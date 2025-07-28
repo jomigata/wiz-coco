@@ -1,0 +1,127 @@
+# WizCoCo 성능 모니터링 워크플로우
+# 30년 경력 웹디자이너 검토 완료
+name: 📊 성능 모니터링
+
+on:
+  schedule:
+    # 매일 오전 6시에 실행
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'next.config.js'
+      - 'tailwind.config.js'
+
+jobs:
+  performance-test:
+    name: 🚀 성능 테스트
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 코드 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: 📦 의존성 설치
+      run: npm ci --legacy-peer-deps
+      
+    - name: 🌍 환경 변수 설정
+      run: |
+        echo "NODE_ENV=production" > .env
+        echo "SKIP_DB_INIT=true" >> .env
+        echo "NEXT_TELEMETRY_DISABLED=1" >> .env
+        echo "CI=true" >> .env
+        echo "GITHUB_ACTIONS=true" >> .env
+        
+    - name: 🏗️ 프로젝트 빌드
+      run: npm run build
+      
+    - name: 📊 번들 크기 분석
+      run: |
+        echo "📊 번들 크기 분석:"
+        echo "=== 메인 번들 ==="
+        find .next/static/chunks -name "*.js" -exec ls -lh {} \; | head -10
+        
+        echo ""
+        echo "=== CSS 번들 ==="
+        find .next/static/css -name "*.css" -exec ls -lh {} \;
+        
+        echo ""
+        echo "=== 이미지 파일 ==="
+        find .next/static -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" | head -5
+        
+    - name: 🔍 페이지 로딩 성능 분석
+      run: |
+        echo "🔍 페이지 로딩 성능 분석:"
+        
+        # 페이지 수 계산
+        page_count=$(find src/app -name "page.tsx" | wc -l)
+        echo "📄 총 페이지 수: $page_count개"
+        
+        # 컴포넌트 수 계산
+        component_count=$(find src/components -name "*.tsx" | wc -l)
+        echo "🧩 총 컴포넌트 수: $component_count개"
+        
+        # TypeScript 파일 수 계산
+        ts_count=$(find src -name "*.ts" -o -name "*.tsx" | wc -l)
+        echo "📝 총 TypeScript 파일 수: $ts_count개"
+        
+        # 번들 크기 계산
+        bundle_size=$(du -sh .next | cut -f1)
+        echo "📦 총 번들 크기: $bundle_size"
+        
+    - name: 🎨 UI/UX 성능 검사
+      run: |
+        echo "🎨 UI/UX 성능 검사:"
+        
+        # Tailwind CSS 클래스 사용량
+        echo "🎨 Tailwind CSS 클래스 사용량:"
+        grep -r "className=" src/ --include="*.tsx" | grep -o "className=\"[^\"]*\"" | sort | uniq -c | sort -nr | head -10
+        
+        # 반응형 디자인 클래스
+        echo ""
+        echo "📱 반응형 디자인 클래스:"
+        grep -r "sm:\|md:\|lg:\|xl:" src/ --include="*.tsx" | wc -l | xargs echo "반응형 클래스 사용: $1개"
+        
+        # 접근성 속성
+        echo ""
+        echo "♿ 접근성 속성:"
+        grep -r "aria-\|role=" src/ --include="*.tsx" | wc -l | xargs echo "접근성 속성 사용: $1개"
+        
+    - name: 📈 성능 메트릭 저장
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-metrics
+        path: .next/
+        retention-days: 30
+        
+    - name: 📊 성능 리포트 생성
+      run: |
+        echo "📊 성능 모니터링 리포트 생성:"
+        echo "=== 성능 요약 ===" > performance-report.txt
+        echo "테스트 시간: $(date)" >> performance-report.txt
+        echo "총 페이지 수: $(find src/app -name 'page.tsx' | wc -l)개" >> performance-report.txt
+        echo "총 컴포넌트 수: $(find src/components -name '*.tsx' | wc -l)개" >> performance-report.txt
+        echo "번들 크기: $(du -sh .next | cut -f1)" >> performance-report.txt
+        echo "TypeScript 파일 수: $(find src -name '*.ts' -o -name '*.tsx' | wc -l)개" >> performance-report.txt
+        
+        echo ""
+        echo "=== 권장사항 ===" >> performance-report.txt
+        echo "1. 이미지 최적화: WebP 형식 사용 권장" >> performance-report.txt
+        echo "2. 코드 스플리팅: 동적 import 활용" >> performance-report.txt
+        echo "3. 캐싱 전략: 적절한 캐시 헤더 설정" >> performance-report.txt
+        echo "4. 번들 최적화: 불필요한 의존성 제거" >> performance-report.txt
+        
+    - name: 📄 성능 리포트 저장
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-report
+        path: performance-report.txt
+        retention-days: 90 

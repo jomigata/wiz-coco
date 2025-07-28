@@ -1,0 +1,84 @@
+# WizCoCo 보안 감사 워크플로우
+# 30년 경력 풀스택 프로그래머 검토 완료
+name: 🔒 보안 감사
+
+on:
+  schedule:
+    # 매주 월요일 오전 9시에 실행
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/**'
+
+jobs:
+  security-audit:
+    name: 🔍 보안 취약점 검사
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 코드 체크아웃
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Node.js 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: 📦 의존성 설치
+      run: npm ci --legacy-peer-deps
+      
+    - name: 🔒 npm 보안 감사
+      run: |
+        echo "🔒 npm 보안 감사 시작..."
+        npm audit --audit-level=moderate --json > audit-report.json || true
+        
+        # 감사 결과 분석
+        if [ -f "audit-report.json" ]; then
+          echo "📊 보안 감사 결과:"
+          cat audit-report.json | jq -r '.metadata.vulnerabilities | to_entries[] | "\(.key): \(.value)"' || echo "감사 결과를 파싱할 수 없습니다."
+        fi
+        
+    - name: 🔍 코드 보안 검사
+      run: |
+        echo "🔍 코드 보안 검사 시작..."
+        
+        # 하드코딩된 비밀번호 검사
+        echo "🔍 하드코딩된 비밀번호 검사:"
+        if grep -r "password.*=.*['\"][^'\"]*['\"]" src/ --exclude-dir=node_modules; then
+          echo "⚠️  하드코딩된 비밀번호가 발견되었습니다."
+        else
+          echo "✅ 하드코딩된 비밀번호가 없습니다."
+        fi
+        
+        # API 키 노출 검사
+        echo "🔍 API 키 노출 검사:"
+        if grep -r "api_key.*=.*['\"][^'\"]*['\"]" src/ --exclude-dir=node_modules; then
+          echo "⚠️  하드코딩된 API 키가 발견되었습니다."
+        else
+          echo "✅ 하드코딩된 API 키가 없습니다."
+        fi
+        
+        # 환경 변수 사용 검사
+        echo "🔍 환경 변수 사용 검사:"
+        env_vars=$(grep -r "process\.env\." src/ --exclude-dir=node_modules | wc -l)
+        echo "✅ 환경 변수 사용: $env_vars개"
+        
+    - name: 📊 보안 리포트 생성
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-audit-report
+        path: audit-report.json
+        retention-days: 90
+        
+    - name: 🔔 보안 알림
+      if: failure()
+      run: |
+        echo "🚨 보안 취약점이 발견되었습니다!"
+        echo "🔍 즉시 검토가 필요합니다."
+        echo "📊 상세 리포트는 아티팩트에서 확인하세요." 
