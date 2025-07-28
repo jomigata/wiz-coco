@@ -2,6 +2,15 @@
 
 Next.js로 구현된 심리 테스트 및 심리 케어 서비스입니다.
 
+## 🎉 **배포 성공!**
+
+**WizCoCo 사이트가 성공적으로 배포되었습니다!**
+- **배포 URL**: https://wiz-coco.web.app
+- **상태**: ✅ 정상 작동 중
+- **배포 시간**: 2025년 1월 27일
+
+---
+
 ## 시작하기
 
 ### 개발 환경 실행
@@ -31,7 +40,23 @@ npm run start
 
 이 프로젝트는 [Firebase](https://firebase.google.com) 플랫폼에 최적화되어 있으며, GitHub Actions를 통한 자동 배포를 지원합니다.
 
-### GitHub Actions 자동 배포 설정
+### 🚀 **로컬 배포 (완료됨)**
+
+```bash
+# Firebase CLI 설치
+npm install -g firebase-tools
+
+# Firebase 로그인
+firebase login
+
+# 빌드 및 배포
+npm run build
+firebase deploy --only hosting
+```
+
+### 🔧 **GitHub Actions 자동 배포 설정**
+
+**현재 상태**: 로컬 배포 완료, 자동 배포 설정 진행 중
 
 1. **GitHub Secrets 설정**
    
@@ -61,21 +86,10 @@ npm run start
    
    main 브랜치에 푸시하면 자동으로 빌드 및 배포가 실행됩니다.
 
-### 수동 Firebase 배포
+### 📋 **상세 설정 가이드**
 
-```bash
-# Firebase CLI 설치
-npm install -g firebase-tools
-
-# Firebase 로그인
-firebase login
-
-# Firebase 프로젝트 초기화
-firebase init hosting
-
-# 배포
-firebase deploy
-```
+- **GitHub Secrets 완전 설정 가이드**: [docs/github-secrets-complete-setup.md](docs/github-secrets-complete-setup.md)
+- **배포 상태 확인**: [docs/deployment-status.md](docs/deployment-status.md)
 
 ## 환경 변수
 
@@ -127,25 +141,25 @@ firebase deploy
    - 모든 Firebase 관련 시크릿이 올바르게 설정되었는지 확인
    - `FIREBASE_SERVICE_ACCOUNT` 시크릿이 JSON 형태로 설정되었는지 확인
 
-2. **Firebase 프로젝트 설정 확인**
-   - Firebase 콘솔에서 프로젝트 설정 확인
-   - Hosting이 활성화되어 있는지 확인
-
-3. **로컬 빌드 테스트**
+2. **로컬 배포 테스트**
    ```bash
    npm run build
-   npm run start
+   firebase deploy --only hosting
    ```
 
-4. **Firebase 콘솔에서 로그 확인**
-   - Firebase 콘솔의 Functions 로그 확인
+3. **Firebase Console 확인**
+   - https://console.firebase.google.com/project/wiz-coco/hosting
 
-### 일반적인 문제들:
+## 🔗 **관련 링크**
 
-- **빌드 실패**: 환경 변수 누락 확인
-- **배포 실패**: Firebase Service Account 시크릿 확인
-- **인증 오류**: Firebase Admin SDK 설정 확인
+### **배포 확인:**
+- **메인 사이트**: https://wiz-coco.web.app
+- **Firebase Console**: https://console.firebase.google.com/project/wiz-coco/overview
 
-## 라이센스
+### **GitHub:**
+- **Actions**: https://github.com/jomigata/wizcoco_2025/actions
+- **Secrets Settings**: https://github.com/jomigata/wizcoco_2025/settings/secrets/actions
 
-이 프로젝트는 비공개(Private) 프로젝트입니다.
+### **문서:**
+- **배포 상태**: [docs/deployment-status.md](docs/deployment-status.md)
+- **GitHub Secrets 설정**: [docs/github-secrets-complete-setup.md](docs/github-secrets-complete-setup.md)
