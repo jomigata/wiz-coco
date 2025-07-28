@@ -1,0 +1,48 @@
+{
+  "name": "OK Test App",
+  "short_name": "OK Test",
+  "description": "심리 테스트 애플리케이션",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4a90e2",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait",
+  "categories": ["education", "productivity", "utilities"],
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "테스트 시작",
+      "short_name": "테스트",
+      "description": "새 테스트 시작하기",
+      "url": "/tests",
+      "icons": [{ "src": "/icons/test-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "내 결과 보기",
+      "short_name": "결과",
+      "description": "내 테스트 결과 보기",
+      "url": "/results",
+      "icons": [{ "src": "/icons/results-icon.png", "sizes": "96x96" }]
+    }
+  ]
+} 

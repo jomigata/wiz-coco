@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API 테스트</h1>
+        
+        <div>
+            <h2>검사 코드 생성</h2>
+            <button id="generateCode">코드 생성</button>
+            <button id="checkHealth">서버 상태 확인</button>
+            <button id="reconnectServer">서버 재연결</button>
+            <pre id="result">여기에 결과가 표시됩니다.</pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateCode').addEventListener('click', async () => {
+            try {
+                const timestamp = Date.now();
+                const requestId = `${timestamp}-test-abcdef12`;
+                
+                const response = await fetch('http://localhost:3000/api/generate-test-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-request-id': requestId
+                    },
+                    body: JSON.stringify({
+                        year: 2025,
+                        month: 4,
+                        testType: 'MBTI',
+                        userData: {
+                            name: '테스트',
+                            gender: 'M',
+                            birthYear: 1990
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = '에러: ' + error.message;
+            }
+        });
+
+        document.getElementById('checkHealth').addEventListener('click', async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/generate-test-code?health=true');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = '에러: ' + error.message;
+            }
+        });
+
+        document.getElementById('reconnectServer').addEventListener('click', async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/generate-test-code', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = '에러: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html> 
