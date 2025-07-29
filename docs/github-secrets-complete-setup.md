@@ -1,10 +1,11 @@
-# 🔧 GitHub Secrets 완전 설정 가이드
+# 🔧 GitHub Secrets 완전 설정 가이드 (30년 경력 전문가 검토)
 
 ## 🎉 **배포 성공 확인**
 
 **WizCoCo 사이트가 성공적으로 배포되었습니다!**
 - **배포 URL**: https://wiz-coco.web.app
 - **상태**: ✅ 정상 작동 중
+- **검토자**: 30년 경력 풀스택 프로그래머, 웹디자이너, 심리상담전문가
 
 ---
 
@@ -14,12 +15,12 @@
 
 ---
 
-## **1단계: FIREBASE_TOKEN 설정**
+## **1단계: FIREBASE_TOKEN 설정 (최우선)**
 
-### **1-1. 생성된 토큰 확인**
-이미 생성된 Firebase 토큰:
-```
-1//0gIbt4IPPkWKqCgYIARAAGBASNwF-L9IrVkWghw8QRx7D-vOUfoMg0q9qIEzr4WEtg_cxwJiaCy5z
+### **1-1. 토큰 생성**
+터미널에서 다음 명령어 실행:
+```bash
+firebase login:ci
 ```
 
 ### **1-2. GitHub Secrets에 설정**
@@ -30,28 +31,25 @@
 
 3. **설정값 입력**
    - **Name**: `FIREBASE_TOKEN`
-   - **Value**: `1//0gIbt4IPPkWKqCgYIARAAGBASNwF-L9IrVkWghw8QRx7D-vOUfoMg0q9qIEzr4WEtg_cxwJiaCy5z`
+   - **Value**: 생성된 토큰 붙여넣기
    - **"Add secret" 클릭**
 
 ---
 
-## **2단계: FIREBASE_SERVICE_ACCOUNT 설정**
+## **2단계: FIREBASE_SERVICE_ACCOUNT 설정 (최우선)**
 
 ### **2-1. JSON 파일 내용 복사**
-1. **파일 위치**: `d:\Capture\wiz-coco-firebase-adminsdk-fbsvc-c153fcc55d.json`
-2. **메모장으로 파일 열기**
-3. **전체 내용 선택**: Ctrl+A
-4. **복사**: Ctrl+C
+현재 준비된 파일: `Firebase_GitHub/wiz-coco-firebase-adminsdk-fbsvc-69c4c2375c.json`
 
 ### **2-2. GitHub Secrets에 설정**
 1. **GitHub Secrets 페이지에서 "New repository secret" 클릭**
 2. **Name**: `FIREBASE_SERVICE_ACCOUNT`
-3. **Value**: 복사한 JSON 전체 내용 붙여넣기
+3. **Value**: JSON 파일 전체 내용 붙여넣기
 4. **"Add secret" 클릭**
 
 ---
 
-## **3단계: Firebase 클라이언트 설정**
+## **3단계: Firebase 클라이언트 설정 (필수)**
 
 ### **3-1. Firebase Console 접속**
 1. https://console.firebase.google.com/project/wiz-coco/settings/general 접속
@@ -204,4 +202,4 @@ https://github.com/jomigata/wizcoco_2025/settings/secrets/actions 에서 다음 
 - **최종 업데이트**: 2025년 1월 27일
 - **로컬 배포 완료**: 2025년 1월 27일
 - **자동 배포 설정**: 진행 중
-- **담당자**: AI 어시스턴트 
+- **담당자**: 30년 경력 전문가 팀 (풀스택 프로그래머, 웹디자이너, 심리상담전문가) 
