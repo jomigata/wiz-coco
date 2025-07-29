@@ -9,9 +9,10 @@ interface ProgramCardProps {
   icon: string;
   image: string;
   index: number;
+  link: string; // 링크 속성 추가
 }
 
-function ProgramCard({ title, description, icon, image, index }: ProgramCardProps) {
+function ProgramCard({ title, description, icon, image, index, link }: ProgramCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   
   // 각 카드에 대한 그라데이션 색상 배열 - 더 은은한 색상으로 변경
@@ -40,7 +41,7 @@ function ProgramCard({ title, description, icon, image, index }: ProgramCardProp
     ),
     "🧒": (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-12 h-12 text-gray-600">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
       </svg>
     ),
     "👨‍👩‍👧": (
@@ -127,7 +128,7 @@ function ProgramCard({ title, description, icon, image, index }: ProgramCardProp
   );
   
   return (
-    <Link href="/tests/mbti_pro" className="block">
+    <Link href={link} className="block">
       <div 
         className="bg-white rounded-2xl overflow-hidden shadow-xl transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl group cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
@@ -196,52 +197,60 @@ export default function ProgramSection() {
 
   const programs = [
     {
+      title: "개인용 MBTI",
+      description: "나의 성격유형을 파악하고 장단점을 이해하여 더 나은 관계와 성장을 도모하세요",
+      icon: "👤",
+      image: "",
+      link: "/tests/mbti"
+    },
+    {
+      title: "전문가용 MBTI",
+      description: "전문가의 해석과 함께 심층적인 성격유형 분석을 통해 자신의 성장 가능성을 발견하세요",
+      icon: "💑",
+      image: "",
+      link: "/tests/mbti_pro"
+    },
+    {
+      title: "그룹형 MBTI",
+      description: "팀원들의 MBTI 유형을 분석하고 팀 내 소통과 협업을 향상시키세요",
+      icon: "🧒",
+      image: "",
+      link: "/tests/group_mbti"
+    },
+    {
+      title: "인사이드 MBTI",
+      description: "두 사람의 MBTI 유형을 비교하여 관계 역학과 상호작용 패턴을 심층적으로 분석해 보세요",
+      icon: "👨‍👩‍👧",
+      image: "",
+      link: "/tests/inside-mbti"
+    },
+    {
       title: "개인 맞춤 심리 상담",
       description: "개인의 내면 탐색과 자아 성장을 돕는 1:1 맞춤형 심리 상담 프로그램입니다. 일상의 스트레스부터 깊은 심리적 문제까지 전문가와 함께 해결해나갑니다.",
-      icon: "👤",
-      image: "" // 이미지는 더 이상 사용하지 않지만 타입 호환성을 위해 유지
+      icon: "📊",
+      image: "",
+      link: "/counseling"
     },
     {
       title: "커플/부부 관계 회복",
       description: "관계의 어려움을 겪고 있는 커플과 부부를 위한 상담 프로그램. 소통 방식 개선과 갈등 해결 기술을 배우고 건강한 관계로 회복합니다.",
-      icon: "💑",
-      image: ""
+      icon: "💼",
+      image: "",
+      link: "/counseling"
     },
     {
       title: "아동/청소년 성장 지원",
       description: "발달 단계에 맞는 심리 지원으로 아동과 청소년의 건강한 성장을 돕습니다. 학업 스트레스, 또래 관계, 정체성 형성 등 다양한 문제를 다룹니다.",
-      icon: "🧒",
-      image: ""
+      icon: "💻",
+      image: "",
+      link: "/counseling"
     },
     {
       title: "가족 시스템 치료",
       description: "가족 구성원 간의 역동성을 이해하고 건강한 가족 문화를 형성할 수 있도록 돕는 통합적 가족 상담 프로그램입니다.",
-      icon: "👨‍👩‍👧",
-      image: ""
-    },
-    {
-      title: "종합 심리 검사",
-      description: "국제적으로 검증된 다양한 심리 검사 도구를 활용한 종합 분석 서비스입니다. 성격, 적성, 인지 능력 등 다각도에서 자신을 이해하는 기회를 제공합니다.",
-      icon: "📊",
-      image: ""
-    },
-    {
-      title: "직장인 마음 건강 관리",
-      description: "업무 스트레스, 인간관계, 번아웃 예방 등 직장인의 심리적 어려움을 해결하고 건강한 직장 생활을 지원하는 맞춤형 프로그램입니다.",
-      icon: "💼",
-      image: ""
-    },
-    {
-      title: "화상 심리 상담",
-      description: "시공간의 제약 없이 편안한 환경에서 전문 상담사와 연결되는 프리미엄 온라인 상담 서비스입니다. 해외 거주자도 이용 가능합니다.",
-      icon: "💻",
-      image: ""
-    },
-    {
-      title: "그룹 테라피",
-      description: "비슷한 경험과 고민을 가진 구성원들과 함께하는 치유적 그룹 프로그램. 공감과 지지를 통해 사회적 연결감을 높이고 함께 성장합니다.",
       icon: "👥",
-      image: ""
+      image: "",
+      link: "/counseling"
     }
   ];
 

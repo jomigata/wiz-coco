@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 
 interface TestCardProps {
   category: string;
@@ -7,9 +8,10 @@ interface TestCardProps {
   description: string;
   index: number;
   isVisible: boolean;
+  link: string; // 링크 속성 추가
 }
 
-function TestCard({ category, icon, description, index, isVisible }: TestCardProps) {
+function TestCard({ category, icon, description, index, isVisible, link }: TestCardProps) {
   // SVG 아이콘 매핑
   const iconSvgs = {
     "😔": (
@@ -75,25 +77,27 @@ function TestCard({ category, icon, description, index, isVisible }: TestCardPro
   );
 
   return (
-    <div 
-      className="flex flex-col items-center group cursor-pointer transition-all duration-700 transform"
-      style={{ 
-        transitionDelay: `${index * 100}ms`,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(20px)'
-      }}
-    >
-      <div className="relative">
-        <div className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-full opacity-30 group-hover:opacity-50 blur-md transition-all duration-700 group-hover:scale-110`}></div>
-        <div className="rounded-full bg-white w-24 h-24 flex items-center justify-center flex-col shadow-sm group-hover:shadow-md transition-all border border-gray-100 group-hover:border-gray-200 transform group-hover:scale-105 relative z-10">
-          {svgIcon}
+    <Link href={link} className="block">
+      <div 
+        className="flex flex-col items-center group cursor-pointer transition-all duration-700 transform"
+        style={{ 
+          transitionDelay: `${index * 100}ms`,
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? 'translateY(0)' : 'translateY(20px)'
+        }}
+      >
+        <div className="relative">
+          <div className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-full opacity-30 group-hover:opacity-50 blur-md transition-all duration-700 group-hover:scale-110`}></div>
+          <div className="rounded-full bg-white w-24 h-24 flex items-center justify-center flex-col shadow-sm group-hover:shadow-md transition-all border border-gray-100 group-hover:border-gray-200 transform group-hover:scale-105 relative z-10">
+            {svgIcon}
+          </div>
+        </div>
+        <div className="mt-4 text-center">
+          <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors mb-1">{category}</div>
+          <p className="text-xs text-gray-500 max-w-[120px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">{description}</p>
         </div>
       </div>
-      <div className="mt-4 text-center">
-        <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors mb-1">{category}</div>
-        <p className="text-xs text-gray-500 max-w-[120px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">{description}</p>
-      </div>
-    </div>
+    </Link>
   )
 }
 
@@ -123,42 +127,50 @@ export default function SelfTestSection() {
     { 
       category: "우울증 검사", 
       icon: "😔",
-      description: "우울한 감정과 무기력함이 지속되나요?"
+      description: "우울한 감정과 무기력함이 지속되나요?",
+      link: "/tests/psychological"
     },
     { 
       category: "불안장애 검사", 
       icon: "😨",
-      description: "과도한 걱정과 불안감이 일상을 방해하나요?"
+      description: "과도한 걱정과 불안감이 일상을 방해하나요?",
+      link: "/tests/psychological"
     },
     { 
       category: "ADHD 검사", 
       icon: "🤔",
-      description: "집중력과 충동 조절에 어려움이 있나요?"
+      description: "집중력과 충동 조절에 어려움이 있나요?",
+      link: "/tests/psychological"
     },
     { 
       category: "트라우마 검사", 
       icon: "💔",
-      description: "과거의 상처가 현재 삶에 영향을 주나요?"
+      description: "과거의 상처가 현재 삶에 영향을 주나요?",
+      link: "/tests/psychological"
     },
     { 
       category: "중독 진단", 
       icon: "⛓️",
-      description: "특정 행동이나 물질에 의존하고 있나요?"
+      description: "특정 행동이나 물질에 의존하고 있나요?",
+      link: "/tests/psychological"
     },
     { 
       category: "식이장애 검사", 
       icon: "🍎",
-      description: "식습관과 신체 이미지에 어려움이 있나요?"
+      description: "식습관과 신체 이미지에 어려움이 있나요?",
+      link: "/tests/psychological"
     },
     { 
       category: "성격유형 분석", 
       icon: "🎭",
-      description: "나의 성격 특성과 강점을 알고 싶으신가요?"
+      description: "나의 성격 특성과 강점을 알고 싶으신가요?",
+      link: "/tests/mbti"
     },
     { 
       category: "스트레스 지수", 
       icon: "🤯",
-      description: "일상 스트레스의 수준을 측정해보세요"
+      description: "일상 스트레스의 수준을 측정해보세요",
+      link: "/tests/psychological"
     }
   ];
 
@@ -234,9 +246,11 @@ export default function SelfTestSection() {
         </div>
         
         <div className={`mt-16 text-center transition-all duration-1000 delay-500 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <button className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-xl text-lg font-medium hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-            모든 검사 보기
-          </button>
+          <Link href="/tests" className="inline-block">
+            <button className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-xl text-lg font-medium hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              모든 검사 보기
+            </button>
+          </Link>
         </div>
       </div>
     </section>
