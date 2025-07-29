@@ -212,6 +212,7 @@ jobs:
     - name: 🔍 Firebase 설정 검증
       run: |
         echo "🔍 Firebase 설정 검증 중..."
+        echo "=================================="
         
         # 필수 환경 변수 검증
         required_vars=(
@@ -223,10 +224,12 @@ jobs:
           "NEXT_PUBLIC_FIREBASE_APP_ID"
         )
         
+        missing_vars=()
+        
         for var in "${required_vars[@]}"; do
           if [ -z "${!var}" ]; then
             echo "❌ $var이 설정되지 않았습니다."
-            exit 1
+            missing_vars+=("$var")
           else
             echo "✅ $var 설정됨"
           fi
@@ -235,13 +238,41 @@ jobs:
         # Firebase 토큰 검증
         if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
           echo "❌ FIREBASE_TOKEN이 설정되지 않았습니다."
-          echo "💡 해결방법: firebase login:ci 명령어로 토큰 생성"
-          exit 1
+          missing_vars+=("FIREBASE_TOKEN")
         else
           echo "✅ FIREBASE_TOKEN 설정됨"
         fi
         
+        # 누락된 변수가 있으면 상세한 해결 방법 제공
+        if [ ${#missing_vars[@]} -ne 0 ]; then
+          echo ""
+          echo "=================================="
+          echo "❌ 누락된 환경변수 발견!"
+          echo "=================================="
+          echo "다음 변수들이 GitHub Secrets에 설정되지 않았습니다:"
+          for var in "${missing_vars[@]}"; do
+            echo "  - $var"
+          done
+          echo ""
+          echo "💡 해결 방법:"
+          echo "1. https://github.com/jomigata/wiz-coco/settings/secrets/actions 접속"
+          echo "2. 'New repository secret' 클릭"
+          echo "3. 각 변수를 올바른 값으로 설정"
+          echo ""
+          echo "🔧 Firebase API Key 찾는 방법:"
+          echo "1. https://console.firebase.google.com 접속"
+          echo "2. wiz-coco 프로젝트 선택"
+          echo "3. ⚙️ 프로젝트 설정 → 일반 → 웹 앱 → apiKey 복사"
+          echo ""
+          echo "🔧 Firebase Token 생성 방법:"
+          echo "1. 로컬에서 'firebase login:ci' 실행"
+          echo "2. 생성된 토큰을 FIREBASE_TOKEN으로 설정"
+          exit 1
+        fi
+        
+        echo ""
         echo "🎉 모든 Firebase 설정 검증 완료!"
+        echo "=================================="
       
     - name: 🚀 Firebase 프로젝트 초기화
       run: |
