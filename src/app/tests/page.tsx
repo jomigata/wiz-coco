@@ -106,7 +106,7 @@ export default function TestsPage() {
                 </Link>
 
                 {/* 그룹형 MBTI 카드 */}
-                <Link href="/tests/mbti_pro" className="block transition-transform hover:scale-[1.02]">
+                <Link href="/tests/group_mbti" className="block transition-transform hover:scale-[1.02]">
                   <div className="h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20">
                     <div className="p-6 text-center">
                       <h2 className="text-3xl font-bold text-white">그룹형 MBTI</h2>
