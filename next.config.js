@@ -2,12 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // Firebase Hosting을 위한 정적 내보내기 설정
-  output: 'export',
+  // Firebase Hosting을 위한 설정
   trailingSlash: false,
   
   images: {
-    unoptimized: true // 정적 내보내기에서는 최적화 비활성화
+    unoptimized: true // Firebase Hosting에서는 최적화 비활성화
   },
   
   // 개발 환경에서의 환경 변수
