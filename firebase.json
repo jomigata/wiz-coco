@@ -6,7 +6,6 @@
       "**/.*",
       "**/node_modules/**",
       "**/*.map",
-      "**/tests/**",
       "**/docs/**",
       "**/scripts/**",
       "**/prisma/**",
@@ -14,8 +13,28 @@
     ],
     "rewrites": [
       {
-        "source": "/tests/**",
-        "destination": "/tests/index.html"
+        "source": "/tests/mbti",
+        "destination": "/tests/mbti.html"
+      },
+      {
+        "source": "/tests/mbti_pro",
+        "destination": "/tests/mbti_pro.html"
+      },
+      {
+        "source": "/tests/group_mbti",
+        "destination": "/tests/group_mbti.html"
+      },
+      {
+        "source": "/tests/inside-mbti",
+        "destination": "/tests/inside-mbti.html"
+      },
+      {
+        "source": "/tests/enneagram",
+        "destination": "/tests/enneagram.html"
+      },
+      {
+        "source": "/tests/ego-ok",
+        "destination": "/tests/ego-ok.html"
       },
       {
         "source": "/admin/**",
