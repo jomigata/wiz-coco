@@ -18,9 +18,11 @@
     "prepare-data": "node scripts/prepare-data.js",
     "backup": "node scripts/backup-data.js",
     "setup-firebase": "node scripts/setup-db.js",
-    "deploy": "npm run build && firebase deploy",
+    "verify-env": "node scripts/verify-env.js",
+    "deploy": "node scripts/deploy-with-verification.js",
     "deploy:firebase": "npm run build && firebase deploy --only hosting",
-    "deploy:quick": "npm run build && firebase deploy --only hosting --force"
+    "deploy:quick": "npm run build && firebase deploy --only hosting --force",
+    "deploy:safe": "npm run verify-env && npm run build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",

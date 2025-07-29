@@ -120,7 +120,19 @@ jobs:
         echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
         
     - name: 🏗️ 프로젝트 빌드
-      run: npm run build
+      run: |
+        echo "🏗️ 프로젝트 빌드 시작..."
+        echo "=================================="
+        echo "📄 .env 파일 내용 확인:"
+        if [ -f ".env" ]; then
+          cat .env | grep -v "FIREBASE" | head -10
+          echo "... (Firebase 설정은 보안상 생략)"
+        else
+          echo "❌ .env 파일이 없습니다."
+        fi
+        echo "=================================="
+        npm run build
+        echo "✅ 빌드 완료!"
       env:
         NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
@@ -212,7 +224,19 @@ jobs:
         echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
         
     - name: 🏗️ 프로젝트 빌드
-      run: npm run build
+      run: |
+        echo "🏗️ 프로젝트 빌드 시작..."
+        echo "=================================="
+        echo "📄 .env 파일 내용 확인:"
+        if [ -f ".env" ]; then
+          cat .env | grep -v "FIREBASE" | head -10
+          echo "... (Firebase 설정은 보안상 생략)"
+        else
+          echo "❌ .env 파일이 없습니다."
+        fi
+        echo "=================================="
+        npm run build
+        echo "✅ 빌드 완료!"
       
     - name: 🔧 Firebase CLI 설치
       run: npm install -g firebase-tools
@@ -221,6 +245,12 @@ jobs:
       run: |
         echo "🔍 Firebase 설정 검증 중..."
         echo "=================================="
+        
+        # .env 파일 로드
+        if [ -f ".env" ]; then
+          echo "📄 .env 파일 발견, 환경변수 로드 중..."
+          export $(cat .env | grep -v '^#' | xargs)
+        fi
         
         # 필수 환경 변수 검증
         required_vars=(
@@ -235,20 +265,44 @@ jobs:
         missing_vars=()
         
         for var in "${required_vars[@]}"; do
-          if [ -z "${!var}" ]; then
+          # GitHub Secrets에서 직접 확인
+          secret_value=""
+          case $var in
+            "NEXT_PUBLIC_FIREBASE_API_KEY")
+              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
+              ;;
+            "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN")
+              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"
+              ;;
+            "NEXT_PUBLIC_FIREBASE_PROJECT_ID")
+              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}"
+              ;;
+            "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET")
+              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}"
+              ;;
+            "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID")
+              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}"
+              ;;
+            "NEXT_PUBLIC_FIREBASE_APP_ID")
+              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}"
+              ;;
+          esac
+          
+          if [ -z "$secret_value" ]; then
             echo "❌ $var이 설정되지 않았습니다."
             missing_vars+=("$var")
           else
-            echo "✅ $var 설정됨"
+            echo "✅ $var 설정됨 (길이: ${#secret_value}자)"
           fi
         done
         
         # Firebase 토큰 검증
-        if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
+        FIREBASE_TOKEN_VALUE="${{ secrets.FIREBASE_TOKEN }}"
+        if [ -z "$FIREBASE_TOKEN_VALUE" ]; then
           echo "❌ FIREBASE_TOKEN이 설정되지 않았습니다."
           missing_vars+=("FIREBASE_TOKEN")
         else
-          echo "✅ FIREBASE_TOKEN 설정됨"
+          echo "✅ FIREBASE_TOKEN 설정됨 (길이: ${#FIREBASE_TOKEN_VALUE}자)"
         fi
         
         # 누락된 변수가 있으면 상세한 해결 방법 제공
