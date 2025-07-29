@@ -77,7 +77,7 @@ function TestCard({ category, icon, description, index, isVisible, link }: TestC
   );
 
   return (
-    <Link href={link} className="block">
+    <a href={link} className="block">
       <div 
         className="flex flex-col items-center group cursor-pointer transition-all duration-700 transform"
         style={{ 
@@ -97,7 +97,7 @@ function TestCard({ category, icon, description, index, isVisible, link }: TestC
           <p className="text-xs text-gray-500 max-w-[120px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">{description}</p>
         </div>
       </div>
-    </Link>
+    </a>
   )
 }
 
@@ -246,11 +246,11 @@ export default function SelfTestSection() {
         </div>
         
         <div className={`mt-16 text-center transition-all duration-1000 delay-500 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <Link href="/tests" className="inline-block">
+          <a href="/tests" className="inline-block">
             <button className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-xl text-lg font-medium hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
               모든 검사 보기
             </button>
-          </Link>
+          </a>
         </div>
       </div>
     </section>

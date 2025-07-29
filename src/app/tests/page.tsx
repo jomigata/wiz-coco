@@ -74,7 +74,7 @@ export default function TestsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* 개인용 MBTI 카드 */}
-                <Link href="/tests/mbti" className="block transition-transform hover:scale-[1.02]">
+                <a href="/tests/mbti" className="block transition-transform hover:scale-[1.02]">
                   <div className="h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20">
                     <div className="p-6 text-center">
                       <h2 className="text-3xl font-bold text-white">개인용 MBTI</h2>
@@ -87,10 +87,10 @@ export default function TestsPage() {
                       <p className="text-sm text-blue-300">소요시간: 15-20분 • 93문항</p>
                     </div>
                   </div>
-                </Link>
+                </a>
 
                 {/* 전문가용 MBTI 카드 */}
-                <Link href="/tests/mbti_pro" className="block transition-transform hover:scale-[1.02]">
+                <a href="/tests/mbti_pro" className="block transition-transform hover:scale-[1.02]">
                   <div className="h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20">
                     <div className="p-6 text-center">
                       <h2 className="text-3xl font-bold text-white">전문가용 MBTI</h2>
@@ -103,10 +103,10 @@ export default function TestsPage() {
                       <p className="text-sm text-blue-300">소요시간: 5-10분 • 20문항</p>
                     </div>
                   </div>
-                </Link>
+                </a>
 
                 {/* 그룹형 MBTI 카드 */}
-                <Link href="/tests/group_mbti" className="block transition-transform hover:scale-[1.02]">
+                <a href="/tests/group_mbti" className="block transition-transform hover:scale-[1.02]">
                   <div className="h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20">
                     <div className="p-6 text-center">
                       <h2 className="text-3xl font-bold text-white">그룹형 MBTI</h2>
@@ -119,10 +119,10 @@ export default function TestsPage() {
                       <p className="text-sm text-blue-300">소요시간: 5-10분 • 팀 분석 및 보고서</p>
                     </div>
                   </div>
-                </Link>
+                </a>
 
                 {/* 인사이드 MBTI 카드 */}
-                <Link href="/tests/inside-mbti" className="block transition-transform hover:scale-[1.02]">
+                <a href="/tests/inside-mbti" className="block transition-transform hover:scale-[1.02]">
                   <div className="h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20">
                     <div className="p-6 text-center">
                       <h2 className="text-3xl font-bold text-white">인사이드 MBTI</h2>
@@ -135,7 +135,7 @@ export default function TestsPage() {
                       <p className="text-sm text-blue-300">소요시간: 5-10분 • 관계 분석 및 조언</p>
                     </div>
                   </div>
-                </Link>
+                </a>
               </div>
             </div>
           </div>

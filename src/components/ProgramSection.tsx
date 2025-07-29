@@ -128,7 +128,7 @@ function ProgramCard({ title, description, icon, image, index, link }: ProgramCa
   );
   
   return (
-    <Link href={link} className="block">
+    <a href={link} className="block">
       <div 
         className="bg-white rounded-2xl overflow-hidden shadow-xl transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl group cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
@@ -169,7 +169,7 @@ function ProgramCard({ title, description, icon, image, index, link }: ProgramCa
           </div>
         </div>
       </div>
-    </Link>
+    </a>
   )
 }
 
