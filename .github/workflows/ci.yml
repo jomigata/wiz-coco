@@ -121,19 +121,27 @@ jobs:
         
     - name: 🏗️ 프로젝트 빌드
       run: npm run build
+      env:
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
       
     - name: 📊 빌드 결과 분석
       run: |
         echo "📊 빌드 결과 분석:"
-        echo "- 총 페이지 수: $(find .next/static/chunks/pages -name '*.js' | wc -l)개"
-        echo "- 번들 크기: $(du -sh .next | cut -f1)"
-        echo "- 정적 파일 수: $(find .next/static -type f | wc -l)개"
+        echo "- 총 페이지 수: $(find out -name '*.html' | wc -l)개"
+        echo "- 번들 크기: $(du -sh out | cut -f1)"
+        echo "- 정적 파일 수: $(find out -type f | wc -l)개"
         
     - name: 📦 빌드 아티팩트 저장
       uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
-        path: .next/
+        path: out/
         retention-days: 7
 
   # 4단계: 보안 검사 (30년 경력 풀스택 프로그래머 검토)
@@ -293,6 +301,29 @@ jobs:
           exit 1
         fi
         
+    - name: 🔍 빌드 결과물 확인
+      run: |
+        echo "🔍 빌드 결과물 확인 중..."
+        echo "=================================="
+        
+        if [ -d "out" ]; then
+          echo "✅ out 폴더 존재 확인"
+          echo "📊 out 폴더 내용:"
+          ls -la out/
+          echo ""
+          echo "📄 HTML 파일 목록:"
+          find out -name "*.html" | head -10
+          echo ""
+          echo "📊 총 파일 수: $(find out -type f | wc -l)개"
+        else
+          echo "❌ out 폴더가 존재하지 않습니다."
+          echo "🔍 현재 디렉토리 내용:"
+          ls -la
+          exit 1
+        fi
+        
+        echo "=================================="
+        
     - name: 🚀 Firebase Hosting 배포
       run: |
         echo "🚀 Firebase Hosting 배포 시작..."
@@ -315,7 +346,7 @@ jobs:
         echo "👤 커밋터: ${{ github.actor }}"
         echo ""
         echo "📊 배포 통계:"
-        echo "- 총 페이지 수: 52개"
+        echo "- 총 페이지 수: $(find out -name '*.html' | wc -l)개"
         echo "- 빌드 시간: 약 1분"
         echo "- 배포 시간: 약 2분"
         echo "- 총 소요 시간: 약 5분"

@@ -14,27 +14,27 @@
     "rewrites": [
       {
         "source": "/tests/mbti",
-        "destination": "/tests/mbti.html"
+        "destination": "/tests/mbti/index.html"
       },
       {
         "source": "/tests/mbti_pro",
-        "destination": "/tests/mbti_pro.html"
+        "destination": "/tests/mbti_pro/index.html"
       },
       {
         "source": "/tests/group_mbti",
-        "destination": "/tests/group_mbti.html"
+        "destination": "/tests/group_mbti/index.html"
       },
       {
         "source": "/tests/inside-mbti",
-        "destination": "/tests/inside-mbti.html"
+        "destination": "/tests/inside-mbti/index.html"
       },
       {
         "source": "/tests/enneagram",
-        "destination": "/tests/enneagram.html"
+        "destination": "/tests/enneagram/index.html"
       },
       {
         "source": "/tests/ego-ok",
-        "destination": "/tests/ego-ok.html"
+        "destination": "/tests/ego-ok/index.html"
       },
       {
         "source": "/admin/**",
@@ -54,7 +54,7 @@
       }
     ],
     "cleanUrls": true,
-    "trailingSlash": false,
+    "trailingSlash": true,
     "headers": [
       {
         "source": "**/*.@(js|css)",

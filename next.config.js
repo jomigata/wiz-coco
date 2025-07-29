@@ -2,11 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // Firebase Hosting을 위한 설정
-  trailingSlash: false,
+  // Firebase Hosting을 위한 정적 내보내기 설정
+  output: 'export',
+  trailingSlash: true, // Firebase Hosting 호환성을 위해 true로 변경
   
   images: {
-    unoptimized: true // Firebase Hosting에서는 최적화 비활성화
+    unoptimized: true // 정적 내보내기에서는 최적화 비활성화
   },
   
   // 개발 환경에서의 환경 변수
@@ -17,6 +18,14 @@ const nextConfig = {
     DATABASE_URL: process.env.DATABASE_URL,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'your-nextauth-secret-key-at-least-32-chars-development',
+    // Firebase 환경변수 추가 (빌드 시점에 주입)
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   },
   
   // 웹팩 설정: 서버 전용 모듈만 제외
@@ -86,8 +95,8 @@ const nextConfig = {
   // 빌드 최적화
   swcMinify: true,
   
-  // 정적 내보내기 최적화
-  distDir: '.next',
+  // 정적 내보내기 최적화 - out 폴더로 변경
+  distDir: 'out',
   
   // 환경 변수 검증 비활성화 (CI/CD 환경에서)
   skipTrailingSlashRedirect: true,
