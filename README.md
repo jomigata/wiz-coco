@@ -157,8 +157,8 @@ firebase deploy --only hosting
 - **Firebase Console**: https://console.firebase.google.com/project/wiz-coco/overview
 
 ### **GitHub:**
-- **Actions**: https://github.com/jomigata/wizcoco_2025/actions
-- **Secrets Settings**: https://github.com/jomigata/wizcoco_2025/settings/secrets/actions
+- **Actions**: https://github.com/jomigata/wiz-coco/actions
+- **Secrets Settings**: https://github.com/jomigata/wiz-coco/settings/secrets/actions
 
 ### **문서:**
 - **배포 상태**: [docs/deployment-status.md](docs/deployment-status.md)

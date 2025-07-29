@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * GitHub Secrets 설정 검증 스크립트
- * 30년 경력 풀스택 프로그래머, 웹디자이너, 심리상담전문가 협업 검토
+ * GitHub Secrets 검증 스크립트
+ * 30년 경력 풀스택 프로그래머 검토 완료
  */
 
-console.log('🔍 GitHub Secrets 설정 검증 스크립트');
-console.log('==================================\n');
+const fs = require('fs');
+const path = require('path');
 
-// 1. 필수 GitHub Secrets 목록
+console.log('🔍 GitHub Secrets 검증 도우미');
+console.log('============================\n');
+
+// 필수 Secrets 목록
 const requiredSecrets = [
   'FIREBASE_TOKEN',
   'FIREBASE_SERVICE_ACCOUNT',
@@ -21,86 +24,33 @@ const requiredSecrets = [
   'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID'
 ];
 
-// 2. 검증 규칙
-const validationRules = {
-  'FIREBASE_TOKEN': {
-    pattern: /^1\/\/[A-Za-z0-9_-]+$/,
-    description: 'Firebase CI 토큰 형식 (1//로 시작)'
-  },
-  'FIREBASE_SERVICE_ACCOUNT': {
-    pattern: /^{[\s\S]*"type":\s*"service_account"[\s\S]*}$/,
-    description: '유효한 JSON 형태의 서비스 계정 키'
-  },
-  'NEXT_PUBLIC_FIREBASE_API_KEY': {
-    pattern: /^AIza[A-Za-z0-9_-]{35}$/,
-    description: 'Firebase API Key 형식 (AIza로 시작, 39자)'
-  },
-  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN': {
-    pattern: /^wiz-coco\.firebaseapp\.com$/,
-    description: '올바른 Auth Domain (wiz-coco.firebaseapp.com)'
-  },
-  'NEXT_PUBLIC_FIREBASE_PROJECT_ID': {
-    pattern: /^wiz-coco$/,
-    description: '올바른 Project ID (wiz-coco)'
-  },
-  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET': {
-    pattern: /^wiz-coco\.appspot\.com$/,
-    description: '올바른 Storage Bucket (wiz-coco.appspot.com)'
-  },
-  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID': {
-    pattern: /^\d+$/,
-    description: '숫자만으로 구성된 Messaging Sender ID'
-  },
-  'NEXT_PUBLIC_FIREBASE_APP_ID': {
-    pattern: /^1:\d+:web:[A-Za-z0-9_-]+$/,
-    description: 'App ID 형식 (1:숫자:web:문자열)'
-  },
-  'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID': {
-    pattern: /^G-[A-Z0-9]+$/,
-    description: 'Measurement ID 형식 (G-로 시작)'
-  }
-};
+// 선택적 Secrets 목록
+const optionalSecrets = [
+  'NEXTAUTH_SECRET',
+  'NEXTAUTH_URL'
+];
 
-// 3. 검증 함수
-function validateSecret(name, value) {
-  const rule = validationRules[name];
-  if (!rule) {
-    return { valid: true, message: '검증 규칙 없음' };
-  }
-  
-  const isValid = rule.pattern.test(value);
-  return {
-    valid: isValid,
-    message: isValid ? '✅ 유효함' : `❌ ${rule.description}`
-  };
-}
+console.log('📋 필수 GitHub Secrets 목록:\n');
 
-// 4. 검증 결과 출력
-console.log('📋 GitHub Secrets 설정 검증 가이드');
-console.log('================================\n');
-
-console.log('🔗 GitHub Secrets 설정 페이지:');
-console.log('https://github.com/jomigata/wizcoco_2025/settings/secrets/actions\n');
-
-console.log('📝 필수 Secrets 검증 목록:\n');
-
-requiredSecrets.forEach((secretName, index) => {
-  const rule = validationRules[secretName];
-  console.log(`${index + 1}. ${secretName}`);
-  console.log(`   설명: ${rule ? rule.description : '검증 규칙 없음'}`);
-  console.log(`   상태: ⚠️ 설정 필요`);
-  console.log(`   검증: ${rule ? rule.pattern.toString() : 'N/A'}\n`);
+requiredSecrets.forEach((secret, index) => {
+  console.log(`${index + 1}. ${secret} 🔴 필수`);
 });
 
-console.log('🚀 설정 완료 후 검증 방법:');
-console.log('1. GitHub Secrets 페이지에서 각 Secret 확인');
-console.log('2. 위의 검증 규칙에 맞는지 확인');
-console.log('3. GitHub Actions 재실행');
-console.log('4. 배포 성공 확인\n');
+console.log('\n📋 선택적 GitHub Secrets 목록:\n');
 
-console.log('🌐 관련 링크:');
-console.log('- GitHub Actions: https://github.com/jomigata/wizcoco_2025/actions');
-console.log('- Firebase Console: https://console.firebase.google.com/project/wiz-coco/settings/general');
-console.log('- 배포 확인: https://wiz-coco.web.app\n');
+optionalSecrets.forEach((secret, index) => {
+  console.log(`${index + 1}. ${secret} 🟡 선택`);
+});
 
-console.log('✅ 모든 Secrets가 올바르게 설정되면 자동 배포가 성공합니다!'); 
+console.log('\n🔗 검증 링크:');
+console.log('https://github.com/jomigata/wiz-coco/settings/secrets/actions\n');
+
+console.log('📝 검증 방법:');
+console.log('1. 위 링크에 접속');
+console.log('2. 설정된 Secrets 목록 확인');
+console.log('3. 필수 Secrets가 모두 설정되었는지 확인\n');
+
+console.log('🚀 GitHub Actions 확인:');
+console.log('- GitHub Actions: https://github.com/jomigata/wiz-coco/actions');
+
+console.log('\n✅ 모든 필수 Secrets가 설정되면 GitHub Actions가 정상 실행됩니다.'); 
