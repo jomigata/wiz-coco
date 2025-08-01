@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { signIn, getSession } from 'next-auth/react';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 // 로딩 컴포넌트
 const LoadingLogin = () => (
@@ -85,35 +87,43 @@ const LoginContent = () => {
     try {
       console.log('[Login] 로그인 시도:', email);
       
-      // NextAuth로 로그인 시도
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-      
-      if (result?.error) {
-        // 에러 메시지 처리
-        let errorMsg = '로그인 처리 중 오류가 발생했습니다.';
-        if (result.error.includes('CredentialsSignin')) {
-          errorMsg = '이메일 또는 비밀번호가 일치하지 않습니다.';
-        }
-        setLoginError(errorMsg);
-        return;
+      // Firebase Auth로 직접 로그인
+      if (!auth) {
+        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
       }
+
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      console.log('[Login] Firebase 로그인 성공:', user.uid);
+      setIsLoggedIn(true);
       
-      if (result?.ok) {
-        console.log('[Login] 로그인 성공');
-        setIsLoggedIn(true);
-        
-        // 리다이렉트 처리
-        setTimeout(() => {
-          router.replace(redirectUrl);
-        }, 100);
-      }
+      // 리다이렉트 처리
+      setTimeout(() => {
+        router.replace(redirectUrl);
+      }, 100);
+      
     } catch (error: any) {
       console.error('[Login] 로그인 오류:', error);
-      setLoginError('로그인 처리 중 오류가 발생했습니다.');
+      
+      // Firebase Auth 에러 처리
+      let errorMessage = '로그인 처리 중 오류가 발생했습니다.';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = '등록되지 않은 이메일 주소입니다.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = '비밀번호가 일치하지 않습니다.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = '유효하지 않은 이메일 주소입니다.';
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = '비활성화된 계정입니다.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      }
+      
+      setLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }

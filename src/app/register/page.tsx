@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { getSession } from 'next-auth/react';
 import { signIn } from 'next-auth/react';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -95,35 +97,42 @@ const RegisterContent = () => {
       
       console.log('[Register] 회원가입 시도:', email);
       
-      // 회원가입 API 호출
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setRegisterError(data.error || '회원가입 처리 중 오류가 발생했습니다.');
-        return;
+      // Firebase Auth로 직접 회원가입
+      if (!auth) {
+        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
       }
-      
-      // 회원가입 성공
-      console.log('[Register] 회원가입 성공:', data);
+
+      // 사용자 생성
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 사용자 프로필 업데이트 (이름 설정)
+      await updateProfile(user, {
+        displayName: name
+      });
+
+      console.log('[Register] Firebase 회원가입 성공:', user.uid);
       
       // 로그인 페이지로 리다이렉트
       router.push('/login?registered=true');
       
     } catch (error: any) {
       console.error('[Register] 회원가입 오류:', error);
-      setRegisterError('회원가입 처리 중 오류가 발생했습니다.');
+      
+      // Firebase Auth 에러 처리
+      let errorMessage = '회원가입 처리 중 오류가 발생했습니다.';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = '이미 사용 중인 이메일 주소입니다.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = '유효하지 않은 이메일 주소입니다.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = '비밀번호가 너무 약합니다. 더 강한 비밀번호를 사용해주세요.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      }
+      
+      setRegisterError(errorMessage);
     } finally {
       setIsLoading(false);
     }
