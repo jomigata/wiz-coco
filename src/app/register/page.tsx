@@ -28,12 +28,7 @@ const RegisterContent = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [name, setName] = useState<string>('');
-  const [errors, setErrors] = useState<{
-    email?: string;
-    password?: string;
-    name?: string;
-    general?: string;
-  }>({});
+  const [registerError, setRegisterError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   
@@ -41,11 +36,16 @@ const RegisterContent = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        console.log('[Register] 로그인 상태 확인 시작');
+        
         const session = await getSession();
         if (session) {
+          console.log('[Register] 이미 로그인된 상태:', session);
           setIsLoggedIn(true);
           router.push('/mypage');
         }
+        
+        console.log('[Register] 인증되지 않은 상태');
       } catch (error) {
         console.error('[Register] 인증 상태 확인 오류:', error);
       }
@@ -56,30 +56,28 @@ const RegisterContent = () => {
   
   // 폼 유효성 검사
   const validateForm = (): boolean => {
-    const newErrors: {
-      email?: string;
-      password?: string;
-      name?: string;
-    } = {};
-
     if (!name.trim()) {
-      newErrors.name = '이름을 입력해주세요.';
+      setRegisterError('이름을 입력해주세요.');
+      return false;
     }
 
     if (!email.trim()) {
-      newErrors.email = '이메일을 입력해주세요.';
+      setRegisterError('이메일을 입력해주세요.');
+      return false;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = '유효한 이메일 주소를 입력해주세요.';
+      setRegisterError('유효한 이메일 주소를 입력해주세요.');
+      return false;
     }
 
     if (!password) {
-      newErrors.password = '비밀번호를 입력해주세요.';
+      setRegisterError('비밀번호를 입력해주세요.');
+      return false;
     } else if (password.length < 6) {
-      newErrors.password = '비밀번호는 6자 이상이어야 합니다.';
+      setRegisterError('비밀번호는 6자 이상이어야 합니다.');
+      return false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
   
   // 회원가입 처리 함수
@@ -93,7 +91,9 @@ const RegisterContent = () => {
     
     try {
       setIsLoading(true);
-      setErrors({});
+      setRegisterError('');
+      
+      console.log('[Register] 회원가입 시도:', email);
       
       // 회원가입 API 호출
       const response = await fetch('/api/auth/register', {
@@ -111,7 +111,7 @@ const RegisterContent = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        setErrors({ general: data.error || '회원가입 처리 중 오류가 발생했습니다.' });
+        setRegisterError(data.error || '회원가입 처리 중 오류가 발생했습니다.');
         return;
       }
       
@@ -123,7 +123,7 @@ const RegisterContent = () => {
       
     } catch (error: any) {
       console.error('[Register] 회원가입 오류:', error);
-      setErrors({ general: '회원가입 처리 중 오류가 발생했습니다.' });
+      setRegisterError('회원가입 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -133,11 +133,12 @@ const RegisterContent = () => {
   const handleSocialRegister = async (provider: string) => {
     try {
       setIsLoading(true);
+      setRegisterError('');
       // 소셜 로그인으로 회원가입 처리 (NextAuth의 signIn 사용)
       await signIn(provider, { callbackUrl: '/mypage' });
     } catch (error) {
       console.error(`[Register] ${provider} 회원가입 오류:`, error);
-      setErrors({ general: `${provider} 회원가입 처리 중 오류가 발생했습니다.` });
+      setRegisterError(`${provider} 회원가입 처리 중 오류가 발생했습니다.`);
     } finally {
       setIsLoading(false);
     }
@@ -168,9 +169,6 @@ const RegisterContent = () => {
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="이름"
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-400">{errors.name}</p>
-                )}
               </div>
               
               <div>
@@ -186,9 +184,6 @@ const RegisterContent = () => {
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="이메일"
                 />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-400">{errors.email}</p>
-                )}
               </div>
               
               <div>
@@ -204,15 +199,12 @@ const RegisterContent = () => {
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="비밀번호 (6자 이상)"
                 />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-400">{errors.password}</p>
-                )}
               </div>
             </div>
 
-            {errors.general && (
+            {registerError && (
               <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg p-3" aria-live="assertive">
-                {errors.general}
+                {registerError}
               </div>
             )}
 
@@ -231,7 +223,7 @@ const RegisterContent = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    처리 중...
+                    가입 중...
                   </div>
                 ) : (
                   "가입하기"
