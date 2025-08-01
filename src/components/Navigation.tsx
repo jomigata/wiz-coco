@@ -269,25 +269,39 @@ export default function Navigation() {
     }
   };
 
-  // 마이페이지 하위 메뉴 항목
+  // 마이페이지 하위 메뉴 항목 (로그인 후 사용자 기능)
   const mypageSubMenuItems = [
-    { name: "기본 정보", href: "/mypage?tab=profile" },
-    { name: "검사 기록", href: "/mypage?tab=records" },
-    { name: "상담 예약", href: "/mypage/counseling" }
+    { name: "📊 대시보드", href: "/mypage?tab=dashboard", description: "내 활동 요약" },
+    { name: "👤 프로필 관리", href: "/mypage?tab=profile", description: "개인정보 수정" },
+    { name: "📋 검사 기록", href: "/mypage?tab=records", description: "심리검사 결과" },
+    { name: "📈 성장 분석", href: "/mypage?tab=analytics", description: "심리 상태 변화" },
+    { name: "💬 상담 예약", href: "/mypage/counseling", description: "전문가 상담" },
+    { name: "📅 상담 일정", href: "/mypage?tab=schedule", description: "예약된 상담" },
+    { name: "⭐ 즐겨찾기", href: "/mypage?tab=favorites", description: "저장한 콘텐츠" },
+    { name: "🔔 알림 설정", href: "/mypage?tab=notifications", description: "알림 관리" },
+    { name: "🔒 보안 설정", href: "/mypage?tab=security", description: "비밀번호 변경" },
+    { name: "💳 결제 내역", href: "/mypage?tab=billing", description: "구독 및 결제" },
+    { name: "❓ 도움말", href: "/mypage?tab=help", description: "사용법 안내" },
   ];
 
   // 관리자 메뉴 항목
   const adminMenuItems = [
-    { name: "대시보드", href: "/admin/dashboard" },
-    { name: "사용자 관리", href: "/admin/users" },
-    { name: "설정", href: "/admin/settings" },
+    { name: "📊 대시보드", href: "/admin/dashboard", description: "전체 통계" },
+    { name: "👥 사용자 관리", href: "/admin/users", description: "회원 관리" },
+    { name: "📋 검사 관리", href: "/admin/tests", description: "검사 결과 관리" },
+    { name: "💬 상담 관리", href: "/admin/counseling", description: "상담 예약 관리" },
+    { name: "📊 분석 리포트", href: "/admin/analytics", description: "데이터 분석" },
+    { name: "⚙️ 시스템 설정", href: "/admin/settings", description: "관리자 설정" },
   ];
 
   // 심리검사 하위 메뉴 항목
   const testSubMenuItems = [
-    { name: "MBTI 검사", href: "/tests" },
-    { name: "이고-오케이 검사", href: "/tests/ego-ok" },
-    { name: "에니어그램", href: "/tests/enneagram" },
+    { name: "🧠 MBTI 검사", href: "/tests/mbti", description: "성격 유형 검사" },
+    { name: "🎯 이고-오케이 검사", href: "/tests/ego-ok", description: "자아 상태 검사" },
+    { name: "🔢 에니어그램", href: "/tests/enneagram", description: "성격 유형 검사" },
+    { name: "😊 우울증 검사", href: "/tests/depression", description: "정신 건강 검사" },
+    { name: "😰 불안증 검사", href: "/tests/anxiety", description: "불안 수준 검사" },
+    { name: "💪 자존감 검사", href: "/tests/self-esteem", description: "자존감 수준 검사" },
   ];
 
   return (
@@ -347,17 +361,18 @@ export default function Navigation() {
               {/* 심리검사 드롭다운 메뉴 */}
               {isTestDropdownOpen && (
                 <div
-                  className="absolute left-0 mt-2 py-2 w-40 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 z-10 animate-fadeIn"
+                  className="absolute left-0 mt-2 py-2 w-56 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 z-10 animate-fadeIn"
                   onMouseLeave={() => setIsTestDropdownOpen(false)}
                 >
                   {testSubMenuItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block px-4 py-2 text-sm text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
+                      className="block px-4 py-3 text-sm text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
                       onClick={() => setIsTestDropdownOpen(false)}
                     >
-                      {item.name}
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-xs text-blue-300 mt-1">{item.description}</div>
                     </Link>
                   ))}
                 </div>
@@ -418,7 +433,7 @@ export default function Navigation() {
                 {/* 마이페이지 드롭다운 */}
                 <div className="relative" ref={dropdownRef}>
                   <Link
-                    href="/mypage?tab=records"
+                    href="/mypage?tab=dashboard"
                     className="px-5 py-2.5 bg-blue-600 rounded-lg text-white font-medium text-sm shadow-md hover:shadow-lg hover:shadow-blue-500/20 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center"
                     onMouseEnter={() => setIsDropdownOpen(true)}
                   >
@@ -440,44 +455,66 @@ export default function Navigation() {
                   {/* 드롭다운 메뉴 */}
                   {isDropdownOpen && (
                     <div
-                      className="absolute right-0 mt-2 py-2 w-40 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 z-10 animate-fadeIn"
+                      className="absolute right-0 mt-2 py-2 w-64 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 z-10 animate-fadeIn max-h-96 overflow-y-auto"
                       onMouseLeave={() => setIsDropdownOpen(false)}
                     >
-                      {mypageSubMenuItems.map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className="block px-4 py-2 text-sm text-blue-200 hover:bg-blue-800 hover:text-white transition-colors text-center"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
+                      {/* 사용자 정보 섹션 */}
+                      <div className="px-4 py-3 border-b border-indigo-700">
+                        <div className="text-white font-medium">
+                          {userName || userEmail.split('@')[0]}님
+                        </div>
+                        <div className="text-blue-300 text-sm">
+                          {userEmail}
+                        </div>
+                        {userRole === "admin" && (
+                          <div className="mt-1">
+                            <span className="px-2 py-0.5 bg-purple-600/30 text-purple-300 rounded-full text-xs">
+                              관리자
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 마이페이지 메뉴 항목 */}
+                      <div className="py-2">
+                        {mypageSubMenuItems.map((item) => (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className="block px-4 py-3 text-sm text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <div className="font-medium">{item.name}</div>
+                            <div className="text-xs text-blue-300 mt-1">{item.description}</div>
+                          </Link>
+                        ))}
+                      </div>
                       
                       {/* 관리자 메뉴 항목 (관리자 권한이 있을 경우에만 표시) */}
                       {userRole === "admin" && (
                         <>
-                          <div className="my-1 border-t border-indigo-700"></div>
-                          <Link
-                            href="/admin/dashboard"
-                            className="block px-4 py-2 text-sm text-purple-300 hover:bg-purple-800/50 hover:text-white transition-colors text-center"
-                            onClick={() => setIsDropdownOpen(false)}
-                          >
+                          <div className="my-2 border-t border-indigo-700"></div>
+                          <div className="px-4 py-2 text-xs font-medium text-purple-300 uppercase tracking-wide">
                             관리자 메뉴
-                          </Link>
-                          <Link
-                            href="/admin/settings"
-                            className="block px-4 py-2 text-sm text-purple-300 hover:bg-purple-800/50 hover:text-white transition-colors text-center"
-                            onClick={() => setIsDropdownOpen(false)}
-                          >
-                            설정
-                          </Link>
+                          </div>
+                          {adminMenuItems.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="block px-4 py-3 text-sm text-purple-300 hover:bg-purple-800/50 hover:text-white transition-colors"
+                              onClick={() => setIsDropdownOpen(false)}
+                            >
+                              <div className="font-medium">{item.name}</div>
+                              <div className="text-xs text-purple-300 mt-1">{item.description}</div>
+                            </Link>
+                          ))}
                         </>
                       )}
                       
-                      <div className="my-1 border-t border-indigo-700"></div>
+                      {/* 로그아웃 버튼 */}
+                      <div className="my-2 border-t border-indigo-700"></div>
                       <div 
-                        className="block px-4 py-2 text-sm text-white bg-red-600/80 hover:bg-red-700/90 rounded-lg mx-2 my-2 transition-colors cursor-pointer text-center flex items-center justify-center"
+                        className="block px-4 py-3 text-sm text-white bg-red-600/80 hover:bg-red-700/90 transition-colors cursor-pointer mx-2 my-2 rounded-lg flex items-center justify-center"
                         onClick={() => {
                           setIsDropdownOpen(false);
                           handleLogout();
@@ -485,7 +522,7 @@ export default function Navigation() {
                       >
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
-                          className="h-4 w-4 mr-1" 
+                          className="h-4 w-4 mr-2" 
                           viewBox="0 0 20 20" 
                           fill="currentColor"
                         >
@@ -570,6 +607,7 @@ export default function Navigation() {
                     </span>
                   )}
                 </p>
+                <p className="text-blue-300 text-sm mt-1">{userEmail}</p>
               </div>
             )}
             
@@ -617,7 +655,8 @@ export default function Navigation() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item.name}
+                    <div>{item.name}</div>
+                    <div className="text-xs text-blue-300 mt-1">{item.description}</div>
                   </Link>
                 ))}
               </div>
@@ -676,7 +715,8 @@ export default function Navigation() {
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {item.name}
+                      <div>{item.name}</div>
+                      <div className="text-xs text-purple-300 mt-1">{item.description}</div>
                     </Link>
                   ))}
                 </div>
@@ -694,7 +734,8 @@ export default function Navigation() {
                     className="block px-4 py-2 text-sm text-blue-200 hover:text-white transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item.name}
+                    <div>{item.name}</div>
+                    <div className="text-xs text-blue-300 mt-1">{item.description}</div>
                   </Link>
                 ))}
               </div>
