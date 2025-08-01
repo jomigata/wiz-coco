@@ -37,9 +37,9 @@ export const authOptions: NextAuthOptions = {
           
           return {
             id: userRecord.uid,
-            email: userRecord.email,
-            name: userRecord.displayName || userRecord.email?.split('@')[0],
-            image: userRecord.photoURL,
+            email: userRecord.email || '', // undefined 방지
+            name: userRecord.displayName || userRecord.email?.split('@')[0] || '',
+            image: userRecord.photoURL || undefined,
           };
         } catch (error) {
           console.error('Credentials 인증 오류:', error);
@@ -69,7 +69,6 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     signIn: '/login',
-    signUp: '/register',
   },
 
   callbacks: {
