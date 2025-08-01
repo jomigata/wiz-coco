@@ -6,6 +6,18 @@ import KakaoProvider from 'next-auth/providers/kakao';
 import NaverProvider from 'next-auth/providers/naver';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
+// 정적 내보내기를 위한 generateStaticParams
+export async function generateStaticParams() {
+  return [
+    { nextauth: ['signin'] },
+    { nextauth: ['signout'] },
+    { nextauth: ['callback'] },
+    { nextauth: ['session'] },
+    { nextauth: ['csrf'] },
+    { nextauth: ['providers'] },
+  ];
+}
+
 // NextAuth 설정
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -146,7 +158,23 @@ export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
 };
 
+// 정적 배포 환경용 핸들러
+const staticHandler = () => {
+  return new Response(JSON.stringify({
+    error: 'Authentication API is not available in static export',
+    message: 'Please use Firebase Authentication directly'
+  }), {
+    status: 501,
+    headers: { 'Content-Type': 'application/json' }
+  });
+};
+
 // NextAuth 핸들러
-const handler = NextAuth(authOptions);
+const nextAuthHandler = NextAuth(authOptions);
+
+// 환경에 따라 적절한 핸들러 선택
+const handler = (process.env.NODE_ENV === 'production' && process.env.SKIP_DB_INIT === 'true') 
+  ? staticHandler 
+  : nextAuthHandler;
 
 export { handler as GET, handler as POST }; 

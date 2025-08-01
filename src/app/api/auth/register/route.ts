@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
+// 정적 내보내기를 위한 generateStaticParams
+export async function generateStaticParams() {
+  return [];
+}
+
 // 회원가입 API
 export async function POST(request: NextRequest) {
+  // 정적 배포 환경에서는 Firebase Authentication 사용 안내
+  if (process.env.NODE_ENV === 'production' && process.env.SKIP_DB_INIT === 'true') {
+    return NextResponse.json({
+      success: false,
+      error: '정적 배포 환경에서는 Firebase Authentication을 직접 사용하여 회원가입을 처리합니다.',
+      message: '클라이언트 사이드에서 Firebase Auth를 사용하세요.',
+      environment: 'static-export'
+    }, { status: 501 });
+  }
+
   try {
     const { email, password, name } = await request.json();
 
