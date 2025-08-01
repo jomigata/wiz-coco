@@ -6,9 +6,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { getSession } from 'next-auth/react';
-import { signIn } from 'next-auth/react';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -33,6 +32,21 @@ const RegisterContent = () => {
   const [registerError, setRegisterError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [firebaseInitialized, setFirebaseInitialized] = useState<boolean>(false);
+  
+  // Firebase 초기화 확인
+  useEffect(() => {
+    const checkFirebase = () => {
+      if (auth) {
+        console.log('[Register] Firebase Auth 초기화 확인됨');
+        setFirebaseInitialized(true);
+      } else {
+        console.log('[Register] Firebase Auth 초기화 대기 중...');
+        setTimeout(checkFirebase, 100);
+      }
+    };
+    checkFirebase();
+  }, []);
   
   // 로그인 상태 확인
   useEffect(() => {
@@ -82,9 +96,15 @@ const RegisterContent = () => {
     return true;
   };
   
-  // 회원가입 처리 함수
+  // 회원가입 처리 함수 (클라이언트 사이드 Firebase Auth 사용)
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Firebase 초기화 확인
+    if (!firebaseInitialized) {
+      setRegisterError('Firebase가 초기화되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
     
     // 폼 유효성 검사
     if (!validateForm()) {
@@ -113,7 +133,8 @@ const RegisterContent = () => {
 
       console.log('[Register] Firebase 회원가입 성공:', user.uid);
       
-      // 로그인 페이지로 리다이렉트
+      // 성공 메시지 표시 후 로그인 페이지로 리다이렉트
+      alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
       router.push('/login?registered=true');
       
     } catch (error: any) {
@@ -130,6 +151,10 @@ const RegisterContent = () => {
         errorMessage = '비밀번호가 너무 약합니다. 더 강한 비밀번호를 사용해주세요.';
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = '이메일/비밀번호 로그인이 비활성화되어 있습니다.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.';
       }
       
       setRegisterError(errorMessage);
@@ -143,11 +168,54 @@ const RegisterContent = () => {
     try {
       setIsLoading(true);
       setRegisterError('');
-      // 소셜 로그인으로 회원가입 처리 (NextAuth의 signIn 사용)
-      await signIn(provider, { callbackUrl: '/mypage' });
-    } catch (error) {
+      
+      if (!auth) {
+        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      }
+
+      let authProvider;
+      
+      switch (provider) {
+        case 'google':
+          authProvider = new GoogleAuthProvider();
+          break;
+        case 'kakao':
+          // Kakao는 Firebase에서 직접 지원하지 않으므로 안내 메시지
+          setRegisterError('Kakao 로그인은 현재 준비 중입니다.');
+          return;
+        case 'naver':
+          // Naver는 Firebase에서 직접 지원하지 않으므로 안내 메시지
+          setRegisterError('Naver 로그인은 현재 준비 중입니다.');
+          return;
+        default:
+          setRegisterError('지원하지 않는 로그인 방식입니다.');
+          return;
+      }
+
+      const result = await signInWithPopup(auth, authProvider);
+      const user = result.user;
+
+      console.log(`[Register] ${provider} 소셜 로그인 성공:`, user.uid);
+      
+      // 마이페이지로 리다이렉트
+      router.push('/mypage');
+      
+    } catch (error: any) {
       console.error(`[Register] ${provider} 회원가입 오류:`, error);
-      setRegisterError(`${provider} 회원가입 처리 중 오류가 발생했습니다.`);
+      
+      let errorMessage = `${provider} 회원가입 처리 중 오류가 발생했습니다.`;
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = '로그인 창이 닫혔습니다. 다시 시도해주세요.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = '팝업이 차단되었습니다. 팝업 차단을 해제해주세요.';
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = '로그인이 취소되었습니다.';
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = '이미 다른 방법으로 가입된 계정입니다.';
+      }
+      
+      setRegisterError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -163,6 +231,13 @@ const RegisterContent = () => {
             <p className="text-emerald-400">심리케어 서비스 이용을 위한 계정을 만들어보세요.</p>
           </div>
           
+          {!firebaseInitialized && (
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <p className="text-emerald-300 text-sm">Firebase 초기화 중...</p>
+            </div>
+          )}
+          
           <form className="mt-8 space-y-6" onSubmit={handleRegister}>
             <div className="space-y-4">
               <div>
@@ -177,6 +252,7 @@ const RegisterContent = () => {
                   onChange={(e) => setName(e.target.value)}
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="이름"
+                  disabled={!firebaseInitialized || isLoading}
                 />
               </div>
               
@@ -192,6 +268,7 @@ const RegisterContent = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="이메일"
+                  disabled={!firebaseInitialized || isLoading}
                 />
               </div>
               
@@ -207,6 +284,7 @@ const RegisterContent = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="비밀번호 (6자 이상)"
+                  disabled={!firebaseInitialized || isLoading}
                 />
               </div>
             </div>
@@ -220,10 +298,10 @@ const RegisterContent = () => {
             <div>
               <motion.button
                 type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
+                disabled={!firebaseInitialized || isLoading}
                 aria-label="회원가입 제출"
               >
                 {isLoading ? (
@@ -255,30 +333,30 @@ const RegisterContent = () => {
             <div className="grid grid-cols-3 gap-3">
               <motion.button
                 onClick={() => handleSocialRegister('google')}
-                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
+                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                disabled={isLoading}
+                disabled={!firebaseInitialized || isLoading}
               >
                 Google
               </motion.button>
               
               <motion.button
                 onClick={() => handleSocialRegister('kakao')}
-                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
+                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                disabled={isLoading}
+                disabled={!firebaseInitialized || isLoading}
               >
                 Kakao
               </motion.button>
               
               <motion.button
                 onClick={() => handleSocialRegister('naver')}
-                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
+                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                disabled={isLoading}
+                disabled={!firebaseInitialized || isLoading}
               >
                 Naver
               </motion.button>
