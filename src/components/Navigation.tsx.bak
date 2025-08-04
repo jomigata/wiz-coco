@@ -1,0 +1,450 @@
+"use client";
+import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+
+export default function Navigation() {
+  const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState("/");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isTestDropdownOpen, setIsTestDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const testDropdownRef = useRef<HTMLDivElement>(null);
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    const updateLoginStatus = () => {
+      if (typeof window !== "undefined") {
+        const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+        setIsLoggedIn(loggedIn);
+
+        if (loggedIn) {
+          try {
+            const user = JSON.parse(localStorage.getItem("user") || "{}");
+            setUserEmail(user.email || user.id || "");
+          } catch (e) {
+            console.error("사용자 정보 파싱 오류:", e);
+          }
+        }
+      }
+    };
+
+    // 초기 상태 설정
+    updateLoginStatus();
+
+    // 로그인 상태 변경 이벤트 리스너 등록
+    window.addEventListener("login-status-changed", updateLoginStatus);
+
+    // 현재 경로에 따라 active 항목 설정
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      setActiveItem(path);
+    }
+
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => {
+      window.removeEventListener("login-status-changed", updateLoginStatus);
+    };
+  }, []);
+
+  // 마이페이지 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+
+      if (
+        testDropdownRef.current &&
+        !testDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTestDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  // 로그아웃 처리 함수
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      setUserEmail("");
+      router.push("/");
+    }
+  };
+
+  // 네비게이션 링크 클릭 핸들러
+  const handleNavLinkClick = (href: string, e: React.MouseEvent) => {
+    // 일반 네비게이션 링크는 기본 동작 유지
+    setActiveItem(href);
+  };
+
+  // 인증 관련 링크 클릭 핸들러 (로그인/회원가입)
+  const handleAuthLinkClick = (href: string, e: React.MouseEvent) => {
+    e.preventDefault(); // 기본 동작 방지
+    router.push(href); // 프로그래밍 방식으로 라우팅
+  };
+
+  // 마이페이지 하위 메뉴 항목
+  const mypageSubMenuItems = [
+    { name: "기본 정보", href: "/mypage?tab=info" },
+    { name: "검사 기록", href: "/mypage?tab=tests" },
+    { name: "상담 예약", href: "/mypage/counseling" },
+    { name: "설정", href: "/mypage/settings" },
+  ];
+
+  // 심리검사 하위 메뉴 항목
+  const testSubMenuItems = [
+    { name: "MBTI 검사", href: "/tests" },
+    { name: "이고-오케이 검사", href: "/tests/ego-ok" },
+    { name: "에니어그램", href: "/tests/enneagram" },
+  ];
+
+  return (
+    <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-indigo-800/50 py-4 shadow-sm">
+      <div className="container max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
+            심
+          </div>
+          <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300">
+            심리케어
+          </span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-2">
+          <div className="flex space-x-1">
+            <Link
+              href="/"
+              className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
+                activeItem === "/"
+                  ? "text-white bg-blue-600"
+                  : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+              }`}
+              onClick={(e) => handleNavLinkClick("/", e)}
+            >
+              홈
+            </Link>
+            
+            {/* 심리검사 드롭다운 메뉴 */}
+            <div className="relative" ref={testDropdownRef}>
+              <Link
+                href="/tests"
+                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                  activeItem === "/tests" || activeItem.startsWith("/tests/")
+                    ? "text-white bg-blue-600"
+                    : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                }`}
+                onClick={(e) => handleNavLinkClick("/tests", e)}
+                onMouseEnter={() => setIsTestDropdownOpen(true)}
+              >
+                심리검사
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className={`w-4 h-4 ml-1 transition-transform duration-200 ${isTestDropdownOpen ? "rotate-180" : ""}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </Link>
+
+              {/* 심리검사 드롭다운 메뉴 */}
+              {isTestDropdownOpen && (
+                <div
+                  className="absolute left-0 mt-2 py-2 w-48 bg-indigo-900 rounded-lg shadow-xl border border-indigo-800 z-10 animate-fadeIn"
+                  onMouseLeave={() => setIsTestDropdownOpen(false)}
+                >
+                  {testSubMenuItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="block px-4 py-2 text-sm text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
+                      onClick={() => setIsTestDropdownOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {[
+              { name: "상담 프로그램", href: "/counseling" },
+              { name: "전문가 소개", href: "/experts" },
+              { name: "고객 후기", href: "/reviews" },
+            ].map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
+                  activeItem === item.href
+                    ? "text-white bg-blue-600"
+                    : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                }`}
+                onClick={(e) => handleNavLinkClick(item.href, e)}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4 ml-6 pl-6 border-l border-indigo-800">
+            {isLoggedIn ? (
+              <>
+                <span className="px-3 py-2 text-sm font-medium text-blue-200">
+                  ID : {userEmail}
+                </span>
+
+                {/* 마이페이지 드롭다운 */}
+                <div className="relative" ref={dropdownRef}>
+                  <Link
+                    href="/mypage?tab=info"
+                    className="px-5 py-2.5 bg-blue-600 rounded-lg text-white font-medium text-sm shadow-md hover:shadow-lg hover:shadow-blue-500/20 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center"
+                    onMouseEnter={() => setIsDropdownOpen(true)}
+                  >
+                    마이페이지
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className={`w-4 h-4 ml-1 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+
+                  {/* 드롭다운 메뉴 */}
+                  {isDropdownOpen && (
+                    <div
+                      className="absolute right-0 mt-2 py-2 w-48 bg-indigo-900 rounded-lg shadow-xl border border-indigo-800 z-10 animate-fadeIn"
+                      onMouseLeave={() => setIsDropdownOpen(false)}
+                    >
+                      {mypageSubMenuItems.map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className="block px-4 py-2 text-sm text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="px-5 py-2.5 rounded-lg font-medium text-sm text-blue-200 hover:text-red-400 hover:bg-red-900/30 transition-all duration-300"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-5 py-2.5 rounded-lg font-medium text-sm text-blue-200 hover:text-white hover:bg-blue-800/50 transition-all duration-300"
+                  onClick={(e) => handleAuthLinkClick("/login", e)}
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-5 py-2.5 bg-blue-600 rounded-lg text-white font-medium text-sm shadow-md hover:shadow-lg hover:shadow-blue-500/20 transform hover:-translate-y-0.5 transition-all duration-300"
+                  onClick={(e) => handleAuthLinkClick("/register", e)}
+                >
+                  회원가입
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden p-2 rounded-lg focus:outline-none"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-6 h-6 text-white"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d={
+                isMobileMenuOpen
+                  ? "M6 18L18 6M6 6l12 12"
+                  : "M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"
+              }
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Navigation */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-indigo-900 border-t border-indigo-800/50 shadow-xl animate-fadeIn">
+          <div className="container py-6 px-6 space-y-3">
+            <Link
+              href="/"
+              className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                activeItem === "/"
+                  ? "bg-blue-600 text-white"
+                  : "text-blue-200 hover:bg-blue-800/50 hover:text-white"
+              }`}
+              onClick={(e) => {
+                setIsMobileMenuOpen(false);
+                handleNavLinkClick("/", e);
+              }}
+            >
+              홈
+            </Link>
+            
+            {/* 모바일 심리검사 메뉴 */}
+            <div>
+              <Link
+                href="/tests"
+                className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  activeItem === "/tests"
+                    ? "bg-blue-600 text-white"
+                    : "text-blue-200 hover:bg-blue-800/50 hover:text-white"
+                }`}
+                onClick={(e) => {
+                  handleNavLinkClick("/tests", e);
+                }}
+              >
+                심리검사
+              </Link>
+              
+              {/* 모바일에서는 항상 하위 메뉴 표시 */}
+              <div className="ml-4 mt-2 space-y-1 border-l-2 border-blue-600 pl-4">
+                {testSubMenuItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`block px-4 py-2 text-sm transition-colors ${
+                      activeItem === item.href
+                        ? "text-white font-medium"
+                        : "text-blue-200 hover:text-white"
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            
+            {[
+              { name: "상담 프로그램", href: "/counseling" },
+              { name: "전문가 소개", href: "/experts" },
+              { name: "고객 후기", href: "/reviews" },
+            ].map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  activeItem === item.href
+                    ? "bg-blue-600 text-white"
+                    : "text-blue-200 hover:bg-blue-800/50 hover:text-white"
+                }`}
+                onClick={(e) => {
+                  setIsMobileMenuOpen(false);
+                  handleNavLinkClick(item.href, e);
+                }}
+              >
+                {item.name}
+              </Link>
+            ))}
+
+            {/* 로그인 상태일 때 마이페이지 하위 메뉴 표시 */}
+            {isLoggedIn && (
+              <div className="ml-4 mt-2 space-y-1 border-l-2 border-blue-600 pl-4">
+                <div className="text-white font-medium py-2">마이페이지</div>
+                {mypageSubMenuItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="block px-4 py-2 text-sm text-blue-200 hover:text-white transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* 모바일에서 로그인/로그아웃 버튼 */}
+            <div className="mt-6 pt-6 border-t border-indigo-800">
+              {isLoggedIn ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-blue-200 px-4">{userEmail} 님</p>
+                  <button
+                    onClick={(e) => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full px-4 py-3 rounded-lg text-sm font-medium bg-red-900/30 text-red-400 hover:bg-red-900/50 transition-all duration-300"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-3">
+                  <Link
+                    href="/login"
+                    className="px-4 py-3 rounded-lg text-center text-sm font-medium text-white bg-blue-800/50 hover:bg-blue-700 transition-all duration-300"
+                    onClick={(e) => {
+                      setIsMobileMenuOpen(false);
+                      handleAuthLinkClick("/login", e);
+                    }}
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-4 py-3 rounded-lg text-center text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300"
+                    onClick={(e) => {
+                      setIsMobileMenuOpen(false);
+                      handleAuthLinkClick("/register", e);
+                    }}
+                  >
+                    회원가입
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
