@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { getSession, signIn } from 'next-auth/react';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -91,37 +93,47 @@ const RegisterContent = () => {
     setRegisterError('');
     
     try {
-      console.log('[Register] 회원가입 시도:', email);
+      console.log('[Register] Firebase 회원가입 시도:', email);
       
-      // 회원가입 API 호출
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setRegisterError(data.error || '회원가입 처리 중 오류가 발생했습니다.');
-        return;
+      if (!auth) {
+        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
       }
       
-      // 회원가입 성공
-      console.log('[Register] 회원가입 성공:', data);
+      // Firebase Authentication으로 회원가입
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // 사용자 프로필 업데이트 (이름 설정)
+      await updateProfile(user, {
+        displayName: name
+      });
+      
+      console.log('[Register] Firebase 회원가입 성공:', {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName
+      });
       
       // 로그인 페이지로 리다이렉트
       router.push('/login?registered=true');
       
     } catch (error: any) {
-      console.error('[Register] 회원가입 오류:', error);
-      setRegisterError('회원가입 처리 중 오류가 발생했습니다.');
+      console.error('[Register] Firebase 회원가입 오류:', error);
+      
+      // Firebase 에러 메시지를 한국어로 변환
+      let errorMessage = '회원가입 처리 중 오류가 발생했습니다.';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = '이미 사용 중인 이메일 주소입니다.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = '비밀번호가 너무 약합니다. 더 강한 비밀번호를 사용해주세요.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = '유효하지 않은 이메일 주소입니다.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = '이메일/비밀번호 로그인이 비활성화되어 있습니다.';
+      }
+      
+      setRegisterError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -131,10 +143,40 @@ const RegisterContent = () => {
   const handleSocialLogin = async (provider: string) => {
     try {
       setIsLoading(true);
-      await signIn(provider, { callbackUrl: '/mypage' });
-    } catch (error) {
+      setRegisterError('');
+      
+      if (!auth) {
+        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      }
+      
+      if (provider === 'google') {
+        const googleProvider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, googleProvider);
+        
+        console.log('[Register] Google 소셜 로그인 성공:', {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName
+        });
+        
+        // 마이페이지로 리다이렉트
+        router.push('/mypage');
+      } else {
+        // Kakao, Naver는 NextAuth를 사용 (Firebase 미지원)
+        await signIn(provider, { callbackUrl: '/mypage' });
+      }
+    } catch (error: any) {
       console.error(`[Register] ${provider} 로그인 오류:`, error);
-      setRegisterError(`${provider} 로그인 처리 중 오류가 발생했습니다.`);
+      
+      let errorMessage = `${provider} 로그인 처리 중 오류가 발생했습니다.`;
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = '로그인 창이 사용자에 의해 닫혔습니다.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = '팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.';
+      }
+      
+      setRegisterError(errorMessage);
     } finally {
       setIsLoading(false);
     }
