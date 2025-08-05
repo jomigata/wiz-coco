@@ -107,3 +107,4 @@ firebase-debug.*.log
 !tailwind.config.js
 !postcss.config.js
 !jest.config.js 
+node_modules
