@@ -1,0 +1,77 @@
+{
+  "prefixes": [
+    {
+      "code": "MP",
+      "name": "전문가용 MBTI 검사",
+      "description": "전문가 심리상담사를 위한 MBTI 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "MA",
+      "name": "개인용 MBTI 검사",
+      "description": "일반 개인 사용자를 위한 MBTI 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "MG",
+      "name": "그룹형 MBTI 검사",
+      "description": "기업 및 단체를 위한 MBTI 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "EP",
+      "name": "전문가용 이고-오케이 검사",
+      "description": "전문가를 위한 이고-오케이 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "EA",
+      "name": "개인용 이고-오케이 검사",
+      "description": "일반 개인용 이고-오케이 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "EG",
+      "name": "그룹형 이고-오케이 검사",
+      "description": "단체용 이고-오케이 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "AP",
+      "name": "전문가용 애니어그램 검사",
+      "description": "전문가를 위한 애니어그램 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "AA",
+      "name": "개인용 애니어그램 검사",
+      "description": "일반 개인용 애니어그램 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    },
+    {
+      "code": "AG",
+      "name": "그룹형 애니어그램 검사",
+      "description": "단체용 애니어그램 검사",
+      "count": 0,
+      "lastGenerated": null,
+      "active": true
+    }
+  ],
+  "lastUpdated": "2025-04-29T23:43:56.383Z"
+}

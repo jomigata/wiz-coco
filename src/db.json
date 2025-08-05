@@ -1,0 +1,76 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "홍길동",
+      "email": "user@example.com",
+      "createdAt": "2024-05-20T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "김철수",
+      "email": "kim@example.com",
+      "createdAt": "2024-05-21T11:30:00Z"
+    }
+  ],
+  "tests": [
+    {
+      "id": "1",
+      "code": "MB245-ABCDE",
+      "testType": "MBTI-PRO",
+      "timestamp": "2024-05-22T09:15:00Z",
+      "userId": "1",
+      "userData": {
+        "name": "홍길동",
+        "birthYear": "1990",
+        "gender": "남성",
+        "phone": "010-1234-5678"
+      },
+      "mbtiType": "ISTJ"
+    },
+    {
+      "id": "2",
+      "code": "MB245-FGHIJ",
+      "testType": "MBTI-PRO",
+      "timestamp": "2024-05-22T15:30:00Z",
+      "userId": "1",
+      "userData": {
+        "name": "홍길동",
+        "birthYear": "1990",
+        "gender": "남성",
+        "phone": "010-1234-5678"
+      },
+      "mbtiType": "ENFP"
+    },
+    {
+      "id": "3",
+      "code": "MB245-KLMNO",
+      "testType": "MBTI-AGE",
+      "timestamp": "2024-05-23T11:45:00Z",
+      "userId": "2",
+      "userData": {
+        "name": "김철수",
+        "birthYear": "1985",
+        "gender": "남성",
+        "phone": "010-9876-5432"
+      },
+      "mbtiType": "INTJ"
+    }
+  ],
+  "servers": [
+    {
+      "id": "main",
+      "name": "메인 서버",
+      "hostname": "localhost",
+      "status": "online",
+      "lastUpdate": "2024-05-24T12:30:00Z"
+    },
+    {
+      "id": "backup",
+      "name": "백업 서버",
+      "hostname": "backup.example.com",
+      "status": "online",
+      "lastUpdate": "2024-05-24T12:30:00Z"
+    }
+  ]
+} 
