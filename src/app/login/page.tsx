@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
-import { signIn, getSession } from 'next-auth/react';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 // 로딩 컴포넌트
 const LoadingLogin = () => (
@@ -25,6 +27,7 @@ const LoadingLogin = () => (
 const LoginContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading, signIn: firebaseSignIn } = useFirebaseAuth();
   const registered = searchParams.get('registered') === 'true';
   const redirectUrl = searchParams.get('redirect') || '/';
   const [email, setEmail] = useState<string>('');
@@ -32,36 +35,22 @@ const LoginContent = () => {
   const [loginError, setLoginError] = useState<string>('');
   const [registrationSuccess, setRegistrationSuccess] = useState<boolean>(registered);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   
-  // 로그인 상태 체크
+  // Firebase 인증 상태 확인
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        console.log('[Login] 로그인 상태 확인 시작');
-        
-        const session = await getSession();
-        if (session) {
-          console.log('[Login] 이미 로그인된 상태:', session);
-          setIsLoggedIn(true);
-          
-          // 리다이렉트 처리
-          setTimeout(() => {
-            router.replace(redirectUrl);
-          }, 100);
-          return;
-        }
-        
-        console.log('[Login] 인증되지 않은 상태');
-      } catch (error) {
-        console.error('[Login] 인증 상태 확인 오류:', error);
-      }
-    };
+    console.log('[Login] Firebase 인증 상태:', { user, loading });
     
-    checkAuthStatus();
-  }, [router, redirectUrl]);
+    if (!loading && user) {
+      console.log('[Login] 이미 로그인된 상태:', user);
+      
+      // 리다이렉트 처리
+      setTimeout(() => {
+        router.replace(redirectUrl);
+      }, 100);
+    }
+  }, [user, loading, router, redirectUrl]);
   
-  // 로그인 처리 함수
+  // Firebase 로그인 처리 함수
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -83,28 +72,56 @@ const LoginContent = () => {
     setLoginError('');
     
     try {
-      console.log('[Login] 로그인 시도:', email);
+      console.log('[Login] Firebase 로그인 시도:', email);
       
-      // NextAuth로 로그인 시도
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+      // Firebase 로그인 시도
+      const result = await firebaseSignIn(email, password);
       
-      if (result?.error) {
-        // 에러 메시지 처리
+      if (result.success) {
+        console.log('[Login] Firebase 로그인 성공:', result.user);
+        
+        // 리다이렉트 처리
+        setTimeout(() => {
+          router.replace(redirectUrl);
+        }, 100);
+      } else {
+        // Firebase 에러 코드에 따른 한국어 메시지
         let errorMsg = '로그인 처리 중 오류가 발생했습니다.';
-        if (result.error.includes('CredentialsSignin')) {
-          errorMsg = '이메일 또는 비밀번호가 일치하지 않습니다.';
+        if (result.error?.includes('user-not-found')) {
+          errorMsg = '등록되지 않은 이메일입니다.';
+        } else if (result.error?.includes('wrong-password')) {
+          errorMsg = '비밀번호가 올바르지 않습니다.';
+        } else if (result.error?.includes('invalid-email')) {
+          errorMsg = '올바르지 않은 이메일 형식입니다.';
+        } else if (result.error?.includes('user-disabled')) {
+          errorMsg = '비활성화된 계정입니다.';
+        } else if (result.error?.includes('too-many-requests')) {
+          errorMsg = '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.';
         }
         setLoginError(errorMsg);
-        return;
       }
+    } catch (error: any) {
+      console.error('[Login] Firebase 로그인 오류:', error);
+      setLoginError('로그인 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Firebase 구글 로그인 처리
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      setLoginError('');
       
-      if (result?.ok) {
-        console.log('[Login] 로그인 성공');
-        setIsLoggedIn(true);
+      console.log('[Login] Google 로그인 시도');
+      
+      // Firebase Google 로그인
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      if (result.user) {
+        console.log('[Login] Google 로그인 성공:', result.user);
         
         // 리다이렉트 처리
         setTimeout(() => {
@@ -112,21 +129,15 @@ const LoginContent = () => {
         }, 100);
       }
     } catch (error: any) {
-      console.error('[Login] 로그인 오류:', error);
-      setLoginError('로그인 처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 소셜 로그인 처리
-  const handleSocialLogin = async (provider: string) => {
-    try {
-      setIsLoading(true);
-      await signIn(provider, { callbackUrl: redirectUrl });
-    } catch (error) {
-      console.error(`[Login] ${provider} 로그인 오류:`, error);
-      setLoginError(`${provider} 로그인 처리 중 오류가 발생했습니다.`);
+      console.error('[Login] Google 로그인 오류:', error);
+      
+      let errorMsg = 'Google 로그인 처리 중 오류가 발생했습니다.';
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMsg = '로그인이 취소되었습니다.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMsg = '팝업이 차단되었습니다. 팝업을 허용해주세요.';
+      }
+      setLoginError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +234,7 @@ const LoginContent = () => {
             
             <div className="grid grid-cols-3 gap-3">
               <motion.button
-                onClick={() => handleSocialLogin('google')}
+                onClick={handleGoogleLogin}
                 className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

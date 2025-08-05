@@ -2,16 +2,14 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { setAuthState, getAuthState, removeItem } from '@/utils/localStorageManager';
 
 export default function Navigation() {
   const router = useRouter();
+  const { user, loading, logout } = useFirebaseAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userRole, setUserRole] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTestDropdownOpen, setIsTestDropdownOpen] = useState(false);
   const [isCounselingDropdownOpen, setIsCounselingDropdownOpen] = useState(false);
@@ -21,128 +19,29 @@ export default function Navigation() {
   const counselingDropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // 인증 상태 확인 함수
-  useEffect(() => {
-    console.log('Navigation 컴포넌트 - 로그인 상태 확인 시작');
-    
-    const checkAuthStatus = async () => {
-      try {
-        // 로컬 임시 인증 상태 확인 (빠른 응답)
-        const authState = getAuthState();
-        if (authState && authState.isLoggedIn && authState.userBasicInfo) {
-          console.log('로컬 임시 인증 상태 확인됨');
-          setIsLoggedIn(true);
-          setUserEmail(authState.userBasicInfo.email || authState.userBasicInfo.id || "");
-          setUserName(authState.userBasicInfo.name || "");
-          setUserRole(authState.userBasicInfo.role || "user");
-          return; // 로컬 상태가 있으면 서버 호출 없이 종료
-        }
-        
-        // 로컬 임시 인증 상태가 없는 경우에만 서버 API 호출
-        console.log('로컬 임시 인증 상태 없음 - 서버 API 확인');
-        try {
-          console.log('서버 API 인증 상태 확인 요청');
-          const response = await fetch('/api/simple-login', {
-            method: 'GET',
-            credentials: 'include',
-            cache: 'no-store'
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log('서버 API 인증 상태 응답:', data);
-            
-            if (data.isLoggedIn && data.user) {
-              console.log('서버 API에서 로그인 상태 확인됨:', data.user);
-              setIsLoggedIn(true);
-              setUserEmail(data.user.email || data.user.id || "");
-              setUserName(data.user.name || "");
-              setUserRole(data.user.role || "user");
-              
-              // 임시 인증 상태 저장
-              setAuthState(true, data.user);
-              return;
-            }
-          }
-        } catch (apiError) {
-          console.warn("서버 API 호출 오류:", apiError);
-        }
-        
-        // 모든 인증 확인 실패 시 로그아웃 상태로 설정
-        setIsLoggedIn(false);
-        setUserEmail("");
-        setUserName("");
-        setUserRole("");
-      } catch (error) {
-        console.error("인증 상태 확인 오류:", error);
-      }
-    };
+  // Firebase 사용자 정보를 기반으로 한 상태 계산
+  const isLoggedIn = !!user && !loading;
+  const userEmail = user?.email || "";
+  const userName = user?.displayName || "";
+  const userRole = user?.role || "user";
 
-    // 초기 상태 설정 (한 번만)
-    checkAuthStatus();
+  // Firebase 인증 상태 디버깅 및 현재 경로 설정
+  useEffect(() => {
+    console.log('Navigation 컴포넌트 - Firebase 인증 상태:', {
+      user: user,
+      loading: loading,
+      isLoggedIn: isLoggedIn,
+      userEmail: userEmail,
+      userName: userName,
+      userRole: userRole
+    });
 
     // 현재 경로에 따라 active 항목 설정
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
       setActiveItem(path);
-      
-      // 로그인 상태 변경 이벤트 리스너 등록
-      const handleLoginStatusChange = (event: Event | CustomEvent) => {
-        console.log('로그인 상태 변경 이벤트 감지', event);
-        
-        // CustomEvent인 경우 detail 속성에서 정보 활용
-        if (event instanceof CustomEvent && event.detail) {
-          console.log('커스텀 이벤트 감지:', event.detail);
-          const { isLoggedIn, user } = event.detail;
-          
-          // 로그아웃 이벤트인 경우
-          if (isLoggedIn === false) {
-            console.log('로그아웃 이벤트 감지됨');
-            setIsLoggedIn(false);
-            setUserEmail("");
-            setUserName("");
-            setUserRole("");
-            return;
-          }
-          
-          // 로그인 이벤트인 경우
-          if (isLoggedIn && user) {
-            console.log('커스텀 이벤트에서 사용자 정보 추출:', user);
-            setIsLoggedIn(true);
-            setUserEmail(user.email || user.id || "");
-            setUserName(user.name || "");
-            setUserRole(user.role || "user");
-            console.log('커스텀 이벤트로부터 로그인 상태 업데이트 완료');
-            return;
-          }
-        }
-        
-        // 일반 이벤트인 경우에는 API 호출하지 않고 무시
-        console.log('일반 이벤트 무시됨');
-      };
-
-      // 사용자 이름 업데이트 이벤트 리스너
-      const handleUserNameUpdate = (event: Event | CustomEvent) => {
-        console.log('사용자 이름 업데이트 이벤트 감지');
-        
-        if (event instanceof CustomEvent && event.detail) {
-          const { name } = event.detail;
-          if (name) {
-            setUserName(name);
-            console.log('네비게이션 컴포넌트에서 사용자 이름 업데이트됨:', name);
-          }
-        }
-      };
-      
-      window.addEventListener('login-status-changed', handleLoginStatusChange);
-      window.addEventListener('user-name-updated', handleUserNameUpdate);
-      
-      return () => {
-        window.removeEventListener('login-status-changed', handleLoginStatusChange);
-        window.removeEventListener('user-name-updated', handleUserNameUpdate);
-      };
     }
-  }, []); // 빈 의존성 배열로 한 번만 실행
+  }, [user, loading, isLoggedIn, userEmail, userName, userRole]);
 
   // 드롭다운 외부 클릭 감지
   useEffect(() => {
@@ -182,90 +81,57 @@ export default function Navigation() {
     };
   }, []);
 
-  // 로그아웃 처리 함수
+  // Firebase 로그아웃 처리 함수
   const handleLogout = async () => {
     try {
-      console.log('로그아웃 시작');
+      console.log('Firebase 로그아웃 시작');
       
-      // 임시 인증 상태 제거
-      removeItem('auth-state');
+      // Firebase 로그아웃 실행
+      const result = await logout();
       
-      // 다른 인증 정보 제거
-      removeItem('user');
-      removeItem('userToken');
-      
-      // 쿠키 삭제를 위해 만료일을 과거로 설정
-      document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      
-      // 상태 업데이트
-      setIsLoggedIn(false);
-      setUserEmail("");
-      setUserName("");
-      setUserRole("");
-      
-      // 다른 컴포넌트에 로그아웃 알림 (CustomEvent 사용)
-      const logoutEvent = new CustomEvent('login-status-changed', {
-        detail: {
-          isLoggedIn: false,
-          timestamp: Date.now()
-        },
-        bubbles: true,
-        cancelable: true
-      });
-      window.dispatchEvent(logoutEvent);
-      console.log('로그아웃 이벤트 발생됨');
-      
-      // 서버에 로그아웃 요청
-      try {
-        const response = await fetch('/api/auth/logout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+      if (result.success) {
+        console.log('Firebase 로그아웃 성공');
         
-        if (response.ok) {
-          console.log('서버 로그아웃 성공');
-        } else {
-          console.warn('서버 로그아웃 요청은 실패했지만, 로컬 로그아웃은 완료됨');
-        }
-      } catch (apiError) {
-        console.error('서버 로그아웃 요청 오류:', apiError);
+        // 로컬 스토리지 정리 (기존 인증 정보 제거 - 호환성 유지)
+        removeItem('auth-state');
+        removeItem('user');
+        removeItem('userToken');
+        removeItem('oktest-auth-state');
+        
+        // 쿠키 정리
+        document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // 로그아웃 이벤트 발생 (다른 컴포넌트 호환성)
+        const logoutEvent = new CustomEvent('login-status-changed', {
+          detail: {
+            isLoggedIn: false,
+            timestamp: Date.now()
+          },
+          bubbles: true,
+          cancelable: true
+        });
+        window.dispatchEvent(logoutEvent);
+        console.log('로그아웃 이벤트 발생됨');
+        
+        // 홈페이지로 이동
+        console.log('홈으로 리다이렉트');
+        router.push('/');
+      } else {
+        console.error('Firebase 로그아웃 실패:', result.error);
+        // 실패해도 로컬 정리는 수행
+        removeItem('auth-state');
+        removeItem('user');
+        removeItem('userToken');
+        router.push('/');
       }
-      
-      // 추가 안전장치: 짧은 대기 후 임시 인증 상태 재확인
-      setTimeout(() => {
-        const authState = getAuthState();
-        if (authState && authState.isLoggedIn) {
-          console.log('로그아웃 후에도 임시 인증 상태가 유지됨 - 강제 로그아웃 실행');
-          removeItem('oktest-auth-state');
-          setIsLoggedIn(false);
-        }
-      }, 100);
-      
-      // 홈으로 리다이렉트
-      console.log('홈으로 리다이렉트');
-      router.push("/");
     } catch (error) {
-      console.error("로그아웃 처리 오류:", error);
-      
-      // 오류가 발생해도 로컬에서는 로그아웃 처리
+      console.error('로그아웃 오류:', error);
+      // 오류 발생 시에도 로컬 정리 및 리다이렉트
+      removeItem('auth-state');
       removeItem('user');
       removeItem('userToken');
-      
-      // 쿠키 삭제
-      document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      
-      setIsLoggedIn(false);
-      setUserEmail("");
-      setUserName("");
-      setUserRole("");
-      
-      // 홈으로 리다이렉트
-      router.push("/");
+      router.push('/');
     }
   };
 
