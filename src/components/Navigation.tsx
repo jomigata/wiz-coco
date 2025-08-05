@@ -676,140 +676,293 @@ export default function Navigation() {
             <div className="flex items-center gap-4 ml-6 pl-6 border-l border-indigo-800">
               {isLoggedIn ? (
                 <>
-                  {/* 사용자 정보 표시 - 개선된 디자인 */}
-                  <div className="flex items-center gap-3 bg-gradient-to-r from-blue-900/30 to-blue-800/30 rounded-lg px-3 py-2 backdrop-blur-sm border border-blue-700/30">
+                  {/* 사용자 정보 표시 - 최신 디자인 */}
+                  <div className="group flex items-center gap-4 bg-gradient-to-r from-emerald-900/40 to-blue-900/40 rounded-xl px-4 py-3 backdrop-blur-md border border-emerald-600/30 shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer"
+                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
                     <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
                         {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-3 border-white rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <div className="text-sm font-medium text-white flex items-center gap-2">
-                        {userName || userEmail.split('@')[0]}
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-white flex items-center gap-2 truncate">
+                        <span className="truncate">{userName || "사용자"}</span>
                         {userRole === "admin" && (
-                          <span className="px-2 py-0.5 text-xs font-bold bg-purple-500 text-white rounded-full">
-                            ADMIN
+                          <span className="flex-shrink-0 px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full animate-pulse">
+                            ⚡ ADMIN
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-blue-200 flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        온라인
+                      <div className="text-xs text-emerald-300 flex items-center gap-1 mt-0.5">
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-ping"></span>
+                        <span className="truncate">{userEmail}</span>
                       </div>
+                      <div className="text-xs text-blue-300 mt-1 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                        <span>로그인 활성</span>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <svg className={`w-5 h-5 text-emerald-300 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""} group-hover:text-white`} 
+                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
                   </div>
 
-                  {/* 마이페이지 드롭다운 */}
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg text-white font-medium text-sm shadow-md hover:shadow-lg hover:shadow-blue-500/20 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center group"
-                      onMouseEnter={() => setIsDropdownOpen(true)}
-                    >
-                      <span className="mr-2">👤</span>
-                      <span>마이페이지</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className={`w-4 h-4 ml-2 transition-transform duration-200 group-hover:scale-110 ${isDropdownOpen ? "rotate-180" : ""}`}
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
+                  {/* 빠른 접근 메뉴 */}
+                  <div className="flex items-center gap-3">
+                    {/* 알림 버튼 */}
+                    <div className="relative">
+                      <button className="p-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl text-amber-300 hover:text-white hover:bg-gradient-to-r hover:from-amber-500/40 hover:to-orange-500/40 transition-all duration-300 group">
+                        <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                        </svg>
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">3</span>
+                      </button>
+                    </div>
 
-                    {/* 마이페이지 메가 메뉴 */}
+                    {/* 즐겨찾기 버튼 */}
+                    <Link href="/mypage?tab=favorites" className="p-3 bg-gradient-to-r from-pink-500/20 to-rose-500/20 rounded-xl text-pink-300 hover:text-white hover:bg-gradient-to-r hover:from-pink-500/40 hover:to-rose-500/40 transition-all duration-300 group">
+                      <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
+                      </svg>
+                    </Link>
+
+                    {/* 설정 버튼 */}
+                    <Link href="/mypage/settings" className="p-3 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl text-indigo-300 hover:text-white hover:bg-gradient-to-r hover:from-indigo-500/40 hover:to-purple-500/40 transition-all duration-300 group">
+                      <svg className="w-5 h-5 group-hover:scale-110 group-hover:rotate-90 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
+                      </svg>
+                    </Link>
+                  </div>
+
+                  {/* 마이페이지 메가 메뉴 */}
+                  <div className="relative" ref={dropdownRef}>
                     {isDropdownOpen && (
                       <div
-                        className="absolute right-0 mt-2 py-6 w-80 bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-xl shadow-2xl border border-indigo-600/50 z-10 animate-fadeIn backdrop-blur-sm"
+                        className="absolute right-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseLeave={() => setIsDropdownOpen(false)}
                       >
-                        {/* 사용자 정보 헤더 */}
-                        <div className="px-6 pb-4 border-b border-indigo-700/50">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                              {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+                        {/* 사용자 정보 헤더 - 고급 버전 */}
+                        <div className="relative px-8 pb-6 border-b border-gradient-to-r from-emerald-500/30 to-blue-500/30">
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-blue-600/10 rounded-t-2xl"></div>
+                          <div className="relative flex items-center gap-4">
+                            <div className="relative group">
+                              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                                {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 border-3 border-white rounded-full flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                                </svg>
+                              </div>
                             </div>
-                            <div>
-                              <div className="text-white font-medium">{userName || userEmail.split('@')[0]}</div>
-                              <div className="text-sm text-blue-200">{userEmail}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-lg font-bold text-white truncate">{userName || "사용자"}</h3>
+                                {userRole === "admin" && (
+                                  <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full shadow-lg animate-pulse">
+                                    ⚡ ADMIN
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-emerald-300 flex items-center gap-2 mb-2">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                </svg>
+                                <span className="truncate">{userEmail}</span>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs">
+                                <div className="flex items-center gap-1 text-green-400">
+                                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                  <span>온라인</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-blue-300">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                                  </svg>
+                                  <span>최근 활동: 방금 전</span>
+                                </div>
+                              </div>
                             </div>
+                            <Link href="/mypage?tab=profile" 
+                                  className="p-2 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-lg text-emerald-300 hover:text-white hover:bg-gradient-to-r hover:from-emerald-500/40 hover:to-blue-500/40 transition-all duration-300 group"
+                                  onClick={() => setIsDropdownOpen(false)}>
+                              <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                              </svg>
+                            </Link>
                           </div>
                         </div>
 
-                        {/* 메뉴 항목들 */}
-                        <div className="py-4">
-                          {mypageSubMenuItems.map((item) => (
-                            <Link
-                              key={item.name}
-                              href={item.href}
-                              className="group block px-6 py-3 text-sm text-blue-200 hover:bg-gradient-to-r hover:from-blue-800/70 hover:to-blue-700/70 hover:text-white transition-all duration-300"
-                              onClick={() => setIsDropdownOpen(false)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium">{item.name}</div>
-                                  <div className="text-xs text-blue-300 mt-1 group-hover:text-blue-100">{item.description}</div>
+                        {/* 빠른 통계 카드 */}
+                        <div className="px-6 py-4 grid grid-cols-3 gap-3">
+                          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                            <div className="text-lg font-bold text-emerald-300">12</div>
+                            <div className="text-xs text-emerald-400">완료된 검사</div>
+                          </div>
+                          <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                            <div className="text-lg font-bold text-blue-300">3</div>
+                            <div className="text-xs text-blue-400">예약된 상담</div>
+                          </div>
+                          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                            <div className="text-lg font-bold text-amber-300">85%</div>
+                            <div className="text-xs text-amber-400">진행률</div>
+                          </div>
+                        </div>
+
+                        {/* 메뉴 항목들 - 고급 버전 */}
+                        <div className="px-6 py-4 space-y-2">
+                          {/* 주요 메뉴 */}
+                          <div className="space-y-1">
+                            {[
+                              { 
+                                name: "📊 내 검사 결과", 
+                                href: "/mypage?tab=records", 
+                                description: "완료한 심리검사 결과 확인",
+                                icon: "📊",
+                                badge: "12개",
+                                color: "from-blue-500/20 to-indigo-500/20"
+                              },
+                              { 
+                                name: "👤 프로필 관리", 
+                                href: "/mypage?tab=profile", 
+                                description: "개인정보 및 계정 설정",
+                                icon: "👤", 
+                                color: "from-emerald-500/20 to-green-500/20"
+                              },
+                              { 
+                                name: "💬 상담 예약", 
+                                href: "/mypage/counseling", 
+                                description: "전문가 상담 예약 및 관리",
+                                icon: "💬",
+                                badge: "3건",
+                                color: "from-purple-500/20 to-pink-500/20"
+                              },
+                              { 
+                                name: "📈 성장 트래킹", 
+                                href: "/mypage/progress", 
+                                description: "개인 성장 분석 및 리포트",
+                                icon: "📈",
+                                color: "from-orange-500/20 to-red-500/20"
+                              },
+                              { 
+                                name: "⚙️ 설정", 
+                                href: "/mypage/settings", 
+                                description: "알림 및 환경 설정",
+                                icon: "⚙️",
+                                color: "from-gray-500/20 to-slate-500/20"
+                              }
+                            ].map((item) => (
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r ${item.color} rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                onClick={() => setIsDropdownOpen(false)}
+                              >
+                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  {item.icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-white truncate">{item.name.replace(item.icon + " ", "")}</span>
+                                    {item.badge && (
+                                      <span className="px-2 py-0.5 text-xs bg-white/20 text-white rounded-full">
+                                        {item.badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-gray-300 truncate">{item.description}</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-300"
+                                  className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                              </div>
-                            </Link>
-                          ))}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
                         
-                          {/* 관리자 메뉴 항목 (관리자 권한이 있을 경우에만 표시) */}
-                          {userRole === "admin" && (
-                            <>
-                              <div className="my-2 border-t border-indigo-700"></div>
-                              <div className="px-4 py-2 text-xs font-medium text-purple-300 uppercase tracking-wide">
-                                관리자 메뉴
-                              </div>
-                              {adminMenuItems.map((item) => (
+                        {/* 관리자 메뉴 (관리자 권한이 있을 경우에만 표시) */}
+                        {userRole === "admin" && (
+                          <div className="px-6 py-4 border-t border-gradient-to-r from-purple-500/30 to-pink-500/30">
+                            <div className="mb-3 flex items-center gap-2">
+                              <span className="text-purple-300 text-sm font-bold">⚡ 관리자 전용</span>
+                              <div className="flex-1 h-px bg-gradient-to-r from-purple-500/50 to-pink-500/50"></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { name: "📊 대시보드", href: "/admin/dashboard", icon: "📊" },
+                                { name: "👥 사용자", href: "/admin/users", icon: "👥" },
+                                { name: "📈 분석", href: "/admin/analytics", icon: "📈" },
+                                { name: "⚙️ 설정", href: "/admin/settings", icon: "⚙️" }
+                              ].map((item) => (
                                 <Link
                                   key={item.name}
                                   href={item.href}
-                                  className="block px-4 py-2 text-sm text-purple-300 hover:bg-purple-800/50 hover:text-white transition-colors"
+                                  className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg text-sm text-purple-200 hover:text-white hover:bg-gradient-to-r hover:from-purple-500/40 hover:to-pink-500/40 transition-all duration-300 group"
                                   onClick={() => setIsDropdownOpen(false)}
                                 >
-                                  {item.name}
+                                  <span className="group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
+                                  <span className="font-medium">{item.name.replace(item.icon + " ", "")}</span>
                                 </Link>
                               ))}
-                            </>
-                          )}
-                        
-                          <div className="mt-4 pt-4 border-t border-indigo-700/50 px-6">
-                            <button 
-                              className="w-full px-4 py-3 text-sm text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-lg transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-red-500/20"
-                              onClick={() => {
-                                setIsDropdownOpen(false);
-                                handleLogout();
-                              }}
-                            >
-                              <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-300" 
-                                viewBox="0 0 20 20" 
-                                fill="currentColor"
-                              >
-                                <path 
-                                  fillRule="evenodd" 
-                                  d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h5a1 1 0 000-2H4V5h4a1 1 0 000-2H3zM13 7l3 3-3 3v-2H9a1 1 0 000-2h4V7z"
-                                  clipRule="evenodd" 
-                                />
-                              </svg>
-                              로그아웃
-                            </button>
+                            </div>
                           </div>
+                        )}
+                        
+                        {/* 하단 영역 */}
+                        <div className="px-6 pt-4 pb-6 border-t border-gradient-to-r from-gray-500/30 to-slate-500/30">
+                          {/* 빠른 액션 버튼들 */}
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            <Link href="/mypage?tab=help" 
+                                  className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-lg text-blue-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-500/40 hover:to-indigo-500/40 transition-all duration-300 group"
+                                  onClick={() => setIsDropdownOpen(false)}>
+                              <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+                              </svg>
+                              <span className="text-sm font-medium">도움말</span>
+                            </Link>
+                            <Link href="/mypage?tab=feedback" 
+                                  className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg text-green-300 hover:text-white hover:bg-gradient-to-r hover:from-green-500/40 hover:to-emerald-500/40 transition-all duration-300 group"
+                                  onClick={() => setIsDropdownOpen(false)}>
+                              <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                                <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                              </svg>
+                              <span className="text-sm font-medium">피드백</span>
+                            </Link>
+                          </div>
+                          
+                          {/* 로그아웃 버튼 */}
+                          <button 
+                            className="w-full px-4 py-3 text-white bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 rounded-xl transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-red-500/30 hover:scale-105"
+                            onClick={() => {
+                              setIsDropdownOpen(false);
+                              handleLogout();
+                            }}
+                          >
+                            <svg 
+                              className="h-5 w-5 mr-3 group-hover:rotate-12 transition-transform duration-300" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            <span className="font-semibold">안전하게 로그아웃</span>
+                          </button>
                         </div>
                       </div>
                     )}
