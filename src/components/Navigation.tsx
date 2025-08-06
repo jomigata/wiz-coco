@@ -295,9 +295,9 @@ export default function Navigation() {
                           </div>
                           <div className="space-y-1">
                             {category.items.map((item) => (
-                              <Link
-                                key={item.name}
-                                href={item.href}
+                    <Link
+                      key={item.name}
+                      href={item.href}
                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                 onClick={() => setActiveMenu(null)}
                               >
@@ -331,13 +331,13 @@ export default function Navigation() {
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                              </Link>
-                            ))}
+                    </Link>
+                  ))}
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
+                </div>
               )}
             </div>
             
@@ -495,9 +495,9 @@ export default function Navigation() {
                           </div>
                           <div className="space-y-1">
                             {category.items.map((item) => (
-                              <Link
-                                key={item.name}
-                                href={item.href}
+                      <Link
+                        key={item.name}
+                        href={item.href}
                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                 onClick={() => setActiveMenu(null)}
                               >
@@ -531,8 +531,8 @@ export default function Navigation() {
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                              </Link>
-                            ))}
+                      </Link>
+                    ))}
                           </div>
                         </div>
                       ))}
@@ -567,11 +567,11 @@ export default function Navigation() {
                         onMouseLeave={() => setActiveMenu(null)}>
                     <div className="relative">
                       <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform duration-300">
-                        {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
-                      </div>
+                    {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+                  </div>
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full flex items-center justify-center">
                         <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
-                      </div>
+                    </div>
                     </div>
                     <div className="text-left min-w-0 flex-1">
                       <div className="text-sm font-semibold text-white flex items-center gap-2 truncate">
@@ -589,16 +589,16 @@ export default function Navigation() {
                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
-                    </div>
                   </div>
+                </div>
 
 
 
                   {/* 마이페이지 메가 메뉴 */}
-                  <div className="relative" ref={dropdownRef}>
+                <div className="relative" ref={dropdownRef}>
                   {isDropdownOpen && (
                     <div
-                        className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                        className="absolute right-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseEnter={() => setActiveMenu('user')}
                         onMouseLeave={() => setActiveMenu(null)}
                       >
@@ -650,8 +650,8 @@ export default function Navigation() {
                                   onClick={() => setActiveMenu(null)}>
                               <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                              </svg>
-                            </Link>
+                    </svg>
+                  </Link>
                           </div>
                         </div>
 
