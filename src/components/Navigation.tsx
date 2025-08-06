@@ -370,13 +370,13 @@ export default function Navigation() {
                                                                  <div className="flex-1 min-w-0">
                                    <div className="flex items-center gap-2">
                                      <span className="font-medium text-white truncate">{item.name}</span>
-                                     {'badge' in item && item.badge && (
+                                     {'badge' in item && (item as any).badge && (
                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                         item.badge === '인기' ? 'bg-red-500 text-white' :
-                                         item.badge === '신규' ? 'bg-green-500 text-white' :
+                                         (item as any).badge === '인기' ? 'bg-red-500 text-white' :
+                                         (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                          'bg-orange-500 text-white'
                                        }`}>
-                                         {item.badge}
+                                         {(item as any).badge}
                                        </span>
                                      )}
                                    </div>
@@ -519,13 +519,13 @@ export default function Navigation() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
                                     <span className="font-medium text-white truncate">{item.name}</span>
-                                    {'badge' in item && item.badge && (
+                                    {'badge' in item && (item as any).badge && (
                                       <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                        item.badge === '인기' ? 'bg-red-500 text-white' :
-                                        item.badge === '신규' ? 'bg-green-500 text-white' :
+                                        (item as any).badge === '인기' ? 'bg-red-500 text-white' :
+                                        (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                         'bg-orange-500 text-white'
                                       }`}>
-                                        {item.badge}
+                                        {(item as any).badge}
                                       </span>
                                     )}
                                   </div>
@@ -688,13 +688,13 @@ export default function Navigation() {
                                                                  <div className="flex-1 min-w-0">
                                    <div className="flex items-center gap-2">
                                      <span className="font-medium text-white truncate">{item.name}</span>
-                                     {'badge' in item && item.badge && (
+                                     {'badge' in item && (item as any).badge && (
                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                         item.badge === '인기' ? 'bg-red-500 text-white' :
-                                         item.badge === '신규' ? 'bg-green-500 text-white' :
+                                         (item as any).badge === '인기' ? 'bg-red-500 text-white' :
+                                         (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                          'bg-orange-500 text-white'
                                        }`}>
-                                         {item.badge}
+                                         {(item as any).badge}
                                        </span>
                                      )}
                                    </div>
