@@ -677,7 +677,7 @@ export default function Navigation() {
                           <div className="space-y-1">
                             {[
                               { 
-                                name: "📊 내 검사 결과", 
+                                name: "내 검사 결과", 
                                 href: "/mypage?tab=records", 
                                 description: "완료한 심리검사 결과 확인",
                                 icon: "📊",
@@ -685,14 +685,14 @@ export default function Navigation() {
                                 color: "from-blue-500/20 to-indigo-500/20"
                               },
                               { 
-                                name: "👤 프로필 관리", 
+                                name: "프로필 관리", 
                                 href: "/mypage?tab=profile", 
                                 description: "개인정보 및 계정 설정",
                                 icon: "👤", 
                                 color: "from-emerald-500/20 to-green-500/20"
                               },
                               { 
-                                name: "💬 상담 예약", 
+                                name: "상담 예약", 
                                 href: "/mypage/counseling", 
                                 description: "전문가 상담 예약 및 관리",
                                 icon: "💬",
@@ -700,14 +700,14 @@ export default function Navigation() {
                                 color: "from-purple-500/20 to-pink-500/20"
                               },
                               { 
-                                name: "📈 성장 트래킹", 
+                                name: "성장 트래킹", 
                                 href: "/mypage/progress", 
                                 description: "개인 성장 분석 및 리포트",
                                 icon: "📈",
                                 color: "from-orange-500/20 to-red-500/20"
                               },
                               { 
-                                name: "⚙️ 설정", 
+                                name: "설정", 
                                 href: "/mypage/settings", 
                                 description: "알림 및 환경 설정",
                                 icon: "⚙️",
@@ -725,7 +725,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium text-white truncate">{item.name.replace(item.icon + " ", "")}</span>
+                                    <span className="font-medium text-white truncate">{item.name}</span>
                                     {item.badge && (
                                       <span className="px-2 py-0.5 text-xs bg-white/20 text-white rounded-full">
                                         {item.badge}
