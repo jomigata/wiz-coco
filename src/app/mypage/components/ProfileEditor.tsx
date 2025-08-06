@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { updateProfile } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { updateProfile, onAuthStateChanged } from 'firebase/auth';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
 
 interface ProfileEditorProps {
   onClose: () => void;
@@ -13,7 +13,8 @@ interface ProfileEditorProps {
 }
 
 export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps) {
-  const { user } = useFirebaseAuth();
+  const { user: authUser } = useFirebaseAuth();
+  const [firebaseUser, setFirebaseUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
@@ -36,20 +37,67 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     '감정 관리', '직업 상담', '가족 상담', '학습', '건강'
   ];
 
+  // Firebase Auth 원본 사용자 객체 가져오기
   useEffect(() => {
-    if (user) {
-      setFormData({
-        displayName: user.displayName || '',
-        email: user.email || '',
-        phoneNumber: user.phoneNumber || '',
-        birthDate: '',
-        gender: '',
-        occupation: '',
-        interests: [],
-        bio: ''
-      });
-    }
-  }, [user]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (authUser) {
+        try {
+          // Firestore에서 사용자 정보 가져오기
+          const userRef = doc(db, 'users', authUser.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setFormData({
+              displayName: authUser.displayName || userData.displayName || '',
+              email: authUser.email || '',
+              phoneNumber: userData.phoneNumber || '',
+              birthDate: userData.birthDate || '',
+              gender: userData.gender || '',
+              occupation: userData.occupation || '',
+              interests: userData.interests || [],
+              bio: userData.bio || ''
+            });
+          } else {
+            // Firestore에 데이터가 없으면 기본값 설정
+            setFormData({
+              displayName: authUser.displayName || '',
+              email: authUser.email || '',
+              phoneNumber: '',
+              birthDate: '',
+              gender: '',
+              occupation: '',
+              interests: [],
+              bio: ''
+            });
+          }
+        } catch (error) {
+          console.error('사용자 데이터 로드 오류:', error);
+          // 오류 발생 시 기본값 설정
+          setFormData({
+            displayName: authUser.displayName || '',
+            email: authUser.email || '',
+            phoneNumber: '',
+            birthDate: '',
+            gender: '',
+            occupation: '',
+            interests: [],
+            bio: ''
+          });
+        }
+      }
+    };
+
+    loadUserData();
+  }, [authUser]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -70,19 +118,19 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!firebaseUser) return;
 
     setIsLoading(true);
     setMessage('');
 
     try {
       // Firebase Auth 프로필 업데이트
-      await updateProfile(user, {
+      await updateProfile(firebaseUser, {
         displayName: formData.displayName
       });
 
       // Firestore에 추가 정보 저장
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, 'users', firebaseUser.uid);
       await updateDoc(userRef, {
         displayName: formData.displayName,
         phoneNumber: formData.phoneNumber,
