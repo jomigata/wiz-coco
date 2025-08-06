@@ -561,34 +561,29 @@ export default function Navigation() {
           <div className="flex items-center gap-4 ml-6 pl-6 border-l border-indigo-800">
             {isLoggedIn ? (
               <>
-                  {/* 사용자 정보 표시 - 최신 디자인 */}
-                                     <div className="group flex items-center gap-4 bg-gradient-to-r from-emerald-900/40 to-blue-900/40 rounded-xl px-4 py-3 backdrop-blur-md border border-emerald-600/30 shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer"
+                  {/* 사용자 정보 표시 - 간소화 버전 */}
+                  <div className="group flex items-center gap-3 bg-gradient-to-r from-emerald-900/40 to-blue-900/40 rounded-xl px-4 py-2.5 backdrop-blur-md border border-emerald-600/30 shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer"
                         onMouseEnter={() => setActiveMenu('user')}
                         onMouseLeave={() => setActiveMenu(null)}>
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
-                    {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
-                  </div>
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-3 border-white rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    </div>
+                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform duration-300">
+                        {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full flex items-center justify-center">
+                        <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                      </div>
                     </div>
                     <div className="text-left min-w-0 flex-1">
                       <div className="text-sm font-semibold text-white flex items-center gap-2 truncate">
-                        <span className="truncate">{userName || "사용자"}</span>
+                        <span className="truncate">{userName || userEmail.split('@')[0]}</span>
                         {userRole === "admin" && (
-                          <span className="flex-shrink-0 px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full animate-pulse">
-                            ⚡ ADMIN
+                          <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full animate-pulse">
+                            ⚡
                           </span>
                         )}
-                  </div>
-                      <div className="text-xs text-emerald-300 flex items-center gap-1 mt-0.5">
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-ping"></span>
-                        <span className="truncate">{userEmail}</span>
-                </div>
-
+                      </div>
                     </div>
-                                        {/* 드롭다운 화살표만 유지 */}
+                    {/* 드롭다운 화살표 */}
                     <div className="p-1">
                       <svg className={`w-4 h-4 text-emerald-300 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""} group-hover:text-white`} 
                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,7 +598,7 @@ export default function Navigation() {
                   <div className="relative" ref={dropdownRef}>
                   {isDropdownOpen && (
                     <div
-                        className="absolute right-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                        className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseEnter={() => setActiveMenu('user')}
                         onMouseLeave={() => setActiveMenu(null)}
                       >
