@@ -598,12 +598,12 @@ export default function Navigation() {
                 <div className="relative" ref={dropdownRef}>
                   {isDropdownOpen && (
                     <div
-                        className="absolute right-0 top-full mt-0 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                        className="absolute right-0 top-full mt-2 py-6 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseEnter={() => setActiveMenu('user')}
                         onMouseLeave={() => setActiveMenu(null)}
                       >
                         {/* 사용자 정보 헤더 - 고급 버전 */}
-                        <div className="relative px-8 pt-4 pb-6 border-b border-gradient-to-r from-emerald-500/30 to-blue-500/30">
+                        <div className="relative px-8 pt-3 pb-6 border-b border-gradient-to-r from-emerald-500/30 to-blue-500/30">
                           <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-blue-600/10 rounded-t-2xl"></div>
                           <div className="relative flex items-center gap-4">
                             <div className="relative group">
