@@ -279,59 +279,124 @@ export default function Navigation() {
                 </svg>
               </Link>
 
-                {/* 심리검사 메가 메뉴 */}
+                {/* 심리검사 메가 메뉴 - 고급 버전 */}
               {isTestDropdownOpen && (
                 <div
-                    className="absolute left-0 mt-2 py-6 w-96 bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-xl shadow-2xl border border-indigo-600/50 z-10 animate-fadeIn backdrop-blur-sm"
+                    className="absolute left-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('test')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
-                    {testSubMenuItems.map((category) => (
-                      <div key={category.category} className="mb-6 last:mb-0">
-                        <div className="px-6 py-2 text-xs font-bold text-indigo-300 uppercase tracking-wide border-b border-indigo-700/50 mb-3">
-                          {category.category}
+                    {/* 헤더 섹션 */}
+                    <div className="relative px-8 pb-6 border-b border-gradient-to-r from-blue-500/30 to-indigo-500/30">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-t-2xl"></div>
+                      <div className="relative flex items-center gap-4">
+                        <div className="relative group">
+                          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                            🧠
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-400 border-3 border-white rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 gap-1 px-4">
-                          {category.items.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                              className="group relative block px-4 py-3 text-sm text-blue-200 hover:bg-gradient-to-r hover:from-blue-800/70 hover:to-blue-700/70 hover:text-white transition-all duration-300 rounded-lg"
-                              onClick={() => setActiveMenu(null)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium flex items-center gap-2">
-                                    {item.name}
-                                    {item.badge && (
-                                      <span className={`px-2 py-1 text-xs font-bold rounded-full ${
-                                        item.badge === '인기' ? 'bg-red-500 text-white' :
-                                        item.badge === '신규' ? 'bg-green-500 text-white' :
-                                        'bg-orange-500 text-white'
-                                      }`}>
-                                        {item.badge}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-blue-300 mt-1 group-hover:text-blue-100">
-                                    {item.description}
-                                  </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-bold text-white truncate">심리검사</h3>
+                            <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full shadow-lg animate-pulse">
+                              🧠 전문
+                            </span>
+                          </div>
+                          <div className="text-sm text-blue-300 flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span className="truncate">정확한 심리 분석 도구</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1 text-blue-400">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                              <span>실시간</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-indigo-300">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                              </svg>
+                              <span>최신 검사 도구</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 통계 카드 */}
+                    <div className="px-6 py-4 grid grid-cols-3 gap-3">
+                      <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-blue-300">16</div>
+                        <div className="text-xs text-blue-400">검사 종류</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-indigo-300">5분</div>
+                        <div className="text-xs text-indigo-400">평균 소요</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-purple-300">99%</div>
+                        <div className="text-xs text-purple-400">정확도</div>
+                      </div>
+                    </div>
+
+                    {/* 메뉴 항목들 - 고급 버전 */}
+                    <div className="px-6 py-4 space-y-2">
+                      {testSubMenuItems.map((category) => (
+                        <div key={category.category} className="mb-4 last:mb-0">
+                          <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
+                            {category.category}
+                          </div>
+                          <div className="space-y-1">
+                            {category.items.map((item) => (
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                onClick={() => setActiveMenu(null)}
+                              >
+                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  {item.name.includes('🧠') ? '🧠' : 
+                                   item.name.includes('🔍') ? '🔍' : 
+                                   item.name.includes('☀️') ? '☀️' : 
+                                   item.name.includes('👥') ? '👥' : 
+                                   item.name.includes('💼') ? '💼' : '📊'}
                                 </div>
+                                                                 <div className="flex-1 min-w-0">
+                                   <div className="flex items-center gap-2">
+                                     <span className="font-medium text-white truncate">{item.name}</span>
+                                     {'badge' in item && item.badge && (
+                                       <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                         item.badge === '인기' ? 'bg-red-500 text-white' :
+                                         item.badge === '신규' ? 'bg-green-500 text-white' :
+                                         'bg-orange-500 text-white'
+                                       }`}>
+                                         {item.badge}
+                                       </span>
+                                     )}
+                                   </div>
+                                   <div className="text-xs text-blue-300 truncate">{item.description}</div>
+                                 </div>
                                 <svg 
-                                  className="w-4 h-4 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                              </div>
-                    </Link>
-                          ))}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                  ))}
-                </div>
+                      ))}
+                    </div>
+                  </div>
               )}
             </div>
             
@@ -363,54 +428,123 @@ export default function Navigation() {
                   </svg>
                 </Link>
 
-                {/* 상담 프로그램 메가 메뉴 */}
+                {/* 상담 프로그램 메가 메뉴 - 고급 버전 */}
                 {isCounselingDropdownOpen && (
                   <div
-                    className="absolute left-0 mt-2 py-6 w-96 bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-xl shadow-2xl border border-indigo-600/50 z-10 animate-fadeIn backdrop-blur-sm"
+                    className="absolute left-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('counseling')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
-                    {counselingMenuItems.map((category) => (
-                      <div key={category.category} className="mb-6 last:mb-0">
-                        <div className="px-6 py-2 text-xs font-bold text-indigo-300 uppercase tracking-wide border-b border-indigo-700/50 mb-3">
-                          {category.category}
+                    {/* 헤더 섹션 */}
+                    <div className="relative px-8 pb-6 border-b border-gradient-to-r from-purple-500/30 to-pink-500/30">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-t-2xl"></div>
+                      <div className="relative flex items-center gap-4">
+                        <div className="relative group">
+                          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 via-pink-500 to-rose-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                            💬
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-purple-400 border-3 border-white rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 gap-1 px-4">
-                          {category.items.map((item) => (
-                            <Link
-                              key={item.name}
-                              href={item.href}
-                              className="group relative block px-4 py-3 text-sm text-purple-200 hover:bg-gradient-to-r hover:from-purple-800/70 hover:to-purple-700/70 hover:text-white transition-all duration-300 rounded-lg"
-                              onClick={() => setActiveMenu(null)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium flex items-center gap-2">
-                                    {item.name}
-                                    {item.badge && (
-                                      <span className="px-2 py-1 text-xs font-bold rounded-full bg-emerald-500 text-white">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-bold text-white truncate">상담 프로그램</h3>
+                            <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full shadow-lg animate-pulse">
+                              💬 전문
+                            </span>
+                          </div>
+                          <div className="text-sm text-purple-300 flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                            </svg>
+                            <span className="truncate">전문가와의 맞춤 상담</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1 text-purple-400">
+                              <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+                              <span>실시간</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-pink-300">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                              </svg>
+                              <span>1:1 전문 상담</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 통계 카드 */}
+                    <div className="px-6 py-4 grid grid-cols-3 gap-3">
+                      <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-purple-300">50+</div>
+                        <div className="text-xs text-purple-400">전문가</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-pink-500/20 to-rose-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-pink-300">24/7</div>
+                        <div className="text-xs text-pink-400">상담 가능</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-rose-500/20 to-red-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-rose-300">98%</div>
+                        <div className="text-xs text-rose-400">만족도</div>
+                      </div>
+                    </div>
+
+                    {/* 메뉴 항목들 - 고급 버전 */}
+                    <div className="px-6 py-4 space-y-2">
+                      {counselingMenuItems.map((category) => (
+                        <div key={category.category} className="mb-4 last:mb-0">
+                          <div className="px-2 py-1 text-xs font-bold text-purple-300 uppercase tracking-wide mb-2">
+                            {category.category}
+                          </div>
+                          <div className="space-y-1">
+                            {category.items.map((item) => (
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                onClick={() => setActiveMenu(null)}
+                              >
+                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  {item.name.includes('💬') ? '💬' : 
+                                   item.name.includes('👨‍⚕️') ? '👨‍⚕️' : 
+                                   item.name.includes('👩‍⚕️') ? '👩‍⚕️' : 
+                                   item.name.includes('📞') ? '📞' : 
+                                   item.name.includes('🎯') ? '🎯' : '💭'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-white truncate">{item.name}</span>
+                                    {'badge' in item && item.badge && (
+                                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                        item.badge === '인기' ? 'bg-red-500 text-white' :
+                                        item.badge === '신규' ? 'bg-green-500 text-white' :
+                                        'bg-orange-500 text-white'
+                                      }`}>
                                         {item.badge}
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-xs text-purple-300 mt-1 group-hover:text-purple-100">
-                                    {item.description}
-                                  </div>
+                                  <div className="text-xs text-purple-300 truncate">{item.description}</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-300"
+                                  className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                              </div>
-                            </Link>
-                          ))}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -463,47 +597,123 @@ export default function Navigation() {
                   </svg>
                 </button>
 
-                  {/* 추가 기능 메가 메뉴 */}
+                  {/* 추가 기능 메가 메뉴 - 고급 버전 */}
                 {isUserMenuOpen && (
                   <div
-                      className="absolute left-0 mt-2 py-6 w-96 bg-gradient-to-br from-emerald-900 to-emerald-800 rounded-xl shadow-2xl border border-emerald-600/50 z-10 animate-fadeIn backdrop-blur-sm"
+                      className="absolute left-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-emerald-900/95 to-green-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('additional')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
+                    {/* 헤더 섹션 */}
+                    <div className="relative px-8 pb-6 border-b border-gradient-to-r from-emerald-500/30 to-green-500/30">
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-green-600/10 rounded-t-2xl"></div>
+                      <div className="relative flex items-center gap-4">
+                        <div className="relative group">
+                          <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                            🎯
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-400 border-3 border-white rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-bold text-white truncate">추가 기능</h3>
+                            <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full shadow-lg animate-pulse">
+                              🎯 프리미엄
+                            </span>
+                          </div>
+                          <div className="text-sm text-emerald-300 flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span className="truncate">개인 맞춤 고급 기능</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1 text-emerald-400">
+                              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                              <span>실시간</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-green-300">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                              </svg>
+                              <span>AI 기반 분석</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 통계 카드 */}
+                    <div className="px-6 py-4 grid grid-cols-3 gap-3">
+                      <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-emerald-300">10+</div>
+                        <div className="text-xs text-emerald-400">고급 기능</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-green-300">AI</div>
+                        <div className="text-xs text-green-400">지능형</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-lg p-3 text-center group hover:scale-105 transition-transform duration-300">
+                        <div className="text-lg font-bold text-teal-300">24/7</div>
+                        <div className="text-xs text-teal-400">사용 가능</div>
+                      </div>
+                    </div>
+
+                    {/* 메뉴 항목들 - 고급 버전 */}
+                    <div className="px-6 py-4 space-y-2">
                       {personalFeaturesMenu.map((category) => (
-                        <div key={category.category} className="mb-6 last:mb-0">
-                          <div className="px-6 py-2 text-xs font-bold text-emerald-300 uppercase tracking-wide border-b border-emerald-700/50 mb-3">
+                        <div key={category.category} className="mb-4 last:mb-0">
+                          <div className="px-2 py-1 text-xs font-bold text-emerald-300 uppercase tracking-wide mb-2">
                             {category.category}
                           </div>
-                          <div className="grid grid-cols-1 gap-1 px-4">
+                          <div className="space-y-1">
                             {category.items.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                                className="group relative block px-4 py-3 text-sm text-emerald-200 hover:bg-gradient-to-r hover:from-emerald-800/70 hover:to-emerald-700/70 hover:text-white transition-all duration-300 rounded-lg"
-                                                        onClick={() => setActiveMenu(null)}
-                      >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                        <div className="font-medium">{item.name}</div>
-                                    <div className="text-xs text-emerald-300 mt-1 group-hover:text-emerald-100">
-                                      {item.description}
-                                    </div>
-                                  </div>
-                                  <svg 
-                                    className="w-4 h-4 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-300"
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                onClick={() => setActiveMenu(null)}
+                              >
+                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  {item.name.includes('📚') ? '📚' : 
+                                   item.name.includes('🎯') ? '🎯' : 
+                                   item.name.includes('📅') ? '📅' : 
+                                   item.name.includes('📊') ? '📊' : 
+                                   item.name.includes('🎨') ? '🎨' : '✨'}
                                 </div>
-                      </Link>
+                                                                 <div className="flex-1 min-w-0">
+                                   <div className="flex items-center gap-2">
+                                     <span className="font-medium text-white truncate">{item.name}</span>
+                                     {'badge' in item && item.badge && (
+                                       <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                         item.badge === '인기' ? 'bg-red-500 text-white' :
+                                         item.badge === '신규' ? 'bg-green-500 text-white' :
+                                         'bg-orange-500 text-white'
+                                       }`}>
+                                         {item.badge}
+                                       </span>
+                                     )}
+                                   </div>
+                                   <div className="text-xs text-emerald-300 truncate">{item.description}</div>
+                                 </div>
+                                <svg 
+                                  className="w-4 h-4 text-emerald-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
                             ))}
                           </div>
                         </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
