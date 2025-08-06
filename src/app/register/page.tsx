@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { getSession, signIn } from 'next-auth/react';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 // 로딩 컴포넌트
@@ -114,8 +114,18 @@ const RegisterContent = () => {
         displayName: user.displayName
       });
       
-      // 로그인 페이지로 리다이렉트
-      router.push('/login?registered=true');
+      // 이메일 인증 보내기
+      try {
+        await sendEmailVerification(user);
+        console.log('[Register] 이메일 인증 발송 성공');
+        
+        // 이메일 인증 안내와 함께 로그인 페이지로 리다이렉트
+        router.push('/login?registered=true&emailVerification=sent');
+      } catch (emailError) {
+        console.error('[Register] 이메일 인증 발송 실패:', emailError);
+        // 이메일 인증 실패해도 회원가입은 성공이므로 로그인 페이지로 이동
+        router.push('/login?registered=true&emailVerification=failed');
+      }
       
     } catch (error: any) {
       console.error('[Register] Firebase 회원가입 오류:', error);

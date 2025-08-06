@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 // 로딩 컴포넌트
@@ -29,12 +29,24 @@ const LoginContent = () => {
   const searchParams = useSearchParams();
   const { user, loading, signIn: firebaseSignIn } = useFirebaseAuth();
   const registered = searchParams.get('registered') === 'true';
+  const emailVerification = searchParams.get('emailVerification');
   const redirectUrl = searchParams.get('redirect') || '/';
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loginError, setLoginError] = useState<string>('');
   const [registrationSuccess, setRegistrationSuccess] = useState<boolean>(registered);
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [passwordResetSent, setPasswordResetSent] = useState<boolean>(false);
+  
+  // 이메일 인증 메시지 설정
+  useEffect(() => {
+    if (emailVerification === 'sent') {
+      setEmailVerificationMessage('회원가입이 완료되었습니다! 이메일을 확인하여 계정을 인증해주세요.');
+    } else if (emailVerification === 'failed') {
+      setEmailVerificationMessage('회원가입은 완료되었지만 인증 이메일 발송에 실패했습니다.');
+    }
+  }, [emailVerification]);
   
   // Firebase 인증 상태 확인
   useEffect(() => {
@@ -142,6 +154,49 @@ const LoginContent = () => {
       setIsLoading(false);
     }
   };
+
+  // 비밀번호 재설정 이메일 보내기
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setLoginError('비밀번호 재설정을 위해 먼저 이메일을 입력해주세요.');
+      return;
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setLoginError('올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setLoginError('');
+      
+      console.log('[Login] 비밀번호 재설정 이메일 발송 시도:', email);
+      
+      await sendPasswordResetEmail(auth, email);
+      
+      console.log('[Login] 비밀번호 재설정 이메일 발송 성공');
+      setPasswordResetSent(true);
+      setLoginError('');
+      
+    } catch (error: any) {
+      console.error('[Login] 비밀번호 재설정 이메일 발송 오류:', error);
+      
+      let errorMsg = '비밀번호 재설정 이메일 발송 중 오류가 발생했습니다.';
+      if (error.code === 'auth/user-not-found') {
+        errorMsg = '등록되지 않은 이메일 주소입니다.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMsg = '올바르지 않은 이메일 형식입니다.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMsg = '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+      }
+      setLoginError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
@@ -153,9 +208,60 @@ const LoginContent = () => {
             <p className="text-emerald-400">심리케어 서비스를 이용하기 위해 로그인해주세요.</p>
           </div>
 
-          {registrationSuccess && (
+          {/* 회원가입 성공 메시지 */}
+          {registrationSuccess && !emailVerificationMessage && (
             <div className="bg-emerald-800/50 text-emerald-200 p-4 rounded-lg text-center mb-4">
               회원가입이 완료되었습니다. 로그인해주세요.
+            </div>
+          )}
+
+          {/* 이메일 인증 관련 메시지 */}
+          {emailVerificationMessage && (
+            <div className={`p-4 rounded-lg text-center mb-4 ${
+              emailVerification === 'sent' 
+                ? 'bg-blue-800/50 text-blue-200 border border-blue-600/50' 
+                : 'bg-amber-800/50 text-amber-200 border border-amber-600/50'
+            }`}>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                {emailVerification === 'sent' ? (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                  </svg>
+                )}
+                <span className="font-semibold">
+                  {emailVerification === 'sent' ? '이메일 인증 발송됨' : '인증 이메일 발송 실패'}
+                </span>
+              </div>
+              <p className="text-sm">{emailVerificationMessage}</p>
+              {emailVerification === 'sent' && (
+                <p className="text-xs mt-2 opacity-75">
+                  이메일을 받지 못하셨나요? 스팸 폴더를 확인해보세요.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* 비밀번호 재설정 성공 메시지 */}
+          {passwordResetSent && (
+            <div className="bg-green-800/50 text-green-200 border border-green-600/50 p-4 rounded-lg text-center mb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                </svg>
+                <span className="font-semibold">비밀번호 재설정 이메일 발송됨</span>
+              </div>
+              <p className="text-sm">
+                {email}로 비밀번호 재설정 링크를 보냈습니다.<br/>
+                이메일을 확인하여 비밀번호를 재설정해주세요.
+              </p>
+              <p className="text-xs mt-2 opacity-75">
+                이메일을 받지 못하셨나요? 스팸 폴더를 확인해보세요.
+              </p>
             </div>
           )}
 
@@ -218,6 +324,18 @@ const LoginContent = () => {
                   "로그인"
                 )}
               </motion.button>
+            </div>
+
+            {/* 비밀번호 재설정 링크 */}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                disabled={isLoading || passwordResetSent}
+                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed underline"
+              >
+                {passwordResetSent ? '재설정 이메일 발송됨' : '비밀번호를 잊으셨나요?'}
+              </button>
             </div>
           </form>
 
