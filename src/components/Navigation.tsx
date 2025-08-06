@@ -282,7 +282,7 @@ export default function Navigation() {
                 {/* 심리검사 메가 메뉴 - 고급 버전 */}
               {isTestDropdownOpen && (
                 <div
-                    className="absolute left-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('test')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
@@ -431,7 +431,7 @@ export default function Navigation() {
                 {/* 상담 프로그램 메가 메뉴 - 고급 버전 */}
                 {isCounselingDropdownOpen && (
                   <div
-                    className="absolute left-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('counseling')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
@@ -600,7 +600,7 @@ export default function Navigation() {
                   {/* 추가 기능 메가 메뉴 - 고급 버전 */}
                 {isUserMenuOpen && (
                   <div
-                      className="absolute left-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-emerald-900/95 to-green-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-emerald-900/95 to-green-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('additional')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
@@ -780,7 +780,7 @@ export default function Navigation() {
                   <div className="relative" ref={dropdownRef}>
                   {isDropdownOpen && (
                     <div
-                        className="absolute right-0 mt-4 py-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                        className="absolute right-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseEnter={() => setActiveMenu('user')}
                         onMouseLeave={() => setActiveMenu(null)}
                       >
