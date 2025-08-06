@@ -564,12 +564,17 @@ export default function Navigation() {
                     </svg>
                   </Link>
 
-                      {/* 설정 아이콘 */}
-                      <Link href="/mypage/settings" className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500/40 transition-all duration-300 group">
-                        <svg className="w-4 h-4 group-hover:scale-110 group-hover:rotate-90 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-                        </svg>
-                      </Link>
+
+                      
+                      {/* 알림 아이콘 */}
+                      <div className="relative">
+                        <button className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:text-white hover:bg-amber-500/40 transition-all duration-300 group">
+                          <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                          </svg>
+                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse text-[10px]">3</span>
+                        </button>
+                      </div>
                       
                       {/* 드롭다운 화살표 */}
                       <div className="p-1">
@@ -581,32 +586,7 @@ export default function Navigation() {
                     </div>
                   </div>
 
-                  {/* 빠른 접근 메뉴 */}
-                  <div className="flex items-center gap-3">
-                    {/* 알림 버튼 */}
-                    <div className="relative">
-                      <button className="p-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl text-amber-300 hover:text-white hover:bg-gradient-to-r hover:from-amber-500/40 hover:to-orange-500/40 transition-all duration-300 group">
-                        <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-                        </svg>
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">3</span>
-                      </button>
-                    </div>
 
-                    {/* 즐겨찾기 버튼 */}
-                    <Link href="/mypage?tab=favorites" className="p-3 bg-gradient-to-r from-pink-500/20 to-rose-500/20 rounded-xl text-pink-300 hover:text-white hover:bg-gradient-to-r hover:from-pink-500/40 hover:to-rose-500/40 transition-all duration-300 group">
-                      <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
-                      </svg>
-                    </Link>
-
-                    {/* 설정 버튼 */}
-                    <Link href="/mypage/settings" className="p-3 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl text-indigo-300 hover:text-white hover:bg-gradient-to-r hover:from-indigo-500/40 hover:to-purple-500/40 transition-all duration-300 group">
-                      <svg className="w-5 h-5 group-hover:scale-110 group-hover:rotate-90 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-                      </svg>
-                    </Link>
-                  </div>
 
                   {/* 마이페이지 메가 메뉴 */}
                   <div className="relative" ref={dropdownRef}>
