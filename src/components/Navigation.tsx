@@ -598,7 +598,7 @@ export default function Navigation() {
                 <div className="relative" ref={dropdownRef}>
                   {isDropdownOpen && (
                     <div
-                        className="absolute right-0 top-full mt-3 py-6 w-96 bg-gradient-to-br from-slate-900/98 via-blue-900/95 to-indigo-900/98 rounded-2xl shadow-2xl border border-emerald-500/20 z-50 animate-fadeIn backdrop-blur-xl"
+                        className="absolute right-0 top-full mt-4 py-12 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseEnter={() => setActiveMenu('user')}
                         onMouseLeave={() => setActiveMenu(null)}
                       >
