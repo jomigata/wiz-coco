@@ -244,21 +244,17 @@ const LoginContent = () => {
               </motion.button>
               
               <motion.button
-                onClick={() => handleSocialLogin('kakao')}
-                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                disabled={isLoading}
+                onClick={() => setLoginError('카카오 로그인은 준비 중입니다.')}
+                className="flex justify-center items-center px-4 py-2 border border-gray-600/50 bg-gray-800/30 text-gray-400 rounded-lg cursor-not-allowed"
+                disabled={true}
               >
                 Kakao
               </motion.button>
               
               <motion.button
-                onClick={() => handleSocialLogin('naver')}
-                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                disabled={isLoading}
+                onClick={() => setLoginError('네이버 로그인은 준비 중입니다.')}
+                className="flex justify-center items-center px-4 py-2 border border-gray-600/50 bg-gray-800/30 text-gray-400 rounded-lg cursor-not-allowed"
+                disabled={true}
               >
                 Naver
               </motion.button>
