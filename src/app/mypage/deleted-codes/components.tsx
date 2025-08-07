@@ -335,7 +335,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   };
 
   // 로딩 상태 체크
-  if (firebaseLoading || isLoadingUser) {
+  if (firebaseLoading || isLoading) {
     return (
       <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>
         {!isEmbedded && (
