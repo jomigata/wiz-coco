@@ -135,22 +135,22 @@ export default function Navigation() {
 
   // 마이페이지 하위 메뉴 항목 (로그인 후 사용 가능)
   const mypageSubMenuItems = [
-    { name: "📊 검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인" },
-    { name: "👤 기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정" },
-    { name: "💬 상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약" },
-    { name: "📋 삭제된 코드", href: "/mypage/deleted-codes", description: "삭제된 테스트 코드 복구" },
-    { name: "⚙️ 설정", href: "/mypage/settings", description: "계정 및 알림 설정" }
+    { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인", icon: "📊" },
+    { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
+    { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
+    { name: "삭제된 코드", href: "/mypage/deleted-codes", description: "삭제된 테스트 코드 복구", icon: "📋" },
+    { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️" }
   ];
 
   // 관리자 메뉴 항목
   const adminMenuItems = [
-    { name: "📊 대시보드", href: "/admin/dashboard" },
-    { name: "👥 사용자 관리", href: "/admin/users" },
-    { name: "🏷️ 코드 관리", href: "/admin/test-codes" },
-    { name: "📈 분석", href: "/admin/analytics" },
-    { name: "🧠 MBTI 분석", href: "/admin/mbti-analysis" },
-    { name: "💕 관계 분석", href: "/admin/relationship-analysis" },
-    { name: "⚙️ 설정", href: "/admin/settings" },
+    { name: "대시보드", href: "/admin/dashboard", icon: "📊" },
+    { name: "사용자 관리", href: "/admin/users", icon: "👥" },
+    { name: "코드 관리", href: "/admin/test-codes", icon: "🏷️" },
+    { name: "분석", href: "/admin/analytics", icon: "📈" },
+    { name: "MBTI 분석", href: "/admin/mbti-analysis", icon: "🧠" },
+    { name: "관계 분석", href: "/admin/relationship-analysis", icon: "💕" },
+    { name: "설정", href: "/admin/settings", icon: "⚙️" },
   ];
 
   // 심리검사 하위 메뉴 항목 - 개선된 구조
@@ -158,17 +158,17 @@ export default function Navigation() {
     { 
       category: "기본 검사",
       items: [
-        { name: "🧠 MBTI 검사", href: "/tests", description: "16가지 성격 유형 검사", badge: "인기" },
-        { name: "🔍 이고-오케이", href: "/tests/ego-ok", description: "자아 성숙도 검사", badge: "신규" },
-        { name: "🌟 에니어그램", href: "/tests/enneagram", description: "9가지 성격 유형 분석" }
+        { name: "MBTI 검사", href: "/tests", description: "16가지 성격 유형 검사", badge: "인기", icon: "🧠" },
+        { name: "이고-오케이", href: "/tests/ego-ok", description: "자아 성숙도 검사", badge: "신규", icon: "🔍" },
+        { name: "에니어그램", href: "/tests/enneagram", description: "9가지 성격 유형 분석", icon: "🌟" }
       ]
     },
     { 
       category: "고급 검사",
       items: [
-        { name: "🎯 MBTI Pro", href: "/tests/mbti-pro", description: "고급 MBTI 분석", badge: "추천" },
-        { name: "👥 그룹 MBTI", href: "/tests/group_mbti", description: "팀 호환성 검사" },
-        { name: "💼 직업 적성", href: "/tests/career", description: "직업 적합성 검사" }
+        { name: "MBTI Pro", href: "/tests/mbti-pro", description: "고급 MBTI 분석", badge: "추천", icon: "🎯" },
+        { name: "그룹 MBTI", href: "/tests/group_mbti", description: "팀 호환성 검사", icon: "👥" },
+        { name: "직업 적성", href: "/tests/career", description: "직업 적합성 검사", icon: "💼" }
       ]
     }
   ];
@@ -178,17 +178,17 @@ export default function Navigation() {
     {
       category: "개인 상담",
       items: [
-        { name: "💭 심리 상담", href: "/counseling/psychology", description: "전문 심리상담사와 1:1 상담", badge: "24시간" },
-        { name: "🌱 성장 코칭", href: "/counseling/growth", description: "개인 성장을 위한 코칭" },
-        { name: "💔 관계 상담", href: "/counseling/relationship", description: "인간관계 문제 해결" }
+        { name: "심리 상담", href: "/counseling/psychology", description: "전문 심리상담사와 1:1 상담", badge: "24시간", icon: "💭" },
+        { name: "성장 코칭", href: "/counseling/growth", description: "개인 성장을 위한 코칭", icon: "🌱" },
+        { name: "관계 상담", href: "/counseling/relationship", description: "인간관계 문제 해결", icon: "💔" }
       ]
     },
     {
       category: "그룹 상담",
       items: [
-        { name: "👨‍👩‍👧‍👦 가족 상담", href: "/counseling/family", description: "가족 관계 개선 상담" },
-        { name: "💑 커플 상담", href: "/counseling/couple", description: "연인/부부 관계 상담" },
-        { name: "🏢 직장 상담", href: "/counseling/workplace", description: "직장 내 스트레스 관리" }
+        { name: "가족 상담", href: "/counseling/family", description: "가족 관계 개선 상담", icon: "👨‍👩‍👧‍👦" },
+        { name: "커플 상담", href: "/counseling/couple", description: "연인/부부 관계 상담", icon: "💑" },
+        { name: "직장 상담", href: "/counseling/workplace", description: "직장 내 스트레스 관리", icon: "🏢" }
       ]
     }
   ];
@@ -198,17 +198,17 @@ export default function Navigation() {
     {
       category: "개인 관리",
       items: [
-        { name: "📊 검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음" },
-        { name: "📈 성장 리포트", href: "/progress", description: "개인 성장 분석 리포트" },
-        { name: "🎯 목표 관리", href: "/goals", description: "개인 목표 설정 및 추적" }
+        { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음", icon: "📊" },
+        { name: "성장 리포트", href: "/progress", description: "개인 성장 분석 리포트", icon: "📈" },
+        { name: "목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
       ]
     },
     {
       category: "학습 & 성장",
       items: [
-        { name: "📚 학습 자료", href: "/learning", description: "심리학 교육 콘텐츠" },
-        { name: "💡 맞춤 추천", href: "/recommendations", description: "AI 기반 상담 추천" },
-        { name: "📅 일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리" }
+        { name: "학습 자료", href: "/learning", description: "심리학 교육 콘텐츠", icon: "📚" },
+        { name: "맞춤 추천", href: "/recommendations", description: "AI 기반 상담 추천", icon: "💡" },
+        { name: "일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리", icon: "📅" }
       ]
     }
   ];
@@ -302,11 +302,7 @@ export default function Navigation() {
                                 onClick={() => setActiveMenu(null)}
                               >
                                 <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  {item.name.includes('🧠') ? '🧠' : 
-                                   item.name.includes('🔍') ? '🔍' : 
-                                   item.name.includes('☀️') ? '☀️' : 
-                                   item.name.includes('👥') ? '👥' : 
-                                   item.name.includes('💼') ? '💼' : '📊'}
+                                  {item.icon || '📊'}
                                 </div>
                                                                  <div className="flex-1 min-w-0">
                                    <div className="flex items-center gap-2">
@@ -392,11 +388,7 @@ export default function Navigation() {
                                 onClick={() => setActiveMenu(null)}
                               >
                                 <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  {item.name.includes('💬') ? '💬' : 
-                                   item.name.includes('👨‍⚕️') ? '👨‍⚕️' : 
-                                   item.name.includes('👩‍⚕️') ? '👩‍⚕️' : 
-                                   item.name.includes('📞') ? '📞' : 
-                                   item.name.includes('🎯') ? '🎯' : '💭'}
+                                  {item.icon || '💭'}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
@@ -501,12 +493,8 @@ export default function Navigation() {
                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                 onClick={() => setActiveMenu(null)}
                               >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  {item.name.includes('📚') ? '📚' : 
-                                   item.name.includes('🎯') ? '🎯' : 
-                                   item.name.includes('📅') ? '📅' : 
-                                   item.name.includes('📊') ? '📊' : 
-                                   item.name.includes('🎨') ? '🎨' : '✨'}
+                                                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  {item.icon || '✨'}
                                 </div>
                                                                  <div className="flex-1 min-w-0">
                                    <div className="flex items-center gap-2">
@@ -768,7 +756,7 @@ export default function Navigation() {
                                   onClick={() => setActiveMenu(null)}
                             >
                                   <span className="group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
-                                  <span className="font-medium">{item.name.replace(item.icon + " ", "")}</span>
+                                  <span className="font-medium">{item.name}</span>
                             </Link>
                           ))}
                             </div>
