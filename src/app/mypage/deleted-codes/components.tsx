@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 // 삭제된 테스트 기록 타입 정의
 interface DeletedTestRecord {
@@ -24,6 +25,8 @@ interface DeletedTestRecord {
 // 삭제코드 컨텐츠 컴포넌트
 export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const router = useRouter();
+  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deletedRecords, setDeletedRecords] = useState<DeletedTestRecord[]>([]);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
@@ -33,10 +36,35 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
 
-  // 삭제된 기록 가져오기
+  // Firebase 인증 상태 확인
   useEffect(() => {
-    fetchDeletedRecords();
-  }, []);
+    const checkAuthAndLoadUser = async () => {
+      try {
+        if (firebaseLoading) {
+          return;
+        }
+
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          return;
+        }
+
+        setUser(null);
+      } catch (error) {
+        console.error('사용자 정보 로딩 오류:', error);
+        setUser(null);
+      }
+    };
+
+    checkAuthAndLoadUser();
+  }, [firebaseUser, firebaseLoading]);
+
+  // 삭제된 기록 가져오기 (인증된 사용자만)
+  useEffect(() => {
+    if (user) {
+      fetchDeletedRecords();
+    }
+  }, [user]);
 
   // 선택된 레코드 로드
   useEffect(() => {
@@ -305,6 +333,53 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       setShowDeleteConfirm(false);
     }
   };
+
+  // 로딩 상태 체크
+  if (firebaseLoading || isLoadingUser) {
+    return (
+      <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>
+        {!isEmbedded && (
+          <>
+            <Navigation />
+            <div className="h-20"></div>
+          </>
+        )}
+        <div className="container mx-auto px-4 py-6 relative z-10">
+          <div className="flex items-center justify-center">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+              <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 인증 체크
+  if (!user) {
+    return (
+      <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>
+        {!isEmbedded && (
+          <>
+            <Navigation />
+            <div className="h-20"></div>
+          </>
+        )}
+        <div className="container mx-auto px-4 py-6 relative z-10">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
+            <p className="text-blue-200 mb-4">삭제된 코드에 접근하려면 로그인이 필요합니다</p>
+            <Link 
+              href="/login" 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              로그인하기
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>

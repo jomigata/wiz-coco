@@ -9,6 +9,7 @@ import { FaUser, FaClipboard, FaBrain, FaClock } from 'react-icons/fa';
 import { getItem, setItem, getAuthState, setAuthState } from '@/utils/localStorageManager';
 import { setupSyncMonitor, onSyncStatusChange, SyncStatus } from '@/utils/syncService';
 import dynamic from 'next/dynamic';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -87,6 +88,9 @@ function MyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  // Firebase 인증 훅 사용
+  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  
   // URL에서 탭 파라미터 확인 - 기본값을 records로 설정
   const initialTab = searchParams.get('tab') || 'records';
   
@@ -120,7 +124,27 @@ function MyPageContent() {
   useEffect(() => {
     const checkAuthAndLoadUser = async () => {
       try {
-        // 1. 빠른 로컬 상태 확인
+        // Firebase 인증 상태 확인
+        if (firebaseLoading) {
+          return; // Firebase 로딩 중이면 대기
+        }
+
+        if (firebaseUser) {
+          // Firebase 사용자 정보를 기존 User 인터페이스에 맞게 변환
+          const userData: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || undefined,
+            role: firebaseUser.role || 'user',
+            createdAt: new Date().toISOString(), // Firebase에서 생성 시간을 가져올 수 있다면 수정
+            lastLoginAt: new Date().toISOString()
+          };
+          setUser(userData);
+          setIsLoadingUser(false);
+          return;
+        }
+
+        // Firebase 인증이 없으면 기존 로컬 인증 확인 (호환성 유지)
         const authState = getAuthState();
         if (authState && authState.isLoggedIn && authState.userBasicInfo) {
           setUser(authState.userBasicInfo);
@@ -128,7 +152,7 @@ function MyPageContent() {
           return;
         }
 
-        // 2. 서버 상태 확인 (로컬 상태가 없는 경우에만)
+        // 서버 상태 확인 (로컬 상태가 없는 경우에만)
         const response = await fetch('/api/simple-login', {
           method: 'GET',
           credentials: 'include',
@@ -156,7 +180,7 @@ function MyPageContent() {
     };
 
     checkAuthAndLoadUser();
-  }, []);
+  }, [firebaseUser, firebaseLoading]);
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -523,7 +547,14 @@ function MyPageContent() {
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
         </div>
         
-        {!user ? (
+        {firebaseLoading || isLoadingUser ? (
+          <div className="flex items-center justify-center">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+              <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
+            </div>
+          </div>
+        ) : !user ? (
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
             <p className="text-blue-200 mb-4">마이페이지에 접근하려면 로그인이 필요합니다</p>
             <Link 

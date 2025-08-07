@@ -1,10 +1,75 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 export default function CounselingPage() {
+  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  const [user, setUser] = useState<any>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  useEffect(() => {
+    const checkAuthAndLoadUser = async () => {
+      try {
+        if (firebaseLoading) {
+          return;
+        }
+
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          setIsLoadingUser(false);
+          return;
+        }
+
+        setUser(null);
+        setIsLoadingUser(false);
+      } catch (error) {
+        console.error('사용자 정보 로딩 오류:', error);
+        setUser(null);
+        setIsLoadingUser(false);
+      }
+    };
+
+    checkAuthAndLoadUser();
+  }, [firebaseUser, firebaseLoading]);
+
+  if (firebaseLoading || isLoadingUser) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
+        <Navigation />
+        <div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+          <div className="flex items-center justify-center">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+              <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
+        <Navigation />
+        <div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
+            <p className="text-blue-200 mb-4">상담 예약에 접근하려면 로그인이 필요합니다</p>
+            <Link 
+              href="/login" 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              로그인하기
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
       <Navigation />

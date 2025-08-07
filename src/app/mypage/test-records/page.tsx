@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 // chart.js 타입만 임포트 (실제 라이브러리는 클라이언트에서 동적으로 로드)
 import type { ChartData, ChartOptions } from 'chart.js';
@@ -113,6 +114,7 @@ const LoadingRecords = () => (
 function TestRecordsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [testRecords, setTestRecords] = useState<TestRecord[]>([]);
@@ -236,6 +238,39 @@ function TestRecordsContent() {
       }
     }
   }, [showStats, chartInitialized, testRecords, prefixStats]);
+
+  // Firebase 인증 상태 확인
+  useEffect(() => {
+    const checkAuthAndLoadUser = async () => {
+      try {
+        if (firebaseLoading) {
+          return;
+        }
+
+        if (firebaseUser) {
+          const userData: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || undefined,
+            createdAt: new Date().toISOString(),
+            lastLoginAt: new Date().toISOString()
+          };
+          setUser(userData);
+          setIsLoading(false);
+          return;
+        }
+
+        setUser(null);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('사용자 정보 로딩 오류:', error);
+        setUser(null);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthAndLoadUser();
+  }, [firebaseUser, firebaseLoading]);
 
   // URL 파라미터에서 stats 값 확인하여 통계 탭 활성화
   useEffect(() => {
@@ -1070,7 +1105,7 @@ function TestRecordsContent() {
   };
 
   // 레코드 상세 보기 페이지 렌더링
-  if (isLoading) {
+  if (firebaseLoading || isLoading) {
     return <LoadingRecords />;
   }
 
