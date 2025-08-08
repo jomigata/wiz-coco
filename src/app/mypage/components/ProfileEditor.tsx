@@ -156,7 +156,11 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firebaseUser) return;
+    if (!firebaseUser || !authUser) {
+      setMessageType('error');
+      setMessage('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
+      return;
+    }
 
     setIsLoading(true);
     setMessage('');
@@ -170,7 +174,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       }
 
       // Firestore에 추가 정보 저장
-      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userRef = doc(db, 'users', authUser.uid);
       
       // 먼저 문서가 존재하는지 확인
       const userDoc = await getDoc(userRef);
@@ -224,9 +228,12 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       if (error.code === 'auth/requires-recent-login') {
         errorMessage = '보안을 위해 다시 로그인해주세요.';
       } else if (error.code === 'permission-denied') {
-        errorMessage = '권한이 없습니다. 관리자에게 문의해주세요.';
+        // 권한 오류 시 더 구체적인 해결 방법 제시
+        errorMessage = '프로필 저장 권한이 없습니다. 페이지를 새로고침하고 다시 시도해주세요.';
       } else if (error.code === 'unavailable') {
         errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error.code === 'not-found') {
+        errorMessage = '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.';
       } else if (error.message) {
         errorMessage = `오류: ${error.message}`;
       }
