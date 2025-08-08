@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { updateProfile, onAuthStateChanged } from 'firebase/auth';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
 interface ProfileEditorProps {
@@ -163,22 +163,45 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
     try {
       // Firebase Auth 프로필 업데이트
-      await updateProfile(firebaseUser, {
-        displayName: formData.displayName
-      });
+      if (formData.displayName !== firebaseUser.displayName) {
+        await updateProfile(firebaseUser, {
+          displayName: formData.displayName
+        });
+      }
 
       // Firestore에 추가 정보 저장
       const userRef = doc(db, 'users', firebaseUser.uid);
-      await updateDoc(userRef, {
-        displayName: formData.displayName,
-        phoneNumber: formData.phoneNumber,
-        birthDate: formData.birthDate,
-        gender: formData.gender,
-        occupation: formData.occupation,
-        interests: formData.interests,
-        bio: formData.bio,
-        updatedAt: new Date()
-      });
+      
+      // 먼저 문서가 존재하는지 확인
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        // 문서가 존재하면 업데이트
+        await updateDoc(userRef, {
+          displayName: formData.displayName,
+          phoneNumber: formData.phoneNumber,
+          birthDate: formData.birthDate,
+          gender: formData.gender,
+          occupation: formData.occupation,
+          interests: formData.interests,
+          bio: formData.bio,
+          updatedAt: new Date()
+        });
+      } else {
+        // 문서가 존재하지 않으면 새로 생성
+        await setDoc(userRef, {
+          displayName: formData.displayName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          birthDate: formData.birthDate,
+          gender: formData.gender,
+          occupation: formData.occupation,
+          interests: formData.interests,
+          bio: formData.bio,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
 
       setMessageType('success');
       setMessage('프로필이 성공적으로 업데이트되었습니다!');
@@ -191,10 +214,24 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         onClose();
       }, 2000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('프로필 업데이트 오류:', error);
       setMessageType('error');
-      setMessage('프로필 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.');
+      
+      // 더 구체적인 에러 메시지 제공
+      let errorMessage = '프로필 업데이트 중 오류가 발생했습니다.';
+      
+      if (error.code === 'auth/requires-recent-login') {
+        errorMessage = '보안을 위해 다시 로그인해주세요.';
+      } else if (error.code === 'permission-denied') {
+        errorMessage = '권한이 없습니다. 관리자에게 문의해주세요.';
+      } else if (error.code === 'unavailable') {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error.message) {
+        errorMessage = `오류: ${error.message}`;
+      }
+      
+      setMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
