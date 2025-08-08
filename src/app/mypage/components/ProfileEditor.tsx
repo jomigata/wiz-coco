@@ -38,6 +38,12 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     '감정 관리', '직업 상담', '가족 상담', '학습', '건강'
   ];
 
+  // 날짜 선택기 상태
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
+
   // Firebase Auth 원본 사용자 객체 가져오기
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -115,6 +121,27 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         ? prev.interests.filter(i => i !== interest)
         : [...prev.interests, interest]
     }));
+  };
+
+  // 날짜 선택 핸들러
+  const handleDateSelect = (year: number, month: number, day: number) => {
+    setSelectedYear(year);
+    setSelectedMonth(month);
+    setSelectedDay(day);
+    
+    const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    setFormData(prev => ({
+      ...prev,
+      birthDate: formattedDate
+    }));
+    setShowDatePicker(false);
+  };
+
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return `${date.getFullYear()}. ${(date.getMonth() + 1).toString().padStart(2, '0')}. ${date.getDate().toString().padStart(2, '0')}.`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,15 +283,119 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                 />
               </div>
               
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={formData.birthDate}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formatDate(formData.birthDate)}
+                    readOnly
+                    onClick={() => setShowDatePicker(!showDatePicker)}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
+                    placeholder="연도. 월. 일."
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* 커스텀 날짜 선택기 */}
+                {showDatePicker && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[10000] p-4">
+                    {/* 연도 선택 */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-emerald-300">연도 선택</span>
+                        <button
+                          onClick={() => setShowDatePicker(false)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-8 gap-1 max-h-32 overflow-y-auto">
+                        {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                          <button
+                            key={year}
+                            onClick={() => setSelectedYear(year)}
+                            className={`px-2 py-1 text-xs rounded ${
+                              selectedYear === year
+                                ? 'bg-emerald-500 text-white'
+                                : 'text-emerald-300 hover:bg-emerald-500/20'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* 월 선택 */}
+                    <div className="mb-4">
+                      <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                          <button
+                            key={month}
+                            onClick={() => setSelectedMonth(month)}
+                            className={`px-3 py-2 text-sm rounded ${
+                              selectedMonth === month
+                                ? 'bg-blue-500 text-white'
+                                : 'text-blue-300 hover:bg-blue-500/20'
+                            }`}
+                          >
+                            {month}월
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* 일 선택 */}
+                    <div>
+                      <span className="text-sm font-medium text-emerald-300 block mb-2">일 선택</span>
+                      <div className="grid grid-cols-7 gap-1">
+                        {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+                          <div key={day} className="text-xs text-gray-400 text-center py-1">
+                            {day}
+                          </div>
+                        ))}
+                        {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map((day) => (
+                          <button
+                            key={day}
+                            onClick={() => handleDateSelect(selectedYear, selectedMonth, day)}
+                            className={`px-2 py-1 text-xs rounded ${
+                              selectedDay === day
+                                ? 'bg-purple-500 text-white'
+                                : 'text-purple-300 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* 하단 버튼 */}
+                    <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
+                      <button
+                        onClick={() => setShowDatePicker(false)}
+                        className="px-3 py-1 text-sm text-gray-400 hover:text-white"
+                      >
+                        삭제
+                      </button>
+                      <button
+                        onClick={() => handleDateSelect(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate())}
+                        className="px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                      >
+                        오늘
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -276,11 +407,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                   value={formData.gender}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                  style={{
+                    color: 'white'
+                  }}
                 >
-                  <option value="">선택하세요</option>
-                  <option value="male">남성</option>
-                  <option value="female">여성</option>
-                  <option value="other">기타</option>
+                  <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>선택하세요</option>
+                  <option value="male" style={{ backgroundColor: '#1e293b', color: 'white' }}>남성</option>
+                  <option value="female" style={{ backgroundColor: '#1e293b', color: 'white' }}>여성</option>
+                  <option value="other" style={{ backgroundColor: '#1e293b', color: 'white' }}>기타</option>
                 </select>
               </div>
               
