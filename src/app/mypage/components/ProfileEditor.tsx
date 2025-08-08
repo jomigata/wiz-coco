@@ -63,11 +63,21 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            const birthDate = userData.birthDate || '';
+            
+            // 기존 생년월일이 있으면 선택된 값들도 설정
+            if (birthDate) {
+              const date = new Date(birthDate);
+              setSelectedYear(date.getFullYear());
+              setSelectedMonth(date.getMonth() + 1);
+              setSelectedDay(date.getDate());
+            }
+            
             setFormData({
               displayName: authUser.displayName || userData.displayName || '',
               email: authUser.email || '',
               phoneNumber: userData.phoneNumber || '',
-              birthDate: userData.birthDate || '',
+              birthDate: birthDate,
               gender: userData.gender || '',
               occupation: userData.occupation || '',
               interests: userData.interests || [],
@@ -317,21 +327,21 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           </svg>
                         </button>
                       </div>
-                      <div className="grid grid-cols-8 gap-1 max-h-32 overflow-y-auto">
-                        {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                          <button
-                            key={year}
-                            onClick={() => setSelectedYear(year)}
-                            className={`px-2 py-1 text-xs rounded ${
-                              selectedYear === year
-                                ? 'bg-emerald-500 text-white'
-                                : 'text-emerald-300 hover:bg-emerald-500/20'
-                            }`}
-                          >
-                            {year}
-                          </button>
-                        ))}
-                      </div>
+                                             <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto">
+                         {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                           <button
+                             key={year}
+                             onClick={() => setSelectedYear(year)}
+                             className={`px-2 py-1 text-xs rounded ${
+                               selectedYear === year
+                                 ? 'bg-emerald-500 text-white'
+                                 : 'text-emerald-300 hover:bg-emerald-500/20'
+                             }`}
+                           >
+                             {year}
+                           </button>
+                         ))}
+                       </div>
                     </div>
                     
                     {/* 월 선택 */}
