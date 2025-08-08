@@ -332,7 +332,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                            <button
                              key={year}
                              onClick={() => setSelectedYear(year)}
-                             className={`px-2 py-1 text-xs rounded ${
+                             className={`px-2 py-1 text-xs rounded flex items-center justify-center min-h-[28px] ${
                                selectedYear === year
                                  ? 'bg-emerald-500 text-white'
                                  : 'text-emerald-300 hover:bg-emerald-500/20'
