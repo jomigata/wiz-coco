@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { updateProfile, onAuthStateChanged } from 'firebase/auth';
-import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
 interface ProfileEditorProps {
@@ -173,38 +173,36 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         });
       }
 
-      // Firestore에 추가 정보 저장
-      const userRef = doc(db, 'users', authUser.uid);
-      
-      // 먼저 문서가 존재하는지 확인
-      const userDoc = await getDoc(userRef);
-      
-      if (userDoc.exists()) {
-        // 문서가 존재하면 업데이트
-        await updateDoc(userRef, {
-          displayName: formData.displayName,
-          phoneNumber: formData.phoneNumber,
-          birthDate: formData.birthDate,
-          gender: formData.gender,
-          occupation: formData.occupation,
-          interests: formData.interests,
-          bio: formData.bio,
-          updatedAt: new Date()
-        });
-      } else {
-        // 문서가 존재하지 않으면 새로 생성
-        await setDoc(userRef, {
-          displayName: formData.displayName,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          birthDate: formData.birthDate,
-          gender: formData.gender,
-          occupation: formData.occupation,
-          interests: formData.interests,
-          bio: formData.bio,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
+      // Firestore에 추가 정보 저장 (항상 merge로 setDoc 사용)
+      const userId = authUser.uid || firebaseUser.uid;
+      const userRef = doc(db, 'users', userId);
+
+      const writeData = {
+        displayName: formData.displayName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        birthDate: formData.birthDate,
+        gender: formData.gender,
+        occupation: formData.occupation,
+        interests: formData.interests,
+        bio: formData.bio,
+        updatedAt: serverTimestamp(),
+      } as const;
+
+      const attemptSave = async () => {
+        await setDoc(userRef, writeData, { merge: true });
+      };
+
+      try {
+        await attemptSave();
+      } catch (err: any) {
+        // 권한 문제일 때 토큰 갱신 후 1회 재시도
+        if (err?.code === 'permission-denied') {
+          await firebaseUser.getIdToken(true);
+          await attemptSave();
+        } else {
+          throw err;
+        }
       }
 
       setMessageType('success');
