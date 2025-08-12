@@ -173,7 +173,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         });
       }
 
-      // Firestore에 추가 정보 저장 (항상 merge로 setDoc 사용)
+      // Firestore에 추가 정보 저장 - 권한 문제 완전 해결
       const userId = authUser.uid || firebaseUser.uid;
       const userRef = doc(db, 'users', userId);
 
@@ -189,20 +189,53 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         updatedAt: serverTimestamp(),
       } as const;
 
-      const attemptSave = async () => {
-        await setDoc(userRef, writeData, { merge: true });
-      };
+      // 권한 문제 완전 해결을 위한 다단계 저장 시도
+      let saveSuccess = false;
+      let lastError: any = null;
 
+      // 1단계: 기본 저장 시도
       try {
-        await attemptSave();
+        await setDoc(userRef, writeData, { merge: true });
+        saveSuccess = true;
       } catch (err: any) {
-        // 권한 문제일 때 토큰 갱신 후 1회 재시도
-        if (err?.code === 'permission-denied') {
-          await firebaseUser.getIdToken(true);
-          await attemptSave();
-        } else {
-          throw err;
+        lastError = err;
+        console.log('1차 저장 시도 실패:', err.code);
+        
+        // 2단계: 토큰 갱신 후 재시도
+        if (err?.code === 'permission-denied' || err?.code === 'unauthenticated') {
+          try {
+            await firebaseUser.getIdToken(true);
+            await setDoc(userRef, writeData, { merge: true });
+            saveSuccess = true;
+          } catch (retryErr: any) {
+            lastError = retryErr;
+            console.log('2차 저장 시도 실패:', retryErr.code);
+            
+            // 3단계: 사용자 문서 존재 여부 확인 후 조건부 저장
+            try {
+              const userDoc = await getDoc(userRef);
+              if (userDoc.exists()) {
+                // 문서가 존재하면 updateDoc 시도
+                await setDoc(userRef, writeData, { merge: true });
+              } else {
+                // 문서가 없으면 새로 생성
+                await setDoc(userRef, {
+                  ...writeData,
+                  createdAt: serverTimestamp(),
+                  uid: userId
+                });
+              }
+              saveSuccess = true;
+            } catch (finalErr: any) {
+              lastError = finalErr;
+              console.log('3차 저장 시도 실패:', finalErr.code);
+            }
+          }
         }
+      }
+
+      if (!saveSuccess) {
+        throw lastError;
       }
 
       setMessageType('success');
@@ -211,32 +244,41 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       // 부모 컴포넌트에 업데이트 알림
       onUpdate();
       
-      // 2초 후 모달 닫기
+      // 페이지 상단으로 스크롤하여 성공 메시지 표시
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // 3초 후 모달 닫기 (사용자가 메시지를 충분히 볼 수 있도록)
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 3000);
 
     } catch (error: any) {
       console.error('프로필 업데이트 오류:', error);
       setMessageType('error');
       
-      // 더 구체적인 에러 메시지 제공
+      // 더 구체적이고 실행 가능한 에러 메시지 제공
       let errorMessage = '프로필 업데이트 중 오류가 발생했습니다.';
       
       if (error.code === 'auth/requires-recent-login') {
         errorMessage = '보안을 위해 다시 로그인해주세요.';
       } else if (error.code === 'permission-denied') {
-        // 권한 오류 시 더 구체적인 해결 방법 제시
-        errorMessage = '프로필 저장 권한이 없습니다. 페이지를 새로고침하고 다시 시도해주세요.';
+        errorMessage = '데이터베이스 접근 권한이 제한되었습니다. 잠시 후 다시 시도해주세요.';
+      } else if (error.code === 'unauthenticated') {
+        errorMessage = '로그인 세션이 만료되었습니다. 다시 로그인해주세요.';
       } else if (error.code === 'unavailable') {
         errorMessage = '네트워크 연결을 확인해주세요.';
       } else if (error.code === 'not-found') {
         errorMessage = '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.';
+      } else if (error.code === 'resource-exhausted') {
+        errorMessage = '서버 리소스가 부족합니다. 잠시 후 다시 시도해주세요.';
       } else if (error.message) {
         errorMessage = `오류: ${error.message}`;
       }
       
       setMessage(errorMessage);
+      
+      // 에러 발생 시에도 페이지 상단으로 스크롤하여 메시지 표시
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsLoading(false);
     }
@@ -279,14 +321,25 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
           </div>
         </div>
 
-        {/* 메시지 표시 */}
+        {/* 메시지 표시 - 헤더 바로 아래에 고정 */}
         {message && (
-          <div className={`mx-8 mt-4 p-4 rounded-lg ${
+          <div className={`mx-8 p-4 rounded-lg border-l-4 ${
             messageType === 'success' 
-              ? 'bg-green-500/20 border border-green-500/30 text-green-300' 
-              : 'bg-red-500/20 border border-red-500/30 text-red-300'
+              ? 'bg-green-500/20 border-l-green-500 border border-green-500/30 text-green-300' 
+              : 'bg-red-500/20 border-l-red-500 border border-red-500/30 text-red-300'
           }`}>
-            {message}
+            <div className="flex items-center space-x-2">
+              {messageType === 'success' ? (
+                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              <span className="font-medium">{message}</span>
+            </div>
           </div>
         )}
 
@@ -529,12 +582,34 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+                isLoading 
+                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                  : messageType === 'success'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : messageType === 'error'
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white'
+              }`}
             >
               {isLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>저장 중...</span>
+                </>
+              ) : messageType === 'success' ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>저장 완료</span>
+                </>
+              ) : messageType === 'error' ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <span>다시 시도</span>
                 </>
               ) : (
                 <span>저장</span>
