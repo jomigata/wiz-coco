@@ -182,7 +182,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
     setIsLoading(true);
     setMessage('');
-    // 기본 상태를 success로 설정하지 않고, 실제 결과에 따라 설정
 
     try {
       // Firebase Auth 프로필 업데이트
@@ -207,6 +206,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         bio: formData.bio,
         updatedAt: serverTimestamp(),
         uid: userId, // 사용자 ID 명시적 포함
+        lastModified: new Date().toISOString(), // 마지막 수정 시간 추가
       } as const;
 
       // 권한 문제 완전 해결을 위한 다단계 저장 시도
@@ -217,22 +217,26 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       try {
         await setDoc(userRef, writeData, { merge: true });
         saveSuccess = true;
+        console.log('프로필 저장 성공: 1차 시도');
       } catch (err: any) {
         lastError = err;
-        console.log('1차 저장 시도 실패:', err.code);
+        console.log('1차 저장 시도 실패:', err.code, err.message);
         
         // 2단계: 토큰 갱신 후 재시도
         if (err?.code === 'permission-denied' || err?.code === 'unauthenticated') {
           try {
+            console.log('토큰 갱신 시도...');
             await firebaseUser.getIdToken(true);
             await setDoc(userRef, writeData, { merge: true });
             saveSuccess = true;
+            console.log('프로필 저장 성공: 2차 시도 (토큰 갱신 후)');
           } catch (retryErr: any) {
             lastError = retryErr;
-            console.log('2차 저장 시도 실패:', retryErr.code);
+            console.log('2차 저장 시도 실패:', retryErr.code, retryErr.message);
             
             // 3단계: 사용자 문서 존재 여부 확인 후 조건부 저장
             try {
+              console.log('사용자 문서 존재 여부 확인...');
               const userDoc = await getDoc(userRef);
               if (userDoc.exists()) {
                 // 문서가 존재하면 updateDoc 시도
@@ -245,9 +249,10 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                 });
               }
               saveSuccess = true;
+              console.log('프로필 저장 성공: 3차 시도 (문서 존재 여부 확인 후)');
             } catch (finalErr: any) {
               lastError = finalErr;
-              console.log('3차 저장 시도 실패:', finalErr.code);
+              console.log('3차 저장 시도 실패:', finalErr.code, finalErr.message);
             }
           }
         }
@@ -348,22 +353,28 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
         {/* 메시지 표시 - 헤더 바로 아래에 고정 */}
         {message && (
-          <div className={`mx-8 my-4 p-4 rounded-lg border-l-4 ${
+          <div className={`mx-6 my-6 p-6 rounded-xl border-l-4 shadow-lg ${
             messageType === 'success' 
-              ? 'bg-green-500/20 border-l-green-500 border border-green-500/30 text-green-300' 
-              : 'bg-red-500/20 border-l-red-500 border border-red-500/30 text-red-300'
+              ? 'bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-l-green-400 border border-green-500/20 text-green-200' 
+              : 'bg-gradient-to-r from-red-500/10 to-pink-500/10 border-l-red-400 border border-red-500/20 text-red-200'
           }`}>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               {messageType === 'success' ? (
-                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <div className="flex-shrink-0 w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
               ) : (
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <div className="flex-shrink-0 w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
               )}
-              <span className="font-medium">{message}</span>
+              <div className="flex-1">
+                <p className="text-sm font-medium leading-relaxed">{message}</p>
+              </div>
             </div>
           </div>
         )}
