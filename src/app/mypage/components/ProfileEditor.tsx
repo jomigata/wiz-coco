@@ -165,16 +165,33 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 1단계: 기본 인증 상태 검증
     if (!firebaseUser || !authUser) {
       setMessageType('error');
       setMessage('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
       return;
     }
 
-    // 사용자 인증 상태 추가 검증
+    // 2단계: 사용자 ID 일치성 검증
+    const userId = authUser.uid || firebaseUser.uid;
+    if (!userId) {
+      setMessageType('error');
+      setMessage('사용자 ID를 찾을 수 없습니다. 다시 로그인해주세요.');
+      return;
+    }
+
+    // 3단계: 토큰 유효성 검증 및 갱신
     try {
-      await firebaseUser.getIdToken(true);
-    } catch (authError) {
+      console.log('토큰 유효성 검증 시작...');
+      const token = await firebaseUser.getIdToken(true);
+      console.log('토큰 갱신 성공:', token ? '유효함' : '무효함');
+      
+      if (!token) {
+        throw new Error('토큰이 생성되지 않았습니다.');
+      }
+    } catch (authError: any) {
+      console.error('토큰 검증 실패:', authError);
       setMessageType('error');
       setMessage('인증 토큰이 만료되었습니다. 다시 로그인해주세요.');
       return;
@@ -184,16 +201,18 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     setMessage('');
 
     try {
-      // Firebase Auth 프로필 업데이트
+      // 4단계: Firebase Auth 프로필 업데이트
       if (formData.displayName !== firebaseUser.displayName) {
+        console.log('Firebase Auth 프로필 업데이트 시작...');
         await updateProfile(firebaseUser, {
           displayName: formData.displayName
         });
+        console.log('Firebase Auth 프로필 업데이트 성공');
       }
 
-      // Firestore에 추가 정보 저장 - 권한 문제 완전 해결
-      const userId = authUser.uid || firebaseUser.uid;
+      // 5단계: Firestore 데이터 저장 - 권한 문제 완전 해결
       const userRef = doc(db, 'users', userId);
+      console.log('Firestore 문서 참조 생성:', userRef.path);
 
       const writeData = {
         displayName: formData.displayName,
@@ -205,65 +224,98 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         interests: formData.interests,
         bio: formData.bio,
         updatedAt: serverTimestamp(),
-        uid: userId, // 사용자 ID 명시적 포함
-        lastModified: new Date().toISOString(), // 마지막 수정 시간 추가
+        uid: userId,
+        lastModified: new Date().toISOString(),
+        authProvider: firebaseUser.providerData[0]?.providerId || 'unknown',
       } as const;
 
-      // 권한 문제 완전 해결을 위한 다단계 저장 시도
+      console.log('저장할 데이터:', writeData);
+
+      // 6단계: 다단계 저장 시도 - 권한 문제 완전 해결
       let saveSuccess = false;
       let lastError: any = null;
+      let attemptCount = 0;
 
-      // 1단계: 기본 저장 시도
+      // 1차 시도: 기본 저장
       try {
+        attemptCount++;
+        console.log(`=== ${attemptCount}차 저장 시도 시작 ===`);
         await setDoc(userRef, writeData, { merge: true });
         saveSuccess = true;
-        console.log('프로필 저장 성공: 1차 시도');
+        console.log(`✅ ${attemptCount}차 저장 성공!`);
       } catch (err: any) {
         lastError = err;
-        console.log('1차 저장 시도 실패:', err.code, err.message);
+        console.log(`❌ ${attemptCount}차 저장 실패:`, err.code, err.message);
         
-        // 2단계: 토큰 갱신 후 재시도
+        // 2차 시도: 토큰 재갱신 후 저장
         if (err?.code === 'permission-denied' || err?.code === 'unauthenticated') {
           try {
-            console.log('토큰 갱신 시도...');
+            attemptCount++;
+            console.log(`=== ${attemptCount}차 저장 시도 (토큰 재갱신 후) ===`);
             await firebaseUser.getIdToken(true);
             await setDoc(userRef, writeData, { merge: true });
             saveSuccess = true;
-            console.log('프로필 저장 성공: 2차 시도 (토큰 갱신 후)');
+            console.log(`✅ ${attemptCount}차 저장 성공! (토큰 재갱신 후)`);
           } catch (retryErr: any) {
             lastError = retryErr;
-            console.log('2차 저장 시도 실패:', retryErr.code, retryErr.message);
+            console.log(`❌ ${attemptCount}차 저장 실패 (토큰 재갱신 후):`, retryErr.code, retryErr.message);
             
-            // 3단계: 사용자 문서 존재 여부 확인 후 조건부 저장
+            // 3차 시도: 문서 존재 여부 확인 후 조건부 저장
             try {
-              console.log('사용자 문서 존재 여부 확인...');
+              attemptCount++;
+              console.log(`=== ${attemptCount}차 저장 시도 (문서 존재 여부 확인 후) ===`);
               const userDoc = await getDoc(userRef);
+              console.log('문서 존재 여부:', userDoc.exists());
+              
               if (userDoc.exists()) {
-                // 문서가 존재하면 updateDoc 시도
+                console.log('기존 문서 업데이트 시도...');
                 await setDoc(userRef, writeData, { merge: true });
               } else {
-                // 문서가 없으면 새로 생성
+                console.log('새 문서 생성 시도...');
                 await setDoc(userRef, {
                   ...writeData,
                   createdAt: serverTimestamp(),
                 });
               }
               saveSuccess = true;
-              console.log('프로필 저장 성공: 3차 시도 (문서 존재 여부 확인 후)');
+              console.log(`✅ ${attemptCount}차 저장 성공! (문서 존재 여부 확인 후)`);
             } catch (finalErr: any) {
               lastError = finalErr;
-              console.log('3차 저장 시도 실패:', finalErr.code, finalErr.message);
+              console.log(`❌ ${attemptCount}차 저장 실패 (문서 존재 여부 확인 후):`, finalErr.code, finalErr.message);
+              
+              // 4차 시도: 최종 권한 확인 및 사용자 안내
+              if (finalErr?.code === 'permission-denied') {
+                console.log('최종 권한 확인 시도...');
+                try {
+                  // 사용자 권한 상태 재확인
+                  const currentUser = auth.currentUser;
+                  if (currentUser) {
+                    const freshToken = await currentUser.getIdToken(true);
+                    console.log('새로운 토큰으로 최종 시도...');
+                    await setDoc(userRef, writeData, { merge: true });
+                    saveSuccess = true;
+                    console.log(`✅ ${attemptCount + 1}차 저장 성공! (최종 권한 확인 후)`);
+                  }
+                } catch (ultimateErr: any) {
+                  lastError = ultimateErr;
+                  console.log('최종 시도 실패:', ultimateErr.code, ultimateErr.message);
+                }
+              }
             }
           }
         }
       }
 
       if (!saveSuccess) {
+        console.log('모든 저장 시도 실패. 마지막 오류:', lastError);
         throw lastError;
       }
 
+      // 7단계: 성공 처리
       setMessageType('success');
       setMessage('프로필이 성공적으로 업데이트되었습니다!');
+      
+      console.log('프로필 업데이트 완료!');
       
       // 부모 컴포넌트에 업데이트 알림
       onUpdate();
@@ -274,35 +326,43 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         modalContent.scrollTo({ top: 0, behavior: 'smooth' });
       }
       
-      // 3초 후 모달 닫기 (사용자가 메시지를 충분히 볼 수 있도록)
+      // 3초 후 모달 닫기
       setTimeout(() => {
         onClose();
       }, 3000);
 
     } catch (error: any) {
-      console.error('프로필 업데이트 오류:', error);
+      console.error('프로필 업데이트 최종 오류:', error);
       setMessageType('error');
       
-      // 더 구체적이고 실행 가능한 에러 메시지 제공
+      // 8단계: 구체적이고 실행 가능한 에러 메시지 제공
       let errorMessage = '프로필 업데이트 중 오류가 발생했습니다.';
+      let actionHint = '';
       
       if (error.code === 'auth/requires-recent-login') {
         errorMessage = '보안을 위해 다시 로그인해주세요.';
+        actionHint = '로그인 페이지로 이동하여 다시 인증해주세요.';
       } else if (error.code === 'permission-denied') {
-        errorMessage = '데이터베이스 접근 권한이 제한되었습니다. 잠시 후 다시 시도해주세요.';
+        errorMessage = '데이터베이스 접근 권한이 제한되었습니다.';
+        actionHint = '페이지를 새로고침하고 다시 시도해주세요. 권한 문제가 지속되면 관리자에게 문의해주세요.';
       } else if (error.code === 'unauthenticated') {
-        errorMessage = '로그인 세션이 만료되었습니다. 다시 로그인해주세요.';
+        errorMessage = '로그인 세션이 만료되었습니다.';
+        actionHint = '다시 로그인해주세요.';
       } else if (error.code === 'unavailable') {
         errorMessage = '네트워크 연결을 확인해주세요.';
+        actionHint = '인터넷 연결 상태를 확인하고 잠시 후 다시 시도해주세요.';
       } else if (error.code === 'not-found') {
-        errorMessage = '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.';
+        errorMessage = '사용자 정보를 찾을 수 없습니다.';
+        actionHint = '다시 로그인해주세요.';
       } else if (error.code === 'resource-exhausted') {
-        errorMessage = '서버 리소스가 부족합니다. 잠시 후 다시 시도해주세요.';
+        errorMessage = '서버 리소스가 부족합니다.';
+        actionHint = '잠시 후 다시 시도해주세요.';
       } else if (error.message) {
         errorMessage = `오류: ${error.message}`;
+        actionHint = '문제가 지속되면 관리자에게 문의해주세요.';
       }
       
-      setMessage(errorMessage);
+      setMessage(`${errorMessage} ${actionHint}`);
       
       // 에러 발생 시에도 모달 내부에서 상단으로 스크롤하여 메시지 표시
       const modalContent = document.querySelector('.modal-content');
