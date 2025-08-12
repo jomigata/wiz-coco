@@ -17,6 +17,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
   const { user: authUser } = useFirebaseAuth();
   const [firebaseUser, setFirebaseUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false); // 데이터 로딩 상태 분리
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
   
@@ -66,6 +67,8 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     const loadUserData = async () => {
       if (authUser) {
         try {
+          setIsDataLoading(true); // 데이터 로딩 시작
+          console.log('사용자 데이터 로드 시작...');
           // Firestore에서 사용자 정보 가져오기
           const userRef = doc(db, 'users', authUser.uid);
           const userDoc = await getDoc(userRef);
@@ -92,6 +95,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               interests: userData.interests || [],
               bio: userData.bio || ''
             });
+            console.log('사용자 데이터 로드 완료:', { displayName: authUser.displayName, birthDate });
           } else {
             // Firestore에 데이터가 없으면 기본값 설정
             setFormData({
@@ -104,6 +108,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               interests: [],
               bio: ''
             });
+            console.log('새 사용자 기본값 설정 완료');
           }
         } catch (error) {
           console.error('사용자 데이터 로드 오류:', error);
@@ -118,12 +123,17 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             interests: [],
             bio: ''
           });
+        } finally {
+          setIsDataLoading(false); // 데이터 로딩 완료
         }
       }
     };
 
-    loadUserData();
-  }, [authUser]);
+    // authUser가 변경될 때만 실행 (날짜 선택 시에는 실행되지 않음)
+    if (authUser && !formData.displayName) {
+      loadUserData();
+    }
+  }, [authUser]); // formData 제거하여 무한 루프 방지
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -144,13 +154,21 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
   // 날짜 선택 핸들러
   const handleDateSelect = (year: number, month: number, day: number, event?: React.MouseEvent) => {
-    console.log('날짜 선택:', { year, month, day });
+    console.log('날짜 선택 시작:', { year, month, day });
     
     // 날짜 선택 시 모달이 닫히지 않도록 이벤트 전파 중단
     if (event) {
       event.stopPropagation();
     }
     
+    // 현재 선택된 값과 동일한지 확인하여 불필요한 상태 변경 방지
+    if (selectedYear === year && selectedMonth === month && selectedDay === day) {
+      console.log('동일한 날짜가 이미 선택됨, 상태 변경 생략');
+      setShowDatePicker(false);
+      return;
+    }
+    
+    // 날짜 선택기 상태 업데이트
     setSelectedYear(year);
     setSelectedMonth(month);
     setSelectedDay(day);
@@ -158,10 +176,20 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
     console.log('포맷된 날짜:', formattedDate);
     
-    setFormData(prev => ({
-      ...prev,
-      birthDate: formattedDate
-    }));
+    // formData 업데이트 (로딩 상태 발생하지 않음)
+    setFormData(prev => {
+      // 현재 값과 동일한지 확인
+      if (prev.birthDate === formattedDate) {
+        console.log('생년월일이 동일함, 상태 업데이트 생략');
+        return prev;
+      }
+      
+      console.log('생년월일 업데이트:', { 이전: prev.birthDate, 새로운: formattedDate });
+      return {
+        ...prev,
+        birthDate: formattedDate
+      };
+    });
     
     // 날짜 선택 후 날짜 선택기는 닫지만, 모달은 유지
     setShowDatePicker(false);
@@ -456,285 +484,300 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
         {/* 폼 */}
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {/* 기본 정보 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">기본 정보</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">이름</label>
-                <input
-                  type="text"
-                  name="displayName"
-                  value={formData.displayName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
-                  placeholder="이름을 입력하세요"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">이메일</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  disabled
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-gray-400 cursor-not-allowed"
-                  placeholder="이메일 (수정 불가)"
-                />
+          {/* 데이터 로딩 중일 때만 로딩 표시 */}
+          {isDataLoading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-emerald-300 text-sm">정보를 불러오는 중입니다...</p>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">전화번호</label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
-                  placeholder="전화번호를 입력하세요"
-                />
-              </div>
-              
-              <div className="relative">
-                <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={formatDate(formData.birthDate)}
-                    readOnly
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDatePicker(!showDatePicker);
-                    }}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
-                    placeholder="연도. 월. 일."
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+          )}
+          
+          {/* 데이터 로딩이 완료된 후에만 폼 내용 표시 */}
+          {!isDataLoading && (
+            <>
+              {/* 기본 정보 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">기본 정보</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">이름</label>
+                    <input
+                      type="text"
+                      name="displayName"
+                      value={formData.displayName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      placeholder="이름을 입력하세요"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">이메일</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      disabled
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-gray-400 cursor-not-allowed"
+                      placeholder="이메일 (수정 불가)"
+                    />
                   </div>
                 </div>
-                
-                {/* 커스텀 날짜 선택기 */}
-                {showDatePicker && (
-                  <div 
-                    className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4"
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onMouseUp={(e) => e.stopPropagation()}
-                  >
-                    {/* 연도 선택 */}
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-emerald-300">연도 선택</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDatePicker(false);
-                          }}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto">
-                        {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                          <button
-                            key={year}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedYear(year);
-                            }}
-                            className={`px-2 py-1 text-xs rounded flex items-center justify-center min-h-[28px] ${
-                              selectedYear === year
-                                ? 'bg-emerald-500 text-white'
-                                : 'text-emerald-300 hover:bg-emerald-500/20'
-                            }`}
-                          >
-                            {year}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* 월 선택 */}
-                    <div className="mb-4">
-                      <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                          <button
-                            key={month}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedMonth(month);
-                            }}
-                            className={`px-3 py-2 text-sm rounded ${
-                              selectedMonth === month
-                                ? 'bg-blue-500 text-white'
-                                : 'text-blue-300 hover:bg-blue-500/20'
-                            }`}
-                          >
-                            {month}월
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* 일 선택 */}
-                    <div>
-                      <span className="text-sm font-medium text-emerald-300 block mb-2">일 선택</span>
-                      <div className="grid grid-cols-7 gap-1">
-                        {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-                          <div key={day} className="text-xs text-gray-400 text-center py-1">
-                            {day}
-                          </div>
-                        ))}
-                        {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map((day) => (
-                          <button
-                            key={day}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDateSelect(selectedYear, selectedMonth, day, e);
-                            }}
-                            className={`px-2 py-1 text-xs rounded ${
-                              selectedDay === day
-                                ? 'bg-purple-500 text-white'
-                                : 'text-purple-300 hover:bg-purple-500/20'
-                            }`}
-                          >
-                            {day}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* 하단 버튼 */}
-                    <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDatePicker(false);
-                        }}
-                        className="px-3 py-1 text-sm text-gray-400 hover:text-white"
-                      >
-                        삭제
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDateSelect(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
-                        }}
-                        className="px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600"
-                      >
-                        오늘
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">성별</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
-                  style={{
-                    color: 'white'
-                  }}
-                >
-                  <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>선택하세요</option>
-                  <option value="male" style={{ backgroundColor: '#1e293b', color: 'white' }}>남성</option>
-                  <option value="female" style={{ backgroundColor: '#1e293b', color: 'white' }}>여성</option>
-                  <option value="other" style={{ backgroundColor: '#1e293b', color: 'white' }}>기타</option>
-                </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">전화번호</label>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      placeholder="전화번호를 입력하세요"
+                    />
+                  </div>
+                  
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formatDate(formData.birthDate)}
+                        readOnly
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDatePicker(!showDatePicker);
+                        }}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
+                        placeholder="연도. 월. 일."
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    {/* 커스텀 날짜 선택기 */}
+                    {showDatePicker && (
+                      <div 
+                        className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
+                      >
+                        {/* 연도 선택 */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-emerald-300">연도 선택</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDatePicker(false);
+                              }}
+                              className="text-gray-400 hover:text-white"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto">
+                            {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                              <button
+                                key={year}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedYear(year);
+                                }}
+                                className={`px-2 py-1 text-xs rounded flex items-center justify-center min-h-[28px] ${
+                                  selectedYear === year
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'text-emerald-300 hover:bg-emerald-500/20'
+                                }`}
+                              >
+                                {year}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* 월 선택 */}
+                        <div className="mb-4">
+                          <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
+                          <div className="grid grid-cols-3 gap-2">
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                              <button
+                                key={month}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedMonth(month);
+                                }}
+                                className={`px-3 py-2 text-sm rounded ${
+                                  selectedMonth === month
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-blue-300 hover:bg-blue-500/20'
+                                }`}
+                              >
+                                {month}월
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* 일 선택 */}
+                        <div>
+                          <span className="text-sm font-medium text-emerald-300 block mb-2">일 선택</span>
+                          <div className="grid grid-cols-7 gap-1">
+                            {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+                              <div key={day} className="text-xs text-gray-400 text-center py-1">
+                                {day}
+                              </div>
+                            ))}
+                            {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map((day) => (
+                              <button
+                                key={day}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDateSelect(selectedYear, selectedMonth, day, e);
+                                }}
+                                className={`px-2 py-1 text-xs rounded ${
+                                  selectedDay === day
+                                    ? 'bg-purple-500 text-white'
+                                    : 'text-purple-300 hover:bg-purple-500/20'
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* 하단 버튼 */}
+                        <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowDatePicker(false);
+                            }}
+                            className="px-3 py-1 text-sm text-gray-400 hover:text-white"
+                          >
+                            삭제
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDateSelect(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
+                            }}
+                            className="px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                          >
+                            오늘
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">성별</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      style={{
+                        color: 'white'
+                      }}
+                    >
+                      <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>선택하세요</option>
+                      <option value="male" style={{ backgroundColor: '#1e293b', color: 'white' }}>남성</option>
+                      <option value="female" style={{ backgroundColor: '#1e293b', color: 'white' }}>여성</option>
+                      <option value="other" style={{ backgroundColor: '#1e293b', color: 'white' }}>기타</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">직업</label>
+                    <input
+                      type="text"
+                      name="occupation"
+                      value={formData.occupation}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      placeholder="직업을 입력하세요"
+                    />
+                  </div>
+                </div>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">직업</label>
-                <input
-                  type="text"
-                  name="occupation"
-                  value={formData.occupation}
+
+              {/* 관심사 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">관심사</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {interestOptions.map((interest) => (
+                    <label key={interest} className="flex items-center space-x-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={formData.interests.includes(interest)}
+                        onChange={() => handleInterestChange(interest)}
+                        className="w-4 h-4 text-emerald-500 bg-white/10 border-white/20 rounded focus:ring-emerald-500/50 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors duration-200">
+                        {interest}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* 자기소개 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">자기소개</h3>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
-                  placeholder="직업을 입력하세요"
+                  rows={4}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-none"
+                  placeholder="자기소개를 입력하세요..."
                 />
               </div>
-            </div>
-          </div>
 
-          {/* 관심사 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">관심사</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {interestOptions.map((interest) => (
-                <label key={interest} className="flex items-center space-x-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={formData.interests.includes(interest)}
-                    onChange={() => handleInterestChange(interest)}
-                    className="w-4 h-4 text-emerald-500 bg-white/10 border-white/20 rounded focus:ring-emerald-500/50 focus:ring-2"
-                  />
-                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors duration-200">
-                    {interest}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* 자기소개 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">자기소개</h3>
-            <textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-none"
-              placeholder="자기소개를 입력하세요..."
-            />
-          </div>
-
-          {/* 버튼 */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-white/20">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-300 hover:text-white border border-white/20 hover:border-white/40 rounded-lg transition-all duration-300"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
-                isLoading 
-                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white'
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>저장 중...</span>
-                </>
-              ) : (
-                <span>저장</span>
-              )}
-            </button>
-          </div>
+              {/* 버튼 */}
+              <div className="flex justify-end space-x-4 pt-6 border-t border-white/20">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-3 text-gray-300 hover:text-white border border-white/20 hover:border-white/40 rounded-lg transition-all duration-300"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
+                    isLoading 
+                      ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white'
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>저장 중...</span>
+                    </>
+                  ) : (
+                    <span>저장</span>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </motion.div>
     </motion.div>,
