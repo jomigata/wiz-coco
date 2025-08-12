@@ -10,6 +10,7 @@ import { getItem, setItem, getAuthState, setAuthState } from '@/utils/localStora
 import { setupSyncMonitor, onSyncStatusChange, SyncStatus } from '@/utils/syncService';
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { auth } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -424,10 +425,20 @@ function MyPageContent() {
       
       console.log('[MyPage] DB에서 검사 기록 조회 시작:', email);
       
+      // Firebase 인증 토큰 가져오기
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn('[MyPage] 인증된 사용자가 없음 - 로컬 데이터로 대체');
+        return fetchLocalTestRecords(email);
+      }
+      
+      const token = await currentUser.getIdToken();
+      
       const response = await fetch('/api/test-results', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include'
       });
