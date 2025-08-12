@@ -48,6 +48,15 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
+      
+      // 사용자 인증 상태가 변경될 때마다 토큰 유효성 검증
+      if (user) {
+        user.getIdToken(true).catch((error) => {
+          console.error('토큰 갱신 실패:', error);
+          setMessageType('error');
+          setMessage('인증 토큰을 갱신할 수 없습니다. 다시 로그인해주세요.');
+        });
+      }
     });
 
     return () => unsubscribe();
@@ -162,9 +171,18 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       return;
     }
 
+    // 사용자 인증 상태 추가 검증
+    try {
+      await firebaseUser.getIdToken(true);
+    } catch (authError) {
+      setMessageType('error');
+      setMessage('인증 토큰이 만료되었습니다. 다시 로그인해주세요.');
+      return;
+    }
+
     setIsLoading(true);
     setMessage('');
-    setMessageType('success'); // 기본 상태를 success로 설정
+    // 기본 상태를 success로 설정하지 않고, 실제 결과에 따라 설정
 
     try {
       // Firebase Auth 프로필 업데이트
@@ -188,6 +206,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         interests: formData.interests,
         bio: formData.bio,
         updatedAt: serverTimestamp(),
+        uid: userId, // 사용자 ID 명시적 포함
       } as const;
 
       // 권한 문제 완전 해결을 위한 다단계 저장 시도
@@ -223,7 +242,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                 await setDoc(userRef, {
                   ...writeData,
                   createdAt: serverTimestamp(),
-                  uid: userId
                 });
               }
               saveSuccess = true;
@@ -330,7 +348,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
         {/* 메시지 표시 - 헤더 바로 아래에 고정 */}
         {message && (
-          <div className={`mx-8 p-4 rounded-lg border-l-4 ${
+          <div className={`mx-8 my-4 p-4 rounded-lg border-l-4 ${
             messageType === 'success' 
               ? 'bg-green-500/20 border-l-green-500 border border-green-500/30 text-green-300' 
               : 'bg-red-500/20 border-l-red-500 border border-red-500/30 text-red-300'
