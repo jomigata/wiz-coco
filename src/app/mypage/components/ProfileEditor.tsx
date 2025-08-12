@@ -164,6 +164,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
     setIsLoading(true);
     setMessage('');
+    setMessageType('success'); // 기본 상태를 success로 설정
 
     try {
       // Firebase Auth 프로필 업데이트
@@ -244,8 +245,11 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       // 부모 컴포넌트에 업데이트 알림
       onUpdate();
       
-      // 페이지 상단으로 스크롤하여 성공 메시지 표시
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 모달 내부에서 상단으로 스크롤하여 성공 메시지 표시
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       
       // 3초 후 모달 닫기 (사용자가 메시지를 충분히 볼 수 있도록)
       setTimeout(() => {
@@ -277,8 +281,11 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       
       setMessage(errorMessage);
       
-      // 에러 발생 시에도 페이지 상단으로 스크롤하여 메시지 표시
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 에러 발생 시에도 모달 내부에서 상단으로 스크롤하여 메시지 표시
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -295,13 +302,13 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 50, opacity: 0 }}
-        className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl shadow-2xl border border-emerald-500/30 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+             <motion.div
+         initial={{ y: 50, opacity: 0 }}
+         animate={{ y: 0, opacity: 1 }}
+         exit={{ y: 50, opacity: 0 }}
+         className="modal-content bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl shadow-2xl border border-emerald-500/30 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+         onClick={(e) => e.stopPropagation()}
+       >
         {/* 헤더 */}
         <div className="relative px-8 py-6 border-b border-gradient-to-r from-emerald-500/30 to-blue-500/30">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-blue-600/10 rounded-t-2xl"></div>
@@ -585,10 +592,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
                 isLoading 
                   ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                  : messageType === 'success'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : messageType === 'error'
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white'
               }`}
             >
@@ -596,20 +599,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>저장 중...</span>
-                </>
-              ) : messageType === 'success' ? (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>저장 완료</span>
-                </>
-              ) : messageType === 'error' ? (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <span>다시 시도</span>
                 </>
               ) : (
                 <span>저장</span>
