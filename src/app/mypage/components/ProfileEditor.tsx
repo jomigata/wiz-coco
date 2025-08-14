@@ -129,11 +129,11 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       }
     };
 
-    // authUser가 변경될 때만 실행 (날짜 선택 시에는 실행되지 않음)
-    if (authUser && !formData.displayName) {
+    // authUser가 변경될 때만 실행하고, 이미 데이터가 로드되었는지 확인
+    if (authUser && !formData.displayName && !isDataLoading) {
       loadUserData();
     }
-  }, [authUser]); // formData 제거하여 무한 루프 방지
+  }, [authUser, isDataLoading]); // isDataLoading 추가하여 중복 실행 방지
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

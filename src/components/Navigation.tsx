@@ -549,10 +549,9 @@ export default function Navigation() {
           <div className="flex items-center gap-4 ml-6 pl-6 border-l border-indigo-800">
             {isLoggedIn ? (
               <>
-                  {/* 사용자 정보 표시 - 간소화 버전 */}
+                  {/* 사용자 정보 표시 - 클릭으로 토글되는 버전 */}
                   <div className="group flex items-center gap-3 bg-gradient-to-r from-emerald-900/40 to-blue-900/40 rounded-xl px-4 py-2.5 backdrop-blur-md border border-emerald-600/30 shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer"
-                        onMouseEnter={() => setActiveMenu('user')}
-                        onMouseLeave={() => setActiveMenu(null)}>
+                        onClick={() => setActiveMenu(activeMenu === 'user' ? null : 'user')}>
                     <div className="relative">
                       <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform duration-300">
                     {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
@@ -587,8 +586,6 @@ export default function Navigation() {
                   {isDropdownOpen && (
                     <div
                         className="absolute right-0 top-full mt-2 py-6 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                        onMouseEnter={() => setActiveMenu('user')}
-                        onMouseLeave={() => setActiveMenu(null)}
                       >
                         {/* 사용자 정보 헤더 - 고급 버전 */}
                         <div className="relative px-8 pt-3 pb-6 border-b border-gradient-to-r from-emerald-500/30 to-blue-500/30">
