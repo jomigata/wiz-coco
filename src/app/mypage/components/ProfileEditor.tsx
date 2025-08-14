@@ -738,7 +738,20 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                                 // 현재 선택된 연도, 월, 일로 날짜 설정
                                 // 일을 선택하지 않았더라도 현재 선택된 일을 사용
                                 const currentDay = selectedDay || 1; // 일이 선택되지 않았으면 1일로 기본 설정
-                                handleDateSelect(selectedYear, selectedMonth, currentDay, e);
+                                
+                                // 현재 선택된 날짜를 formData에 즉시 반영하여 상단 입력필드에 표시
+                                const formattedDate = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`;
+                                
+                                // formData 업데이트로 상단 입력필드에 즉시 반영
+                                setFormData(prev => ({
+                                  ...prev,
+                                  birthDate: formattedDate
+                                }));
+                                
+                                // 날짜 선택기 닫기
+                                setShowDatePicker(false);
+                                
+                                console.log('완료 버튼으로 날짜 설정 완료:', formattedDate);
                               }}
                               onMouseDown={(e) => e.stopPropagation()}
                               onMouseUp={(e) => e.stopPropagation()}
