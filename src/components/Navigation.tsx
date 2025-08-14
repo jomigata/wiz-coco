@@ -552,15 +552,16 @@ export default function Navigation() {
                   {/* 사용자 정보 표시 - 하이브리드 토글 버전 (마우스 오버 + 클릭) */}
                   <div className="group flex items-center gap-3 bg-gradient-to-r from-emerald-900/40 to-blue-900/40 rounded-xl px-4 py-2.5 backdrop-blur-md border border-emerald-600/30 shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 cursor-pointer"
                         onClick={() => setActiveMenu(activeMenu === 'user' ? null : 'user')}
-                        onMouseEnter={() => setActiveMenu('user')}
+                        onMouseEnter={() => {
+                          // 마우스 오버 시 서브메뉴 표시 (클릭으로 열린 상태가 아닐 때만)
+                          if (activeMenu !== 'user') {
+                            setActiveMenu('user');
+                          }
+                        }}
                         onMouseLeave={() => {
-                          // 마우스가 메뉴 영역을 벗어날 때만 자동으로 닫기
-                          // 클릭으로 열린 상태는 유지
-                          setTimeout(() => {
-                            if (activeMenu === 'user') {
-                              setActiveMenu(null);
-                            }
-                          }, 100);
+                          // 마우스가 버튼 영역을 벗어날 때 서브메뉴 숨김
+                          // 단, 클릭으로 열린 상태는 유지하지 않음
+                          setActiveMenu(null);
                         }}>
                     <div className="relative">
                       <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform duration-300">
@@ -596,14 +597,15 @@ export default function Navigation() {
                   {isDropdownOpen && (
                     <div
                         className="absolute right-0 top-full mt-2 py-6 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                        onMouseEnter={() => setActiveMenu('user')}
+                        onMouseEnter={() => {
+                          // 마우스가 메뉴 영역에 들어올 때 서브메뉴 유지
+                          if (activeMenu === 'user') {
+                            setActiveMenu('user');
+                          }
+                        }}
                         onMouseLeave={() => {
-                          // 마우스가 메뉴 영역을 벗어날 때만 자동으로 닫기
-                          setTimeout(() => {
-                            if (activeMenu === 'user') {
-                              setActiveMenu(null);
-                            }
-                          }, 100);
+                          // 마우스가 메뉴 영역을 벗어날 때 서브메뉴 숨김
+                          setActiveMenu(null);
                         }}
                       >
                         {/* 사용자 정보 헤더 - 고급 버전 */}

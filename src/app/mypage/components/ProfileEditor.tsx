@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
@@ -134,7 +134,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     if (authUser && !formData.displayName && !isDataLoading) {
       loadUserData();
     }
-  }, [authUser]); // isDataLoading 제거하여 무한 루프 방지
+  }, [authUser]); // formData 제거하여 무한 루프 완전 방지
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -153,13 +153,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     }));
   };
 
-  // 날짜 선택 핸들러 - 최적화된 버전
+  // 날짜 선택 핸들러 - 완전 최적화된 버전
   const handleDateSelect = (year: number, month: number, day: number, event?: React.MouseEvent) => {
     console.log('날짜 선택 시작:', { year, month, day });
     
     // 날짜 선택 시 모달이 닫히지 않도록 이벤트 전파 중단
     if (event) {
       event.stopPropagation();
+      event.preventDefault();
     }
     
     // 현재 선택된 값과 동일한지 확인하여 불필요한 상태 변경 방지
@@ -181,14 +182,17 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     }
     
     // 모든 상태를 한 번에 업데이트하여 불필요한 리렌더링 방지
-    setSelectedYear(year);
-    setSelectedMonth(month);
-    setSelectedDay(day);
-    
-    setFormData(prev => ({
-      ...prev,
-      birthDate: formattedDate
-    }));
+    // React 18의 배치 업데이트를 활용
+    startTransition(() => {
+      setSelectedYear(year);
+      setSelectedMonth(month);
+      setSelectedDay(day);
+      
+      setFormData(prev => ({
+        ...prev,
+        birthDate: formattedDate
+      }));
+    });
     
     // 날짜 선택 후 날짜 선택기는 닫지만, 모달은 유지
     setShowDatePicker(false);
@@ -542,17 +546,26 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                   <div className="relative">
                     <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
                     <div className="relative">
-                      <input
-                        type="text"
-                        value={formatDate(formData.birthDate)}
-                        readOnly
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDatePicker(!showDatePicker);
-                        }}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
-                        placeholder="연도. 월. 일."
-                      />
+                                             <input
+                         type="text"
+                         value={formatDate(formData.birthDate)}
+                         readOnly
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                           setShowDatePicker(!showDatePicker);
+                         }}
+                         onMouseDown={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onMouseUp={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
+                         placeholder="연도. 월. 일."
+                       />
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                         <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -564,11 +577,34 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                      {showDatePicker && (
                        <div 
                          className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4"
-                         onClick={(e) => e.stopPropagation()}
-                         onMouseDown={(e) => e.stopPropagation()}
-                         onMouseUp={(e) => e.stopPropagation()}
-                         onPointerDown={(e) => e.stopPropagation()}
-                         onPointerUp={(e) => e.stopPropagation()}
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onMouseDown={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onMouseUp={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onPointerDown={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onPointerUp={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onTouchStart={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
+                         onTouchEnd={(e) => {
+                           e.stopPropagation();
+                           e.preventDefault();
+                         }}
                        >
                         {/* 연도 선택 */}
                         <div className="mb-4">
