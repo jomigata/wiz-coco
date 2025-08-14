@@ -166,7 +166,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     // 현재 선택된 값과 동일한지 확인하여 불필요한 상태 변경 방지
     if (selectedYear === year && selectedMonth === month && selectedDay === day) {
       console.log('동일한 날짜가 이미 선택됨, 상태 변경 생략');
-      setShowDatePicker(false);
       return;
     }
     
@@ -177,7 +176,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     // 현재 formData의 birthDate와 동일한지 확인
     if (formData.birthDate === formattedDate) {
       console.log('생년월일이 동일함, 상태 업데이트 생략');
-      setShowDatePicker(false);
       return;
     }
     
@@ -194,10 +192,10 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       }));
     });
     
-    // 날짜 선택 후 날짜 선택기는 닫지만, 모달은 유지
-    setShowDatePicker(false);
+    // 날짜 선택 후에도 날짜 선택기를 유지하여 사용자가 계속 조정할 수 있도록 함
+    // 완료 버튼을 누를 때까지 날짜 선택기가 열려있음
     
-    console.log('날짜 선택 완료, 모달 상태:', { showDatePicker: false, modalOpen: true });
+    console.log('날짜 선택 완료, 날짜 선택기 유지:', { showDatePicker: true, modalOpen: true });
   };
 
   // 날짜 포맷팅 함수
@@ -728,29 +726,21 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                         </div>
                         
                                                  {/* 하단 버튼 */}
-                         <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
-                                                       <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                // 생년월일을 빈 값으로 설정
-                                setFormData(prev => ({
-                                  ...prev,
-                                  birthDate: ''
-                                }));
-                                // 선택된 연도, 월, 일을 초기화
-                                setSelectedYear(new Date().getFullYear());
-                                setSelectedMonth(new Date().getMonth() + 1);
-                                setSelectedDay(new Date().getDate());
-                                // 날짜 선택기 닫기
-                                setShowDatePicker(false);
-                              }}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              onMouseUp={(e) => e.stopPropagation()}
-                              className="px-3 py-1 text-sm text-gray-400 hover:text-white"
-                            >
-                              삭제
-                            </button>
+                                                   <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
+                                                        <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 e.preventDefault();
+                                 // 취소 버튼: 날짜 선택기만 닫고 기존 데이터는 변경하지 않음
+                                 setShowDatePicker(false);
+                                 console.log('날짜 선택 취소, 날짜 선택기 닫힘');
+                               }}
+                               onMouseDown={(e) => e.stopPropagation()}
+                               onMouseUp={(e) => e.stopPropagation()}
+                               className="px-3 py-1 text-sm text-gray-400 hover:text-white"
+                             >
+                               취소
+                             </button>
                                                        <button
                               onClick={(e) => {
                                 e.stopPropagation();
