@@ -543,35 +543,37 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                     />
                   </div>
                   
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
-                    <div className="relative">
-                                             <input
+                                     <div className="relative">
+                     <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
+                     <div 
+                       className="relative cursor-pointer"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         e.preventDefault();
+                         setShowDatePicker(!showDatePicker);
+                       }}
+                       onMouseDown={(e) => {
+                         e.stopPropagation();
+                         e.preventDefault();
+                       }}
+                       onMouseUp={(e) => {
+                         e.stopPropagation();
+                         e.preventDefault();
+                       }}
+                     >
+                       <input
                          type="text"
                          value={formatDate(formData.birthDate)}
                          readOnly
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           e.preventDefault();
-                           setShowDatePicker(!showDatePicker);
-                         }}
-                         onMouseDown={(e) => {
-                           e.stopPropagation();
-                           e.preventDefault();
-                         }}
-                         onMouseUp={(e) => {
-                           e.stopPropagation();
-                           e.preventDefault();
-                         }}
                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
                          placeholder="연도. 월. 일."
                        />
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    </div>
+                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                         <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 0 002 2z" />
+                         </svg>
+                       </div>
+                     </div>
                     
                                          {/* 커스텀 날짜 선택기 */}
                      {showDatePicker && (
@@ -734,7 +736,9 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                                 e.stopPropagation();
                                 e.preventDefault();
                                 // 현재 선택된 연도, 월, 일로 날짜 설정
-                                handleDateSelect(selectedYear, selectedMonth, selectedDay, e);
+                                // 일을 선택하지 않았더라도 현재 선택된 일을 사용
+                                const currentDay = selectedDay || 1; // 일이 선택되지 않았으면 1일로 기본 설정
+                                handleDateSelect(selectedYear, selectedMonth, currentDay, e);
                               }}
                               onMouseDown={(e) => e.stopPropagation()}
                               onMouseUp={(e) => e.stopPropagation()}
