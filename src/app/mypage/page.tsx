@@ -10,7 +10,8 @@ import { getItem, setItem, getAuthState, setAuthState } from '@/utils/localStora
 import { setupSyncMonitor, onSyncStatusChange, SyncStatus } from '@/utils/syncService';
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { auth } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
+import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
+import { doc, getDoc } from 'firebase/firestore';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -23,6 +24,13 @@ interface User {
   role?: string;
   createdAt: string;
   lastLoginAt?: string;
+  // 프로필 편집에서 설정할 수 있는 추가 정보들
+  phoneNumber?: string;
+  birthDate?: string;
+  gender?: string;
+  occupation?: string;
+  interests?: string[];
+  bio?: string;
 }
 
 interface TestRecord {
@@ -140,6 +148,29 @@ function MyPageContent() {
             createdAt: new Date().toISOString(), // Firebase에서 생성 시간을 가져올 수 있다면 수정
             lastLoginAt: new Date().toISOString()
           };
+
+          // Firestore에서 사용자 상세 정보 가져오기
+          try {
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+              const userDetailData = userDoc.data();
+              // 상세 정보를 userData에 병합
+              Object.assign(userData, {
+                phoneNumber: userDetailData.phoneNumber || '',
+                birthDate: userDetailData.birthDate || '',
+                gender: userDetailData.gender || '',
+                occupation: userDetailData.occupation || '',
+                interests: userDetailData.interests || [],
+                bio: userDetailData.bio || ''
+              });
+            }
+          } catch (firestoreError) {
+            console.warn('Firestore에서 사용자 상세 정보를 가져오는 중 오류:', firestoreError);
+            // Firestore 오류가 있어도 기본 사용자 정보는 설정
+          }
+
           setUser(userData);
           setIsLoadingUser(false);
           return;
@@ -288,6 +319,43 @@ function MyPageContent() {
       console.error('날짜 포맷팅 오류:', error);
       return '자료가 없음';
     }
+  }
+
+  // 생년월일 포맷팅 함수
+  function formatBirthDate(birthDate?: string): string {
+    if (!birthDate) {
+      return '설정되지 않음';
+    }
+    
+    try {
+      const date = new Date(birthDate);
+      
+      if (isNaN(date.getTime())) {
+        return '설정되지 않음';
+      }
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}년 ${month}월 ${day}일`;
+    } catch (error) {
+      console.error('생년월일 포맷팅 오류:', error);
+      return '설정되지 않음';
+    }
+  }
+
+  // 성별 표시 함수
+  function formatGender(gender?: string): string {
+    if (!gender) return '설정되지 않음';
+    
+    const genderMap: Record<string, string> = {
+      'male': '남성',
+      'female': '여성',
+      'other': '기타'
+    };
+    
+    return genderMap[gender] || gender;
   }
 
   // 레코드 상세보기
@@ -662,7 +730,59 @@ function MyPageContent() {
                     <p className="text-blue-300 mb-2 font-medium">마지막 로그인</p>
                     <p className="text-white text-lg">{formatDate(user?.lastLoginAt)}</p>
                   </div>
+
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                    <p className="text-blue-300 mb-2 font-medium">이름</p>
+                    <p className="text-white text-lg">{user?.name || '설정되지 않음'}</p>
+                  </div>
+
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                    <p className="text-blue-300 mb-2 font-medium">전화번호</p>
+                    <p className="text-white text-lg">{user?.phoneNumber || '설정되지 않음'}</p>
+                  </div>
+
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                    <p className="text-blue-300 mb-2 font-medium">생년월일</p>
+                    <p className="text-white text-lg">{formatBirthDate(user?.birthDate)}</p>
+                  </div>
+
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                    <p className="text-blue-300 mb-2 font-medium">성별</p>
+                    <p className="text-white text-lg">{formatGender(user?.gender)}</p>
+                  </div>
+
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                    <p className="text-blue-300 mb-2 font-medium">직업</p>
+                    <p className="text-white text-lg">{user?.occupation || '설정되지 않음'}</p>
+                  </div>
                 </div>
+
+                {/* 관심사 섹션 */}
+                {user?.interests && user.interests.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-white/20">
+                    <h3 className="text-lg font-semibold text-white mb-4">관심사</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {user.interests.map((interest, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-blue-600/40 text-blue-200 rounded-full text-sm border border-blue-500/30"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 자기소개 섹션 */}
+                {user?.bio && (
+                  <div className="mt-6 pt-6 border-t border-white/20">
+                    <h3 className="text-lg font-semibold text-white mb-4">자기소개</h3>
+                    <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                      <p className="text-white leading-relaxed">{user.bio}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* 알림 설정 */}
                 <div className="mt-8 pt-6 border-t border-white/20">
