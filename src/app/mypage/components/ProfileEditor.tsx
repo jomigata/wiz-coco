@@ -648,31 +648,31 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           </div>
                         </div>
                         
-                        {/* 월 선택 */}
-                        <div className="mb-4">
-                          <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
-                          <div className="grid grid-cols-3 gap-2">
-                                                       {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                             <button
-                               key={month}
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 e.preventDefault();
-                                 setSelectedMonth(month);
-                               }}
-                               onMouseDown={(e) => e.stopPropagation()}
-                               onMouseUp={(e) => e.stopPropagation()}
-                               className={`px-3 py-2 text-sm rounded ${
-                                 selectedMonth === month
-                                   ? 'bg-blue-500 text-white'
-                                   : 'text-blue-300 hover:bg-blue-500/20'
-                               }`}
-                             >
-                               {month}월
-                             </button>
-                           ))}
-                          </div>
-                        </div>
+                                                 {/* 월 선택 */}
+                         <div className="mb-4">
+                           <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
+                           <div className="grid grid-cols-3 gap-1">
+                             {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                               <button
+                                 key={month}
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   e.preventDefault();
+                                   setSelectedMonth(month);
+                                 }}
+                                 onMouseDown={(e) => e.stopPropagation()}
+                                 onMouseUp={(e) => e.stopPropagation()}
+                                 className={`px-3 py-1 text-sm rounded ${
+                                   selectedMonth === month
+                                     ? 'bg-blue-500 text-white'
+                                     : 'text-blue-300 hover:bg-blue-500/20'
+                                 }`}
+                               >
+                                 {month}월
+                               </button>
+                             ))}
+                           </div>
+                         </div>
                         
                         {/* 일 선택 */}
                         <div>
@@ -707,30 +707,41 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                         
                                                  {/* 하단 버튼 */}
                          <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
-                           <button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               e.preventDefault();
-                               setShowDatePicker(false);
-                             }}
-                             onMouseDown={(e) => e.stopPropagation()}
-                             onMouseUp={(e) => e.stopPropagation()}
-                             className="px-3 py-1 text-sm text-gray-400 hover:text-white"
-                           >
-                             삭제
-                           </button>
-                           <button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               e.preventDefault();
-                               handleDateSelect(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
-                             }}
-                             onMouseDown={(e) => e.stopPropagation()}
-                             onMouseUp={(e) => e.stopPropagation()}
-                             className="px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600"
-                           >
-                             오늘
-                           </button>
+                                                       <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                // 생년월일을 빈 값으로 설정
+                                setFormData(prev => ({
+                                  ...prev,
+                                  birthDate: ''
+                                }));
+                                // 선택된 연도, 월, 일을 초기화
+                                setSelectedYear(new Date().getFullYear());
+                                setSelectedMonth(new Date().getMonth() + 1);
+                                setSelectedDay(new Date().getDate());
+                                // 날짜 선택기 닫기
+                                setShowDatePicker(false);
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onMouseUp={(e) => e.stopPropagation()}
+                              className="px-3 py-1 text-sm text-gray-400 hover:text-white"
+                            >
+                              삭제
+                            </button>
+                                                       <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                // 현재 선택된 연도, 월, 일로 날짜 설정
+                                handleDateSelect(selectedYear, selectedMonth, selectedDay, e);
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onMouseUp={(e) => e.stopPropagation()}
+                              className="px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                            >
+                              완료
+                            </button>
                          </div>
                       </div>
                     )}
