@@ -703,129 +703,145 @@ function MyPageContent() {
                   </button>
                 </div>
                 
-                {/* 기본 정보 카드 그리드 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* 기본 정보 카드 그리드 - 컴팩트 디자인 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {/* 이메일 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-blue-900/40 via-indigo-900/40 to-purple-900/40 rounded-2xl border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-all duration-500 hover:scale-105 hover:border-blue-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-blue-900/40 via-indigo-900/40 to-purple-900/40 rounded-xl border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-102 hover:border-blue-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                         </div>
-                        <button
-                          onClick={() => setIsPasswordModalOpen(true)}
-                          className="text-blue-300 hover:text-blue-200 transition-colors duration-300 flex items-center text-sm group/btn"
-                          title="비밀번호 변경"
-                        >
-                          <svg className="w-4 h-4 mr-1 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                          <span className="group-hover/btn:text-blue-200">변경</span>
-                        </button>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-blue-200 text-xs font-medium mb-1">이메일</p>
+                          <p className="text-white text-sm font-semibold truncate">{user?.email}</p>
+                        </div>
                       </div>
-                      <p className="text-blue-200 text-sm font-medium mb-2">이메일</p>
-                      <p className="text-white text-lg font-semibold break-all">{user?.email}</p>
+                      <button
+                        onClick={() => setIsPasswordModalOpen(true)}
+                        className="text-blue-300 hover:text-blue-200 transition-colors duration-300 flex items-center text-xs group/btn ml-2 flex-shrink-0"
+                        title="비밀번호 변경"
+                      >
+                        <svg className="w-3 h-3 mr-1 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="group-hover/btn:text-blue-200">변경</span>
+                      </button>
                     </div>
                   </div>
 
                   {/* 가입일 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-teal-900/40 to-cyan-900/40 rounded-2xl border border-emerald-500/20 shadow-lg hover:shadow-emerald-500/30 transition-all duration-500 hover:scale-105 hover:border-emerald-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-teal-900/40 to-cyan-900/40 rounded-xl border border-emerald-500/20 shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-102 hover:border-emerald-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <p className="text-emerald-200 text-sm font-medium mb-2">가입일</p>
-                      <p className="text-white text-lg font-semibold">{formatDate(user?.createdAt)}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-emerald-200 text-xs font-medium mb-1">가입일</p>
+                        <p className="text-white text-sm font-semibold truncate">{formatDate(user?.createdAt)}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* 마지막 로그인 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-orange-900/40 via-amber-900/40 to-yellow-900/40 rounded-2xl border border-orange-500/20 shadow-lg hover:shadow-orange-500/30 transition-all duration-500 hover:scale-105 hover:border-orange-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-yellow-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-orange-900/40 via-amber-900/40 to-yellow-900/40 rounded-xl border border-orange-500/20 shadow-lg hover:shadow-orange-500/30 transition-all duration-300 hover:scale-102 hover:border-orange-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-yellow-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
-                      <p className="text-orange-200 text-sm font-medium mb-2">마지막 로그인</p>
-                      <p className="text-white text-lg font-semibold">{formatDate(user?.lastLoginAt)}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-orange-200 text-xs font-medium mb-1">마지막 로그인</p>
+                        <p className="text-white text-sm font-semibold truncate">{formatDate(user?.lastLoginAt)}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* 이름 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-pink-900/40 via-rose-900/40 to-red-900/40 rounded-2xl border border-pink-500/20 shadow-lg hover:shadow-pink-500/30 transition-all duration-500 hover:scale-105 hover:border-pink-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-pink-600/10 to-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-pink-900/40 via-rose-900/40 to-red-900/40 rounded-xl border border-pink-500/20 shadow-lg hover:shadow-pink-500/30 transition-all duration-300 hover:scale-102 hover:border-pink-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-600/10 to-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
-                      <p className="text-pink-200 text-sm font-medium mb-2">이름</p>
-                      <p className="text-white text-lg font-semibold">{user?.name || '설정되지 않음'}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-pink-200 text-xs font-medium mb-1">이름</p>
+                        <p className="text-white text-sm font-semibold truncate">{user?.name || '설정되지 않음'}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* 전화번호 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-violet-900/40 via-purple-900/40 to-indigo-900/40 rounded-2xl border border-violet-500/20 shadow-lg hover:shadow-violet-500/30 transition-all duration-500 hover:scale-105 hover:border-violet-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-violet-900/40 via-purple-900/40 to-indigo-900/40 rounded-xl border border-violet-500/20 shadow-lg hover:shadow-violet-500/30 transition-all duration-300 hover:scale-102 hover:border-violet-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                       </div>
-                      <p className="text-violet-200 text-sm font-medium mb-2">전화번호</p>
-                      <p className="text-white text-lg font-semibold">{user?.phoneNumber || '설정되지 않음'}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-violet-200 text-xs font-medium mb-1">전화번호</p>
+                        <p className="text-white text-sm font-semibold truncate">{user?.phoneNumber || '설정되지 않음'}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* 생년월일 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-cyan-900/40 via-blue-900/40 to-sky-900/40 rounded-2xl border border-cyan-500/20 shadow-lg hover:shadow-cyan-500/30 transition-all duration-500 hover:scale-105 hover:border-cyan-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/10 to-sky-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-cyan-900/40 via-blue-900/40 to-sky-900/40 rounded-xl border border-cyan-500/20 shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 hover:scale-102 hover:border-cyan-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/10 to-sky-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-sky-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <p className="text-cyan-200 text-sm font-medium mb-2">생년월일</p>
-                      <p className="text-white text-lg font-semibold">{formatBirthDate(user?.birthDate)}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-cyan-200 text-xs font-medium mb-1">생년월일</p>
+                        <p className="text-white text-sm font-semibold truncate">{formatBirthDate(user?.birthDate)}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* 성별 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-green-900/40 via-emerald-900/40 to-teal-900/40 rounded-2xl border border-green-500/20 shadow-lg hover:shadow-green-500/30 transition-all duration-500 hover:scale-105 hover:border-green-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-600/10 to-teal-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-green-900/40 via-emerald-900/40 to-teal-900/40 rounded-xl border border-green-500/20 shadow-lg hover:shadow-green-500/30 transition-all duration-300 hover:scale-102 hover:border-green-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-600/10 to-teal-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       </div>
-                      <p className="text-green-200 text-sm font-medium mb-2">성별</p>
-                      <p className="text-white text-lg font-semibold">{formatGender(user?.gender)}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-green-200 text-xs font-medium mb-1">성별</p>
+                        <p className="text-white text-sm font-semibold truncate">{formatGender(user?.gender)}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* 직업 카드 */}
-                  <div className="group relative overflow-hidden bg-gradient-to-br from-amber-900/40 via-orange-900/40 to-red-900/40 rounded-2xl border border-amber-500/20 shadow-lg hover:shadow-amber-500/30 transition-all duration-500 hover:scale-105 hover:border-amber-400/40">
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-600/10 to-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative p-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-amber-900/40 via-orange-900/40 to-red-900/40 rounded-xl border border-amber-500/20 shadow-lg hover:shadow-amber-500/30 transition-all duration-300 hover:scale-102 hover:border-amber-400/40">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-600/10 to-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6a2 2 0 00-2-2z" />
                         </svg>
                       </div>
-                      <p className="text-amber-200 text-sm font-medium mb-2">직업</p>
-                      <p className="text-white text-lg font-semibold">{user?.occupation || '설정되지 않음'}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-amber-200 text-xs font-medium mb-1">직업</p>
+                        <p className="text-white text-sm font-semibold truncate">{user?.occupation || '설정되지 않음'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
