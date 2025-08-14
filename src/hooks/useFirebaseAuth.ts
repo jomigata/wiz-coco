@@ -21,6 +21,10 @@ export interface AuthUser {
   displayName: string | null;
   photoURL: string | null;
   role?: string;
+  metadata?: {
+    creationTime?: string;
+    lastSignInTime?: string;
+  };
 }
 
 export const useFirebaseAuth = () => {
@@ -35,7 +39,11 @@ export const useFirebaseAuth = () => {
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
-          role: 'user' // 기본 역할
+          role: 'user', // 기본 역할
+          metadata: {
+            creationTime: firebaseUser.metadata.creationTime,
+            lastSignInTime: firebaseUser.metadata.lastSignInTime
+          }
         });
       } else {
         setUser(null);

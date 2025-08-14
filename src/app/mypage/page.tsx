@@ -145,8 +145,8 @@ function MyPageContent() {
             email: firebaseUser.email || '',
             name: firebaseUser.displayName || undefined,
             role: firebaseUser.role || 'user',
-            createdAt: new Date().toISOString(), // Firebase에서 생성 시간을 가져올 수 있다면 수정
-            lastLoginAt: new Date().toISOString()
+            createdAt: firebaseUser.metadata?.creationTime || '', // Firebase 생성 시간 사용
+            lastLoginAt: firebaseUser.metadata?.lastSignInTime || '' // Firebase 마지막 로그인 시간 사용
           };
 
           // Firestore에서 사용자 상세 정보 가져오기
@@ -163,7 +163,10 @@ function MyPageContent() {
                 gender: userDetailData.gender || '',
                 occupation: userDetailData.occupation || '',
                 interests: userDetailData.interests || [],
-                bio: userDetailData.bio || ''
+                bio: userDetailData.bio || '',
+                // Firestore에서 사용자 생성 및 로그인 시간 정보 가져오기
+                createdAt: userDetailData.createdAt || firebaseUser.metadata?.creationTime || '',
+                lastLoginAt: userDetailData.lastLoginAt || firebaseUser.metadata?.lastSignInTime || ''
               });
             }
           } catch (firestoreError) {
@@ -744,7 +747,9 @@ function MyPageContent() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-emerald-200 text-xs font-medium mb-1">가입일</p>
-                        <p className="text-white text-sm font-semibold truncate">{formatDate(user?.createdAt)}</p>
+                        <p className="text-white text-sm font-semibold truncate">
+                          {user?.createdAt ? formatDate(user.createdAt) : '정보 없음'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -760,7 +765,9 @@ function MyPageContent() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-orange-200 text-xs font-medium mb-1">마지막 로그인</p>
-                        <p className="text-white text-sm font-semibold truncate">{formatDate(user?.lastLoginAt)}</p>
+                        <p className="text-white text-sm font-semibold truncate">
+                          {user?.lastLoginAt ? formatDate(user.lastLoginAt) : '정보 없음'}
+                        </p>
                       </div>
                     </div>
                   </div>
