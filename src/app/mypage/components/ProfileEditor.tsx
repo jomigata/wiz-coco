@@ -629,23 +629,33 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           </div>
                           <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto">
                                                          {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                               <button
-                                 key={year}
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   e.preventDefault();
-                                   setSelectedYear(year);
-                                 }}
-                                 onMouseDown={(e) => e.stopPropagation()}
-                                 onMouseUp={(e) => e.stopPropagation()}
-                                 className={`px-2 py-1 text-xs rounded flex items-center justify-center min-h-[28px] ${
-                                   selectedYear === year
-                                     ? 'bg-emerald-500 text-white'
-                                     : 'text-emerald-300 hover:bg-emerald-500/20'
-                                 }`}
-                               >
-                                 {year}
-                               </button>
+                                                               <button
+                                  key={year}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setSelectedYear(year);
+                                    
+                                    // 연도 변경 시 현재 선택된 월/일과 함께 상단 입력필드에 표시
+                                    if (selectedMonth && selectedDay) {
+                                      const formattedDate = `${year}-${selectedMonth.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        birthDate: formattedDate
+                                      }));
+                                      console.log('연도 변경으로 날짜 업데이트:', formattedDate);
+                                    }
+                                  }}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onMouseUp={(e) => e.stopPropagation()}
+                                  className={`px-2 py-1 text-xs rounded flex items-center justify-center min-h-[28px] ${
+                                    selectedYear === year
+                                      ? 'bg-emerald-500 text-white'
+                                      : 'text-emerald-300 hover:bg-emerald-500/20'
+                                  }`}
+                                >
+                                  {year}
+                                </button>
                              ))}
                           </div>
                         </div>
@@ -655,23 +665,33 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                            <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
                            <div className="grid grid-cols-3 gap-1">
                              {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                               <button
-                                 key={month}
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   e.preventDefault();
-                                   setSelectedMonth(month);
-                                 }}
-                                 onMouseDown={(e) => e.stopPropagation()}
-                                 onMouseUp={(e) => e.stopPropagation()}
-                                 className={`px-3 py-1 text-sm rounded ${
-                                   selectedMonth === month
-                                     ? 'bg-blue-500 text-white'
-                                     : 'text-blue-300 hover:bg-blue-500/20'
-                                 }`}
-                               >
-                                 {month}월
-                               </button>
+                                                               <button
+                                  key={month}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setSelectedMonth(month);
+                                    
+                                    // 월 변경 시 현재 선택된 연도/일과 함께 상단 입력필드에 표시
+                                    if (selectedYear && selectedDay) {
+                                      const formattedDate = `${selectedYear}-${month.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        birthDate: formattedDate
+                                      }));
+                                      console.log('월 변경으로 날짜 업데이트:', formattedDate);
+                                    }
+                                  }}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onMouseUp={(e) => e.stopPropagation()}
+                                  className={`px-3 py-1 text-sm rounded ${
+                                    selectedMonth === month
+                                      ? 'bg-blue-500 text-white'
+                                      : 'text-blue-300 hover:bg-blue-500/20'
+                                  }`}
+                                >
+                                  {month}월
+                                </button>
                              ))}
                            </div>
                          </div>
