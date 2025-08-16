@@ -2097,7 +2097,7 @@ firebase login:ci
    ```bash
    openssl rand -base64 32
    ```
-2. ?�는 ?�라???�성�??�용: https://generate-secret.vercel.app/32
+2. ?�는 ?�라???�성�??�용: https://console.firebase.google.com/project/wiz-coco/settings/serviceaccounts/adminsdk
 
 **?�시 ?�식**:
 ```
