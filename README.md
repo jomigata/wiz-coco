@@ -13,27 +13,28 @@ Next.js로 구현된 심리 테스트 및 심리 케어 서비스입니다.
 
 ## 시작하기
 
-### 개발 환경 실행
+### ⚠️ **중요: 개발 서버 사용 중지**
+
+이 프로젝트는 **Firebase Hosting만을 사용**하도록 설정되어 있습니다. 로컬 개발 서버는 더 이상 지원하지 않습니다.
+
+### 의존성 설치
 
 ```bash
 # 의존성 설치
 npm install
-
-# 개발 서버 실행
-npm run dev
 ```
 
-### 빌드 및 프로덕션 실행
+### 빌드 및 배포
 
 ```bash
-# 빌드
+# 프로덕션 빌드
 npm run build
 
-# 배포 전 데이터 준비
-npm run prepare-data
+# Firebase Hosting 배포
+npm run deploy:firebase
 
-# 프로덕션 서버 실행
-npm run start
+# 또는 Windows 배치 파일 사용
+deploy-firebase.bat
 ```
 
 ## 배포 방법

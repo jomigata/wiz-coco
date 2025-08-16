@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "echo '개발 서버는 더 이상 사용하지 않습니다. Firebase Hosting을 사용하세요.'",
     "build": "cross-env SKIP_DB_INIT=true next build",
     "build:static": "cross-env SKIP_DB_INIT=true next build",
     "build:with-firebase": "node scripts/setup-db.js && cross-env SKIP_DB_INIT=true next build",
     "clean": "rimraf .next",
     "build:clean": "npm run clean && cross-env SKIP_DB_INIT=true next build",
-    "start": "cross-env NODE_ENV=production next start",
+    "start": "echo '프로덕션 서버는 Firebase Hosting을 사용합니다.'",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -23,7 +23,11 @@
     "deploy": "node scripts/deploy-with-verification.js",
     "deploy:firebase": "npm run build && firebase deploy --only hosting",
     "deploy:quick": "npm run build && firebase deploy --only hosting --force",
-    "deploy:safe": "npm run verify-env && npm run build && firebase deploy --only hosting"
+    "deploy:safe": "npm run verify-env && npm run build && firebase deploy --only hosting",
+    "deploy:full": "npm run build && firebase deploy",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "deploy:functions": "npm run build && firebase deploy --only functions",
+    "deploy:firestore": "npm run build && firebase deploy --only firestore"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",
