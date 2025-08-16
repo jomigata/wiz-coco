@@ -411,7 +411,12 @@ function MyPageContent() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-200">성별</span>
-                        <span className="text-blue-100">{user.gender || '정보 없음'}</span>
+                        <span className="text-blue-100">
+                          {user.gender === 'male' ? '남성' : 
+                           user.gender === 'female' ? '여성' : 
+                           user.gender === 'other' ? '기타' : 
+                           '정보 없음'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-200">직업</span>
