@@ -552,10 +552,10 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                        </div>
                      </div>
                     
-                                         {/* 커스텀 날짜 선택기 - 왼쪽 상단에 위치 */}
+                                         {/* 커스텀 날짜 선택기 - 프로필 편집 팝업 오른쪽에 위치 */}
                      {showDatePicker && (
                        <div 
-                         className="fixed top-20 left-8 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4 w-80"
+                         className="absolute top-0 right-0 ml-2.5 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4 w-80 h-full"
                          onClick={(e) => {
                            e.stopPropagation();
                            e.preventDefault();
@@ -585,8 +585,8 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                            e.preventDefault();
                          }}
                        >
-                        {/* 연도 선택 */}
-                        <div className="mb-4">
+                                                 {/* 연도 선택 */}
+                         <div className="mb-2">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-emerald-300">연도 선택</span>
                             <button
@@ -604,108 +604,108 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                               </svg>
                             </button>
                           </div>
-                          <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto bg-slate-700/50 rounded-lg p-2">
-                           {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                             <button
-                               key={year}
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 e.preventDefault();
-                                 setSelectedYear(year);
-                                 
-                                 // 연도 변경 시 현재 선택된 월/일과 함께 상단 입력필드에 표시
-                                 if (selectedMonth && selectedDay) {
-                                   const formattedDate = `${year}-${selectedMonth.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
-                                   setFormData(prev => ({
-                                     ...prev,
-                                     birthDate: formattedDate
-                                   }));
-                                   console.log('연도 변경으로 날짜 업데이트:', formattedDate);
-                                 }
-                               }}
-                               onMouseDown={(e) => e.stopPropagation()}
-                               onMouseUp={(e) => e.stopPropagation()}
-                               className={`px-2 py-1 text-xs rounded flex items-center justify-center min-h-[28px] transition-all duration-200 ${
-                                 selectedYear === year
-                                   ? 'bg-emerald-500 text-white shadow-lg'
-                                   : 'text-emerald-300 hover:bg-emerald-500/20 hover:scale-105'
-                               }`}
-                             >
-                               {year}
-                             </button>
-                           ))}
-                         </div>
+                                                     <div className="grid grid-cols-7 gap-1 max-h-28 overflow-y-auto bg-slate-700/50 rounded-lg p-2">
+                            {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                              <button
+                                key={year}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setSelectedYear(year);
+                                  
+                                  // 연도 변경 시 현재 선택된 월/일과 함께 상단 입력필드에 표시
+                                  if (selectedMonth && selectedDay) {
+                                    const formattedDate = `${year}-${selectedMonth.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      birthDate: formattedDate
+                                    }));
+                                    console.log('연도 변경으로 날짜 업데이트:', formattedDate);
+                                  }
+                                }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onMouseUp={(e) => e.stopPropagation()}
+                                className={`px-2 py-0.5 text-xs rounded flex items-center justify-center min-h-[20px] transition-all duration-200 ${
+                                  selectedYear === year
+                                    ? 'bg-emerald-500 text-white shadow-lg'
+                                    : 'text-emerald-300 hover:bg-emerald-500/20 hover:scale-105'
+                                }`}
+                              >
+                                {year}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                         
                          {/* 월 선택 */}
-                         <div className="mb-4">
+                         <div className="mb-2">
                            <span className="text-sm font-medium text-emerald-300 block mb-2">월 선택</span>
-                           <div className="grid grid-cols-3 gap-1 bg-slate-700/50 rounded-lg p-2">
-                             {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                               <button
-                                 key={month}
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   e.preventDefault();
-                                   setSelectedMonth(month);
-                                   
-                                   // 월 변경 시 현재 선택된 연도/일과 함께 상단 입력필드에 표시
-                                   if (selectedYear && selectedDay) {
-                                     const formattedDate = `${selectedYear}-${month.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
-                                     setFormData(prev => ({
-                                       ...prev,
-                                       birthDate: formattedDate
-                                     }));
-                                     console.log('월 변경으로 날짜 업데이트:', formattedDate);
-                                   }
-                                 }}
-                                 onMouseDown={(e) => e.stopPropagation()}
-                                 onMouseUp={(e) => e.stopPropagation()}
-                                 className={`px-3 py-1 text-sm rounded transition-all duration-200 ${
-                                   selectedMonth === month
-                                     ? 'bg-blue-500 text-white shadow-lg'
-                                     : 'text-blue-300 hover:bg-blue-500/20 hover:scale-105'
-                                 }`}
-                               >
-                                 {month}월
-                               </button>
-                             ))}
-                           </div>
+                                                       <div className="grid grid-cols-3 gap-1 bg-slate-700/50 rounded-lg p-2">
+                              {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                                <button
+                                  key={month}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setSelectedMonth(month);
+                                    
+                                    // 월 변경 시 현재 선택된 연도/일과 함께 상단 입력필드에 표시
+                                    if (selectedYear && selectedDay) {
+                                      const formattedDate = `${selectedYear}-${month.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        birthDate: formattedDate
+                                      }));
+                                      console.log('월 변경으로 날짜 업데이트:', formattedDate);
+                                    }
+                                  }}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onMouseUp={(e) => e.stopPropagation()}
+                                  className={`px-3 py-0.5 text-sm rounded transition-all duration-200 ${
+                                    selectedMonth === month
+                                      ? 'bg-blue-500 text-white shadow-lg'
+                                      : 'text-blue-300 hover:bg-blue-500/20 hover:scale-105'
+                                  }`}
+                                >
+                                  {month}월
+                                </button>
+                              ))}
+                            </div>
                          </div>
                         
                                                  {/* 일 선택 */}
                          <div>
                            <span className="text-sm font-medium text-emerald-300 block mb-2">일 선택</span>
-                           <div className="grid grid-cols-7 gap-1 bg-slate-700/50 rounded-lg p-2">
-                             {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-                               <div key={day} className="text-xs text-gray-400 text-center py-1">
-                                 {day}
-                               </div>
-                             ))}
-                             {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map((day) => (
-                               <button
-                                 key={day}
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   e.preventDefault();
-                                   handleDateSelect(selectedYear, selectedMonth, day, e);
-                                 }}
-                                 onMouseDown={(e) => e.stopPropagation()}
-                                 onMouseUp={(e) => e.stopPropagation()}
-                                 className={`px-2 py-1 text-xs rounded transition-all duration-200 ${
-                                   selectedDay === day
-                                     ? 'bg-purple-500 text-white shadow-lg'
-                                     : 'text-purple-300 hover:bg-purple-500/20 hover:scale-105'
-                                 }`}
-                               >
-                                 {day}
-                               </button>
-                             ))}
-                           </div>
+                                                       <div className="grid grid-cols-7 gap-1 bg-slate-700/50 rounded-lg p-2">
+                              {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+                                <div key={day} className="text-xs text-gray-400 text-center py-0.5">
+                                  {day}
+                                </div>
+                              ))}
+                              {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map((day) => (
+                                <button
+                                  key={day}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleDateSelect(selectedYear, selectedMonth, day, e);
+                                  }}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onMouseUp={(e) => e.stopPropagation()}
+                                  className={`px-2 py-0.5 text-xs rounded transition-all duration-200 ${
+                                    selectedDay === day
+                                      ? 'bg-purple-500 text-white shadow-lg'
+                                      : 'text-purple-300 hover:bg-purple-500/20 hover:scale-105'
+                                  }`}
+                                >
+                                  {day}
+                                </button>
+                              ))}
+                            </div>
                          </div>
                         
-                                                 {/* 하단 버튼 */}
-                                                   <div className="flex justify-between mt-4 pt-4 border-t border-white/20">
+                                                                          {/* 하단 버튼 */}
+                           <div className="flex justify-between mt-2 pt-2 border-t border-white/20">
                                                         <button
                                onClick={(e) => {
                                  e.stopPropagation();
