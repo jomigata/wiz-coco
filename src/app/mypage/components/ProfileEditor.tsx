@@ -28,16 +28,10 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     phoneNumber: '',
     birthDate: '',
     gender: '',
-    occupation: '',
-    interests: [] as string[],
-    bio: ''
+    occupation: ''
   });
 
-  // 관심사 옵션
-  const interestOptions = [
-    '심리학', '상담', '자기계발', '인간관계', '스트레스 관리',
-    '감정 관리', '직업 상담', '가족 상담', '학습', '건강'
-  ];
+
 
   // 날짜 선택기 상태
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -91,9 +85,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               phoneNumber: userData.phoneNumber || '',
               birthDate: birthDate,
               gender: userData.gender || '',
-              occupation: userData.occupation || '',
-              interests: userData.interests || [],
-              bio: userData.bio || ''
+              occupation: userData.occupation || ''
             });
             console.log('사용자 데이터 로드 완료:', { displayName: authUser.displayName, birthDate });
           } else {
@@ -104,9 +96,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               phoneNumber: '',
               birthDate: '',
               gender: '',
-              occupation: '',
-              interests: [],
-              bio: ''
+              occupation: ''
             });
             console.log('새 사용자 기본값 설정 완료');
           }
@@ -119,9 +109,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             phoneNumber: '',
             birthDate: '',
             gender: '',
-            occupation: '',
-            interests: [],
-            bio: ''
+            occupation: ''
           });
         } finally {
           setIsDataLoading(false); // 데이터 로딩 완료
@@ -144,14 +132,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     }));
   };
 
-  const handleInterestChange = (interest: string) => {
-    setFormData(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
-    }));
-  };
+
 
   // 날짜 선택 핸들러 - 완전 최적화된 버전
   const handleDateSelect = (year: number, month: number, day: number, event?: React.MouseEvent) => {
@@ -263,8 +244,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         birthDate: formData.birthDate,
         gender: formData.gender,
         occupation: formData.occupation,
-        interests: formData.interests,
-        bio: formData.bio,
         updatedAt: serverTimestamp(),
         uid: userId,
         lastModified: new Date().toISOString(),
@@ -808,38 +787,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                 </div>
               </div>
 
-              {/* 관심사 */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">관심사</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {interestOptions.map((interest) => (
-                    <label key={interest} className="flex items-center space-x-2 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={formData.interests.includes(interest)}
-                        onChange={() => handleInterestChange(interest)}
-                        className="w-4 h-4 text-emerald-500 bg-white/10 border-white/20 rounded focus:ring-emerald-500/50 focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors duration-200">
-                        {interest}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
 
-              {/* 자기소개 */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">자기소개</h3>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-none"
-                  placeholder="자기소개를 입력하세요..."
-                />
-              </div>
 
               {/* 버튼 */}
               <div className="flex justify-end space-x-4 pt-6 border-t border-white/20">

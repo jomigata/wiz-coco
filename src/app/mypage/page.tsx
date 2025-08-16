@@ -362,7 +362,7 @@ function MyPageContent() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* 계정 정보 그룹 */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                     <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
                       <KeyIcon className="w-5 h-5 mr-2 text-purple-400" />
                       계정 정보
@@ -388,11 +388,19 @@ function MyPageContent() {
                   </div>
 
                   {/* 개인 정보 그룹 */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                    <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                      <UserIcon className="w-5 h-5 mr-2 text-purple-400" />
-                      개인 정보
-                    </h3>
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 relative">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-semibold text-blue-100 flex items-center">
+                        <UserIcon className="w-5 h-5 mr-2 text-purple-400" />
+                        개인 정보
+                      </h3>
+                      <button
+                        onClick={() => setShowProfileEditor(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm"
+                      >
+                        개인정보 수정
+                      </button>
+                    </div>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-blue-200">이름</span>
@@ -418,20 +426,7 @@ function MyPageContent() {
                   </div>
                 </div>
 
-                {/* 프로필 편집 버튼 */}
-                <motion.div 
-                  className="mt-6 text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                >
-                  <button
-                    onClick={() => setShowProfileEditor(true)}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                  >
-                    프로필 편집
-                  </button>
-                </motion.div>
+
               </motion.div>
             )}
 
