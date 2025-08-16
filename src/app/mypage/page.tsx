@@ -17,20 +17,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
 
-// 동적 import로 컴포넌트 로드
-const TestRecordsContent = () => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-    <h2 className="text-2xl font-bold text-blue-100 mb-6">검사 기록</h2>
-    <p className="text-blue-200">검사 기록 기능이 준비 중입니다.</p>
-  </div>
-);
 
-const StatsContent = () => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-    <h2 className="text-2xl font-bold text-blue-100 mb-6">통계 보기</h2>
-    <p className="text-blue-200">통계 기능이 준비 중입니다.</p>
-  </div>
-);
 
 // 아이콘 컴포넌트들
 const UserIcon = FaUser;
@@ -349,16 +336,24 @@ function MyPageContent() {
             </motion.div>
 
             {activeTab === 'profile' && (
-              <motion.div 
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 transition-all hover:bg-white/15 hover:shadow-xl"
+              <motion.div
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                <h2 className="text-2xl font-bold text-blue-100 mb-6 flex items-center">
-                  <FaUser className="w-6 h-6 mr-3 text-blue-300" />
-                  기본 정보
-                </h2>
+                {/* 기본 정보 섹션 제목 */}
+                <motion.div
+                  className="mb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <h2 className="text-2xl font-bold text-blue-100">기본 정보</h2>
+                  <p className="mt-2 text-blue-200 max-w-2xl">
+                    계정 정보와 개인 정보를 확인하고 관리할 수 있습니다.
+                  </p>
+                </motion.div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* 계정 정보 그룹 */}
@@ -425,17 +420,318 @@ function MyPageContent() {
                     </div>
                   </div>
                 </div>
-
-
               </motion.div>
             )}
 
             {activeTab === 'records' && (
-              <TestRecordsContent />
+              <motion.div
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                {/* 검사 기록 섹션 제목 */}
+                <motion.div
+                  className="mb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <h2 className="text-2xl font-bold text-blue-100">검사 기록</h2>
+                  <p className="mt-2 text-blue-200 max-w-2xl">
+                    이전에 진행한 심리 검사들의 결과와 기록을 확인할 수 있습니다.
+                  </p>
+                </motion.div>
+                
+                {/* 검색 및 필터링 컨트롤 */}
+                <motion.div 
+                  className="mb-6 flex flex-col md:flex-row gap-4 items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <div className="relative flex-grow">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="검사 코드 또는 이름으로 검색"
+                      className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    <select className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="newest" className="bg-blue-800 text-white">최근 검사순</option>
+                      <option value="oldest" className="bg-blue-800 text-white">오래된 검사순</option>
+                      <option value="type" className="bg-blue-800 text-white">검사 유형별</option>
+                    </select>
+                  </div>
+                </motion.div>
+                
+                {/* 검사 기록 테이블 */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-white/20">
+                    <thead className="bg-white/5">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                          검사결과 코드
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          검사 유형
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          검사 일시
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          결과 요약
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          상태
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10">
+                      <tr className="hover:bg-white/10 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                          MB23-ABCD1
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          MBTI 검사
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          2023. 11. 15. 오전 09:30
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          INTJ
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                          <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full">
+                            완료
+                          </span>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-white/10 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                          EG23-EFGH2
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          에고그램 검사
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          2023. 11. 20. 오후 03:45
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          N5
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                          <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full">
+                            완료
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* 페이지네이션 */}
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="text-sm text-blue-200">
+                    총 2개의 검사 기록
+                  </div>
+                  <div className="flex space-x-2">
+                    <button className="px-3 py-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      이전
+                    </button>
+                    <span className="px-3 py-2 text-sm text-blue-200">1</span>
+                    <button className="px-3 py-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      다음
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {activeTab === 'stats' && (
-              <StatsContent />
+              <motion.div
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                {/* 통계 보기 섹션 제목 */}
+                <motion.div
+                  className="mb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <h2 className="text-2xl font-bold text-blue-100">통계 보기</h2>
+                  <p className="mt-2 text-blue-200 max-w-2xl">
+                    심리 검사 결과와 진행 상황에 대한 통계 정보를 확인할 수 있습니다.
+                  </p>
+                </motion.div>
+                
+                {/* 통계 요약 카드들 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  <motion.div
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                  >
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-blue-500/20">
+                        <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-blue-300">총 검사 수</p>
+                        <p className="text-2xl font-bold text-blue-100">24</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                  >
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-purple-500/20">
+                        <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-purple-300">MBTI 검사</p>
+                        <p className="text-2xl font-bold text-purple-100">12</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                  >
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-green-500/20">
+                        <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-green-300">에고그램</p>
+                        <p className="text-2xl font-bold text-green-100">8</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                  >
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-indigo-500/20">
+                        <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-indigo-300">평균 점수</p>
+                        <p className="text-2xl font-bold text-indigo-100">85.2</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+                
+                {/* 상세 통계 테이블 */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-white/20">
+                    <thead className="bg-white/5">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                          검사 유형
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          진행 횟수
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          평균 점수
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          최고 점수
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                          마지막 검사일
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10">
+                      <tr className="hover:bg-white/10 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                          MBTI 성격유형 검사
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          12회
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          92.5점
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          98점
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          2023. 12. 15
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-white/10 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                          에고그램 검사
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          8회
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          87.8점
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          95점
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          2023. 12. 10
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-white/10 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                          에니어그램 검사
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          4회
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          78.5점
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          85점
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                          2023. 11. 28
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
             )}
 
             {activeTab === 'deleted' && (
