@@ -117,7 +117,6 @@ const LoadingMyPage = () => (
 function MyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'profile';
   const [user, setUser] = useState<User | null>(null);
   const [testRecords, setTestRecords] = useState<TestRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -134,8 +133,8 @@ function MyPageContent() {
   // Firebase 인증 훅 사용
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
   
-  // URL에서 탭 파라미터 확인 - 기본값을 records로 설정
-  const initialTab = searchParams.get('tab') || 'records';
+  // URL에서 탭 파라미터 확인
+  const initialTab = searchParams.get('tab') || 'profile';
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -158,34 +157,30 @@ function MyPageContent() {
     favoriteType: null
   });
 
-  // 로그인 상태 확인 (빠른 체크를 위해 최적화)
+  // 로그인 상태 확인
   useEffect(() => {
     const checkAuthAndLoadUser = async () => {
       try {
-        // Firebase 인증 상태 확인
         if (firebaseLoading) {
-          return; // Firebase 로딩 중이면 대기
+          return;
         }
 
         if (firebaseUser) {
-          // Firebase 사용자 정보를 기존 User 인터페이스에 맞게 변환
           const userData: User = {
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
             name: firebaseUser.displayName || undefined,
             role: firebaseUser.role || 'user',
-            createdAt: firebaseUser.metadata?.creationTime || '', // Firebase 생성 시간 사용
-            lastLoginAt: firebaseUser.metadata?.lastSignInTime || '' // Firebase 마지막 로그인 시간 사용
+            createdAt: firebaseUser.metadata?.creationTime || '',
+            lastLoginAt: firebaseUser.metadata?.lastSignInTime || ''
           };
 
-          // Firestore에서 사용자 상세 정보 가져오기
           try {
             const userRef = doc(db, 'users', firebaseUser.uid);
             const userDoc = await getDoc(userRef);
             
             if (userDoc.exists()) {
               const userDetailData = userDoc.data();
-              // 상세 정보를 userData에 병합
               Object.assign(userData, {
                 phoneNumber: userDetailData.phoneNumber || '',
                 birthDate: userDetailData.birthDate || '',
@@ -193,14 +188,12 @@ function MyPageContent() {
                 occupation: userDetailData.occupation || '',
                 interests: userDetailData.interests || [],
                 bio: userDetailData.bio || '',
-                // Firestore에서 사용자 생성 및 로그인 시간 정보 가져오기
                 createdAt: userDetailData.createdAt || firebaseUser.metadata?.creationTime || '',
                 lastLoginAt: userDetailData.lastLoginAt || firebaseUser.metadata?.lastSignInTime || ''
               });
             }
           } catch (firestoreError) {
             console.warn('Firestore에서 사용자 상세 정보를 가져오는 중 오류:', firestoreError);
-            // Firestore 오류가 있어도 기본 사용자 정보는 설정
           }
 
           setUser(userData);
@@ -208,7 +201,6 @@ function MyPageContent() {
           return;
         }
 
-        // Firebase 사용자가 없으면 로컬 스토리지에서 확인
         const localUser = localStorage.getItem('user_settings');
         if (localUser) {
           try {
@@ -221,7 +213,6 @@ function MyPageContent() {
           }
         }
 
-        // 사용자 정보가 없으면 로딩 완료
         setIsLoading(false);
       } catch (error) {
         console.error('사용자 인증 확인 오류:', error);
@@ -235,7 +226,6 @@ function MyPageContent() {
   // 탭 변경 함수
   const changeTab = (tabName: string) => {
     setActiveTab(tabName);
-    // URL 업데이트
     const params = new URLSearchParams(searchParams);
     params.set('tab', tabName);
     router.push(`/mypage?${params.toString()}`);
@@ -263,37 +253,37 @@ function MyPageContent() {
   }
 
   return (
-    <main className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12">
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
       <Navigation />
       <div className="h-20"></div>
       
-      {/* Background pattern */}
-      <div className="absolute inset-0 z-0 opacity-10">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)" />
-        </svg>
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
-      
-      {/* Gradient orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       
       <div className="container mx-auto px-4 py-6 relative z-10">
         {/* 마이페이지 타이틀 */}
-        <div className="mb-8 relative">
+        <motion.div 
+          className="mb-8 relative"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
           <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
             마이페이지
           </h1>
-          <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-        </div>
+          <motion.div 
+            className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"
+            initial={{ width: 0 }}
+            animate={{ width: 128 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          ></motion.div>
+        </motion.div>
         
         {firebaseLoading || isLoading ? (
           <div className="flex items-center justify-center">
@@ -314,7 +304,12 @@ function MyPageContent() {
           </div>
         ) : (
           <>
-            <div className="flex border-b border-white/20 mb-6">
+            <motion.div 
+              className="flex border-b border-white/20 mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
               <button
                 onClick={() => changeTab('profile')}
                 className={`px-4 py-2 font-medium ${
@@ -351,10 +346,15 @@ function MyPageContent() {
               >
                 삭제코드
               </Link>
-            </div>
+            </motion.div>
 
             {activeTab === 'profile' && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 transition-all hover:bg-white/15 hover:shadow-xl">
+              <motion.div 
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 transition-all hover:bg-white/15 hover:shadow-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
                 <h2 className="text-2xl font-bold text-blue-100 mb-6 flex items-center">
                   <FaUser className="w-6 h-6 mr-3 text-blue-300" />
                   기본 정보
@@ -418,52 +418,21 @@ function MyPageContent() {
                   </div>
                 </div>
 
-                {/* 관심사 섹션 */}
-                <div className="mt-8 bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                  <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                    <HeartIcon className="w-5 h-5 mr-2 text-purple-400" />
-                    관심사
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {['심리학', '상담', '자기계발', '인간관계', '스트레스 관리', '감정 관리', '직업 상담', '가족 상담', '학습', '건강', '심리검사', '정신건강'].map((interest) => (
-                      <label
-                        key={interest}
-                        className="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-white/5 transition-colors"
-                        onClick={() => setShowProfileEditor(true)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={user.interests?.includes(interest) || false}
-                          onChange={() => {}}
-                          className="w-4 h-4 text-blue-600 bg-white/10 border-white/20 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <span className="text-blue-100 text-sm">{interest}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 자기소개 섹션 */}
-                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                  <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                    <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-purple-400" />
-                    자기소개
-                  </h3>
-                  <p className="text-blue-100 leading-relaxed">
-                    {user.bio || '자기소개가 없습니다. 프로필을 편집하여 자기소개를 추가해보세요.'}
-                  </p>
-                </div>
-
                 {/* 프로필 편집 버튼 */}
-                <div className="mt-6 text-center">
+                <motion.div 
+                  className="mt-6 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                >
                   <button
                     onClick={() => setShowProfileEditor(true)}
                     className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                   >
                     프로필 편집
                   </button>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             )}
 
             {activeTab === 'records' && (
@@ -485,7 +454,6 @@ function MyPageContent() {
           <ProfileEditor
             onClose={() => setShowProfileEditor(false)}
             onUpdate={() => {
-              // 사용자 정보 새로고침
               window.location.reload();
             }}
           />
