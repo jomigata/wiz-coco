@@ -96,7 +96,20 @@ const LoadingMyPage = () => (
 function MyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const tab = searchParams.get('tab') || 'profile';
+  const [user, setUser] = useState<User | null>(null);
+  const [testRecords, setTestRecords] = useState<TestRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(SyncStatus.PENDING);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('');
+  const [isOnline, setIsOnline] = useState(true);
+  const [showReconnectModal, setShowReconnectModal] = useState(false);
+  const [showOfflineData, setShowOfflineData] = useState(false);
+  const [offlineData, setOfflineData] = useState<any[]>([]);
+  const [showClientInfo, setShowClientInfo] = useState(false);
+  const [showLocalStorageCleaner, setShowLocalStorageCleaner] = useState(false);
+
   // Firebase 인증 훅 사용
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
   
@@ -104,18 +117,13 @@ function MyPageContent() {
   const initialTab = searchParams.get('tab') || 'records';
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle' as SyncStatus);
-  const [testRecords, setTestRecords] = useState<TestRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'mbti' | 'ego' | 'enneagram'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -175,7 +183,7 @@ function MyPageContent() {
           }
 
           setUser(userData);
-          setIsLoadingUser(false);
+          setIsLoading(false);
           return;
         }
 
@@ -183,7 +191,7 @@ function MyPageContent() {
         const authState = getAuthState();
         if (authState && authState.isLoggedIn && authState.userBasicInfo) {
           setUser(authState.userBasicInfo);
-          setIsLoadingUser(false);
+          setIsLoading(false);
           return;
         }
 
@@ -199,18 +207,18 @@ function MyPageContent() {
           if (data.isLoggedIn && data.user) {
             setUser(data.user);
             setAuthState(true, data.user);
-            setIsLoadingUser(false);
+            setIsLoading(false);
             return;
           }
         }
 
         // 3. 인증 실패 시 처리
         setUser(null);
-        setIsLoadingUser(false);
+        setIsLoading(false);
       } catch (error) {
         console.error('사용자 정보 로딩 오류:', error);
         setUser(null);
-        setIsLoadingUser(false);
+        setIsLoading(false);
       }
     };
 
@@ -221,7 +229,7 @@ function MyPageContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoadingUser(true);
+        setIsLoading(true);
 
         // URL 탭 파라미터 처리
         const tabParam = searchParams.get('tab');
@@ -244,7 +252,7 @@ function MyPageContent() {
       } catch (error) {
         console.error('데이터 로드 오류:', error);
       } finally {
-        setIsLoadingUser(false);
+        setIsLoading(false);
       }
     };
 
@@ -592,7 +600,7 @@ function MyPageContent() {
     }
   };
 
-  if (isLoadingUser) {
+  if (isLoading) {
     return <LoadingMyPage />;
   }
 
@@ -629,7 +637,7 @@ function MyPageContent() {
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
         </div>
         
-        {firebaseLoading || isLoadingUser ? (
+        {firebaseLoading || isLoading ? (
           <div className="flex items-center justify-center">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -679,16 +687,12 @@ function MyPageContent() {
               >
                 통계 보기
               </button>
-              <button
-                onClick={() => changeTab('deleted')}
-                className={`px-4 py-2 font-medium ${
-                  activeTab === 'deleted'
-                    ? 'text-blue-200 border-b-2 border-blue-200'
-                    : 'text-blue-300 hover:text-blue-200'
-                }`}
+              <Link
+                href="/mypage/deleted-codes"
+                className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
               >
                 삭제코드
-              </button>
+              </Link>
             </div>
 
             {activeTab === 'profile' && (
@@ -696,7 +700,7 @@ function MyPageContent() {
                 <div className="flex justify-between items-center mb-6 border-b border-white/20 pb-3">
                   <h2 className="text-xl font-bold text-white">사용자 정보</h2>
                   <button
-                    onClick={() => setIsProfileEditorOpen(true)}
+                    onClick={() => setShowProfileEditor(true)}
                     className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 flex items-center space-x-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -709,121 +713,121 @@ function MyPageContent() {
                 {/* 기본 정보 섹션 - 그룹별로 구성된 심플하고 고급스러운 디자인 */}
                 <div className="space-y-6">
                   {/* 계정 정보 그룹 */}
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                      <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6">
+                    <h4 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
+                      <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       계정 정보
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-center space-x-3">
-                          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div className="flex items-center space-x-3">
+                            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                              <p className="text-blue-200 text-sm">이메일</p>
+                              <p className="text-blue-100 font-medium">{user?.email}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setIsPasswordModalOpen(true)}
+                            className="text-blue-400 hover:text-blue-300 transition-colors text-sm flex items-center"
+                            title="비밀번호 변경"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            변경
+                          </button>
+                        </div>
+                        <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                          <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                           <div>
-                            <p className="text-gray-300 text-sm">이메일</p>
-                            <p className="text-white font-medium">{user?.email}</p>
+                            <p className="text-blue-200 text-sm">가입일</p>
+                            <p className="text-blue-100 font-medium">
+                              {user?.createdAt ? formatDate(user.createdAt) : '정보 없음'}
+                            </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => setIsPasswordModalOpen(true)}
-                          className="text-blue-400 hover:text-blue-300 transition-colors text-sm flex items-center"
-                          title="비밀번호 변경"
-                        >
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                          <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          변경
-                        </button>
-                      </div>
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">가입일</p>
-                          <p className="text-white font-medium">
-                            {user?.createdAt ? formatDate(user.createdAt) : '정보 없음'}
-                          </p>
+                          <div>
+                            <p className="text-blue-200 text-sm">마지막 로그인</p>
+                            <p className="text-blue-100 font-medium">
+                              {user?.lastLoginAt ? formatDate(user.lastLoginAt) : '정보 없음'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">마지막 로그인</p>
-                          <p className="text-white font-medium">
-                            {user?.lastLoginAt ? formatDate(user.lastLoginAt) : '정보 없음'}
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
-                  {/* 개인 정보 그룹 */}
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                      <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  {/* 개인 정보 그룹 */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6">
+                  <h4 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
+                    <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    개인 정보
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                      <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      개인 정보
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">이름</p>
-                          <p className="text-white font-medium">{user?.name || '설정되지 않음'}</p>
-                        </div>
+                      <div>
+                        <p className="text-blue-200 text-sm">이름</p>
+                        <p className="text-blue-100 font-medium">{user?.name || '설정되지 않음'}</p>
                       </div>
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">전화번호</p>
-                          <p className="text-white font-medium">{user?.phoneNumber || '설정되지 않음'}</p>
-                        </div>
+                    </div>
+                    <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                      <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <div>
+                        <p className="text-blue-200 text-sm">전화번호</p>
+                        <p className="text-blue-100 font-medium">{user?.phoneNumber || '설정되지 않음'}</p>
                       </div>
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">생년월일</p>
-                          <p className="text-white font-medium">{formatBirthDate(user?.birthDate)}</p>
-                        </div>
+                    </div>
+                    <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                      <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-blue-200 text-sm">생년월일</p>
+                        <p className="text-blue-100 font-medium">{formatBirthDate(user?.birthDate)}</p>
                       </div>
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">성별</p>
-                          <p className="text-white font-medium">{formatGender(user?.gender)}</p>
-                        </div>
+                    </div>
+                    <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                      <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-blue-200 text-sm">성별</p>
+                        <p className="text-blue-100 font-medium">{formatGender(user?.gender)}</p>
                       </div>
-                      <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <svg className="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6a2 2 0 00-2-2z" />
-                        </svg>
-                        <div>
-                          <p className="text-gray-300 text-sm">직업</p>
-                          <p className="text-white font-medium">{user?.occupation || '설정되지 않음'}</p>
-                        </div>
+                    </div>
+                    <div className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                      <svg className="w-5 h-5 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0 00-7-7z" />
+                      </svg>
+                      <div>
+                        <p className="text-blue-200 text-sm">직업</p>
+                        <p className="text-blue-100 font-medium">{user?.occupation || '설정되지 않음'}</p>
                       </div>
                     </div>
                   </div>
                 </div>
+                </div>
 
                 {/* 관심사 섹션 - 체크박스 형태로 모든 관심사 표시 */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6">
+                  <h4 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
                     <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
@@ -836,41 +840,50 @@ function MyPageContent() {
                     ].map((interest) => {
                       const isSelected = user?.interests?.includes(interest) || false;
                       return (
-                        <label key={interest} className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                        <label 
+                          key={interest} 
+                          className="flex items-center p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                          onClick={() => setShowProfileEditor(true)}
+                        >
                           <input
                             type="checkbox"
                             checked={isSelected}
                             readOnly
                             className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
                           />
-                          <span className={`ml-3 text-sm ${isSelected ? 'text-white font-medium' : 'text-gray-400'}`}>
+                          <span className={`ml-3 text-sm ${isSelected ? 'text-blue-100 font-medium' : 'text-blue-200'}`}>
                             {interest}
                           </span>
                         </label>
                       );
                     })}
                   </div>
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setShowProfileEditor(true)}
+                      className="text-blue-300 hover:text-blue-200 text-sm underline"
+                    >
+                      관심사 수정하기
+                    </button>
+                  </div>
                 </div>
 
-                {/* 자기소개 섹션 */}
-                {user?.bio && (
-                  <div className="mt-8 pt-8 border-t border-white/20">
-                    <div className="flex items-center mb-6">
-                      <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-xl font-bold text-white">자기소개</h3>
-                    </div>
-                    <div className="group relative overflow-hidden bg-gradient-to-br from-cyan-900/40 via-blue-900/40 to-indigo-900/40 rounded-2xl border border-cyan-500/20 shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 hover:border-cyan-400/40">
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/10 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative p-6">
-                        <p className="text-white leading-relaxed text-lg font-medium">{user.bio}</p>
+
+
+                  {/* 자기소개 섹션 */}
+                  {user?.bio && (
+                    <div className="mt-8 pt-8 border-t border-white/20">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6">
+                        <h4 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
+                          <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          자기소개
+                        </h4>
+                        <p className="text-blue-200 leading-relaxed">{user.bio}</p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* 알림 설정 */}
                 <div className="mt-8 pt-8 border-t border-white/20">
@@ -1332,9 +1345,9 @@ function MyPageContent() {
         )}
 
         {/* 프로필 편집 모달 */}
-        {isProfileEditorOpen && (
+        {showProfileEditor && (
           <ProfileEditor
-            onClose={() => setIsProfileEditorOpen(false)}
+            onClose={() => setShowProfileEditor(false)}
             onUpdate={() => {
               // 사용자 정보 새로고침
               window.location.reload();
