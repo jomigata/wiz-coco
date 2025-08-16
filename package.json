@@ -30,7 +30,10 @@
     "deploy:full": "echo '🚫 중복 배포가 비활성화되었습니다. GitHub Actions를 통해서만 배포됩니다.'",
     "deploy:hosting": "echo '🚫 중복 배포가 비활성화되었습니다. GitHub Actions를 통해서만 배포됩니다.'",
     "deploy:functions": "echo '🚫 중복 배포가 비활성화되었습니다. GitHub Actions를 통해서만 배포됩니다.'",
-    "deploy:firestore": "echo '🚫 중복 배포가 비활성화되었습니다. GitHub Actions를 통해서만 배포됩니다.'"
+    "deploy:firestore": "echo '🚫 중복 배포가 비활성화되었습니다. GitHub Actions를 통해서만 배포됩니다.'",
+    "deploy:auto": "node scripts/auto-deploy.js",
+    "deploy:auto:wait": "node scripts/auto-deploy.js --wait",
+    "deploy:smart": "node scripts/auto-deploy.js --smart"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",
