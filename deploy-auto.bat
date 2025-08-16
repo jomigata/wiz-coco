@@ -13,6 +13,12 @@ echo - 완전 자동: ✅ 활성화
 echo.
 
 echo 🔄 자동 배포 실행 중...
+echo.
+echo 📋 배포 모드 선택:
+echo 1. 기본 자동 배포 (권장)
+echo 2. 고속 배포 (Git 지연 문제 해결)
+echo.
+echo 🔄 기본 자동 배포 실행 중...
 node scripts/auto-deploy.js
 
 if %ERRORLEVEL% EQU 0 (

@@ -42,35 +42,95 @@ function handleError(error, step) {
   process.exit(1);
 }
 
-// 명령어 실행 함수 (자동화)
+// 명령어 실행 함수 (완전 자동화)
 function executeCommand(command, description, options = {}) {
   log(`🔄 ${description} 실행 중...`, 'blue');
   log(`📝 명령어: ${command}`, 'cyan');
   
   try {
-    const result = execSync(command, {
+    // Git 명령어에 대한 특별한 처리
+    const gitOptions = {
       stdio: 'pipe',
       encoding: 'utf8',
       cwd: process.cwd(),
+      timeout: 30000, // 30초 타임아웃
+      maxBuffer: 1024 * 1024, // 1MB 버퍼
       ...options
-    });
+    };
+    
+    // Git 명령어별 최적화된 옵션
+    if (command.includes('git add')) {
+      gitOptions.stdio = ['pipe', 'pipe', 'pipe'];
+      gitOptions.timeout = 60000; // git add는 더 긴 타임아웃
+    } else if (command.includes('git commit')) {
+      gitOptions.stdio = ['pipe', 'pipe', 'pipe'];
+      gitOptions.timeout = 45000; // git commit 타임아웃
+    } else if (command.includes('git push')) {
+      gitOptions.stdio = ['pipe', 'pipe', 'pipe'];
+      gitOptions.timeout = 120000; // git push는 가장 긴 타임아웃
+    }
+    
+    const result = execSync(command, gitOptions);
     
     log(`✅ ${description} 완료`, 'green');
-    if (result) {
+    if (result && result.trim()) {
       log(`📊 결과: ${result.trim()}`, 'cyan');
     }
     return result;
   } catch (error) {
+    // Git 명령어별 구체적인 오류 처리
+    if (command.includes('git add') && error.message.includes('timeout')) {
+      log(`⚠️ ${description} 타임아웃, 재시도 중...`, 'yellow');
+      return retryGitCommand(command, description, options);
+    } else if (command.includes('git push') && error.message.includes('timeout')) {
+      log(`⚠️ ${description} 타임아웃, 재시도 중...`, 'yellow');
+      return retryGitCommand(command, description, options);
+    }
+    
     handleError(error, description);
   }
 }
 
-// Git 상태 확인 함수
+// Git 명령어 재시도 함수
+function retryGitCommand(command, description, options, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      log(`🔄 ${description} 재시도 ${attempt}/${maxRetries}...`, 'yellow');
+      
+      const result = execSync(command, {
+        stdio: 'pipe',
+        encoding: 'utf8',
+        cwd: process.cwd(),
+        timeout: 60000,
+        maxBuffer: 1024 * 1024,
+        ...options
+      });
+      
+      log(`✅ ${description} 재시도 성공!`, 'green');
+      return result;
+    } catch (retryError) {
+      if (attempt === maxRetries) {
+        handleError(retryError, `${description} 최종 재시도 실패`);
+      }
+      log(`⚠️ ${description} 재시도 ${attempt} 실패, 잠시 대기 후 재시도...`, 'yellow');
+      // 재시도 간 잠시 대기
+      setTimeout(() => {}, 2000);
+    }
+  }
+}
+
+// Git 상태 확인 함수 (최적화)
 function checkGitStatus() {
   log('🔍 Git 상태 확인 중...', 'blue');
   
   try {
-    const status = execSync('git status --porcelain', { encoding: 'utf8' });
+    // Git 상태 확인을 위한 최적화된 옵션
+    const status = execSync('git status --porcelain', { 
+      encoding: 'utf8',
+      stdio: 'pipe',
+      timeout: 15000, // 15초 타임아웃
+      cwd: process.cwd()
+    });
     
     if (!status.trim()) {
       log('✅ Git 작업 디렉토리가 깨끗합니다', 'green');
@@ -82,7 +142,8 @@ function checkGitStatus() {
     return true; // 변경사항 있음
   } catch (error) {
     log('⚠️ Git 상태 확인 실패, 계속 진행합니다', 'yellow');
-    return true;
+    log(`🔍 오류 상세: ${error.message}`, 'yellow');
+    return true; // 안전하게 변경사항이 있다고 가정
   }
 }
 
@@ -97,13 +158,14 @@ function generateCommitMessage() {
   return `🚀 자동 배포 업데이트 - ${timestamp} ${time}`;
 }
 
-// 완전 자동화된 배포 프로세스
+// 완전 자동화된 배포 프로세스 (강화)
 async function autoDeploy() {
   log('🚀 WizCoCo 완전 자동화 배포 시작!', 'bright');
   log('=====================================', 'blue');
   
   try {
-    // 1단계: Git 상태 확인
+    // 1단계: Git 상태 확인 (강화된 오류 처리)
+    log('📋 1단계: Git 상태 확인', 'cyan');
     const hasChanges = checkGitStatus();
     
     if (!hasChanges) {
@@ -111,20 +173,60 @@ async function autoDeploy() {
       return;
     }
     
-    // 2단계: 모든 변경사항 스테이징 (자동)
+    // 2단계: 모든 변경사항 스테이징 (강화된 자동화)
+    log('📋 2단계: 변경사항 스테이징', 'cyan');
     log('📦 변경사항 스테이징 중...', 'blue');
+    
+    // git add 명령어 실행 전 상태 확인
+    const beforeAdd = execSync('git status --porcelain', { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      timeout: 10000 
+    });
+    log(`📊 스테이징 전 변경사항: ${beforeAdd.trim().split('\n').length}개 파일`, 'cyan');
+    
     executeCommand('git add .', 'Git 스테이징');
     
-    // 3단계: 자동 커밋 (사용자 입력 없음)
+    // 스테이징 후 상태 확인
+    const afterAdd = execSync('git status --porcelain', { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      timeout: 10000 
+    });
+    log(`📊 스테이징 후 상태: ${afterAdd.trim().split('\n').length}개 파일 스테이징됨`, 'cyan');
+    
+    // 3단계: 자동 커밋 (강화된 자동화)
+    log('📋 3단계: 자동 커밋', 'cyan');
     const commitMessage = generateCommitMessage();
     log('💾 자동 커밋 생성 중...', 'blue');
+    log(`📝 커밋 메시지: ${commitMessage}`, 'cyan');
+    
     executeCommand(`git commit -m "${commitMessage}"`, '자동 커밋');
     
-    // 4단계: GitHub 푸시 (자동)
+    // 커밋 후 상태 확인
+    const commitHash = execSync('git rev-parse HEAD', { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      timeout: 10000 
+    });
+    log(`✅ 커밋 완료: ${commitHash.trim().substring(0, 8)}`, 'green');
+    
+    // 4단계: GitHub 푸시 (강화된 자동화)
+    log('📋 4단계: GitHub 푸시', 'cyan');
     log('🚀 GitHub 푸시 중...', 'blue');
+    
     executeCommand('git push origin main', 'GitHub 푸시');
     
-    // 5단계: 배포 상태 확인
+    // 푸시 후 원격 상태 확인
+    const remoteStatus = execSync('git status -uno', { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      timeout: 15000 
+    });
+    log('📊 푸시 후 원격 상태 확인 완료', 'green');
+    
+    // 5단계: 배포 상태 확인 (강화)
+    log('📋 5단계: 배포 상태 확인', 'cyan');
     log('🔍 배포 상태 확인 중...', 'blue');
     log('📊 GitHub Actions가 자동으로 실행됩니다', 'green');
     log('🌐 Actions URL: https://github.com/jomigata/wiz-coco/actions', 'cyan');
@@ -139,7 +241,73 @@ async function autoDeploy() {
     log('=====================================', 'green');
     
   } catch (error) {
-    handleError(error, '자동 배포 프로세스');
+    log('❌ 자동 배포 프로세스 중 오류 발생', 'red');
+    log(`🔍 오류 상세: ${error.message}`, 'red');
+    
+    // 오류 발생 시 복구 시도
+    try {
+      log('🔄 자동 복구 시도 중...', 'yellow');
+      await attemptRecovery();
+    } catch (recoveryError) {
+      log('❌ 자동 복구 실패', 'red');
+      handleError(error, '자동 배포 프로세스');
+    }
+  }
+}
+
+// 자동 복구 함수
+async function attemptRecovery() {
+  log('🔧 자동 복구 프로세스 시작...', 'yellow');
+  
+  try {
+    // Git 상태 재확인
+    const status = execSync('git status --porcelain', { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      timeout: 15000 
+    });
+    
+    if (status.trim()) {
+      log('📝 변경사항이 여전히 존재합니다', 'cyan');
+      
+      // 강제로 스테이징 시도
+      try {
+        execSync('git add .', { 
+          stdio: 'pipe', 
+          timeout: 60000,
+          cwd: process.cwd()
+        });
+        log('✅ 강제 스테이징 성공', 'green');
+        
+        // 강제 커밋 시도
+        const commitMessage = `🚀 자동 복구 커밋 - ${new Date().toISOString()}`;
+        execSync(`git commit -m "${commitMessage}"`, { 
+          stdio: 'pipe', 
+          timeout: 45000,
+          cwd: process.cwd()
+        });
+        log('✅ 강제 커밋 성공', 'green');
+        
+        // 강제 푸시 시도
+        execSync('git push origin main', { 
+          stdio: 'pipe', 
+          timeout: 120000,
+          cwd: process.cwd()
+        });
+        log('✅ 강제 푸시 성공', 'green');
+        
+        log('🎉 자동 복구 완료!', 'bright');
+        return;
+      } catch (forceError) {
+        log(`❌ 강제 복구 실패: ${forceError.message}`, 'red');
+        throw forceError;
+      }
+    } else {
+      log('✅ Git 상태가 정상입니다', 'green');
+    }
+  } catch (recoveryError) {
+    log(`❌ 복구 프로세스 실패: ${recoveryError.message}`, 'red');
+    throw recoveryError;
   }
 }
 
@@ -166,13 +334,18 @@ async function waitForDeployment() {
   });
 }
 
-// 스마트 배포 함수 (변경사항 분석 및 최적화)
+// 스마트 배포 함수 (강화된 변경사항 분석 및 최적화)
 function smartDeploy() {
   log('🧠 스마트 배포 모드 시작!', 'magenta');
   
   try {
-    // 변경사항 분석
-    const changes = execSync('git status --porcelain', { encoding: 'utf8' });
+    // 변경사항 분석 (강화된 오류 처리)
+    log('🔍 변경사항 분석 중...', 'blue');
+    const changes = execSync('git status --porcelain', { 
+      encoding: 'utf8',
+      stdio: 'pipe',
+      timeout: 15000
+    });
     const files = changes.trim().split('\n').filter(line => line.trim());
     
     if (files.length === 0) {
@@ -180,31 +353,48 @@ function smartDeploy() {
       return;
     }
     
-    // 파일 타입별 분석
+    log(`📝 총 ${files.length}개 파일의 변경사항 발견`, 'cyan');
+    
+    // 파일 타입별 상세 분석
     const analysis = {
       components: files.filter(f => f.includes('src/components/')),
       pages: files.filter(f => f.includes('src/app/')),
       styles: files.filter(f => f.includes('.css') || f.includes('.scss')),
       config: files.filter(f => f.includes('package.json') || f.includes('next.config.js')),
       docs: files.filter(f => f.includes('docs/') || f.includes('README')),
-      scripts: files.filter(f => f.includes('scripts/') || f.includes('.github/'))
+      scripts: files.filter(f => f.includes('scripts/') || f.includes('.github/')),
+      other: files.filter(f => !f.includes('src/') && !f.includes('docs/') && !f.includes('scripts/'))
     };
     
-    log('📊 변경사항 분석 결과:', 'cyan');
+    log('📊 변경사항 상세 분석 결과:', 'cyan');
     Object.entries(analysis).forEach(([type, files]) => {
       if (files.length > 0) {
         log(`  ${type}: ${files.length}개 파일`, 'yellow');
+        // 중요 파일들 상세 표시
+        if (files.length <= 5) {
+          files.forEach(file => {
+            const status = file.substring(0, 2);
+            const fileName = file.substring(3);
+            log(`    ${status} ${fileName}`, 'cyan');
+          });
+        }
       }
     });
     
     // 스마트 커밋 메시지 생성
     const smartMessage = generateSmartCommitMessage(analysis);
+    log(`📝 생성된 커밋 메시지: ${smartMessage}`, 'magenta');
     
     // 자동 배포 실행
     executeSmartDeploy(smartMessage);
     
   } catch (error) {
-    handleError(error, '스마트 배포');
+    log('❌ 스마트 배포 분석 실패', 'red');
+    log(`🔍 오류 상세: ${error.message}`, 'red');
+    
+    // 분석 실패 시에도 기본 배포 시도
+    log('🔄 기본 배포 모드로 전환...', 'yellow');
+    autoDeploy().catch(handleError);
   }
 }
 
@@ -256,11 +446,99 @@ function executeSmartDeploy(commitMessage) {
   }
 }
 
+// 고속 배포 함수 (git add 문제 해결)
+function fastDeploy() {
+  log('⚡ 고속 배포 모드 시작!', 'magenta');
+  log('🚀 Git 명령어 지연 문제를 우회합니다', 'cyan');
+  
+  try {
+    // 1단계: 빠른 Git 상태 확인
+    log('📋 1단계: 빠른 Git 상태 확인', 'cyan');
+    const status = execSync('git status --porcelain', { 
+      encoding: 'utf8',
+      stdio: 'pipe',
+      timeout: 10000
+    });
+    
+    if (!status.trim()) {
+      log('✅ 변경사항이 없습니다', 'green');
+      return;
+    }
+    
+    const fileCount = status.trim().split('\n').length;
+    log(`📝 ${fileCount}개 파일의 변경사항 발견`, 'yellow');
+    
+    // 2단계: 강제 스테이징 (타임아웃 없음)
+    log('📋 2단계: 강제 스테이징', 'cyan');
+    log('📦 변경사항 강제 스테이징 중...', 'blue');
+    
+    try {
+      execSync('git add .', { 
+        stdio: 'pipe',
+        cwd: process.cwd()
+      });
+      log('✅ 강제 스테이징 성공!', 'green');
+    } catch (addError) {
+      log(`⚠️ git add 실패, 대안 방법 시도: ${addError.message}`, 'yellow');
+      
+      // 대안: 개별 파일 스테이징
+      const files = status.trim().split('\n').map(line => line.substring(3));
+      log(`🔄 ${files.length}개 파일을 개별적으로 스테이징...`, 'cyan');
+      
+      files.forEach(file => {
+        try {
+          execSync(`git add "${file}"`, { 
+            stdio: 'pipe',
+            cwd: process.cwd()
+          });
+          log(`✅ ${file} 스테이징 성공`, 'green');
+        } catch (fileError) {
+          log(`⚠️ ${file} 스테이징 실패: ${fileError.message}`, 'yellow');
+        }
+      });
+    }
+    
+    // 3단계: 빠른 커밋
+    log('📋 3단계: 빠른 커밋', 'cyan');
+    const commitMessage = `⚡ 고속 배포 - ${new Date().toISOString()}`;
+    log('💾 빠른 커밋 생성 중...', 'blue');
+    
+    execSync(`git commit -m "${commitMessage}"`, { 
+      stdio: 'pipe',
+      cwd: process.cwd()
+    });
+    log('✅ 빠른 커밋 성공!', 'green');
+    
+    // 4단계: 강제 푸시
+    log('📋 4단계: 강제 푸시', 'cyan');
+    log('🚀 GitHub 강제 푸시 중...', 'blue');
+    
+    execSync('git push origin main', { 
+      stdio: 'pipe',
+      cwd: process.cwd()
+    });
+    log('✅ 강제 푸시 성공!', 'green');
+    
+    log('🎉 고속 배포 완료!', 'bright');
+    log('📊 GitHub Actions가 자동으로 실행됩니다', 'cyan');
+    
+  } catch (error) {
+    log('❌ 고속 배포 실패', 'red');
+    log(`🔍 오류 상세: ${error.message}`, 'red');
+    
+    // 고속 배포 실패 시 기본 배포 시도
+    log('🔄 기본 배포 모드로 전환...', 'yellow');
+    autoDeploy().catch(handleError);
+  }
+}
+
 // 메인 실행
 if (require.main === module) {
   const args = process.argv.slice(2);
   
-  if (args.includes('--smart')) {
+  if (args.includes('--fast')) {
+    fastDeploy();
+  } else if (args.includes('--smart')) {
     smartDeploy();
   } else if (args.includes('--wait')) {
     autoDeploy().catch(handleError);

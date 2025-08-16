@@ -37,6 +37,9 @@ npm run deploy:auto:wait
 
 # 스마트 배포 (변경사항 감지)
 npm run deploy:smart
+
+# 고속 배포 (Git 지연 문제 해결)
+npm run deploy:fast
 ```
 
 ## ⚠️ **주의사항**
