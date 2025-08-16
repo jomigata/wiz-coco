@@ -552,10 +552,10 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                        </div>
                      </div>
                     
-                                         {/* 커스텀 날짜 선택기 - 프로필 편집 페이지 오른쪽에 위치 */}
+                                         {/* 커스텀 날짜 선택기 - 프로필 편집 팝업 오른쪽에 바짝 붙여서 10픽셀 간격 */}
                      {showDatePicker && (
                        <div 
-                         className="fixed top-1/2 right-4 transform -translate-y-1/2 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4 w-80"
+                         className="absolute top-0 -right-80 ml-2.5 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 rounded-xl shadow-2xl border border-emerald-500/30 z-[99999] p-4 w-80"
                          onClick={(e) => {
                            e.stopPropagation();
                            e.preventDefault();
