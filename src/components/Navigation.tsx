@@ -425,8 +425,10 @@ export default function Navigation() {
               
               {/* 기타 공통 메뉴 항목들 */}
               {[
-              { name: "👨‍⚕️ 전문가 소개", href: "/experts" },
-              { name: "⭐ 고객 후기", href: "/reviews" },
+              { name: "🔍 마음 체크업", href: "/mind-checkup" },
+              { name: "🚨 마음 SOS", href: "/mind-sos" },
+              { name: "🤖 AI 마음 스캔", href: "/ai-mind-scan" },
+              { name: "📝 솔루션 노트", href: "/solution-note" },
             ].map((item) => (
               <Link
                 key={item.name}
