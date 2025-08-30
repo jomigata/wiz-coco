@@ -317,7 +317,7 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 - 간소화 버전 */}
-                    <div className="px-6 py-4 space-y-2">
+                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                       {testSubMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
@@ -403,7 +403,7 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 - 간소화 버전 */}
-                    <div className="px-6 py-4 space-y-2">
+                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900">
                       {counselingMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-purple-300 uppercase tracking-wide mb-2">
@@ -489,7 +489,7 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 */}
-                    <div className="px-6 py-4 space-y-2">
+                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                       {aiMindAssistantSubMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
@@ -576,7 +576,7 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 - 간소화 버전 */}
-                    <div className="px-6 py-4 space-y-2">
+                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900">
                       {personalFeaturesMenu.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-emerald-300 uppercase tracking-wide mb-2">
@@ -771,7 +771,7 @@ export default function Navigation() {
                         </div>
 
                         {/* 메뉴 항목들 - 고급 버전 */}
-                        <div className="px-6 py-4 space-y-2">
+                        <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900">
                           {/* 주요 메뉴 */}
                           <div className="space-y-1">
                             {[
