@@ -19,6 +19,7 @@ export default function Navigation() {
   const isTestDropdownOpen = activeMenu === 'test';
   const isCounselingDropdownOpen = activeMenu === 'counseling';
   const isUserMenuOpen = activeMenu === 'additional';
+  const isAiMindAssistantOpen = activeMenu === 'ai-mind-assistant';
 
   // Firebase 사용자 정보를 기반으로 한 상태 계산
   const isLoggedIn = !!user && !loading;
@@ -209,6 +210,57 @@ export default function Navigation() {
         { name: "학습 자료", href: "/learning", description: "심리학 교육 콘텐츠", icon: "📚" },
         { name: "맞춤 추천", href: "/recommendations", description: "AI 기반 상담 추천", icon: "💡" },
         { name: "일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리", icon: "📅" }
+      ]
+    }
+  ];
+
+  // AI 마음 비서 하위 메뉴 항목 - 통합된 구조
+  const aiMindAssistantSubMenuItems = [
+    { 
+      category: "일일 체크",
+      items: [
+        { name: "한 줄 생각 남기기", href: "/ai-mind-assistant/daily-thought", description: "오늘의 마음을 한 줄로 표현", icon: "💭" },
+        { name: "오늘의 마음 상태", href: "/ai-mind-assistant/daily-mood", description: "5점 척도로 마음 상태 기록", icon: "📊" },
+        { name: "수면 & 에너지 체크", href: "/ai-mind-assistant/sleep-energy", description: "수면의 질과 에너지 레벨 체크", icon: "😴" },
+        { name: "스트레스 지수 체크", href: "/ai-mind-assistant/stress-index", description: "현재 스트레스 수준 측정", icon: "😰" },
+        { name: "우울/불안 자가 체크", href: "/ai-mind-assistant/depression-anxiety", description: "정신 건강 상태 자가 진단", icon: "😔" },
+        { name: "맞춤 힐링 메시지", href: "/ai-mind-assistant/healing-message", description: "AI가 전하는 오늘의 위로", icon: "💝" }
+      ]
+    },
+    { 
+      category: "정기적 마음 검진",
+      items: [
+        { name: "감정일기 분석", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" },
+        { name: "텍스트 감정 분석", href: "/ai-mind-assistant/text-analysis", description: "글에서 찾는 무의식과 숨은 감정", icon: "🔍" },
+        { name: "음성 감정 분석", href: "/ai-mind-assistant/voice-analysis", description: "목소리에 담긴 진짜 마음 분석", icon: "🎤" },
+        { name: "마음 이미지 생성", href: "/ai-mind-assistant/mind-image", description: "AI가 그려주는 내 마음의 이미지", icon: "🎨" },
+        { name: "AI 위로 문장", href: "/ai-mind-assistant/ai-comfort", description: "개인 맞춤 위로 메시지", icon: "🤖" }
+      ]
+    },
+    { 
+      category: "마음 SOS",
+      items: [
+        { name: "긴급 마음진단", href: "/ai-mind-assistant/emergency-diagnosis", description: "1분 AI 솔루션", icon: "🚨", badge: "긴급" },
+        { name: "번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" },
+        { name: "자존감 온도계", href: "/ai-mind-assistant/self-esteem", description: "현재 자존감 수준 측정", icon: "🌡️" }
+      ]
+    },
+    { 
+      category: "감정 분석 & 리포트",
+      items: [
+        { name: "감정 변화 그래프", href: "/ai-mind-assistant/emotion-graph", description: "주간/월간 감정 변화 추이", icon: "📈" },
+        { name: "AI 감정 분석 리포트", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 분석 결과", icon: "📋" },
+        { name: "마음 성장 레벨", href: "/ai-mind-assistant/growth-level", description: "성장 배지와 레벨 확인", icon: "🏆" },
+        { name: "스트레스 변화 그래프", href: "/ai-mind-assistant/stress-graph", description: "스트레스 지수 변화 추이", icon: "📊" }
+      ]
+    },
+    { 
+      category: "AI 퀵스캔",
+      items: [
+        { name: "마음 컨디션 체크", href: "/ai-mind-assistant/mind-condition", description: "AI가 알려주는 오늘의 마음 상태", icon: "🔮" },
+        { name: "마음 온도 측정", href: "/ai-mind-assistant/mind-temperature", description: "오늘의 내 마음 온도는?", icon: "🌡️" },
+        { name: "감정 날씨 확인", href: "/ai-mind-assistant/emotion-weather", description: "내 감정의 날씨 알아보기", icon: "🌤️" },
+        { name: "자존감 글쓰기", href: "/ai-mind-assistant/self-esteem-writing", description: "자존감을 채우는 글쓰기", icon: "✍️" }
       ]
     }
   ];
@@ -423,26 +475,91 @@ export default function Navigation() {
                 )}
               </div>
               
-              {/* 기타 공통 메뉴 항목들 */}
-              {[
-              { name: "🔍 마음 체크업", href: "/mind-checkup" },
-              { name: "🚨 마음 SOS", href: "/mind-sos" },
-              { name: "🤖 AI 마음 스캔", href: "/ai-mind-scan" },
-              { name: "📝 솔루션 노트", href: "/solution-note" },
-            ].map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
-                  activeItem === item.href
-                    ? "text-white bg-blue-600"
-                    : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                }`}
-                onClick={(e) => handleNavLinkClick(item.href, e)}
-              >
-                {item.name}
-              </Link>
-            ))}
+              {/* AI 마음 비서 드롭다운 메뉴 */}
+              <div className="relative">
+                <button
+                  className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                    activeItem.startsWith("/ai-mind-assistant") || activeItem.startsWith("/mind-checkup") || 
+                    activeItem.startsWith("/mind-sos") || activeItem.startsWith("/ai-mind-scan") ||
+                    activeItem.startsWith("/solution-note")
+                      ? "text-white bg-blue-600"
+                      : "text-blue-300 hover:text-white hover:bg-blue-800/50"
+                  }`}
+                  onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                  onMouseLeave={() => setActiveMenu(null)}
+                >
+                  🤖 AI 마음 비서
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${activeMenu === 'ai-mind-assistant' ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                {/* AI 마음 비서 메가 메뉴 */}
+                {activeMenu === 'ai-mind-assistant' && (
+                  <div
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-[500px] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                    onMouseLeave={() => setActiveMenu(null)}
+                  >
+                    {/* 메뉴 항목들 */}
+                    <div className="px-6 py-4 space-y-2">
+                      {aiMindAssistantSubMenuItems.map((category) => (
+                        <div key={category.category} className="mb-4 last:mb-0">
+                          <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
+                            {category.category}
+                          </div>
+                          <div className="space-y-1">
+                            {category.items.map((item) => (
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                onClick={() => setActiveMenu(null)}
+                              >
+                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  {item.icon || '🤖'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-white truncate">{item.name}</span>
+                                    {'badge' in item && (item as any).badge && (
+                                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                        (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
+                                        (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                        'bg-orange-500 text-white'
+                                      }`}>
+                                        {(item as any).badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-blue-300 truncate">{item.description}</div>
+                                </div>
+                                <svg 
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             
             {/* 로그인 후에만 표시되는 추가 기능 메뉴 */}
             {isLoggedIn && (
