@@ -214,18 +214,12 @@ export default function Navigation() {
     }
   ];
 
-  // AI 마음 비서 하위 메뉴 항목 - 간소화된 구조
+  // AI 마음 비서 하위 메뉴 항목 - 재구성된 구조
   const aiMindAssistantSubMenuItems = [
     { 
       category: "일일 체크",
       items: [
-        { name: "한 줄 생각 남기기", href: "/ai-mind-assistant/daily-thought", description: "오늘의 마음을 한 줄로 표현", icon: "💭" },
-        { name: "오늘의 마음 상태 기록 (5점 척도)", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" }
-      ]
-    },
-    { 
-      category: "정기적 마음 검진",
-      items: [
+        { name: "오늘의 마음 상태 기록 (5점 척도)", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" },
         { name: "오늘의 감정일기 쓰기", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" },
         { name: "월별검사 및 분기별 검사", href: "/ai-mind-assistant/periodic-tests", description: "정기적인 심리 상태 점검", icon: "📅" }
       ]
@@ -233,29 +227,20 @@ export default function Navigation() {
     { 
       category: "마음 SOS",
       items: [
-        { name: "긴급 마음진단", href: "/ai-mind-assistant/emergency-diagnosis", description: "1분 AI 솔루션", icon: "🚨", badge: "긴급" },
-        { name: "번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" },
-        { name: "자존감 온도계", href: "/ai-mind-assistant/self-esteem", description: "현재 자존감 수준 측정", icon: "🌡️" }
+        { name: "AI 긴급 마음진단", href: "/ai-mind-assistant/emergency-diagnosis", description: "1분 AI 솔루션", icon: "🚨", badge: "긴급" },
+        { name: "AI 번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" },
+        { name: "AI 자존감 온도계", href: "/ai-mind-assistant/self-esteem", description: "현재 자존감 수준 측정", icon: "🌡️" }
       ]
     },
     { 
       category: "감정 분석 & 리포트",
       items: [
-        { name: "감정 변화 그래프", href: "/ai-mind-assistant/emotion-graph", description: "주간/월간 감정 변화 추이", icon: "📈" },
-        { name: "AI 감정 분석 리포트", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 분석 결과", icon: "📋" },
-        { name: "마음 성장 레벨", href: "/ai-mind-assistant/growth-level", description: "성장 배지와 레벨 확인", icon: "🏆" },
-        { name: "스트레스 변화 그래프", href: "/ai-mind-assistant/stress-graph", description: "스트레스 지수 변화 추이", icon: "📊" }
+        { name: "AI 감정 분석 리포트", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 분석 결과 (감정 변화 그래프 포함)", icon: "📋" },
+        { name: "AI 스트레스 분석 리포트", href: "/ai-mind-assistant/stress-graph", description: "스트레스 지수 변화 추이", icon: "📊" },
+        { name: "마음 컨디션 체크", href: "/ai-mind-assistant/growth-level", description: "현재 마음 상태 종합 점검", icon: "🏆" }
       ]
     },
-    { 
-      category: "AI 퀵스캔",
-      items: [
-        { name: "마음 컨디션 체크", href: "/ai-mind-assistant/mind-condition", description: "AI가 알려주는 오늘의 마음 상태", icon: "🔮" },
-        { name: "마음 온도 측정", href: "/ai-mind-assistant/mind-temperature", description: "오늘의 내 마음 온도는?", icon: "🌡️" },
-        { name: "감정 날씨 확인", href: "/ai-mind-assistant/emotion-weather", description: "내 감정의 날씨 알아보기", icon: "🌤️" },
-        { name: "자존감 글쓰기", href: "/ai-mind-assistant/self-esteem-writing", description: "자존감을 채우는 글쓰기", icon: "✍️" }
-      ]
-    }
+
   ];
 
   return (
