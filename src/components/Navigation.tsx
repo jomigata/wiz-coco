@@ -214,27 +214,20 @@ export default function Navigation() {
     }
   ];
 
-  // AI 마음 비서 하위 메뉴 항목 - 통합된 구조
+  // AI 마음 비서 하위 메뉴 항목 - 간소화된 구조
   const aiMindAssistantSubMenuItems = [
     { 
       category: "일일 체크",
       items: [
         { name: "한 줄 생각 남기기", href: "/ai-mind-assistant/daily-thought", description: "오늘의 마음을 한 줄로 표현", icon: "💭" },
-        { name: "오늘의 마음 상태", href: "/ai-mind-assistant/daily-mood", description: "5점 척도로 마음 상태 기록", icon: "📊" },
-        { name: "수면 & 에너지 체크", href: "/ai-mind-assistant/sleep-energy", description: "수면의 질과 에너지 레벨 체크", icon: "😴" },
-        { name: "스트레스 지수 체크", href: "/ai-mind-assistant/stress-index", description: "현재 스트레스 수준 측정", icon: "😰" },
-        { name: "우울/불안 자가 체크", href: "/ai-mind-assistant/depression-anxiety", description: "정신 건강 상태 자가 진단", icon: "😔" },
-        { name: "맞춤 힐링 메시지", href: "/ai-mind-assistant/healing-message", description: "AI가 전하는 오늘의 위로", icon: "💝" }
+        { name: "오늘의 마음 상태 기록 (5점 척도)", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" }
       ]
     },
     { 
       category: "정기적 마음 검진",
       items: [
-        { name: "감정일기 분석", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" },
-        { name: "텍스트 감정 분석", href: "/ai-mind-assistant/text-analysis", description: "글에서 찾는 무의식과 숨은 감정", icon: "🔍" },
-        { name: "음성 감정 분석", href: "/ai-mind-assistant/voice-analysis", description: "목소리에 담긴 진짜 마음 분석", icon: "🎤" },
-        { name: "마음 이미지 생성", href: "/ai-mind-assistant/mind-image", description: "AI가 그려주는 내 마음의 이미지", icon: "🎨" },
-        { name: "AI 위로 문장", href: "/ai-mind-assistant/ai-comfort", description: "개인 맞춤 위로 메시지", icon: "🤖" }
+        { name: "오늘의 감정일기 쓰기", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" },
+        { name: "월별검사 및 분기별 검사", href: "/ai-mind-assistant/periodic-tests", description: "정기적인 심리 상태 점검", icon: "📅" }
       ]
     },
     { 
