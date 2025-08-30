@@ -271,14 +271,14 @@ export default function Navigation() {
                   </svg>
                 </Link>
 
-                {/* 심리검사 메가 메뉴 */}
-                {isTestDropdownOpen && (
-                  <div
-                    data-dropdown-menu="test"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onMouseEnter={() => setActiveMenu('test')}
-                    onMouseLeave={() => setActiveMenu(null)}
-                  >
+                                 {/* 심리검사 메가 메뉴 */}
+                 {isTestDropdownOpen && (
+                   <div
+                     data-dropdown-menu="test"
+                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                     onMouseEnter={() => setActiveMenu('test')}
+                     onMouseLeave={() => setActiveMenu(null)}
+                   >
                     <div 
                       className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                       onWheel={(e) => {
@@ -375,14 +375,14 @@ export default function Navigation() {
                    </svg>
                  </Link>
 
-                                   {/* 상담 프로그램 메가 메뉴 */}
-                  {isCounselingDropdownOpen && (
-                    <div
-                      data-dropdown-menu="counseling"
-                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                      onMouseEnter={() => setActiveMenu('counseling')}
-                      onMouseLeave={() => setActiveMenu(null)}
-                    >
+                                                                       {/* 상담 프로그램 메가 메뉴 */}
+                   {isCounselingDropdownOpen && (
+                     <div
+                       data-dropdown-menu="counseling"
+                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                       onMouseEnter={() => setActiveMenu('counseling')}
+                       onMouseLeave={() => setActiveMenu(null)}
+                     >
                       <div 
                         className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                        onWheel={(e) => {
@@ -479,14 +479,14 @@ export default function Navigation() {
                    </svg>
                  </Link>
 
-                 {/* AI 마음 비서 메가 메뉴 */}
-                 {isAiMindAssistantOpen && (
-                   <div
-                     data-dropdown-menu="ai-mind-assistant"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-[500px] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
-                     onMouseLeave={() => setActiveMenu(null)}
-                   >
+                                   {/* AI 마음 비서 메가 메뉴 */}
+                  {isAiMindAssistantOpen && (
+                    <div
+                      data-dropdown-menu="ai-mind-assistant"
+                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                      onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                      onMouseLeave={() => setActiveMenu(null)}
+                    >
                      <div className="relative">
                        {/* 상단 화살표 가이드 */}
                        <div
@@ -669,14 +669,14 @@ export default function Navigation() {
                    </svg>
                  </Link>
 
-                 {/* 추가 기능 메가 메뉴 */}
-                 {isUserMenuOpen && (
-                   <div
-                     data-dropdown-menu="additional"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                     onMouseEnter={() => setActiveMenu('additional')}
-                     onMouseLeave={() => setActiveMenu(null)}
-                   >
+                                   {/* 추가 기능 메가 메뉴 */}
+                  {isUserMenuOpen && (
+                    <div
+                      data-dropdown-menu="additional"
+                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                      onMouseEnter={() => setActiveMenu('additional')}
+                      onMouseLeave={() => setActiveMenu(null)}
+                    >
                      <div 
                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
                        onWheel={(e) => {
@@ -777,14 +777,14 @@ export default function Navigation() {
                          </svg>
                        </Link>
 
-                                               {/* 마이페이지 메가 메뉴 */}
-                        {isDropdownOpen && (
-                          <div
-                            data-dropdown-menu="user"
-                            className="absolute right-0 mt-0 pt-4 pb-8 w-[500px] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                            onMouseEnter={() => setActiveMenu('user')}
-                            onMouseLeave={() => setActiveMenu(null)}
-                          >
+                                                                                               {/* 마이페이지 메가 메뉴 */}
+                         {isDropdownOpen && (
+                           <div
+                             data-dropdown-menu="user"
+                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             onMouseEnter={() => setActiveMenu('user')}
+                             onMouseLeave={() => setActiveMenu(null)}
+                           >
                            <div className="relative">
                              {/* 상단 화살표 가이드 */}
                              <div
