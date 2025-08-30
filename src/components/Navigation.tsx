@@ -970,8 +970,14 @@ export default function Navigation() {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-indigo-900 border-t border-indigo-800/50 shadow-xl animate-fadeIn">
-          <div className="container py-6 px-6 space-y-3">
+        <>
+          {/* 배경 오버레이 */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="md:hidden bg-indigo-900 border-t border-indigo-800/50 shadow-xl animate-fadeIn fixed inset-x-0 top-16 z-50">
+          <div className="container py-6 px-6 space-y-3 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-600 scrollbar-track-indigo-900">
             {/* 로그인 상태일 때 사용자 정보 표시 - 모바일 메뉴 상단에 배치 */}
             {isLoggedIn && (
               <div className="mb-4 px-4 py-3 bg-indigo-800/50 rounded-lg">
@@ -1024,15 +1030,15 @@ export default function Navigation() {
               </Link>
               
               {/* 모바일에서는 항상 하위 메뉴 표시 */}
-              <div className="ml-4 mt-2 space-y-1 border-l-2 border-blue-600 pl-4">
+              <div className="ml-4 mt-2 space-y-1 border-l-2 border-blue-600 pl-4 mb-4">
                   {testSubMenuItems.map((category) =>
                     category.items.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`block px-4 py-2 text-sm transition-colors ${
+                    className={`block px-4 py-2 text-sm transition-colors rounded-lg hover:bg-blue-800/30 ${
                       activeItem === item.href
-                        ? "text-white font-medium"
+                        ? "text-white font-medium bg-blue-600/50"
                         : "text-blue-200 hover:text-white"
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -1073,13 +1079,13 @@ export default function Navigation() {
                 <div className="px-4 py-2 text-sm font-medium text-green-300 border-l-2 border-green-600 pl-4">
                   🎯 추가 기능
                 </div>
-                <div className="ml-4 space-y-1 border-l-2 border-green-600 pl-4">
+                <div className="ml-4 space-y-1 border-l-2 border-green-600 pl-4 mb-4">
                     {personalFeaturesMenu.map((category) =>
                       category.items.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block px-4 py-2 text-sm text-green-200 hover:text-white transition-colors"
+                      className="block px-4 py-2 text-sm text-green-200 hover:text-white transition-colors rounded-lg hover:bg-green-800/30"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item.name}
@@ -1109,14 +1115,14 @@ export default function Navigation() {
                 </Link>
                 
                 {/* 모바일 관리자 하위 메뉴 */}
-                <div className="ml-4 mt-2 space-y-1 border-l-2 border-purple-600 pl-4">
+                <div className="ml-4 mt-2 space-y-1 border-l-2 border-purple-600 pl-4 mb-4">
                   {adminMenuItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`block px-4 py-2 text-sm transition-colors ${
+                      className={`block px-4 py-2 text-sm transition-colors rounded-lg hover:bg-purple-800/30 ${
                         activeItem === item.href
-                          ? "text-white font-medium"
+                          ? "text-white font-medium bg-purple-600/50"
                         : "text-purple-300 hover:text-white"
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -1134,12 +1140,12 @@ export default function Navigation() {
                 <div className="px-4 py-2 text-sm font-medium text-blue-300 border-l-2 border-blue-600 pl-4">
                   👤 마이페이지
                 </div>
-                <div className="ml-4 space-y-1 border-l-2 border-blue-600 pl-4">
+                <div className="ml-4 space-y-1 border-l-2 border-blue-600 pl-4 mb-4">
                   {mypageSubMenuItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block px-4 py-2 text-sm text-blue-200 hover:text-white transition-colors"
+                      className="block px-4 py-2 text-sm text-blue-200 hover:text-white transition-colors rounded-lg hover:bg-blue-800/30"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item.name}
@@ -1200,6 +1206,7 @@ export default function Navigation() {
             </div>
           </div>
         </div>
+        </>
       )}
     </nav>
     </>
