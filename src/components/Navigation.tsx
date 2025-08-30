@@ -45,7 +45,7 @@ export default function Navigation() {
     }
   }, [user, loading, isLoggedIn, userEmail, userName, userRole]);
 
-  // 드롭다운 외부 클릭 감지 및 스크롤 제어
+  // 드롭다운 외부 클릭 감지 및 스마트 스크롤 제어
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (
@@ -56,59 +56,59 @@ export default function Navigation() {
       }
     };
 
-    // 메뉴가 열릴 때 페이지 스크롤 방지
-    const handleScroll = (e: Event) => {
-      if (activeMenu) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    // 휠 이벤트로 페이지 스크롤 방지
+    // 스마트 휠 이벤트 처리 - 커서 위치에 따라 스크롤 제어
     const handleWheel = (e: WheelEvent) => {
-      if (activeMenu) {
+      if (!activeMenu) return;
+      
+      // 커서가 서브메뉴 내부에 있는지 확인
+      const target = e.target as Element;
+      const isInsideDropdown = target.closest('[data-dropdown-menu]');
+      
+      if (isInsideDropdown) {
+        // 서브메뉴 내부에서는 페이지 스크롤 방지
         e.preventDefault();
         e.stopPropagation();
+      } else {
+        // 서브메뉴 외부에서는 페이지 스크롤 허용
+        // 이벤트를 막지 않음
       }
     };
 
-    // 터치 이벤트로 페이지 스크롤 방지
+    // 스마트 터치 이벤트 처리
     const handleTouchMove = (e: TouchEvent) => {
-      if (activeMenu) {
+      if (!activeMenu) return;
+      
+      const target = e.target as Element;
+      const isInsideDropdown = target.closest('[data-dropdown-menu]');
+      
+      if (isInsideDropdown) {
         e.preventDefault();
         e.stopPropagation();
       }
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("scroll", handleScroll, { passive: false });
     document.addEventListener("wheel", handleWheel, { passive: false });
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
     
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("scroll", handleScroll);
       document.removeEventListener("wheel", handleWheel);
       document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [activeMenu]);
 
-  // 모바일 메뉴 열림/닫힘 시 페이지 스크롤 제어
+  // 모바일 메뉴 열림/닫힘 시 스마트 스크롤 제어
   useEffect(() => {
     if (isMobileMenuOpen) {
+      // 모바일 메뉴가 열려있을 때는 페이지 스크롤을 제한하되 완전히 차단하지 않음
       document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
     } else {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
     }
 
     return () => {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
     };
   }, [isMobileMenuOpen]);
 
@@ -362,6 +362,7 @@ export default function Navigation() {
                 {/* 심리검사 메가 메뉴 - 간소화 버전 */}
               {isTestDropdownOpen && (
                 <div
+                    data-dropdown-menu="test"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('test')}
                     onMouseLeave={() => setActiveMenu(null)}
@@ -466,6 +467,7 @@ export default function Navigation() {
                 {/* 상담 프로그램 메가 메뉴 - 간소화 버전 */}
                 {isCounselingDropdownOpen && (
                   <div
+                    data-dropdown-menu="counseling"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('counseling')}
                     onMouseLeave={() => setActiveMenu(null)}
@@ -570,6 +572,7 @@ export default function Navigation() {
                 {/* AI 마음 비서 메가 메뉴 */}
                 {activeMenu === 'ai-mind-assistant' && (
                   <div
+                    data-dropdown-menu="ai-mind-assistant"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[500px] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
                     onMouseLeave={() => setActiveMenu(null)}
@@ -675,6 +678,7 @@ export default function Navigation() {
                   {/* 추가 기능 메가 메뉴 - 간소화 버전 */}
                 {isUserMenuOpen && (
                   <div
+                      data-dropdown-menu="additional"
                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-emerald-900/95 to-green-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('additional')}
                     onMouseLeave={() => setActiveMenu(null)}
@@ -811,6 +815,7 @@ export default function Navigation() {
                 <div className="relative" ref={dropdownRef}>
                   {isDropdownOpen && (
                     <div
+                        data-dropdown-menu="user"
                         className="absolute right-0 top-full mt-2 py-6 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-emerald-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                         onMouseEnter={() => {
                           // 마우스가 메뉴 영역에 들어올 때 서브메뉴 유지
@@ -1116,7 +1121,10 @@ export default function Navigation() {
             className="md:hidden fixed inset-0 bg-black/50 z-40"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="md:hidden bg-indigo-900 border-t border-indigo-800/50 shadow-xl animate-fadeIn fixed inset-x-0 top-16 z-50">
+          <div 
+          data-dropdown-menu="mobile"
+          className="md:hidden bg-indigo-900 border-t border-indigo-800/50 shadow-xl animate-fadeIn fixed inset-x-0 top-16 z-50"
+        >
           <div 
             className="container py-6 px-6 space-y-3 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-600 scrollbar-track-indigo-900"
             onWheel={(e) => {
