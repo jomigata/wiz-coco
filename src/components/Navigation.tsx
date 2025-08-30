@@ -579,7 +579,7 @@ export default function Navigation() {
                   >
                     {/* 메뉴 항목들 */}
                     <div 
-                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
                       onWheel={(e) => {
                         e.stopPropagation();
                         const target = e.currentTarget;
@@ -592,9 +592,37 @@ export default function Navigation() {
                           e.preventDefault();
                         }
                       }}
-                      style={{
-                        overscrollBehavior: 'contain',
-                        scrollbarGutter: 'stable'
+                      onMouseMove={(e) => {
+                        const target = e.currentTarget;
+                        const rect = target.getBoundingClientRect();
+                        const mouseY = e.clientY - rect.top;
+                        const containerHeight = rect.height;
+                        const scrollTop = target.scrollTop;
+                        const scrollHeight = target.scrollHeight;
+                        const clientHeight = target.clientHeight;
+                        
+                        // 스크롤이 필요한 경우에만 자동 스크롤 실행
+                        if (scrollHeight > clientHeight) {
+                          // 하단 0~20% 영역에서 아래로 자동 스크롤
+                          if (mouseY >= containerHeight * 0.8 && mouseY <= containerHeight) {
+                            if (scrollTop + clientHeight < scrollHeight) {
+                              target.scrollTo({
+                                top: scrollTop + 3,
+                                behavior: 'smooth'
+                              });
+                            }
+                          }
+                          
+                          // 상단 0~20% 영역에서 위로 자동 스크롤
+                          if (mouseY >= 0 && mouseY <= containerHeight * 0.2) {
+                            if (scrollTop > 0) {
+                              target.scrollTo({
+                                top: scrollTop - 3,
+                                behavior: 'smooth'
+                              });
+                            }
+                          }
+                        }
                       }}
                     >
                       {aiMindAssistantSubMenuItems.map((category) => (

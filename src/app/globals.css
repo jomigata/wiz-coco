@@ -147,6 +147,19 @@ body.dropdown-open {
   }
 }
 
+/* Auto-scroll dropdown with hidden scrollbar */
+.auto-scroll-dropdown {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.auto-scroll-dropdown::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 /* Custom Shadows */
 .shadow-soft {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
