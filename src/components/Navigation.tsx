@@ -603,21 +603,21 @@ export default function Navigation() {
                         
                         // 스크롤이 필요한 경우에만 자동 스크롤 실행
                         if (scrollHeight > clientHeight) {
-                          // 하단 0~20% 영역에서 아래로 자동 스크롤
+                          // 하단 0~20% 영역에서 아래로 자동 스크롤 (아주 빠른 속도)
                           if (mouseY >= containerHeight * 0.8 && mouseY <= containerHeight) {
                             if (scrollTop + clientHeight < scrollHeight) {
                               target.scrollTo({
-                                top: scrollTop + 3,
+                                top: scrollTop + 15,
                                 behavior: 'smooth'
                               });
                             }
                           }
                           
-                          // 상단 0~20% 영역에서 위로 자동 스크롤
+                          // 상단 0~20% 영역에서 위로 자동 스크롤 (아주 빠른 속도)
                           if (mouseY >= 0 && mouseY <= containerHeight * 0.2) {
                             if (scrollTop > 0) {
                               target.scrollTo({
-                                top: scrollTop - 3,
+                                top: scrollTop - 15,
                                 behavior: 'smooth'
                               });
                             }
