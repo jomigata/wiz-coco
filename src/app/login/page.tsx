@@ -38,6 +38,8 @@ const LoginContent = () => {
   const [emailVerificationMessage, setEmailVerificationMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [passwordResetSent, setPasswordResetSent] = useState<boolean>(false);
+  const [showSnsLogin, setShowSnsLogin] = useState<boolean>(false);
+  const [duplicateEmail, setDuplicateEmail] = useState<string>('');
   
   // 이메일 인증 메시지 설정
   useEffect(() => {
@@ -82,6 +84,7 @@ const LoginContent = () => {
     // 로딩 상태 시작
     setIsLoading(true);
     setLoginError('');
+    setShowSnsLogin(false);
     
     try {
       console.log('[Login] Firebase 로그인 시도:', email);
@@ -99,6 +102,8 @@ const LoginContent = () => {
       } else {
         // Firebase 에러 코드에 따른 한국어 메시지
         let errorMsg = '로그인 처리 중 오류가 발생했습니다.';
+        let isDuplicateAccount = false;
+        
         if (result.error?.includes('user-not-found')) {
           errorMsg = '등록되지 않은 이메일입니다.';
         } else if (result.error?.includes('wrong-password')) {
@@ -109,12 +114,34 @@ const LoginContent = () => {
           errorMsg = '비활성화된 계정입니다.';
         } else if (result.error?.includes('too-many-requests')) {
           errorMsg = '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.';
+        } else if (result.error?.includes('account-exists-with-different-credential')) {
+          errorMsg = '이 이메일로 가입된 계정이 다른 로그인 방식으로 존재합니다.';
+          isDuplicateAccount = true;
+        } else if (result.error?.includes('email-already-in-use')) {
+          errorMsg = '이미 사용 중인 이메일입니다.';
+          isDuplicateAccount = true;
         }
+        
         setLoginError(errorMsg);
+        
+        // 중복 계정 에러인 경우 SNS 로그인 화면 표시
+        if (isDuplicateAccount) {
+          setDuplicateEmail(email);
+          setShowSnsLogin(true);
+        }
       }
     } catch (error: any) {
       console.error('[Login] Firebase 로그인 오류:', error);
-      setLoginError('로그인 처리 중 오류가 발생했습니다.');
+      
+      // 중복 계정 에러 체크
+      if (error.code === 'auth/account-exists-with-different-credential' || 
+          error.code === 'auth/email-already-in-use') {
+        setLoginError('이 이메일로 가입된 계정이 다른 로그인 방식으로 존재합니다.');
+        setDuplicateEmail(email);
+        setShowSnsLogin(true);
+      } else {
+        setLoginError('로그인 처리 중 오류가 발생했습니다.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -148,11 +175,23 @@ const LoginContent = () => {
         errorMsg = '로그인이 취소되었습니다.';
       } else if (error.code === 'auth/popup-blocked') {
         errorMsg = '팝업이 차단되었습니다. 팝업을 허용해주세요.';
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMsg = '이 이메일로 가입된 계정이 다른 로그인 방식으로 존재합니다.';
       }
       setLoginError(errorMsg);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 카카오 로그인 처리 (준비 중)
+  const handleKakaoLogin = () => {
+    setLoginError('카카오 로그인은 준비 중입니다. 곧 서비스될 예정입니다.');
+  };
+
+  // 네이버 로그인 처리 (준비 중)
+  const handleNaverLogin = () => {
+    setLoginError('네이버 로그인은 준비 중입니다. 곧 서비스될 예정입니다.');
   };
 
   // 비밀번호 재설정 이메일 보내기
@@ -196,6 +235,13 @@ const LoginContent = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // SNS 로그인 화면으로 돌아가기
+  const handleBackToEmailLogin = () => {
+    setShowSnsLogin(false);
+    setDuplicateEmail('');
+    setLoginError('');
   };
   
   return (
@@ -265,79 +311,104 @@ const LoginContent = () => {
             </div>
           )}
 
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="sr-only">이메일</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  placeholder="이메일"
-                />
+          {/* 중복 계정 에러 시 SNS 로그인 안내 */}
+          {showSnsLogin && duplicateEmail && (
+            <div className="bg-amber-800/50 text-amber-200 border border-amber-600/50 p-4 rounded-lg text-center mb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                </svg>
+                <span className="font-semibold">중복 계정 감지됨</span>
               </div>
-              <div>
-                <label htmlFor="password" className="sr-only">비밀번호</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  placeholder="비밀번호"
-                />
-              </div>
-            </div>
-
-            {loginError && (
-              <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg p-3" aria-live="assertive">
-                {loginError}
-              </div>
-            )}
-
-            <div>
-              <motion.button
-                type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
-                aria-label="로그인 제출"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    로그인 중...
-                  </div>
-                ) : (
-                  "로그인"
-                )}
-              </motion.button>
-            </div>
-
-            {/* 비밀번호 재설정 링크 */}
-            <div className="text-center">
+              <p className="text-sm mb-3">
+                <strong>{duplicateEmail}</strong>로 가입된 계정이 다른 로그인 방식으로 존재합니다.<br/>
+                아래의 소셜 로그인을 통해 로그인해주세요.
+              </p>
               <button
-                type="button"
-                onClick={handlePasswordReset}
-                disabled={isLoading || passwordResetSent}
-                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed underline"
+                onClick={handleBackToEmailLogin}
+                className="text-xs text-amber-300 hover:text-amber-200 underline"
               >
-                {passwordResetSent ? '재설정 이메일 발송됨' : '비밀번호를 잊으셨나요?'}
+                이메일 로그인으로 돌아가기
               </button>
             </div>
-          </form>
+          )}
+
+          {/* 이메일 로그인 폼 (SNS 로그인 화면이 아닐 때만 표시) */}
+          {!showSnsLogin && (
+            <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="sr-only">이메일</label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    placeholder="이메일"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="sr-only">비밀번호</label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    placeholder="비밀번호"
+                  />
+                </div>
+              </div>
+
+              {loginError && (
+                <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg p-3" aria-live="assertive">
+                  {loginError}
+                </div>
+              )}
+
+              <div>
+                <motion.button
+                  type="submit"
+                  className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isLoading}
+                  aria-label="로그인 제출"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      로그인 중...
+                    </div>
+                  ) : (
+                    "로그인"
+                  )}
+                </motion.button>
+              </div>
+
+              {/* 비밀번호 재설정 링크 */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={isLoading || passwordResetSent}
+                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed underline"
+                >
+                  {passwordResetSent ? '재설정 이메일 발송됨' : '비밀번호를 잊으셨나요?'}
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* 소셜 로그인 버튼 */}
           <div className="space-y-3">
@@ -346,7 +417,9 @@ const LoginContent = () => {
                 <div className="w-full border-t border-emerald-700/50"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-emerald-900/30 text-emerald-400">또는</span>
+                <span className="px-2 bg-emerald-900/30 text-emerald-400">
+                  {showSnsLogin ? '소셜 로그인으로 계속하기' : '또는'}
+                </span>
               </div>
             </div>
             
@@ -362,17 +435,21 @@ const LoginContent = () => {
               </motion.button>
               
               <motion.button
-                onClick={() => setLoginError('카카오 로그인은 준비 중입니다.')}
-                className="flex justify-center items-center px-4 py-2 border border-gray-600/50 bg-gray-800/30 text-gray-400 rounded-lg cursor-not-allowed"
-                disabled={true}
+                onClick={handleKakaoLogin}
+                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={isLoading}
               >
                 Kakao
               </motion.button>
               
               <motion.button
-                onClick={() => setLoginError('네이버 로그인은 준비 중입니다.')}
-                className="flex justify-center items-center px-4 py-2 border border-gray-600/50 bg-gray-800/30 text-gray-400 rounded-lg cursor-not-allowed"
-                disabled={true}
+                onClick={handleNaverLogin}
+                className="flex justify-center items-center px-4 py-2 border border-emerald-700/50 bg-emerald-900/30 text-emerald-200 rounded-lg hover:bg-emerald-800/50 transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={isLoading}
               >
                 Naver
               </motion.button>
