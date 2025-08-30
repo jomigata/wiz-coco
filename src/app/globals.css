@@ -259,4 +259,57 @@ html.hide-global-scroll-button .global-scroll-button {
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
+}
+
+/* Navigation 컴포넌트 스타일 */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(59 130 246) rgb(30 58 138);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgb(30 58 138);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(59 130 246);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(37 99 235);
+}
+
+/* Auto-scroll dropdown with hidden scrollbar */
+.auto-scroll-dropdown {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.auto-scroll-dropdown::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Dropdown scroll container */
+.dropdown-scroll-container {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Body scroll control when dropdown is open */
+body.dropdown-open {
+  overflow: hidden;
+}
+
+/* Smooth scroll for dropdowns */
+.dropdown-smooth-scroll {
+  scroll-behavior: smooth;
 } 
