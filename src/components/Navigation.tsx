@@ -375,16 +375,16 @@ export default function Navigation() {
                    </svg>
                  </Link>
 
-                 {/* 상담 프로그램 메가 메뉴 */}
-                 {isCounselingDropdownOpen && (
-                   <div
-                     data-dropdown-menu="counseling"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                     onMouseEnter={() => setActiveMenu('counseling')}
-                     onMouseLeave={() => setActiveMenu(null)}
-                   >
-                     <div 
-                       className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900"
+                                   {/* 상담 프로그램 메가 메뉴 */}
+                  {isCounselingDropdownOpen && (
+                    <div
+                      data-dropdown-menu="counseling"
+                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                      onMouseEnter={() => setActiveMenu('counseling')}
+                      onMouseLeave={() => setActiveMenu(null)}
+                    >
+                      <div 
+                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                        onWheel={(e) => {
                          e.stopPropagation();
                          const target = e.currentTarget;
@@ -412,7 +412,7 @@ export default function Navigation() {
                                <Link
                                  key={item.name}
                                  href={item.href}
-                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                  onClick={() => setActiveMenu(null)}
                                >
                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -431,10 +431,10 @@ export default function Navigation() {
                                        </span>
                                      )}
                                    </div>
-                                   <div className="text-xs text-purple-300 truncate">{item.description}</div>
+                                   <div className="text-xs text-blue-300 truncate">{item.description}</div>
                                  </div>
                                  <svg 
-                                   className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                   className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                    fill="none" 
                                    stroke="currentColor" 
                                    viewBox="0 0 24 24"
@@ -777,14 +777,14 @@ export default function Navigation() {
                          </svg>
                        </Link>
 
-                       {/* 마이페이지 메가 메뉴 */}
-                       {isDropdownOpen && (
-                         <div
-                           data-dropdown-menu="user"
-                           className="absolute right-0 mt-0 pt-4 pb-8 w-[500px] bg-gradient-to-br from-slate-900/95 via-indigo-900/95 to-purple-900/95 rounded-2xl shadow-2xl border border-indigo-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                           onMouseEnter={() => setActiveMenu('user')}
-                           onMouseLeave={() => setActiveMenu(null)}
-                         >
+                                               {/* 마이페이지 메가 메뉴 */}
+                        {isDropdownOpen && (
+                          <div
+                            data-dropdown-menu="user"
+                            className="absolute right-0 mt-0 pt-4 pb-8 w-[500px] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            onMouseEnter={() => setActiveMenu('user')}
+                            onMouseLeave={() => setActiveMenu(null)}
+                          >
                            <div className="relative">
                              {/* 상단 화살표 가이드 */}
                              <div
@@ -810,7 +810,7 @@ export default function Navigation() {
                                  }
                                }}
                              >
-                               <div className="bg-gradient-to-b from-indigo-600/90 to-indigo-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-indigo-400/50">
+                               <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                                  </svg>
@@ -841,7 +841,7 @@ export default function Navigation() {
                                  }
                                }}
                              >
-                               <div className="bg-gradient-to-b from-indigo-600/90 to-indigo-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-indigo-400/50">
+                               <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                  </svg>
@@ -889,19 +889,19 @@ export default function Navigation() {
                                  scrollbarGutter: 'stable'
                                }}
                              >
-                               {/* 사용자 정보 헤더 */}
-                               <div className="mb-4 p-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl border border-indigo-500/30">
-                                 <div className="flex items-center gap-3">
-                                   <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                     {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
-                                   </div>
-                                   <div>
-                                     <div className="font-semibold text-white">{userName || '사용자'}</div>
-                                     <div className="text-sm text-indigo-300">{userEmail}</div>
-                                     <div className="text-xs text-indigo-400 capitalize">{userRole}</div>
-                                   </div>
-                                 </div>
-                               </div>
+                                                               {/* 사용자 정보 헤더 */}
+                                <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                      {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-white">{userName || '사용자'}</div>
+                                      <div className="text-sm text-green-300">{userEmail}</div>
+                                      <div className="text-xs text-green-400 capitalize">{userRole}</div>
+                                    </div>
+                                  </div>
+                                </div>
 
                                {/* 마이페이지 메뉴 아이템들 */}
                                <div className="space-y-1">
@@ -915,7 +915,7 @@ export default function Navigation() {
                                    <Link
                                      key={item.name}
                                      href={item.href}
-                                     className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                     className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
                                      onClick={() => setActiveMenu(null)}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -923,10 +923,10 @@ export default function Navigation() {
                                      </div>
                                      <div className="flex-1 min-w-0">
                                        <div className="font-medium text-white truncate">{item.name}</div>
-                                       <div className="text-xs text-indigo-300 truncate">{item.description}</div>
+                                       <div className="text-xs text-green-300 truncate">{item.description}</div>
                                      </div>
                                      <svg 
-                                       className="w-4 h-4 text-indigo-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                       className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                        fill="none" 
                                        stroke="currentColor" 
                                        viewBox="0 0 24 24"
@@ -939,10 +939,10 @@ export default function Navigation() {
                                  {/* 관리자 메뉴 (관리자인 경우) */}
                                  {userRole === 'admin' && (
                                    <>
-                                     <div className="mt-4 pt-4 border-t border-indigo-500/30">
-                                       <div className="px-2 py-1 text-xs font-bold text-indigo-300 uppercase tracking-wide mb-2">
-                                         관리자 메뉴
-                                       </div>
+                                                                           <div className="mt-4 pt-4 border-t border-green-500/30">
+                                        <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
+                                          관리자 메뉴
+                                        </div>
                                        <div className="space-y-1">
                                          {[
                                            { name: "대시보드", href: "/admin/dashboard", icon: "📊" },
@@ -980,8 +980,8 @@ export default function Navigation() {
                                    </>
                                  )}
 
-                                 {/* 로그아웃 버튼 */}
-                                 <div className="mt-4 pt-4 border-t border-indigo-500/30">
+                                                                   {/* 로그아웃 버튼 */}
+                                  <div className="mt-4 pt-4 border-t border-green-500/30">
                                    <button
                                      onClick={handleLogout}
                                      className="w-full group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 border border-transparent hover:border-red-500/30 text-left"
