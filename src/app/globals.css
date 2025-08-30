@@ -120,6 +120,33 @@
   background: rgb(99 102 241);
 }
 
+/* Dropdown Menu Scroll Control */
+.dropdown-scroll-container {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent page scroll when dropdown is open */
+body.dropdown-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Smooth scroll behavior for dropdowns */
+.dropdown-smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Touch-friendly scroll for mobile */
+@media (max-width: 768px) {
+  .dropdown-scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
 /* Custom Shadows */
 .shadow-soft {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);

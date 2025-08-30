@@ -45,7 +45,7 @@ export default function Navigation() {
     }
   }, [user, loading, isLoggedIn, userEmail, userName, userRole]);
 
-  // 드롭다운 외부 클릭 감지
+  // 드롭다운 외부 클릭 감지 및 스크롤 제어
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (
@@ -56,11 +56,61 @@ export default function Navigation() {
       }
     };
 
+    // 메뉴가 열릴 때 페이지 스크롤 방지
+    const handleScroll = (e: Event) => {
+      if (activeMenu) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // 휠 이벤트로 페이지 스크롤 방지
+    const handleWheel = (e: WheelEvent) => {
+      if (activeMenu) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // 터치 이벤트로 페이지 스크롤 방지
+    const handleTouchMove = (e: TouchEvent) => {
+      if (activeMenu) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
     document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("scroll", handleScroll, { passive: false });
+    document.addEventListener("wheel", handleWheel, { passive: false });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("wheel", handleWheel);
+      document.removeEventListener("touchmove", handleTouchMove);
     };
-  }, []);
+  }, [activeMenu]);
+
+  // 모바일 메뉴 열림/닫힘 시 페이지 스크롤 제어
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [isMobileMenuOpen]);
 
   // Firebase 로그아웃 처리 함수
   const handleLogout = async () => {
@@ -317,7 +367,25 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 - 간소화 버전 */}
-                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                    <div 
+                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                      onWheel={(e) => {
+                        e.stopPropagation();
+                        const target = e.currentTarget;
+                        const scrollTop = target.scrollTop;
+                        const scrollHeight = target.scrollHeight;
+                        const clientHeight = target.clientHeight;
+                        
+                        if ((scrollTop === 0 && e.deltaY < 0) || 
+                            (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      style={{
+                        overscrollBehavior: 'contain',
+                        scrollbarGutter: 'stable'
+                      }}
+                    >
                       {testSubMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
@@ -403,7 +471,25 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 - 간소화 버전 */}
-                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900">
+                    <div 
+                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900"
+                      onWheel={(e) => {
+                        e.stopPropagation();
+                        const target = e.currentTarget;
+                        const scrollTop = target.scrollTop;
+                        const scrollHeight = target.scrollHeight;
+                        const clientHeight = target.clientHeight;
+                        
+                        if ((scrollTop === 0 && e.deltaY < 0) || 
+                            (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      style={{
+                        overscrollBehavior: 'contain',
+                        scrollbarGutter: 'stable'
+                      }}
+                    >
                       {counselingMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-purple-300 uppercase tracking-wide mb-2">
@@ -489,7 +575,25 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 */}
-                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                    <div 
+                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                      onWheel={(e) => {
+                        e.stopPropagation();
+                        const target = e.currentTarget;
+                        const scrollTop = target.scrollTop;
+                        const scrollHeight = target.scrollHeight;
+                        const clientHeight = target.clientHeight;
+                        
+                        if ((scrollTop === 0 && e.deltaY < 0) || 
+                            (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      style={{
+                        overscrollBehavior: 'contain',
+                        scrollbarGutter: 'stable'
+                      }}
+                    >
                       {aiMindAssistantSubMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
@@ -576,7 +680,25 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 - 간소화 버전 */}
-                    <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900">
+                    <div 
+                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900"
+                      onWheel={(e) => {
+                        e.stopPropagation();
+                        const target = e.currentTarget;
+                        const scrollTop = target.scrollTop;
+                        const scrollHeight = target.scrollHeight;
+                        const clientHeight = target.clientHeight;
+                        
+                        if ((scrollTop === 0 && e.deltaY > 0) || 
+                            (scrollTop + clientHeight >= scrollHeight && e.deltaY < 0)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      style={{
+                        overscrollBehavior: 'contain',
+                        scrollbarGutter: 'stable'
+                      }}
+                    >
                       {personalFeaturesMenu.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-emerald-300 uppercase tracking-wide mb-2">
@@ -771,7 +893,25 @@ export default function Navigation() {
                         </div>
 
                         {/* 메뉴 항목들 - 고급 버전 */}
-                        <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900">
+                        <div 
+                          className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900"
+                          onWheel={(e) => {
+                            e.stopPropagation();
+                            const target = e.currentTarget;
+                            const scrollTop = target.scrollTop;
+                            const scrollHeight = target.scrollHeight;
+                            const clientHeight = target.clientHeight;
+                            
+                            if ((scrollTop === 0 && e.deltaY > 0) || 
+                                (scrollTop + clientHeight >= scrollHeight && e.deltaY < 0)) {
+                              e.preventDefault();
+                            }
+                          }}
+                          style={{
+                            overscrollBehavior: 'contain',
+                            scrollbarGutter: 'stable'
+                          }}
+                        >
                           {/* 주요 메뉴 */}
                           <div className="space-y-1">
                             {[
@@ -977,7 +1117,25 @@ export default function Navigation() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           <div className="md:hidden bg-indigo-900 border-t border-indigo-800/50 shadow-xl animate-fadeIn fixed inset-x-0 top-16 z-50">
-          <div className="container py-6 px-6 space-y-3 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-600 scrollbar-track-indigo-900">
+          <div 
+            className="container py-6 px-6 space-y-3 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-600 scrollbar-track-indigo-900"
+            onWheel={(e) => {
+              e.stopPropagation();
+              const target = e.currentTarget;
+              const scrollTop = target.scrollTop;
+              const scrollHeight = target.scrollHeight;
+              const clientHeight = target.clientHeight;
+              
+              if ((scrollTop === 0 && e.deltaY > 0) || 
+                  (scrollTop + clientHeight >= scrollHeight && e.deltaY < 0)) {
+                e.preventDefault();
+              }
+            }}
+            style={{
+              overscrollBehavior: 'contain',
+              scrollbarGutter: 'stable'
+            }}
+          >
             {/* 로그인 상태일 때 사용자 정보 표시 - 모바일 메뉴 상단에 배치 */}
             {isLoggedIn && (
               <div className="mb-4 px-4 py-3 bg-indigo-800/50 rounded-lg">
