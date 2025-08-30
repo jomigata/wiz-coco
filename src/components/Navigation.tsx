@@ -578,53 +578,112 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {/* 메뉴 항목들 */}
-                    <div 
-                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
-                      onWheel={(e) => {
-                        e.stopPropagation();
-                        const target = e.currentTarget;
-                        const scrollTop = target.scrollTop;
-                        const scrollHeight = target.scrollHeight;
-                        const clientHeight = target.clientHeight;
-                        
-                        if ((scrollTop === 0 && e.deltaY < 0) || 
-                            (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      onMouseMove={(e) => {
-                        const target = e.currentTarget;
-                        const rect = target.getBoundingClientRect();
-                        const mouseY = e.clientY - rect.top;
-                        const containerHeight = rect.height;
-                        const scrollTop = target.scrollTop;
-                        const scrollHeight = target.scrollHeight;
-                        const clientHeight = target.clientHeight;
-                        
-                        // 스크롤이 필요한 경우에만 자동 스크롤 실행
-                        if (scrollHeight > clientHeight) {
-                          // 하단 0~20% 영역에서 아래로 자동 스크롤 (아주 빠른 속도)
-                          if (mouseY >= containerHeight * 0.8 && mouseY <= containerHeight) {
-                            if (scrollTop + clientHeight < scrollHeight) {
-                              target.scrollTo({
-                                top: scrollTop + 15,
-                                behavior: 'smooth'
-                              });
+                    <div className="relative">
+                      {/* 상단 화살표 - 숨겨진 메뉴가 있을 때만 표시 */}
+                      <div 
+                        className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                        style={{
+                          opacity: 0,
+                          transition: 'opacity 0.3s ease-in-out'
+                        }}
+                        ref={(el) => {
+                          if (el) {
+                            const container = el.parentElement?.querySelector('.auto-scroll-dropdown');
+                            if (container) {
+                              const updateArrow = () => {
+                                const scrollTop = container.scrollTop;
+                                el.style.opacity = scrollTop > 0 ? '1' : '0';
+                              };
+                              container.addEventListener('scroll', updateArrow);
+                              updateArrow();
                             }
                           }
+                        }}
+                      >
+                        <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* 하단 화살표 - 숨겨진 메뉴가 있을 때만 표시 */}
+                      <div 
+                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                        style={{
+                          opacity: 0,
+                          transition: 'opacity 0.3s ease-in-out'
+                        }}
+                        ref={(el) => {
+                          if (el) {
+                            const container = el.parentElement?.querySelector('.auto-scroll-dropdown');
+                            if (container) {
+                              const updateArrow = () => {
+                                const scrollTop = container.scrollTop;
+                                const scrollHeight = container.scrollHeight;
+                                const clientHeight = container.clientHeight;
+                                el.style.opacity = (scrollTop + clientHeight < scrollHeight) ? '1' : '0';
+                              };
+                              container.addEventListener('scroll', updateArrow);
+                              updateArrow();
+                            }
+                          }
+                        }}
+                      >
+                        <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      <div 
+                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
+                        onWheel={(e) => {
+                          e.stopPropagation();
+                          const target = e.currentTarget;
+                          const scrollTop = target.scrollTop;
+                          const scrollHeight = target.scrollHeight;
+                          const clientHeight = target.clientHeight;
                           
-                          // 상단 0~20% 영역에서 위로 자동 스크롤 (아주 빠른 속도)
-                          if (mouseY >= 0 && mouseY <= containerHeight * 0.2) {
-                            if (scrollTop > 0) {
-                              target.scrollTo({
-                                top: scrollTop - 15,
-                                behavior: 'smooth'
-                              });
+                          if ((scrollTop === 0 && e.deltaY < 0) || 
+                              (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onMouseMove={(e) => {
+                          const target = e.currentTarget;
+                          const rect = target.getBoundingClientRect();
+                          const mouseY = e.clientY - rect.top;
+                          const containerHeight = rect.height;
+                          const scrollTop = target.scrollTop;
+                          const scrollHeight = target.scrollHeight;
+                          const clientHeight = target.clientHeight;
+                          
+                          // 스크롤이 필요한 경우에만 자동 스크롤 실행
+                          if (scrollHeight > clientHeight) {
+                            // 하단 0~20% 영역에서 아래로 자동 스크롤 (2배 빠른 속도)
+                            if (mouseY >= containerHeight * 0.8 && mouseY <= containerHeight) {
+                              if (scrollTop + clientHeight < scrollHeight) {
+                                target.scrollTo({
+                                  top: scrollTop + 30,
+                                  behavior: 'smooth'
+                                });
+                              }
+                            }
+                            
+                            // 상단 0~20% 영역에서 위로 자동 스크롤 (2배 빠른 속도)
+                            if (mouseY >= 0 && mouseY <= containerHeight * 0.2) {
+                              if (scrollTop > 0) {
+                                target.scrollTo({
+                                  top: scrollTop - 30,
+                                  behavior: 'smooth'
+                                });
+                              }
                             }
                           }
-                        }
-                      }}
-                    >
+                        }}
+                      >
                       {aiMindAssistantSubMenuItems.map((category) => (
                         <div key={category.category} className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
