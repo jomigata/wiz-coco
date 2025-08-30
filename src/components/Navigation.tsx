@@ -182,7 +182,7 @@ export default function Navigation() {
     { 
       category: "일일 체크",
       items: [
-        { name: "오늘의 마음 상태 기록 (5점 척도)", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" },
+                 { name: "오늘의 마음상태 기록", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" },
         { name: "오늘의 감정일기 쓰기", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" },
         { name: "월별검사 및 분기별 검사", href: "/ai-mind-assistant/periodic-tests", description: "정기적인 심리 상태 점검", icon: "📅" }
       ]
@@ -643,18 +643,18 @@ export default function Navigation() {
                
                {/* 추가 기능 드롭다운 메뉴 */}
                <div className="relative">
-                 <Link
-                   href="/features"
-                   className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
-                     activeItem === "/features" || activeItem.startsWith("/features/")
-                       ? "text-white bg-blue-600"
-                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                   }`}
-                   onClick={(e) => handleNavLinkClick("/features", e)}
-                   onMouseEnter={() => setActiveMenu('additional')}
-                   onMouseLeave={() => setActiveMenu(null)}
-                 >
-                   ⚡ 추가 기능
+                                   <Link
+                    href="/features"
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                      activeItem === "/features" || activeItem.startsWith("/features/")
+                        ? "text-white bg-blue-600"
+                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                    }`}
+                    onClick={(e) => handleNavLinkClick("/features", e)}
+                    onMouseEnter={() => setActiveMenu('additional')}
+                    onMouseLeave={() => setActiveMenu(null)}
+                  >
+                    📚 나의 자료실
                    <svg
                      xmlns="http://www.w3.org/2000/svg"
                      viewBox="0 0 20 20"
@@ -762,7 +762,7 @@ export default function Navigation() {
                          onMouseEnter={() => setActiveMenu('user')}
                          onMouseLeave={() => setActiveMenu(null)}
                        >
-                         👤 {userName || userEmail}
+                                                   👤 마이페이지
                          <svg
                            xmlns="http://www.w3.org/2000/svg"
                            viewBox="0 0 20 20"
@@ -1207,9 +1207,9 @@ export default function Navigation() {
 
                {/* 추가 기능 */}
                <div className="space-y-2">
-                 <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
-                   ⚡ 추가 기능
-                 </div>
+                                   <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
+                    📚 나의 자료실
+                  </div>
                  {personalFeaturesMenu.map((category) => (
                    <div key={category.category} className="ml-4 space-y-1">
                      <div className="px-2 py-1 text-xs font-medium text-green-400 uppercase tracking-wide">
