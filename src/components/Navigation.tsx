@@ -178,29 +178,26 @@ export default function Navigation() {
     }
   ];
 
-  const aiMindAssistantSubMenuItems = [
+    const aiMindAssistantSubMenuItems = [
     { 
       category: "일일 체크",
       items: [
-                 { name: "오늘의 마음상태 기록", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" },
-        { name: "오늘의 감정일기 쓰기", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" },
-        { name: "월별검사 및 분기별 검사", href: "/ai-mind-assistant/periodic-tests", description: "정기적인 심리 상태 점검", icon: "📅" }
+        { name: "오늘의 컨디션 체크", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" },
+        { name: "오늘의 감정일기", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" }
       ]
     },
     { 
       category: "마음 SOS",
       items: [
         { name: "AI 긴급 마음진단", href: "/ai-mind-assistant/emergency-diagnosis", description: "1분 AI 솔루션", icon: "🚨", badge: "긴급" },
-        { name: "AI 번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" },
-        { name: "AI 자존감 온도계", href: "/ai-mind-assistant/self-esteem", description: "현재 자존감 수준 측정", icon: "🌡️" }
+        { name: "AI 번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" }
       ]
     },
     { 
       category: "감정 분석 & 리포트",
       items: [
-        { name: "AI 감정 분석 리포트", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 분석 결과 (감정 변화 그래프 포함)", icon: "📋" },
-        { name: "AI 스트레스 분석 리포트", href: "/ai-mind-assistant/stress-graph", description: "스트레스 지수 변화 추이", icon: "📊" },
-        { name: "마음 컨디션 체크", href: "/ai-mind-assistant/growth-level", description: "현재 마음 상태 종합 점검", icon: "🏆" }
+        { name: "AI 감정/스트레스 분석", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 및 스트레스 분석 결과", icon: "📋" },
+        { name: "AI 마음 컨디션 리포트", href: "/ai-mind-assistant/growth-level", description: "현재 마음 상태 종합 점검", icon: "🏆" }
       ]
     }
   ];
@@ -453,18 +450,18 @@ export default function Navigation() {
                
                {/* AI 마음 비서 드롭다운 메뉴 */}
                <div className="relative">
-                 <Link
-                   href="/ai-mind-assistant"
-                   className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
-                     activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
-                       ? "text-white bg-blue-600"
-                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                   }`}
-                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
-                   onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
-                   onMouseLeave={() => setActiveMenu(null)}
-                 >
-                   🤖 AI 마음 비서
+                                   <Link
+                    href="/ai-mind-assistant"
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                      activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
+                        ? "text-white bg-blue-600"
+                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                    }`}
+                    onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
+                    onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                    onMouseLeave={() => setActiveMenu(null)}
+                  >
+                    🤖 나의 AI 비서
                    <svg
                      xmlns="http://www.w3.org/2000/svg"
                      viewBox="0 0 20 20"
@@ -1170,9 +1167,9 @@ export default function Navigation() {
 
                {/* AI 마음 비서 */}
                <div className="space-y-2">
-                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide">
-                   🤖 AI 마음 비서
-                 </div>
+                                   <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide">
+                    🤖 나의 AI 비서
+                  </div>
                  {aiMindAssistantSubMenuItems.map((category) => (
                    <div key={category.category} className="ml-4 space-y-1">
                      <div className="px-2 py-1 text-xs font-medium text-blue-400 uppercase tracking-wide">
