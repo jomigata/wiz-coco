@@ -184,7 +184,7 @@ export default function EmergencyDiagnosisPage() {
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
         <Navigation />
         {/* 헤더 */}
-        <div className={`bg-gradient-to-r ${diagnosisResult.color} text-white py-12`}>
+        <div className={`bg-gradient-to-r ${diagnosisResult.color} text-white py-12 pt-20`}>
           <div className="container mx-auto px-6 text-center">
             <Link href="/ai-mind-assistant" className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,7 +304,7 @@ export default function EmergencyDiagnosisPage() {
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       <Navigation />
       {/* 헤더 */}
-      <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-12">
+      <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-12 pt-20">
         <div className="container mx-auto px-6 text-center">
           <Link href="/ai-mind-assistant" className="inline-flex items-center text-red-100 hover:text-white mb-4 transition-colors">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
