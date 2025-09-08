@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 export default function PeriodicTestsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
@@ -57,6 +58,7 @@ export default function PeriodicTestsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
+      <Navigation />
       {/* 헤더 */}
       <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16">
         <div className="container mx-auto px-6 text-center">

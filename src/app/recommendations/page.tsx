@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import Navigation from '@/components/Navigation';
 
 export default function RecommendationsPage() {
   const [userProfile, setUserProfile] = useState({
@@ -124,6 +125,7 @@ export default function RecommendationsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+      <Navigation />
       <div className="container mx-auto px-4 py-8">
         {/* 헤더 */}
         <motion.div 

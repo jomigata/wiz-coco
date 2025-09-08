@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 interface EmergencyQuestion {
   id: number;
@@ -181,6 +182,7 @@ export default function EmergencyDiagnosisPage() {
   if (diagnosisResult) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+        <Navigation />
         {/* 헤더 */}
         <div className={`bg-gradient-to-r ${diagnosisResult.color} text-white py-12`}>
           <div className="container mx-auto px-6 text-center">
@@ -300,6 +302,7 @@ export default function EmergencyDiagnosisPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+      <Navigation />
       {/* 헤더 */}
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-12">
         <div className="container mx-auto px-6 text-center">

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Navigation from '@/components/Navigation';
 
 export default function LearningPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -84,6 +85,7 @@ export default function LearningPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+      <Navigation />
       <div className="container mx-auto px-4 py-8">
         {/* 헤더 */}
         <motion.div 

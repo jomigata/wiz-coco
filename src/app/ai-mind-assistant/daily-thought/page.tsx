@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 interface ThoughtEntry {
   id: string;
@@ -97,6 +98,7 @@ export default function DailyThoughtPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <Navigation />
       {/* 헤더 */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12">
         <div className="container mx-auto px-6">
