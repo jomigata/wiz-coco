@@ -128,11 +128,11 @@ function CounselorPageContent() {
         >
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-              {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+              {user?.displayName ? user.displayName.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'S'}
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">
-                안녕하세요, {user.displayName || '상담사'}님!
+                안녕하세요, {user?.displayName || '상담사'}님!
               </h2>
               <p className="text-blue-200 mt-1">
                 오늘도 내담자들과 함께 성장하는 하루가 되시길 바랍니다.

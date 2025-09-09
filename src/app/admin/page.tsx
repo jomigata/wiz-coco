@@ -137,11 +137,11 @@ function AdminPageContent() {
         >
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-              {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+              {user?.displayName ? user.displayName.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">
-                안녕하세요, {user.displayName || '관리자'}님!
+                안녕하세요, {user?.displayName || '관리자'}님!
               </h2>
               <p className="text-red-200 mt-1">
                 시스템 관리와 모니터링을 위한 모든 도구가 준비되어 있습니다.
