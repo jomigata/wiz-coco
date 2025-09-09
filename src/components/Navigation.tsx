@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { removeItem } from '@/utils/localStorageManager';
+import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 
 export default function Navigation() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function Navigation() {
   const isCounselingDropdownOpen = activeMenu === 'counseling';
   const isUserMenuOpen = activeMenu === 'additional';
   const isAiMindAssistantOpen = activeMenu === 'ai-mind-assistant';
+  const isCounselorMenuOpen = activeMenu === 'counselor';
+  const isAdminMenuOpen = activeMenu === 'admin';
 
   const isLoggedIn = !!user && !loading;
   const userEmail = user?.email || "";
@@ -174,6 +177,70 @@ export default function Navigation() {
         { name: "학습 자료", href: "/learning", description: "심리학 교육 콘텐츠", icon: "📚" },
         { name: "맞춤 추천", href: "/recommendations", description: "AI 기반 상담 추천", icon: "💡" },
         { name: "일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리", icon: "📅" }
+      ]
+    }
+  ];
+
+  // 상담사 메뉴 데이터
+  const counselorMenuItems = [
+    {
+      category: "내담자 관리",
+      items: [
+        { name: "내담자 목록", href: "/counselor/clients", description: "담당 내담자 관리", icon: "👥" },
+        { name: "상담 일정", href: "/counselor/schedule", description: "상담 일정 관리", icon: "📅" },
+        { name: "상담 기록", href: "/counselor/sessions", description: "상담 세션 기록", icon: "📝" }
+      ]
+    },
+    {
+      category: "심리검사 관리",
+      items: [
+        { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
+        { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
+        { name: "검사 코드 관리", href: "/counselor/test-codes", description: "검사 코드 생성 및 관리", icon: "🔑" }
+      ]
+    },
+    {
+      category: "상담 도구",
+      items: [
+        { name: "상담 노트", href: "/counselor/notes", description: "상담 내용 기록", icon: "📋" },
+        { name: "치료 계획", href: "/counselor/treatment-plans", description: "치료 계획 수립", icon: "📋" },
+        { name: "진행 상황", href: "/counselor/progress", description: "치료 진행 상황 추적", icon: "📈" }
+      ]
+    }
+  ];
+
+  // 관리자 메뉴 데이터
+  const adminMenuItems = [
+    {
+      category: "사용자 관리",
+      items: [
+        { name: "전체 사용자", href: "/admin/users", description: "사용자 계정 관리", icon: "👥" },
+        { name: "상담사 인증", href: "/admin/counselor-verification", description: "상담사 인증 관리", icon: "✅" },
+        { name: "권한 관리", href: "/admin/permissions", description: "사용자 권한 설정", icon: "🔐" }
+      ]
+    },
+    {
+      category: "시스템 관리",
+      items: [
+        { name: "대시보드", href: "/admin/dashboard", description: "시스템 현황 대시보드", icon: "📊" },
+        { name: "검사 코드 관리", href: "/admin/test-codes", description: "전체 검사 코드 관리", icon: "🏷️" },
+        { name: "데이터 분석", href: "/admin/analytics", description: "사용자 데이터 분석", icon: "📈" }
+      ]
+    },
+    {
+      category: "콘텐츠 관리",
+      items: [
+        { name: "심리검사 관리", href: "/admin/tests", description: "심리검사 콘텐츠 관리", icon: "🧠" },
+        { name: "상담 프로그램", href: "/admin/counseling-programs", description: "상담 프로그램 관리", icon: "💭" },
+        { name: "공지사항", href: "/admin/notices", description: "사이트 공지사항 관리", icon: "📢" }
+      ]
+    },
+    {
+      category: "시스템 설정",
+      items: [
+        { name: "사이트 설정", href: "/admin/settings", description: "전체 사이트 설정", icon: "⚙️" },
+        { name: "백업 관리", href: "/admin/backup", description: "데이터 백업 및 복원", icon: "💾" },
+        { name: "로그 관리", href: "/admin/logs", description: "시스템 로그 확인", icon: "📋" }
       ]
     }
   ];
@@ -447,6 +514,94 @@ export default function Navigation() {
                    </div>
                  )}
                </div>
+
+               {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
+               {shouldShowCounselorMenu(userEmail) && (
+                 <div className="relative">
+                   <Link
+                     href="/counselor"
+                     className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                       activeItem === "/counselor" || activeItem.startsWith("/counselor/")
+                         ? "text-white bg-green-600"
+                         : "text-gray-300 hover:text-white hover:bg-green-800/50"
+                     }`}
+                     onClick={(e) => handleNavLinkClick("/counselor", e)}
+                     onMouseEnter={() => setActiveMenu('counselor')}
+                     onMouseLeave={() => setActiveMenu(null)}
+                   >
+                     👨‍⚕️ 상담사
+                     <svg
+                       xmlns="http://www.w3.org/2000/svg"
+                       viewBox="0 0 20 20"
+                       fill="currentColor"
+                       className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorMenuOpen ? "rotate-180" : ""}`}
+                     >
+                       <path
+                         fillRule="evenodd"
+                         d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                         clipRule="evenodd"
+                       />
+                     </svg>
+                   </Link>
+
+                   {/* 상담사 메가 메뉴 */}
+                   {isCounselorMenuOpen && (
+                     <div
+                       data-dropdown-menu="counselor"
+                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                       onMouseEnter={() => setActiveMenu('counselor')}
+                       onMouseLeave={() => setActiveMenu(null)}
+                     >
+                       <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                         {counselorMenuItems.map((category) => (
+                           <div key={category.category} className="mb-4 last:mb-0">
+                             <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
+                               {category.category}
+                             </div>
+                             <div className="space-y-1">
+                               {category.items.map((item) => (
+                                 <Link
+                                   key={item.name}
+                                   href={item.href}
+                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                   onClick={() => setActiveMenu(null)}
+                                 >
+                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                     {item.icon || '👨‍⚕️'}
+                                   </div>
+                                   <div className="flex-1 min-w-0">
+                                     <div className="flex items-center gap-2">
+                                       <span className="font-medium text-white truncate">{item.name}</span>
+                                       {'badge' in item && (item as any).badge && (
+                                         <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                           (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
+                                           (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                           'bg-orange-500 text-white'
+                                         }`}>
+                                           {(item as any).badge}
+                                         </span>
+                                       )}
+                                     </div>
+                                     <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                   </div>
+                                   <svg 
+                                     className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                     fill="none" 
+                                     stroke="currentColor" 
+                                     viewBox="0 0 24 24"
+                                   >
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                   </svg>
+                                 </Link>
+                               ))}
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               )}
                
                {/* AI 마음 비서 드롭다운 메뉴 */}
                <div className="relative">
@@ -746,6 +901,94 @@ export default function Navigation() {
                <div className="flex items-center space-x-2">
                  {isLoggedIn ? (
                    <>
+                     {/* 관리자 메뉴 - 관리자만 표시 */}
+                     {shouldShowAdminMenu(userEmail) && (
+                       <div className="relative">
+                         <Link
+                           href="/admin"
+                           className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                             activeItem === "/admin" || activeItem.startsWith("/admin/")
+                               ? "text-white bg-red-600"
+                               : "text-gray-300 hover:text-white hover:bg-red-800/50"
+                           }`}
+                           onClick={(e) => handleNavLinkClick("/admin", e)}
+                           onMouseEnter={() => setActiveMenu('admin')}
+                           onMouseLeave={() => setActiveMenu(null)}
+                         >
+                           🔧 관리자
+                           <svg
+                             xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 20 20"
+                             fill="currentColor"
+                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAdminMenuOpen ? "rotate-180" : ""}`}
+                           >
+                             <path
+                               fillRule="evenodd"
+                               d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                               clipRule="evenodd"
+                             />
+                           </svg>
+                         </Link>
+
+                         {/* 관리자 메가 메뉴 */}
+                         {isAdminMenuOpen && (
+                           <div
+                             data-dropdown-menu="admin"
+                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-red-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-red-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             onMouseEnter={() => setActiveMenu('admin')}
+                             onMouseLeave={() => setActiveMenu(null)}
+                           >
+                             <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900">
+                               {adminMenuItems.map((category) => (
+                                 <div key={category.category} className="mb-4 last:mb-0">
+                                   <div className="px-2 py-1 text-xs font-bold text-red-300 uppercase tracking-wide mb-2">
+                                     {category.category}
+                                   </div>
+                                   <div className="space-y-1">
+                                     {category.items.map((item) => (
+                                       <Link
+                                         key={item.name}
+                                         href={item.href}
+                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                         onClick={() => setActiveMenu(null)}
+                                       >
+                                         <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                           {item.icon || '🔧'}
+                                         </div>
+                                         <div className="flex-1 min-w-0">
+                                           <div className="flex items-center gap-2">
+                                             <span className="font-medium text-white truncate">{item.name}</span>
+                                             {'badge' in item && (item as any).badge && (
+                                               <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                                 (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
+                                                 (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                                 'bg-orange-500 text-white'
+                                               }`}>
+                                                 {(item as any).badge}
+                                               </span>
+                                             )}
+                                           </div>
+                                           <div className="text-xs text-red-300 truncate">{item.description}</div>
+                                         </div>
+                                         <svg 
+                                           className="w-4 h-4 text-red-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                           fill="none" 
+                                           stroke="currentColor" 
+                                           viewBox="0 0 24 24"
+                                         >
+                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                         </svg>
+                                       </Link>
+                                     ))}
+                                   </div>
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     )}
+
                      {/* 마이페이지 드롭다운 메뉴 */}
                      <div className="relative">
                        <Link
@@ -933,49 +1176,6 @@ export default function Navigation() {
                                    </Link>
                                  ))}
 
-                                 {/* 관리자 메뉴 (관리자인 경우) */}
-                                 {userRole === 'admin' && (
-                                   <>
-                                                                           <div className="mt-4 pt-4 border-t border-green-500/30">
-                                        <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
-                                          관리자 메뉴
-                                        </div>
-                                       <div className="space-y-1">
-                                         {[
-                                           { name: "대시보드", href: "/admin/dashboard", icon: "📊" },
-                                           { name: "사용자 관리", href: "/admin/users", icon: "👥" },
-                                           { name: "코드 관리", href: "/admin/test-codes", icon: "🏷️" },
-                                           { name: "분석", href: "/admin/analytics", icon: "📈" },
-                                           { name: "MBTI 분석", href: "/admin/mbti-analysis", icon: "🧠" },
-                                           { name: "관계 분석", href: "/admin/relationship-analysis", icon: "💕" },
-                                           { name: "설정", href: "/admin/settings", icon: "⚙️" }
-                                         ].map((item) => (
-                                           <Link
-                                             key={item.name}
-                                             href={item.href}
-                                             className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
-                                             onClick={() => setActiveMenu(null)}
-                                           >
-                                             <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                               {item.icon}
-                                             </div>
-                                             <div className="flex-1 min-w-0">
-                                               <div className="font-medium text-white truncate">{item.name}</div>
-                                             </div>
-                                             <svg 
-                                               className="w-4 h-4 text-red-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                               fill="none" 
-                                               stroke="currentColor" 
-                                               viewBox="0 0 24 24"
-                                             >
-                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                             </svg>
-                                           </Link>
-                                         ))}
-                                       </div>
-                                     </div>
-                                   </>
-                                 )}
 
                                                                    {/* 로그아웃 버튼 */}
                                   <div className="mt-4 pt-4 border-t border-green-500/30">
