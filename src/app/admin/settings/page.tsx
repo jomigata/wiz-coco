@@ -39,11 +39,21 @@ export default function AdminSettingsPage() {
         }
         
         const data = await response.json();
-        setUsers(data.users || []);
+        setUsers(data.data || []);
         setIsLoading(false);
       } catch (err) {
         console.error('사용자 데이터 로드 오류:', err);
-        setError(err instanceof Error ? err.message : '사용자 데이터를 불러오는 중 오류가 발생했습니다.');
+        let errorMessage = '사용자 데이터를 불러오는 중 오류가 발생했습니다.';
+        
+        if (err instanceof Error) {
+          if (err.message.includes('JSON')) {
+            errorMessage = '서버에서 잘못된 응답을 받았습니다. 페이지를 새로고침해주세요.';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+        
+        setError(errorMessage);
         setIsLoading(false);
       }
     };
@@ -219,7 +229,23 @@ export default function AdminSettingsPage() {
                     <div className="w-8 h-8 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
                   </div>
                 ) : error ? (
-                  <div className="p-6 text-center text-red-300">{error}</div>
+                  <div className="p-6 text-center">
+                    <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-center mb-2">
+                        <svg className="w-6 h-6 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <span className="text-red-300 font-medium">오류 발생</span>
+                      </div>
+                      <p className="text-red-200 text-sm">{error}</p>
+                      <button 
+                        onClick={() => window.location.reload()} 
+                        className="mt-3 px-4 py-2 bg-red-600/60 hover:bg-red-600/80 text-white text-sm rounded transition-colors"
+                      >
+                        페이지 새로고침
+                      </button>
+                    </div>
+                  </div>
                 ) : filteredUsers.length === 0 ? (
                   <div className="p-6 text-center text-gray-400">검색 결과가 없습니다.</div>
                 ) : (
