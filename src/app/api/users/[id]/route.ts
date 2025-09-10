@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// generateStaticParams for static export
+export async function generateStaticParams() {
+  return [
+    { id: '1' },
+    { id: '2' },
+    { id: '3' }
+  ];
+}
+
 // GET /api/users/[id] - 특정 사용자 정보 조회
 export async function GET(
   request: NextRequest,

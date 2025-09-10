@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// generateStaticParams for static export
+export async function generateStaticParams() {
+  return [
+    { id: '1' },
+    { id: '2' },
+    { id: '3' }
+  ];
+}
+
 // PUT /api/users/[id]/role - 사용자 역할 업데이트
 export async function PUT(
   request: NextRequest,
