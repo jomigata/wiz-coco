@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
+import type { Auth } from 'firebase-admin/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +26,10 @@ export async function GET(request: NextRequest) {
     const token = authHeader.split('Bearer ')[1];
     
     try {
-      // Firebase 토큰 검증
+      // Firebase 토큰 검증 (타입 가드 추가)
+      if (!adminAuth) {
+        throw new Error('Firebase Admin Auth가 초기화되지 않았습니다.');
+      }
       const decodedToken = await adminAuth.verifyIdToken(token);
       const userId = decodedToken.uid;
       
@@ -82,7 +86,10 @@ export async function POST(request: NextRequest) {
     const token = authHeader.split('Bearer ')[1];
     
     try {
-      // Firebase 토큰 검증
+      // Firebase 토큰 검증 (타입 가드 추가)
+      if (!adminAuth) {
+        throw new Error('Firebase Admin Auth가 초기화되지 않았습니다.');
+      }
       const decodedToken = await adminAuth.verifyIdToken(token);
       const userId = decodedToken.uid;
       

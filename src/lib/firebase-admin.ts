@@ -1,11 +1,16 @@
 // Firebase Admin SDK 설정
 // 서버 사이드에서 Firebase 서비스를 사용하기 위한 설정
 
+import type { App } from 'firebase-admin/app';
+import type { Auth } from 'firebase-admin/auth';
+import type { Firestore } from 'firebase-admin/firestore';
+import type { Storage } from 'firebase-admin/storage';
+
 // 정적 내보내기 환경에서는 Firebase Admin SDK를 사용하지 않음
-let adminApp = null;
-let adminAuth = null;
-let adminDb = null;
-let adminStorage = null;
+let adminApp: App | null = null;
+let adminAuth: Auth | null = null;
+let adminDb: Firestore | null = null;
+let adminStorage: Storage | null = null;
 
 // 서버 환경에서만 Firebase Admin SDK 초기화
 if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
