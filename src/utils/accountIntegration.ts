@@ -10,6 +10,7 @@ import {
   sendEmailVerification
 } from 'firebase/auth';
 import { signIn } from 'next-auth/react';
+import { UserAccountManager } from './userAccountManager';
 
 export interface AccountInfo {
   uid: string;
@@ -56,7 +57,36 @@ export class AccountIntegrationManager {
     needsAccountLinking?: boolean;
   }> {
     try {
+      // 먼저 사용자 계정 관리 시스템에서 확인
+      const userAccount = UserAccountManager.findUserByEmail(email);
+      
+      if (!userAccount) {
+        return {
+          success: false,
+          error: '등록되지 않은 이메일입니다.',
+          needsAccountLinking: false
+        };
+      }
+
+      // 이메일/비밀번호 인증 방법이 있는지 확인
+      if (!UserAccountManager.hasAuthMethod(email, 'email')) {
+        return {
+          success: false,
+          error: '이 이메일은 이메일/비밀번호로 가입되지 않았습니다.',
+          needsAccountLinking: true
+        };
+      }
+
       const result = await signInWithEmailAndPassword(auth, email, password);
+      
+      // 사용자 계정 정보 업데이트
+      UserAccountManager.createOrUpdateUser(
+        email,
+        result.user.displayName || userAccount.name,
+        'email',
+        result.user.uid,
+        userAccount.role
+      );
       
       console.log('[AccountIntegration] 이메일 로그인 성공:', {
         uid: result.user.uid,
@@ -85,7 +115,7 @@ export class AccountIntegrationManager {
         return {
           success: false,
           error: '비밀번호가 올바르지 않습니다.',
-          needsAccountLinking: true // 소셜 계정과 연결 가능성
+          needsAccountLinking: false
         };
       }
 
@@ -109,10 +139,20 @@ export class AccountIntegrationManager {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
+      // 사용자 계정 관리 시스템에 등록/업데이트
+      const userAccount = UserAccountManager.createOrUpdateUser(
+        result.user.email!,
+        result.user.displayName || 'Google 사용자',
+        'google',
+        result.user.uid,
+        'user'
+      );
+      
       console.log('[AccountIntegration] Google 로그인 성공:', {
         uid: result.user.uid,
         email: result.user.email,
-        providerId: result.user.providerId
+        providerId: result.user.providerId,
+        authMethods: userAccount.authMethods
       });
 
       return {
@@ -217,6 +257,16 @@ export class AccountIntegrationManager {
     error?: string;
   }> {
     try {
+      // 사용자 계정 관리 시스템에서 확인
+      const existingUser = UserAccountManager.findUserByEmail(email);
+      
+      if (existingUser && UserAccountManager.hasAuthMethod(email, 'email')) {
+        return {
+          success: false,
+          error: '이미 이메일/비밀번호로 가입된 계정입니다. 로그인을 시도해보세요.'
+        };
+      }
+
       const result = await createUserWithEmailAndPassword(auth, email, password);
       
       // 사용자 프로필 업데이트
@@ -226,6 +276,15 @@ export class AccountIntegrationManager {
 
       // 이메일 인증 발송
       await sendEmailVerification(result.user);
+      
+      // 사용자 계정 관리 시스템에 등록/업데이트
+      UserAccountManager.createOrUpdateUser(
+        email,
+        displayName,
+        'email',
+        result.user.uid,
+        'user'
+      );
       
       console.log('[AccountIntegration] 이메일 회원가입 성공:', {
         uid: result.user.uid,
@@ -384,7 +443,7 @@ export class AccountIntegrationManager {
     error?: string;
     method?: 'email' | 'google' | 'naver' | 'kakao';
   }> {
-    // 1. 이메일/비밀번호로 로그인 시도
+    // 1. 이메일/비밀번호로 로그인 시도 (비밀번호가 제공된 경우에만)
     if (password) {
       const emailResult = await this.signInWithEmail(email, password);
       if (emailResult.success) {
@@ -394,55 +453,59 @@ export class AccountIntegrationManager {
           method: 'email'
         };
       }
+      
+      // 이메일/비밀번호 로그인이 실패한 경우, 해당 에러 메시지 반환
+      return {
+        success: false,
+        error: emailResult.error || '이메일/비밀번호 로그인에 실패했습니다.'
+      };
     }
 
-    // 2. Google 로그인 시도 (이메일이 Google 계정인 경우)
-    if (email.includes('@gmail.com') || email.includes('@googlemail.com')) {
-      const googleResult = await this.signInWithGoogle();
-      if (googleResult.success && googleResult.user?.email === email) {
-        return {
-          success: true,
-          user: googleResult.user,
-          method: 'google'
-        };
-      }
-    }
-
-    // 3. Naver 로그인 시도 (이메일이 Naver 계정인 경우)
-    if (email.includes('@naver.com')) {
-      const naverResult = await this.signInWithNaver();
-      if (naverResult.success) {
-        return {
-          success: true,
-          user: naverResult.user,
-          method: 'naver'
-        };
-      }
-    }
-
-    // 4. Kakao 로그인 시도 (이메일이 Kakao 계정인 경우)
-    if (email.includes('@kakao.com') || email.includes('@kakao.co.kr')) {
-      const kakaoResult = await this.signInWithKakao();
-      if (kakaoResult.success) {
-        return {
-          success: true,
-          user: kakaoResult.user,
-          method: 'kakao'
-        };
-      }
-    }
-
-    // 모든 방법이 실패한 경우
-    let errorMessage = '해당 이메일로 등록된 계정을 찾을 수 없습니다.';
+    // 2. 비밀번호가 없는 경우, 사용자 계정 관리 시스템에서 확인
+    const userAccount = UserAccountManager.findUserByEmail(email);
     
-    // 이메일/비밀번호 로그인을 시도했지만 실패한 경우
-    if (password) {
-      errorMessage = '등록되지 않은 이메일이거나 비밀번호가 올바르지 않습니다.';
+    if (!userAccount) {
+      return {
+        success: false,
+        error: '등록되지 않은 이메일입니다.'
+      };
+    }
+
+    // 3. 사용 가능한 인증 방법이 있는지 확인
+    const availableMethods = userAccount.authMethods.map(method => method.provider);
+    
+    if (availableMethods.includes('email')) {
+      return {
+        success: false,
+        error: '이 이메일은 이메일/비밀번호로 가입되었습니다. 비밀번호를 입력해주세요.'
+      };
+    }
+
+    // 4. SNS 로그인 제안
+    if (availableMethods.includes('google')) {
+      return {
+        success: false,
+        error: 'Google 계정으로 로그인해주세요.'
+      };
     }
     
+    if (availableMethods.includes('naver')) {
+      return {
+        success: false,
+        error: 'Naver 계정으로 로그인해주세요.'
+      };
+    }
+    
+    if (availableMethods.includes('kakao')) {
+      return {
+        success: false,
+        error: 'Kakao 계정으로 로그인해주세요.'
+      };
+    }
+
     return {
       success: false,
-      error: errorMessage
+      error: '등록되지 않은 이메일입니다.'
     };
   }
 }

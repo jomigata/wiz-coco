@@ -113,23 +113,10 @@ const LoginContent = () => {
         
         if (result.error?.includes('등록되지 않은 이메일') || result.error?.includes('user-not-found')) {
           errorMsg = '등록되지 않은 이메일입니다.';
-          
-          // 이메일이 SNS 도메인인 경우 제안 표시
-          const domain = email.split('@')[1]?.toLowerCase();
-          if (domain === 'gmail.com' || domain === 'googlemail.com' || 
-              domain === 'naver.com' || 
-              domain === 'kakao.com' || domain === 'kakao.co.kr') {
-            setShowSuggestions(true);
-            if (domain === 'gmail.com' || domain === 'googlemail.com') {
-              setAccountSuggestions(['Google 계정으로 로그인해보세요.']);
-            } else if (domain === 'naver.com') {
-              setAccountSuggestions(['Naver 계정으로 로그인해보세요.']);
-            } else if (domain === 'kakao.com' || domain === 'kakao.co.kr') {
-              setAccountSuggestions(['Kakao 계정으로 로그인해보세요.']);
-            }
-          }
+          // SNS 제안은 표시하지 않음
         } else if (result.error?.includes('비밀번호가 올바르지 않습니다') || result.error?.includes('wrong-password')) {
           errorMsg = '비밀번호가 올바르지 않습니다.';
+          // SNS 제안은 표시하지 않음
         } else if (result.error?.includes('invalid-email')) {
           errorMsg = '올바르지 않은 이메일 형식입니다.';
         } else if (result.error?.includes('user-disabled')) {
