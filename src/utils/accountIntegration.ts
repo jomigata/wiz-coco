@@ -432,9 +432,17 @@ export class AccountIntegrationManager {
       }
     }
 
+    // 모든 방법이 실패한 경우
+    let errorMessage = '해당 이메일로 등록된 계정을 찾을 수 없습니다.';
+    
+    // 이메일/비밀번호 로그인을 시도했지만 실패한 경우
+    if (password) {
+      errorMessage = '등록되지 않은 이메일이거나 비밀번호가 올바르지 않습니다.';
+    }
+    
     return {
       success: false,
-      error: '해당 이메일로 등록된 계정을 찾을 수 없습니다.'
+      error: errorMessage
     };
   }
 }

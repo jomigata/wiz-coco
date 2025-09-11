@@ -111,7 +111,7 @@ const LoginContent = () => {
         let errorMsg = result.error || '로그인 처리 중 오류가 발생했습니다.';
         let isDuplicateAccount = false;
         
-        if (result.error?.includes('user-not-found')) {
+        if (result.error?.includes('등록되지 않은 이메일') || result.error?.includes('user-not-found')) {
           errorMsg = '등록되지 않은 이메일입니다.';
           
           // 이메일이 SNS 도메인인 경우 제안 표시
@@ -128,7 +128,7 @@ const LoginContent = () => {
               setAccountSuggestions(['Kakao 계정으로 로그인해보세요.']);
             }
           }
-        } else if (result.error?.includes('wrong-password')) {
+        } else if (result.error?.includes('비밀번호가 올바르지 않습니다') || result.error?.includes('wrong-password')) {
           errorMsg = '비밀번호가 올바르지 않습니다.';
         } else if (result.error?.includes('invalid-email')) {
           errorMsg = '올바르지 않은 이메일 형식입니다.';
@@ -468,8 +468,14 @@ const LoginContent = () => {
               </div>
 
               {loginError && (
-                <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg p-3" aria-live="assertive">
-                  {loginError}
+                <div className="text-red-300 text-sm text-center bg-red-500/20 border border-red-500/30 rounded-lg p-4 shadow-lg" aria-live="assertive">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                    </svg>
+                    <span className="font-medium">로그인 실패</span>
+                  </div>
+                  <div>{loginError}</div>
                 </div>
               )}
 
