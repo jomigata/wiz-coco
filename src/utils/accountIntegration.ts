@@ -321,6 +321,7 @@ export class AccountIntegrationManager {
     hasNaverAccount: boolean;
     hasKakaoAccount: boolean;
     suggestions: string[];
+    shouldShowSuggestions: boolean;
   }> {
     const suggestions: string[] = [];
     
@@ -328,23 +329,38 @@ export class AccountIntegrationManager {
       // 이메일 도메인 기반으로 가능한 계정 유형 추정
       const domain = email.split('@')[1]?.toLowerCase();
       
-      if (domain === 'gmail.com' || domain === 'googlemail.com') {
-        suggestions.push('Google 계정으로 로그인해보세요.');
-      } else if (domain === 'naver.com') {
-        suggestions.push('Naver 계정으로 로그인해보세요.');
-      } else if (domain === 'kakao.com' || domain === 'kakao.co.kr') {
-        suggestions.push('Kakao 계정으로 로그인해보세요.');
-      } else {
-        suggestions.push('이메일/비밀번호로 로그인해보세요.');
-        suggestions.push('Google, Naver, Kakao 계정으로도 시도해보세요.');
+      // 실제로는 서버에서 계정 존재 여부를 확인해야 하지만,
+      // 현재는 도메인 기반으로 추정
+      const hasGoogleAccount = domain === 'gmail.com' || domain === 'googlemail.com';
+      const hasNaverAccount = domain === 'naver.com';
+      const hasKakaoAccount = domain === 'kakao.com' || domain === 'kakao.co.kr';
+      
+      // 이메일/비밀번호 계정이 있는지 확인 (실제로는 서버에서 확인 필요)
+      const hasEmailAccount = false; // 임시로 false 설정
+      
+      // SNS 계정만 있고 이메일/비밀번호 계정이 없는 경우에만 제안 표시
+      const hasAnySnsAccount = hasGoogleAccount || hasNaverAccount || hasKakaoAccount;
+      const shouldShowSuggestions = hasAnySnsAccount && !hasEmailAccount;
+      
+      if (shouldShowSuggestions) {
+        if (hasGoogleAccount) {
+          suggestions.push('Google 계정으로 로그인해보세요.');
+        }
+        if (hasNaverAccount) {
+          suggestions.push('Naver 계정으로 로그인해보세요.');
+        }
+        if (hasKakaoAccount) {
+          suggestions.push('Kakao 계정으로 로그인해보세요.');
+        }
       }
 
       return {
-        hasEmailAccount: false, // 실제로는 서버에서 확인 필요
-        hasGoogleAccount: domain === 'gmail.com' || domain === 'googlemail.com',
-        hasNaverAccount: domain === 'naver.com',
-        hasKakaoAccount: domain === 'kakao.com' || domain === 'kakao.co.kr',
-        suggestions
+        hasEmailAccount,
+        hasGoogleAccount,
+        hasNaverAccount,
+        hasKakaoAccount,
+        suggestions,
+        shouldShowSuggestions
       };
     } catch (error) {
       console.error('[AccountIntegration] 계정 검색 실패:', error);
@@ -353,7 +369,8 @@ export class AccountIntegrationManager {
         hasGoogleAccount: false,
         hasNaverAccount: false,
         hasKakaoAccount: false,
-        suggestions: ['이메일/비밀번호로 로그인해보세요.']
+        suggestions: [],
+        shouldShowSuggestions: false
       };
     }
   }

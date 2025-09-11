@@ -113,6 +113,21 @@ const LoginContent = () => {
         
         if (result.error?.includes('user-not-found')) {
           errorMsg = '등록되지 않은 이메일입니다.';
+          
+          // 이메일이 SNS 도메인인 경우 제안 표시
+          const domain = email.split('@')[1]?.toLowerCase();
+          if (domain === 'gmail.com' || domain === 'googlemail.com' || 
+              domain === 'naver.com' || 
+              domain === 'kakao.com' || domain === 'kakao.co.kr') {
+            setShowSuggestions(true);
+            if (domain === 'gmail.com' || domain === 'googlemail.com') {
+              setAccountSuggestions(['Google 계정으로 로그인해보세요.']);
+            } else if (domain === 'naver.com') {
+              setAccountSuggestions(['Naver 계정으로 로그인해보세요.']);
+            } else if (domain === 'kakao.com' || domain === 'kakao.co.kr') {
+              setAccountSuggestions(['Kakao 계정으로 로그인해보세요.']);
+            }
+          }
         } else if (result.error?.includes('wrong-password')) {
           errorMsg = '비밀번호가 올바르지 않습니다.';
         } else if (result.error?.includes('invalid-email')) {
@@ -305,22 +320,12 @@ const LoginContent = () => {
     setLoginError('');
   };
 
-  // 이메일 입력 시 계정 제안
-  const handleEmailChange = async (value: string) => {
+  // 이메일 입력 시 계정 제안 (실제 로그인 시도 후에만 표시)
+  const handleEmailChange = (value: string) => {
     setEmail(value);
-    
-    if (value && value.includes('@')) {
-      try {
-        const suggestions = await AccountIntegrationManager.findAndSuggestAccountLinking(value);
-        setAccountSuggestions(suggestions.suggestions);
-        setShowSuggestions(true);
-      } catch (error) {
-        console.error('[Login] 계정 제안 실패:', error);
-      }
-    } else {
-      setShowSuggestions(false);
-      setAccountSuggestions([]);
-    }
+    // 이메일 입력 시에는 제안을 표시하지 않음
+    setShowSuggestions(false);
+    setAccountSuggestions([]);
   };
   
   return (
