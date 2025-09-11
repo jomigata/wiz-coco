@@ -114,42 +114,9 @@ const RegisterContent = () => {
         return;
       }
       
-      console.log('[Register] Firebase 회원가입 성공:', {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName
-      });
-      
-      // 이메일 인증 보내기
-      try {
-        await sendEmailVerification(user);
-        console.log('[Register] 이메일 인증 발송 성공');
-        
-        // 이메일 인증 안내와 함께 로그인 페이지로 리다이렉트
-        router.push('/login?registered=true&emailVerification=sent');
-      } catch (emailError) {
-        console.error('[Register] 이메일 인증 발송 실패:', emailError);
-        // 이메일 인증 실패해도 회원가입은 성공이므로 로그인 페이지로 이동
-        router.push('/login?registered=true&emailVerification=failed');
-      }
-      
     } catch (error: any) {
-      console.error('[Register] Firebase 회원가입 오류:', error);
-      
-      // Firebase 에러 메시지를 한국어로 변환
-      let errorMessage = '회원가입 처리 중 오류가 발생했습니다.';
-      
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = '이미 사용 중인 이메일 주소입니다.';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = '비밀번호가 너무 약합니다. 더 강한 비밀번호를 사용해주세요.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = '유효하지 않은 이메일 주소입니다.';
-      } else if (error.code === 'auth/operation-not-allowed') {
-        errorMessage = '이메일/비밀번호 로그인이 비활성화되어 있습니다.';
-      }
-      
-      setRegisterError(errorMessage);
+      console.error('[Register] 통합 회원가입 오류:', error);
+      setRegisterError('회원가입 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -189,8 +156,19 @@ const RegisterContent = () => {
         } else {
           setRegisterError(result.error || 'Naver 로그인 처리 중 오류가 발생했습니다.');
         }
+      } else if (provider === 'kakao') {
+        const result = await AccountIntegrationManager.signInWithKakao();
+        
+        if (result.success) {
+          console.log('[Register] Kakao 소셜 로그인 성공');
+          
+          // 마이페이지로 리다이렉트
+          router.push('/mypage');
+        } else {
+          setRegisterError(result.error || 'Kakao 로그인 처리 중 오류가 발생했습니다.');
+        }
       } else {
-        // Kakao는 NextAuth를 사용
+        // 기타 제공자는 NextAuth를 사용
         await signIn(provider, { callbackUrl: '/mypage' });
       }
     } catch (error: any) {

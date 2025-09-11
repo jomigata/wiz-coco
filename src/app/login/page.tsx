@@ -42,6 +42,8 @@ const LoginContent = () => {
   const [passwordResetSent, setPasswordResetSent] = useState<boolean>(false);
   const [showSnsLogin, setShowSnsLogin] = useState<boolean>(false);
   const [duplicateEmail, setDuplicateEmail] = useState<string>('');
+  const [accountSuggestions, setAccountSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   
   // 이메일 인증 메시지 설정
   useEffect(() => {
@@ -193,9 +195,34 @@ const LoginContent = () => {
     }
   };
 
-  // 카카오 로그인 처리 (준비 중)
-  const handleKakaoLogin = () => {
-    setLoginError('카카오 로그인은 준비 중입니다. 곧 서비스될 예정입니다.');
+  // Kakao 로그인 처리
+  const handleKakaoLogin = async () => {
+    try {
+      setIsLoading(true);
+      setLoginError('');
+      setShowSnsLogin(false);
+      
+      console.log('[Login] Kakao 로그인 시도');
+      
+      const result = await AccountIntegrationManager.signInWithKakao();
+      
+      if (result.success) {
+        console.log('[Login] Kakao 로그인 성공');
+        
+        // 리다이렉트 처리
+        setTimeout(() => {
+          router.replace(redirectUrl);
+        }, 100);
+      } else {
+        setLoginError(result.error || 'Kakao 로그인 처리 중 오류가 발생했습니다.');
+      }
+      
+    } catch (error: any) {
+      console.error('[Login] Kakao 로그인 오류:', error);
+      setLoginError('Kakao 로그인 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Naver 로그인 처리
@@ -276,6 +303,24 @@ const LoginContent = () => {
     setShowSnsLogin(false);
     setDuplicateEmail('');
     setLoginError('');
+  };
+
+  // 이메일 입력 시 계정 제안
+  const handleEmailChange = async (value: string) => {
+    setEmail(value);
+    
+    if (value && value.includes('@')) {
+      try {
+        const suggestions = await AccountIntegrationManager.findAndSuggestAccountLinking(value);
+        setAccountSuggestions(suggestions.suggestions);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('[Login] 계정 제안 실패:', error);
+      }
+    } else {
+      setShowSuggestions(false);
+      setAccountSuggestions([]);
+    }
   };
   
   return (
@@ -373,17 +418,33 @@ const LoginContent = () => {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="email" className="sr-only">이메일</label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                    placeholder="이메일"
-                  />
+                  <div className="relative">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => handleEmailChange(e.target.value)}
+                      className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      placeholder="이메일"
+                    />
+                    
+                    {/* 계정 제안 드롭다운 */}
+                    {showSuggestions && accountSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700/50 rounded-lg shadow-lg z-10">
+                        <div className="p-3">
+                          <div className="text-xs text-emerald-300 mb-2">💡 로그인 제안:</div>
+                          {accountSuggestions.map((suggestion, index) => (
+                            <div key={index} className="text-xs text-emerald-200 py-1">
+                              • {suggestion}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="password" className="sr-only">비밀번호</label>

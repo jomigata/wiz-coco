@@ -174,6 +174,41 @@ export class AccountIntegrationManager {
   }
 
   /**
+   * Kakao 소셜 로그인 (NextAuth 사용)
+   */
+  static async signInWithKakao(): Promise<{
+    success: boolean;
+    user?: any;
+    error?: string;
+  }> {
+    try {
+      const result = await signIn('kakao', { 
+        callbackUrl: '/mypage',
+        redirect: false 
+      });
+      
+      if (result?.ok) {
+        console.log('[AccountIntegration] Kakao 로그인 성공');
+        return {
+          success: true,
+          user: result
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Kakao 로그인에 실패했습니다.'
+        };
+      }
+    } catch (error: any) {
+      console.error('[AccountIntegration] Kakao 로그인 실패:', error);
+      return {
+        success: false,
+        error: 'Kakao 로그인 처리 중 오류가 발생했습니다.'
+      };
+    }
+  }
+
+  /**
    * 이메일/비밀번호로 회원가입
    */
   static async signUpWithEmail(email: string, password: string, displayName: string): Promise<{
@@ -223,7 +258,7 @@ export class AccountIntegrationManager {
   /**
    * 계정 연결 (이메일/비밀번호 계정에 소셜 계정 연결)
    */
-  static async linkAccount(email: string, password: string, provider: 'google' | 'naver'): Promise<{
+  static async linkAccount(email: string, password: string, provider: 'google' | 'naver' | 'kakao'): Promise<{
     success: boolean;
     user?: any;
     error?: string;
@@ -254,13 +289,13 @@ export class AccountIntegrationManager {
           success: true,
           user: linkResult.user
         };
-      } else if (provider === 'naver') {
-        // Naver는 NextAuth를 사용하므로 별도 처리 필요
-        console.log('[AccountIntegration] Naver 계정 연결은 서버에서 처리해야 합니다.');
+      } else if (provider === 'naver' || provider === 'kakao') {
+        // Naver, Kakao는 NextAuth를 사용하므로 별도 처리 필요
+        console.log(`[AccountIntegration] ${provider} 계정 연결은 서버에서 처리해야 합니다.`);
         
         return {
           success: false,
-          error: 'Naver 계정 연결은 현재 지원되지 않습니다.'
+          error: `${provider} 계정 연결은 현재 지원되지 않습니다.`
         };
       }
 
@@ -278,13 +313,59 @@ export class AccountIntegrationManager {
   }
 
   /**
+   * 이메일 기반 계정 검색 및 연결 제안
+   */
+  static async findAndSuggestAccountLinking(email: string): Promise<{
+    hasEmailAccount: boolean;
+    hasGoogleAccount: boolean;
+    hasNaverAccount: boolean;
+    hasKakaoAccount: boolean;
+    suggestions: string[];
+  }> {
+    const suggestions: string[] = [];
+    
+    try {
+      // 이메일 도메인 기반으로 가능한 계정 유형 추정
+      const domain = email.split('@')[1]?.toLowerCase();
+      
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        suggestions.push('Google 계정으로 로그인해보세요.');
+      } else if (domain === 'naver.com') {
+        suggestions.push('Naver 계정으로 로그인해보세요.');
+      } else if (domain === 'kakao.com' || domain === 'kakao.co.kr') {
+        suggestions.push('Kakao 계정으로 로그인해보세요.');
+      } else {
+        suggestions.push('이메일/비밀번호로 로그인해보세요.');
+        suggestions.push('Google, Naver, Kakao 계정으로도 시도해보세요.');
+      }
+
+      return {
+        hasEmailAccount: false, // 실제로는 서버에서 확인 필요
+        hasGoogleAccount: domain === 'gmail.com' || domain === 'googlemail.com',
+        hasNaverAccount: domain === 'naver.com',
+        hasKakaoAccount: domain === 'kakao.com' || domain === 'kakao.co.kr',
+        suggestions
+      };
+    } catch (error) {
+      console.error('[AccountIntegration] 계정 검색 실패:', error);
+      return {
+        hasEmailAccount: false,
+        hasGoogleAccount: false,
+        hasNaverAccount: false,
+        hasKakaoAccount: false,
+        suggestions: ['이메일/비밀번호로 로그인해보세요.']
+      };
+    }
+  }
+
+  /**
    * 통합 로그인 (이메일 기반으로 모든 방법 시도)
    */
   static async unifiedSignIn(email: string, password?: string): Promise<{
     success: boolean;
     user?: any;
     error?: string;
-    method?: 'email' | 'google' | 'naver';
+    method?: 'email' | 'google' | 'naver' | 'kakao';
   }> {
     // 1. 이메일/비밀번호로 로그인 시도
     if (password) {
@@ -318,6 +399,18 @@ export class AccountIntegrationManager {
           success: true,
           user: naverResult.user,
           method: 'naver'
+        };
+      }
+    }
+
+    // 4. Kakao 로그인 시도 (이메일이 Kakao 계정인 경우)
+    if (email.includes('@kakao.com') || email.includes('@kakao.co.kr')) {
+      const kakaoResult = await this.signInWithKakao();
+      if (kakaoResult.success) {
+        return {
+          success: true,
+          user: kakaoResult.user,
+          method: 'kakao'
         };
       }
     }
