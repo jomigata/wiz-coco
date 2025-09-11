@@ -114,8 +114,8 @@ const LoginContent = () => {
         if (result.error?.includes('등록되지 않은 이메일') || result.error?.includes('user-not-found')) {
           errorMsg = '등록되지 않은 이메일입니다.';
           // SNS 제안은 표시하지 않음
-        } else if (result.error?.includes('이 이메일은 SNS로 가입되었습니다')) {
-          errorMsg = '이 이메일은 SNS로 가입되었습니다.';
+        } else if (result.error?.includes('SNS로 가입되어 있습니다')) {
+          errorMsg = 'SNS로 가입되어 있습니다. SNS 로그인을 이용하세요.';
           isDuplicateAccount = true;
           // SNS 인증 방법 표시
           if (result.snsAuthMethods && result.snsAuthMethods.length > 0) {
@@ -129,8 +129,8 @@ const LoginContent = () => {
             }));
             setShowSuggestions(true);
           }
-        } else if (result.error?.includes('비밀번호가 올바르지 않습니다') || result.error?.includes('wrong-password')) {
-          errorMsg = '비밀번호가 올바르지 않습니다.';
+        } else if (result.error?.includes('비밀번호가 일치하지 않습니다') || result.error?.includes('wrong-password')) {
+          errorMsg = '비밀번호가 일치하지 않습니다.';
           // SNS 제안은 표시하지 않음
         } else if (result.error?.includes('invalid-email')) {
           errorMsg = '올바르지 않은 이메일 형식입니다.';
@@ -407,8 +407,8 @@ const LoginContent = () => {
                 <span className="font-semibold">SNS 계정으로 가입됨</span>
               </div>
               <p className="text-sm mb-3">
-                <strong>{duplicateEmail}</strong>은(는) SNS 계정으로 가입되었습니다.<br/>
-                아래의 소셜 로그인을 통해 로그인해주세요.
+                <strong>{duplicateEmail}</strong>은(는) SNS로 가입되어 있습니다.<br/>
+                SNS 로그인을 이용하세요.
               </p>
               <button
                 onClick={handleBackToEmailLogin}

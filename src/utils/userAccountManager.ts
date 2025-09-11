@@ -61,7 +61,7 @@ export class UserAccountManager {
       status: 'active'
     });
 
-    // 여러 인증 방법을 가진 사용자
+    // 여러 인증 방법을 가진 사용자 (이메일 + Naver)
     this.accounts.set('3', {
       id: '3',
       email: 'multi@naver.com',
@@ -81,6 +81,48 @@ export class UserAccountManager {
           lastUsedAt: new Date().toISOString()
         }
       ],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
+
+    // 이메일 + Google 2중 가입 사용자
+    this.accounts.set('4', {
+      id: '4',
+      email: 'dual@gmail.com',
+      name: '2중 가입 사용자',
+      role: 'user',
+      authMethods: [
+        {
+          provider: 'email',
+          providerId: 'email_111',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        },
+        {
+          provider: 'google',
+          providerId: 'google_222',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
+
+    // Kakao로만 가입된 사용자
+    this.accounts.set('5', {
+      id: '5',
+      email: 'kakao@kakao.com',
+      name: '카카오 사용자',
+      role: 'user',
+      authMethods: [{
+        provider: 'kakao',
+        providerId: 'kakao_333',
+        createdAt: new Date().toISOString(),
+        lastUsedAt: new Date().toISOString()
+      }],
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
       status: 'active'

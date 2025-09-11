@@ -79,7 +79,7 @@ export class AccountIntegrationManager {
         if (snsMethods.length > 0) {
           return {
             success: false,
-            error: '이 이메일은 SNS로 가입되었습니다.',
+            error: 'SNS로 가입되어 있습니다. SNS 로그인을 이용하세요.',
             needsAccountLinking: true,
             snsAuthMethods: snsMethods
           };
@@ -129,7 +129,7 @@ export class AccountIntegrationManager {
       if (error.code === 'auth/wrong-password') {
         return {
           success: false,
-          error: '비밀번호가 올바르지 않습니다.',
+          error: '비밀번호가 일치하지 않습니다.',
           needsAccountLinking: false
         };
       }
