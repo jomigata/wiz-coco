@@ -114,6 +114,21 @@ const LoginContent = () => {
         if (result.error?.includes('등록되지 않은 이메일') || result.error?.includes('user-not-found')) {
           errorMsg = '등록되지 않은 이메일입니다.';
           // SNS 제안은 표시하지 않음
+        } else if (result.error?.includes('이 이메일은 SNS로 가입되었습니다')) {
+          errorMsg = '이 이메일은 SNS로 가입되었습니다.';
+          isDuplicateAccount = true;
+          // SNS 인증 방법 표시
+          if (result.snsAuthMethods && result.snsAuthMethods.length > 0) {
+            setAccountSuggestions(result.snsAuthMethods.map(method => {
+              switch(method) {
+                case 'google': return 'Google 계정으로 로그인해보세요.';
+                case 'naver': return 'Naver 계정으로 로그인해보세요.';
+                case 'kakao': return 'Kakao 계정으로 로그인해보세요.';
+                default: return `${method} 계정으로 로그인해보세요.`;
+              }
+            }));
+            setShowSuggestions(true);
+          }
         } else if (result.error?.includes('비밀번호가 올바르지 않습니다') || result.error?.includes('wrong-password')) {
           errorMsg = '비밀번호가 올바르지 않습니다.';
           // SNS 제안은 표시하지 않음
@@ -382,22 +397,22 @@ const LoginContent = () => {
             </div>
           )}
 
-          {/* 중복 계정 에러 시 SNS 로그인 안내 */}
+          {/* SNS 가입 알림 및 로그인 안내 */}
           {showSnsLogin && duplicateEmail && (
-            <div className="bg-amber-800/50 text-amber-200 border border-amber-600/50 p-4 rounded-lg text-center mb-4">
+            <div className="bg-blue-800/50 text-blue-200 border border-blue-600/50 p-4 rounded-lg text-center mb-4">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
                 </svg>
-                <span className="font-semibold">중복 계정 감지됨</span>
+                <span className="font-semibold">SNS 계정으로 가입됨</span>
               </div>
               <p className="text-sm mb-3">
-                <strong>{duplicateEmail}</strong>로 가입된 계정이 다른 로그인 방식으로 존재합니다.<br/>
+                <strong>{duplicateEmail}</strong>은(는) SNS 계정으로 가입되었습니다.<br/>
                 아래의 소셜 로그인을 통해 로그인해주세요.
               </p>
               <button
                 onClick={handleBackToEmailLogin}
-                className="text-xs text-amber-300 hover:text-amber-200 underline"
+                className="text-xs text-blue-300 hover:text-blue-200 underline"
               >
                 이메일 로그인으로 돌아가기
               </button>

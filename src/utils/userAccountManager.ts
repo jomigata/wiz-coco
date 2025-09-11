@@ -25,6 +25,68 @@ export class UserAccountManager {
   private static accounts: Map<string, UserAccount> = new Map();
   private static nextId = 1;
 
+  // 테스트용 샘플 데이터 초기화
+  static {
+    // SNS로만 가입된 사용자 (이메일/비밀번호 없음)
+    this.accounts.set('1', {
+      id: '1',
+      email: 'test@gmail.com',
+      name: '테스트 사용자',
+      role: 'user',
+      authMethods: [{
+        provider: 'google',
+        providerId: 'google_123',
+        createdAt: new Date().toISOString(),
+        lastUsedAt: new Date().toISOString()
+      }],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
+
+    // 이메일/비밀번호로만 가입된 사용자
+    this.accounts.set('2', {
+      id: '2',
+      email: 'email@example.com',
+      name: '이메일 사용자',
+      role: 'user',
+      authMethods: [{
+        provider: 'email',
+        providerId: 'email_456',
+        createdAt: new Date().toISOString(),
+        lastUsedAt: new Date().toISOString()
+      }],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
+
+    // 여러 인증 방법을 가진 사용자
+    this.accounts.set('3', {
+      id: '3',
+      email: 'multi@naver.com',
+      name: '다중 사용자',
+      role: 'user',
+      authMethods: [
+        {
+          provider: 'email',
+          providerId: 'email_789',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        },
+        {
+          provider: 'naver',
+          providerId: 'naver_101',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
+  }
+
   /**
    * 이메일로 사용자 계정 찾기
    */
