@@ -119,7 +119,7 @@ const LoginContent = () => {
           isDuplicateAccount = true;
           // SNS 인증 방법 표시
           if (result.snsAuthMethods && result.snsAuthMethods.length > 0) {
-            setAccountSuggestions(result.snsAuthMethods.map(method => {
+            setAccountSuggestions(result.snsAuthMethods.map((method: string) => {
               switch(method) {
                 case 'google': return 'Google 계정으로 로그인해보세요.';
                 case 'naver': return 'Naver 계정으로 로그인해보세요.';

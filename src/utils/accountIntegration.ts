@@ -457,6 +457,7 @@ export class AccountIntegrationManager {
     user?: any;
     error?: string;
     method?: 'email' | 'google' | 'naver' | 'kakao';
+    snsAuthMethods?: string[];
   }> {
     // 1. 이메일/비밀번호로 로그인 시도 (비밀번호가 제공된 경우에만)
     if (password) {
@@ -472,7 +473,8 @@ export class AccountIntegrationManager {
       // 이메일/비밀번호 로그인이 실패한 경우, 해당 에러 메시지 반환
       return {
         success: false,
-        error: emailResult.error || '이메일/비밀번호 로그인에 실패했습니다.'
+        error: emailResult.error || '이메일/비밀번호 로그인에 실패했습니다.',
+        snsAuthMethods: emailResult.snsAuthMethods
       };
     }
 
