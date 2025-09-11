@@ -8,6 +8,7 @@ import Navigation from '@/components/Navigation';
 import { getSession, signIn } from 'next-auth/react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { AccountIntegrationManager } from '@/utils/accountIntegration';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -93,20 +94,25 @@ const RegisterContent = () => {
     setRegisterError('');
     
     try {
-      console.log('[Register] Firebase 회원가입 시도:', email);
+      console.log('[Register] 통합 회원가입 시도:', email);
       
-      if (!auth) {
-        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      // 통합 회원가입 시도
+      const result = await AccountIntegrationManager.signUpWithEmail(email, password, name);
+      
+      if (result.success) {
+        console.log('[Register] 통합 회원가입 성공:', {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName
+        });
+        
+        // 이메일 인증 안내와 함께 로그인 페이지로 리다이렉트
+        router.push('/login?registered=true&emailVerification=sent');
+        return;
+      } else {
+        setRegisterError(result.error || '회원가입 처리 중 오류가 발생했습니다.');
+        return;
       }
-      
-      // Firebase Authentication으로 회원가입
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // 사용자 프로필 업데이트 (이름 설정)
-      await updateProfile(user, {
-        displayName: name
-      });
       
       console.log('[Register] Firebase 회원가입 성공:', {
         uid: user.uid,
@@ -155,38 +161,41 @@ const RegisterContent = () => {
       setIsLoading(true);
       setRegisterError('');
       
-      if (!auth) {
-        throw new Error('Firebase Auth가 초기화되지 않았습니다.');
-      }
+      console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
-        const googleProvider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, googleProvider);
+        const result = await AccountIntegrationManager.signInWithGoogle();
         
-        console.log('[Register] Google 소셜 로그인 성공:', {
-          uid: result.user.uid,
-          email: result.user.email,
-          displayName: result.user.displayName
-        });
+        if (result.success) {
+          console.log('[Register] Google 소셜 로그인 성공:', {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName
+          });
+          
+          // 마이페이지로 리다이렉트
+          router.push('/mypage');
+        } else {
+          setRegisterError(result.error || 'Google 로그인 처리 중 오류가 발생했습니다.');
+        }
+      } else if (provider === 'naver') {
+        const result = await AccountIntegrationManager.signInWithNaver();
         
-        // 마이페이지로 리다이렉트
-        router.push('/mypage');
+        if (result.success) {
+          console.log('[Register] Naver 소셜 로그인 성공');
+          
+          // 마이페이지로 리다이렉트
+          router.push('/mypage');
+        } else {
+          setRegisterError(result.error || 'Naver 로그인 처리 중 오류가 발생했습니다.');
+        }
       } else {
-        // Kakao, Naver는 NextAuth를 사용 (Firebase 미지원)
+        // Kakao는 NextAuth를 사용
         await signIn(provider, { callbackUrl: '/mypage' });
       }
     } catch (error: any) {
       console.error(`[Register] ${provider} 로그인 오류:`, error);
-      
-      let errorMessage = `${provider} 로그인 처리 중 오류가 발생했습니다.`;
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = '로그인 창이 사용자에 의해 닫혔습니다.';
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = '팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.';
-      }
-      
-      setRegisterError(errorMessage);
+      setRegisterError(`${provider} 로그인 처리 중 오류가 발생했습니다.`);
     } finally {
       setIsLoading(false);
     }

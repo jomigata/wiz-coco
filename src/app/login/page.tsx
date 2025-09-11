@@ -8,6 +8,8 @@ import Navigation from '@/components/Navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import { signIn } from 'next-auth/react';
 
 // 로딩 컴포넌트
 const LoadingLogin = () => (
@@ -64,7 +66,7 @@ const LoginContent = () => {
     }
   }, [user, loading, router, redirectUrl]);
   
-  // Firebase 로그인 처리 함수
+  // 통합 로그인 처리 함수
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -87,21 +89,24 @@ const LoginContent = () => {
     setShowSnsLogin(false);
     
     try {
-      console.log('[Login] Firebase 로그인 시도:', email);
+      console.log('[Login] 통합 로그인 시도:', email);
       
-      // Firebase 로그인 시도
-      const result = await firebaseSignIn(email, password);
+      // 통합 로그인 시도 (이메일 기반으로 모든 방법 시도)
+      const result = await AccountIntegrationManager.unifiedSignIn(email, password);
       
       if (result.success) {
-        console.log('[Login] Firebase 로그인 성공:', result.user);
+        console.log('[Login] 통합 로그인 성공:', {
+          method: result.method,
+          user: result.user
+        });
         
         // 리다이렉트 처리
         setTimeout(() => {
           router.replace(redirectUrl);
         }, 100);
       } else {
-        // Firebase 에러 코드에 따른 한국어 메시지
-        let errorMsg = '로그인 처리 중 오류가 발생했습니다.';
+        // 에러 메시지 설정
+        let errorMsg = result.error || '로그인 처리 중 오류가 발생했습니다.';
         let isDuplicateAccount = false;
         
         if (result.error?.includes('user-not-found')) {
@@ -147,38 +152,42 @@ const LoginContent = () => {
     }
   };
 
-  // Firebase 구글 로그인 처리
+  // Google 로그인 처리
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
       setLoginError('');
+      setShowSnsLogin(false);
       
       console.log('[Login] Google 로그인 시도');
       
-      // Firebase Google 로그인
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await AccountIntegrationManager.signInWithGoogle();
       
-      if (result.user) {
-        console.log('[Login] Google 로그인 성공:', result.user);
+      if (result.success) {
+        console.log('[Login] Google 로그인 성공:', {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName
+        });
         
         // 리다이렉트 처리
         setTimeout(() => {
           router.replace(redirectUrl);
         }, 100);
+      } else {
+        let errorMessage = result.error || 'Google 로그인 처리 중 오류가 발생했습니다.';
+        
+        if (result.needsAccountLinking) {
+          errorMessage = '이 이메일은 다른 방법으로 이미 가입되어 있습니다.';
+          setShowSnsLogin(true);
+        }
+        
+        setLoginError(errorMessage);
       }
+      
     } catch (error: any) {
       console.error('[Login] Google 로그인 오류:', error);
-      
-      let errorMsg = 'Google 로그인 처리 중 오류가 발생했습니다.';
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMsg = '로그인이 취소되었습니다.';
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMsg = '팝업이 차단되었습니다. 팝업을 허용해주세요.';
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMsg = '이 이메일로 가입된 계정이 다른 로그인 방식으로 존재합니다.';
-      }
-      setLoginError(errorMsg);
+      setLoginError('Google 로그인 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -189,9 +198,34 @@ const LoginContent = () => {
     setLoginError('카카오 로그인은 준비 중입니다. 곧 서비스될 예정입니다.');
   };
 
-  // 네이버 로그인 처리 (준비 중)
-  const handleNaverLogin = () => {
-    setLoginError('네이버 로그인은 준비 중입니다. 곧 서비스될 예정입니다.');
+  // Naver 로그인 처리
+  const handleNaverLogin = async () => {
+    try {
+      setIsLoading(true);
+      setLoginError('');
+      setShowSnsLogin(false);
+      
+      console.log('[Login] Naver 로그인 시도');
+      
+      const result = await AccountIntegrationManager.signInWithNaver();
+      
+      if (result.success) {
+        console.log('[Login] Naver 로그인 성공');
+        
+        // 리다이렉트 처리
+        setTimeout(() => {
+          router.replace(redirectUrl);
+        }, 100);
+      } else {
+        setLoginError(result.error || 'Naver 로그인 처리 중 오류가 발생했습니다.');
+      }
+      
+    } catch (error: any) {
+      console.error('[Login] Naver 로그인 오류:', error);
+      setLoginError('Naver 로그인 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // 비밀번호 재설정 이메일 보내기
