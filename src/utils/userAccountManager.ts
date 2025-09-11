@@ -29,7 +29,8 @@ export class UserAccountManager {
    * 이메일로 사용자 계정 찾기
    */
   static findUserByEmail(email: string): UserAccount | null {
-    for (const account of this.accounts.values()) {
+    const accounts = Array.from(this.accounts.values());
+    for (const account of accounts) {
       if (account.email.toLowerCase() === email.toLowerCase()) {
         return account;
       }
