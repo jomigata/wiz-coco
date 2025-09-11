@@ -21,7 +21,7 @@ export async function PUT(
 
     if (!role || !['user', 'counselor', 'admin'].includes(role)) {
       return NextResponse.json(
-        { success: false, error: '유효하지 않은 역할입니다.' },
+        { success: false, error: '유효하지 않은 역할입니다. user, counselor, admin 중 하나를 선택해주세요.' },
         { status: 400 }
       );
     }

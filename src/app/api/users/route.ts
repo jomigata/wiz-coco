@@ -37,6 +37,33 @@ export async function GET(request: NextRequest) {
         createdAt: '2024-01-01T00:00:00Z',
         lastLoginAt: '2024-01-20T08:45:00Z',
         status: 'active'
+      },
+      {
+        id: '4',
+        name: '최심리사',
+        email: 'psychologist@example.com',
+        role: 'counselor',
+        createdAt: '2024-01-05T00:00:00Z',
+        lastLoginAt: '2024-01-19T14:20:00Z',
+        status: 'active'
+      },
+      {
+        id: '5',
+        name: '정일반인',
+        email: 'user2@example.com',
+        role: 'user',
+        createdAt: '2024-01-12T00:00:00Z',
+        lastLoginAt: '2024-01-18T16:45:00Z',
+        status: 'active'
+      },
+      {
+        id: '6',
+        name: '한테스터',
+        email: 'tester@example.com',
+        role: 'user',
+        createdAt: '2024-01-08T00:00:00Z',
+        lastLoginAt: '2024-01-17T11:30:00Z',
+        status: 'active'
       }
     ];
 

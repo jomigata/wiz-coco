@@ -327,9 +327,13 @@ export default function AdminSettingsPage() {
                           <td className="p-4 text-white">{user.email}</td>
                           <td className="p-4">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'
+                              user.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 
+                              user.role === 'counselor' ? 'bg-green-500/20 text-green-300' : 
+                              'bg-blue-500/20 text-blue-300'
                             }`}>
-                              {user.role === 'admin' ? '관리자' : '일반 사용자'}
+                              {user.role === 'admin' ? '관리자' : 
+                               user.role === 'counselor' ? '상담사' : 
+                               '일반 사용자'}
                             </span>
                           </td>
                           <td className="p-4 text-gray-300">{new Date(user.createdAt).toLocaleDateString()}</td>
@@ -346,6 +350,7 @@ export default function AdminSettingsPage() {
                               }}
                             >
                               <option value="user" style={{backgroundColor: '#1e40af', color: 'white'}}>일반 사용자</option>
+                              <option value="counselor" style={{backgroundColor: '#1e40af', color: 'white'}}>상담사</option>
                               <option value="admin" style={{backgroundColor: '#1e40af', color: 'white'}}>관리자</option>
                             </select>
                           </td>
