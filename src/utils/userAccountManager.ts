@@ -183,6 +183,31 @@ export class UserAccountManager {
       lastLoginAt: new Date().toISOString(),
       status: 'active'
     });
+
+    // jomiga@naver.com 사용자 (이메일 + Naver 2중 가입)
+    this.accounts.set('8', {
+      id: '8',
+      email: 'jomiga@naver.com',
+      name: '조미가 사용자',
+      role: 'user',
+      authMethods: [
+        {
+          provider: 'email',
+          providerId: 'email_999',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        },
+        {
+          provider: 'naver',
+          providerId: 'naver_100',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
   }
 
   /**

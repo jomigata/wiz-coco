@@ -70,7 +70,26 @@ export class AccountIntegrationManager {
       }
 
       // Firebase Authentication으로 이메일/비밀번호 로그인 시도
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      let result;
+      try {
+        result = await signInWithEmailAndPassword(auth, email, password);
+      } catch (firebaseError: any) {
+        // Firebase에 계정이 없는 경우, 자동으로 생성
+        if (firebaseError.code === 'auth/user-not-found') {
+          console.log('[AccountIntegration] Firebase에 계정이 없어 자동 생성합니다:', email);
+          
+          // 임시 비밀번호로 계정 생성 (실제로는 사용자가 입력한 비밀번호 사용)
+          const { createUserWithEmailAndPassword } = await import('firebase/auth');
+          result = await createUserWithEmailAndPassword(auth, email, password);
+          
+          console.log('[AccountIntegration] Firebase 계정 자동 생성 완료:', {
+            uid: result.user.uid,
+            email: result.user.email
+          });
+        } else {
+          throw firebaseError;
+        }
+      }
       
       // 사용자 계정 정보 업데이트 (2중 가입된 경우에도 정상 작동)
       UserAccountManager.createOrUpdateUser(
