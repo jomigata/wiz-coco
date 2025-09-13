@@ -69,29 +69,7 @@ export class AccountIntegrationManager {
         };
       }
 
-      // 이메일/비밀번호 인증 방법이 있는지 확인
-      if (!UserAccountManager.hasAuthMethod(email, 'email')) {
-        // SNS 인증 방법이 있는지 확인
-        const snsMethods = userAccount.authMethods
-          .filter(method => method.provider !== 'email')
-          .map(method => method.provider);
-        
-        if (snsMethods.length > 0) {
-          return {
-            success: false,
-            error: 'SNS로 가입되어 있습니다. SNS 로그인을 이용하세요.',
-            needsAccountLinking: true,
-            snsAuthMethods: snsMethods
-          };
-        }
-        
-        return {
-          success: false,
-          error: '이 이메일은 이메일/비밀번호로 가입되지 않았습니다.',
-          needsAccountLinking: true
-        };
-      }
-
+      // Firebase Authentication으로 이메일/비밀번호 로그인 시도
       const result = await signInWithEmailAndPassword(auth, email, password);
       
       // 사용자 계정 정보 업데이트
@@ -118,6 +96,20 @@ export class AccountIntegrationManager {
       
       // 계정이 존재하지 않는 경우
       if (error.code === 'auth/user-not-found') {
+        // SNS 인증 방법이 있는지 확인
+        const snsMethods = userAccount.authMethods
+          .filter(method => method.provider !== 'email')
+          .map(method => method.provider);
+        
+        if (snsMethods.length > 0) {
+          return {
+            success: false,
+            error: 'SNS로 가입되어 있습니다. SNS 로그인을 이용하세요.',
+            needsAccountLinking: true,
+            snsAuthMethods: snsMethods
+          };
+        }
+        
         return {
           success: false,
           error: '등록되지 않은 이메일입니다.',
