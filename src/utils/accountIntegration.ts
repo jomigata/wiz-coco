@@ -96,18 +96,23 @@ export class AccountIntegrationManager {
       
       // 계정이 존재하지 않는 경우
       if (error.code === 'auth/user-not-found') {
-        // SNS 인증 방법이 있는지 확인
-        const snsMethods = userAccount.authMethods
-          .filter(method => method.provider !== 'email')
-          .map(method => method.provider);
+        // 사용자 계정 관리 시스템에서 확인
+        const userAccount = UserAccountManager.findUserByEmail(email);
         
-        if (snsMethods.length > 0) {
-          return {
-            success: false,
-            error: 'SNS로 가입되어 있습니다. SNS 로그인을 이용하세요.',
-            needsAccountLinking: true,
-            snsAuthMethods: snsMethods
-          };
+        if (userAccount) {
+          // SNS 인증 방법이 있는지 확인
+          const snsMethods = userAccount.authMethods
+            .filter((method: any) => method.provider !== 'email')
+            .map((method: any) => method.provider);
+          
+          if (snsMethods.length > 0) {
+            return {
+              success: false,
+              error: 'SNS로 가입되어 있습니다. SNS 로그인을 이용하세요.',
+              needsAccountLinking: true,
+              snsAuthMethods: snsMethods
+            };
+          }
         }
         
         return {
