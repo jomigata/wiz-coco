@@ -36,7 +36,36 @@ jobs:
         cache: 'npm'
         
     - name: 📦 의존성 설치
-      run: npm ci --legacy-peer-deps
+      run: |
+        echo "📦 의존성 설치 시작..."
+        echo "=================================="
+        
+        # npm 캐시 정리
+        npm cache clean --force
+        
+        # 네트워크 재시도 설정
+        npm config set registry https://registry.npmjs.org/
+        npm config set fetch-retry-mintimeout 20000
+        npm config set fetch-retry-maxtimeout 120000
+        npm config set fetch-retries 5
+        
+        # 의존성 설치 (재시도 포함)
+        for i in {1..3}; do
+          echo "🔄 시도 $i/3..."
+          if npm ci --legacy-peer-deps --no-audit --no-fund; then
+            echo "✅ 의존성 설치 성공!"
+            break
+          else
+            echo "❌ 시도 $i 실패, 재시도 중..."
+            if [ $i -eq 3 ]; then
+              echo "❌ 모든 시도 실패"
+              exit 1
+            fi
+            sleep 10
+          fi
+        done
+        
+        echo "=================================="
       
     - name: 🔍 ESLint 검사
       run: npm run lint --if-present || echo "ESLint 설정이 없습니다."
@@ -68,7 +97,36 @@ jobs:
         cache: 'npm'
         
     - name: 📦 의존성 설치
-      run: npm ci --legacy-peer-deps
+      run: |
+        echo "📦 의존성 설치 시작..."
+        echo "=================================="
+        
+        # npm 캐시 정리
+        npm cache clean --force
+        
+        # 네트워크 재시도 설정
+        npm config set registry https://registry.npmjs.org/
+        npm config set fetch-retry-mintimeout 20000
+        npm config set fetch-retry-maxtimeout 120000
+        npm config set fetch-retries 5
+        
+        # 의존성 설치 (재시도 포함)
+        for i in {1..3}; do
+          echo "🔄 시도 $i/3..."
+          if npm ci --legacy-peer-deps --no-audit --no-fund; then
+            echo "✅ 의존성 설치 성공!"
+            break
+          else
+            echo "❌ 시도 $i 실패, 재시도 중..."
+            if [ $i -eq 3 ]; then
+              echo "❌ 모든 시도 실패"
+              exit 1
+            fi
+            sleep 10
+          fi
+        done
+        
+        echo "=================================="
       
     - name: 🧪 단위 테스트 실행
       run: npm test -- --testPathIgnorePatterns=dbCodeGenerator.test.ts --passWithNoTests --coverage
@@ -98,7 +156,36 @@ jobs:
         cache: 'npm'
         
     - name: 📦 의존성 설치
-      run: npm ci --legacy-peer-deps
+      run: |
+        echo "📦 의존성 설치 시작..."
+        echo "=================================="
+        
+        # npm 캐시 정리
+        npm cache clean --force
+        
+        # 네트워크 재시도 설정
+        npm config set registry https://registry.npmjs.org/
+        npm config set fetch-retry-mintimeout 20000
+        npm config set fetch-retry-maxtimeout 120000
+        npm config set fetch-retries 5
+        
+        # 의존성 설치 (재시도 포함)
+        for i in {1..3}; do
+          echo "🔄 시도 $i/3..."
+          if npm ci --legacy-peer-deps --no-audit --no-fund; then
+            echo "✅ 의존성 설치 성공!"
+            break
+          else
+            echo "❌ 시도 $i 실패, 재시도 중..."
+            if [ $i -eq 3 ]; then
+              echo "❌ 모든 시도 실패"
+              exit 1
+            fi
+            sleep 10
+          fi
+        done
+        
+        echo "=================================="
       
     - name: 🌍 환경 변수 설정
       run: |
@@ -307,7 +394,36 @@ jobs:
         cache: 'npm'
         
     - name: 📦 의존성 설치
-      run: npm ci --legacy-peer-deps
+      run: |
+        echo "📦 의존성 설치 시작..."
+        echo "=================================="
+        
+        # npm 캐시 정리
+        npm cache clean --force
+        
+        # 네트워크 재시도 설정
+        npm config set registry https://registry.npmjs.org/
+        npm config set fetch-retry-mintimeout 20000
+        npm config set fetch-retry-maxtimeout 120000
+        npm config set fetch-retries 5
+        
+        # 의존성 설치 (재시도 포함)
+        for i in {1..3}; do
+          echo "🔄 시도 $i/3..."
+          if npm ci --legacy-peer-deps --no-audit --no-fund; then
+            echo "✅ 의존성 설치 성공!"
+            break
+          else
+            echo "❌ 시도 $i 실패, 재시도 중..."
+            if [ $i -eq 3 ]; then
+              echo "❌ 모든 시도 실패"
+              exit 1
+            fi
+            sleep 10
+          fi
+        done
+        
+        echo "=================================="
       
     - name: 📊 성능 분석
       run: |
