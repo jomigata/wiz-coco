@@ -72,7 +72,7 @@ export class AccountIntegrationManager {
       // Firebase Authentication으로 이메일/비밀번호 로그인 시도
       const result = await signInWithEmailAndPassword(auth, email, password);
       
-      // 사용자 계정 정보 업데이트
+      // 사용자 계정 정보 업데이트 (2중 가입된 경우에도 정상 작동)
       UserAccountManager.createOrUpdateUser(
         email,
         result.user.displayName || userAccount.name,
@@ -84,7 +84,8 @@ export class AccountIntegrationManager {
       console.log('[AccountIntegration] 이메일 로그인 성공:', {
         uid: result.user.uid,
         email: result.user.email,
-        providerId: result.user.providerId
+        providerId: result.user.providerId,
+        authMethods: userAccount.authMethods
       });
 
       return {

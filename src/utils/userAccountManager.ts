@@ -127,6 +127,62 @@ export class UserAccountManager {
       lastLoginAt: new Date().toISOString(),
       status: 'active'
     });
+
+    // 이메일 + Kakao 2중 가입 사용자
+    this.accounts.set('6', {
+      id: '6',
+      email: 'dual-kakao@kakao.com',
+      name: '이메일+카카오 사용자',
+      role: 'user',
+      authMethods: [
+        {
+          provider: 'email',
+          providerId: 'email_444',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        },
+        {
+          provider: 'kakao',
+          providerId: 'kakao_555',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
+
+    // 이메일 + Naver + Google 3중 가입 사용자
+    this.accounts.set('7', {
+      id: '7',
+      email: 'triple@example.com',
+      name: '3중 가입 사용자',
+      role: 'user',
+      authMethods: [
+        {
+          provider: 'email',
+          providerId: 'email_666',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        },
+        {
+          provider: 'naver',
+          providerId: 'naver_777',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        },
+        {
+          provider: 'google',
+          providerId: 'google_888',
+          createdAt: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      status: 'active'
+    });
   }
 
   /**
