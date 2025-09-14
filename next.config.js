@@ -36,6 +36,12 @@ const nextConfig = {
       use: 'ignore-loader'
     });
 
+    // functions 폴더를 빌드에서 제외
+    config.module.rules.push({
+      test: /functions\/.*\.(ts|js)$/,
+      use: 'ignore-loader'
+    });
+
     if (!isServer) {
       // 클라이언트 빌드에서 서버 전용 모듈들만 제외
       config.resolve.fallback = {
@@ -58,6 +64,7 @@ const nextConfig = {
         'nodemailer': false,
         // Firebase Admin SDK는 서버 전용이므로 클라이언트에서 제외
         'firebase-admin': false,
+        'firebase-functions': false,
         // NextAuth 관련 모듈들 제외 (정적 배포에서는 사용하지 않음)
         'next-auth': false,
         '@next-auth/prisma-adapter': false,
@@ -75,6 +82,7 @@ const nextConfig = {
         'jsonwebtoken': 'commonjs jsonwebtoken',
         'nodemailer': 'commonjs nodemailer',
         'firebase-admin': 'commonjs firebase-admin',
+        'firebase-functions': 'commonjs firebase-functions',
         'next-auth': 'commonjs next-auth',
         '@next-auth/prisma-adapter': 'commonjs @next-auth/prisma-adapter',
         // Firebase 클라이언트 SDK는 제외하지 않음
