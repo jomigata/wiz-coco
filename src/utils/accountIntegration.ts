@@ -12,6 +12,30 @@ import {
 import { signIn } from 'next-auth/react';
 import { UserAccountManager } from './userAccountManager';
 
+// 로깅 헬퍼 함수
+const logToFirebase = async (level: string, message: string, data?: any) => {
+  try {
+    const logData = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      data: data || {},
+      source: 'account-integration'
+    };
+    
+    // Firebase Functions로 로그 전송
+    await fetch('/api/logs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(logData)
+    });
+  } catch (error) {
+    console.error('[Logging] Firebase 로그 전송 실패:', error);
+  }
+};
+
 export interface AccountInfo {
   uid: string;
   email: string;
@@ -58,16 +82,31 @@ export class AccountIntegrationManager {
     snsAuthMethods?: string[];
   }> {
     try {
+      console.log('[AccountIntegration] 이메일 로그인 시도:', { email });
+      await logToFirebase('info', '이메일 로그인 시도', { email });
+      
       // 먼저 사용자 계정 관리 시스템에서 확인
       const userAccount = UserAccountManager.findUserByEmail(email);
       
       if (!userAccount) {
+        console.log('[AccountIntegration] 사용자 계정을 찾을 수 없음:', { email });
+        await logToFirebase('warn', '사용자 계정을 찾을 수 없음', { email });
+        
         return {
           success: false,
           error: '등록되지 않은 이메일입니다.',
           needsAccountLinking: false
         };
       }
+      
+      console.log('[AccountIntegration] 사용자 계정 발견:', { 
+        email, 
+        authMethods: userAccount.authMethods.map(m => m.provider) 
+      });
+      await logToFirebase('info', '사용자 계정 발견', { 
+        email, 
+        authMethods: userAccount.authMethods.map(m => m.provider) 
+      });
 
       // Firebase Authentication으로 이메일/비밀번호 로그인 시도
       let result;
