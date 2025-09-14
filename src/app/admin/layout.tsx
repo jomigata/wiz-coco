@@ -9,6 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('user-management');
 
   // 현재 경로에 따라 활성화된 메뉴 항목 결정
   function getActiveSection(path: string) {
@@ -118,7 +119,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   {/* 중분류 메뉴 */}
                   <button
-                    onClick={() => category.href && handleMenuClick(category.id, category.href)}
+                    onClick={() => {
+                      if (category.subItems.length > 0) {
+                        setExpandedCategory(expandedCategory === category.id ? null : category.id);
+                      } else if (category.href) {
+                        handleMenuClick(category.id, category.href);
+                      }
+                    }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
                       activeSection === category.id
                         ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
@@ -144,7 +151,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {category.subItems.length > 0 && (
                       <svg 
                         className="h-4 w-4 transition-transform duration-200"
-                        style={{ transform: hoveredCategory === category.id ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                        style={{ transform: expandedCategory === category.id ? 'rotate(90deg)' : 'rotate(0deg)' }}
                         xmlns="http://www.w3.org/2000/svg" 
                         fill="none" 
                         viewBox="0 0 24 24" 
@@ -157,13 +164,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
 
                   {/* 소분류 드롭다운 메뉴 */}
-                  {category.subItems.length > 0 && hoveredCategory === category.id && (
+                  {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id) && (
                     <div className="absolute left-full top-0 ml-2 w-48 bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl border border-white/10 z-50">
                       <div className="py-2">
                         {category.subItems.map((subItem) => (
                           <button
                             key={subItem.id}
-                            onClick={() => handleMenuClick(subItem.id, subItem.href)}
+                            onClick={() => {
+                              handleMenuClick(subItem.id, subItem.href);
+                              // 소분류 메뉴 클릭 시에도 메뉴 유지
+                            }}
                             className={`w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-colors duration-200 ${
                               activeSection === subItem.id ? 'bg-indigo-600/50 text-white' : ''
                             }`}
