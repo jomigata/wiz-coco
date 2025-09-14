@@ -73,20 +73,31 @@ export class AccountIntegrationManager {
       let result;
       try {
         result = await signInWithEmailAndPassword(auth, email, password);
+        console.log('[AccountIntegration] Firebase 로그인 성공:', {
+          uid: result.user.uid,
+          email: result.user.email
+        });
       } catch (firebaseError: any) {
+        console.log('[AccountIntegration] Firebase 로그인 실패, 에러 코드:', firebaseError.code);
+        
         // Firebase에 계정이 없는 경우, 자동으로 생성
         if (firebaseError.code === 'auth/user-not-found') {
           console.log('[AccountIntegration] Firebase에 계정이 없어 자동 생성합니다:', email);
           
-          // 임시 비밀번호로 계정 생성 (실제로는 사용자가 입력한 비밀번호 사용)
-          const { createUserWithEmailAndPassword } = await import('firebase/auth');
-          result = await createUserWithEmailAndPassword(auth, email, password);
-          
-          console.log('[AccountIntegration] Firebase 계정 자동 생성 완료:', {
-            uid: result.user.uid,
-            email: result.user.email
-          });
+          try {
+            const { createUserWithEmailAndPassword } = await import('firebase/auth');
+            result = await createUserWithEmailAndPassword(auth, email, password);
+            
+            console.log('[AccountIntegration] Firebase 계정 자동 생성 완료:', {
+              uid: result.user.uid,
+              email: result.user.email
+            });
+          } catch (createError: any) {
+            console.error('[AccountIntegration] Firebase 계정 생성 실패:', createError);
+            throw createError;
+          }
         } else {
+          console.error('[AccountIntegration] Firebase 로그인 에러:', firebaseError);
           throw firebaseError;
         }
       }
@@ -132,6 +143,42 @@ export class AccountIntegrationManager {
               needsAccountLinking: true,
               snsAuthMethods: snsMethods
             };
+          }
+          
+          // 이메일 인증 방법이 있는 경우 Firebase 계정 자동 생성 시도
+          const hasEmailAuth = userAccount.authMethods.some((method: any) => method.provider === 'email');
+          if (hasEmailAuth) {
+            console.log('[AccountIntegration] 이메일 인증 방법이 있으므로 Firebase 계정 자동 생성 시도:', email);
+            try {
+              const { createUserWithEmailAndPassword } = await import('firebase/auth');
+              const result = await createUserWithEmailAndPassword(auth, email, password);
+              
+              // 사용자 계정 정보 업데이트
+              UserAccountManager.createOrUpdateUser(
+                email,
+                result.user.displayName || userAccount.name,
+                'email',
+                result.user.uid,
+                userAccount.role
+              );
+              
+              console.log('[AccountIntegration] Firebase 계정 자동 생성 후 로그인 성공:', {
+                uid: result.user.uid,
+                email: result.user.email
+              });
+              
+              return {
+                success: true,
+                user: result.user
+              };
+            } catch (createError: any) {
+              console.error('[AccountIntegration] Firebase 계정 자동 생성 실패:', createError);
+              return {
+                success: false,
+                error: '계정 생성 중 오류가 발생했습니다.',
+                needsAccountLinking: false
+              };
+            }
           }
         }
         

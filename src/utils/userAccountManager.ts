@@ -184,11 +184,11 @@ export class UserAccountManager {
       status: 'active'
     });
 
-    // jomiga@naver.com 사용자 (이메일 + Naver 2중 가입)
+    // jomigata@naver.com 사용자 (이메일 + Naver 2중 가입)
     this.accounts.set('8', {
       id: '8',
-      email: 'jomiga@naver.com',
-      name: '조미가 사용자',
+      email: 'jomigata@naver.com',
+      name: '조미가타 사용자',
       role: 'user',
       authMethods: [
         {
