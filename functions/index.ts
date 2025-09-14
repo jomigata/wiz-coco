@@ -1,11 +1,12 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { Request, Response } from 'express';
 
 // Firebase Admin 초기화
 admin.initializeApp();
 
 // API Functions - 간단한 API 엔드포인트
-export const api = functions.https.onRequest(async (req, res) => {
+export const api = functions.https.onRequest(async (req: Request, res: Response) => {
   try {
     console.log(`[Firebase Functions] API 요청: ${req.method} ${req.url}`);
     
@@ -41,7 +42,7 @@ export const api = functions.https.onRequest(async (req, res) => {
 });
 
 // 로그 처리 함수
-export const processLogs = functions.https.onRequest(async (req, res) => {
+export const processLogs = functions.https.onRequest(async (req: Request, res: Response) => {
   try {
     console.log('[Firebase Functions] 로그 처리 요청');
     
