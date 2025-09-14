@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
-import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate } from 'react-icons/fa';
+import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { shouldShowAdminMenu } from '@/utils/roleUtils';
 import RoleGuard from '@/components/RoleGuard';
@@ -94,11 +94,35 @@ const sampleApplications: CounselorApplication[] = [
 ];
 
 function CounselorVerificationPageContent() {
+  const searchParams = useSearchParams();
   const [applications, setApplications] = useState<CounselorApplication[]>(sampleApplications);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [selectedApplication, setSelectedApplication] = useState<CounselorApplication | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingApplication, setEditingApplication] = useState<CounselorApplication | null>(null);
+  const [newApplication, setNewApplication] = useState<Partial<CounselorApplication>>({
+    name: '',
+    email: '',
+    phone: '',
+    licenseNumber: '',
+    institution: '',
+    experience: 0,
+    specialization: [],
+    education: '',
+    status: 'pending',
+    appliedDate: new Date().toISOString().split('T')[0],
+    documents: [],
+    notes: ''
+  });
+
+  // URL 파라미터 확인하여 자동으로 추가 모달 열기
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      setShowAddModal(true);
+    }
+  }, [searchParams]);
 
   // 필터링
   const filteredApplications = applications
@@ -154,6 +178,74 @@ function CounselorVerificationPageContent() {
     setShowModal(true);
   };
 
+  const openAddModal = () => {
+    setNewApplication({
+      name: '',
+      email: '',
+      phone: '',
+      licenseNumber: '',
+      institution: '',
+      experience: 0,
+      specialization: [],
+      education: '',
+      status: 'pending',
+      appliedDate: new Date().toISOString().split('T')[0],
+      documents: [],
+      notes: ''
+    });
+    setShowAddModal(true);
+  };
+
+  const handleAddCounselor = () => {
+    if (!newApplication.name || !newApplication.email) {
+      alert('이름과 이메일은 필수 입력 항목입니다.');
+      return;
+    }
+
+    const counselor: CounselorApplication = {
+      id: Date.now().toString(),
+      name: newApplication.name!,
+      email: newApplication.email!,
+      phone: newApplication.phone || '',
+      licenseNumber: newApplication.licenseNumber || '',
+      institution: newApplication.institution || '',
+      experience: newApplication.experience || 0,
+      specialization: newApplication.specialization || [],
+      education: newApplication.education || '',
+      status: newApplication.status || 'pending',
+      appliedDate: newApplication.appliedDate || new Date().toISOString().split('T')[0],
+      documents: newApplication.documents || [],
+      notes: newApplication.notes || ''
+    };
+
+    setApplications(prev => [counselor, ...prev]);
+    setShowAddModal(false);
+    setNewApplication({
+      name: '',
+      email: '',
+      phone: '',
+      licenseNumber: '',
+      institution: '',
+      experience: 0,
+      specialization: [],
+      education: '',
+      status: 'pending',
+      appliedDate: new Date().toISOString().split('T')[0],
+      documents: [],
+      notes: ''
+    });
+  };
+
+  const handleSpecializationChange = (value: string) => {
+    const specializations = value.split(',').map(s => s.trim()).filter(s => s);
+    setNewApplication(prev => ({ ...prev, specialization: specializations }));
+  };
+
+  const handleDocumentsChange = (value: string) => {
+    const documents = value.split(',').map(d => d.trim()).filter(d => d);
+    setNewApplication(prev => ({ ...prev, documents }));
+  };
+
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
@@ -186,11 +278,20 @@ function CounselorVerificationPageContent() {
                 transition={{ delay: 0.3, duration: 0.5 }}
               ></motion.div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-white">
-                {applications.filter(app => app.status === 'pending').length}
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-2xl font-bold text-white">
+                  {applications.filter(app => app.status === 'pending').length}
+                </div>
+                <div className="text-sm text-red-200">검토 대기 중</div>
               </div>
-              <div className="text-sm text-red-200">검토 대기 중</div>
+              <button
+                onClick={openAddModal}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+              >
+                <FaPlus className="w-4 h-4" />
+                상담사 추가
+              </button>
             </div>
           </div>
         </motion.div>
@@ -344,6 +445,162 @@ function CounselorVerificationPageContent() {
             <h3 className="text-xl font-semibold text-white mb-2">인증 신청이 없습니다</h3>
             <p className="text-red-200 mb-4">검색 조건에 맞는 상담사 인증 신청이 없습니다.</p>
           </motion.div>
+        )}
+
+        {/* 상담사 추가 모달 */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-white">상담사 수동 추가</h3>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-red-300 hover:text-white transition-colors"
+                >
+                  <FaTimes className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-red-300 text-sm font-medium">이름 *</label>
+                    <input
+                      type="text"
+                      value={newApplication.name || ''}
+                      onChange={(e) => setNewApplication(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="상담사 이름"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-red-300 text-sm font-medium">이메일 *</label>
+                    <input
+                      type="email"
+                      value={newApplication.email || ''}
+                      onChange={(e) => setNewApplication(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="이메일 주소"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-red-300 text-sm font-medium">전화번호</label>
+                    <input
+                      type="tel"
+                      value={newApplication.phone || ''}
+                      onChange={(e) => setNewApplication(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="010-1234-5678"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-red-300 text-sm font-medium">자격증 번호</label>
+                    <input
+                      type="text"
+                      value={newApplication.licenseNumber || ''}
+                      onChange={(e) => setNewApplication(prev => ({ ...prev, licenseNumber: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="PSY-2024-001"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-red-300 text-sm font-medium">소속 기관</label>
+                    <input
+                      type="text"
+                      value={newApplication.institution || ''}
+                      onChange={(e) => setNewApplication(prev => ({ ...prev, institution: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="한국심리상담협회"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-red-300 text-sm font-medium">경력 (년)</label>
+                    <input
+                      type="number"
+                      value={newApplication.experience || 0}
+                      onChange={(e) => setNewApplication(prev => ({ ...prev, experience: parseInt(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="5"
+                      min="0"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-red-300 text-sm font-medium">학력</label>
+                  <input
+                    type="text"
+                    value={newApplication.education || ''}
+                    onChange={(e) => setNewApplication(prev => ({ ...prev, education: e.target.value }))}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="서울대학교 심리학과 석사"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-red-300 text-sm font-medium">전문분야 (쉼표로 구분)</label>
+                  <input
+                    type="text"
+                    value={newApplication.specialization?.join(', ') || ''}
+                    onChange={(e) => handleSpecializationChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="우울증, 불안장애, 관계상담"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-red-300 text-sm font-medium">첨부 문서 (쉼표로 구분)</label>
+                  <input
+                    type="text"
+                    value={newApplication.documents?.join(', ') || ''}
+                    onChange={(e) => handleDocumentsChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="자격증.pdf, 경력증명서.pdf, 학위증명서.pdf"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-red-300 text-sm font-medium">메모</label>
+                  <textarea
+                    value={newApplication.notes || ''}
+                    onChange={(e) => setNewApplication(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="상담사에 대한 추가 정보나 메모"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-red-300 text-sm font-medium">상태</label>
+                  <select
+                    value={newApplication.status || 'pending'}
+                    onChange={(e) => setNewApplication(prev => ({ ...prev, status: e.target.value as 'pending' | 'approved' | 'rejected' }))}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="pending" className="bg-gray-800">검토 중</option>
+                    <option value="approved" className="bg-gray-800">승인됨</option>
+                    <option value="rejected" className="bg-gray-800">거부됨</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mt-6">
+                <button
+                  onClick={handleAddCounselor}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <FaSave className="w-4 h-4" />
+                  상담사 추가
+                </button>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* 상세보기 모달 */}

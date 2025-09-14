@@ -86,7 +86,7 @@
     ]
   },
   "functions": {
-    "source": ".",
+    "source": "functions",
     "runtime": "nodejs18"
   },
   "firestore": {

@@ -30,7 +30,7 @@ export const api = functions.https.onRequest(async (req, res) => {
     
     console.log(`[Firebase Functions] API 응답 완료: ${req.method} ${req.url}`);
     res.status(200).json(response);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Firebase Functions] API 에러:', err);
     res.status(500).json({ 
       success: false,
@@ -60,7 +60,7 @@ export const processLogs = functions.https.onRequest(async (req, res) => {
     });
     
     res.status(200).json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Firebase Functions] 로그 처리 에러:', err);
     res.status(500).json({ error: 'Log processing failed' });
   }

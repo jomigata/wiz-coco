@@ -216,6 +216,7 @@ export default function Navigation() {
       items: [
         { name: "전체 사용자", href: "/admin/users", description: "사용자 계정 관리", icon: "👥" },
         { name: "상담사 인증", href: "/admin/counselor-verification", description: "상담사 인증 관리", icon: "✅" },
+        { name: "상담사 추가", href: "/admin/counselor-verification?add=true", description: "상담사 수동 추가", icon: "➕" },
         { name: "권한 관리", href: "/admin/permissions", description: "사용자 권한 설정", icon: "🔐" }
       ]
     },
