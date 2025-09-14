@@ -109,13 +109,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="space-y-2"
               role="navigation"
               aria-labelledby="admin-menu-title"
+              onMouseLeave={() => {
+                // 네비게이션 영역을 벗어나면 모든 메뉴 닫기
+                setHoveredCategory(null);
+                setExpandedCategory('user-management'); // 기본값으로 사용자 관리만 열어둠
+              }}
             >
               {adminMenuCategories.map((category, index) => (
                 <div
                   key={category.id}
                   className="relative"
-                  onMouseEnter={() => setHoveredCategory(category.id)}
-                  onMouseLeave={() => setHoveredCategory(null)}
+                  onMouseEnter={() => {
+                    setHoveredCategory(category.id);
+                    if (category.subItems.length > 0) {
+                      setExpandedCategory(category.id);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredCategory(null);
+                    // 호버가 끝나도 expandedCategory는 유지 (클릭으로만 토글)
+                  }}
                 >
                   {/* 중분류 메뉴 */}
                   <button
@@ -164,7 +177,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
 
                   {/* 소분류 드롭다운 메뉴 */}
-                  {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id) && (
+                  {category.subItems.length > 0 && expandedCategory === category.id && (
                     <div className="absolute left-full top-0 ml-2 w-48 bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl border border-white/10 z-50">
                       <div className="py-2">
                         {category.subItems.map((subItem) => (
