@@ -50,6 +50,7 @@
     "dist",
     "build",
     ".next",
-    "tests"
+    "tests",
+    "functions"
   ]
 }

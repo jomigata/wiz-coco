@@ -42,6 +42,12 @@ const nextConfig = {
       use: 'ignore-loader'
     });
 
+    // functions 폴더의 모든 파일을 제외
+    config.module.rules.push({
+      test: /^.*\/functions\/.*$/,
+      use: 'ignore-loader'
+    });
+
     if (!isServer) {
       // 클라이언트 빌드에서 서버 전용 모듈들만 제외
       config.resolve.fallback = {
