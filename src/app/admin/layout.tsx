@@ -43,7 +43,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       subItems: [
         { id: 'users', label: '전체 사용자', href: '/admin/users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
         { id: 'counselor-verification', label: '상담사 인증', href: '/admin/counselor-verification', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-        { id: 'counselor-add', label: '상담사 추가', href: '/admin/counselor-verification?add=true', icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6' },
         { id: 'permissions', label: '권한 관리', href: '/admin/permissions', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
       ]
     },
@@ -90,6 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleMenuClick = (itemId: string, href: string) => {
     setActiveSection(itemId);
     router.push(href);
+    // 소분류 메뉴 클릭 시에도 메뉴를 열어둠 (다른 페이지로 이동할 때까지)
   };
 
   return (
@@ -210,7 +210,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           key={subItem.id}
                           onClick={() => {
                             handleMenuClick(subItem.id, subItem.href);
-                            // 소분류 메뉴 클릭 시에도 메뉴 유지
+                            // 소분류 메뉴 클릭 시에도 메뉴 유지 - expandedCategory는 유지
                           }}
                           className={`w-full flex items-center px-6 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-all duration-200 rounded-lg ml-4 transform hover:scale-[1.02] ${
                             activeSection === subItem.id ? 'bg-indigo-600/50 text-white' : ''
