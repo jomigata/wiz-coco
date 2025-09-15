@@ -126,8 +126,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     }
                   }}
                   onMouseLeave={() => {
-                    setHoveredCategory(null);
-                    // 호버가 끝나도 expandedCategory는 유지 (클릭으로만 토글)
+                    // 약간의 지연을 두어 자연스러운 전환
+                    setTimeout(() => {
+                      setHoveredCategory(null);
+                    }, 100);
                   }}
                 >
                   {/* 중분류 메뉴 */}
@@ -176,36 +178,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     )}
                   </button>
 
-                  {/* 소분류 드롭다운 메뉴 */}
-                  {category.subItems.length > 0 && expandedCategory === category.id && (
-                    <div className="absolute left-full top-0 ml-2 w-48 bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl border border-white/10 z-50">
-                      <div className="py-2">
-                        {category.subItems.map((subItem) => (
-                          <button
-                            key={subItem.id}
-                            onClick={() => {
-                              handleMenuClick(subItem.id, subItem.href);
-                              // 소분류 메뉴 클릭 시에도 메뉴 유지
-                            }}
-                            className={`w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-colors duration-200 ${
-                              activeSection === subItem.id ? 'bg-indigo-600/50 text-white' : ''
-                            }`}
-                            aria-current={activeSection === subItem.id ? 'page' : undefined}
+                  {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
+                  {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id) && (
+                    <div 
+                      className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
+                      onMouseEnter={() => {
+                        setHoveredCategory(category.id);
+                        setExpandedCategory(category.id);
+                      }}
+                      onMouseLeave={() => {
+                        setTimeout(() => {
+                          setHoveredCategory(null);
+                        }, 100);
+                      }}
+                    >
+                      {category.subItems.map((subItem) => (
+                        <button
+                          key={subItem.id}
+                          onClick={() => {
+                            handleMenuClick(subItem.id, subItem.href);
+                            // 소분류 메뉴 클릭 시에도 메뉴 유지
+                          }}
+                          className={`w-full flex items-center px-6 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-all duration-200 rounded-lg ml-4 transform hover:scale-[1.02] ${
+                            activeSection === subItem.id ? 'bg-indigo-600/50 text-white' : ''
+                          }`}
+                          aria-current={activeSection === subItem.id ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="mr-3 h-4 w-4 flex-shrink-0" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                            aria-hidden="true"
                           >
-                            <svg 
-                              className="mr-3 h-4 w-4 flex-shrink-0" 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              fill="none" 
-                              viewBox="0 0 24 24" 
-                              stroke="currentColor"
-                              aria-hidden="true"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
-                            </svg>
-                            <span className="truncate">{subItem.label}</span>
-                          </button>
-                        ))}
-                      </div>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
+                          </svg>
+                          <span className="truncate">{subItem.label}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
