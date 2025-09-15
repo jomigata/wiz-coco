@@ -41,11 +41,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       id: 'user-management',
       label: '사용자 관리',
       icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
-      subItems: [
-        { id: 'users', label: '전체 사용자', href: '/admin/users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-        { id: 'counselor-verification', label: '상담사 인증', href: '/admin/counselor-verification', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-        { id: 'permissions', label: '권한 관리', href: '/admin/permissions', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
-      ]
+       subItems: [
+         { id: 'users', label: '전체 사용자', href: '/admin/users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+         { id: 'counselor-verification', label: '상담사 인증', href: '/admin/counselor-verification', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+         { id: 'permissions', label: '권한 관리', href: '/admin/permissions', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
+       ]
     },
     {
       id: 'system-management',
@@ -134,44 +134,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="space-y-2"
               role="navigation"
               aria-labelledby="admin-menu-title"
-              onMouseLeave={() => {
-                // 네비게이션 영역을 벗어나면 모든 메뉴 닫기
-                setHoveredCategory(null);
-                setExpandedCategory('user-management'); // 기본값으로 사용자 관리만 열어둠
-              }}
+               onMouseLeave={() => {
+                 // 네비게이션 영역을 벗어나면 모든 메뉴 닫기
+                 setHoveredCategory(null);
+                 setExpandedCategory(persistentCategory || 'user-management'); // 지속적인 메뉴가 있으면 유지, 없으면 사용자 관리
+               }}
             >
               {adminMenuCategories.map((category, index) => (
                 <div
                   key={category.id}
                   className="relative"
-                  onMouseEnter={() => {
-                    // 지속적인 메뉴가 없을 때만 후버 기능 활성화
-                    if (!persistentCategory) {
-                      setHoveredCategory(category.id);
-                      if (category.subItems.length > 0) {
-                        setExpandedCategory(category.id);
-                      }
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    // 지속적인 메뉴가 없을 때만 후버 기능 비활성화
-                    if (!persistentCategory) {
-                      const delay = category.id === 'system-settings' ? 300 : 100;
-                      setTimeout(() => {
-                        setHoveredCategory(null);
-                      }, delay);
-                    }
-                  }}
+                   onMouseEnter={() => {
+                     // 지속적인 메뉴가 없을 때만 후버 기능 활성화
+                     if (!persistentCategory) {
+                       setHoveredCategory(category.id);
+                       if (category.subItems.length > 0) {
+                         setExpandedCategory(category.id);
+                       }
+                     }
+                   }}
+                   onMouseLeave={() => {
+                     // 지속적인 메뉴가 없을 때만 후버 기능 비활성화
+                     if (!persistentCategory) {
+                       const delay = category.id === 'system-settings' ? 300 : 100;
+                       setTimeout(() => {
+                         setHoveredCategory(null);
+                       }, delay);
+                     }
+                   }}
                 >
                   {/* 중분류 메뉴 */}
                   <button
-                    onClick={() => {
-                      if (category.subItems.length > 0) {
-                        handleCategoryClick(category.id);
-                      } else if (category.href) {
-                        handleMenuClick(category.id, category.href);
-                      }
-                    }}
+                     onClick={() => {
+                       if (category.subItems.length > 0) {
+                         handleCategoryClick(category.id);
+                       } else if (category.href) {
+                         handleMenuClick(category.id, category.href);
+                       }
+                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
                       activeSection === category.id
                         ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
@@ -209,8 +209,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     )}
                   </button>
 
-                  {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
-                  {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id || persistentCategory === category.id) && (
+                   {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
+                   {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id || persistentCategory === category.id) && (
                     <div 
                       className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={() => {
