@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('user-management');
+  const [persistentCategory, setPersistentCategory] = useState<string | null>('user-management');
 
   // 현재 경로에 따라 활성화된 메뉴 항목 결정
   function getActiveSection(path: string) {
@@ -92,6 +93,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // 소분류 메뉴 클릭 시에도 메뉴를 열어둠 (다른 페이지로 이동할 때까지)
   };
 
+  // 중분류 메뉴 클릭 핸들러
+  const handleCategoryClick = (categoryId: string) => {
+    if (persistentCategory === categoryId) {
+      // 같은 카테고리 클릭 시 토글
+      setPersistentCategory(null);
+      setExpandedCategory(null);
+    } else {
+      // 다른 카테고리 클릭 시 교체
+      setPersistentCategory(categoryId);
+      setExpandedCategory(categoryId);
+    }
+    setHoveredCategory(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
       {/* 최상단 사이트 네비게이션 - z-index 50 */}
@@ -130,24 +145,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={category.id}
                   className="relative"
                   onMouseEnter={() => {
-                    setHoveredCategory(category.id);
-                    if (category.subItems.length > 0) {
-                      setExpandedCategory(category.id);
+                    // 지속적인 메뉴가 없을 때만 후버 기능 활성화
+                    if (!persistentCategory) {
+                      setHoveredCategory(category.id);
+                      if (category.subItems.length > 0) {
+                        setExpandedCategory(category.id);
+                      }
                     }
                   }}
                   onMouseLeave={() => {
-                    // 시스템 설정의 경우 더 긴 지연을 두어 안정화
-                    const delay = category.id === 'system-settings' ? 300 : 100;
-                    setTimeout(() => {
-                      setHoveredCategory(null);
-                    }, delay);
+                    // 지속적인 메뉴가 없을 때만 후버 기능 비활성화
+                    if (!persistentCategory) {
+                      const delay = category.id === 'system-settings' ? 300 : 100;
+                      setTimeout(() => {
+                        setHoveredCategory(null);
+                      }, delay);
+                    }
                   }}
                 >
                   {/* 중분류 메뉴 */}
                   <button
                     onClick={() => {
                       if (category.subItems.length > 0) {
-                        setExpandedCategory(expandedCategory === category.id ? null : category.id);
+                        handleCategoryClick(category.id);
                       } else if (category.href) {
                         handleMenuClick(category.id, category.href);
                       }
@@ -190,19 +210,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
 
                   {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
-                  {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id) && (
+                  {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id || persistentCategory === category.id) && (
                     <div 
                       className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={() => {
-                        setHoveredCategory(category.id);
-                        setExpandedCategory(category.id);
+                        // 지속적인 메뉴가 없을 때만 후버 기능 활성화
+                        if (!persistentCategory) {
+                          setHoveredCategory(category.id);
+                          setExpandedCategory(category.id);
+                        }
                       }}
                       onMouseLeave={() => {
-                        // 시스템 설정의 경우 더 긴 지연을 두어 안정화
-                        const delay = category.id === 'system-settings' ? 300 : 100;
-                        setTimeout(() => {
-                          setHoveredCategory(null);
-                        }, delay);
+                        // 지속적인 메뉴가 없을 때만 후버 기능 비활성화
+                        if (!persistentCategory) {
+                          const delay = category.id === 'system-settings' ? 300 : 100;
+                          setTimeout(() => {
+                            setHoveredCategory(null);
+                          }, delay);
+                        }
                       }}
                     >
                       {category.subItems.map((subItem) => (
