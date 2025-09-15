@@ -10,7 +10,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('user-management');
-  const [persistentCategory, setPersistentCategory] = useState<string | null>('user-management');
+  const [lastClickedCategory, setLastClickedCategory] = useState<string | null>('user-management');
+  const [isHoverMode, setIsHoverMode] = useState<boolean>(false);
 
   // 현재 경로에 따라 활성화된 메뉴 항목 결정
   function getActiveSection(path: string) {
@@ -90,21 +91,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleMenuClick = (itemId: string, href: string) => {
     setActiveSection(itemId);
     router.push(href);
-    // 소분류 메뉴 클릭 시에도 메뉴를 열어둠 (다른 페이지로 이동할 때까지)
   };
 
   // 중분류 메뉴 클릭 핸들러
   const handleCategoryClick = (categoryId: string) => {
-    if (persistentCategory === categoryId) {
+    // 클릭 모드로 전환
+    setIsHoverMode(false);
+    
+    if (expandedCategory === categoryId) {
       // 같은 카테고리 클릭 시 토글
-      setPersistentCategory(null);
       setExpandedCategory(null);
+      setLastClickedCategory(null);
     } else {
       // 다른 카테고리 클릭 시 교체
-      setPersistentCategory(categoryId);
       setExpandedCategory(categoryId);
+      setLastClickedCategory(categoryId);
     }
     setHoveredCategory(null);
+  };
+
+  // 중분류 메뉴 후버 핸들러
+  const handleCategoryHover = (categoryId: string) => {
+    if (isHoverMode) {
+      setHoveredCategory(categoryId);
+      if (categoryId !== lastClickedCategory) {
+        setExpandedCategory(categoryId);
+      }
+    }
+  };
+
+  // 중분류 메뉴 후버 아웃 핸들러
+  const handleCategoryHoverOut = (categoryId: string) => {
+    if (isHoverMode) {
+      setHoveredCategory(null);
+      if (categoryId !== lastClickedCategory) {
+        setExpandedCategory(lastClickedCategory);
+      }
+    }
+  };
+
+  // 네비게이션 영역 후버 아웃 핸들러
+  const handleNavigationHoverOut = () => {
+    if (isHoverMode) {
+      setHoveredCategory(null);
+      setExpandedCategory(lastClickedCategory);
+    }
   };
 
   return (
@@ -130,38 +161,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               관리자 메뉴
             </h2>
             
-            <nav
-              className="space-y-2"
-              role="navigation"
-              aria-labelledby="admin-menu-title"
-               onMouseLeave={() => {
-                 // 네비게이션 영역을 벗어나면 모든 메뉴 닫기
-                 setHoveredCategory(null);
-                 setExpandedCategory(persistentCategory || 'user-management'); // 지속적인 메뉴가 있으면 유지, 없으면 사용자 관리
+             <nav
+               className="space-y-2"
+               role="navigation"
+               aria-labelledby="admin-menu-title"
+               onMouseEnter={() => {
+                 // 네비게이션 영역에 마우스 진입 시 후버 모드 활성화
+                 setIsHoverMode(true);
                }}
-            >
+               onMouseLeave={handleNavigationHoverOut}
+             >
               {adminMenuCategories.map((category, index) => (
                 <div
                   key={category.id}
                   className="relative"
-                   onMouseEnter={() => {
-                     // 지속적인 메뉴가 없을 때만 후버 기능 활성화
-                     if (!persistentCategory) {
-                       setHoveredCategory(category.id);
-                       if (category.subItems.length > 0) {
-                         setExpandedCategory(category.id);
-                       }
-                     }
-                   }}
-                   onMouseLeave={() => {
-                     // 지속적인 메뉴가 없을 때만 후버 기능 비활성화
-                     if (!persistentCategory) {
-                       const delay = category.id === 'system-settings' ? 300 : 100;
-                       setTimeout(() => {
-                         setHoveredCategory(null);
-                       }, delay);
-                     }
-                   }}
+                   onMouseEnter={() => handleCategoryHover(category.id)}
+                   onMouseLeave={() => handleCategoryHoverOut(category.id)}
                 >
                   {/* 중분류 메뉴 */}
                   <button
@@ -210,32 +225,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
 
                    {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
-                   {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id || persistentCategory === category.id) && (
+                   {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id) && (
                     <div 
                       className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
-                      onMouseEnter={() => {
-                        // 지속적인 메뉴가 없을 때만 후버 기능 활성화
-                        if (!persistentCategory) {
-                          setHoveredCategory(category.id);
-                          setExpandedCategory(category.id);
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        // 지속적인 메뉴가 없을 때만 후버 기능 비활성화
-                        if (!persistentCategory) {
-                          const delay = category.id === 'system-settings' ? 300 : 100;
-                          setTimeout(() => {
-                            setHoveredCategory(null);
-                          }, delay);
-                        }
-                      }}
+                      onMouseEnter={() => handleCategoryHover(category.id)}
+                      onMouseLeave={() => handleCategoryHoverOut(category.id)}
                     >
                       {category.subItems.map((subItem) => (
                         <button
                           key={subItem.id}
                           onClick={() => {
                             handleMenuClick(subItem.id, subItem.href);
-                            // 소분류 메뉴 클릭 시에도 메뉴 유지 - expandedCategory는 유지
+                            // 소분류 메뉴 클릭 시에도 메뉴 유지
                           }}
                           className={`w-full flex items-center px-6 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-all duration-200 rounded-lg ml-4 transform hover:scale-[1.02] ${
                             activeSection === subItem.id ? 'bg-indigo-600/50 text-white' : ''
