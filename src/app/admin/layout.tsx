@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 
@@ -8,6 +8,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
+  
+  // 새로운 상태 관리 시스템
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('user-management');
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>('user-management');
@@ -87,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   ];
 
-  // 메뉴 항목 클릭 핸들러
+  // 새로운 메뉴 핸들러들
   const handleMenuClick = (itemId: string, href: string) => {
     setActiveSection(itemId);
     router.push(href);
@@ -95,22 +97,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // 중분류 메뉴 클릭 핸들러
   const handleCategoryClick = (categoryId: string) => {
-    // 클릭 모드로 전환
-    setIsHoverMode(false);
-    
-    if (expandedCategory === categoryId) {
+    if (lastClickedCategory === categoryId) {
       // 같은 카테고리 클릭 시 토글
-      setExpandedCategory(null);
       setLastClickedCategory(null);
+      setExpandedCategory(null);
+      setIsHoverMode(true);
     } else {
       // 다른 카테고리 클릭 시 교체
-      setExpandedCategory(categoryId);
       setLastClickedCategory(categoryId);
+      setExpandedCategory(categoryId);
+      setIsHoverMode(false);
     }
     setHoveredCategory(null);
   };
 
-  // 중분류 메뉴 후버 핸들러
+  // 중분류 메뉴 호버 핸들러
   const handleCategoryHover = (categoryId: string) => {
     if (isHoverMode) {
       setHoveredCategory(categoryId);
@@ -120,18 +121,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  // 중분류 메뉴 후버 아웃 핸들러
+  // 중분류 메뉴 호버 아웃 핸들러
   const handleCategoryHoverOut = (categoryId: string) => {
     if (isHoverMode) {
-      setHoveredCategory(null);
-      if (categoryId !== lastClickedCategory) {
-        setExpandedCategory(lastClickedCategory);
-      }
+      setTimeout(() => {
+        setHoveredCategory(null);
+        if (categoryId !== lastClickedCategory) {
+          setExpandedCategory(lastClickedCategory);
+        }
+      }, 100);
     }
   };
 
-  // 네비게이션 영역 후버 아웃 핸들러
-  const handleNavigationHoverOut = () => {
+  // 네비게이션 영역 호버 아웃 핸들러
+  const handleNavHoverOut = () => {
     if (isHoverMode) {
       setHoveredCategory(null);
       setExpandedCategory(lastClickedCategory);
@@ -165,11 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                className="space-y-2"
                role="navigation"
                aria-labelledby="admin-menu-title"
-               onMouseEnter={() => {
-                 // 네비게이션 영역에 마우스 진입 시 후버 모드 활성화
-                 setIsHoverMode(true);
-               }}
-               onMouseLeave={handleNavigationHoverOut}
+               onMouseLeave={handleNavHoverOut}
              >
               {adminMenuCategories.map((category, index) => (
                 <div
@@ -179,7 +178,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                    onMouseLeave={() => handleCategoryHoverOut(category.id)}
                 >
                   {/* 중분류 메뉴 */}
-                  <button
+                <button
                      onClick={() => {
                        if (category.subItems.length > 0) {
                          handleCategoryClick(category.id);
@@ -189,22 +188,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                      }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
                       activeSection === category.id
-                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
-                        : 'text-gray-300 hover:bg-gradient-to-r hover:from-indigo-600/30 hover:to-indigo-700/30 hover:text-white hover:shadow-md'
-                    }`}
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
+                      : 'text-gray-300 hover:bg-gradient-to-r hover:from-indigo-600/30 hover:to-indigo-700/30 hover:text-white hover:shadow-md'
+                  }`}
                     aria-current={activeSection === category.id ? 'page' : undefined}
                     title={category.label}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
                     <div className="flex items-center">
-                      <svg 
-                        className="mr-3 h-5 w-5 flex-shrink-0" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
+                  <svg 
+                    className="mr-3 h-5 w-5 flex-shrink-0" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
                       </svg>
                       <span className="truncate">{category.label}</span>
@@ -252,9 +251,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             aria-hidden="true"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
-                          </svg>
+                  </svg>
                           <span className="truncate">{subItem.label}</span>
-                        </button>
+                </button>
                       ))}
                     </div>
                   )}
