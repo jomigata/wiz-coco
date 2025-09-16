@@ -13,7 +13,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('user-management');
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>('user-management');
-  const [isHoverMode, setIsHoverMode] = useState<boolean>(false);
+  const [isHoverMode, setIsHoverMode] = useState<boolean>(true);
+  const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
 
   // 현재 경로에 따라 활성화된 메뉴 항목 결정
   function getActiveSection(path: string) {
@@ -30,6 +31,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (path.includes('/admin/settings')) return 'settings';
     return 'dashboard';
   }
+
+  // 현재 페이지 타이틀 설정
+  function getPageTitle(section: string) {
+    const titleMap: { [key: string]: string } = {
+      'dashboard': '대시보드',
+      'users': '전체 사용자',
+      'counselor-verification': '상담사 인증',
+      'permissions': '권한 관리',
+      'test-codes': '검사 코드 관리',
+      'test-prefix': '접두사 관리',
+      'analytics': '데이터 분석',
+      'mbti-analysis': 'MBTI 분석',
+      'relationship-analysis': '관계성 분석',
+      'deleted-codes': '삭제된 코드',
+      'settings': '사이트 설정'
+    };
+    return titleMap[section] || '관리자 페이지';
+  }
+
+  // 경로 변경 시 페이지 타이틀 업데이트
+  useEffect(() => {
+    const section = getActiveSection(pathname);
+    setActiveSection(section);
+    setCurrentPageTitle(getPageTitle(section));
+  }, [pathname]);
 
   // 중분류-소분류 메뉴 구조 (상단 네비게이션과 통합)
   const adminMenuCategories = [
@@ -90,14 +116,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   // 새로운 메뉴 핸들러들
-  const handleMenuClick = (itemId: string, href: string) => {
+  const handleMenuClick = (itemId: string, href: string, categoryId: string) => {
     setActiveSection(itemId);
+    setLastClickedCategory(categoryId);
+    setExpandedCategory(categoryId);
+    setIsHoverMode(false);
+    setHoveredCategory(null);
+    setCurrentPageTitle(getPageTitle(itemId));
     router.push(href);
   };
 
   // 중분류 메뉴 클릭 핸들러
   const handleCategoryClick = (categoryId: string) => {
-    if (lastClickedCategory === categoryId) {
+    if (categoryId === 'dashboard') {
+      // 대시보드 클릭 시 사용자 관리 소분류 고정
+      setLastClickedCategory('user-management');
+      setExpandedCategory('user-management');
+      setIsHoverMode(false);
+      setHoveredCategory(null);
+      router.push('/admin');
+    } else if (lastClickedCategory === categoryId) {
       // 같은 카테고리 클릭 시 토글
       setLastClickedCategory(null);
       setExpandedCategory(null);
@@ -115,6 +153,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleCategoryHover = (categoryId: string) => {
     if (isHoverMode) {
       setHoveredCategory(categoryId);
+      // 기존에 열려있는 소분류는 유지하면서 새로운 소분류 추가
+      // 현재 호버된 카테고리와 마지막 클릭된 카테고리를 모두 표시
       if (categoryId !== lastClickedCategory) {
         setExpandedCategory(categoryId);
       }
@@ -126,6 +166,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isHoverMode) {
       setTimeout(() => {
         setHoveredCategory(null);
+        // 호버가 벗어나면 마지막 클릭된 카테고리로 복원
         if (categoryId !== lastClickedCategory) {
           setExpandedCategory(lastClickedCategory);
         }
@@ -183,7 +224,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                        if (category.subItems.length > 0) {
                          handleCategoryClick(category.id);
                        } else if (category.href) {
-                         handleMenuClick(category.id, category.href);
+                         handleMenuClick(category.id, category.href, category.id);
                        }
                      }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
@@ -211,7 +252,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {category.subItems.length > 0 && (
                       <svg 
                         className="h-4 w-4 transition-transform duration-200"
-                        style={{ transform: expandedCategory === category.id ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                        style={{ transform: (hoveredCategory === category.id || expandedCategory === category.id || lastClickedCategory === category.id) ? 'rotate(90deg)' : 'rotate(0deg)' }}
                         xmlns="http://www.w3.org/2000/svg" 
                         fill="none" 
                         viewBox="0 0 24 24" 
@@ -224,7 +265,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
 
                    {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
-                   {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id) && (
+                   {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id || lastClickedCategory === category.id) && (
                     <div 
                       className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={() => handleCategoryHover(category.id)}
@@ -234,7 +275,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <button
                           key={subItem.id}
                           onClick={() => {
-                            handleMenuClick(subItem.id, subItem.href);
+                            handleMenuClick(subItem.id, subItem.href, category.id);
                             // 소분류 메뉴 클릭 시에도 메뉴 유지
                           }}
                           className={`w-full flex items-center px-6 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-all duration-200 rounded-lg ml-4 transform hover:scale-[1.02] ${
@@ -269,6 +310,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           role="main"
           aria-label="관리자 콘텐츠"
         >
+          {/* 현재 페이지 타이틀 표시 */}
+          {currentPageTitle && (
+            <div className="sticky top-0 z-20 bg-gradient-to-r from-indigo-600/90 to-purple-600/90 backdrop-blur-sm border-b border-white/10 px-6 py-4">
+              <h1 className="text-2xl font-bold text-white flex items-center">
+                <span className="mr-3">📋</span>
+                {currentPageTitle}
+              </h1>
+            </div>
+          )}
+          
           {/* 컨텐츠 영역을 전체 화면에 맞게 확장 */}
           <div className="w-full h-full">
             {children}
