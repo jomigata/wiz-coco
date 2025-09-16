@@ -9,11 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
   
-  // 새로운 상태 관리 시스템
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['user-management']));
-  const [lastClickedCategory, setLastClickedCategory] = useState<string | null>('user-management');
-  const [isHoverMode, setIsHoverMode] = useState<boolean>(true);
+  // 단순화된 상태 관리 시스템
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
 
   // 현재 경로에 따라 활성화된 메뉴 항목 결정
@@ -115,78 +111,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   ];
 
-  // 새로운 메뉴 핸들러들
-  const handleMenuClick = (itemId: string, href: string, categoryId: string) => {
+  // 단순화된 메뉴 핸들러
+  const handleMenuClick = (itemId: string, href: string) => {
     setActiveSection(itemId);
-    setLastClickedCategory(categoryId);
-    // 클릭한 메뉴의 중분류만 열고 나머지는 닫기
-    setExpandedCategories(new Set([categoryId]));
-    setIsHoverMode(false);
-    setHoveredCategory(null);
     setCurrentPageTitle(getPageTitle(itemId));
     router.push(href);
-  };
-
-  // 중분류 메뉴 클릭 핸들러
-  const handleCategoryClick = (categoryId: string) => {
-    if (categoryId === 'dashboard') {
-      // 대시보드 클릭 시 사용자 관리 소분류 고정
-      setLastClickedCategory('user-management');
-      setExpandedCategories(new Set(['user-management']));
-      setIsHoverMode(false);
-      setHoveredCategory(null);
-      router.push('/admin');
-    } else if (lastClickedCategory === categoryId) {
-      // 같은 카테고리 클릭 시 토글
-      setLastClickedCategory(null);
-      setExpandedCategories(new Set());
-      setIsHoverMode(true);
-    } else {
-      // 다른 카테고리 클릭 시 교체
-      setLastClickedCategory(categoryId);
-      setExpandedCategories(new Set([categoryId]));
-      setIsHoverMode(false);
-    }
-    setHoveredCategory(null);
-  };
-
-  // 중분류 메뉴 호버 핸들러
-  const handleCategoryHover = (categoryId: string) => {
-    if (isHoverMode) {
-      setHoveredCategory(categoryId);
-      // 기존에 열려있는 소분류는 유지하면서 새로운 소분류 추가
-      setExpandedCategories(prev => new Set(Array.from(prev).concat(categoryId)));
-    }
-  };
-
-  // 중분류 메뉴 호버 아웃 핸들러
-  const handleCategoryHoverOut = (categoryId: string) => {
-    if (isHoverMode) {
-      setTimeout(() => {
-        setHoveredCategory(null);
-        // 호버가 벗어나면 해당 카테고리만 제거하고 마지막 클릭된 카테고리는 유지
-        setExpandedCategories(prev => {
-          const newSet = new Set(prev);
-          if (categoryId !== lastClickedCategory) {
-            newSet.delete(categoryId);
-          }
-          return newSet;
-        });
-      }, 150);
-    }
-  };
-
-  // 네비게이션 영역 호버 아웃 핸들러
-  const handleNavHoverOut = () => {
-    if (isHoverMode) {
-      setHoveredCategory(null);
-      // 마지막 클릭된 카테고리만 유지
-      if (lastClickedCategory) {
-        setExpandedCategories(new Set([lastClickedCategory]));
-      } else {
-        setExpandedCategories(new Set());
-      }
-    }
   };
 
   return (
@@ -216,75 +145,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                className="space-y-2"
                role="navigation"
                aria-labelledby="admin-menu-title"
-               onMouseLeave={handleNavHoverOut}
              >
               {adminMenuCategories.map((category, index) => (
-                <div
-                  key={category.id}
-                  className="relative"
-                   onMouseEnter={() => handleCategoryHover(category.id)}
-                   onMouseLeave={() => handleCategoryHoverOut(category.id)}
-                >
-                  {/* 중분류 메뉴 */}
-                <button
-                     onClick={() => {
-                       if (category.subItems.length > 0) {
-                         handleCategoryClick(category.id);
-                       } else if (category.href) {
-                         handleMenuClick(category.id, category.href, category.id);
-                       }
-                     }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
-                      activeSection === category.id
-                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
-                      : 'text-gray-300 hover:bg-gradient-to-r hover:from-indigo-600/30 hover:to-indigo-700/30 hover:text-white hover:shadow-md'
-                  }`}
-                    aria-current={activeSection === category.id ? 'page' : undefined}
-                    title={category.label}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
+                <div key={category.id} className="space-y-1">
+                  {/* 중분류 메뉴 - 단순화 */}
+                  <div className="px-4 py-2 text-sm font-medium text-gray-400 border-b border-gray-600/30">
                     <div className="flex items-center">
-                  <svg 
-                    className="mr-3 h-5 w-5 flex-shrink-0" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
-                      </svg>
-                      <span className="truncate">{category.label}</span>
-                    </div>
-                    {category.subItems.length > 0 && (
                       <svg 
-                        className="h-4 w-4 transition-transform duration-200"
-                        style={{ transform: expandedCategories.has(category.id) ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                        className="mr-3 h-5 w-5 flex-shrink-0" 
                         xmlns="http://www.w3.org/2000/svg" 
                         fill="none" 
                         viewBox="0 0 24 24" 
                         stroke="currentColor"
                         aria-hidden="true"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
                       </svg>
-                    )}
-                  </button>
+                      <span className="truncate">{category.label}</span>
+                    </div>
+                  </div>
 
-                   {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
-                   {category.subItems.length > 0 && expandedCategories.has(category.id) && (
-                    <div 
-                      className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
-                      onMouseEnter={() => handleCategoryHover(category.id)}
-                      onMouseLeave={() => handleCategoryHoverOut(category.id)}
-                    >
+                  {/* 소분류 메뉴 - 항상 펼쳐져서 고정 */}
+                  {category.subItems.length > 0 && (
+                    <div className="space-y-1">
                       {category.subItems.map((subItem) => (
                         <button
                           key={subItem.id}
-                          onClick={() => {
-                            handleMenuClick(subItem.id, subItem.href, category.id);
-                            // 소분류 메뉴 클릭 시에도 메뉴 유지
-                          }}
+                          onClick={() => handleMenuClick(subItem.id, subItem.href)}
                           className={`w-full flex items-center px-6 py-2 text-sm text-gray-300 hover:bg-indigo-600/30 hover:text-white transition-all duration-200 rounded-lg ml-4 transform hover:scale-[1.02] ${
                             activeSection === subItem.id ? 'bg-indigo-600/50 text-white' : ''
                           }`}
@@ -299,9 +186,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             aria-hidden="true"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
-                  </svg>
+                          </svg>
                           <span className="truncate">{subItem.label}</span>
-                </button>
+                        </button>
                       ))}
                     </div>
                   )}
