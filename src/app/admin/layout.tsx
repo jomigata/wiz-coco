@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   // 새로운 상태 관리 시스템
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>('user-management');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['user-management']));
   const [lastClickedCategory, setLastClickedCategory] = useState<string | null>('user-management');
   const [isHoverMode, setIsHoverMode] = useState<boolean>(true);
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
@@ -119,7 +119,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleMenuClick = (itemId: string, href: string, categoryId: string) => {
     setActiveSection(itemId);
     setLastClickedCategory(categoryId);
-    setExpandedCategory(categoryId);
+    // 클릭한 메뉴의 중분류만 열고 나머지는 닫기
+    setExpandedCategories(new Set([categoryId]));
     setIsHoverMode(false);
     setHoveredCategory(null);
     setCurrentPageTitle(getPageTitle(itemId));
@@ -131,19 +132,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (categoryId === 'dashboard') {
       // 대시보드 클릭 시 사용자 관리 소분류 고정
       setLastClickedCategory('user-management');
-      setExpandedCategory('user-management');
+      setExpandedCategories(new Set(['user-management']));
       setIsHoverMode(false);
       setHoveredCategory(null);
       router.push('/admin');
     } else if (lastClickedCategory === categoryId) {
       // 같은 카테고리 클릭 시 토글
       setLastClickedCategory(null);
-      setExpandedCategory(null);
+      setExpandedCategories(new Set());
       setIsHoverMode(true);
     } else {
       // 다른 카테고리 클릭 시 교체
       setLastClickedCategory(categoryId);
-      setExpandedCategory(categoryId);
+      setExpandedCategories(new Set([categoryId]));
       setIsHoverMode(false);
     }
     setHoveredCategory(null);
@@ -154,10 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isHoverMode) {
       setHoveredCategory(categoryId);
       // 기존에 열려있는 소분류는 유지하면서 새로운 소분류 추가
-      // 현재 호버된 카테고리와 마지막 클릭된 카테고리를 모두 표시
-      if (categoryId !== lastClickedCategory) {
-        setExpandedCategory(categoryId);
-      }
+      setExpandedCategories(prev => new Set(Array.from(prev).concat(categoryId)));
     }
   };
 
@@ -166,11 +164,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isHoverMode) {
       setTimeout(() => {
         setHoveredCategory(null);
-        // 호버가 벗어나면 마지막 클릭된 카테고리로 복원
-        if (categoryId !== lastClickedCategory) {
-          setExpandedCategory(lastClickedCategory);
-        }
-      }, 100);
+        // 호버가 벗어나면 해당 카테고리만 제거하고 마지막 클릭된 카테고리는 유지
+        setExpandedCategories(prev => {
+          const newSet = new Set(prev);
+          if (categoryId !== lastClickedCategory) {
+            newSet.delete(categoryId);
+          }
+          return newSet;
+        });
+      }, 150);
     }
   };
 
@@ -178,7 +180,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleNavHoverOut = () => {
     if (isHoverMode) {
       setHoveredCategory(null);
-      setExpandedCategory(lastClickedCategory);
+      // 마지막 클릭된 카테고리만 유지
+      if (lastClickedCategory) {
+        setExpandedCategories(new Set([lastClickedCategory]));
+      } else {
+        setExpandedCategories(new Set());
+      }
     }
   };
 
@@ -252,7 +259,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {category.subItems.length > 0 && (
                       <svg 
                         className="h-4 w-4 transition-transform duration-200"
-                        style={{ transform: (hoveredCategory === category.id || expandedCategory === category.id || lastClickedCategory === category.id) ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                        style={{ transform: expandedCategories.has(category.id) ? 'rotate(90deg)' : 'rotate(0deg)' }}
                         xmlns="http://www.w3.org/2000/svg" 
                         fill="none" 
                         viewBox="0 0 24 24" 
@@ -265,7 +272,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
 
                    {/* 소분류 드롭다운 메뉴 - 아래로 펼쳐지도록 수정 */}
-                   {category.subItems.length > 0 && (hoveredCategory === category.id || expandedCategory === category.id || lastClickedCategory === category.id) && (
+                   {category.subItems.length > 0 && expandedCategories.has(category.id) && (
                     <div 
                       className="mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={() => handleCategoryHover(category.id)}
