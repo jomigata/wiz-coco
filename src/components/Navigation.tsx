@@ -275,32 +275,15 @@ export default function Navigation() {
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          {/* 홈 메뉴 - 제일 왼쪽으로 이동 */}
-          <div className="hidden md:flex items-center">
-            <Link
-              href="/"
-              className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 whitespace-nowrap ${
-                activeItem === "/"
-                  ? "text-white bg-blue-600"
-                  : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-              }`}
-              onClick={(e) => handleNavLinkClick("/", e)}
-            >
-              🏠 홈
-            </Link>
-          </div>
-
-          {/* 브랜드 텍스트 - 중앙에 넓은 공백과 함께 */}
-          <div className="flex-1 flex justify-center px-8">
-            <div className="flex flex-col items-center">
-              <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight">
-                심리케어
-              </span>
-              <span className="text-xs text-blue-200 font-medium whitespace-nowrap">
-                Psychological Care
-              </span>
-            </div>
-          </div>
+          {/* 브랜드 텍스트 - 좌측 끝으로 이동 및 홈페이지 링크 연결 */}
+          <Link href="/" className="flex flex-col items-center group" onClick={(e) => handleNavLinkClick("/", e)}>
+            <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300">
+              심리케어
+            </span>
+            <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
+              Psychological Care
+            </span>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
@@ -1274,21 +1257,6 @@ export default function Navigation() {
            {/* 모바일 메뉴 */}
            <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
              <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
-               {/* 홈 */}
-               <Link
-                 href="/"
-                 className={`block px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
-                   activeItem === "/"
-                     ? "text-white bg-blue-600"
-                     : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                 }`}
-                 onClick={() => {
-                   setIsMobileMenuOpen(false);
-                   handleNavLinkClick("/", {} as React.MouseEvent);
-                 }}
-               >
-                 🏠 홈
-               </Link>
 
                {/* 심리검사 */}
                <div className="space-y-2">
