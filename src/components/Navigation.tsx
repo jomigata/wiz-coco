@@ -276,12 +276,17 @@ export default function Navigation() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
               심
             </div>
-            <span className="font-bold text-3xl tracking-tight text-white transition-colors duration-300">
-              심리케어
-            </span>
+            <div className="flex flex-col">
+              <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight">
+                심리케어
+              </span>
+              <span className="text-xs text-blue-200 font-medium">
+                Psychological Care
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

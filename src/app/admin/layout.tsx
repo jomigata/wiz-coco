@@ -103,33 +103,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
-      {/* 최상단 사이트 네비게이션 - z-index 50 */}
-      <div className="relative z-50">
+    <div className="min-h-screen bg-gray-900">
+      {/* 상단 네비게이션 */}
+      <div className="fixed top-0 left-0 right-0 z-50">
         <Navigation />
       </div>
       
-      {/* 전체 레이아웃 - 네비게이션 바 아래 전체 화면 사용 */}
-      <div className="flex h-screen pt-16">
-        {/* 좌측 사이드바 - 고정, z-index 40 */}
-        <aside 
-          className="w-64 bg-gray-800/40 backdrop-blur-sm border-r border-white/10 flex-shrink-0 fixed left-0 top-16 h-[calc(100vh-4rem)] overflow-y-auto z-40 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
-          role="navigation"
-          aria-label="관리자 메뉴"
-        >
-          <div className="p-4 pb-8">
-            <h2 
-              className="text-xl font-bold text-white mb-6 border-b border-white/10 pb-2"
-              id="admin-menu-title"
-            >
-              관리자 메뉴
-            </h2>
+      {/* 메인 콘텐츠 영역 */}
+      <div className="flex pt-16">
+        {/* 사이드바 */}
+        <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl">
+          <div className="p-6">
+            {/* 로고 및 제목 */}
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">관리자 메뉴</h1>
+                <p className="text-sm text-gray-400">전문 상담 관리 시스템</p>
+              </div>
+            </div>
             
-             <nav
-               className="space-y-2"
-               role="navigation"
-               aria-labelledby="admin-menu-title"
-             >
+            {/* 사이드바 메뉴 */}
+            <nav
+              className="space-y-1"
+              role="navigation"
+              aria-labelledby="admin-menu-title"
+            >
               {adminMenuCategories.map((category, index) => (
                 <div key={category.id} className="space-y-1">
                   {/* 중분류 메뉴 - 대시보드는 클릭 가능, 나머지는 단순 표시 */}
@@ -225,27 +228,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </aside>
         
-        {/* 메인 콘텐츠 영역 - 전체 화면 사용, 좌측 여백만 적용 */}
-        <main 
-          className="flex-1 ml-64 h-[calc(100vh-5rem)] overflow-auto relative z-10"
-          role="main"
-          aria-label="관리자 콘텐츠"
-        >
-          {/* 현재 페이지 타이틀 표시 */}
-          {currentPageTitle && (
-            <div className="sticky top-0 z-20 bg-gradient-to-r from-indigo-600/90 to-purple-600/90 backdrop-blur-sm border-b border-white/10 px-6 py-4">
-              <h1 className="text-2xl font-bold text-white flex items-center">
-                <span className="mr-3">📋</span>
-                {currentPageTitle}
-              </h1>
+        {/* 메인 콘텐츠 영역 */}
+        <div className="flex-1 flex flex-col">
+          {/* 상단 헤더 */}
+          <header className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">{currentPageTitle || '관리자 대시보드'}</h1>
+                  <p className="text-purple-100 text-sm mt-1">전문 상담 관리 시스템</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-sm text-purple-100">관리자</p>
+                  <p className="text-white font-medium">김관리</p>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">김</span>
+                </div>
+              </div>
             </div>
-          )}
-          
-          {/* 컨텐츠 영역을 전체 화면에 맞게 확장 */}
-          <div className="w-full h-full">
+          </header>
+
+          {/* 메인 콘텐츠 */}
+          <main className="flex-1 p-6">
             {children}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );
