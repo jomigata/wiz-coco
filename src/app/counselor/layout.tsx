@@ -113,7 +113,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       <div className="flex pt-16">
         {/* 사이드바 */}
         <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl">
-        <div className="p-6">
+          <div className="p-6">
           {/* 로고 및 제목 */}
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -225,11 +225,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
               </div>
             ))}
           </nav>
+          </div>
         </div>
-      </div>
 
-      {/* 메인 콘텐츠 영역 */}
-      <div className="flex-1 flex flex-col">
+        {/* 메인 콘텐츠 영역 */}
+        <div className="flex-1 flex flex-col">
         {/* 상단 헤더 */}
         <header className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 shadow-lg">
           <div className="flex items-center justify-between">
@@ -256,10 +256,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        {/* 메인 콘텐츠 */}
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+          {/* 메인 콘텐츠 */}
+          <main className="flex-1 p-6">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
