@@ -132,22 +132,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
              >
               {adminMenuCategories.map((category, index) => (
                 <div key={category.id} className="space-y-1">
-                  {/* 중분류 메뉴 - 호버 기능 완전 제거, 단순 표시만 */}
-                  <div className="px-4 py-3 text-sm font-medium text-gray-400 border-b border-gray-600/30 bg-gray-800/20">
-                    <div className="flex items-center">
-                      <svg 
-                        className="mr-3 h-5 w-5 flex-shrink-0" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
-                      </svg>
-                      <span className="truncate font-semibold">{category.label}</span>
+                  {/* 중분류 메뉴 - 대시보드는 클릭 가능, 나머지는 단순 표시 */}
+                  {category.id === 'dashboard' ? (
+                    <button
+                      onClick={() => handleMenuClick('dashboard', category.href)}
+                      className={`w-full px-4 py-3 text-sm font-medium border-b border-gray-600/30 bg-gray-800/20 hover:bg-gray-700/30 transition-all duration-300 rounded-lg group ${
+                        activeSection === 'dashboard' 
+                          ? 'text-cyan-300 bg-slate-700/30' 
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <svg 
+                          className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                            activeSection === 'dashboard' ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'
+                          }`}
+                          xmlns="http://www.w3.org/2000/svg" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
+                        </svg>
+                        <span className="truncate font-semibold">{category.label}</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="px-4 py-3 text-sm font-medium text-gray-400 border-b border-gray-600/30 bg-gray-800/20">
+                      <div className="flex items-center">
+                        <svg 
+                          className="mr-3 h-5 w-5 flex-shrink-0" 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
+                        </svg>
+                        <span className="truncate font-semibold">{category.label}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 소분류 메뉴 - 항상 펼쳐진 상태, 고급스러운 선택 효과 */}
                   {category.subItems.length > 0 && (

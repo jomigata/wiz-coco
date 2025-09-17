@@ -1,365 +1,251 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
+import React from 'react';
 import Link from 'next/link';
-import { FaUsers, FaUserCheck, FaCog, FaChartBar, FaTags, FaBrain, FaComments, FaBell, FaCogs, FaDatabase, FaFileAlt } from 'react-icons/fa';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { shouldShowAdminMenu } from '@/utils/roleUtils';
-import RoleGuard from '@/components/RoleGuard';
 
-// 관리자 대시보드 카드 컴포넌트
-const AdminCard = ({ 
-  title, 
-  description, 
-  icon: Icon, 
-  href, 
-  color = "red",
-  stats = null,
-  trend = null
-}: {
-  title: string;
-  description: string;
-  icon: any;
-  href: string;
-  color?: string;
-  stats?: { label: string; value: string | number } | null;
-  trend?: { value: number; isPositive: boolean } | null;
-}) => {
-  const colorClasses = {
-    red: "from-red-500 to-pink-600",
-    blue: "from-blue-500 to-indigo-600", 
-    green: "from-green-500 to-emerald-600",
-    purple: "from-purple-500 to-violet-600",
-    orange: "from-orange-500 to-red-600",
-    teal: "from-teal-500 to-cyan-600"
-  };
+export default function AdminDashboard() {
+  const quickAccessItems = [
+    {
+      title: '시스템 대시보드',
+      description: '전체 현황을 한눈에 파악하세요',
+      href: '/admin/system-dashboard',
+      icon: '📊',
+      color: 'from-blue-500 to-cyan-500',
+      stats: { value: '1,247', label: '총 사용자', change: '+12%' }
+    },
+    {
+      title: '실시간 모니터링',
+      description: '활성 사용자와 상담 진행 상황을 실시간으로 확인',
+      href: '/admin/realtime-monitoring',
+      icon: '⚡',
+      color: 'from-green-500 to-emerald-500',
+      stats: { value: '47', label: '현재 활성', change: '실시간' }
+    },
+    {
+      title: '사용자 관리',
+      description: '상담사와 내담자를 통합 관리',
+      href: '/admin/user-management',
+      icon: '👥',
+      color: 'from-purple-500 to-pink-500',
+      stats: { value: '23', label: '상담사', change: '+2' }
+    },
+    {
+      title: '상담 관리',
+      description: '상담 일정, 진행 상황, 결과를 관리',
+      href: '/admin/counseling-management',
+      icon: '💬',
+      color: 'from-orange-500 to-red-500',
+      stats: { value: '156', label: '진행 중', change: '+8' }
+    },
+    {
+      title: '심리검사 관리',
+      description: '검사 생성, 배포, 결과를 분석',
+      href: '/admin/psychological-tests',
+      icon: '🧠',
+      color: 'from-indigo-500 to-purple-500',
+      stats: { value: '89', label: '완료된 검사', change: '+15' }
+    },
+    {
+      title: '콘텐츠 관리',
+      description: '상담 프로그램, 공지사항, 자료를 관리',
+      href: '/admin/content-management',
+      icon: '📚',
+      color: 'from-teal-500 to-cyan-500',
+      stats: { value: '12', label: '프로그램', change: '+3' }
+    },
+    {
+      title: '알림 관리',
+      description: '중요 알림 및 이벤트를 관리',
+      href: '/admin/notification-management',
+      icon: '🔔',
+      color: 'from-yellow-500 to-orange-500',
+      stats: { value: '5', label: '새 알림', change: '2분 전' }
+    },
+    {
+      title: '시스템 설정',
+      description: '기본 설정과 권한을 관리',
+      href: '/admin/system-settings',
+      icon: '⚙️',
+      color: 'from-gray-500 to-slate-500',
+      stats: { value: '100%', label: '시스템 상태', change: '정상' }
+    },
+    {
+      title: '데이터 관리',
+      description: '백업, 복원, 데이터를 분석',
+      href: '/admin/data-management',
+      icon: '💾',
+      color: 'from-emerald-500 to-green-500',
+      stats: { value: '2.3GB', label: '백업 크기', change: '최신' }
+    },
+    {
+      title: '보안 관리',
+      description: '보안 설정, 로그 관리, 접근을 제어',
+      href: '/admin/security-management',
+      icon: '🔐',
+      color: 'from-red-500 to-pink-500',
+      stats: { value: '99.9%', label: '보안 점수', change: '우수' }
+    }
+  ];
+
+  const recentActivities = [
+    { action: '새로운 사용자 등록', user: '김상담', time: '2분 전', type: 'user' },
+    { action: '상담 완료', user: '이내담', time: '15분 전', type: 'counseling' },
+    { action: '심리검사 완료', user: '박테스트', time: '1시간 전', type: 'test' },
+    { action: '시스템 업데이트', user: '관리자', time: '2시간 전', type: 'system' },
+    { action: '새 알림 생성', user: '시스템', time: '3시간 전', type: 'notification' }
+  ];
 
   return (
-    <Link href={href}>
-      <motion.div 
-        className="group relative bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:border-white/40 transition-all duration-300 hover:scale-105"
-        whileHover={{ y: -5 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-full bg-gradient-to-r ${colorClasses[color as keyof typeof colorClasses] || colorClasses.red}`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-          {stats && (
-            <div className="text-right">
-              <div className="text-2xl font-bold text-white">{stats.value}</div>
-              <div className="text-sm text-red-200">{stats.label}</div>
-              {trend && (
-                <div className={`text-xs flex items-center gap-1 ${trend.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                  <span>{trend.isPositive ? '↗' : '↘'}</span>
-                  <span>{Math.abs(trend.value)}%</span>
-            </div>
-              )}
-            </div>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* 페이지 헤더 */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">관리자 대시보드</h1>
+          <p className="text-gray-300 text-lg">전체 시스템을 한눈에 파악하고 빠르게 접근하세요</p>
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-red-200 transition-colors">
-          {title}
-        </h3>
-        <p className="text-red-200 text-sm leading-relaxed">
-          {description}
-        </p>
-        <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-pink-500/0 group-hover:from-red-500/10 group-hover:to-pink-500/10 rounded-xl transition-all duration-300"></div>
-      </motion.div>
-    </Link>
-  );
-};
 
-// 로딩 컴포넌트
-const LoadingAdminPage = () => (
-  <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
-    <Navigation />
-    <div className="h-20"></div>
-    
-    <div className="container mx-auto px-4 py-6 relative z-10">
-      <div className="flex items-center justify-center">
-        <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
-          <div className="w-16 h-16 border-4 border-red-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-red-200">관리자 정보를 불러오는 중입니다...</p>
+        {/* 전체 현황 카드 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-300 text-sm">총 사용자</p>
+                <p className="text-3xl font-bold text-white">1,247</p>
+                <p className="text-green-400 text-sm">+12% 이번 주</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">👥</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-300 text-sm">활성 상담사</p>
+                <p className="text-3xl font-bold text-white">23</p>
+                <p className="text-green-400 text-sm">+2 이번 주</p>
+              </div>
+              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">👨‍⚕️</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-300 text-sm">진행 중인 상담</p>
+                <p className="text-3xl font-bold text-white">156</p>
+                <p className="text-blue-400 text-sm">+8 오늘</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">💬</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-300 text-sm">완료된 상담</p>
+                <p className="text-3xl font-bold text-white">2,341</p>
+                <p className="text-green-400 text-sm">+45 이번 주</p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">✅</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 빠른 접근 버튼들 */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-6">빠른 접근</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {quickAccessItems.map((item, index) => (
+              <Link
+                key={index}
+                href={item.href}
+                className="group bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+              >
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-r ${item.color} flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300`}>
+                    {item.icon}
+                  </div>
+                  <h3 className="text-white font-semibold mb-2 group-hover:text-cyan-300 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-3">{item.description}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white font-bold">{item.stats.value}</span>
+                    <span className="text-gray-400">{item.stats.label}</span>
+                  </div>
+                  <div className="text-xs text-cyan-400 mt-1">{item.stats.change}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* 최근 활동 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">최근 활동</h3>
+            <div className="space-y-4">
+              {recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-center space-x-4 p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    activity.type === 'user' ? 'bg-blue-500/20' :
+                    activity.type === 'counseling' ? 'bg-green-500/20' :
+                    activity.type === 'test' ? 'bg-purple-500/20' :
+                    activity.type === 'system' ? 'bg-yellow-500/20' :
+                    'bg-orange-500/20'
+                  }`}>
+                    <span className="text-lg">
+                      {activity.type === 'user' ? '👤' :
+                       activity.type === 'counseling' ? '💬' :
+                       activity.type === 'test' ? '🧠' :
+                       activity.type === 'system' ? '⚙️' : '🔔'}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-medium">{activity.action}</p>
+                    <p className="text-gray-400 text-sm">{activity.user}</p>
+                  </div>
+                  <span className="text-gray-400 text-sm">{activity.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">시스템 상태</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300">서버 상태</span>
+                <span className="text-green-400 font-semibold">정상</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300">데이터베이스</span>
+                <span className="text-green-400 font-semibold">정상</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300">API 응답시간</span>
+                <span className="text-green-400 font-semibold">120ms</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300">메모리 사용률</span>
+                <span className="text-yellow-400 font-semibold">67%</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300">보안 점수</span>
+                <span className="text-green-400 font-semibold">99.9%</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </main>
-);
-
-function AdminPageContent() {
-  const { user } = useFirebaseAuth();
-  
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      <Navigation />
-      <div className="h-20"></div>
-      
-      {/* Background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        {/* 관리자 대시보드 타이틀 */}
-        <motion.div 
-          className="mb-8 relative"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="absolute -left-4 -top-8 w-20 h-20 bg-red-500 rounded-full opacity-20 blur-2xl"></div>
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-300 via-blue-200 to-purple-300 inline-block drop-shadow-lg">
-          관리자 대시보드
-          </h1>
-        <motion.div 
-            className="h-1.5 w-32 bg-gradient-to-r from-red-500 via-blue-500 to-purple-500 rounded-full mt-2 shadow-lg"
-          initial={{ width: 0 }}
-          animate={{ width: 128 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        ></motion.div>
-        </motion.div>
-
-        {/* 환영 메시지 */}
-      <motion.div 
-          className="mb-8 bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-              {user?.displayName ? user.displayName.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'A'}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">
-                안녕하세요, {user?.displayName || '관리자'}님!
-              </h2>
-              <p className="text-red-200 mt-1">
-                시스템 관리와 모니터링을 위한 모든 도구가 준비되어 있습니다.
-              </p>
-            </div>
-          </div>
-      </motion.div>
-
-        {/* 시스템 현황 요약 */}
-      <motion.div 
-          className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-200 text-sm">총 사용자</p>
-                <p className="text-3xl font-bold text-white">1,247</p>
-                <p className="text-green-400 text-xs">+12% 이번 주</p>
-              </div>
-              <FaUsers className="w-8 h-8 text-red-400" />
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-200 text-sm">활성 상담사</p>
-                <p className="text-3xl font-bold text-white">23</p>
-                <p className="text-green-400 text-xs">+2 이번 주</p>
-              </div>
-              <FaUserCheck className="w-8 h-8 text-blue-400" />
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-200 text-sm">이번 주 상담</p>
-                <p className="text-3xl font-bold text-white">156</p>
-                <p className="text-green-400 text-xs">+8% 이번 주</p>
-              </div>
-              <FaComments className="w-8 h-8 text-green-400" />
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-200 text-sm">시스템 상태</p>
-                <p className="text-3xl font-bold text-green-400">정상</p>
-                <p className="text-green-400 text-xs">99.9% 가동률</p>
-              </div>
-              <FaCog className="w-8 h-8 text-green-400" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* 관리자 기능 카드들 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 사용자 관리 */}
-          <AdminCard
-            title="전체 사용자"
-            description="사용자 계정을 관리하고 권한을 설정할 수 있습니다."
-            icon={FaUsers}
-            href="/admin/users"
-            color="red"
-            stats={{ label: "총 사용자", value: "1,247" }}
-            trend={{ value: 12, isPositive: true }}
-          />
-
-          {/* 상담사 인증 */}
-          <AdminCard
-            title="상담사 인증"
-            description="상담사 인증 요청을 검토하고 승인할 수 있습니다."
-            icon={FaUserCheck}
-            href="/admin/counselor-verification"
-            color="blue"
-            stats={{ label: "대기 중", value: "5건" }}
-          />
-
-          {/* 권한 관리 */}
-          <AdminCard
-            title="권한 관리"
-            description="사용자별 권한과 역할을 설정할 수 있습니다."
-            icon={FaCog}
-            href="/admin/permissions"
-            color="green"
-          />
-
-          {/* 대시보드 */}
-          <AdminCard
-            title="시스템 대시보드"
-            description="시스템 현황과 성능 지표를 모니터링할 수 있습니다."
-            icon={FaChartBar}
-            href="/admin/dashboard"
-            color="purple"
-            stats={{ label: "실시간", value: "활성" }}
-          />
-
-          {/* 검사 코드 관리 */}
-          <AdminCard
-            title="검사 코드 관리"
-            description="전체 검사 코드를 생성하고 관리할 수 있습니다."
-            icon={FaTags}
-          href="/admin/test-codes"
-            color="orange"
-            stats={{ label: "활성 코드", value: "2,456개" }}
-          />
-
-          {/* 데이터 분석 */}
-          <AdminCard
-            title="데이터 분석"
-            description="사용자 데이터와 상담 통계를 분석할 수 있습니다."
-            icon={FaChartBar}
-            href="/admin/analytics"
-            color="teal"
-            stats={{ label: "분석 완료", value: "24시간" }}
-          />
-
-          {/* 심리검사 관리 */}
-          <AdminCard
-            title="심리검사 관리"
-            description="심리검사 콘텐츠와 질문을 관리할 수 있습니다."
-            icon={FaBrain}
-            href="/admin/tests"
-            color="blue"
-            stats={{ label: "활성 검사", value: "12개" }}
-          />
-
-          {/* 상담 프로그램 */}
-          <AdminCard
-            title="상담 프로그램"
-            description="상담 프로그램과 서비스를 관리할 수 있습니다."
-            icon={FaComments}
-            href="/admin/counseling-programs"
-            color="green"
-          />
-
-          {/* 공지사항 */}
-          <AdminCard
-            title="공지사항"
-            description="사이트 공지사항과 알림을 관리할 수 있습니다."
-            icon={FaBell}
-            href="/admin/notices"
-            color="purple"
-            stats={{ label: "활성 공지", value: "3개" }}
-          />
-
-          {/* 사이트 설정 */}
-          <AdminCard
-            title="사이트 설정"
-            description="전체 사이트 설정과 구성을 관리할 수 있습니다."
-            icon={FaCogs}
-            href="/admin/settings"
-            color="red"
-          />
-
-          {/* 백업 관리 */}
-          <AdminCard
-            title="백업 관리"
-            description="데이터 백업과 복원을 관리할 수 있습니다."
-            icon={FaDatabase}
-            href="/admin/backup"
-            color="orange"
-            stats={{ label: "마지막 백업", value: "2시간 전" }}
-          />
-
-          {/* 로그 관리 */}
-          <AdminCard
-            title="로그 관리"
-            description="시스템 로그와 활동 기록을 확인할 수 있습니다."
-            icon={FaFileAlt}
-            href="/admin/logs"
-            color="teal"
-            stats={{ label: "오늘 로그", value: "1,234개" }}
-          />
-        </div>
-
-        {/* 최근 활동 요약 */}
-        <motion.div
-          className="mt-8 bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <h3 className="text-xl font-bold text-white mb-4">최근 시스템 활동</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-red-200">새로운 상담사 인증 요청이 접수되었습니다.</span>
-              <span className="text-sm text-red-300 ml-auto">5분 전</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-red-200">시스템 백업이 성공적으로 완료되었습니다.</span>
-              <span className="text-sm text-red-300 ml-auto">2시간 전</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-              <span className="text-red-200">새로운 사용자 12명이 가입했습니다.</span>
-              <span className="text-sm text-red-300 ml-auto">3시간 전</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-              <span className="text-red-200">심리검사 결과 분석이 완료되었습니다.</span>
-              <span className="text-sm text-red-300 ml-auto">6시간 전</span>
-            </div>
-          </div>
-      </motion.div>
-      </div>
-    </main>
   );
 }
-
-export default function AdminPage() {
-  return (
-    <RoleGuard allowedRoles={['admin']}>
-      <AdminPageContent />
-    </RoleGuard>
-  );
-} 
