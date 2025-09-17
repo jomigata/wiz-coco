@@ -209,39 +209,31 @@ export default function Navigation() {
     }
   ];
 
-  // 관리자 메뉴 데이터
+  // 통합 관리자 메뉴 데이터 (탑메뉴와 사이드메뉴 일치)
   const adminMenuItems = [
     {
-      category: "사용자 관리",
+      category: "대시보드 & 모니터링",
       items: [
-        { name: "전체 사용자", href: "/admin/users", description: "사용자 계정 관리", icon: "👥" },
-        { name: "상담사 인증", href: "/admin/counselor-verification", description: "상담사 인증 관리", icon: "✅" },
-        { name: "상담사 추가", href: "/admin/counselor-verification?add=true", description: "상담사 수동 추가", icon: "➕" },
-        { name: "권한 관리", href: "/admin/permissions", description: "사용자 권한 설정", icon: "🔐" }
+        { name: "시스템 대시보드", href: "/admin/system-dashboard", description: "전체 현황 한눈에 보기", icon: "📊" },
+        { name: "실시간 모니터링", href: "/admin/realtime-monitoring", description: "활성 사용자, 상담 진행 상황", icon: "⚡" },
+        { name: "알림 관리", href: "/admin/notification-management", description: "중요 알림 및 이벤트 관리", icon: "🔔" }
       ]
     },
     {
-      category: "시스템 관리",
+      category: "사용자 & 상담 관리",
       items: [
-        { name: "대시보드", href: "/admin/dashboard", description: "시스템 현황 대시보드", icon: "📊" },
-        { name: "검사 코드 관리", href: "/admin/test-codes", description: "전체 검사 코드 관리", icon: "🏷️" },
-        { name: "데이터 분석", href: "/admin/analytics", description: "사용자 데이터 분석", icon: "📈" }
+        { name: "사용자 관리", href: "/admin/user-management", description: "상담사/내담자 통합 관리", icon: "👥" },
+        { name: "상담 관리", href: "/admin/counseling-management", description: "상담 일정, 진행 상황, 결과 관리", icon: "💭" },
+        { name: "심리검사 관리", href: "/admin/psychological-tests", description: "검사 생성, 배포, 결과 분석", icon: "🧠" },
+        { name: "콘텐츠 관리", href: "/admin/content-management", description: "상담 프로그램, 공지사항, 자료 관리", icon: "📚" }
       ]
     },
     {
-      category: "콘텐츠 관리",
+      category: "시스템 & 보안 관리",
       items: [
-        { name: "심리검사 관리", href: "/admin/tests", description: "심리검사 콘텐츠 관리", icon: "🧠" },
-        { name: "상담 프로그램", href: "/admin/counseling-programs", description: "상담 프로그램 관리", icon: "💭" },
-        { name: "공지사항", href: "/admin/notices", description: "사이트 공지사항 관리", icon: "📢" }
-      ]
-    },
-    {
-      category: "시스템 설정",
-      items: [
-        { name: "사이트 설정", href: "/admin/settings", description: "전체 사이트 설정", icon: "⚙️" },
-        { name: "백업 관리", href: "/admin/backup", description: "데이터 백업 및 복원", icon: "💾" },
-        { name: "로그 관리", href: "/admin/logs", description: "시스템 로그 확인", icon: "📋" }
+        { name: "시스템 설정", href: "/admin/system-settings", description: "기본 설정, 권한 관리", icon: "⚙️" },
+        { name: "데이터 관리", href: "/admin/data-management", description: "백업, 복원, 데이터 분석", icon: "💾" },
+        { name: "보안 관리", href: "/admin/security-management", description: "보안 설정, 로그 관리, 접근 제어", icon: "🔐" }
       ]
     }
   ];
