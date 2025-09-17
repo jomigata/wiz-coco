@@ -135,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {/* 중분류 메뉴 - 대시보드는 클릭 가능, 나머지는 단순 표시 */}
                   {category.id === 'dashboard' ? (
                     <button
-                      onClick={() => handleMenuClick('dashboard', category.href)}
+                      onClick={() => handleMenuClick('dashboard', category.href || '/admin')}
                       className={`w-full px-4 py-3 text-sm font-medium border-b border-gray-600/30 bg-gray-800/20 hover:bg-gray-700/30 transition-all duration-300 rounded-lg group ${
                         activeSection === 'dashboard' 
                           ? 'text-cyan-300 bg-slate-700/30' 
