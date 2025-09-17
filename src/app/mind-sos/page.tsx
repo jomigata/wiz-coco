@@ -24,8 +24,16 @@ export default function MindSOSPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-12">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <div className="min-h-screen bg-gray-900">
+      {/* 상단 네비게이션 */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navigation />
+      </div>
+      
+      {/* 메인 콘텐츠 영역 */}
+      <div className="pt-16">
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-12">
+          <div className="container mx-auto px-4 max-w-6xl">
         {/* 헤더 */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">

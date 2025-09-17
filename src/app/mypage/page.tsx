@@ -240,9 +240,15 @@ function MyPageContent() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      <Navigation />
-      <div className="h-20"></div>
+    <div className="min-h-screen bg-gray-900">
+      {/* 상단 네비게이션 */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navigation />
+      </div>
+      
+      {/* 메인 콘텐츠 영역 */}
+      <div className="pt-16">
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
       
       {/* Background effects */}
       <div className="absolute inset-0">
@@ -825,7 +831,9 @@ function MyPageContent() {
           </div>
         )}
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
   );
 }
 

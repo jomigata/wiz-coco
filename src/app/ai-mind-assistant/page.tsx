@@ -59,10 +59,17 @@ export default function AIMindAssistantPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
-      <Navigation />
-      {/* 헤더 */}
-      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
+    <div className="min-h-screen bg-gray-900">
+      {/* 상단 네비게이션 */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navigation />
+      </div>
+      
+      {/* 메인 콘텐츠 영역 */}
+      <div className="pt-16">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
+          {/* 헤더 */}
+          <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
         <div className="container mx-auto px-6 text-center">
           <div className="text-6xl mb-4">🤖</div>
           <h1 className="text-4xl font-bold mb-4">AI 마음 비서</h1>
@@ -149,6 +156,7 @@ export default function AIMindAssistantPage() {
               일일 체크부터 정기적인 마음 검진, 긴급 상황 대응까지 모든 마음 건강 관리 요구를 AI와 함께 해결할 수 있습니다.
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>
