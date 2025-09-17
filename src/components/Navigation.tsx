@@ -283,7 +283,7 @@ export default function Navigation() {
               <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight">
                 심리케어
               </span>
-              <span className="text-xs text-blue-200 font-medium">
+              <span className="text-xs text-blue-200 font-medium whitespace-nowrap">
                 Psychological Care
               </span>
             </div>

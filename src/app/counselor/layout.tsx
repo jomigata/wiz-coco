@@ -139,7 +139,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                 {category.id === 'dashboard' ? (
                   <button
                     onClick={() => handleMenuClick('dashboard', category.href || '/counselor')}
-                    className={`w-full px-4 py-3 text-sm font-medium border-b border-gray-600/30 bg-gray-800/20 hover:bg-gray-700/30 transition-all duration-300 rounded-lg group ${
+                    className={`w-full px-4 py-3 text-base font-medium border-b border-gray-600/30 bg-gray-800/20 hover:bg-gray-700/30 transition-all duration-300 rounded-lg group ${
                       activeSection === 'dashboard' 
                         ? 'text-cyan-300 bg-slate-700/30' 
                         : 'text-gray-400 hover:text-white'
@@ -147,7 +147,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                   >
                     <div className="flex items-center">
                       <svg 
-                        className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                        className={`mr-3 h-6 w-6 flex-shrink-0 ${
                           activeSection === 'dashboard' ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'
                         }`}
                         xmlns="http://www.w3.org/2000/svg" 
@@ -162,10 +162,10 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                     </div>
                   </button>
                 ) : (
-                  <div className="px-4 py-3 text-sm font-medium text-gray-400 border-b border-gray-600/30 bg-gray-800/20">
+                  <div className="px-4 py-3 text-base font-medium text-gray-400 border-b border-gray-600/30 bg-gray-800/20">
                     <div className="flex items-center">
                       <svg 
-                        className="mr-3 h-5 w-5 flex-shrink-0" 
+                        className="mr-3 h-6 w-6 flex-shrink-0" 
                         xmlns="http://www.w3.org/2000/svg" 
                         fill="none" 
                         viewBox="0 0 24 24" 
@@ -186,7 +186,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                       <button
                         key={subItem.id}
                         onClick={() => handleMenuClick(subItem.id, subItem.href)}
-                        className={`w-full flex items-center px-6 py-3 text-sm transition-all duration-300 rounded-lg ml-4 transform hover:scale-[1.02] relative group ${
+                        className={`w-full flex items-center px-6 py-3 text-base transition-all duration-300 rounded-lg ml-4 transform hover:scale-[1.02] relative group ${
                           activeSection === subItem.id 
                             ? 'bg-gradient-to-r from-slate-800/90 to-slate-700/90 text-white shadow-lg shadow-slate-500/20 font-semibold border-l-4 border-cyan-400' 
                             : 'text-gray-300 hover:bg-slate-700/30 hover:text-white hover:shadow-md'
@@ -206,7 +206,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                         )}
                         
                         <svg 
-                          className={`mr-3 h-4 w-4 flex-shrink-0 relative z-10 ${
+                          className={`mr-3 h-5 w-5 flex-shrink-0 relative z-10 ${
                             activeSection === subItem.id ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'
                           }`}
                           xmlns="http://www.w3.org/2000/svg" 
