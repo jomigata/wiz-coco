@@ -278,7 +278,7 @@ export default function Navigation() {
           {/* 브랜드 텍스트 - 좌측 끝으로 이동 및 홈페이지 링크 연결 */}
           <Link href="/" className="flex flex-col items-center group" onClick={(e) => handleNavLinkClick("/", e)}>
             <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300">
-              심리케어
+              AI 심리케어
             </span>
             <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
               Psychological Care
