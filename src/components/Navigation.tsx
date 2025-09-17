@@ -279,7 +279,7 @@ export default function Navigation() {
             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
               심
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
               <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight">
                 심리케어
               </span>
