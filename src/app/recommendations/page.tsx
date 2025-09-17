@@ -18,77 +18,75 @@ export default function RecommendationsPage() {
       id: 1,
       type: 'test',
       title: '에니어그램 검사',
-      description: 'INTJ 성격 유형에 적합한 심화 성격 검사',
-      reason: 'MBTI와 보완적인 관점에서 성격을 분석할 수 있습니다.',
+      description: '성격 유형을 9가지로 분류하여 더 깊이 있는 자기 이해를 제공합니다',
+      category: '성격',
       priority: 'high',
-      estimatedTime: '45분',
-      category: 'personality',
-      tags: ['성격분석', '심화검사', 'INTJ추천']
+      matchScore: 95,
+      estimatedTime: '15분',
+      icon: '🔮'
     },
     {
       id: 2,
       type: 'counseling',
-      title: '대인관계 개선 상담',
-      description: 'INTJ 성격 유형의 대인관계 패턴 분석 및 개선',
-      reason: '설정된 목표와 일치하며, 전문가의 개별 지도를 받을 수 있습니다.',
+      title: '인지행동치료 상담',
+      description: '부정적인 사고 패턴을 인식하고 긍정적인 변화를 이끌어내는 상담입니다',
+      category: '상담',
       priority: 'high',
-      estimatedTime: '60분',
-      category: 'relationship',
-      tags: ['대인관계', '1:1상담', '목표달성']
+      matchScore: 88,
+      estimatedTime: '50분',
+      icon: '💭'
     },
     {
       id: 3,
       type: 'learning',
-      title: '스트레스 관리 고급 과정',
-      description: '직장인을 위한 실전 스트레스 관리 기법',
-      reason: '이전 상담 경험을 바탕으로 한 심화 학습이 가능합니다.',
+      title: '감정 조절 워크숍',
+      description: '감정을 건강하게 표현하고 관리하는 방법을 배우는 실습 프로그램입니다',
+      category: '교육',
       priority: 'medium',
-      estimatedTime: '90분',
-      category: 'stress',
-      tags: ['스트레스관리', '실전기법', '심화과정']
+      matchScore: 82,
+      estimatedTime: '2시간',
+      icon: '🎭'
     },
     {
       id: 4,
       type: 'test',
-      title: '직업 적성 검사',
-      description: 'INTJ 성격 유형에 최적화된 직업 적성 분석',
-      reason: '성격 유형과 관심사를 종합하여 진로를 탐색할 수 있습니다.',
+      title: '스트레스 대처 능력 검사',
+      description: '현재 스트레스 대처 방식을 평가하고 개선 방향을 제시합니다',
+      category: '스트레스',
       priority: 'medium',
-      estimatedTime: '30분',
-      category: 'career',
-      tags: ['진로탐색', '직업적성', 'INTJ특화']
+      matchScore: 79,
+      estimatedTime: '20분',
+      icon: '⚡'
     },
     {
       id: 5,
+      type: 'counseling',
+      title: '대인관계 상담',
+      description: '건강한 인간관계를 형성하고 유지하는 방법을 배우는 상담입니다',
+      category: '관계',
+      priority: 'high',
+      matchScore: 91,
+      estimatedTime: '50분',
+      icon: '🤝'
+    },
+    {
+      id: 6,
       type: 'learning',
-      title: '명상과 마음챙김 기초',
-      description: '과학적으로 검증된 명상 기법 학습',
-      reason: '스트레스 관리와 자기 이해에 도움이 되는 보완적 활동입니다.',
+      title: '마음챙김 명상 프로그램',
+      description: '현재 순간에 집중하여 마음의 평정을 기르는 명상 프로그램입니다',
+      category: '명상',
       priority: 'low',
-      estimatedTime: '60분',
-      category: 'mindfulness',
-      tags: ['명상', '마음챙김', '기초과정']
+      matchScore: 75,
+      estimatedTime: '30분',
+      icon: '🧘'
     }
   ]);
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
 
-  const categories = [
-    { id: 'all', name: '전체', icon: '🎯' },
-    { id: 'personality', name: '성격분석', icon: '🧠' },
-    { id: 'relationship', name: '대인관계', icon: '🤝' },
-    { id: 'stress', name: '스트레스', icon: '😌' },
-    { id: 'career', name: '진로', icon: '💼' },
-    { id: 'mindfulness', name: '마음챙김', icon: '🧘‍♀️' }
-  ];
-
-  const priorities = [
-    { id: 'all', name: '전체', color: 'gray' },
-    { id: 'high', name: '높음', color: 'red' },
-    { id: 'medium', name: '보통', color: 'yellow' },
-    { id: 'low', name: '낮음', color: 'green' }
-  ];
+  const categories = ['all', '성격', '상담', '교육', '스트레스', '관계', '명상'];
+  const priorities = ['all', 'high', 'medium', 'low'];
 
   const filteredRecommendations = recommendations.filter(rec => {
     const categoryMatch = selectedCategory === 'all' || rec.category === selectedCategory;
@@ -134,244 +132,194 @@ export default function RecommendationsPage() {
       <div className="pt-16">
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
           <div className="container mx-auto px-4 py-8">
-        {/* 헤더 */}
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            💡 맞춤형 추천
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            당신의 성격 유형, 관심사, 목표를 분석하여 최적화된 심리케어 서비스를 추천해드립니다.
-            개인화된 경험으로 더 효과적인 성장을 도와드립니다.
-          </p>
-        </motion.div>
+            {/* 헤더 */}
+            <motion.div 
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                🎯 맞춤 추천
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                당신의 성격과 관심사를 바탕으로 최적화된 심리검사와 상담 프로그램을 추천해드립니다
+              </p>
+            </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* 사용자 프로필 */}
-          <motion.div 
-            className="lg:col-span-1"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                👤 내 프로필
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">MBTI 유형</label>
-                  <div className="text-lg font-bold text-blue-600">{userProfile.mbti}</div>
+            {/* 사용자 프로필 */}
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-indigo-100"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">👤 나의 프로필</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-gray-800 mb-2">MBTI</h3>
+                  <p className="text-2xl font-bold text-blue-600">{userProfile.mbti}</p>
                 </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-600">관심 분야</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-gray-800 mb-2">관심사</h3>
+                  <div className="flex flex-wrap gap-1">
                     {userProfile.interests.map((interest, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      <span key={index} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                         {interest}
                       </span>
                     ))}
                   </div>
                 </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-600">목표</label>
-                  <div className="space-y-1 mt-1">
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-gray-800 mb-2">목표</h3>
+                  <div className="flex flex-wrap gap-1">
                     {userProfile.goals.map((goal, index) => (
-                      <div key={index} className="text-sm text-gray-700">• {goal}</div>
+                      <span key={index} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                        {goal}
+                      </span>
                     ))}
                   </div>
                 </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-600">완료한 검사</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-gray-800 mb-2">완료한 검사</h3>
+                  <div className="flex flex-wrap gap-1">
                     {userProfile.completedTests.map((test, index) => (
-                      <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                      <span key={index} className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
                         {test}
                       </span>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* 추천 알고리즘 설명 */}
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-white">
-              <h3 className="text-lg font-bold mb-3">🤖 추천 알고리즘</h3>
-              <div className="text-sm space-y-2">
-                <div>• MBTI 성격 유형 분석</div>
-                <div>• 관심사 및 목표 매칭</div>
-                <div>• 이전 활동 패턴 분석</div>
-                <div>• 전문가 의견 반영</div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* 추천 목록 */}
-          <motion.div 
-            className="lg:col-span-3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
             {/* 필터 */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <motion.div 
+              className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-indigo-100"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">🔍 필터</h3>
               <div className="flex flex-wrap gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.icon} {category.name}
+                      <option key={category} value={category}>
+                        {category === 'all' ? '전체' : category}
                       </option>
                     ))}
                   </select>
                 </div>
-                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">우선순위</label>
                   <select
                     value={selectedPriority}
                     onChange={(e) => setSelectedPriority(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     {priorities.map(priority => (
-                      <option key={priority.id} value={priority.id}>
-                        {priority.name}
+                      <option key={priority} value={priority}>
+                        {priority === 'all' ? '전체' : priority === 'high' ? '높음' : priority === 'medium' ? '보통' : '낮음'}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* 추천 목록 */}
-            <div className="space-y-4">
-              {filteredRecommendations.map((recommendation, index) => (
-                <motion.div
-                  key={recommendation.id}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 * index }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{getTypeIcon(recommendation.type)}</span>
-                          <span className="text-sm text-gray-500">{getTypeName(recommendation.type)}</span>
-                        </div>
+            <motion.div 
+              className="space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                🎯 추천 결과 ({filteredRecommendations.length}개)
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRecommendations.map((rec, index) => (
+                  <motion.div
+                    key={rec.id}
+                    className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-3xl">{rec.icon}</div>
+                      <div className="flex items-center space-x-2">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          recommendation.priority === 'high' ? 'bg-red-100 text-red-800' :
-                          recommendation.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
+                          rec.priority === 'high' ? 'bg-red-100 text-red-700' :
+                          rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
                         }`}>
-                          {recommendation.priority === 'high' ? '높음' :
-                           recommendation.priority === 'medium' ? '보통' : '낮음'} 우선순위
+                          {rec.priority === 'high' ? '높음' : rec.priority === 'medium' ? '보통' : '낮음'}
                         </span>
-                      </div>
-                      
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
-                        {recommendation.title}
-                      </h3>
-                      
-                      <p className="text-gray-600 mb-3">
-                        {recommendation.description}
-                      </p>
-                      
-                      <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                        <div className="text-sm font-medium text-blue-900 mb-1">
-                          💡 추천 이유
-                        </div>
-                        <div className="text-sm text-blue-700">
-                          {recommendation.reason}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                        <span>⏱️ {recommendation.estimatedTime}</span>
-                        <span>📊 {recommendation.category}</span>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {recommendation.tags.map((tag, tagIndex) => (
-                          <span key={tagIndex} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                            {tag}
-                          </span>
-                        ))}
+                        <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">
+                          {getTypeName(rec.type)}
+                        </span>
                       </div>
                     </div>
                     
-                    <div className="ml-6 flex flex-col gap-2">
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{rec.title}</h3>
+                    <p className="text-gray-600 mb-4 leading-relaxed">{rec.description}</p>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <span>⏱️ {rec.estimatedTime}</span>
+                      <span>📊 {rec.category}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">매칭도</span>
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-indigo-500 to-blue-500 h-2 rounded-full"
+                            style={{ width: `${rec.matchScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-semibold text-indigo-600">{rec.matchScore}%</span>
+                      </div>
+                      <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-all duration-300">
                         시작하기
                       </button>
-                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                        자세히 보기
-                      </button>
-                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                        나중에
-                      </button>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
 
-            {/* 추천 통계 */}
+            {/* 매칭 정확도 정보 */}
             <motion.div 
-              className="mt-8 bg-white rounded-xl shadow-lg p-6"
+              className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-6 mt-8 border border-indigo-200"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                📊 추천 통계
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">
-                    {recommendations.length}
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">🎯 매칭 정확도</h3>
+                <p className="text-gray-600 mb-4">
+                  AI가 당신의 프로필과 관심사를 분석하여 최적의 추천을 제공합니다
+                </p>
+                <div className="flex items-center justify-center space-x-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-indigo-600">95%</div>
+                    <div className="text-sm text-gray-600">매칭 정확도</div>
                   </div>
-                  <div className="text-sm text-gray-600">총 추천</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600 mb-1">
-                    {recommendations.filter(r => r.priority === 'high').length}
-                  </div>
-                  <div className="text-sm text-gray-600">높은 우선순위</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">
-                    {new Set(recommendations.map(r => r.category)).size}
-                  </div>
-                  <div className="text-sm text-gray-600">카테고리</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600 mb-1">
-                    95%
-                  </div>
-                  <div className="text-sm text-gray-600">매칭 정확도</div>
                 </div>
               </div>
             </motion.div>
-          </motion.div>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}
