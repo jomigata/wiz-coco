@@ -149,23 +149,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
                   </div>
 
-                  {/* 소분류 메뉴 - 항상 펼쳐진 상태, 선택된 항목 강력한 강조 */}
+                  {/* 소분류 메뉴 - 항상 펼쳐진 상태, 고급스러운 선택 효과 */}
                   {category.subItems.length > 0 && (
                     <div className="space-y-1 pb-2">
                       {category.subItems.map((subItem) => (
                         <button
                           key={subItem.id}
                           onClick={() => handleMenuClick(subItem.id, subItem.href)}
-                          className={`w-full flex items-center px-6 py-3 text-sm transition-all duration-300 rounded-lg ml-4 transform hover:scale-[1.02] ${
+                          className={`w-full flex items-center px-6 py-3 text-sm transition-all duration-300 rounded-lg ml-4 transform hover:scale-[1.02] relative group ${
                             activeSection === subItem.id 
-                              ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-xl shadow-indigo-500/40 font-bold border-l-4 border-white' 
-                              : 'text-gray-300 hover:bg-indigo-600/20 hover:text-white hover:shadow-md'
+                              ? 'bg-gradient-to-r from-slate-800/90 to-slate-700/90 text-white shadow-lg shadow-slate-500/20 font-semibold border-l-4 border-cyan-400' 
+                              : 'text-gray-300 hover:bg-slate-700/30 hover:text-white hover:shadow-md'
                           }`}
                           aria-current={activeSection === subItem.id ? 'page' : undefined}
                         >
+                          {/* 좌우측 밝은 선 효과 (마우스 오버시) */}
+                          <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          
+                          {/* 선택된 항목의 좌우측 선 (항상 표시) */}
+                          {activeSection === subItem.id && (
+                            <>
+                              <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500"></div>
+                              <div className="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500"></div>
+                            </>
+                          )}
+                          
                           <svg 
-                            className={`mr-3 h-4 w-4 flex-shrink-0 ${
-                              activeSection === subItem.id ? 'text-white' : 'text-gray-400'
+                            className={`mr-3 h-4 w-4 flex-shrink-0 relative z-10 ${
+                              activeSection === subItem.id ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'
                             }`}
                             xmlns="http://www.w3.org/2000/svg" 
                             fill="none" 
@@ -175,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
                           </svg>
-                          <span className="truncate">{subItem.label}</span>
+                          <span className="truncate relative z-10">{subItem.label}</span>
                         </button>
                       ))}
                     </div>
