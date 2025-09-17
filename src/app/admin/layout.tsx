@@ -110,10 +110,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
       
       {/* 전체 레이아웃 - 네비게이션 바 아래 전체 화면 사용 */}
-      <div className="flex h-screen pt-20">
+      <div className="flex h-screen pt-16">
         {/* 좌측 사이드바 - 고정, z-index 40 */}
         <aside 
-          className="w-64 bg-gray-800/40 backdrop-blur-sm border-r border-white/10 flex-shrink-0 fixed left-0 top-20 h-[calc(100vh-5rem)] overflow-y-auto z-40 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+          className="w-64 bg-gray-800/40 backdrop-blur-sm border-r border-white/10 flex-shrink-0 fixed left-0 top-16 h-[calc(100vh-4rem)] overflow-y-auto z-40 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
           role="navigation"
           aria-label="관리자 메뉴"
         >

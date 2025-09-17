@@ -273,13 +273,13 @@ export default function Navigation() {
           animation: fadeIn 0.2s ease-out;
         }
       `}</style>
-      <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white py-4 shadow-sm">
-        <div className="container max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
+        <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
               심
             </div>
-            <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300">
+            <span className="font-bold text-3xl tracking-tight text-white transition-colors duration-300">
               심리케어
             </span>
           </Link>
@@ -986,7 +986,7 @@ export default function Navigation() {
                      <div className="relative">
                        <Link
                          href="/mypage"
-                         className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                         className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                            activeItem === "/mypage" || activeItem.startsWith("/mypage/")
                              ? "text-white bg-blue-600"
                              : "text-gray-300 hover:text-white hover:bg-blue-800/50"
@@ -995,7 +995,7 @@ export default function Navigation() {
                          onMouseEnter={() => setActiveMenu('user')}
                          onMouseLeave={() => setActiveMenu(null)}
                        >
-                                                   👤 마이페이지
+                         👤 마이페이지
                          <svg
                            xmlns="http://www.w3.org/2000/svg"
                            viewBox="0 0 20 20"
