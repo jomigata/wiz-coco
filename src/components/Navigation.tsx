@@ -275,10 +275,23 @@ export default function Navigation() {
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:shadow-blue-500/30 transition-all duration-300 transform group-hover:scale-105">
-              심
-            </div>
+          {/* 홈 메뉴 - 제일 왼쪽으로 이동 */}
+          <div className="hidden md:flex items-center">
+            <Link
+              href="/"
+              className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 whitespace-nowrap ${
+                activeItem === "/"
+                  ? "text-white bg-blue-600"
+                  : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+              }`}
+              onClick={(e) => handleNavLinkClick("/", e)}
+            >
+              🏠 홈
+            </Link>
+          </div>
+
+          {/* 브랜드 텍스트 - 중앙에 넓은 공백과 함께 */}
+          <div className="flex-1 flex justify-center px-8">
             <div className="flex flex-col items-center">
               <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight">
                 심리케어
@@ -287,23 +300,11 @@ export default function Navigation() {
                 Psychological Care
               </span>
             </div>
-          </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
             <div className="flex space-x-1">
-              {/* 로그인 전/후 공통 메뉴 */}
-              <Link
-                href="/"
-                className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 whitespace-nowrap ${
-                  activeItem === "/"
-                    ? "text-white bg-blue-600"
-                    : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                }`}
-                onClick={(e) => handleNavLinkClick("/", e)}
-              >
-                🏠 홈
-              </Link>
               
               {/* 심리검사 드롭다운 메뉴 */}
               <div className="relative">
