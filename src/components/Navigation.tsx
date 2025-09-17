@@ -290,7 +290,7 @@ export default function Navigation() {
               {/* 로그인 전/후 공통 메뉴 */}
               <Link
                 href="/"
-                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
+                className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 whitespace-nowrap ${
                   activeItem === "/"
                     ? "text-white bg-blue-600"
                     : "text-gray-300 hover:text-white hover:bg-blue-800/50"
@@ -304,7 +304,7 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/tests"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                     activeItem === "/tests" || activeItem.startsWith("/tests/")
                       ? "text-white bg-blue-600"
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
@@ -408,7 +408,7 @@ export default function Navigation() {
                <div className="relative">
                  <Link
                    href="/counseling"
-                   className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                   className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                      activeItem === "/counseling" || activeItem.startsWith("/counseling/")
                        ? "text-white bg-blue-600"
                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
@@ -513,7 +513,7 @@ export default function Navigation() {
                  <div className="relative">
                    <Link
                      href="/counselor"
-                     className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                     className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                        activeItem === "/counselor" || activeItem.startsWith("/counselor/")
                          ? "text-white bg-green-600"
                          : "text-gray-300 hover:text-white hover:bg-green-800/50"
@@ -600,7 +600,7 @@ export default function Navigation() {
                <div className="relative">
                                    <Link
                     href="/ai-mind-assistant"
-                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                    className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                       activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
                         ? "text-white bg-blue-600"
                         : "text-gray-300 hover:text-white hover:bg-blue-800/50"
@@ -790,7 +790,7 @@ export default function Navigation() {
                <div className="relative">
                                    <Link
                     href="/features"
-                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                    className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                       activeItem === "/features" || activeItem.startsWith("/features/")
                         ? "text-white bg-blue-600"
                         : "text-gray-300 hover:text-white hover:bg-blue-800/50"
@@ -899,7 +899,7 @@ export default function Navigation() {
                        <div className="relative">
                          <Link
                            href="/admin"
-                           className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                           className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                              activeItem === "/admin" || activeItem.startsWith("/admin/")
                                ? "text-white bg-red-600"
                                : "text-gray-300 hover:text-white hover:bg-red-800/50"

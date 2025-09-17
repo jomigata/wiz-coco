@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -102,9 +103,16 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex">
-      {/* 사이드바 */}
-      <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl">
+    <div className="min-h-screen bg-gray-900">
+      {/* 상단 네비게이션 */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navigation />
+      </div>
+      
+      {/* 메인 콘텐츠 영역 */}
+      <div className="flex pt-16">
+        {/* 사이드바 */}
+        <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl">
         <div className="p-6">
           {/* 로고 및 제목 */}
           <div className="flex items-center space-x-3 mb-8">
@@ -223,18 +231,25 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       {/* 메인 콘텐츠 영역 */}
       <div className="flex-1 flex flex-col">
         {/* 상단 헤더 */}
-        <header className="bg-white/5 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4">
+        <header className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 shadow-lg">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">{pageTitle}</h1>
-              <p className="text-gray-400 text-sm mt-1">전문 상담 관리 시스템</p>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">{pageTitle}</h1>
+                <p className="text-purple-100 text-sm mt-1">전문 상담 관리 시스템</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm text-gray-300">상담사</p>
+                <p className="text-sm text-purple-100">상담사</p>
                 <p className="text-white font-medium">김상담</p>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold">김</span>
               </div>
             </div>
