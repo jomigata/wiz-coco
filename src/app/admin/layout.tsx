@@ -226,7 +226,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ))}
             </nav>
           </div>
-        </aside>
+        </div>
         
         {/* 메인 콘텐츠 영역 */}
         <div className="flex-1 flex flex-col">
