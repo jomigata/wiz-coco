@@ -276,12 +276,9 @@ export default function Navigation() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           {/* 브랜드 텍스트 - 좌측 끝으로 이동 및 홈페이지 링크 연결 */}
-          <Link href="/" className="flex flex-col items-center group" onClick={(e) => handleNavLinkClick("/", e)}>
-            <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300">
+          <Link href="/" className="flex items-center group" onClick={(e) => handleNavLinkClick("/", e)}>
+            <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
               AI 심리케어
-            </span>
-            <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
-              Psychological Care
             </span>
           </Link>
 
@@ -497,93 +494,6 @@ export default function Navigation() {
                  )}
                </div>
 
-               {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
-               {shouldShowCounselorMenu(userEmail) && (
-                 <div className="relative">
-                   <Link
-                     href="/counselor"
-                     className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                       activeItem === "/counselor" || activeItem.startsWith("/counselor/")
-                         ? "text-white bg-green-600"
-                         : "text-gray-300 hover:text-white hover:bg-green-800/50"
-                     }`}
-                     onClick={(e) => handleNavLinkClick("/counselor", e)}
-                     onMouseEnter={() => setActiveMenu('counselor')}
-                     onMouseLeave={() => setActiveMenu(null)}
-                   >
-                     👨‍⚕️ 상담사
-                     <svg
-                       xmlns="http://www.w3.org/2000/svg"
-                       viewBox="0 0 20 20"
-                       fill="currentColor"
-                       className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorMenuOpen ? "rotate-180" : ""}`}
-                     >
-                       <path
-                         fillRule="evenodd"
-                         d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                         clipRule="evenodd"
-                       />
-                     </svg>
-                   </Link>
-
-                   {/* 상담사 메가 메뉴 */}
-                   {isCounselorMenuOpen && (
-                     <div
-                       data-dropdown-menu="counselor"
-                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                       onMouseEnter={() => setActiveMenu('counselor')}
-                       onMouseLeave={() => setActiveMenu(null)}
-                     >
-                       <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
-                         {counselorMenuItems.map((category) => (
-                           <div key={category.category} className="mb-4 last:mb-0">
-                             <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
-                               {category.category}
-                             </div>
-                             <div className="space-y-1">
-                               {category.items.map((item) => (
-                                 <Link
-                                   key={item.name}
-                                   href={item.href}
-                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                   onClick={() => setActiveMenu(null)}
-                                 >
-                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                     {item.icon || '👨‍⚕️'}
-                                   </div>
-                                   <div className="flex-1 min-w-0">
-                                     <div className="flex items-center gap-2">
-                                       <span className="font-medium text-white truncate">{item.name}</span>
-                                       {'badge' in item && (item as any).badge && (
-                                         <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                           (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
-                                           (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                           'bg-orange-500 text-white'
-                                         }`}>
-                                           {(item as any).badge}
-                                         </span>
-                                       )}
-                                     </div>
-                                     <div className="text-xs text-green-300 truncate">{item.description}</div>
-                                   </div>
-                                   <svg 
-                                     className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24"
-                                   >
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                   </svg>
-                                 </Link>
-                               ))}
-                             </div>
-                           </div>
-                         ))}
-                       </div>
-                     </div>
-                   )}
-                 </div>
-               )}
                
                {/* AI 마음 비서 드롭다운 메뉴 */}
                <div className="relative">
@@ -883,6 +793,94 @@ export default function Navigation() {
                <div className="flex items-center space-x-2">
                  {isLoggedIn ? (
                    <>
+                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
+                     {shouldShowCounselorMenu(userEmail) && (
+                       <div className="relative">
+                         <Link
+                           href="/counselor"
+                           className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                             activeItem === "/counselor" || activeItem.startsWith("/counselor/")
+                               ? "text-white bg-green-600"
+                               : "text-gray-300 hover:text-white hover:bg-green-800/50"
+                           }`}
+                           onClick={(e) => handleNavLinkClick("/counselor", e)}
+                           onMouseEnter={() => setActiveMenu('counselor')}
+                           onMouseLeave={() => setActiveMenu(null)}
+                         >
+                           👨‍⚕️ 상담사
+                           <svg
+                             xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 20 20"
+                             fill="currentColor"
+                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorMenuOpen ? "rotate-180" : ""}`}
+                           >
+                             <path
+                               fillRule="evenodd"
+                               d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                               clipRule="evenodd"
+                             />
+                           </svg>
+                         </Link>
+
+                         {/* 상담사 메가 메뉴 */}
+                         {isCounselorMenuOpen && (
+                           <div
+                             data-dropdown-menu="counselor"
+                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             onMouseEnter={() => setActiveMenu('counselor')}
+                             onMouseLeave={() => setActiveMenu(null)}
+                           >
+                             <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                               {counselorMenuItems.map((category) => (
+                                 <div key={category.category} className="mb-4 last:mb-0">
+                                   <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
+                                     {category.category}
+                                   </div>
+                                   <div className="space-y-1">
+                                     {category.items.map((item) => (
+                                       <Link
+                                         key={item.name}
+                                         href={item.href}
+                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                         onClick={() => setActiveMenu(null)}
+                                       >
+                                         <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                           {item.icon || '👨‍⚕️'}
+                                         </div>
+                                         <div className="flex-1 min-w-0">
+                                           <div className="flex items-center gap-2">
+                                             <span className="font-medium text-white truncate">{item.name}</span>
+                                             {'badge' in item && (item as any).badge && (
+                                               <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                                 (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
+                                                 (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                                 'bg-orange-500 text-white'
+                                               }`}>
+                                                 {(item as any).badge}
+                                               </span>
+                                             )}
+                                           </div>
+                                           <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                         </div>
+                                         <svg 
+                                           className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                           fill="none" 
+                                           stroke="currentColor" 
+                                           viewBox="0 0 24 24"
+                                         >
+                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                         </svg>
+                                       </Link>
+                                     ))}
+                                   </div>
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     )}
+
                      {/* 관리자 메뉴 - 관리자만 표시 */}
                      {shouldShowAdminMenu(userEmail) && (
                        <div className="relative">
