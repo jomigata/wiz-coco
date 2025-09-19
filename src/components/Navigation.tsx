@@ -276,9 +276,12 @@ export default function Navigation() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           {/* 브랜드 텍스트 - 좌측 끝으로 이동 및 홈페이지 링크 연결 */}
-          <Link href="/" className="flex items-center group" onClick={(e) => handleNavLinkClick("/", e)}>
+          <Link href="/" className="flex flex-col items-center group" onClick={(e) => handleNavLinkClick("/", e)}>
             <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
               AI 심리케어
+            </span>
+            <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
+              Psychological Care
             </span>
           </Link>
 

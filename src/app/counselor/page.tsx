@@ -122,9 +122,9 @@ export default function CounselorDashboard() {
               </div>
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">👥</span>
-              </div>
-            </div>
           </div>
+            </div>
+        </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
             <div className="flex items-center justify-between">
@@ -148,9 +148,9 @@ export default function CounselorDashboard() {
               </div>
               <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">📝</span>
-              </div>
-            </div>
-          </div>
+        </div>
+      </div>
+    </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
             <div className="flex items-center justify-between">
@@ -225,8 +225,8 @@ export default function CounselorDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-
+      </div>
+      
           {/* 오늘의 상담 일정 */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
             <h3 className="text-xl font-semibold text-white mb-4">오늘의 상담 일정</h3>
@@ -236,17 +236,17 @@ export default function CounselorDashboard() {
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center">
                       <span className="text-cyan-400 text-sm font-bold">{session.time}</span>
-                    </div>
-                    <div>
+            </div>
+            <div>
                       <p className="text-white font-medium">{session.client}</p>
                       <p className="text-gray-400 text-sm">{session.type}</p>
-                    </div>
-                  </div>
+            </div>
+          </div>
                   <span className="text-cyan-400 text-sm font-medium">{session.status}</span>
                 </div>
               ))}
             </div>
-          </div>
+        </div>
 
           {/* 상담 통계 */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
@@ -273,9 +273,9 @@ export default function CounselorDashboard() {
                 <span className="text-purple-400 font-semibold">18건</span>
               </div>
             </div>
+            </div>
+            </div>
           </div>
-        </div>
       </div>
-    </div>
   );
 }
