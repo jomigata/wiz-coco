@@ -8,7 +8,7 @@ interface UseAutoScrollOptions {
 }
 
 export const useAutoScroll = (options: UseAutoScrollOptions = {}) => {
-  const { scrollSpeed = 5, scrollZoneHeight = 150, maxSpeed = 10, minSpeed = 1.5 } = options;
+  const { scrollSpeed = 5, scrollZoneHeight = 150, maxSpeed = 2, minSpeed = 0.1 } = options;
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -24,11 +24,11 @@ export const useAutoScroll = (options: UseAutoScrollOptions = {}) => {
         // 가속도 계산: 상단/하단으로 갈수록 빠르게
         let speedMultiplier = 1;
         if (direction === 'up') {
-          // 상단 150px 영역에서 0px에 가까울수록 빠르게 (1.5x ~ 2x)
+          // 상단 150px 영역에서 0px에 가까울수록 빠르게 (0.1x ~ 2x)
           const distanceFromTop = mouseY;
           speedMultiplier = minSpeed + (maxSpeed - minSpeed) * (1 - distanceFromTop / scrollZoneHeight);
         } else {
-          // 하단 150px 영역에서 0px에 가까울수록 빠르게 (1.5x ~ 2x)
+          // 하단 150px 영역에서 0px에 가까울수록 빠르게 (0.1x ~ 2x)
           const distanceFromBottom = containerHeight - mouseY;
           speedMultiplier = minSpeed + (maxSpeed - minSpeed) * (1 - distanceFromBottom / scrollZoneHeight);
         }

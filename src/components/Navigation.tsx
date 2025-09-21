@@ -438,13 +438,13 @@ export default function Navigation() {
                    {isCounselingDropdownOpen && (
                      <div
                        data-dropdown-menu="counseling"
-                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                       className="absolute left-0 mt-0 pt-4 pb-8 w-[32rem] min-w-[28rem] max-w-[36rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                        onMouseEnter={() => setActiveMenu('counseling')}
                        onMouseLeave={() => setActiveMenu(null)}
                      >
                       <div 
                         ref={counselingScroll.scrollRef}
-                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        className="px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         onMouseMove={counselingScroll.handleMouseMove}
                         onMouseLeave={counselingScroll.handleMouseLeave}
                        onWheel={(e) => {
