@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
+import { testSubMenuItems } from '@/data/psychologyTestMenu';
 
 export default function Navigation() {
   const router = useRouter();
@@ -123,25 +124,7 @@ export default function Navigation() {
     }
   };
 
-  // 메뉴 데이터
-  const testSubMenuItems = [
-    { 
-      category: "기본 검사",
-      items: [
-        { name: "MBTI 검사", href: "/tests", description: "16가지 성격 유형 검사", badge: "인기", icon: "🧠" },
-        { name: "이고-오케이", href: "/tests/ego-ok", description: "자아 성숙도 검사", badge: "신규", icon: "🔍" },
-        { name: "에니어그램", href: "/tests/enneagram", description: "9가지 성격 유형 분석", icon: "🌟" }
-      ]
-    },
-    { 
-      category: "고급 검사",
-      items: [
-        { name: "MBTI Pro", href: "/tests/mbti-pro", description: "고급 MBTI 분석", badge: "추천", icon: "🎯" },
-        { name: "그룹 MBTI", href: "/tests/group_mbti", description: "팀 호환성 검사", icon: "👥" },
-        { name: "직업 적성", href: "/tests/career", description: "직업 적합성 검사", icon: "💼" }
-      ]
-    }
-  ];
+  // 메뉴 데이터는 별도 파일에서 import
 
   const counselingMenuItems = [
     {
@@ -321,12 +304,12 @@ export default function Navigation() {
                  {isTestDropdownOpen && (
                    <div
                      data-dropdown-menu="test"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                     className="absolute left-0 mt-0 pt-4 pb-8 w-[32rem] min-w-[28rem] max-w-[36rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                      onMouseEnter={() => setActiveMenu('test')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
                     <div 
-                      className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                      className="px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                       onWheel={(e) => {
                         e.stopPropagation();
                         const target = e.currentTarget;
@@ -345,45 +328,63 @@ export default function Navigation() {
                       }}
                     >
                       {testSubMenuItems.map((category) => (
-                        <div key={category.category} className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">
-                            {category.category}
+                        <div key={category.category} className="mb-6 last:mb-0">
+                          {/* 대분류 헤더 */}
+                          <div className="flex items-center gap-2 px-2 py-2 text-sm font-bold text-blue-200 uppercase tracking-wide mb-3 border-b border-blue-500/30">
+                            <span className="text-lg">{category.icon}</span>
+                            <span>{category.category}</span>
                           </div>
-                          <div className="space-y-1">
-                            {category.items.map((item) => (
-                              <Link
-                                key={item.name}
-                                href={item.href}
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                onClick={() => setActiveMenu(null)}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  {item.icon || '📊'}
+                          
+                          {/* 중분류 및 소분류 */}
+                          <div className="space-y-4">
+                            {category.subcategories.map((subcategory) => (
+                              <div key={subcategory.name} className="ml-2">
+                                {/* 중분류 헤더 */}
+                                <div className="flex items-center gap-2 px-2 py-1 text-xs font-semibold text-purple-300 mb-2">
+                                  <span className="text-sm">{subcategory.icon}</span>
+                                  <span>{subcategory.name}</span>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-white truncate">{item.name}</span>
-                                    {'badge' in item && (item as any).badge && (
-                                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                        (item as any).badge === '인기' ? 'bg-red-500 text-white' :
-                                        (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                        'bg-orange-500 text-white'
-                                      }`}>
-                                        {(item as any).badge}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-blue-300 truncate">{item.description}</div>
+                                
+                                {/* 소분류 아이템들 */}
+                                <div className="space-y-1 ml-4">
+                                  {subcategory.items.map((item) => (
+                                    <Link
+                                      key={item.name}
+                                      href={item.href}
+                                      className={`group flex items-center gap-3 px-3 py-2.5 bg-gradient-to-r from-blue-500/15 to-indigo-500/15 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                      onClick={() => setActiveMenu(null)}
+                                    >
+                                      <div className="text-lg group-hover:scale-110 transition-transform duration-300">
+                                        {item.icon}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-medium text-white truncate">{item.name}</span>
+                                          {item.badge && (
+                                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                              item.badge === '인기' ? 'bg-red-500 text-white' :
+                                              item.badge === '신규' ? 'bg-green-500 text-white' :
+                                              item.badge === '추천' ? 'bg-orange-500 text-white' :
+                                              'bg-blue-500 text-white'
+                                            }`}>
+                                              {item.badge}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-blue-300 truncate">{item.description}</div>
+                                      </div>
+                                      <svg 
+                                        className="w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    </Link>
+                                  ))}
                                 </div>
-                                <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </Link>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -1260,38 +1261,58 @@ export default function Navigation() {
              <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
 
                {/* 심리검사 */}
-               <div className="space-y-2">
-                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide">
+               <div className="space-y-3">
+                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
                    🧠 심리검사
                  </div>
                  {testSubMenuItems.map((category) => (
-                   <div key={category.category} className="ml-4 space-y-1">
-                     <div className="px-2 py-1 text-xs font-medium text-blue-400 uppercase tracking-wide">
-                       {category.category}
+                   <div key={category.category} className="space-y-2">
+                     {/* 대분류 */}
+                     <div className="flex items-center gap-2 px-2 py-1 text-xs font-bold text-blue-200 uppercase tracking-wide bg-blue-500/20 rounded-lg">
+                       <span className="text-sm">{category.icon}</span>
+                       <span>{category.category}</span>
                      </div>
-                     {category.items.map((item) => (
-                       <Link
-                         key={item.name}
-                         href={item.href}
-                         className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                         onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                         <div className="flex items-center gap-2">
-                           <span>{item.icon}</span>
-                           <span>{item.name}</span>
-                           {'badge' in item && (item as any).badge && (
-                             <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                               (item as any).badge === '인기' ? 'bg-red-500 text-white' :
-                               (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                               'bg-orange-500 text-white'
-                             }`}>
-                               {(item as any).badge}
-                             </span>
-                           )}
+                     
+                     {/* 중분류 및 소분류 */}
+                     <div className="ml-4 space-y-2">
+                       {category.subcategories.map((subcategory) => (
+                         <div key={subcategory.name} className="space-y-1">
+                           {/* 중분류 */}
+                           <div className="flex items-center gap-2 px-2 py-1 text-xs font-semibold text-purple-300 bg-purple-500/20 rounded">
+                             <span className="text-sm">{subcategory.icon}</span>
+                             <span>{subcategory.name}</span>
+                           </div>
+                           
+                           {/* 소분류 아이템들 */}
+                           <div className="ml-4 space-y-1">
+                             {subcategory.items.map((item) => (
+                               <Link
+                                 key={item.name}
+                                 href={item.href}
+                                 className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                                 onClick={() => setIsMobileMenuOpen(false)}
+                               >
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-sm">{item.icon}</span>
+                                   <span className="font-medium">{item.name}</span>
+                                   {item.badge && (
+                                     <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                       item.badge === '인기' ? 'bg-red-500 text-white' :
+                                       item.badge === '신규' ? 'bg-green-500 text-white' :
+                                       item.badge === '추천' ? 'bg-orange-500 text-white' :
+                                       'bg-blue-500 text-white'
+                                     }`}>
+                                       {item.badge}
+                                     </span>
+                                   )}
+                                 </div>
+                                 <div className="text-xs text-blue-300 ml-6 mt-1">{item.description}</div>
+                               </Link>
+                             ))}
+                           </div>
                          </div>
-                         <div className="text-xs text-blue-300 ml-6 mt-1">{item.description}</div>
-                       </Link>
-                     ))}
+                       ))}
+                     </div>
                    </div>
                  ))}
                </div>
