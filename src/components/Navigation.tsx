@@ -317,6 +317,16 @@ export default function Navigation() {
                      onMouseEnter={() => setActiveMenu('test')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
+                    {/* 상단 스크롤 가이드 */}
+                    {testScroll.showTopGuide && (
+                      <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
+                    )}
+                    
+                    {/* 하단 스크롤 가이드 */}
+                    {testScroll.showBottomGuide && (
+                      <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-blue-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
+                    )}
+                    
                     <div 
                       ref={testScroll.scrollRef}
                       className="px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
@@ -438,13 +448,23 @@ export default function Navigation() {
                    {isCounselingDropdownOpen && (
                      <div
                        data-dropdown-menu="counseling"
-                       className="absolute left-0 mt-0 pt-4 pb-8 w-[32rem] min-w-[28rem] max-w-[36rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                        onMouseEnter={() => setActiveMenu('counseling')}
                        onMouseLeave={() => setActiveMenu(null)}
                      >
+                      {/* 상단 스크롤 가이드 */}
+                      {counselingScroll.showTopGuide && (
+                        <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
+                      )}
+                      
+                      {/* 하단 스크롤 가이드 */}
+                      {counselingScroll.showBottomGuide && (
+                        <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-blue-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
+                      )}
+                      
                       <div 
                         ref={counselingScroll.scrollRef}
-                        className="px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         onMouseMove={counselingScroll.handleMouseMove}
                         onMouseLeave={counselingScroll.handleMouseLeave}
                        onWheel={(e) => {
@@ -613,6 +633,16 @@ export default function Navigation() {
                          </div>
                        </div>
 
+                       {/* 상단 스크롤 가이드 */}
+                       {aiAssistantScroll.showTopGuide && (
+                         <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
+                       )}
+                       
+                       {/* 하단 스크롤 가이드 */}
+                       {aiAssistantScroll.showBottomGuide && (
+                         <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-blue-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
+                       )}
+                       
                        {/* 스크롤 가능한 콘텐츠 */}
                        <div 
                          ref={aiAssistantScroll.scrollRef}
@@ -722,6 +752,16 @@ export default function Navigation() {
                       onMouseEnter={() => setActiveMenu('additional')}
                       onMouseLeave={() => setActiveMenu(null)}
                     >
+                     {/* 상단 스크롤 가이드 */}
+                     {userMenuScroll.showTopGuide && (
+                       <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-green-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
+                     )}
+                     
+                     {/* 하단 스크롤 가이드 */}
+                     {userMenuScroll.showBottomGuide && (
+                       <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-green-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
+                     )}
+                     
                      <div 
                        ref={userMenuScroll.scrollRef}
                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
@@ -834,6 +874,16 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
+                             {/* 상단 스크롤 가이드 */}
+                             {counselorScroll.showTopGuide && (
+                               <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-green-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
+                             )}
+                             
+                             {/* 하단 스크롤 가이드 */}
+                             {counselorScroll.showBottomGuide && (
+                               <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-green-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
+                             )}
+                             
                              <div 
                                ref={counselorScroll.scrollRef}
                                className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
@@ -927,6 +977,16 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
+                             {/* 상단 스크롤 가이드 */}
+                             {adminScroll.showTopGuide && (
+                               <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-red-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
+                             )}
+                             
+                             {/* 하단 스크롤 가이드 */}
+                             {adminScroll.showBottomGuide && (
+                               <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-red-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
+                             )}
+                             
                              <div 
                                ref={adminScroll.scrollRef}
                                className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900"

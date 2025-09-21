@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 
 interface UseAutoScrollOptions {
   scrollSpeed?: number;
@@ -11,6 +11,8 @@ export const useAutoScroll = (options: UseAutoScrollOptions = {}) => {
   const { scrollSpeed = 5, scrollZoneHeight = 150, maxSpeed = 2, minSpeed = 0.1 } = options;
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showTopGuide, setShowTopGuide] = useState(false);
+  const [showBottomGuide, setShowBottomGuide] = useState(false);
 
   const startScroll = useCallback((direction: 'up' | 'down', mouseY: number, containerHeight: number) => {
     if (scrollIntervalRef.current) {
@@ -59,26 +61,36 @@ export const useAutoScroll = (options: UseAutoScrollOptions = {}) => {
 
     // 상단 150px 영역에서 위로 스크롤 (가속도 적용)
     if (mouseY <= scrollZoneHeight) {
+      setShowTopGuide(true);
+      setShowBottomGuide(false);
       startScroll('up', mouseY, containerHeight);
     }
     // 하단 150px 영역에서 아래로 스크롤 (가속도 적용)
     else if (mouseY >= containerHeight - scrollZoneHeight) {
+      setShowTopGuide(false);
+      setShowBottomGuide(true);
       startScroll('down', mouseY, containerHeight);
     }
     // 중간 영역에서는 스크롤 중지
     else {
+      setShowTopGuide(false);
+      setShowBottomGuide(false);
       stopScroll();
     }
   }, [startScroll, stopScroll, scrollZoneHeight]);
 
   const handleMouseLeave = useCallback(() => {
     stopScroll();
+    setShowTopGuide(false);
+    setShowBottomGuide(false);
   }, [stopScroll]);
 
   return {
     scrollRef,
     handleMouseMove,
     handleMouseLeave,
-    stopScroll
+    stopScroll,
+    showTopGuide,
+    showBottomGuide
   };
 };
