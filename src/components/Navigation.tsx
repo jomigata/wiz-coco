@@ -317,19 +317,73 @@ export default function Navigation() {
                      onMouseEnter={() => setActiveMenu('test')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
-                    {/* 상단 스크롤 가이드 */}
-                    {testScroll.showTopGuide && (
-                      <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
-                    )}
-                    
-                    {/* 하단 스크롤 가이드 */}
-                    {testScroll.showBottomGuide && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-blue-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
-                    )}
-                    
+                    <div className="relative">
+                       {/* 상단 화살표 가이드 */}
+                       <div
+                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                         ref={(el) => {
+                           if (el) {
+                             const checkScroll = () => {
+                               const scrollableDiv = el.parentElement?.querySelector('.test-scrollable') as HTMLElement;
+                               if (scrollableDiv) {
+                                 const shouldShow = scrollableDiv.scrollTop > 0;
+                                 el.style.opacity = shouldShow ? '1' : '0';
+                               }
+                             };
+                             
+                             const scrollableDiv = el.parentElement?.querySelector('.test-scrollable') as HTMLElement;
+                             if (scrollableDiv) {
+                               scrollableDiv.addEventListener('scroll', checkScroll);
+                               checkScroll();
+                               
+                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                             }
+                           }
+                         }}
+                       >
+                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                           </svg>
+                         </div>
+                       </div>
+
+                       {/* 하단 화살표 가이드 */}
+                       <div
+                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                         ref={(el) => {
+                           if (el) {
+                             const checkScroll = () => {
+                               const scrollableDiv = el.parentElement?.querySelector('.test-scrollable') as HTMLElement;
+                               if (scrollableDiv) {
+                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
+                                 el.style.opacity = shouldShow ? '1' : '0';
+                               }
+                             };
+                             
+                             const scrollableDiv = el.parentElement?.querySelector('.test-scrollable') as HTMLElement;
+                             if (scrollableDiv) {
+                               scrollableDiv.addEventListener('scroll', checkScroll);
+                               checkScroll();
+                               
+                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                             }
+                           }
+                         }}
+                       >
+                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </div>
+                       </div>
+
+                       {/* 스크롤 가능한 콘텐츠 */}
                     <div 
                       ref={testScroll.scrollRef}
-                      className="px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                      className="test-scrollable px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                       onMouseMove={testScroll.handleMouseMove}
                       onMouseLeave={testScroll.handleMouseLeave}
                       onWheel={(e) => {
@@ -413,6 +467,7 @@ export default function Navigation() {
                       ))}
                     </div>
                   </div>
+                  </div>
                 )}
                              </div>
                
@@ -452,19 +507,73 @@ export default function Navigation() {
                        onMouseEnter={() => setActiveMenu('counseling')}
                        onMouseLeave={() => setActiveMenu(null)}
                      >
-                      {/* 상단 스크롤 가이드 */}
-                      {counselingScroll.showTopGuide && (
-                        <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
-                      )}
-                      
-                      {/* 하단 스크롤 가이드 */}
-                      {counselingScroll.showBottomGuide && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-blue-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
-                      )}
-                      
+                     <div className="relative">
+                       {/* 상단 화살표 가이드 */}
+                       <div
+                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                         ref={(el) => {
+                           if (el) {
+                             const checkScroll = () => {
+                               const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
+                               if (scrollableDiv) {
+                                 const shouldShow = scrollableDiv.scrollTop > 0;
+                                 el.style.opacity = shouldShow ? '1' : '0';
+                               }
+                             };
+                             
+                             const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
+                             if (scrollableDiv) {
+                               scrollableDiv.addEventListener('scroll', checkScroll);
+                               checkScroll();
+                               
+                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                             }
+                           }
+                         }}
+                       >
+                         <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                           </svg>
+                         </div>
+                       </div>
+
+                       {/* 하단 화살표 가이드 */}
+                       <div
+                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                         ref={(el) => {
+                           if (el) {
+                             const checkScroll = () => {
+                               const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
+                               if (scrollableDiv) {
+                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
+                                 el.style.opacity = shouldShow ? '1' : '0';
+                               }
+                             };
+                             
+                             const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
+                             if (scrollableDiv) {
+                               scrollableDiv.addEventListener('scroll', checkScroll);
+                               checkScroll();
+                               
+                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                             }
+                           }
+                         }}
+                       >
+                         <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </div>
+                       </div>
+
+                       {/* 스크롤 가능한 콘텐츠 */}
                       <div 
                         ref={counselingScroll.scrollRef}
-                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        className="counseling-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         onMouseMove={counselingScroll.handleMouseMove}
                         onMouseLeave={counselingScroll.handleMouseLeave}
                        onWheel={(e) => {
@@ -529,6 +638,7 @@ export default function Navigation() {
                          </div>
                        ))}
                      </div>
+                   </div>
                    </div>
                  )}
                </div>
@@ -633,16 +743,6 @@ export default function Navigation() {
                          </div>
                        </div>
 
-                       {/* 상단 스크롤 가이드 */}
-                       {aiAssistantScroll.showTopGuide && (
-                         <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-blue-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
-                       )}
-                       
-                       {/* 하단 스크롤 가이드 */}
-                       {aiAssistantScroll.showBottomGuide && (
-                         <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-blue-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
-                       )}
-                       
                        {/* 스크롤 가능한 콘텐츠 */}
                        <div 
                          ref={aiAssistantScroll.scrollRef}
@@ -752,19 +852,73 @@ export default function Navigation() {
                       onMouseEnter={() => setActiveMenu('additional')}
                       onMouseLeave={() => setActiveMenu(null)}
                     >
-                     {/* 상단 스크롤 가이드 */}
-                     {userMenuScroll.showTopGuide && (
-                       <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-green-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
-                     )}
-                     
-                     {/* 하단 스크롤 가이드 */}
-                     {userMenuScroll.showBottomGuide && (
-                       <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-green-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
-                     )}
-                     
+                     <div className="relative">
+                       {/* 상단 화살표 가이드 */}
+                       <div
+                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                         ref={(el) => {
+                           if (el) {
+                             const checkScroll = () => {
+                               const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
+                               if (scrollableDiv) {
+                                 const shouldShow = scrollableDiv.scrollTop > 0;
+                                 el.style.opacity = shouldShow ? '1' : '0';
+                               }
+                             };
+                             
+                             const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
+                             if (scrollableDiv) {
+                               scrollableDiv.addEventListener('scroll', checkScroll);
+                               checkScroll();
+                               
+                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                             }
+                           }
+                         }}
+                       >
+                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                           </svg>
+                         </div>
+                       </div>
+
+                       {/* 하단 화살표 가이드 */}
+                       <div
+                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                         ref={(el) => {
+                           if (el) {
+                             const checkScroll = () => {
+                               const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
+                               if (scrollableDiv) {
+                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
+                                 el.style.opacity = shouldShow ? '1' : '0';
+                               }
+                             };
+                             
+                             const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
+                             if (scrollableDiv) {
+                               scrollableDiv.addEventListener('scroll', checkScroll);
+                               checkScroll();
+                               
+                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                             }
+                           }
+                         }}
+                       >
+                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </div>
+                       </div>
+
+                       {/* 스크롤 가능한 콘텐츠 */}
                      <div 
                        ref={userMenuScroll.scrollRef}
-                       className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                       className="user-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
                        onMouseMove={userMenuScroll.handleMouseMove}
                        onMouseLeave={userMenuScroll.handleMouseLeave}
                        onWheel={(e) => {
@@ -830,6 +984,7 @@ export default function Navigation() {
                        ))}
                      </div>
                    </div>
+                   </div>
                  )}
                </div>
                
@@ -874,16 +1029,6 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
-                             {/* 상단 스크롤 가이드 */}
-                             {counselorScroll.showTopGuide && (
-                               <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-green-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
-                             )}
-                             
-                             {/* 하단 스크롤 가이드 */}
-                             {counselorScroll.showBottomGuide && (
-                               <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-green-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
-                             )}
-                             
                              <div 
                                ref={counselorScroll.scrollRef}
                                className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
@@ -977,16 +1122,6 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
-                             {/* 상단 스크롤 가이드 */}
-                             {adminScroll.showTopGuide && (
-                               <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-red-600/20 to-transparent pointer-events-none z-10 rounded-t-2xl" />
-                             )}
-                             
-                             {/* 하단 스크롤 가이드 */}
-                             {adminScroll.showBottomGuide && (
-                               <div className="absolute bottom-0 left-0 right-0 h-[150px] bg-gradient-to-t from-red-600/20 to-transparent pointer-events-none z-10 rounded-b-2xl" />
-                             )}
-                             
                              <div 
                                ref={adminScroll.scrollRef}
                                className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900"
