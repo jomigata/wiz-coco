@@ -466,7 +466,7 @@ export default function Navigation() {
                      >
                        {counselingMenuItems.map((category) => (
                          <div key={category.category} className="mb-4 last:mb-0">
-                           <div className="px-2 py-1 text-sm font-bold text-purple-300 uppercase tracking-wide mb-2">
+                           <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                              {category.category}
                            </div>
                            <div className="space-y-1">
@@ -482,7 +482,7 @@ export default function Navigation() {
                                  </div>
                                  <div className="flex-1 min-w-0">
                                    <div className="flex items-center gap-2">
-                                     <span className="font-medium text-white truncate">{item.name}</span>
+                                     <span className="text-base font-medium text-white truncate">{item.name}</span>
                                      {'badge' in item && (item as any).badge && (
                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                                          (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
@@ -493,7 +493,7 @@ export default function Navigation() {
                                        </span>
                                      )}
                                    </div>
-                                   <div className="text-xs text-blue-300 truncate">{item.description}</div>
+                                   <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                  </div>
                                  <svg 
                                    className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
