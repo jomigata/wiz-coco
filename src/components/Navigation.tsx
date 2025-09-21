@@ -6,6 +6,7 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
+import { useAutoScroll } from '@/hooks/useAutoScroll';
 
 export default function Navigation() {
   const router = useRouter();
@@ -14,6 +15,14 @@ export default function Navigation() {
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // 자동 스크롤 훅들
+  const testScroll = useAutoScroll();
+  const counselingScroll = useAutoScroll();
+  const aiAssistantScroll = useAutoScroll();
+  const userMenuScroll = useAutoScroll();
+  const counselorScroll = useAutoScroll();
+  const adminScroll = useAutoScroll();
   
   const isDropdownOpen = activeMenu === 'user';
   const isTestDropdownOpen = activeMenu === 'test';
@@ -309,7 +318,10 @@ export default function Navigation() {
                      onMouseLeave={() => setActiveMenu(null)}
                    >
                     <div 
+                      ref={testScroll.scrollRef}
                       className="px-6 py-4 space-y-2 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                      onMouseMove={testScroll.handleMouseMove}
+                      onMouseLeave={testScroll.handleMouseLeave}
                       onWheel={(e) => {
                         e.stopPropagation();
                         const target = e.currentTarget;
@@ -431,7 +443,10 @@ export default function Navigation() {
                        onMouseLeave={() => setActiveMenu(null)}
                      >
                       <div 
+                        ref={counselingScroll.scrollRef}
                         className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        onMouseMove={counselingScroll.handleMouseMove}
+                        onMouseLeave={counselingScroll.handleMouseLeave}
                        onWheel={(e) => {
                          e.stopPropagation();
                          const target = e.currentTarget;
@@ -451,7 +466,7 @@ export default function Navigation() {
                      >
                        {counselingMenuItems.map((category) => (
                          <div key={category.category} className="mb-4 last:mb-0">
-                           <div className="px-2 py-1 text-xs font-bold text-purple-300 uppercase tracking-wide mb-2">
+                           <div className="px-2 py-1 text-sm font-bold text-purple-300 uppercase tracking-wide mb-2">
                              {category.category}
                            </div>
                            <div className="space-y-1">
@@ -600,7 +615,10 @@ export default function Navigation() {
 
                        {/* 스크롤 가능한 콘텐츠 */}
                        <div 
+                         ref={aiAssistantScroll.scrollRef}
                          className="ai-mind-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
+                         onMouseMove={aiAssistantScroll.handleMouseMove}
+                         onMouseLeave={aiAssistantScroll.handleMouseLeave}
                          onWheel={(e) => {
                            e.stopPropagation();
                            const target = e.currentTarget;
@@ -611,27 +629,6 @@ export default function Navigation() {
                            if ((scrollTop === 0 && e.deltaY < 0) || 
                                (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
                              e.preventDefault();
-                           }
-                         }}
-                         onMouseMove={(e) => {
-                           const target = e.currentTarget;
-                           const rect = target.getBoundingClientRect();
-                           const mouseY = e.clientY - rect.top;
-                           const height = rect.height;
-                           
-                           // 상단 20% 영역에서 자동 스크롤 다운
-                           if (mouseY < height * 0.2) {
-                             target.scrollTo({
-                               top: target.scrollTop - 30,
-                               behavior: 'smooth'
-                             });
-                           }
-                           // 하단 20% 영역에서 자동 스크롤 업
-                           else if (mouseY > height * 0.8) {
-                             target.scrollTo({
-                               top: target.scrollTop + 30,
-                               behavior: 'smooth'
-                             });
                            }
                          }}
                          style={{
@@ -726,7 +723,10 @@ export default function Navigation() {
                       onMouseLeave={() => setActiveMenu(null)}
                     >
                      <div 
+                       ref={userMenuScroll.scrollRef}
                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                       onMouseMove={userMenuScroll.handleMouseMove}
+                       onMouseLeave={userMenuScroll.handleMouseLeave}
                        onWheel={(e) => {
                          e.stopPropagation();
                          const target = e.currentTarget;
@@ -834,7 +834,12 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
-                             <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                             <div 
+                               ref={counselorScroll.scrollRef}
+                               className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                               onMouseMove={counselorScroll.handleMouseMove}
+                               onMouseLeave={counselorScroll.handleMouseLeave}
+                             >
                                {counselorMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
                                    <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
@@ -922,7 +927,12 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
-                             <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900">
+                             <div 
+                               ref={adminScroll.scrollRef}
+                               className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900"
+                               onMouseMove={adminScroll.handleMouseMove}
+                               onMouseLeave={adminScroll.handleMouseLeave}
+                             >
                                {adminMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
                                    <div className="px-2 py-1 text-xs font-bold text-red-300 uppercase tracking-wide mb-2">
