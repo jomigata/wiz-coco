@@ -313,7 +313,7 @@ export default function Navigation() {
                  {isTestDropdownOpen && (
                    <div
                      data-dropdown-menu="test"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-[32rem] min-w-[28rem] max-w-[36rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                      onMouseEnter={() => setActiveMenu('test')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
@@ -1029,15 +1029,79 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
+                             <div className="relative">
+                               {/* 상단 화살표 가이드 */}
+                               <div
+                                 className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                                 ref={(el) => {
+                                   if (el) {
+                                     const checkScroll = () => {
+                                       const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
+                                       if (scrollableDiv) {
+                                         const shouldShow = scrollableDiv.scrollTop > 0;
+                                         el.style.opacity = shouldShow ? '1' : '0';
+                                       }
+                                     };
+                                     
+                                     const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
+                                     if (scrollableDiv) {
+                                       scrollableDiv.addEventListener('scroll', checkScroll);
+                                       checkScroll();
+                                       
+                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                                     }
+                                   }
+                                 }}
+                               >
+                                 <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                   </svg>
+                                 </div>
+                               </div>
+
+                               {/* 하단 화살표 가이드 */}
+                               <div
+                                 className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                                 ref={(el) => {
+                                   if (el) {
+                                     const checkScroll = () => {
+                                       const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
+                                       if (scrollableDiv) {
+                                         const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
+                                         el.style.opacity = shouldShow ? '1' : '0';
+                                       }
+                                     };
+                                     
+                                     const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
+                                     if (scrollableDiv) {
+                                       scrollableDiv.addEventListener('scroll', checkScroll);
+                                       checkScroll();
+                                       
+                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                                     }
+                                   }
+                                 }}
+                               >
+                                 <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                   </svg>
+                                 </div>
+                               </div>
+
+                               {/* 스크롤 가능한 콘텐츠 */}
                              <div 
                                ref={counselorScroll.scrollRef}
-                               className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                               className="counselor-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
                                onMouseMove={counselorScroll.handleMouseMove}
                                onMouseLeave={counselorScroll.handleMouseLeave}
                              >
                                {counselorMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
-                                   <div className="px-2 py-1 text-xs font-bold text-green-300 uppercase tracking-wide mb-2">
+                                   <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
                                      {category.category}
                                    </div>
                                    <div className="space-y-1">
@@ -1053,7 +1117,7 @@ export default function Navigation() {
                                          </div>
                                          <div className="flex-1 min-w-0">
                                            <div className="flex items-center gap-2">
-                                             <span className="font-medium text-white truncate">{item.name}</span>
+                                             <span className="text-base font-medium text-white truncate">{item.name}</span>
                                              {'badge' in item && (item as any).badge && (
                                                <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                                                  (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
@@ -1064,7 +1128,7 @@ export default function Navigation() {
                                                </span>
                                              )}
                                            </div>
-                                           <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                           <div className="text-sm text-green-300 truncate">{item.description}</div>
                                          </div>
                                          <svg 
                                            className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
@@ -1080,6 +1144,7 @@ export default function Navigation() {
                                  </div>
                                ))}
                              </div>
+                           </div>
                            </div>
                          )}
                        </div>
@@ -1122,15 +1187,79 @@ export default function Navigation() {
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
+                             <div className="relative">
+                               {/* 상단 화살표 가이드 */}
+                               <div
+                                 className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                                 ref={(el) => {
+                                   if (el) {
+                                     const checkScroll = () => {
+                                       const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
+                                       if (scrollableDiv) {
+                                         const shouldShow = scrollableDiv.scrollTop > 0;
+                                         el.style.opacity = shouldShow ? '1' : '0';
+                                       }
+                                     };
+                                     
+                                     const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
+                                     if (scrollableDiv) {
+                                       scrollableDiv.addEventListener('scroll', checkScroll);
+                                       checkScroll();
+                                       
+                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                                     }
+                                   }
+                                 }}
+                               >
+                                 <div className="bg-gradient-to-b from-red-600/90 to-red-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-red-400/50">
+                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                   </svg>
+                                 </div>
+                               </div>
+
+                               {/* 하단 화살표 가이드 */}
+                               <div
+                                 className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
+                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                                 ref={(el) => {
+                                   if (el) {
+                                     const checkScroll = () => {
+                                       const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
+                                       if (scrollableDiv) {
+                                         const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
+                                         el.style.opacity = shouldShow ? '1' : '0';
+                                       }
+                                     };
+                                     
+                                     const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
+                                     if (scrollableDiv) {
+                                       scrollableDiv.addEventListener('scroll', checkScroll);
+                                       checkScroll();
+                                       
+                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
+                                     }
+                                   }
+                                 }}
+                               >
+                                 <div className="bg-gradient-to-b from-red-600/90 to-red-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-red-400/50">
+                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                   </svg>
+                                 </div>
+                               </div>
+
+                               {/* 스크롤 가능한 콘텐츠 */}
                              <div 
                                ref={adminScroll.scrollRef}
-                               className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900"
+                               className="admin-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900"
                                onMouseMove={adminScroll.handleMouseMove}
                                onMouseLeave={adminScroll.handleMouseLeave}
                              >
                                {adminMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
-                                   <div className="px-2 py-1 text-xs font-bold text-red-300 uppercase tracking-wide mb-2">
+                                   <div className="px-2 py-1 text-base font-bold text-red-300 uppercase tracking-wide mb-2">
                                      {category.category}
                                    </div>
                                    <div className="space-y-1">
@@ -1146,7 +1275,7 @@ export default function Navigation() {
                                          </div>
                                          <div className="flex-1 min-w-0">
                                            <div className="flex items-center gap-2">
-                                             <span className="font-medium text-white truncate">{item.name}</span>
+                                             <span className="text-base font-medium text-white truncate">{item.name}</span>
                                              {'badge' in item && (item as any).badge && (
                                                <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                                                  (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
@@ -1157,7 +1286,7 @@ export default function Navigation() {
                                                </span>
                                              )}
                                            </div>
-                                           <div className="text-xs text-red-300 truncate">{item.description}</div>
+                                           <div className="text-sm text-red-300 truncate">{item.description}</div>
                                          </div>
                                          <svg 
                                            className="w-4 h-4 text-red-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
@@ -1173,6 +1302,7 @@ export default function Navigation() {
                                  </div>
                                ))}
                              </div>
+                           </div>
                            </div>
                          )}
                        </div>
