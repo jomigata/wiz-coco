@@ -14,11 +14,6 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [hoveredSubcategory, setHoveredSubcategory] = useState<string | null>(
-    testSubMenuItems.length > 0 && testSubMenuItems[0].subcategories.length > 0 
-      ? testSubMenuItems[0].subcategories[0].name 
-      : null
-  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // 자동 스크롤 훅들
@@ -293,7 +288,7 @@ export default function Navigation() {
                   className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                     activeItem === "/tests" || activeItem.startsWith("/tests/")
                       ? "text-white bg-blue-600"
-                      : "text-blue-300 hover:text-white hover:bg-blue-800/50"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
                   onMouseEnter={() => setActiveMenu('test')}
@@ -327,7 +322,7 @@ export default function Navigation() {
                        <div className="absolute top-2 right-2 z-20">
                          <Link
                            href="/tests/overview"
-                           className="flex items-center justify-center w-8 h-8 bg-blue-600/90 hover:bg-blue-500 text-white rounded-full shadow-lg border border-green-400/50 transition-all duration-300 hover:scale-110"
+                           className="flex items-center justify-center w-8 h-8 bg-blue-600/90 hover:bg-blue-500 text-white rounded-full shadow-lg border border-blue-400/50 transition-all duration-300 hover:scale-110"
                            title="전체보기"
                          >
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,7 +355,7 @@ export default function Navigation() {
                            }
                          }}
                        >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                            </svg>
@@ -391,7 +386,7 @@ export default function Navigation() {
                            }
                          }}
                        >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                            </svg>
@@ -434,29 +429,14 @@ export default function Navigation() {
                             {category.subcategories.map((subcategory) => (
                               <div key={subcategory.name} className="ml-2">
                                 {/* 중분류 헤더 */}
-                                <div 
-                                  className="flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 mb-2 cursor-pointer hover:bg-purple-500/20 rounded-lg transition-all duration-200"
-                                  onMouseEnter={() => setHoveredSubcategory(subcategory.name)}
-                                  onMouseLeave={() => setHoveredSubcategory(null)}
-                                >
+                                <div className="flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 mb-2">
                                   <span className="text-sm">{subcategory.icon}</span>
                                   <span>{subcategory.name}</span>
-                                  <svg 
-                                    className={`w-3 h-3 ml-auto transition-transform duration-200 ${
-                                      hoveredSubcategory === subcategory.name ? 'rotate-90' : ''
-                                    }`} 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
                                 </div>
                                 
-                                {/* 소분류 아이템들 - 호버 시에만 표시 */}
-                                {hoveredSubcategory === subcategory.name && (
-                                  <div className="space-y-1 ml-4 animate-fadeIn">
-                                    {subcategory.items.map((item) => (
+                                {/* 소분류 아이템들 */}
+                                <div className="space-y-1 ml-4">
+                                  {subcategory.items.map((item) => (
                               <Link
                                 key={item.name}
                                 href={item.href}
@@ -491,10 +471,9 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </Link>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                           </div>
                         </div>
@@ -512,7 +491,7 @@ export default function Navigation() {
                    className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                      activeItem === "/counseling" || activeItem.startsWith("/counseling/")
                        ? "text-white bg-blue-600"
-                       : "text-blue-300 hover:text-white hover:bg-blue-800/50"
+                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                    }`}
                    onClick={(e) => handleNavLinkClick("/counseling", e)}
                    onMouseEnter={() => setActiveMenu('counseling')}
@@ -698,7 +677,7 @@ export default function Navigation() {
                     className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                       activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
                         ? "text-white bg-blue-600"
-                        : "text-blue-300 hover:text-white hover:bg-blue-800/50"
+                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                     }`}
                     onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
@@ -723,24 +702,11 @@ export default function Navigation() {
                   {isAiMindAssistantOpen && (
                     <div
                       data-dropdown-menu="ai-mind-assistant"
-                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                       onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
                       onMouseLeave={() => setActiveMenu(null)}
                     >
                      <div className="relative">
-                       {/* 전체보기 아이콘 */}
-                       <div className="absolute top-2 right-2 z-20">
-                         <Link
-                           href="/ai-mind-assistant/overview"
-                           className="flex items-center justify-center w-8 h-8 bg-green-600/90 hover:bg-green-500 text-white rounded-full shadow-lg border border-green-400/50 transition-all duration-300 hover:scale-110"
-                           title="전체보기"
-                         >
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                           </svg>
-                         </Link>
-                       </div>
-
                        {/* 상단 화살표 가이드 */}
                        <div
                          className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
@@ -765,7 +731,7 @@ export default function Navigation() {
                            }
                          }}
                        >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                            </svg>
@@ -796,7 +762,7 @@ export default function Navigation() {
                            }
                          }}
                        >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                            </svg>
@@ -828,7 +794,7 @@ export default function Navigation() {
                        >
                          {aiMindAssistantSubMenuItems.map((category) => (
                            <div key={category.category} className="mb-4 last:mb-0">
-                             <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                             <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
                                {category.category}
                              </div>
                              <div className="space-y-1">
@@ -836,7 +802,7 @@ export default function Navigation() {
                                  <Link
                                    key={item.name}
                                    href={item.href}
-                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                    onClick={() => setActiveMenu(null)}
                                  >
                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -855,10 +821,10 @@ export default function Navigation() {
                                          </span>
                                        )}
                                      </div>
-                                     <div className="text-sm text-green-300 truncate">{item.description}</div>
+                                     <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                    </div>
                                    <svg 
-                                     className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                     className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                      fill="none" 
                                      stroke="currentColor" 
                                      viewBox="0 0 24 24"
@@ -883,7 +849,7 @@ export default function Navigation() {
                     className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                       activeItem === "/features" || activeItem.startsWith("/features/")
                         ? "text-white bg-blue-600"
-                        : "text-blue-300 hover:text-white hover:bg-blue-800/50"
+                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                     }`}
                     onClick={(e) => handleNavLinkClick("/features", e)}
                     onMouseEnter={() => setActiveMenu('additional')}
@@ -1060,7 +1026,7 @@ export default function Navigation() {
                            className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                              activeItem === "/counselor" || activeItem.startsWith("/counselor/")
                                ? "text-white bg-green-600"
-                               : "text-blue-300 hover:text-white hover:bg-green-800/50"
+                               : "text-gray-300 hover:text-white hover:bg-green-800/50"
                            }`}
                            onClick={(e) => handleNavLinkClick("/counselor", e)}
                            onMouseEnter={() => setActiveMenu('counselor')}
@@ -1231,7 +1197,7 @@ export default function Navigation() {
                            className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                              activeItem === "/admin" || activeItem.startsWith("/admin/")
                                ? "text-white bg-red-600"
-                               : "text-blue-300 hover:text-white hover:bg-red-800/50"
+                               : "text-gray-300 hover:text-white hover:bg-red-800/50"
                            }`}
                            onClick={(e) => handleNavLinkClick("/admin", e)}
                            onMouseEnter={() => setActiveMenu('admin')}
@@ -1256,7 +1222,7 @@ export default function Navigation() {
                          {isAdminMenuOpen && (
                            <div
                              data-dropdown-menu="admin"
-                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-violet-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
@@ -1265,7 +1231,7 @@ export default function Navigation() {
                                <div className="absolute top-2 right-2 z-20">
                                  <Link
                                    href="/admin/overview"
-                                   className="flex items-center justify-center w-8 h-8 bg-blue-600/90 hover:bg-blue-500 text-white rounded-full shadow-lg border border-blue-400/50 transition-all duration-300 hover:scale-110"
+                                   className="flex items-center justify-center w-8 h-8 bg-purple-600/90 hover:bg-purple-500 text-white rounded-full shadow-lg border border-purple-400/50 transition-all duration-300 hover:scale-110"
                                    title="전체보기"
                                  >
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1298,7 +1264,7 @@ export default function Navigation() {
                                    }
                                  }}
                                >
-                                 <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-gray-400/50">
+                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                                    </svg>
@@ -1329,7 +1295,7 @@ export default function Navigation() {
                                    }
                                  }}
                                >
-                                 <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-gray-400/50">
+                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                    </svg>
@@ -1339,13 +1305,13 @@ export default function Navigation() {
                                {/* 스크롤 가능한 콘텐츠 */}
                              <div 
                                ref={adminScroll.scrollRef}
-                               className="admin-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                               className="admin-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900"
                                onMouseMove={adminScroll.handleMouseMove}
                                onMouseLeave={adminScroll.handleMouseLeave}
                              >
                                {adminMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
-                                   <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
+                                   <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                                      {category.category}
                                    </div>
                                    <div className="space-y-1">
@@ -1353,7 +1319,7 @@ export default function Navigation() {
                                        <Link
                                          key={item.name}
                                          href={item.href}
-                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                          onClick={() => setActiveMenu(null)}
                                        >
                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1372,10 +1338,10 @@ export default function Navigation() {
                                                </span>
                                              )}
                                            </div>
-                                           <div className="text-sm text-blue-300 truncate">{item.description}</div>
+                                           <div className="text-sm text-purple-300 truncate">{item.description}</div>
                                          </div>
                                          <svg 
-                                           className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                           className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                            fill="none" 
                                            stroke="currentColor" 
                                            viewBox="0 0 24 24"
@@ -1401,7 +1367,7 @@ export default function Navigation() {
                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                            activeItem === "/mypage" || activeItem.startsWith("/mypage/")
                              ? "text-white bg-blue-600"
-                             : "text-blue-300 hover:text-white hover:bg-blue-800/50"
+                             : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                          }`}
                          onClick={(e) => handleNavLinkClick("/mypage", e)}
                          onMouseEnter={() => setActiveMenu('user')}
@@ -1617,7 +1583,7 @@ export default function Navigation() {
                      {/* 로그인/회원가입 버튼 */}
                      <Link
                        href="/login"
-                       className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 text-blue-300 hover:text-white hover:bg-blue-800/50"
+                       className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 text-gray-300 hover:text-white hover:bg-blue-800/50"
                        onClick={(e) => handleAuthLinkClick("/login", e)}
                      >
                        🔑 로그인
@@ -1640,7 +1606,7 @@ export default function Navigation() {
          <div className="md:hidden">
            <button
              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-             className="p-2 text-blue-300 hover:text-white hover:bg-blue-800/50 rounded-lg transition-all duration-300"
+             className="p-2 text-gray-300 hover:text-white hover:bg-blue-800/50 rounded-lg transition-all duration-300"
            >
              <svg
                className="w-6 h-6"
@@ -1710,7 +1676,7 @@ export default function Navigation() {
                        <Link
                          key={item.name}
                          href={item.href}
-                                 className="block px-3 py-2 text-base text-blue-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                                 className="block px-3 py-2 text-base text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
                          onClick={() => setIsMobileMenuOpen(false)}
                        >
                          <div className="flex items-center gap-2">
@@ -1752,7 +1718,7 @@ export default function Navigation() {
                        <Link
                          key={item.name}
                          href={item.href}
-                         className="block px-4 py-2 text-base text-blue-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
+                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
                          onClick={() => setIsMobileMenuOpen(false)}
                        >
                          <div className="flex items-center gap-2">
@@ -1789,7 +1755,7 @@ export default function Navigation() {
                        <Link
                          key={item.name}
                          href={item.href}
-                         className="block px-4 py-2 text-base text-blue-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
                          onClick={() => setIsMobileMenuOpen(false)}
                        >
                          <div className="flex items-center gap-2">
@@ -1826,7 +1792,7 @@ export default function Navigation() {
                        <Link
                          key={item.name}
                          href={item.href}
-                         className="block px-4 py-2 text-base text-blue-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
+                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
                          onClick={() => setIsMobileMenuOpen(false)}
                        >
                          <div className="flex items-center gap-2">
@@ -1848,21 +1814,21 @@ export default function Navigation() {
                    </div>
                    <Link
                      href="/mypage"
-                     className="block px-4 py-2 text-sm text-blue-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
                      onClick={() => setIsMobileMenuOpen(false)}
                    >
                      📊 검사 기록
                    </Link>
                    <Link
                      href="/mypage?tab=profile"
-                     className="block px-4 py-2 text-sm text-blue-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
                      onClick={() => setIsMobileMenuOpen(false)}
                    >
                      👤 기본 정보
                    </Link>
                    <Link
                      href="/mypage/counseling"
-                     className="block px-4 py-2 text-sm text-blue-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
                      onClick={() => setIsMobileMenuOpen(false)}
                    >
                      💬 상담 예약
@@ -1881,14 +1847,14 @@ export default function Navigation() {
                  <div className="space-y-2 pt-4 border-t border-white/20">
                    <Link
                      href="/login"
-                     className="block px-4 py-2 text-sm text-blue-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
                      onClick={() => setIsMobileMenuOpen(false)}
                    >
                      🔑 로그인
                    </Link>
                    <Link
                      href="/register"
-                     className="block px-4 py-2 text-sm text-blue-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
                      onClick={() => setIsMobileMenuOpen(false)}
                    >
                      ✨ 회원가입
