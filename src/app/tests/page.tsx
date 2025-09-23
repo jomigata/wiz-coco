@@ -254,7 +254,7 @@ export default function PsychologyTestsPage() {
                               <Link
                                 key={index}
                                 href={test.href}
-                                className="group bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105"
+                                className="group bg-black/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-black/90 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105"
                               >
                                 <div className="flex items-start gap-3 mb-3">
                                   <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-300">
@@ -317,7 +317,7 @@ export default function PsychologyTestsPage() {
                           <Link
                             key={index}
                             href={test.href}
-                            className="group bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:scale-105"
+                            className="group bg-black/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:bg-black/90 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105"
                           >
                             <div className="flex items-start gap-4 mb-4">
                               <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
