@@ -36,8 +36,8 @@ export default function CounselingOverviewPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
-      {/* 네비게이션 */}
-      <nav className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-xl border-b border-purple-500/30">
+      {/* 상단 네비게이션 */}
+      <nav className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-xl border-b border-purple-500/30 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-white">
@@ -53,13 +53,19 @@ export default function CounselingOverviewPage() {
               <Link href="/ai-mind-assistant" className="text-gray-300 hover:text-white transition-colors">
                 AI 마음 비서
               </Link>
+              <Link href="/counselor" className="text-gray-300 hover:text-white transition-colors">
+                상담사
+              </Link>
+              <Link href="/admin" className="text-gray-300 hover:text-white transition-colors">
+                관리자
+              </Link>
             </div>
           </div>
         </div>
       </nav>
 
       {/* 메인 콘텐츠 */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-h-[calc(100vh-120px)] overflow-y-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">상담 프로그램 전체보기</h1>
           <p className="text-purple-200 text-lg">전문 상담사와 함께하는 맞춤형 상담 프로그램</p>
