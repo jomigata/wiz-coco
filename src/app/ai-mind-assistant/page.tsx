@@ -13,7 +13,7 @@ export default function AIMindAssistantPage() {
       title: '일일 체크',
       description: '매일 마음을 점검하고 기록하세요',
       icon: '📅',
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-green-500 to-green-600'
     },
     {
       id: '마음 SOS',
@@ -27,7 +27,7 @@ export default function AIMindAssistantPage() {
       title: '감정 분석 & 리포트',
       description: '체계적인 감정 변화 분석',
       icon: '📊',
-      color: 'from-green-500 to-green-600'
+      color: 'from-emerald-500 to-emerald-600'
     }
   ];
 
@@ -66,13 +66,13 @@ export default function AIMindAssistantPage() {
       
       {/* 메인 콘텐츠 영역 */}
       <div className="pt-16">
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
           {/* 헤더 */}
-          <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
+          <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white py-16 pt-24">
             <div className="container mx-auto px-6 text-center">
               <div className="text-6xl mb-4">🤖</div>
               <h1 className="text-4xl font-bold mb-4">AI 마음 비서</h1>
-              <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+              <p className="text-xl text-green-100 max-w-2xl mx-auto">
                 AI와 함께하는 개인 맞춤형 마음 건강 관리 시스템
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function AIMindAssistantPage() {
                   >
                     <div className="text-3xl mb-2">{category.icon}</div>
                     <div className="font-semibold text-lg mb-1">{category.title}</div>
-                    <div className={`text-sm ${activeCategory === category.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                    <div className={`text-sm ${activeCategory === category.id ? 'text-green-100' : 'text-gray-500'}`}>
                       {category.description}
                     </div>
                   </button>
