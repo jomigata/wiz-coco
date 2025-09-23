@@ -111,209 +111,210 @@ export default function PsychologyTestsPage() {
       {/* 메인 콘텐츠 */}
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 pt-20 p-6">
         <div className="max-w-7xl mx-auto">
-        {/* 페이지 헤더 */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">심리검사 선택</h1>
-          <p className="text-gray-300 text-lg">상담 주제에 맞는 적절한 심리검사를 선택하여 내담자에게 제공하세요</p>
-        </div>
+          {/* 페이지 헤더 */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">심리검사 선택</h1>
+            <p className="text-gray-300 text-lg">상담 주제에 맞는 적절한 심리검사를 선택하여 내담자에게 제공하세요</p>
+          </div>
 
-        {/* 전체 현황 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-300 text-sm">전체 검사</p>
-                <p className="text-3xl font-bold text-white">{totalTests}</p>
-                <p className="text-blue-400 text-sm">6개 카테고리</p>
+          {/* 전체 현황 카드 */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300 text-sm">전체 검사</p>
+                  <p className="text-3xl font-bold text-white">{totalTests}</p>
+                  <p className="text-blue-400 text-sm">6개 카테고리</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📋</span>
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📋</span>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300 text-sm">인기 검사</p>
+                  <p className="text-3xl font-bold text-white">{totalPopular}</p>
+                  <p className="text-green-400 text-sm">자주 사용됨</p>
+                </div>
+                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">⭐</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300 text-sm">신규 검사</p>
+                  <p className="text-3xl font-bold text-white">{totalNew}</p>
+                  <p className="text-purple-400 text-sm">최근 추가</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">🆕</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300 text-sm">이번 주 실시</p>
+                  <p className="text-3xl font-bold text-white">127</p>
+                  <p className="text-orange-400 text-sm">+23 증가</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📊</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-300 text-sm">인기 검사</p>
-                <p className="text-3xl font-bold text-white">{totalPopular}</p>
-                <p className="text-green-400 text-sm">자주 사용됨</p>
-              </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">⭐</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-300 text-sm">신규 검사</p>
-                <p className="text-3xl font-bold text-white">{totalNew}</p>
-                <p className="text-purple-400 text-sm">최근 추가</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">🆕</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-300 text-sm">이번 주 실시</p>
-                <p className="text-3xl font-bold text-white">127</p>
-                <p className="text-orange-400 text-sm">+23 증가</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📊</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 카테고리 필터 */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">검사 카테고리</h2>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                selectedCategory === null
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
-              }`}
-            >
-              전체보기
-            </button>
-            {testCategories.map((category) => (
+          {/* 카테고리 필터 */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">검사 카테고리</h2>
+            <div className="flex flex-wrap gap-3">
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 ${
-                  selectedCategory === category.id
+                onClick={() => setSelectedCategory(null)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                  selectedCategory === null
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
                 }`}
               >
-                <span>{category.icon}</span>
-                {category.title}
+                전체보기
               </button>
+              {testCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 ${
+                    selectedCategory === category.id
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
+                  }`}
+                >
+                  <span>{category.icon}</span>
+                  {category.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 검사 카테고리별 표시 */}
+          <div className="space-y-8">
+            {filteredCategories.map((category) => (
+              <div key={category.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${category.color} flex items-center justify-center text-2xl`}>
+                      {category.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">{category.title}</h3>
+                      <p className="text-gray-300">{category.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 text-center">
+                    <div>
+                      <p className="text-2xl font-bold text-white">{category.stats.total}</p>
+                      <p className="text-gray-400 text-sm">전체</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-green-400">{category.stats.popular}</p>
+                      <p className="text-gray-400 text-sm">인기</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-purple-400">{category.stats.new}</p>
+                      <p className="text-gray-400 text-sm">신규</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {category.tests.map((test, index) => (
+                    <Link
+                      key={index}
+                      href={test.href}
+                      className="group bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-300">
+                          {test.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold mb-1 group-hover:text-cyan-300 transition-colors">
+                            {test.name}
+                          </h4>
+                          <p className="text-gray-400 text-sm leading-tight">{test.description}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full ${
+                            test.difficulty === '쉬움' ? 'bg-green-500/20 text-green-400' :
+                            test.difficulty === '보통' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
+                          }`}>
+                            {test.difficulty}
+                          </span>
+                          <span className="text-gray-400">{test.time}</span>
+                        </div>
+                        <div className="flex items-center text-cyan-400">
+                          <span className="text-xs">시작하기</span>
+                          <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
-        </div>
 
-        {/* 검사 카테고리별 표시 */}
-        <div className="space-y-8">
-          {filteredCategories.map((category) => (
-            <div key={category.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${category.color} flex items-center justify-center text-2xl`}>
-                    {category.icon}
-                  </div>
+          {/* 추천 검사 섹션 */}
+          <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-2xl font-bold text-white mb-4">상담사 추천 검사</h3>
+            <p className="text-gray-300 mb-6">경험이 풍부한 상담사들이 자주 사용하는 효과적인 검사들입니다</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl p-4 border border-blue-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">🎭</span>
                   <div>
-                    <h3 className="text-2xl font-bold text-white">{category.title}</h3>
-                    <p className="text-gray-300">{category.description}</p>
+                    <h4 className="text-white font-semibold">MBTI 성격유형검사</h4>
+                    <p className="text-blue-300 text-sm">초기 상담 필수 검사</p>
                   </div>
                 </div>
-                <div className="flex gap-4 text-center">
+                <p className="text-gray-300 text-sm">내담자의 기본적인 성격 특성을 파악하여 상담 방향을 설정하는 데 매우 유용합니다.</p>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">😔</span>
                   <div>
-                    <p className="text-2xl font-bold text-white">{category.stats.total}</p>
-                    <p className="text-gray-400 text-sm">전체</p>
+                    <h4 className="text-white font-semibold">우울증 자가진단</h4>
+                    <p className="text-purple-300 text-sm">감정 상태 평가</p>
                   </div>
+                </div>
+                <p className="text-gray-300 text-sm">우울 증상의 정도를 객관적으로 측정하여 치료 계획 수립에 도움이 됩니다.</p>
+              </div>
+
+              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border border-green-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">💕</span>
                   <div>
-                    <p className="text-2xl font-bold text-green-400">{category.stats.popular}</p>
-                    <p className="text-gray-400 text-sm">인기</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-400">{category.stats.new}</p>
-                    <p className="text-gray-400 text-sm">신규</p>
+                    <h4 className="text-white font-semibold">애착유형검사</h4>
+                    <p className="text-green-300 text-sm">관계 패턴 분석</p>
                   </div>
                 </div>
+                <p className="text-gray-300 text-sm">대인관계 문제의 근본 원인을 파악하고 건강한 관계 형성을 돕습니다.</p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {category.tests.map((test, index) => (
-                  <Link
-                    key={index}
-                    href={test.href}
-                    className="group bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:bg-gray-700/50 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105"
-                  >
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-300">
-                        {test.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold mb-1 group-hover:text-cyan-300 transition-colors">
-                          {test.name}
-                        </h4>
-                        <p className="text-gray-400 text-sm leading-tight">{test.description}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full ${
-                          test.difficulty === '쉬움' ? 'bg-green-500/20 text-green-400' :
-                          test.difficulty === '보통' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-red-500/20 text-red-400'
-                        }`}>
-                          {test.difficulty}
-                        </span>
-                        <span className="text-gray-400">{test.time}</span>
-                      </div>
-                      <div className="flex items-center text-cyan-400">
-                        <span className="text-xs">시작하기</span>
-                        <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 추천 검사 섹션 */}
-        <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-          <h3 className="text-2xl font-bold text-white mb-4">상담사 추천 검사</h3>
-          <p className="text-gray-300 mb-6">경험이 풍부한 상담사들이 자주 사용하는 효과적인 검사들입니다</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl p-4 border border-blue-500/30">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">🎭</span>
-                <div>
-                  <h4 className="text-white font-semibold">MBTI 성격유형검사</h4>
-                  <p className="text-blue-300 text-sm">초기 상담 필수 검사</p>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm">내담자의 기본적인 성격 특성을 파악하여 상담 방향을 설정하는 데 매우 유용합니다.</p>
-            </div>
-
-            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-500/30">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">😔</span>
-                <div>
-                  <h4 className="text-white font-semibold">우울증 자가진단</h4>
-                  <p className="text-purple-300 text-sm">감정 상태 평가</p>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm">우울 증상의 정도를 객관적으로 측정하여 치료 계획 수립에 도움이 됩니다.</p>
-            </div>
-
-            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border border-green-500/30">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">💕</span>
-                <div>
-                  <h4 className="text-white font-semibold">애착유형검사</h4>
-                  <p className="text-green-300 text-sm">관계 패턴 분석</p>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm">대인관계 문제의 근본 원인을 파악하고 건강한 관계 형성을 돕습니다.</p>
             </div>
           </div>
         </div>
