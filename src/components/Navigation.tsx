@@ -318,6 +318,19 @@ export default function Navigation() {
                      onMouseLeave={() => setActiveMenu(null)}
                    >
                     <div className="relative">
+                       {/* 전체보기 아이콘 */}
+                       <div className="absolute top-2 right-2 z-20">
+                         <Link
+                           href="/tests/overview"
+                           className="flex items-center justify-center w-8 h-8 bg-blue-600/90 hover:bg-blue-500 text-white rounded-full shadow-lg border border-blue-400/50 transition-all duration-300 hover:scale-110"
+                           title="전체보기"
+                         >
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                           </svg>
+                         </Link>
+                       </div>
+
                        {/* 상단 화살표 가이드 */}
                        <div
                          className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
@@ -424,49 +437,49 @@ export default function Navigation() {
                                 {/* 소분류 아이템들 */}
                                 <div className="space-y-1 ml-4">
                                   {subcategory.items.map((item) => (
-                                    <Link
-                                      key={item.name}
-                                      href={item.href}
+                              <Link
+                                key={item.name}
+                                href={item.href}
                                       className={`group flex items-center gap-3 px-3 py-2.5 bg-gradient-to-r from-blue-500/15 to-indigo-500/15 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                      onClick={() => setActiveMenu(null)}
-                                    >
+                                onClick={() => setActiveMenu(null)}
+                              >
                                       <div className="text-lg group-hover:scale-110 transition-transform duration-300">
                                         {item.icon}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
                                           <span className="text-base font-medium text-white truncate">{item.name}</span>
                                           {item.badge && (
-                                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                                               item.badge === '인기' ? 'bg-red-500 text-white' :
                                               item.badge === '신규' ? 'bg-green-500 text-white' :
                                               item.badge === '추천' ? 'bg-orange-500 text-white' :
                                               'bg-blue-500 text-white'
                                             }`}>
                                               {item.badge}
-                                            </span>
-                                          )}
-                                        </div>
+                                      </span>
+                                    )}
+                                  </div>
                                         <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                      </div>
-                                      <svg 
-                                        className="w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                        fill="none" 
-                                        stroke="currentColor" 
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                      </svg>
-                                    </Link>
-                                  ))}
                                 </div>
-                              </div>
+                                <svg 
+                                        className="w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
                             ))}
                           </div>
                         </div>
                       ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                    </div>
                   </div>
                 )}
                              </div>
@@ -508,6 +521,19 @@ export default function Navigation() {
                        onMouseLeave={() => setActiveMenu(null)}
                      >
                      <div className="relative">
+                       {/* 전체보기 아이콘 */}
+                       <div className="absolute top-2 right-2 z-20">
+                         <Link
+                           href="/counseling/overview"
+                           className="flex items-center justify-center w-8 h-8 bg-purple-600/90 hover:bg-purple-500 text-white rounded-full shadow-lg border border-purple-400/50 transition-all duration-300 hover:scale-110"
+                           title="전체보기"
+                         >
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                           </svg>
+                         </Link>
+                       </div>
+
                        {/* 상단 화살표 가이드 */}
                        <div
                          className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
@@ -638,7 +664,7 @@ export default function Navigation() {
                          </div>
                        ))}
                      </div>
-                   </div>
+                     </div>
                    </div>
                  )}
                </div>
@@ -983,7 +1009,7 @@ export default function Navigation() {
                          </div>
                        ))}
                      </div>
-                   </div>
+                     </div>
                    </div>
                  )}
                </div>
@@ -1025,11 +1051,24 @@ export default function Navigation() {
                          {isCounselorMenuOpen && (
                            <div
                              data-dropdown-menu="counselor"
-                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-violet-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
                              <div className="relative">
+                               {/* 전체보기 아이콘 */}
+                               <div className="absolute top-2 right-2 z-20">
+                                 <Link
+                                   href="/counselor/overview"
+                                   className="flex items-center justify-center w-8 h-8 bg-purple-600/90 hover:bg-purple-500 text-white rounded-full shadow-lg border border-purple-400/50 transition-all duration-300 hover:scale-110"
+                                   title="전체보기"
+                                 >
+                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                   </svg>
+                                 </Link>
+                               </div>
+
                                {/* 상단 화살표 가이드 */}
                                <div
                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
@@ -1054,7 +1093,7 @@ export default function Navigation() {
                                    }
                                  }}
                                >
-                                 <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                                    </svg>
@@ -1085,7 +1124,7 @@ export default function Navigation() {
                                    }
                                  }}
                                >
-                                 <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
+                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                    </svg>
@@ -1095,13 +1134,13 @@ export default function Navigation() {
                                {/* 스크롤 가능한 콘텐츠 */}
                              <div 
                                ref={counselorScroll.scrollRef}
-                               className="counselor-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                               className="counselor-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900"
                                onMouseMove={counselorScroll.handleMouseMove}
                                onMouseLeave={counselorScroll.handleMouseLeave}
                              >
                                {counselorMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
-                                   <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                                   <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                                      {category.category}
                                    </div>
                                    <div className="space-y-1">
@@ -1109,7 +1148,7 @@ export default function Navigation() {
                                        <Link
                                          key={item.name}
                                          href={item.href}
-                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                          onClick={() => setActiveMenu(null)}
                                        >
                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1128,10 +1167,10 @@ export default function Navigation() {
                                                </span>
                                              )}
                                            </div>
-                                           <div className="text-sm text-green-300 truncate">{item.description}</div>
+                                           <div className="text-sm text-purple-300 truncate">{item.description}</div>
                                          </div>
                                          <svg 
-                                           className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                           className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                            fill="none" 
                                            stroke="currentColor" 
                                            viewBox="0 0 24 24"
@@ -1144,7 +1183,7 @@ export default function Navigation() {
                                  </div>
                                ))}
                              </div>
-                           </div>
+                             </div>
                            </div>
                          )}
                        </div>
@@ -1183,11 +1222,24 @@ export default function Navigation() {
                          {isAdminMenuOpen && (
                            <div
                              data-dropdown-menu="admin"
-                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-red-900/95 to-pink-900/95 rounded-2xl shadow-2xl border border-red-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-gray-900/95 to-stone-900/95 rounded-2xl shadow-2xl border border-gray-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
                              <div className="relative">
+                               {/* 전체보기 아이콘 */}
+                               <div className="absolute top-2 right-2 z-20">
+                                 <Link
+                                   href="/admin/overview"
+                                   className="flex items-center justify-center w-8 h-8 bg-gray-600/90 hover:bg-gray-500 text-white rounded-full shadow-lg border border-gray-400/50 transition-all duration-300 hover:scale-110"
+                                   title="전체보기"
+                                 >
+                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                   </svg>
+                                 </Link>
+                               </div>
+
                                {/* 상단 화살표 가이드 */}
                                <div
                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
@@ -1212,7 +1264,7 @@ export default function Navigation() {
                                    }
                                  }}
                                >
-                                 <div className="bg-gradient-to-b from-red-600/90 to-red-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-red-400/50">
+                                 <div className="bg-gradient-to-b from-gray-600/90 to-gray-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-gray-400/50">
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                                    </svg>
@@ -1243,7 +1295,7 @@ export default function Navigation() {
                                    }
                                  }}
                                >
-                                 <div className="bg-gradient-to-b from-red-600/90 to-red-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-red-400/50">
+                                 <div className="bg-gradient-to-b from-gray-600/90 to-gray-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-gray-400/50">
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                    </svg>
@@ -1253,13 +1305,13 @@ export default function Navigation() {
                                {/* 스크롤 가능한 콘텐츠 */}
                              <div 
                                ref={adminScroll.scrollRef}
-                               className="admin-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-red-900"
+                               className="admin-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900"
                                onMouseMove={adminScroll.handleMouseMove}
                                onMouseLeave={adminScroll.handleMouseLeave}
                              >
                                {adminMenuItems.map((category) => (
                                  <div key={category.category} className="mb-4 last:mb-0">
-                                   <div className="px-2 py-1 text-base font-bold text-red-300 uppercase tracking-wide mb-2">
+                                   <div className="px-2 py-1 text-base font-bold text-gray-300 uppercase tracking-wide mb-2">
                                      {category.category}
                                    </div>
                                    <div className="space-y-1">
@@ -1267,7 +1319,7 @@ export default function Navigation() {
                                        <Link
                                          key={item.name}
                                          href={item.href}
-                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                         className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-gray-500/20 to-stone-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                          onClick={() => setActiveMenu(null)}
                                        >
                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1286,10 +1338,10 @@ export default function Navigation() {
                                                </span>
                                              )}
                                            </div>
-                                           <div className="text-sm text-red-300 truncate">{item.description}</div>
+                                           <div className="text-sm text-gray-300 truncate">{item.description}</div>
                                          </div>
                                          <svg 
-                                           className="w-4 h-4 text-red-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                           className="w-4 h-4 text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                            fill="none" 
                                            stroke="currentColor" 
                                            viewBox="0 0 24 24"
@@ -1302,7 +1354,7 @@ export default function Navigation() {
                                  </div>
                                ))}
                              </div>
-                           </div>
+                             </div>
                            </div>
                          )}
                        </div>
@@ -1621,29 +1673,29 @@ export default function Navigation() {
                            {/* 소분류 아이템들 */}
                            <div className="ml-4 space-y-1">
                              {subcategory.items.map((item) => (
-                               <Link
-                                 key={item.name}
-                                 href={item.href}
+                       <Link
+                         key={item.name}
+                         href={item.href}
                                  className="block px-3 py-2 text-base text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                                 onClick={() => setIsMobileMenuOpen(false)}
-                               >
-                                 <div className="flex items-center gap-2">
+                         onClick={() => setIsMobileMenuOpen(false)}
+                       >
+                         <div className="flex items-center gap-2">
                                    <span className="text-sm">{item.icon}</span>
                                    <span className="font-medium">{item.name}</span>
                                    {item.badge && (
-                                     <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                             <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                                        item.badge === '인기' ? 'bg-red-500 text-white' :
                                        item.badge === '신규' ? 'bg-green-500 text-white' :
                                        item.badge === '추천' ? 'bg-orange-500 text-white' :
                                        'bg-blue-500 text-white'
                                      }`}>
                                        {item.badge}
-                                     </span>
-                                   )}
-                                 </div>
-                                 <div className="text-xs text-blue-300 ml-6 mt-1">{item.description}</div>
-                               </Link>
-                             ))}
+                             </span>
+                           )}
+                         </div>
+                         <div className="text-xs text-blue-300 ml-6 mt-1">{item.description}</div>
+                       </Link>
+                     ))}
                            </div>
                          </div>
                        ))}
