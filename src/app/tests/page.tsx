@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Navigation from '@/components/Navigation';
 
 export default function PsychologyTestsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -103,8 +104,13 @@ export default function PsychologyTestsPage() {
   const totalNew = testCategories.reduce((sum, cat) => sum + cat.stats.new, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <>
+      {/* 상단 네비게이션 */}
+      <Navigation />
+      
+      {/* 메인 콘텐츠 */}
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 pt-20 p-6">
+        <div className="max-w-7xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">심리검사 선택</h1>
@@ -312,6 +318,6 @@ export default function PsychologyTestsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
