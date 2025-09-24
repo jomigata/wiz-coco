@@ -339,21 +339,21 @@ export default function PsychologyTestsPage() {
 
   return (
     <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
-      <div className="max-w-7xl mx-auto">
-        {/* 페이지 헤더 */}
-        <div className="mb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* 페이지 헤더 */}
+          <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-3xl">
               🧠
             </div>
-            <div>
+                <div>
               <h1 className="text-3xl font-bold text-white">AI CoCo 심리검사 대시보드</h1>
               <p className="text-gray-300 text-lg mt-2">AI 기반 심리분석 솔루션으로 내담자를 지원하세요</p>
             </div>
           </div>
-          
+
           {/* 카테고리 필터 탭 */}
-          <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3">
             {categoryFilters.map((filter) => (
               <button
                 key={filter.id}
@@ -366,10 +366,10 @@ export default function PsychologyTestsPage() {
               >
                 <span className="text-lg">{filter.icon}</span>
                 <span className="text-sm">{filter.name}</span>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
         {/* 통계 요약 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -377,19 +377,19 @@ export default function PsychologyTestsPage() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-cyan-400 text-lg">📊</span>
-              </div>
-              <div>
+                    </div>
+                    <div>
                 <p className="text-gray-400 text-sm">전체 검사</p>
                 <p className="text-white text-xl font-bold">{allTestCategories.length}개</p>
               </div>
-            </div>
-          </div>
+                    </div>
+                  </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-green-400 text-lg">⚡</span>
               </div>
-              <div>
+                    <div>
                 <p className="text-gray-400 text-sm">쉬운 검사</p>
                 <p className="text-white text-xl font-bold">{allTestCategories.filter(t => t.difficulty === '쉬움').length}개</p>
               </div>
@@ -399,8 +399,8 @@ export default function PsychologyTestsPage() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-yellow-400 text-lg">⭐</span>
-              </div>
-              <div>
+                    </div>
+                    <div>
                 <p className="text-gray-400 text-sm">보통 검사</p>
                 <p className="text-white text-xl font-bold">{allTestCategories.filter(t => t.difficulty === '보통').length}개</p>
               </div>
@@ -410,14 +410,14 @@ export default function PsychologyTestsPage() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-red-400 text-lg">🔥</span>
-              </div>
-              <div>
+                    </div>
+                    <div>
                 <p className="text-gray-400 text-sm">어려운 검사</p>
                 <p className="text-white text-xl font-bold">{allTestCategories.filter(t => t.difficulty === '어려움').length}개</p>
               </div>
-            </div>
-          </div>
-        </div>
+                    </div>
+                  </div>
+                </div>
 
         {/* 검사 카드 그리드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -426,8 +426,8 @@ export default function PsychologyTestsPage() {
               {/* 카드 헤더 */}
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-12 h-12 bg-gradient-to-r ${test.color} rounded-lg flex items-center justify-center text-lg flex-shrink-0`}>
-                  {test.icon}
-                </div>
+                          {test.icon}
+                        </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-white leading-tight">{test.title}</h3>
                   <p className="text-xs text-gray-400">{test.categoryName}</p>
@@ -442,7 +442,7 @@ export default function PsychologyTestsPage() {
                 <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
                   <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
                     <span>💭</span> 주요 고민
-                  </h4>
+                          </h4>
                   <div className="space-y-1">
                     {test.worryExamples.slice(0, 2).map((worry, idx) => (
                       <div key={idx} className="text-xs text-gray-300 truncate">
@@ -454,25 +454,25 @@ export default function PsychologyTestsPage() {
                         +{test.worryExamples.length - 2}개 더...
                       </div>
                     )}
-                  </div>
-                </div>
-
+                        </div>
+                      </div>
+                      
                 {/* 카드 메타 정보 */}
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      test.difficulty === '쉬움' ? 'bg-green-500/20 text-green-400' :
-                      test.difficulty === '보통' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
-                      {test.difficulty}
-                    </span>
+                            test.difficulty === '쉬움' ? 'bg-green-500/20 text-green-400' :
+                            test.difficulty === '보통' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
+                          }`}>
+                            {test.difficulty}
+                          </span>
                     <span className="text-gray-400 text-xs">{test.time}</span>
                   </div>
                   <div className="text-xs text-gray-400">
                     {test.testCount}개 검사
                   </div>
-                </div>
+              </div>
 
                 {/* 검사 시작 버튼 */}
                 <Link
