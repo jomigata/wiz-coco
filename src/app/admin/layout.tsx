@@ -11,6 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   // 단순화된 상태 관리 시스템
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
   // 현재 경로에 따라 활성화된 메뉴 항목 결정 (통합 메뉴 구조)
   function getActiveSection(path: string) {
@@ -115,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* 메인 콘텐츠 영역 */}
       <div className="flex pt-16">
         {/* 사이드바 */}
-        <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl">
+        <div className="relative w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl">
           <div className="p-6">
             {/* 로고 및 제목 */}
             <div className="flex items-center space-x-3 mb-8">
@@ -130,28 +131,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
             
-            {/* 사이드바 메뉴 */}
-            <nav
-              className="space-y-1"
-              role="navigation"
-              aria-labelledby="admin-menu-title"
-            >
+            {/* 메뉴 네비게이션 - 호버 팝업 방식 */}
+            <nav className="space-y-3" role="navigation" aria-labelledby="admin-menu-title">
               {adminMenuCategories.map((category, index) => (
-                <div key={category.id} className="space-y-1">
-                  {/* 중분류 메뉴 - 대시보드는 클릭 가능, 나머지는 단순 표시 */}
+                <div 
+                  key={category.id} 
+                  className="relative"
+                  onMouseEnter={() => category.id !== 'dashboard' && setHoveredCategory(category.id)}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
+                  {/* 중분류 메뉴 */}
                   {category.id === 'dashboard' ? (
                     <button
                       onClick={() => handleMenuClick('dashboard', category.href || '/admin')}
-                      className={`w-full px-4 py-3 text-base font-medium border-b border-gray-600/30 bg-gray-800/20 hover:bg-gray-700/30 transition-all duration-300 rounded-lg group ${
+                      className={`w-full px-4 py-4 text-base font-semibold rounded-xl transition-all duration-300 group ${
                         activeSection === 'dashboard' 
-                          ? 'text-cyan-300 bg-slate-700/30' 
-                          : 'text-gray-400 hover:text-white'
+                          ? 'text-white bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg shadow-cyan-500/30' 
+                          : 'text-gray-300 bg-slate-800/50 hover:bg-slate-700/70 hover:text-white hover:shadow-md'
                       }`}
                     >
                       <div className="flex items-center">
                         <svg 
                           className={`mr-3 h-6 w-6 flex-shrink-0 ${
-                            activeSection === 'dashboard' ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'
+                            activeSection === 'dashboard' ? 'text-white' : 'text-gray-400 group-hover:text-cyan-300'
                           }`}
                           xmlns="http://www.w3.org/2000/svg" 
                           fill="none" 
@@ -161,56 +163,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
                         </svg>
-                        <span className="truncate font-semibold">{category.label}</span>
+                        <span className="truncate">{category.label}</span>
                       </div>
                     </button>
                   ) : (
-                    <div className="px-4 py-3 text-base font-medium text-gray-400 border-b border-gray-600/30 bg-gray-800/20">
-                      <div className="flex items-center">
-                        <svg 
-                          className="mr-3 h-6 w-6 flex-shrink-0" 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
-                        </svg>
-                        <span className="truncate font-semibold">{category.label}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 소분류 메뉴 - 항상 펼쳐진 상태, 고급스러운 선택 효과 */}
-                  {category.subItems.length > 0 && (
-                    <div className="space-y-1 pb-2">
-                      {category.subItems.map((subItem) => (
-                        <button
-                          key={subItem.id}
-                          onClick={() => handleMenuClick(subItem.id, subItem.href)}
-                          className={`w-full flex items-center px-6 py-3 text-base transition-all duration-300 rounded-lg ml-4 transform hover:scale-[1.02] relative group ${
-                            activeSection === subItem.id 
-                              ? 'bg-gradient-to-r from-slate-800/90 to-slate-700/90 text-white shadow-lg shadow-slate-500/20 font-semibold border-l-4 border-cyan-400' 
-                              : 'text-gray-300 hover:bg-slate-700/30 hover:text-white hover:shadow-md'
-                          }`}
-                          aria-current={activeSection === subItem.id ? 'page' : undefined}
-                        >
-                          {/* 좌우측 밝은 선 효과 (마우스 오버시) */}
-                          <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          
-                          {/* 선택된 항목의 좌우측 선 (항상 표시) */}
-                          {activeSection === subItem.id && (
-                            <>
-                              <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500"></div>
-                              <div className="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500"></div>
-                            </>
-                          )}
-                          
+                    <div
+                      className={`w-full px-4 py-4 text-base font-semibold rounded-xl transition-all duration-300 cursor-pointer group ${
+                        hoveredCategory === category.id
+                          ? 'text-white bg-gradient-to-r from-slate-700 to-slate-600 shadow-lg'
+                          : 'text-gray-300 bg-slate-800/50 hover:bg-slate-700/70 hover:text-white hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
                           <svg 
-                            className={`mr-3 h-5 w-5 flex-shrink-0 relative z-10 ${
-                              activeSection === subItem.id ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'
+                            className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-300 ${
+                              hoveredCategory === category.id ? 'text-white' : 'text-gray-400 group-hover:text-cyan-300'
                             }`}
                             xmlns="http://www.w3.org/2000/svg" 
                             fill="none" 
@@ -218,11 +186,86 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             stroke="currentColor"
                             aria-hidden="true"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
                           </svg>
-                          <span className="truncate relative z-10">{subItem.label}</span>
-                        </button>
-                      ))}
+                          <span className="truncate">{category.label}</span>
+                        </div>
+                        
+                        {/* 우측 화살표 아이콘 */}
+                        <svg 
+                          className={`h-5 w-5 transition-all duration-300 ${
+                            hoveredCategory === category.id 
+                              ? 'text-white transform translate-x-1' 
+                              : 'text-gray-500 group-hover:text-cyan-300'
+                          }`}
+                          xmlns="http://www.w3.org/2000/svg" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 소분류 팝업 메뉴 */}
+                  {category.subItems.length > 0 && hoveredCategory === category.id && (
+                    <div 
+                      className="absolute left-full top-0 ml-2 w-72 bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-slate-600/50 backdrop-blur-sm z-50 animate-in slide-in-from-left-2 duration-200"
+                    >
+                      {/* 팝업 헤더 */}
+                      <div className="px-4 py-3 border-b border-slate-600/50">
+                        <h3 className="text-sm font-semibold text-cyan-400 flex items-center">
+                          <svg 
+                            className="mr-2 h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={category.icon} />
+                          </svg>
+                          {category.label}
+                        </h3>
+                      </div>
+                      
+                      {/* 소분류 목록 */}
+                      <div className="p-2 space-y-1">
+                        {category.subItems.map((subItem) => (
+                          <button
+                            key={subItem.id}
+                            onClick={() => {
+                              handleMenuClick(subItem.id, subItem.href);
+                              setHoveredCategory(null);
+                            }}
+                            className={`w-full flex items-center px-3 py-3 text-sm transition-all duration-200 rounded-lg group ${
+                              activeSection === subItem.id 
+                                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg' 
+                                : 'text-gray-300 hover:bg-slate-700/70 hover:text-white'
+                            }`}
+                          >
+                            <svg 
+                              className={`mr-3 h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
+                                activeSection === subItem.id ? 'text-white' : 'text-gray-400 group-hover:text-cyan-300'
+                              }`}
+                              xmlns="http://www.w3.org/2000/svg" 
+                              fill="none" 
+                              viewBox="0 0 24 24" 
+                              stroke="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={subItem.icon} />
+                            </svg>
+                            <span className="truncate leading-tight">{subItem.label}</span>
+                            
+                            {/* 활성 상태 표시 */}
+                            {activeSection === subItem.id && (
+                              <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -202,7 +202,12 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
             {/* 메뉴 네비게이션 - 호버 팝업 방식 */}
             <nav className="space-y-3" role="navigation" aria-labelledby="test-menu-title">
               {testMenuCategories.map((category, index) => (
-                <div key={category.id} className="relative">
+                <div 
+                  key={category.id} 
+                  className="relative"
+                  onMouseEnter={() => category.id !== 'dashboard' && setHoveredCategory(category.id)}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
                   {/* 중분류 메뉴 */}
                   {category.id === 'dashboard' ? (
                     <button
@@ -236,8 +241,6 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
                           ? 'text-white bg-gradient-to-r from-slate-700 to-slate-600 shadow-lg'
                           : 'text-gray-300 bg-slate-800/50 hover:bg-slate-700/70 hover:text-white hover:shadow-md'
                       }`}
-                      onMouseEnter={() => setHoveredCategory(category.id)}
-                      onMouseLeave={() => setHoveredCategory(null)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -277,9 +280,7 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
                   {/* 소분류 팝업 메뉴 */}
                   {category.subItems.length > 0 && hoveredCategory === category.id && (
                     <div 
-                      className="absolute left-full top-0 ml-4 w-72 bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-slate-600/50 backdrop-blur-sm z-50 animate-in slide-in-from-left-2 duration-200"
-                      onMouseEnter={() => setHoveredCategory(category.id)}
-                      onMouseLeave={() => setHoveredCategory(null)}
+                      className="absolute left-full top-0 ml-2 w-72 bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-slate-600/50 backdrop-blur-sm z-50 animate-in slide-in-from-left-2 duration-200"
                     >
                       {/* 팝업 헤더 */}
                       <div className="px-4 py-3 border-b border-slate-600/50">
