@@ -25,7 +25,7 @@ export default function Navigation() {
   const isCounselingDropdownOpen = activeMenu === 'counseling';
   const isUserMenuOpen = activeMenu === 'additional';
   const isAiMindAssistantOpen = activeMenu === 'ai-mind-assistant';
-  const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
+  const isPsychologyOpen = activeMenu === 'psychology';
   const isCounselorOpen = activeMenu === 'counselor';
   const isAdminOpen = activeMenu === 'admin';
 
@@ -279,7 +279,7 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-2">
             <div className="flex space-x-1">
               
-               {/* 심리검사 메뉴 */}
+               {/* 심리검사 드롭다운 메뉴 */}
                <div className="relative">
                  <Link
                    href="/tests"
@@ -289,7 +289,7 @@ export default function Navigation() {
                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                    }`}
                    onClick={(e) => handleNavLinkClick("/tests", e)}
-                   onMouseEnter={() => setActiveMenu('psychology-tests')}
+                   onMouseEnter={() => setActiveMenu('psychology')}
                    onMouseLeave={() => setActiveMenu(null)}
                  >
                    🧠 심리검사
@@ -297,7 +297,7 @@ export default function Navigation() {
                      xmlns="http://www.w3.org/2000/svg"
                      viewBox="0 0 20 20"
                      fill="currentColor"
-                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${activeMenu === 'psychology-tests' ? "rotate-180" : ""}`}
+                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isPsychologyOpen ? "rotate-180" : ""}`}
                    >
                      <path
                        fillRule="evenodd"
@@ -308,11 +308,11 @@ export default function Navigation() {
                  </Link>
 
                  {/* 심리검사 메가 메뉴 */}
-                 {activeMenu === 'psychology-tests' && (
+                 {isPsychologyOpen && (
                    <div
-                     data-dropdown-menu="psychology-tests"
+                     data-dropdown-menu="psychology"
                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                     onMouseEnter={() => setActiveMenu('psychology-tests')}
+                     onMouseEnter={() => setActiveMenu('psychology')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
                      <div className="relative">
@@ -322,48 +322,48 @@ export default function Navigation() {
                            {
                              category: "개인 심리 및 성장",
                              items: [
-                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "성격 유형과 기질 특성 분석", icon: "🧬" },
-                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아정체감과 가치관 탐구", icon: "💎" },
-                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 잠재력과 역량 발굴", icon: "🚀" },
-                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 의미와 실존적 고민", icon: "🌟" }
+                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "MBTI, Big5 등 성격 분석", icon: "🧬" },
+                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아정체감, 가치관 탐색", icon: "⭐" },
+                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 역량 및 잠재력 분석", icon: "🚀" },
+                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 목적과 의미 탐색", icon: "🌟" }
                              ]
                            },
                            {
                              category: "대인관계 및 사회적응",
                              items: [
                                { name: "가족 관계", href: "/tests/family-relations", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦" },
-                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "연인/부부 관계 건강도", icon: "💕" },
-                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계와 소통 능력", icon: "👥" },
-                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "사회적 기술과 소통 능력", icon: "💬" }
+                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "연인/부부 관계 분석", icon: "💕" },
+                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계 분석", icon: "👥" },
+                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "소통 능력 및 사회적 기술", icon: "💬" }
                              ]
                            },
                            {
                              category: "정서 문제 및 정신 건강",
                              items: [
-                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감과 기분 변화 분석", icon: "😔" },
-                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안감과 스트레스 관리", icon: "😰" },
-                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "외상 경험과 위기 상황", icon: "🆘" },
-                               { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독과 충동 조절 능력", icon: "⚠️" },
-                               { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감과 자기 인식", icon: "🪞" }
+                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감, 기분 변화 분석", icon: "😔" },
+                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안, 스트레스 수준 측정", icon: "😰" },
+                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "외상 경험 및 위기 상황", icon: "🆘" },
+                               { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독성 행동 및 충동 조절", icon: "⚠️" },
+                               { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감 및 자기 인식", icon: "🪞" }
                              ]
                            },
                            {
                              category: "현실 문제 및 생활 관리",
                              items: [
-                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 선택과 직업 적성", icon: "💼" },
-                               { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스와 관리", icon: "💰" },
-                               { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강과 웰빙", icon: "🏥" },
-                               { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제와 행정 절차", icon: "⚖️" },
+                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 탐색 및 직업 적성", icon: "💼" },
+                               { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스 및 관리", icon: "💰" },
+                               { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강 및 관리", icon: "🏥" },
+                               { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제 및 행정 절차", icon: "⚖️" },
                                { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상생활 관리 능력", icon: "📅" }
                              ]
                            },
                            {
                              category: "문화 및 환경 적응",
                              items: [
-                               { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응력", icon: "🌍" },
-                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 환경 적응력", icon: "💻" },
-                               { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "생애주기별 적응 능력", icon: "🔄" },
-                               { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회환경적 문제 대응", icon: "🏘️" }
+                               { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응", icon: "🌍" },
+                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 환경 적응", icon: "💻" },
+                               { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "인생 단계별 적응", icon: "🔄" },
+                               { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회 환경적 문제", icon: "🏘️" }
                              ]
                            }
                          ].map((category) => (
@@ -376,14 +376,16 @@ export default function Navigation() {
                                  <Link
                                    key={item.name}
                                    href={item.href}
-                                   className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                    onClick={() => setActiveMenu(null)}
                                  >
                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                     {item.icon}
+                                     {item.icon || '🧠'}
                                    </div>
                                    <div className="flex-1 min-w-0">
-                                     <div className="text-base font-medium text-white truncate">{item.name}</div>
+                                     <div className="flex items-center gap-2">
+                                       <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                     </div>
                                      <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                    </div>
                                    <svg 
@@ -935,8 +937,8 @@ export default function Navigation() {
                            href="/counselor"
                            className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                              activeItem === "/counselor" || activeItem.startsWith("/counselor/")
-                               ? "text-white bg-purple-600"
-                               : "text-gray-300 hover:text-white hover:bg-purple-800/50"
+                               ? "text-white bg-blue-600"
+                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                            }`}
                            onClick={(e) => handleNavLinkClick("/counselor", e)}
                            onMouseEnter={() => setActiveMenu('counselor')}
@@ -947,7 +949,7 @@ export default function Navigation() {
                              xmlns="http://www.w3.org/2000/svg"
                              viewBox="0 0 20 20"
                              fill="currentColor"
-                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${activeMenu === 'counselor' ? "rotate-180" : ""}`}
+                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorOpen ? "rotate-180" : ""}`}
                            >
                              <path
                                fillRule="evenodd"
@@ -958,19 +960,19 @@ export default function Navigation() {
                          </Link>
 
                          {/* 상담사 메가 메뉴 */}
-                         {activeMenu === 'counselor' && (
+                         {isCounselorOpen && (
                            <div
                              data-dropdown-menu="counselor"
-                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
                              <div className="relative">
                                {/* 스크롤 가능한 콘텐츠 */}
-                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900">
+                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                                  {counselorMenuItems.map((category) => (
                                    <div key={category.category} className="mb-4 last:mb-0">
-                                     <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
+                                     <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
                                        {category.category}
                                      </div>
                                      <div className="space-y-1">
@@ -978,18 +980,20 @@ export default function Navigation() {
                                          <Link
                                            key={item.name}
                                            href={item.href}
-                                           className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                           className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon}
+                                             {item.icon || '👨‍⚕️'}
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-base font-medium text-white truncate">{item.name}</div>
-                                             <div className="text-sm text-purple-300 truncate">{item.description}</div>
+                                             <div className="flex items-center gap-2">
+                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                             </div>
+                                             <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                            </div>
                                            <svg 
-                                             className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -1015,8 +1019,8 @@ export default function Navigation() {
                            href="/admin"
                            className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                              activeItem === "/admin" || activeItem.startsWith("/admin/")
-                               ? "text-white bg-purple-600"
-                               : "text-gray-300 hover:text-white hover:bg-purple-800/50"
+                               ? "text-white bg-blue-600"
+                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                            }`}
                            onClick={(e) => handleNavLinkClick("/admin", e)}
                            onMouseEnter={() => setActiveMenu('admin')}
@@ -1027,7 +1031,7 @@ export default function Navigation() {
                              xmlns="http://www.w3.org/2000/svg"
                              viewBox="0 0 20 20"
                              fill="currentColor"
-                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${activeMenu === 'admin' ? "rotate-180" : ""}`}
+                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAdminOpen ? "rotate-180" : ""}`}
                            >
                              <path
                                fillRule="evenodd"
@@ -1038,19 +1042,19 @@ export default function Navigation() {
                          </Link>
 
                          {/* 관리자 메가 메뉴 */}
-                         {activeMenu === 'admin' && (
+                         {isAdminOpen && (
                            <div
                              data-dropdown-menu="admin"
-                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
                              <div className="relative">
                                {/* 스크롤 가능한 콘텐츠 */}
-                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900">
+                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                                  {adminMenuItems.map((category) => (
                                    <div key={category.category} className="mb-4 last:mb-0">
-                                     <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
+                                     <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
                                        {category.category}
                                      </div>
                                      <div className="space-y-1">
@@ -1058,18 +1062,20 @@ export default function Navigation() {
                                          <Link
                                            key={item.name}
                                            href={item.href}
-                                           className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                           className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon}
+                                             {item.icon || '🔧'}
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-base font-medium text-white truncate">{item.name}</div>
-                                             <div className="text-sm text-purple-300 truncate">{item.description}</div>
+                                             <div className="flex items-center gap-2">
+                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                             </div>
+                                             <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                            </div>
                                            <svg 
-                                             className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
