@@ -209,7 +209,9 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                   {/* 소분류 팝업 메뉴 */}
                   {category.subItems.length > 0 && hoveredCategory === category.id && (
                     <div 
-                      className="absolute left-full top-0 ml-2 w-72 bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-slate-600/50 backdrop-blur-sm z-50 animate-in slide-in-from-left-2 duration-200"
+                      className="absolute left-full top-0 w-72 bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-slate-600/50 backdrop-blur-sm z-50 animate-in slide-in-from-left-2 duration-200"
+                      onMouseEnter={() => setHoveredCategory(category.id)}
+                      onMouseLeave={() => setHoveredCategory(null)}
                     >
                       {/* 팝업 헤더 */}
                       <div className="px-4 py-3 border-b border-slate-600/50">
