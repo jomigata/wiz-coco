@@ -279,7 +279,7 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-2">
             <div className="flex space-x-1">
               
-               {/* 심리검사 드롭다운 메뉴 */}
+               {/* 심리검사 메뉴 */}
                <div className="relative">
                  <Link
                    href="/tests"
@@ -316,138 +316,85 @@ export default function Navigation() {
                      onMouseLeave={() => setActiveMenu(null)}
                    >
                      <div className="relative">
-                       {/* 상단 화살표 가이드 */}
-                       <div
-                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.psychology-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop > 0;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.psychology-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                           </svg>
-                         </div>
-                       </div>
-
-                       {/* 하단 화살표 가이드 */}
-                       <div
-                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.psychology-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.psychology-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-blue-600/90 to-blue-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-blue-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                           </svg>
-                         </div>
-                       </div>
-
                        {/* 스크롤 가능한 콘텐츠 */}
-                       <div 
-                         className="psychology-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
-                         onWheel={(e) => {
-                           e.stopPropagation();
-                           const target = e.currentTarget;
-                           const scrollTop = target.scrollTop;
-                           const scrollHeight = target.scrollHeight;
-                           const clientHeight = target.clientHeight;
-                           
-                           if ((scrollTop === 0 && e.deltaY < 0) || 
-                               (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                             e.preventDefault();
+                       <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                         {[
+                           {
+                             category: "개인 심리 및 성장",
+                             items: [
+                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "성격 유형과 기질 특성 분석", icon: "🧬" },
+                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아정체감과 가치관 탐구", icon: "💎" },
+                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 잠재력과 역량 발굴", icon: "🚀" },
+                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 의미와 실존적 고민", icon: "🌟" }
+                             ]
+                           },
+                           {
+                             category: "대인관계 및 사회적응",
+                             items: [
+                               { name: "가족 관계", href: "/tests/family-relations", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦" },
+                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "연인/부부 관계 건강도", icon: "💕" },
+                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계와 소통 능력", icon: "👥" },
+                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "사회적 기술과 소통 능력", icon: "💬" }
+                             ]
+                           },
+                           {
+                             category: "정서 문제 및 정신 건강",
+                             items: [
+                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감과 기분 변화 분석", icon: "😔" },
+                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안감과 스트레스 관리", icon: "😰" },
+                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "외상 경험과 위기 상황", icon: "🆘" },
+                               { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독과 충동 조절 능력", icon: "⚠️" },
+                               { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감과 자기 인식", icon: "🪞" }
+                             ]
+                           },
+                           {
+                             category: "현실 문제 및 생활 관리",
+                             items: [
+                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 선택과 직업 적성", icon: "💼" },
+                               { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스와 관리", icon: "💰" },
+                               { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강과 웰빙", icon: "🏥" },
+                               { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제와 행정 절차", icon: "⚖️" },
+                               { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상생활 관리 능력", icon: "📅" }
+                             ]
+                           },
+                           {
+                             category: "문화 및 환경 적응",
+                             items: [
+                               { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응력", icon: "🌍" },
+                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 환경 적응력", icon: "💻" },
+                               { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "생애주기별 적응 능력", icon: "🔄" },
+                               { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회환경적 문제 대응", icon: "🏘️" }
+                             ]
                            }
-                         }}
-                         style={{
-                           overscrollBehavior: 'contain',
-                           scrollbarGutter: 'stable'
-                         }}
-                       >
-                         {testSubMenuItems.map((category) => (
+                         ].map((category) => (
                            <div key={category.category} className="mb-4 last:mb-0">
                              <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
                                {category.category}
                              </div>
                              <div className="space-y-1">
-                               {category.subcategories.map((subcategory) => (
-                                 <div key={subcategory.name} className="space-y-1">
-                                   <div className="px-2 py-1 text-sm font-semibold text-purple-300 bg-purple-500/20 rounded">
-                                     {subcategory.name}
+                               {category.items.map((item) => (
+                                 <Link
+                                   key={item.name}
+                                   href={item.href}
+                                   className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                   onClick={() => setActiveMenu(null)}
+                                 >
+                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                     {item.icon}
                                    </div>
-                                   <div className="ml-2 space-y-1">
-                                     {subcategory.items.map((item) => (
-                                       <Link
-                                         key={item.name}
-                                         href={item.href}
-                                         className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
-                                         onClick={() => setActiveMenu(null)}
-                                       >
-                                         <div className="text-lg group-hover:scale-110 transition-transform duration-300">
-                                           {item.icon || '🧠'}
-                                         </div>
-                                         <div className="flex-1 min-w-0">
-                                           <div className="flex items-center gap-2">
-                                             <span className="text-sm font-medium text-white truncate">{item.name}</span>
-                                             {item.badge && (
-                                               <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                 item.badge === '인기' ? 'bg-red-500 text-white' :
-                                                 item.badge === '신규' ? 'bg-green-500 text-white' :
-                                                 item.badge === '추천' ? 'bg-orange-500 text-white' :
-                                                 'bg-blue-500 text-white'
-                                               }`}>
-                                                 {item.badge}
-                                               </span>
-                                             )}
-                                           </div>
-                                           <div className="text-xs text-blue-300 truncate">{item.description}</div>
-                                         </div>
-                                         <svg 
-                                           className="w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                           fill="none" 
-                                           stroke="currentColor" 
-                                           viewBox="0 0 24 24"
-                                         >
-                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                         </svg>
-                                       </Link>
-                                     ))}
+                                   <div className="flex-1 min-w-0">
+                                     <div className="text-base font-medium text-white truncate">{item.name}</div>
+                                     <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                    </div>
-                                 </div>
+                                   <svg 
+                                     className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                     fill="none" 
+                                     stroke="currentColor" 
+                                     viewBox="0 0 24 24"
+                                   >
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                   </svg>
+                                 </Link>
                                ))}
                              </div>
                            </div>
@@ -1014,93 +961,13 @@ export default function Navigation() {
                          {activeMenu === 'counselor' && (
                            <div
                              data-dropdown-menu="counselor"
-                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('counselor')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
                              <div className="relative">
-                               {/* 상단 화살표 가이드 */}
-                               <div
-                                 className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                                 ref={(el) => {
-                                   if (el) {
-                                     const checkScroll = () => {
-                                       const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
-                                       if (scrollableDiv) {
-                                         const shouldShow = scrollableDiv.scrollTop > 0;
-                                         el.style.opacity = shouldShow ? '1' : '0';
-                                       }
-                                     };
-                                     
-                                     const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
-                                     if (scrollableDiv) {
-                                       scrollableDiv.addEventListener('scroll', checkScroll);
-                                       checkScroll();
-                                       
-                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                                     }
-                                   }
-                                 }}
-                               >
-                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
-                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                   </svg>
-                                 </div>
-                               </div>
-
-                               {/* 하단 화살표 가이드 */}
-                               <div
-                                 className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                                 ref={(el) => {
-                                   if (el) {
-                                     const checkScroll = () => {
-                                       const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
-                                       if (scrollableDiv) {
-                                         const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                         el.style.opacity = shouldShow ? '1' : '0';
-                                       }
-                                     };
-                                     
-                                     const scrollableDiv = el.parentElement?.querySelector('.counselor-scrollable') as HTMLElement;
-                                     if (scrollableDiv) {
-                                       scrollableDiv.addEventListener('scroll', checkScroll);
-                                       checkScroll();
-                                       
-                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                                     }
-                                   }
-                                 }}
-                               >
-                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
-                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                   </svg>
-                                 </div>
-                               </div>
-
                                {/* 스크롤 가능한 콘텐츠 */}
-                               <div 
-                                 className="counselor-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900"
-                                 onWheel={(e) => {
-                                   e.stopPropagation();
-                                   const target = e.currentTarget;
-                                   const scrollTop = target.scrollTop;
-                                   const scrollHeight = target.scrollHeight;
-                                   const clientHeight = target.clientHeight;
-                                   
-                                   if ((scrollTop === 0 && e.deltaY < 0) || 
-                                       (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                                     e.preventDefault();
-                                   }
-                                 }}
-                                 style={{
-                                   overscrollBehavior: 'contain',
-                                   scrollbarGutter: 'stable'
-                                 }}
-                               >
+                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900">
                                  {counselorMenuItems.map((category) => (
                                    <div key={category.category} className="mb-4 last:mb-0">
                                      <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
@@ -1115,21 +982,10 @@ export default function Navigation() {
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon || '👨‍⚕️'}
+                                             {item.icon}
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="flex items-center gap-2">
-                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                               {'badge' in item && (item as any).badge && (
-                                                 <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                   (item as any).badge === '인기' ? 'bg-red-500 text-white' :
-                                                   (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                                   'bg-orange-500 text-white'
-                                                 }`}>
-                                                   {(item as any).badge}
-                                                 </span>
-                                               )}
-                                             </div>
+                                             <div className="text-base font-medium text-white truncate">{item.name}</div>
                                              <div className="text-sm text-purple-300 truncate">{item.description}</div>
                                            </div>
                                            <svg 
@@ -1185,93 +1041,13 @@ export default function Navigation() {
                          {activeMenu === 'admin' && (
                            <div
                              data-dropdown-menu="admin"
-                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                              onMouseEnter={() => setActiveMenu('admin')}
                              onMouseLeave={() => setActiveMenu(null)}
                            >
                              <div className="relative">
-                               {/* 상단 화살표 가이드 */}
-                               <div
-                                 className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                                 ref={(el) => {
-                                   if (el) {
-                                     const checkScroll = () => {
-                                       const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
-                                       if (scrollableDiv) {
-                                         const shouldShow = scrollableDiv.scrollTop > 0;
-                                         el.style.opacity = shouldShow ? '1' : '0';
-                                       }
-                                     };
-                                     
-                                     const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
-                                     if (scrollableDiv) {
-                                       scrollableDiv.addEventListener('scroll', checkScroll);
-                                       checkScroll();
-                                       
-                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                                     }
-                                   }
-                                 }}
-                               >
-                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
-                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                   </svg>
-                                 </div>
-                               </div>
-
-                               {/* 하단 화살표 가이드 */}
-                               <div
-                                 className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                                 style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                                 ref={(el) => {
-                                   if (el) {
-                                     const checkScroll = () => {
-                                       const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
-                                       if (scrollableDiv) {
-                                         const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                         el.style.opacity = shouldShow ? '1' : '0';
-                                       }
-                                     };
-                                     
-                                     const scrollableDiv = el.parentElement?.querySelector('.admin-scrollable') as HTMLElement;
-                                     if (scrollableDiv) {
-                                       scrollableDiv.addEventListener('scroll', checkScroll);
-                                       checkScroll();
-                                       
-                                       return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                                     }
-                                   }
-                                 }}
-                               >
-                                 <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
-                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                   </svg>
-                                 </div>
-                               </div>
-
                                {/* 스크롤 가능한 콘텐츠 */}
-                               <div 
-                                 className="admin-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900"
-                                 onWheel={(e) => {
-                                   e.stopPropagation();
-                                   const target = e.currentTarget;
-                                   const scrollTop = target.scrollTop;
-                                   const scrollHeight = target.scrollHeight;
-                                   const clientHeight = target.clientHeight;
-                                   
-                                   if ((scrollTop === 0 && e.deltaY < 0) || 
-                                       (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                                     e.preventDefault();
-                                   }
-                                 }}
-                                 style={{
-                                   overscrollBehavior: 'contain',
-                                   scrollbarGutter: 'stable'
-                                 }}
-                               >
+                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-purple-900">
                                  {adminMenuItems.map((category) => (
                                    <div key={category.category} className="mb-4 last:mb-0">
                                      <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
@@ -1286,21 +1062,10 @@ export default function Navigation() {
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon || '🔧'}
+                                             {item.icon}
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="flex items-center gap-2">
-                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                               {'badge' in item && (item as any).badge && (
-                                                 <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                   (item as any).badge === '인기' ? 'bg-red-500 text-white' :
-                                                   (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                                   'bg-orange-500 text-white'
-                                                 }`}>
-                                                   {(item as any).badge}
-                                                 </span>
-                                               )}
-                                             </div>
+                                             <div className="text-base font-medium text-white truncate">{item.name}</div>
                                              <div className="text-sm text-purple-300 truncate">{item.description}</div>
                                            </div>
                                            <svg 
