@@ -25,7 +25,7 @@ export default function Navigation() {
   const isCounselingDropdownOpen = activeMenu === 'counseling';
   const isUserMenuOpen = activeMenu === 'additional';
   const isAiMindAssistantOpen = activeMenu === 'ai-mind-assistant';
-  const isPsychologyOpen = activeMenu === 'psychology';
+  const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
   const isCounselorOpen = activeMenu === 'counselor';
   const isAdminOpen = activeMenu === 'admin';
 
@@ -289,7 +289,7 @@ export default function Navigation() {
                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                    }`}
                    onClick={(e) => handleNavLinkClick("/tests", e)}
-                   onMouseEnter={() => setActiveMenu('psychology')}
+                   onMouseEnter={() => setActiveMenu('psychology-tests')}
                    onMouseLeave={() => setActiveMenu(null)}
                  >
                    🧠 심리검사
@@ -297,7 +297,7 @@ export default function Navigation() {
                      xmlns="http://www.w3.org/2000/svg"
                      viewBox="0 0 20 20"
                      fill="currentColor"
-                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isPsychologyOpen ? "rotate-180" : ""}`}
+                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isPsychologyTestsOpen ? "rotate-180" : ""}`}
                    >
                      <path
                        fillRule="evenodd"
@@ -308,11 +308,11 @@ export default function Navigation() {
                  </Link>
 
                  {/* 심리검사 메가 메뉴 */}
-                 {isPsychologyOpen && (
+                 {isPsychologyTestsOpen && (
                    <div
-                     data-dropdown-menu="psychology"
+                     data-dropdown-menu="psychology-tests"
                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                     onMouseEnter={() => setActiveMenu('psychology')}
+                     onMouseEnter={() => setActiveMenu('psychology-tests')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
                      <div className="relative">
@@ -322,27 +322,27 @@ export default function Navigation() {
                            {
                              category: "개인 심리 및 성장",
                              items: [
-                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "MBTI, Big5 등 성격 분석", icon: "🧬" },
-                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아정체감, 가치관 탐색", icon: "⭐" },
-                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 역량 및 잠재력 분석", icon: "🚀" },
-                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 목적과 의미 탐색", icon: "🌟" }
+                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "개인 성격 특성 분석", icon: "🧬" },
+                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아 인식 및 가치 체계", icon: "🎯" },
+                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 역량 및 성장 가능성", icon: "🚀" },
+                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 목적과 의미 탐구", icon: "🌟" }
                              ]
                            },
                            {
                              category: "대인관계 및 사회적응",
                              items: [
                                { name: "가족 관계", href: "/tests/family-relations", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦" },
-                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "연인/부부 관계 분석", icon: "💕" },
-                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계 분석", icon: "👥" },
-                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "소통 능력 및 사회적 기술", icon: "💬" }
+                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "로맨틱 관계 및 결혼 생활", icon: "💕" },
+                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계 및 소통", icon: "👥" },
+                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "대인관계 기술 및 소통 능력", icon: "💬" }
                              ]
                            },
                            {
                              category: "정서 문제 및 정신 건강",
                              items: [
-                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감, 기분 변화 분석", icon: "😔" },
-                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안, 스트레스 수준 측정", icon: "😰" },
-                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "외상 경험 및 위기 상황", icon: "🆘" },
+                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감 및 기분 장애", icon: "😔" },
+                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안 증상 및 스트레스 관리", icon: "😰" },
+                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "트라우마 및 위기 상황", icon: "🆘" },
                                { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독성 행동 및 충동 조절", icon: "⚠️" },
                                { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감 및 자기 인식", icon: "🪞" }
                              ]
@@ -350,18 +350,18 @@ export default function Navigation() {
                            {
                              category: "현실 문제 및 생활 관리",
                              items: [
-                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 탐색 및 직업 적성", icon: "💼" },
+                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 선택 및 직업 적응", icon: "💼" },
                                { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스 및 관리", icon: "💰" },
                                { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강 및 관리", icon: "🏥" },
                                { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제 및 행정 절차", icon: "⚖️" },
-                               { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상생활 관리 능력", icon: "📅" }
+                               { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상 생활 관리 및 습관", icon: "📅" }
                              ]
                            },
                            {
                              category: "문화 및 환경 적응",
                              items: [
                                { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응", icon: "🌍" },
-                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 환경 적응", icon: "💻" },
+                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 시대 적응", icon: "💻" },
                                { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "인생 단계별 적응", icon: "🔄" },
                                { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회 환경적 문제", icon: "🏘️" }
                              ]
