@@ -165,8 +165,16 @@ export default function Navigation() {
       category: "상담 & 소통",
       items: [
         { name: "1:1 채팅", href: "/chat", description: "상담사와 실시간 채팅", icon: "💬" },
+        { name: "상담 예약", href: "/counseling/appointments", description: "개인/가족/커플 상담 예약", icon: "📅" },
         { name: "상담사 연결", href: "/mypage/connect-counselor", description: "상담사 인증코드 입력", icon: "🔗" },
         { name: "상담사 지원", href: "/counselor-application", description: "상담사 지원 신청", icon: "👨‍⚕️" }
+      ]
+    },
+    {
+      category: "일상 관리",
+      items: [
+        { name: "일상 추적", href: "/mypage/daily-tracking", description: "매일의 마음 상태 기록", icon: "📝" },
+        { name: "MBTI 궁합", href: "/mbti-compatibility", description: "AI 기반 MBTI 궁합 분석", icon: "💕" }
       ]
     },
     {
@@ -205,6 +213,13 @@ export default function Navigation() {
         { name: "상담 노트", href: "/counselor/notes", description: "상담 내용 기록", icon: "📋" },
         { name: "치료 계획", href: "/counselor/treatment-plans", description: "치료 계획 수립", icon: "📋" },
         { name: "진행 상황", href: "/counselor/progress", description: "치료 진행 상황 추적", icon: "📈" }
+      ]
+    },
+    {
+      category: "데이터 관리",
+      items: [
+        { name: "데이터 공유", href: "/counselor/data-sharing", description: "다른 상담사와 데이터 공유", icon: "🤝" },
+        { name: "일상 기록 관리", href: "/counselor/daily-records", description: "내담자 일상 기록 관리", icon: "📊" }
       ]
     }
   ];
