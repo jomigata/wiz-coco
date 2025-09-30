@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { useRouter } from 'next/navigation';
 
 export default function CounselorApplicationPage() {
   const { user, loading } = useFirebaseAuth();

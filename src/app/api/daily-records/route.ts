@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { initializeFirebase } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import { DailyRecord } from '@/types/counselor';
 
 // 일상 기록 생성
 export async function POST(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { clientId, counselorId, recordType, content, moodScore, stressLevel, energyLevel, isShared } = await request.json();
 
     if (!clientId || !recordType || !content) {
@@ -50,6 +53,9 @@ export async function POST(request: NextRequest) {
 // 일상 기록 조회
 export async function GET(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
     const counselorId = searchParams.get('counselorId');
@@ -122,6 +128,9 @@ export async function GET(request: NextRequest) {
 // 일상 기록 수정
 export async function PUT(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { recordId, content, moodScore, stressLevel, energyLevel, isShared, counselorNotes } = await request.json();
 
     if (!recordId) {

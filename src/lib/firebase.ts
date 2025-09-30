@@ -31,7 +31,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Firebase 앱 초기화 (중복 방지) - 클라이언트 사이드에서만 실행
+// Firebase 앱 초기화 (중복 방지)
 let app: any = null;
 let auth: any = null;
 let db: any = null;
@@ -39,38 +39,41 @@ let storage: any = null;
 let analytics: any = null;
 let performance: any = null;
 
-// 클라이언트 사이드에서만 Firebase 초기화
-if (typeof window !== 'undefined') {
-  try {
-    // Firebase 앱 초기화
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    
-    // Firebase 서비스 초기화
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-    
-    // Analytics 초기화 (지원되는 경우에만)
-    if (typeof window !== 'undefined') {
-      isSupported().then(yes => yes ? analytics = getAnalytics(app) : null);
-    }
-    
-    // Performance 초기화 (지원되는 경우에만)
-    if (typeof window !== 'undefined') {
-      try {
-        performance = getPerformance(app);
-      } catch (error) {
-        console.warn('Firebase Performance 초기화 실패:', error);
+// Firebase 초기화 함수
+function initializeFirebase() {
+  if (!app) {
+    try {
+      // Firebase 앱 초기화
+      app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+      
+      // Firebase 서비스 초기화
+      auth = getAuth(app);
+      db = getFirestore(app);
+      storage = getStorage(app);
+      
+      // 클라이언트 사이드에서만 Analytics와 Performance 초기화
+      if (typeof window !== 'undefined') {
+        // Analytics 초기화 (지원되는 경우에만)
+        isSupported().then(yes => yes ? analytics = getAnalytics(app) : null);
+        
+        // Performance 초기화 (지원되는 경우에만)
+        try {
+          performance = getPerformance(app);
+        } catch (error) {
+          console.warn('Firebase Performance 초기화 실패:', error);
+        }
       }
+      
+    } catch (error) {
+      console.error('❌ Firebase 초기화 실패:', error);
+      throw error;
     }
-    
-  } catch (error) {
-    console.error('❌ Firebase 클라이언트 초기화 실패:', error);
   }
+  return { app, auth, db, storage, analytics, performance };
 }
 
 // Firebase 서비스 인스턴스 내보내기
-export { app, auth, db, storage, analytics, performance };
+export { app, auth, db, storage, analytics, performance, initializeFirebase };
 
 // 기본 내보내기
 export default app; 

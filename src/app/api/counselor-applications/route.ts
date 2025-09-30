@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { initializeFirebase } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
 import { CounselorApplication } from '@/types/counselor';
 
 // 상담사 지원 신청
 export async function POST(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const applicationData: Omit<CounselorApplication, 'id'> = await request.json();
 
     // 필수 필드 검증
@@ -61,6 +64,9 @@ export async function POST(request: NextRequest) {
 // 상담사 지원 신청 목록 조회 (관리자용)
 export async function GET(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const applicantId = searchParams.get('applicantId');
@@ -106,6 +112,9 @@ export async function GET(request: NextRequest) {
 // 상담사 지원 신청 상태 업데이트 (관리자용)
 export async function PUT(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { applicationId, status, reviewNotes, reviewerId } = await request.json();
 
     if (!applicationId || !status) {

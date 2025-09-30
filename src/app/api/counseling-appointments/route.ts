@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { initializeFirebase } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, where, doc, updateDoc, orderBy } from 'firebase/firestore';
 
 export interface CounselingAppointment {
@@ -25,6 +25,9 @@ export interface CounselingAppointment {
 // 상담 예약 생성
 export async function POST(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { 
       clientId, 
       counselorId, 
@@ -104,6 +107,9 @@ export async function POST(request: NextRequest) {
 // 상담 예약 조회
 export async function GET(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
     const counselorId = searchParams.get('counselorId');
@@ -175,6 +181,9 @@ export async function GET(request: NextRequest) {
 // 상담 예약 상태 업데이트
 export async function PUT(request: NextRequest) {
   try {
+    // Firebase 초기화
+    const { db } = initializeFirebase();
+    
     const { appointmentId, status, counselorNotes } = await request.json();
 
     if (!appointmentId || !status) {
