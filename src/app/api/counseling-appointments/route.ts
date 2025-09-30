@@ -133,15 +133,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (status) {
+    if (status && q) {
       q = query(q, where('status', '==', status));
     }
 
-    if (startDate && endDate) {
+    if (startDate && endDate && q) {
       q = query(q, where('scheduledAt', '>=', startDate), where('scheduledAt', '<=', endDate));
     }
 
-    q = query(q, orderBy('scheduledAt', 'asc'));
+    if (q) {
+      q = query(q, orderBy('scheduledAt', 'asc'));
+    }
 
     const querySnapshot = await getDocs(q);
     const appointments = querySnapshot.docs.map(doc => ({

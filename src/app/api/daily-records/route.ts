@@ -80,15 +80,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (recordType) {
+    if (recordType && q) {
       q = query(q, where('recordType', '==', recordType));
     }
 
-    if (startDate && endDate) {
+    if (startDate && endDate && q) {
       q = query(q, where('recordedAt', '>=', startDate), where('recordedAt', '<=', endDate));
     }
 
-    q = query(q, orderBy('recordedAt', 'desc'), limit(limitCount));
+    if (q) {
+      q = query(q, orderBy('recordedAt', 'desc'), limit(limitCount));
+    }
 
     const querySnapshot = await getDocs(q);
     const records = querySnapshot.docs.map(doc => ({

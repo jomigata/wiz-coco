@@ -204,7 +204,7 @@ function analyzeMBTICompatibility(mbti1: string, mbti2: string, relationshipType
   }
 
   // 특별한 궁합 조합들
-  const specialCombinations = {
+  const specialCombinations: { [key: string]: { score: number; strength?: string; challenge?: string } } = {
     'ENFP-INTJ': { score: 20, strength: '완벽한 보완 관계로 서로를 성장시킵니다' },
     'ENFJ-INFP': { score: 15, strength: '깊은 이해와 공감으로 강한 유대감을 형성합니다' },
     'ESTJ-INFP': { score: -10, challenge: '완전히 다른 가치관으로 갈등이 많을 수 있습니다' },
