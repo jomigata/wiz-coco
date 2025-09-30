@@ -10,6 +10,7 @@ import { getItem, setItem, getAuthState, setAuthState } from '@/utils/localStora
 import { setupSyncMonitor, onSyncStatusChange, SyncStatus } from '@/utils/syncService';
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useCounselorConnection } from '@/hooks/useCounselorConnection';
 import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -119,6 +120,9 @@ function MyPageContent() {
 
   // Firebase 인증 훅 사용
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  
+  // 상담사 연결 상태 훅 사용
+  const { connection: counselorConnection, loading: counselorLoading, refetch: refetchCounselor } = useCounselorConnection();
   
   // URL에서 탭 파라미터 확인
   const initialTab = searchParams.get('tab') || 'profile';
@@ -277,6 +281,15 @@ function MyPageContent() {
             transition={{ delay: 0.3, duration: 0.5 }}
           ></motion.div>
         </motion.div>
+        
+        {/* 상담사 연결 상태 표시 */}
+        {!firebaseLoading && !isLoading && (
+          <CounselorConnectionStatus 
+            connection={counselorConnection}
+            loading={counselorLoading}
+            onRefetch={refetchCounselor}
+          />
+        )}
         
         {firebaseLoading || isLoading ? (
           <div className="flex items-center justify-center">
@@ -834,6 +847,100 @@ function MyPageContent() {
         </main>
       </div>
     </div>
+  );
+}
+
+// 상담사 연결 상태 컴포넌트
+function CounselorConnectionStatus({ 
+  connection, 
+  loading, 
+  onRefetch 
+}: { 
+  connection: any; 
+  loading: boolean; 
+  onRefetch: () => void;
+}) {
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
+          <div className="flex items-center">
+            <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-3"></div>
+            <p className="text-gray-300">상담사 연결 상태를 확인하는 중...</p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (connection.isConnected) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-emerald-400 font-semibold">상담사와 연결됨</h3>
+                <p className="text-emerald-300 text-sm">
+                  {connection.counselorInfo?.name || '상담사'}와 연결되어 있습니다
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onRefetch}
+              className="text-emerald-400 hover:text-emerald-300 text-sm underline"
+            >
+              새로고침
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-6"
+    >
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-blue-400 font-semibold">상담사와 연결하기</h3>
+              <p className="text-blue-300 text-sm">
+                상담사 인증코드를 입력하여 연결하세요
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/mypage/connect-counselor"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            연결하기
+          </Link>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 

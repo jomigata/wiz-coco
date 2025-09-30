@@ -30,9 +30,11 @@ const RegisterContent = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [name, setName] = useState<string>('');
+  const [counselorCode, setCounselorCode] = useState<string>('');
   const [registerError, setRegisterError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [showCounselorCode, setShowCounselorCode] = useState<boolean>(false);
   
   // 로그인 상태 확인
   useEffect(() => {
@@ -105,10 +107,45 @@ const RegisterContent = () => {
           email: result.user.email,
           displayName: result.user.displayName
         });
-        
-        // 이메일 인증 안내와 함께 로그인 페이지로 리다이렉트
-        router.push('/login?registered=true&emailVerification=sent');
-        return;
+
+        // 인증코드가 입력된 경우 상담사 연결 처리
+        if (counselorCode.trim()) {
+          try {
+            const verifyResponse = await fetch('/api/verify-counselor-code', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                clientId: result.user.uid,
+                counselorCode: counselorCode.trim()
+              }),
+            });
+
+            const verifyResult = await verifyResponse.json();
+            
+            if (verifyResult.success) {
+              console.log('[Register] 상담사 연결 성공:', verifyResult.data);
+              // 상담사 연결 성공 시 마이페이지로 리다이렉트
+              router.push('/mypage?connected=true');
+              return;
+            } else {
+              console.warn('[Register] 상담사 연결 실패:', verifyResult.error);
+              // 상담사 연결 실패해도 회원가입은 성공으로 처리
+              router.push('/login?registered=true&counselorConnectionFailed=true');
+              return;
+            }
+          } catch (verifyError) {
+            console.error('[Register] 상담사 연결 처리 오류:', verifyError);
+            // 상담사 연결 오류가 발생해도 회원가입은 성공으로 처리
+            router.push('/login?registered=true&counselorConnectionError=true');
+            return;
+          }
+        } else {
+          // 인증코드가 없는 경우 기본 로그인 페이지로 리다이렉트
+          router.push('/login?registered=true&emailVerification=sent');
+          return;
+        }
       } else {
         setRegisterError(result.error || '회원가입 처리 중 오류가 발생했습니다.');
         return;
@@ -232,6 +269,40 @@ const RegisterContent = () => {
                   className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   placeholder="비밀번호 (6자 이상)"
                 />
+              </div>
+              
+              {/* 상담사 인증코드 입력 섹션 */}
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="hasCounselorCode"
+                    checked={showCounselorCode}
+                    onChange={(e) => setShowCounselorCode(e.target.checked)}
+                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-emerald-700/50 rounded bg-emerald-900/30"
+                  />
+                  <label htmlFor="hasCounselorCode" className="ml-2 text-sm text-emerald-300">
+                    상담사 인증코드가 있으신가요? (선택사항)
+                  </label>
+                </div>
+                
+                {showCounselorCode && (
+                  <div>
+                    <label htmlFor="counselorCode" className="sr-only">상담사 인증코드</label>
+                    <input
+                      id="counselorCode"
+                      name="counselorCode"
+                      type="text"
+                      value={counselorCode}
+                      onChange={(e) => setCounselorCode(e.target.value)}
+                      className="appearance-none relative block w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      placeholder="상담사 인증코드를 입력하세요"
+                    />
+                    <p className="mt-1 text-xs text-emerald-400">
+                      인증코드를 입력하면 해당 상담사와 연결되어 검사 결과를 공유할 수 있습니다.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

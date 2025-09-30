@@ -156,8 +156,17 @@ export default function Navigation() {
       category: "개인 관리",
       items: [
         { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음", icon: "📊" },
+        { name: "할당된 검사", href: "/mypage/assigned-tests", description: "상담사가 할당한 검사", icon: "📋" },
         { name: "성장 리포트", href: "/progress", description: "개인 성장 분석 리포트", icon: "📈" },
         { name: "목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
+      ]
+    },
+    {
+      category: "상담 & 소통",
+      items: [
+        { name: "1:1 채팅", href: "/chat", description: "상담사와 실시간 채팅", icon: "💬" },
+        { name: "상담사 연결", href: "/mypage/connect-counselor", description: "상담사 인증코드 입력", icon: "🔗" },
+        { name: "상담사 지원", href: "/counselor-application", description: "상담사 지원 신청", icon: "👨‍⚕️" }
       ]
     },
     {
@@ -176,6 +185,7 @@ export default function Navigation() {
       category: "내담자 관리",
       items: [
         { name: "내담자 목록", href: "/counselor/clients", description: "담당 내담자 관리", icon: "👥" },
+        { name: "검사 할당", href: "/counselor/assign-tests", description: "내담자에게 검사 할당", icon: "📋" },
         { name: "상담 일정", href: "/counselor/schedule", description: "상담 일정 관리", icon: "📅" },
         { name: "상담 기록", href: "/counselor/sessions", description: "상담 세션 기록", icon: "📝" }
       ]
@@ -185,12 +195,13 @@ export default function Navigation() {
       items: [
         { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
         { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
-        { name: "검사 코드 관리", href: "/counselor/test-codes", description: "검사 코드 생성 및 관리", icon: "🔑" }
+        { name: "인증코드 관리", href: "/counselor/codes", description: "상담사 인증코드 관리", icon: "🔑" }
       ]
     },
     {
       category: "상담 도구",
       items: [
+        { name: "1:1 채팅", href: "/chat", description: "내담자와 실시간 채팅", icon: "💬" },
         { name: "상담 노트", href: "/counselor/notes", description: "상담 내용 기록", icon: "📋" },
         { name: "치료 계획", href: "/counselor/treatment-plans", description: "치료 계획 수립", icon: "📋" },
         { name: "진행 상황", href: "/counselor/progress", description: "치료 진행 상황 추적", icon: "📈" }
