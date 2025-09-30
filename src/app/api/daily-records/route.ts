@@ -92,6 +92,13 @@ export async function GET(request: NextRequest) {
       q = query(q, orderBy('recordedAt', 'desc'), limit(limitCount));
     }
 
+    if (!q) {
+      return NextResponse.json(
+        { success: false, error: '쿼리를 생성할 수 없습니다.' },
+        { status: 400 }
+      );
+    }
+
     const querySnapshot = await getDocs(q);
     const records = querySnapshot.docs.map(doc => ({
       id: doc.id,

@@ -145,6 +145,13 @@ export async function GET(request: NextRequest) {
       q = query(q, orderBy('scheduledAt', 'asc'));
     }
 
+    if (!q) {
+      return NextResponse.json(
+        { success: false, error: '쿼리를 생성할 수 없습니다.' },
+        { status: 400 }
+      );
+    }
+
     const querySnapshot = await getDocs(q);
     const appointments = querySnapshot.docs.map(doc => ({
       id: doc.id,
