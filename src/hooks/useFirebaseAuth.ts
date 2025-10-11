@@ -13,7 +13,7 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { initializeFirebase } from '@/lib/firebase';
 
 export interface AuthUser {
   uid: string;
@@ -32,6 +32,15 @@ export const useFirebaseAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Firebase 초기화
+    const { auth } = initializeFirebase();
+    
+    if (!auth) {
+      console.error('Firebase Auth가 초기화되지 않았습니다.');
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser({
@@ -56,6 +65,9 @@ export const useFirebaseAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      const { auth } = initializeFirebase();
+      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      
       const result = await signInWithEmailAndPassword(auth, email, password);
       return { success: true, user: result.user };
     } catch (error: any) {
@@ -65,6 +77,9 @@ export const useFirebaseAuth = () => {
 
   const signUp = async (email: string, password: string, displayName?: string) => {
     try {
+      const { auth } = initializeFirebase();
+      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      
       const result = await createUserWithEmailAndPassword(auth, email, password);
       if (displayName) {
         // 사용자 프로필 업데이트
@@ -78,6 +93,9 @@ export const useFirebaseAuth = () => {
 
   const signInWithGoogle = async () => {
     try {
+      const { auth } = initializeFirebase();
+      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       return { success: true, user: result.user };
@@ -88,6 +106,9 @@ export const useFirebaseAuth = () => {
 
   const logout = async () => {
     try {
+      const { auth } = initializeFirebase();
+      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      
       await signOut(auth);
       return { success: true };
     } catch (error: any) {
@@ -97,6 +118,9 @@ export const useFirebaseAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
+      const { auth } = initializeFirebase();
+      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+      
       await sendPasswordResetEmail(auth, email);
       return { success: true };
     } catch (error: any) {

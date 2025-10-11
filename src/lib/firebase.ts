@@ -31,7 +31,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Firebase 앱 초기화 (중복 방지)
+// Firebase 서비스 인스턴스 내보내기
 let app: any = null;
 let auth: any = null;
 let db: any = null;
@@ -40,7 +40,7 @@ let analytics: any = null;
 let performance: any = null;
 
 // Firebase 초기화 함수
-function initializeFirebase() {
+export function initializeFirebase() {
   if (!app) {
     try {
       // Firebase 앱 초기화
@@ -73,7 +73,7 @@ function initializeFirebase() {
 }
 
 // Firebase 서비스 인스턴스 내보내기
-export { app, auth, db, storage, analytics, performance, initializeFirebase };
+export { app, auth, db, storage, analytics, performance };
 
 // 기본 내보내기
 export default app; 
