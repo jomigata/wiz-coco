@@ -15,6 +15,8 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // 자동 스크롤 훅들
@@ -295,7 +297,7 @@ export default function Navigation() {
           {/* 브랜드 텍스트 - 좌측 끝으로 이동 및 홈페이지 링크 연결 */}
           <Link href="/" className="flex flex-col items-center group mr-8" onClick={(e) => handleNavLinkClick("/", e)}>
             <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
-              AI 심리케어
+              AI 심리검사
             </span>
             <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
               Psychological Care
@@ -319,7 +321,7 @@ export default function Navigation() {
                    onMouseEnter={() => setActiveMenu('psychology-tests')}
                    onMouseLeave={() => setActiveMenu(null)}
                  >
-                   🧠 심리검사
+                   🧠 AI 심리검사
                    <svg
                      xmlns="http://www.w3.org/2000/svg"
                      viewBox="0 0 20 20"
@@ -342,55 +344,149 @@ export default function Navigation() {
                      onMouseEnter={() => setActiveMenu('psychology-tests')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
-                     <div className="relative">
+               <div className="relative">
                        {/* 스크롤 가능한 콘텐츠 */}
                        <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                          {[
                            {
                              category: "개인 심리 및 성장",
+                             icon: "🧬",
                              items: [
-                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "개인 성격 특성 분석", icon: "🧬" },
-                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아 인식 및 가치 체계", icon: "🎯" },
-                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 역량 및 성장 가능성", icon: "🚀" },
-                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 목적과 의미 탐구", icon: "🌟" }
+                               { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "개인 성격 특성 분석", icon: "🧬", subcategories: [
+                                 { name: "MBTI 성격 유형", href: "/tests/mbti", description: "16가지 성격 유형 분석" },
+                                 { name: "빅5 성격 특성", href: "/tests/big5", description: "5대 성격 특성 분석" },
+                                 { name: "기질 및 성향", href: "/tests/temperament", description: "선천적 기질 분석" }
+                               ]},
+                               { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아 인식 및 가치 체계", icon: "🎯", subcategories: [
+                                 { name: "자아정체감", href: "/tests/self-identity", description: "자아 정체감 탐구" },
+                                 { name: "가치관 및 신념", href: "/tests/values-beliefs", description: "개인 가치관 분석" },
+                                 { name: "자존감 측정", href: "/tests/self-esteem", description: "자존감 수준 평가" }
+                               ]},
+                               { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 역량 및 성장 가능성", icon: "🚀", subcategories: [
+                                 { name: "지능 및 능력", href: "/tests/intelligence", description: "다중지능 분석" },
+                                 { name: "창의성 측정", href: "/tests/creativity", description: "창의적 사고 능력" },
+                                 { name: "리더십 역량", href: "/tests/leadership", description: "리더십 특성 분석" }
+                               ]},
+                               { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 목적과 의미 탐구", icon: "🌟", subcategories: [
+                                 { name: "삶의 목적", href: "/tests/life-purpose", description: "삶의 목적 탐구" },
+                                 { name: "실존적 불안", href: "/tests/existential-anxiety", description: "실존적 고민 분석" },
+                                 { name: "삶의 만족도", href: "/tests/life-satisfaction", description: "삶의 만족도 측정" }
+                               ]}
                              ]
                            },
                            {
                              category: "대인관계 및 사회적응",
+                             icon: "👥",
                              items: [
-                               { name: "가족 관계", href: "/tests/family-relations", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦" },
-                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "로맨틱 관계 및 결혼 생활", icon: "💕" },
-                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계 및 소통", icon: "👥" },
-                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "대인관계 기술 및 소통 능력", icon: "💬" }
+                               { name: "가족 관계", href: "/tests/family-relations", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦", subcategories: [
+                                 { name: "가족 역학", href: "/tests/family-dynamics", description: "가족 내 역할 분석" },
+                                 { name: "부모-자녀 관계", href: "/tests/parent-child", description: "부모-자녀 관계 패턴" },
+                                 { name: "형제자매 관계", href: "/tests/sibling-relations", description: "형제자매 관계 분석" }
+                               ]},
+                               { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "로맨틱 관계 및 결혼 생활", icon: "💕", subcategories: [
+                                 { name: "연애 스타일", href: "/tests/love-style", description: "연애 스타일 분석" },
+                                 { name: "부부 관계", href: "/tests/marital-relations", description: "부부 관계 만족도" },
+                                 { name: "이별 및 상실", href: "/tests/breakup-loss", description: "이별 후 회복 과정" }
+                               ]},
+                               { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계 및 소통", icon: "👥", subcategories: [
+                                 { name: "친구 관계", href: "/tests/friendship", description: "우정 관계 분석" },
+                                 { name: "직장 내 관계", href: "/tests/workplace-relations", description: "직장 내 인간관계" },
+                                 { name: "사회적 기술", href: "/tests/social-skills", description: "사회적 기술 평가" }
+                               ]},
+                               { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "대인관계 기술 및 소통 능력", icon: "💬", subcategories: [
+                                 { name: "소통 스타일", href: "/tests/communication-style", description: "소통 방식 분석" },
+                                 { name: "갈등 해결", href: "/tests/conflict-resolution", description: "갈등 해결 능력" },
+                                 { name: "공감 능력", href: "/tests/empathy", description: "공감 능력 측정" }
+                               ]}
                              ]
                            },
                            {
                              category: "정서 문제 및 정신 건강",
+                             icon: "💭",
                              items: [
-                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감 및 기분 장애", icon: "😔" },
-                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안 증상 및 스트레스 관리", icon: "😰" },
-                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "트라우마 및 위기 상황", icon: "🆘" },
-                               { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독성 행동 및 충동 조절", icon: "⚠️" },
-                               { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감 및 자기 인식", icon: "🪞" }
+                               { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감 및 기분 장애", icon: "😔", subcategories: [
+                                 { name: "우울증 선별", href: "/tests/depression-screening", description: "우울증 위험도 평가" },
+                                 { name: "기분 장애", href: "/tests/mood-disorders", description: "기분 장애 분석" },
+                                 { name: "절망감 측정", href: "/tests/hopelessness", description: "절망감 수준 평가" }
+                               ]},
+                               { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안 증상 및 스트레스 관리", icon: "😰", subcategories: [
+                                 { name: "불안 장애", href: "/tests/anxiety-disorders", description: "불안 장애 선별" },
+                                 { name: "스트레스 수준", href: "/tests/stress-level", description: "스트레스 수준 측정" },
+                                 { name: "공황 장애", href: "/tests/panic-disorder", description: "공황 장애 평가" }
+                               ]},
+                               { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "트라우마 및 위기 상황", icon: "🆘", subcategories: [
+                                 { name: "외상 후 스트레스", href: "/tests/ptsd", description: "PTSD 선별 검사" },
+                                 { name: "위기 상황 대처", href: "/tests/crisis-coping", description: "위기 대처 능력" },
+                                 { name: "회복력 측정", href: "/tests/resilience", description: "회복력 수준 평가" }
+                               ]},
+                               { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독성 행동 및 충동 조절", icon: "⚠️", subcategories: [
+                                 { name: "알코올 중독", href: "/tests/alcohol-addiction", description: "알코올 중독 선별" },
+                                 { name: "도박 중독", href: "/tests/gambling-addiction", description: "도박 중독 평가" },
+                                 { name: "충동 조절", href: "/tests/impulse-control", description: "충동 조절 능력" }
+                               ]},
+                               { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감 및 자기 인식", icon: "🪞", subcategories: [
+                                 { name: "자존감 수준", href: "/tests/self-esteem-level", description: "자존감 수준 측정" },
+                                 { name: "자기 효능감", href: "/tests/self-efficacy", description: "자기 효능감 평가" },
+                                 { name: "완벽주의", href: "/tests/perfectionism", description: "완벽주의 성향" }
+                               ]}
                              ]
                            },
                            {
                              category: "현실 문제 및 생활 관리",
+                             icon: "📋",
                              items: [
-                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 선택 및 직업 적응", icon: "💼" },
-                               { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스 및 관리", icon: "💰" },
-                               { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강 및 관리", icon: "🏥" },
-                               { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제 및 행정 절차", icon: "⚖️" },
-                               { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상 생활 관리 및 습관", icon: "📅" }
+                               { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 선택 및 직업 적응", icon: "💼", subcategories: [
+                                 { name: "진로 적성", href: "/tests/career-aptitude", description: "진로 적성 분석" },
+                                 { name: "직업 만족도", href: "/tests/job-satisfaction", description: "직업 만족도 측정" },
+                                 { name: "직장 스트레스", href: "/tests/workplace-stress", description: "직장 스트레스 평가" }
+                               ]},
+                               { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스 및 관리", icon: "💰", subcategories: [
+                                 { name: "재정 스트레스", href: "/tests/financial-stress", description: "재정 스트레스 측정" },
+                                 { name: "소비 패턴", href: "/tests/spending-patterns", description: "소비 패턴 분석" },
+                                 { name: "경제 불안", href: "/tests/economic-anxiety", description: "경제적 불안감" }
+                               ]},
+                               { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강 및 관리", icon: "🏥", subcategories: [
+                                 { name: "건강 불안", href: "/tests/health-anxiety", description: "건강 불안 수준" },
+                                 { name: "신체 이미지", href: "/tests/body-image", description: "신체 이미지 인식" },
+                                 { name: "생활 습관", href: "/tests/lifestyle-habits", description: "건강한 생활 습관" }
+                               ]},
+                               { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제 및 행정 절차", icon: "⚖️", subcategories: [
+                                 { name: "법적 스트레스", href: "/tests/legal-stress", description: "법적 문제 스트레스" },
+                                 { name: "행정 절차", href: "/tests/administrative-procedures", description: "행정 절차 이해도" },
+                                 { name: "권리 인식", href: "/tests/rights-awareness", description: "개인 권리 인식" }
+                               ]},
+                               { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상 생활 관리 및 습관", icon: "📅", subcategories: [
+                                 { name: "시간 관리", href: "/tests/time-management", description: "시간 관리 능력" },
+                                 { name: "자기 관리", href: "/tests/self-care", description: "자기 관리 습관" },
+                                 { name: "생활 만족도", href: "/tests/life-satisfaction", description: "일상생활 만족도" }
+                               ]}
                              ]
                            },
                            {
                              category: "문화 및 환경 적응",
+                             icon: "🌍",
                              items: [
-                               { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응", icon: "🌍" },
-                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 시대 적응", icon: "💻" },
-                               { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "인생 단계별 적응", icon: "🔄" },
-                               { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회 환경적 문제", icon: "🏘️" }
+                               { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응", icon: "🌍", subcategories: [
+                                 { name: "문화 적응", href: "/tests/cultural-adaptation", description: "문화 적응 능력" },
+                                 { name: "문화 충격", href: "/tests/culture-shock", description: "문화 충격 경험" },
+                                 { name: "다양성 수용", href: "/tests/diversity-acceptance", description: "다양성 수용도" }
+                               ]},
+                               { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 시대 적응", icon: "💻", subcategories: [
+                                 { name: "디지털 리터러시", href: "/tests/digital-literacy", description: "디지털 활용 능력" },
+                                 { name: "온라인 관계", href: "/tests/online-relationships", description: "온라인 인간관계" },
+                                 { name: "사이버 불안", href: "/tests/cyber-anxiety", description: "디지털 환경 불안" }
+                               ]},
+                               { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "인생 단계별 적응", icon: "🔄", subcategories: [
+                                 { name: "청소년기", href: "/tests/adolescence", description: "청소년기 적응" },
+                                 { name: "성인기", href: "/tests/adulthood", description: "성인기 적응" },
+                                 { name: "중년기", href: "/tests/middle-age", description: "중년기 적응" },
+                                 { name: "노년기", href: "/tests/elderly", description: "노년기 적응" }
+                               ]},
+                               { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회 환경적 문제", icon: "🏘️", subcategories: [
+                                 { name: "사회적 고립", href: "/tests/social-isolation", description: "사회적 고립감" },
+                                 { name: "환경 스트레스", href: "/tests/environmental-stress", description: "환경적 스트레스" },
+                                 { name: "사회적 지지", href: "/tests/social-support", description: "사회적 지지 체계" }
+                               ]}
                              ]
                            }
                          ].map((category) => (
@@ -400,30 +496,66 @@ export default function Navigation() {
                              </div>
                              <div className="space-y-1">
                                {category.items.map((item) => (
-                                 <Link
-                                   key={item.name}
-                                   href={item.href}
-                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                   onClick={() => setActiveMenu(null)}
-                                 >
-                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                     {item.icon || '🧠'}
-                                   </div>
-                                   <div className="flex-1 min-w-0">
-                                     <div className="flex items-center gap-2">
-                                       <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                     </div>
-                                     <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                   </div>
-                                   <svg 
-                                     className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24"
+                                 <div key={item.name} className="relative">
+                                   <div
+                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                     }`}
+                                     onMouseEnter={() => setHoveredCategory(item.name)}
+                                     onMouseLeave={() => setHoveredCategory(null)}
+                                     onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                    >
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                   </svg>
-                                 </Link>
+                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                       {item.icon || '🧠'}
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                       <div className="flex items-center gap-2">
+                                         <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                       </div>
+                                       <div className="text-sm text-blue-300 truncate">{item.description}</div>
+                                     </div>
+                                     <svg 
+                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
+                                         selectedSubcategory === item.name ? 'rotate-90' : ''
+                                       }`}
+                                       fill="none" 
+                                       stroke="currentColor" 
+                                       viewBox="0 0 24 24"
+                                     >
+                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                     </svg>
+                                   </div>
+                                   
+                                   {/* 소분류 메뉴 */}
+                                   {selectedSubcategory === item.name && item.subcategories && (
+                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn">
+                                       {item.subcategories.map((subItem) => (
+                                         <Link
+                                           key={subItem.name}
+                                           href={subItem.href}
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/10 to-indigo-400/10 rounded-lg hover:bg-gradient-to-r hover:from-white/5 hover:to-white/2 transition-all duration-300 border border-transparent hover:border-white/10"
+                                           onClick={() => setActiveMenu(null)}
+                                         >
+                                           <div className="text-lg group-hover:scale-110 transition-transform duration-300">
+                                             {subItem.icon || '📋'}
+                                           </div>
+                                           <div className="flex-1 min-w-0">
+                                             <div className="text-sm font-medium text-white truncate">{subItem.name}</div>
+                                             <div className="text-xs text-blue-200 truncate">{subItem.description}</div>
+                                           </div>
+                                           <svg 
+                                             className="w-3 h-3 text-blue-200 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             fill="none" 
+                                             stroke="currentColor" 
+                                             viewBox="0 0 24 24"
+                                           >
+                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                           </svg>
+                                         </Link>
+                                       ))}
+                                     </div>
+                                   )}
+                                 </div>
                                ))}
                              </div>
                            </div>
@@ -433,16 +565,16 @@ export default function Navigation() {
                    </div>
                  )}
                </div>
-
+               
                
                {/* 상담 프로그램 드롭다운 메뉴 */}
-               <div className="relative">
-                 <Link
+                       <div className="relative">
+                         <Link
                    href="/counseling"
-                   className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                           className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                      activeItem === "/counseling" || activeItem.startsWith("/counseling/")
-                       ? "text-white bg-blue-600"
-                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                               ? "text-white bg-blue-600"
+                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                    }`}
                    onClick={(e) => handleNavLinkClick("/counseling", e)}
                    onMouseEnter={() => setActiveMenu('counseling')}
@@ -461,7 +593,7 @@ export default function Navigation() {
                        clipRule="evenodd"
                      />
                    </svg>
-                 </Link>
+                         </Link>
 
                                                                        {/* 상담 프로그램 메가 메뉴 */}
                    {isCounselingDropdownOpen && (
@@ -471,7 +603,7 @@ export default function Navigation() {
                        onMouseEnter={() => setActiveMenu('counseling')}
                        onMouseLeave={() => setActiveMenu(null)}
                      >
-                     <div className="relative">
+                       <div className="relative">
 
                        {/* 상단 화살표 가이드 */}
                        <div
@@ -565,7 +697,7 @@ export default function Navigation() {
                            </div>
                            <div className="space-y-1">
                              {category.items.map((item) => (
-                               <Link
+                         <Link
                                  key={item.name}
                                  href={item.href}
                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
@@ -597,26 +729,26 @@ export default function Navigation() {
                                  >
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                  </svg>
-                               </Link>
+                         </Link>
                              ))}
                            </div>
                          </div>
                        ))}
                      </div>
                      </div>
-                   </div>
-                 )}
+                       </div>
+                     )}
                </div>
 
                
                {/* AI 마음 비서 드롭다운 메뉴 */}
-               <div className="relative">
-                                   <Link
+                     <div className="relative">
+                       <Link
                     href="/ai-mind-assistant"
-                    className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                         className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                       activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
-                        ? "text-white bg-blue-600"
-                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                             ? "text-white bg-blue-600"
+                             : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                     }`}
                     onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
@@ -635,7 +767,7 @@ export default function Navigation() {
                        clipRule="evenodd"
                      />
                    </svg>
-                 </Link>
+                     </Link>
 
                                    {/* AI 마음 비서 메가 메뉴 */}
                   {isAiMindAssistantOpen && (
@@ -674,8 +806,8 @@ export default function Navigation() {
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                            </svg>
-                         </div>
-                       </div>
+               </div>
+             </div>
 
                        {/* 하단 화살표 가이드 */}
                        <div
@@ -705,8 +837,8 @@ export default function Navigation() {
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                            </svg>
-                         </div>
-                       </div>
+           </div>
+         </div>
 
                        {/* 스크롤 가능한 콘텐츠 */}
                        <div 
@@ -764,10 +896,10 @@ export default function Navigation() {
                                    </div>
                                    <svg 
                                      className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24"
-                                   >
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24"
+             >
                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                    </svg>
                                  </Link>
@@ -801,12 +933,12 @@ export default function Navigation() {
                      fill="currentColor"
                      className={`w-4 h-4 ml-1 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`}
                    >
-                     <path
+                 <path
                        fillRule="evenodd"
                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
                        clipRule="evenodd"
                      />
-                   </svg>
+             </svg>
                  </Link>
 
                                    {/* 추가 기능 메가 메뉴 */}
@@ -846,8 +978,8 @@ export default function Navigation() {
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                            </svg>
-                         </div>
-                       </div>
+              </div>
+            </div>
 
                        {/* 하단 화살표 가이드 */}
                        <div
@@ -918,8 +1050,8 @@ export default function Navigation() {
                                >
                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                    {item.icon || '⚡'}
-                                 </div>
-                                 <div className="flex-1 min-w-0">
+                      </div>
+                      <div className="flex-1 min-w-0">
                                    <div className="flex items-center gap-2">
                                      <span className="text-base font-medium text-white truncate">{item.name}</span>
                                      {'badge' in item && (item as any).badge && (
@@ -933,16 +1065,16 @@ export default function Navigation() {
                                      )}
                                    </div>
                                    <div className="text-sm text-green-300 truncate">{item.description}</div>
-                                 </div>
-                                 <svg 
+                      </div>
+                      <svg 
                                    className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                   fill="none" 
-                                   stroke="currentColor" 
-                                   viewBox="0 0 24 24"
-                                 >
-                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                 </svg>
-                               </Link>
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
                              ))}
                            </div>
                          </div>
@@ -973,7 +1105,7 @@ export default function Navigation() {
                          >
                            👨‍⚕️ 상담사
                            <svg
-                             xmlns="http://www.w3.org/2000/svg"
+                          xmlns="http://www.w3.org/2000/svg" 
                              viewBox="0 0 20 20"
                              fill="currentColor"
                              className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorOpen ? "rotate-180" : ""}`}
@@ -1021,12 +1153,12 @@ export default function Navigation() {
                                            </div>
                                            <svg 
                                              className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                             fill="none" 
-                                             stroke="currentColor" 
+                          fill="none" 
+                          stroke="currentColor"
                                              viewBox="0 0 24 24"
-                                           >
+                        >
                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                           </svg>
+                        </svg>
                                          </Link>
                                        ))}
                                      </div>
@@ -1094,21 +1226,21 @@ export default function Navigation() {
                                          >
                                            <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                              {item.icon || '🔧'}
-                                           </div>
-                                           <div className="flex-1 min-w-0">
+                      </div>
+                      <div className="flex-1 min-w-0">
                                              <div className="flex items-center gap-2">
                                                <span className="text-base font-medium text-white truncate">{item.name}</span>
                                              </div>
                                              <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                           </div>
-                                           <svg 
-                                             className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                             fill="none" 
-                                             stroke="currentColor" 
-                                             viewBox="0 0 24 24"
-                                           >
-                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                           </svg>
+                      </div>
+                      <svg 
+                        className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                                          </Link>
                                        ))}
                                      </div>
@@ -1118,12 +1250,12 @@ export default function Navigation() {
                              </div>
                            </div>
                          )}
-                       </div>
-                     )}
-
+                    </div>
+                  )}
+                  
                      {/* 마이페이지 드롭다운 메뉴 */}
                      <div className="relative">
-                       <Link
+                        <Link
                          href="/mypage"
                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
                            activeItem === "/mypage" || activeItem.startsWith("/mypage/")
@@ -1186,8 +1318,8 @@ export default function Navigation() {
                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                                  </svg>
-                               </div>
-                             </div>
+                          </div>
+                            </div>
 
                              {/* 하단 화살표 가이드 */}
                              <div
@@ -1296,17 +1428,17 @@ export default function Navigation() {
                                      <div className="flex-1 min-w-0">
                                        <div className="font-medium text-white truncate">{item.name}</div>
                                        <div className="text-xs text-green-300 truncate">{item.description}</div>
-                                     </div>
-                                     <svg 
+                          </div>
+                          <svg 
                                        className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                     </svg>
-                                   </Link>
-                                 ))}
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      ))}
 
 
                                                                    {/* 로그아웃 버튼 */}
@@ -1335,9 +1467,9 @@ export default function Navigation() {
                                </div>
                              </div>
                            </div>
-                         </div>
-                       )}
-                     </div>
+                    </div>
+                  )}
+                </div>
                    </>
                  ) : (
                    <>
@@ -1358,9 +1490,9 @@ export default function Navigation() {
                      </Link>
                    </>
                  )}
-               </div>
-             </div>
-           </div>
+            </div>
+          </div>
+        </div>
          </div>
 
          {/* 모바일 메뉴 버튼 */}
@@ -1413,7 +1545,149 @@ export default function Navigation() {
                  <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
                    🧠 심리검사
                  </div>
-                 {testSubMenuItems.map((category) => (
+                 {[
+                   {
+                     category: "개인 심리 및 성장",
+                     icon: "🧬",
+                     items: [
+                       { name: "성격 및 기질 탐색", href: "/tests/personality-temperament", description: "개인 성격 특성 분석", icon: "🧬", subcategories: [
+                         { name: "MBTI 성격 유형", href: "/tests/mbti", description: "16가지 성격 유형 분석" },
+                         { name: "빅5 성격 특성", href: "/tests/big5", description: "5대 성격 특성 분석" },
+                         { name: "기질 및 성향", href: "/tests/temperament", description: "선천적 기질 분석" }
+                       ]},
+                       { name: "자아정체감 및 가치관", href: "/tests/identity-values", description: "자아 인식 및 가치 체계", icon: "🎯", subcategories: [
+                         { name: "자아정체감", href: "/tests/self-identity", description: "자아 정체감 탐구" },
+                         { name: "가치관 및 신념", href: "/tests/values-beliefs", description: "개인 가치관 분석" },
+                         { name: "자존감 측정", href: "/tests/self-esteem", description: "자존감 수준 평가" }
+                       ]},
+                       { name: "잠재력 및 역량 개발", href: "/tests/potential-development", description: "개인 역량 및 성장 가능성", icon: "🚀", subcategories: [
+                         { name: "지능 및 능력", href: "/tests/intelligence", description: "다중지능 분석" },
+                         { name: "창의성 측정", href: "/tests/creativity", description: "창의적 사고 능력" },
+                         { name: "리더십 역량", href: "/tests/leadership", description: "리더십 특성 분석" }
+                       ]},
+                       { name: "삶의 의미 및 실존적 문제", href: "/tests/life-meaning", description: "삶의 목적과 의미 탐구", icon: "🌟", subcategories: [
+                         { name: "삶의 목적", href: "/tests/life-purpose", description: "삶의 목적 탐구" },
+                         { name: "실존적 불안", href: "/tests/existential-anxiety", description: "실존적 고민 분석" },
+                         { name: "삶의 만족도", href: "/tests/life-satisfaction", description: "삶의 만족도 측정" }
+                       ]}
+                     ]
+                   },
+                   {
+                     category: "대인관계 및 사회적응",
+                     icon: "👥",
+                     items: [
+                       { name: "가족 관계", href: "/tests/family-relations", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦", subcategories: [
+                         { name: "가족 역학", href: "/tests/family-dynamics", description: "가족 내 역할 분석" },
+                         { name: "부모-자녀 관계", href: "/tests/parent-child", description: "부모-자녀 관계 패턴" },
+                         { name: "형제자매 관계", href: "/tests/sibling-relations", description: "형제자매 관계 분석" }
+                       ]},
+                       { name: "연인 및 부부 관계", href: "/tests/romantic-relations", description: "로맨틱 관계 및 결혼 생활", icon: "💕", subcategories: [
+                         { name: "연애 스타일", href: "/tests/love-style", description: "연애 스타일 분석" },
+                         { name: "부부 관계", href: "/tests/marital-relations", description: "부부 관계 만족도" },
+                         { name: "이별 및 상실", href: "/tests/breakup-loss", description: "이별 후 회복 과정" }
+                       ]},
+                       { name: "친구 및 동료 관계", href: "/tests/friend-colleague", description: "사회적 관계 및 소통", icon: "👥", subcategories: [
+                         { name: "친구 관계", href: "/tests/friendship", description: "우정 관계 분석" },
+                         { name: "직장 내 관계", href: "/tests/workplace-relations", description: "직장 내 인간관계" },
+                         { name: "사회적 기술", href: "/tests/social-skills", description: "사회적 기술 평가" }
+                       ]},
+                       { name: "사회적 기술 및 소통", href: "/tests/social-communication", description: "대인관계 기술 및 소통 능력", icon: "💬", subcategories: [
+                         { name: "소통 스타일", href: "/tests/communication-style", description: "소통 방식 분석" },
+                         { name: "갈등 해결", href: "/tests/conflict-resolution", description: "갈등 해결 능력" },
+                         { name: "공감 능력", href: "/tests/empathy", description: "공감 능력 측정" }
+                       ]}
+                     ]
+                   },
+                   {
+                     category: "정서 문제 및 정신 건강",
+                     icon: "💭",
+                     items: [
+                       { name: "우울 및 기분 문제", href: "/tests/depression-mood", description: "우울감 및 기분 장애", icon: "😔", subcategories: [
+                         { name: "우울증 선별", href: "/tests/depression-screening", description: "우울증 위험도 평가" },
+                         { name: "기분 장애", href: "/tests/mood-disorders", description: "기분 장애 분석" },
+                         { name: "절망감 측정", href: "/tests/hopelessness", description: "절망감 수준 평가" }
+                       ]},
+                       { name: "불안 및 스트레스", href: "/tests/anxiety-stress", description: "불안 증상 및 스트레스 관리", icon: "😰", subcategories: [
+                         { name: "불안 장애", href: "/tests/anxiety-disorders", description: "불안 장애 선별" },
+                         { name: "스트레스 수준", href: "/tests/stress-level", description: "스트레스 수준 측정" },
+                         { name: "공황 장애", href: "/tests/panic-disorder", description: "공황 장애 평가" }
+                       ]},
+                       { name: "외상 및 위기 개입", href: "/tests/trauma-crisis", description: "트라우마 및 위기 상황", icon: "🆘", subcategories: [
+                         { name: "외상 후 스트레스", href: "/tests/ptsd", description: "PTSD 선별 검사" },
+                         { name: "위기 상황 대처", href: "/tests/crisis-coping", description: "위기 대처 능력" },
+                         { name: "회복력 측정", href: "/tests/resilience", description: "회복력 수준 평가" }
+                       ]},
+                       { name: "중독 및 충동 조절 문제", href: "/tests/addiction-impulse", description: "중독성 행동 및 충동 조절", icon: "⚠️", subcategories: [
+                         { name: "알코올 중독", href: "/tests/alcohol-addiction", description: "알코올 중독 선별" },
+                         { name: "도박 중독", href: "/tests/gambling-addiction", description: "도박 중독 평가" },
+                         { name: "충동 조절", href: "/tests/impulse-control", description: "충동 조절 능력" }
+                       ]},
+                       { name: "자존감 및 자기 문제", href: "/tests/self-esteem", description: "자존감 및 자기 인식", icon: "🪞", subcategories: [
+                         { name: "자존감 수준", href: "/tests/self-esteem-level", description: "자존감 수준 측정" },
+                         { name: "자기 효능감", href: "/tests/self-efficacy", description: "자기 효능감 평가" },
+                         { name: "완벽주의", href: "/tests/perfectionism", description: "완벽주의 성향" }
+                       ]}
+                     ]
+                   },
+                   {
+                     category: "현실 문제 및 생활 관리",
+                     icon: "📋",
+                     items: [
+                       { name: "진로 및 직업 문제", href: "/tests/career-work", description: "진로 선택 및 직업 적응", icon: "💼", subcategories: [
+                         { name: "진로 적성", href: "/tests/career-aptitude", description: "진로 적성 분석" },
+                         { name: "직업 만족도", href: "/tests/job-satisfaction", description: "직업 만족도 측정" },
+                         { name: "직장 스트레스", href: "/tests/workplace-stress", description: "직장 스트레스 평가" }
+                       ]},
+                       { name: "경제 및 재정 문제", href: "/tests/economic-finance", description: "경제적 스트레스 및 관리", icon: "💰", subcategories: [
+                         { name: "재정 스트레스", href: "/tests/financial-stress", description: "재정 스트레스 측정" },
+                         { name: "소비 패턴", href: "/tests/spending-patterns", description: "소비 패턴 분석" },
+                         { name: "경제 불안", href: "/tests/economic-anxiety", description: "경제적 불안감" }
+                       ]},
+                       { name: "건강 및 신체 문제", href: "/tests/health-body", description: "신체 건강 및 관리", icon: "🏥", subcategories: [
+                         { name: "건강 불안", href: "/tests/health-anxiety", description: "건강 불안 수준" },
+                         { name: "신체 이미지", href: "/tests/body-image", description: "신체 이미지 인식" },
+                         { name: "생활 습관", href: "/tests/lifestyle-habits", description: "건강한 생활 습관" }
+                       ]},
+                       { name: "법률 및 행정 문제", href: "/tests/legal-admin", description: "법적 문제 및 행정 절차", icon: "⚖️", subcategories: [
+                         { name: "법적 스트레스", href: "/tests/legal-stress", description: "법적 문제 스트레스" },
+                         { name: "행정 절차", href: "/tests/administrative-procedures", description: "행정 절차 이해도" },
+                         { name: "권리 인식", href: "/tests/rights-awareness", description: "개인 권리 인식" }
+                       ]},
+                       { name: "일상생활 및 자기 관리", href: "/tests/daily-management", description: "일상 생활 관리 및 습관", icon: "📅", subcategories: [
+                         { name: "시간 관리", href: "/tests/time-management", description: "시간 관리 능력" },
+                         { name: "자기 관리", href: "/tests/self-care", description: "자기 관리 습관" },
+                         { name: "생활 만족도", href: "/tests/life-satisfaction", description: "일상생활 만족도" }
+                       ]}
+                     ]
+                   },
+                   {
+                     category: "문화 및 환경 적응",
+                     icon: "🌍",
+                     items: [
+                       { name: "다문화 적응", href: "/tests/multicultural", description: "다문화 환경 적응", icon: "🌍", subcategories: [
+                         { name: "문화 적응", href: "/tests/cultural-adaptation", description: "문화 적응 능력" },
+                         { name: "문화 충격", href: "/tests/culture-shock", description: "문화 충격 경험" },
+                         { name: "다양성 수용", href: "/tests/diversity-acceptance", description: "다양성 수용도" }
+                       ]},
+                       { name: "디지털 환경 적응", href: "/tests/digital-adaptation", description: "디지털 시대 적응", icon: "💻", subcategories: [
+                         { name: "디지털 리터러시", href: "/tests/digital-literacy", description: "디지털 활용 능력" },
+                         { name: "온라인 관계", href: "/tests/online-relationships", description: "온라인 인간관계" },
+                         { name: "사이버 불안", href: "/tests/cyber-anxiety", description: "디지털 환경 불안" }
+                       ]},
+                       { name: "생애주기별 적응", href: "/tests/lifecycle-adaptation", description: "인생 단계별 적응", icon: "🔄", subcategories: [
+                         { name: "청소년기", href: "/tests/adolescence", description: "청소년기 적응" },
+                         { name: "성인기", href: "/tests/adulthood", description: "성인기 적응" },
+                         { name: "중년기", href: "/tests/middle-age", description: "중년기 적응" },
+                         { name: "노년기", href: "/tests/elderly", description: "노년기 적응" }
+                       ]},
+                       { name: "특정 사회·환경 문제", href: "/tests/social-environment", description: "사회 환경적 문제", icon: "🏘️", subcategories: [
+                         { name: "사회적 고립", href: "/tests/social-isolation", description: "사회적 고립감" },
+                         { name: "환경 스트레스", href: "/tests/environmental-stress", description: "환경적 스트레스" },
+                         { name: "사회적 지지", href: "/tests/social-support", description: "사회적 지지 체계" }
+                       ]}
+                     ]
+                   }
+                 ].map((category) => (
                    <div key={category.category} className="space-y-2">
                      {/* 대분류 */}
                      <div className="flex items-center gap-2 px-2 py-1 text-xs font-bold text-blue-200 uppercase tracking-wide bg-blue-500/20 rounded-lg">
@@ -1423,41 +1697,48 @@ export default function Navigation() {
                      
                      {/* 중분류 및 소분류 */}
                      <div className="ml-4 space-y-2">
-                       {category.subcategories.map((subcategory) => (
-                         <div key={subcategory.name} className="space-y-1">
+                       {category.items.map((item) => (
+                         <div key={item.name} className="space-y-1">
                            {/* 중분류 */}
-                           <div className="flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 bg-purple-500/20 rounded">
-                             <span className="text-sm">{subcategory.icon}</span>
-                             <span>{subcategory.name}</span>
+                           <div 
+                             className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 bg-purple-500/20 rounded cursor-pointer transition-all duration-300 ${
+                               selectedSubcategory === item.name ? 'bg-purple-500/30' : 'hover:bg-purple-500/30'
+                             }`}
+                             onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
+                           >
+                             <span className="text-sm">{item.icon}</span>
+                             <span className="flex-1">{item.name}</span>
+                             <svg 
+                               className={`w-4 h-4 transition-transform duration-300 ${
+                                 selectedSubcategory === item.name ? 'rotate-90' : ''
+                               }`}
+                               fill="none" 
+                               stroke="currentColor" 
+                               viewBox="0 0 24 24"
+                             >
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                             </svg>
                            </div>
                            
                            {/* 소분류 아이템들 */}
-                           <div className="ml-4 space-y-1">
-                             {subcategory.items.map((item) => (
-                       <Link
-                         key={item.name}
-                         href={item.href}
-                                 className="block px-3 py-2 text-base text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                         onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                         <div className="flex items-center gap-2">
-                                   <span className="text-sm">{item.icon}</span>
-                                   <span className="font-medium">{item.name}</span>
-                                   {item.badge && (
-                             <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                       item.badge === '인기' ? 'bg-red-500 text-white' :
-                                       item.badge === '신규' ? 'bg-green-500 text-white' :
-                                       item.badge === '추천' ? 'bg-orange-500 text-white' :
-                                       'bg-blue-500 text-white'
-                                     }`}>
-                                       {item.badge}
-                             </span>
+                           {selectedSubcategory === item.name && item.subcategories && (
+                             <div className="ml-4 space-y-1 animate-fadeIn">
+                               {item.subcategories.map((subItem) => (
+                                 <Link
+                                   key={subItem.name}
+                                   href={subItem.href}
+                                   className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                                   onClick={() => setIsMobileMenuOpen(false)}
+                                 >
+                                   <div className="flex items-center gap-2">
+                                     <span className="text-xs">📋</span>
+                                     <span className="font-medium">{subItem.name}</span>
+                                   </div>
+                                   <div className="text-xs text-blue-300 ml-5 mt-1">{subItem.description}</div>
+                                 </Link>
+                               ))}
+                             </div>
                            )}
-                         </div>
-                         <div className="text-xs text-blue-300 ml-6 mt-1">{item.description}</div>
-                       </Link>
-                     ))}
-                           </div>
                          </div>
                        ))}
                      </div>
@@ -1474,15 +1755,15 @@ export default function Navigation() {
                    <div key={category.category} className="ml-4 space-y-1">
                      <div className="px-2 py-1 text-base font-bold text-purple-400 uppercase tracking-wide">
                        {category.category}
-                     </div>
+                       </div>
                      {category.items.map((item) => (
-                       <Link
+                             <Link
                          key={item.name}
-                         href={item.href}
+                               href={item.href}
                          className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
-                         onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                         <div className="flex items-center gap-2">
+                               onClick={() => setIsMobileMenuOpen(false)}
+                             >
+                               <div className="flex items-center gap-2">
                            <span>{item.icon}</span>
                            <span>{item.name}</span>
                            {'badge' in item && (item as any).badge && (
@@ -1494,11 +1775,11 @@ export default function Navigation() {
                                {(item as any).badge}
                              </span>
                            )}
-                         </div>
+                               </div>
                          <div className="text-xs text-purple-300 ml-6 mt-1">{item.description}</div>
-                       </Link>
-                     ))}
-                   </div>
+                             </Link>
+                           ))}
+                         </div>
                  ))}
                </div>
 
@@ -1530,12 +1811,12 @@ export default function Navigation() {
                              }`}>
                                {(item as any).badge}
                              </span>
-                           )}
-                         </div>
+                       )}
+                     </div>
                          <div className="text-xs text-green-300 ml-6 mt-1">{item.description}</div>
                        </Link>
-                     ))}
-                   </div>
+                   ))}
+                 </div>
                  ))}
                </div>
 
@@ -1573,13 +1854,13 @@ export default function Navigation() {
                    <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide">
                      👤 마이페이지
                    </div>
-                   <Link
+                       <Link
                      href="/mypage"
-                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
+                         className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                         onClick={() => setIsMobileMenuOpen(false)}
+                       >
                      📊 검사 기록
-                   </Link>
+                       </Link>
                    <Link
                      href="/mypage?tab=profile"
                      className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
@@ -1594,15 +1875,15 @@ export default function Navigation() {
                    >
                      💬 상담 예약
                    </Link>
-                   <button
-                     onClick={() => {
-                       setIsMobileMenuOpen(false);
-                       handleLogout();
-                     }}
-                     className="w-full text-left px-4 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-800/30 rounded-lg transition-all duration-300"
-                   >
+                     <button
+                       onClick={() => {
+                         setIsMobileMenuOpen(false);
+                         handleLogout();
+                       }}
+                       className="w-full text-left px-4 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-800/30 rounded-lg transition-all duration-300"
+                     >
                      🚪 로그아웃
-                   </button>
+                     </button>
                  </div>
                ) : (
                  <div className="space-y-2 pt-4 border-t border-white/20">
