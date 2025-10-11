@@ -537,7 +537,7 @@ export default function Navigation() {
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-lg group-hover:scale-110 transition-transform duration-300">
-                                             {subItem.icon || '📋'}
+                                             📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-white truncate">{subItem.name}</div>
