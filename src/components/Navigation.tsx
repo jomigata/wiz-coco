@@ -528,17 +528,25 @@ export default function Navigation() {
                  <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
+                                           className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg transition-all duration-300 border-2 border-blue-400/30 ml-8 shadow-sm ${
+                                             selectedMainCategory !== "personal" 
+                                               ? "hover:bg-blue-600 hover:text-white hover:border-blue-400 hover:shadow-md" 
+                                               : "hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-white/25"
+                                           }`}
                                    onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className={`text-sm font-medium text-blue-200 truncate ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                             }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                             }`}
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -655,10 +663,14 @@ export default function Navigation() {
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className={`text-sm font-medium text-blue-200 truncate ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                             }`}>{subItem.name}</div>
                                    </div>
                                    <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                             }`}
                                      fill="none" 
                                      stroke="currentColor" 
                                      viewBox="0 0 24 24"
@@ -780,10 +792,14 @@ export default function Navigation() {
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className={`text-sm font-medium text-blue-200 truncate ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                             }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                             }`}
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -905,10 +921,14 @@ export default function Navigation() {
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className={`text-sm font-medium text-blue-200 truncate ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                             }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                             }`}
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -1026,10 +1046,14 @@ export default function Navigation() {
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className={`text-sm font-medium text-blue-200 truncate ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                             }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                             }`}
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
