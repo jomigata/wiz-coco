@@ -344,15 +344,15 @@ export default function Navigation() {
                  {isPsychologyTestsOpen && (
                    <div
                      data-dropdown-menu="psychology-tests"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-[700px] min-w-[40rem] max-w-[50rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                     className="absolute left-0 mt-0 pt-4 pb-8 w-[600px] min-w-[35rem] max-w-[45rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                      onMouseEnter={() => setActiveMenu('psychology-tests')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
-                     <div className="relative flex h-[70vh]">
-                       {/* 왼쪽: 대분류 5개 */}
-                       <div className="w-1/3 p-4 border-r border-blue-500/30">
+                     <div className="relative flex flex-col h-[70vh]">
+                       {/* 상단: 대분류 5개 - 한 줄로 배치 */}
+                       <div className="p-4 border-b border-blue-500/30">
                          <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
-                         <div className="space-y-2">
+                         <div className="flex flex-wrap gap-2">
                            {[
                              { id: "personal", name: "개인 심리 및 성장", icon: "🧬" },
                              { id: "social", name: "대인관계 및 사회적응", icon: "👥" },
@@ -362,7 +362,7 @@ export default function Navigation() {
                            ].map((mainCategory) => (
                    <div
                      key={mainCategory.id}
-                     className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
+                     className={`px-3 py-2 rounded-lg cursor-pointer transition-all duration-300 border-2 text-sm whitespace-nowrap ${
                        selectedMainCategory === mainCategory.id
                          ? 'bg-blue-600 text-white border-blue-400 shadow-lg'
                          : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border-blue-500/30 hover:border-blue-400 hover:shadow-md'
@@ -400,13 +400,13 @@ export default function Navigation() {
                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
                      }}
                    >
-                               <div className="flex items-center gap-3">
-                                 <span className="text-xl">{mainCategory.icon}</span>
-                                 <span className="font-medium">{mainCategory.name}</span>
+                               <div className="flex items-center gap-2">
+                                 <span className="text-sm">{mainCategory.icon}</span>
+                                 <span className="font-medium text-xs">{mainCategory.name}</span>
                                  {/* 대분류가 선택되었을 때 화살표 표시 */}
                                  {selectedMainCategory === mainCategory.id && (
                                    <svg 
-                                     className="w-4 h-4 text-white ml-auto"
+                                     className="w-3 h-3 text-white ml-auto"
                                      fill="none" 
                                      stroke="currentColor" 
                                      viewBox="0 0 24 24"
@@ -420,8 +420,8 @@ export default function Navigation() {
                          </div>
                        </div>
 
-                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                       <div className="w-2/3 p-4">
+                       {/* 하단: 선택된 대분류의 중분류 */}
+                       <div className="flex-1 p-4">
                          {selectedMainCategory ? (
                            <div>
                              <div className="text-lg font-bold text-blue-300 mb-4">
