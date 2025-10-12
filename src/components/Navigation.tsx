@@ -290,7 +290,10 @@ export default function Navigation() {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
-          animation: fadeIn 1.5s ease-out;
+          animation: fadeIn 0.2s ease-out;
+        }
+        .animate-fadeIn-slow {
+          animation: fadeIn 1.2s ease-out;
         }
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
@@ -387,7 +390,7 @@ export default function Navigation() {
                                <div className="flex items-center gap-3">
                                  <span className="text-xl">{mainCategory.icon}</span>
                                  <span className="font-medium">{mainCategory.name}</span>
-                               </div>
+                             </div>
                              </div>
                            ))}
                          </div>
@@ -462,22 +465,22 @@ export default function Navigation() {
                                    
                                    {/* 소분류 메뉴 */}
                                    {selectedSubcategory === item.name && item.subcategories && (
-                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn">
+                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
                                        {item.subcategories.map((subItem) => (
-                                         <Link
+                 <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
-                                           onClick={() => setActiveMenu(null)}
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                   onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -527,11 +530,11 @@ export default function Navigation() {
                                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
                                      }}
                                      onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
-                                   >
-                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                 >
+                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
-                                     </div>
-                                     <div className="flex-1 min-w-0">
+                                   </div>
+                                   <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
                                      <svg 
@@ -548,34 +551,34 @@ export default function Navigation() {
                                    
                                    {/* 소분류 메뉴 */}
                                    {selectedSubcategory === item.name && item.subcategories && (
-                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn">
+                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
                                        {item.subcategories.map((subItem) => (
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
-                                           </div>
-                                           <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
-                                             fill="none" 
-                                             stroke="currentColor" 
-                                             viewBox="0 0 24 24"
-                                           >
-                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                           </svg>
-                                         </Link>
-                                       ))}
-                                     </div>
-                                   )}
-                                 </div>
+                                   </div>
+                                   <svg 
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
+                                     fill="none" 
+                                     stroke="currentColor" 
+                                     viewBox="0 0 24 24"
+                                   >
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                   </svg>
+                 </Link>
                                ))}
+                             </div>
+                                   )}
+                           </div>
+                         ))}
 
                                {selectedMainCategory === "emotional" && [
                                  { name: "우울 및 기분 문제", description: "우울감 및 기분 장애", icon: "😔", subcategories: [
@@ -621,10 +624,10 @@ export default function Navigation() {
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
-                                     </div>
+                       </div>
                                      <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
-                                     </div>
+                     </div>
                                      <svg 
                                        className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
@@ -639,22 +642,22 @@ export default function Navigation() {
                                    
                                    {/* 소분류 메뉴 */}
                                    {selectedSubcategory === item.name && item.subcategories && (
-                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn">
+                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
                                        {item.subcategories.map((subItem) => (
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -663,9 +666,9 @@ export default function Navigation() {
                                            </svg>
                                          </Link>
                                        ))}
-                                     </div>
-                                   )}
-                                 </div>
+                   </div>
+                 )}
+               </div>
                                ))}
 
                                {selectedMainCategory === "practical" && [
@@ -730,22 +733,22 @@ export default function Navigation() {
                                    
                                    {/* 소분류 메뉴 */}
                                    {selectedSubcategory === item.name && item.subcategories && (
-                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn">
+                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
                                        {item.subcategories.map((subItem) => (
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -817,22 +820,22 @@ export default function Navigation() {
                                    
                                    {/* 소분류 메뉴 */}
                                    {selectedSubcategory === item.name && item.subcategories && (
-                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn">
+                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
                                        {item.subcategories.map((subItem) => (
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -1850,7 +1853,7 @@ export default function Navigation() {
                      { id: "cultural", name: "문화 및 환경 적응", icon: "🌍" }
                    ].map((mainCategory) => (
                      <div key={mainCategory.id} className="space-y-2">
-                       {/* 대분류 */}
+                     {/* 대분류 */}
                        <div 
                          className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-blue-200 bg-blue-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
                            selectedMainCategory === mainCategory.id ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/30'
@@ -1870,7 +1873,7 @@ export default function Navigation() {
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                          </svg>
                        </div>
-                       
+                     
                        {/* 선택된 대분류의 중분류 */}
                        {selectedMainCategory === mainCategory.id && (
                          <div className="ml-4 space-y-2 animate-fadeIn">
@@ -1915,18 +1918,18 @@ export default function Navigation() {
                                  >
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                  </svg>
-                               </div>
-                               
+                           </div>
+                           
                                {selectedSubcategory === item.name && item.subcategories && (
-                                 <div className="ml-4 space-y-1 animate-fadeIn">
+                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                    {item.subcategories.map((subItem) => (
-                                     <Link
+                             <Link
                                        key={subItem.name}
                                        href={subItem.href}
                                        className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                                       onClick={() => setIsMobileMenuOpen(false)}
-                                     >
-                                       <div className="flex items-center gap-2">
+                               onClick={() => setIsMobileMenuOpen(false)}
+                             >
+                               <div className="flex items-center gap-2">
                                          <span className="text-xs">📋</span>
                                          <span className="font-medium">{subItem.name}</span>
                                        </div>
@@ -1966,7 +1969,7 @@ export default function Navigation() {
                                  }`}
                                  onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                >
-                                 <span className="text-sm">{item.icon}</span>
+                                   <span className="text-sm">{item.icon}</span>
                                  <span className="flex-1">{item.name}</span>
                                  <svg 
                                    className={`w-4 h-4 transition-transform duration-300 ${
@@ -1981,7 +1984,7 @@ export default function Navigation() {
                                </div>
                                
                                {selectedSubcategory === item.name && item.subcategories && (
-                                 <div className="ml-4 space-y-1 animate-fadeIn">
+                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                    {item.subcategories.map((subItem) => (
                                      <Link
                                        key={subItem.name}
@@ -1996,8 +1999,8 @@ export default function Navigation() {
                                      </Link>
                                    ))}
                                  </div>
-                               )}
-                             </div>
+                           )}
+                               </div>
                            ))}
 
                            {mainCategory.id === "emotional" && [
@@ -2049,7 +2052,7 @@ export default function Navigation() {
                                </div>
                                
                                {selectedSubcategory === item.name && item.subcategories && (
-                                 <div className="ml-4 space-y-1 animate-fadeIn">
+                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                    {item.subcategories.map((subItem) => (
                                      <Link
                                        key={subItem.name}
@@ -2061,12 +2064,12 @@ export default function Navigation() {
                                          <span className="text-xs">📋</span>
                                          <span className="font-medium">{subItem.name}</span>
                                        </div>
-                                     </Link>
-                                   ))}
-                                 </div>
-                               )}
-                             </div>
+                             </Link>
                            ))}
+                         </div>
+                               )}
+                     </div>
+                   ))}
 
                            {mainCategory.id === "practical" && [
                              { name: "진로 및 직업 문제", description: "진로 선택 및 직업 적응", icon: "💼", subcategories: [
@@ -2114,10 +2117,10 @@ export default function Navigation() {
                                  >
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                  </svg>
-                               </div>
+                 </div>
                                
                                {selectedSubcategory === item.name && item.subcategories && (
-                                 <div className="ml-4 space-y-1 animate-fadeIn">
+                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                    {item.subcategories.map((subItem) => (
                                      <Link
                                        key={subItem.name}
@@ -2128,7 +2131,7 @@ export default function Navigation() {
                                        <div className="flex items-center gap-2">
                                          <span className="text-xs">📋</span>
                                          <span className="font-medium">{subItem.name}</span>
-                                       </div>
+                   </div>
                                      </Link>
                                    ))}
                                  </div>
@@ -2181,7 +2184,7 @@ export default function Navigation() {
                                </div>
                                
                                {selectedSubcategory === item.name && item.subcategories && (
-                                 <div className="ml-4 space-y-1 animate-fadeIn">
+                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                    {item.subcategories.map((subItem) => (
                                      <Link
                                        key={subItem.name}
