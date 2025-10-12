@@ -16,7 +16,7 @@ export default function Navigation() {
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("personal");
+  const [selectedMainCategory, setSelectedMainCategory] = useState<"personal" | "social" | "emotional" | "practical" | "cultural" | null>("personal");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -529,7 +529,7 @@ export default function Navigation() {
                                            key={subItem.name}
                                            href={subItem.href}
                                            className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg transition-all duration-300 border-2 border-blue-400/30 ml-8 shadow-sm ${
-                                             selectedMainCategory && selectedMainCategory !== "personal" 
+                                             selectedMainCategory !== "personal" 
                                                ? "hover:bg-blue-600 hover:text-white hover:border-blue-400 hover:shadow-md" 
                                                : "hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-white/25"
                                            }`}
@@ -540,12 +540,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -664,12 +664,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                    </div>
                                    <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                      fill="none" 
                                      stroke="currentColor" 
@@ -793,12 +793,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -922,12 +922,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -1047,12 +1047,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory && selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
