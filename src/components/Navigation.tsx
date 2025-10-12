@@ -344,7 +344,7 @@ export default function Navigation() {
                  {isPsychologyTestsOpen && (
                    <div
                      data-dropdown-menu="psychology-tests"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[55rem] max-w-[70rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                     className="absolute left-0 mt-0 pt-4 pb-8 w-[700px] min-w-[40rem] max-w-[50rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                      onMouseEnter={() => setActiveMenu('psychology-tests')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
@@ -456,9 +456,9 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 border-2 cursor-pointer shadow-sm hover:shadow-md w-fit max-w-xs ${
+                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-md' 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
@@ -503,14 +503,14 @@ export default function Navigation() {
                                        }
                                      }}
                                    >
-                                     <div className="text-lg group-hover:scale-110 transition-transform duration-300">
+                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
                                      <div className="flex-1 min-w-0">
-                                       <div className="text-sm font-medium text-white truncate">{item.name}</div>
+                                       <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
                                      <svg 
-                                       className={`w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
+                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
                                        }`}
                                        fill="none" 
@@ -528,17 +528,17 @@ export default function Navigation() {
                  <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-6 shadow-sm hover:shadow-md w-fit max-w-xs"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                    onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-sm group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-xs font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-2 h-2 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -576,9 +576,9 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 border-2 cursor-pointer shadow-sm hover:shadow-md w-fit max-w-xs ${
+                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-md' 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
@@ -627,10 +627,10 @@ export default function Navigation() {
                                        {item.icon}
                                    </div>
                                    <div className="flex-1 min-w-0">
-                                       <div className="text-sm font-medium text-white truncate">{item.name}</div>
+                                       <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
                                      <svg 
-                                       className={`w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
+                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
                                        }`}
                                        fill="none" 
@@ -648,14 +648,14 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-6 shadow-sm hover:shadow-md w-fit max-w-xs"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-sm group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-xs font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
                                    </div>
                                    <svg 
                                              className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
@@ -701,9 +701,9 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 border-2 cursor-pointer shadow-sm hover:shadow-md w-fit max-w-xs ${
+                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-md' 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
@@ -752,10 +752,10 @@ export default function Navigation() {
                                        {item.icon}
                        </div>
                                      <div className="flex-1 min-w-0">
-                                       <div className="text-sm font-medium text-white truncate">{item.name}</div>
+                                       <div className="text-base font-medium text-white truncate">{item.name}</div>
                      </div>
                                      <svg 
-                                       className={`w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
+                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
                                        }`}
                                        fill="none" 
@@ -773,17 +773,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-6 shadow-sm hover:shadow-md w-fit max-w-xs"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-sm group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-xs font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-2 h-2 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -826,9 +826,9 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 border-2 cursor-pointer shadow-sm hover:shadow-md w-fit max-w-xs ${
+                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-md' 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
@@ -873,14 +873,14 @@ export default function Navigation() {
                                        }
                                      }}
                                    >
-                                     <div className="text-lg group-hover:scale-110 transition-transform duration-300">
+                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
                                      <div className="flex-1 min-w-0">
-                                       <div className="text-sm font-medium text-white truncate">{item.name}</div>
+                                       <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
                                      <svg 
-                                       className={`w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
+                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
                                        }`}
                                        fill="none" 
@@ -898,17 +898,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-6 shadow-sm hover:shadow-md w-fit max-w-xs"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-sm group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-xs font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-2 h-2 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -947,9 +947,9 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 border-2 cursor-pointer shadow-sm hover:shadow-md w-fit max-w-xs ${
+                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-md' 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
@@ -994,14 +994,14 @@ export default function Navigation() {
                                        }
                                      }}
                                    >
-                                     <div className="text-lg group-hover:scale-110 transition-transform duration-300">
+                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
                                      <div className="flex-1 min-w-0">
-                                       <div className="text-sm font-medium text-white truncate">{item.name}</div>
+                                       <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
                                      <svg 
-                                       className={`w-3 h-3 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
+                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
                                        }`}
                                        fill="none" 
@@ -1019,17 +1019,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-6 shadow-sm hover:shadow-md w-fit max-w-xs"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-sm group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-xs font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-2 h-2 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -1913,7 +1913,7 @@ export default function Navigation() {
                                      className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
                                      onClick={() => setActiveMenu(null)}
                                    >
-                                     <div className="text-lg group-hover:scale-110 transition-transform duration-300">
+                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
                                      <div className="flex-1 min-w-0">
