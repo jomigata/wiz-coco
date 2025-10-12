@@ -9,6 +9,21 @@ import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils'
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 
+// 타입 정의 추가
+interface SubcategoryItem {
+  name: string;
+  href: string;
+  description: string;
+}
+
+interface CategoryItem {
+  name: string;
+  description: string;
+  icon: string;
+  subcategories: SubcategoryItem[];
+  isSpecial?: boolean;
+}
+
 export default function Navigation() {
   const router = useRouter();
   const { user, loading, logout } = useFirebaseAuth();
