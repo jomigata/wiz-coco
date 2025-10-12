@@ -403,6 +403,17 @@ export default function Navigation() {
                                <div className="flex items-center gap-3">
                                  <span className="text-xl">{mainCategory.icon}</span>
                                  <span className="font-medium">{mainCategory.name}</span>
+                                 {/* 대분류가 선택되었을 때 화살표 표시 */}
+                                 {selectedMainCategory === mainCategory.id && (
+                                   <svg 
+                                     className="w-4 h-4 text-white ml-auto"
+                                     fill="none" 
+                                     stroke="currentColor" 
+                                     viewBox="0 0 24 24"
+                                   >
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                   </svg>
+                                 )}
                              </div>
                              </div>
                            ))}
@@ -445,8 +456,10 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
@@ -563,8 +576,10 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
@@ -686,8 +701,10 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
@@ -809,8 +826,10 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
@@ -928,8 +947,10 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name 
+                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
                                      }`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
