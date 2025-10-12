@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export default function PsychologyTestsPage() {
+function TestsContent() {
   const searchParams = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -507,5 +507,27 @@ export default function PsychologyTestsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PsychologyTestsPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-3xl mx-auto mb-4">
+                🧠
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">로딩 중...</h2>
+              <p className="text-gray-300">심리검사 목록을 불러오고 있습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TestsContent />
+    </Suspense>
   );
 }
