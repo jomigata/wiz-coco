@@ -420,18 +420,18 @@ export default function Navigation() {
                          </div>
                        </div>
 
-                      {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div className="w-2/3 p-4">
-                        {selectedMainCategory ? (
-                          <div className="w-full">
-                            <div className="text-lg font-bold text-blue-300 mb-4 w-full">
-                              {selectedMainCategory === "personal" && "개인 심리 및 성장"}
-                              {selectedMainCategory === "social" && "대인관계 및 사회적응"}
-                              {selectedMainCategory === "emotional" && "정서 문제 및 정신 건강"}
-                              {selectedMainCategory === "practical" && "현실 문제 및 생활 관리"}
-                              {selectedMainCategory === "cultural" && "문화 및 환경 적응"}
-                            </div>
-                            <div className="space-y-2 max-h-[60vh] overflow-y-auto w-full">
+                       {/* 오른쪽: 선택된 대분류의 중분류 */}
+                       <div className="w-2/3 p-4">
+                         {selectedMainCategory ? (
+                           <div>
+                             <div className="text-lg font-bold text-blue-300 mb-4">
+                               {selectedMainCategory === "personal" && "개인 심리 및 성장"}
+                               {selectedMainCategory === "social" && "대인관계 및 사회적응"}
+                               {selectedMainCategory === "emotional" && "정서 문제 및 정신 건강"}
+                               {selectedMainCategory === "practical" && "현실 문제 및 생활 관리"}
+                               {selectedMainCategory === "cultural" && "문화 및 환경 적응"}
+                             </div>
+                             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                                {selectedMainCategory === "personal" && [
                                  { name: "성격 및 기질 탐색", description: "개인 성격 특성 분석", icon: "🧬", subcategories: [
                                    { name: "MBTI 성격 유형", href: "/tests/mbti", description: "16가지 성격 유형 분석" },

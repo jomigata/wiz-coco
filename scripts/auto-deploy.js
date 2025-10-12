@@ -155,7 +155,47 @@ function generateCommitMessage() {
     timeZone: 'Asia/Seoul' 
   });
   
-  return `🚀 자동 배포 업데이트 - ${timestamp} ${time}`;
+  // 변경사항 분석하여 주요 변경사항 추출
+  try {
+    const changes = execSync('git status --porcelain', { 
+      encoding: 'utf8',
+      stdio: 'pipe',
+      timeout: 10000
+    });
+    
+    const files = changes.trim().split('\n').filter(line => line.trim());
+    const analysis = {
+      components: files.filter(f => f.includes('src/components/')),
+      pages: files.filter(f => f.includes('src/app/')),
+      styles: files.filter(f => f.includes('.css') || f.includes('.scss')),
+      config: files.filter(f => f.includes('package.json') || f.includes('next.config.js')),
+      scripts: files.filter(f => f.includes('scripts/') || f.includes('.github/')),
+      docs: files.filter(f => f.includes('docs/') || f.includes('README'))
+    };
+    
+    // 주요 변경사항 식별
+    let mainChange = '';
+    if (analysis.components.length > 0) {
+      mainChange = 'UI 컴포넌트 개선';
+    } else if (analysis.pages.length > 0) {
+      mainChange = '페이지 기능 업데이트';
+    } else if (analysis.styles.length > 0) {
+      mainChange = '스타일 개선';
+    } else if (analysis.config.length > 0) {
+      mainChange = '설정 최적화';
+    } else if (analysis.scripts.length > 0) {
+      mainChange = '배포 시스템 개선';
+    } else if (analysis.docs.length > 0) {
+      mainChange = '문서 업데이트';
+    } else {
+      mainChange = '코드 최적화';
+    }
+    
+    return `🚀 ${mainChange} - ${timestamp} ${time}`;
+  } catch (error) {
+    // 오류 발생 시 기본 메시지 사용
+    return `🚀 코드 업데이트 - ${timestamp} ${time}`;
+  }
 }
 
 // 완전 자동화된 배포 프로세스 (강화)
