@@ -380,6 +380,9 @@ export default function Navigation() {
                          setSelectedSubcategory("문화적응 및 정체성");
                        }
                      }}
+                     onMouseLeave={() => {
+                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                     }}
                    >
                                <div className="flex items-center gap-3">
                                  <span className="text-xl">{mainCategory.icon}</span>
@@ -429,8 +432,14 @@ export default function Navigation() {
                                      className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
-                                     onMouseEnter={() => setHoveredCategory(item.name)}
-                                     onMouseLeave={() => setHoveredCategory(null)}
+                                     onMouseEnter={() => {
+                                       setHoveredCategory(item.name);
+                                       setSelectedSubcategory(item.name);
+                                     }}
+                                     onMouseLeave={() => {
+                                       setHoveredCategory(null);
+                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                     }}
                                      onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -509,8 +518,14 @@ export default function Navigation() {
                                      className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
-                                     onMouseEnter={() => setHoveredCategory(item.name)}
-                                     onMouseLeave={() => setHoveredCategory(null)}
+                                     onMouseEnter={() => {
+                                       setHoveredCategory(item.name);
+                                       setSelectedSubcategory(item.name);
+                                     }}
+                                     onMouseLeave={() => {
+                                       setHoveredCategory(null);
+                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                     }}
                                      onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -594,8 +609,14 @@ export default function Navigation() {
                                      className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
-                                     onMouseEnter={() => setHoveredCategory(item.name)}
-                                     onMouseLeave={() => setHoveredCategory(null)}
+                                     onMouseEnter={() => {
+                                       setHoveredCategory(item.name);
+                                       setSelectedSubcategory(item.name);
+                                     }}
+                                     onMouseLeave={() => {
+                                       setHoveredCategory(null);
+                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                     }}
                                      onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -679,8 +700,14 @@ export default function Navigation() {
                                      className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
-                                     onMouseEnter={() => setHoveredCategory(item.name)}
-                                     onMouseLeave={() => setHoveredCategory(null)}
+                                     onMouseEnter={() => {
+                                       setHoveredCategory(item.name);
+                                       setSelectedSubcategory(item.name);
+                                     }}
+                                     onMouseLeave={() => {
+                                       setHoveredCategory(null);
+                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                     }}
                                      onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -760,8 +787,14 @@ export default function Navigation() {
                                      className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
-                                     onMouseEnter={() => setHoveredCategory(item.name)}
-                                     onMouseLeave={() => setHoveredCategory(null)}
+                                     onMouseEnter={() => {
+                                       setHoveredCategory(item.name);
+                                       setSelectedSubcategory(item.name);
+                                     }}
+                                     onMouseLeave={() => {
+                                       setHoveredCategory(null);
+                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                     }}
                                      onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
