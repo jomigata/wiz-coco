@@ -18,7 +18,6 @@ export default function Navigation() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("personal");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
-  const [isHoverDisabled, setIsHoverDisabled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // 자동 스크롤 훅들
@@ -74,24 +73,16 @@ export default function Navigation() {
       }
     };
 
-    const handleMouseMove = () => {
-      if (isHoverDisabled) {
-        setIsHoverDisabled(false);
-      }
-    };
-
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("wheel", handleWheel, { passive: false });
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("mousemove", handleMouseMove);
     
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("wheel", handleWheel);
       document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [activeMenu, isHoverDisabled]);
+  }, [activeMenu]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -132,7 +123,6 @@ export default function Navigation() {
 
   const handleNavLinkClick = (href: string, e: React.MouseEvent) => {
     setActiveItem(href);
-    setIsHoverDisabled(true);
   };
 
   const handleAuthLinkClick = (href: string, e: React.MouseEvent) => {
@@ -379,7 +369,6 @@ export default function Navigation() {
                      }`}
                      onClick={() => setSelectedMainCategory(mainCategory.id)}
                      onMouseEnter={() => {
-                       if (isHoverDisabled) return;
                        setSelectedMainCategory(mainCategory.id);
                        // 각 대분류의 첫 번째 중분류와 소분류 자동 펼침 (T02처럼)
                        if (mainCategory.id === "personal") {
@@ -447,7 +436,6 @@ export default function Navigation() {
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => {
-                                       if (isHoverDisabled) return;
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
                                      }}
@@ -534,7 +522,6 @@ export default function Navigation() {
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => {
-                                       if (isHoverDisabled) return;
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
                                      }}
@@ -626,7 +613,6 @@ export default function Navigation() {
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => {
-                                       if (isHoverDisabled) return;
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
                                      }}
@@ -718,7 +704,6 @@ export default function Navigation() {
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => {
-                                       if (isHoverDisabled) return;
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
                                      }}
@@ -806,7 +791,6 @@ export default function Navigation() {
                                        selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => {
-                                       if (isHoverDisabled) return;
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
                                      }}
