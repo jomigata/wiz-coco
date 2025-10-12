@@ -357,15 +357,30 @@ export default function Navigation() {
                              { id: "practical", name: "현실 문제 및 생활 관리", icon: "📋" },
                              { id: "cultural", name: "문화 및 환경 적응", icon: "🌍" }
                            ].map((mainCategory) => (
-                             <div
-                               key={mainCategory.id}
-                               className={`p-3 rounded-lg cursor-pointer transition-all duration-300 ${
-                                 selectedMainCategory === mainCategory.id
-                                   ? 'bg-blue-600 text-white'
-                                   : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:text-white'
-                               }`}
-                               onClick={() => setSelectedMainCategory(mainCategory.id)}
-                             >
+                   <div
+                     key={mainCategory.id}
+                     className={`p-3 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
+                       selectedMainCategory === mainCategory.id
+                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg'
+                         : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border-blue-500/30 hover:border-blue-400 hover:shadow-md'
+                     }`}
+                     onClick={() => setSelectedMainCategory(mainCategory.id)}
+                     onMouseEnter={() => {
+                       setSelectedMainCategory(mainCategory.id);
+                       // 각 대분류의 첫 번째 중분류와 소분류 자동 펼침
+                       if (mainCategory.id === "personal") {
+                         setSelectedSubcategory("성격 및 기질 탐색");
+                       } else if (mainCategory.id === "social") {
+                         setSelectedSubcategory("인간관계 및 소통");
+                       } else if (mainCategory.id === "emotional") {
+                         setSelectedSubcategory("우울 및 불안");
+                       } else if (mainCategory.id === "practical") {
+                         setSelectedSubcategory("학습 및 진로");
+                       } else if (mainCategory.id === "cultural") {
+                         setSelectedSubcategory("문화적응 및 정체성");
+                       }
+                     }}
+                   >
                                <div className="flex items-center gap-3">
                                  <span className="text-xl">{mainCategory.icon}</span>
                                  <span className="font-medium">{mainCategory.name}</span>
@@ -411,8 +426,8 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => setHoveredCategory(item.name)}
                                      onMouseLeave={() => setHoveredCategory(null)}
@@ -443,17 +458,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/15 to-indigo-400/15 rounded-lg hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 transition-all duration-300 border border-blue-400/20 hover:border-white/20 ml-6"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-100 truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-300 group-hover:text-blue-100 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -491,8 +506,8 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => setHoveredCategory(item.name)}
                                      onMouseLeave={() => setHoveredCategory(null)}
@@ -523,17 +538,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/15 to-indigo-400/15 rounded-lg hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 transition-all duration-300 border border-blue-400/20 hover:border-white/20 ml-6"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-100 truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-300 group-hover:text-blue-100 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -576,8 +591,8 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => setHoveredCategory(item.name)}
                                      onMouseLeave={() => setHoveredCategory(null)}
@@ -608,17 +623,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/15 to-indigo-400/15 rounded-lg hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 transition-all duration-300 border border-blue-400/20 hover:border-white/20 ml-6"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-100 truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-300 group-hover:text-blue-100 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -661,8 +676,8 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => setHoveredCategory(item.name)}
                                      onMouseLeave={() => setHoveredCategory(null)}
@@ -693,17 +708,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/15 to-indigo-400/15 rounded-lg hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 transition-all duration-300 border border-blue-400/20 hover:border-white/20 ml-6"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-100 truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-300 group-hover:text-blue-100 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -742,8 +757,8 @@ export default function Navigation() {
                                ].map((item) => (
                                  <div key={item.name} className="relative">
                                    <div
-                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                     className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/25 to-indigo-500/25 rounded-xl hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 transition-all duration-300 border-2 border-blue-500/40 hover:border-white/30 cursor-pointer shadow-md hover:shadow-lg ${
+                                       selectedSubcategory === item.name ? 'bg-gradient-to-r from-white/15 to-white/8 border-white/30 shadow-lg' : ''
                                      }`}
                                      onMouseEnter={() => setHoveredCategory(item.name)}
                                      onMouseLeave={() => setHoveredCategory(null)}
@@ -774,17 +789,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/15 to-indigo-400/15 rounded-lg hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 transition-all duration-300 border border-blue-400/20 hover:border-white/20 ml-6"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-100 truncate">{subItem.name}</div>
+                                             <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-300 group-hover:text-blue-100 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
