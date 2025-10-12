@@ -24,6 +24,16 @@ interface CategoryItem {
   isSpecial?: boolean;
 }
 
+// 모든 네비게이션 아이템에 대한 통합 타입 정의
+interface NavigationItem {
+  name: string;
+  description: string;
+  icon: string;
+  subcategories?: SubcategoryItem[];
+  isSpecial?: boolean;
+  badge?: string;
+}
+
 export default function Navigation() {
   const router = useRouter();
   const { user, loading, logout } = useFirebaseAuth();
@@ -475,7 +485,7 @@ export default function Navigation() {
                                        selectedSubcategory === item.name 
                                          ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                     } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
@@ -527,7 +537,7 @@ export default function Navigation() {
                                      <svg 
                                        className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                        fill="none" 
                                        stroke="currentColor" 
                                        viewBox="0 0 24 24"
@@ -595,7 +605,7 @@ export default function Navigation() {
                                        selectedSubcategory === item.name 
                                          ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                     } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
@@ -647,7 +657,7 @@ export default function Navigation() {
                                      <svg 
                                        className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                        fill="none" 
                                        stroke="currentColor" 
                                        viewBox="0 0 24 24"
@@ -720,7 +730,7 @@ export default function Navigation() {
                                        selectedSubcategory === item.name 
                                          ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                     } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
@@ -772,7 +782,7 @@ export default function Navigation() {
                                      <svg 
                                        className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                        fill="none" 
                                        stroke="currentColor" 
                                        viewBox="0 0 24 24"
@@ -845,7 +855,7 @@ export default function Navigation() {
                                        selectedSubcategory === item.name 
                                          ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                     } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
@@ -897,7 +907,7 @@ export default function Navigation() {
                                      <svg 
                                        className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                        fill="none" 
                                        stroke="currentColor" 
                                        viewBox="0 0 24 24"
@@ -966,7 +976,7 @@ export default function Navigation() {
                                        selectedSubcategory === item.name 
                                          ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
                                          : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                     } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                      onMouseEnter={() => {
                                        setHoveredCategory(item.name);
                                        setSelectedSubcategory(item.name);
@@ -1018,7 +1028,7 @@ export default function Navigation() {
                                      <svg 
                                        className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
                                          selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}
                                        fill="none" 
                                        stroke="currentColor" 
                                        viewBox="0 0 24 24"
@@ -1222,7 +1232,7 @@ export default function Navigation() {
                                          (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
                                          (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                          'bg-orange-500 text-white'
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}>
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}>
                                          {(item as any).badge}
                                        </span>
                                      )}
@@ -1395,7 +1405,7 @@ export default function Navigation() {
                                            (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
                                            (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                            'bg-orange-500 text-white'
-                                         } ${item.isSpecial ? 'max-w-sm' : ''}`}>
+                                         } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}>
                                            {(item as any).badge}
                                          </span>
                                        )}
@@ -1567,7 +1577,7 @@ export default function Navigation() {
                                          (item as any).badge === '인기' ? 'bg-red-500 text-white' :
                                          (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                          'bg-orange-500 text-white'
-                                       } ${item.isSpecial ? 'max-w-sm' : ''}`}>
+                                       } ${(item as any).isSpecial ? 'max-w-sm' : ''}`}>
                                          {(item as any).badge}
                                        </span>
                                      )}
@@ -2112,11 +2122,11 @@ export default function Navigation() {
                                <div 
                                  className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 bg-purple-500/20 rounded cursor-pointer transition-all duration-300 ${
                                    selectedSubcategory === item.name ? 'bg-purple-500/30' : 'hover:bg-purple-500/30'
-                                 } ${item.isSpecial ? 'max-w-xs' : ''}`}
+                                 } ${(item as any).isSpecial ? 'max-w-xs' : ''}`}
                                  onClick={() => setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name)}
                                >
                                  <span className="text-sm">{item.icon}</span>
-                                 <span className={`${item.isSpecial ? 'text-sm' : 'flex-1'}`}>{item.name}</span>
+                                 <span className={`${(item as any).isSpecial ? 'text-sm' : 'flex-1'}`}>{item.name}</span>
                                  <svg 
                                    className={`w-4 h-4 transition-transform duration-300 ${
                                      selectedSubcategory === item.name ? 'rotate-90' : ''
