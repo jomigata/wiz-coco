@@ -18,7 +18,10 @@ export default function Navigation() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedMainCategory, setSelectedMainCategory] = useState<"personal" | "social" | "emotional" | "practical" | "cultural" | null>("personal");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  // 타입 가드 함수
+  const isNotPersonalCategory = (category: string | null): boolean => {
+    return category !== "personal";
+  };
   
   // 자동 스크롤 훅들
   const counselingScroll = useAutoScroll();
@@ -368,7 +371,7 @@ export default function Navigation() {
                          : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border-blue-500/30 hover:border-blue-400 hover:shadow-md'
                      }`}
                      onClick={() => {
-                       setSelectedMainCategory(mainCategory.id);
+                       setSelectedMainCategory(mainCategory.id as "personal" | "social" | "emotional" | "practical" | "cultural");
                        // 대분류 클릭 시 대시보드로 이동하면서 카테고리 전달
                        const categoryMap: { [key: string]: string } = {
                          "personal": "personal-growth",
@@ -382,7 +385,7 @@ export default function Navigation() {
                        setActiveMenu(null);
                      }}
                      onMouseEnter={() => {
-                       setSelectedMainCategory(mainCategory.id);
+                       setSelectedMainCategory(mainCategory.id as "personal" | "social" | "emotional" | "practical" | "cultural");
                        // 각 대분류의 첫 번째 중분류와 소분류 자동 펼침 (T02처럼)
                        if (mainCategory.id === "personal") {
                          setSelectedSubcategory("성격 및 기질 탐색");
@@ -529,7 +532,7 @@ export default function Navigation() {
                                            key={subItem.name}
                                            href={subItem.href}
                                            className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg transition-all duration-300 border-2 border-blue-400/30 ml-8 shadow-sm ${
-                                             selectedMainCategory !== "personal" 
+                                             isNotPersonalCategory(selectedMainCategory)
                                                ? "hover:bg-blue-600 hover:text-white hover:border-blue-400 hover:shadow-md" 
                                                : "hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-white/25"
                                            }`}
@@ -540,12 +543,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -664,12 +667,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                    </div>
                                    <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                      fill="none" 
                                      stroke="currentColor" 
@@ -793,12 +796,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -922,12 +925,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -1047,12 +1050,12 @@ export default function Navigation() {
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className={`text-sm font-medium text-blue-200 truncate ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : ""
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : ""
                                              }`}>{subItem.name}</div>
                                            </div>
                                            <svg 
                                              className={`w-3 h-3 text-blue-400 group-hover:translate-x-1 transition-all duration-300 ${
-                                               selectedMainCategory !== "personal" ? "group-hover:text-white" : "group-hover:text-blue-200"
+                                               isNotPersonalCategory(selectedMainCategory) ? "group-hover:text-white" : "group-hover:text-blue-200"
                                              }`}
                                              fill="none" 
                                              stroke="currentColor" 
@@ -2076,7 +2079,7 @@ export default function Navigation() {
                          className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-blue-200 bg-blue-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
                            selectedMainCategory === mainCategory.id ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/30'
                          }`}
-                         onClick={() => setSelectedMainCategory(selectedMainCategory === mainCategory.id ? null : mainCategory.id)}
+                         onClick={() => setSelectedMainCategory(selectedMainCategory === mainCategory.id ? null : (mainCategory.id as "personal" | "social" | "emotional" | "practical" | "cultural"))}
                        >
                          <span className="text-lg">{mainCategory.icon}</span>
                          <span className="flex-1">{mainCategory.name}</span>
