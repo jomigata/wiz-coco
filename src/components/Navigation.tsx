@@ -367,17 +367,17 @@ export default function Navigation() {
                      onClick={() => setSelectedMainCategory(mainCategory.id)}
                      onMouseEnter={() => {
                        setSelectedMainCategory(mainCategory.id);
-                       // 각 대분류의 첫 번째 중분류와 소분류 자동 펼침
+                       // 각 대분류의 첫 번째 중분류와 소분류 자동 펼침 (T02처럼)
                        if (mainCategory.id === "personal") {
                          setSelectedSubcategory("성격 및 기질 탐색");
                        } else if (mainCategory.id === "social") {
-                         setSelectedSubcategory("인간관계 및 소통");
+                         setSelectedSubcategory("가족 관계");
                        } else if (mainCategory.id === "emotional") {
-                         setSelectedSubcategory("우울 및 불안");
+                         setSelectedSubcategory("우울 및 기분 문제");
                        } else if (mainCategory.id === "practical") {
-                         setSelectedSubcategory("학습 및 진로");
+                         setSelectedSubcategory("진로 및 직업 문제");
                        } else if (mainCategory.id === "cultural") {
-                         setSelectedSubcategory("문화적응 및 정체성");
+                         setSelectedSubcategory("다문화 적응");
                        }
                      }}
                      onMouseLeave={() => {
