@@ -18,6 +18,7 @@ export default function Navigation() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedMainCategory, setSelectedMainCategory] = useState<"personal" | "social" | "emotional" | "practical" | "cultural" | null>("personal");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
+  const dropdownRef = useRef<HTMLDivElement>(null);
   // 타입 가드 함수
   const isNotPersonalCategory = (category: string | null): boolean => {
     return category !== "personal";
