@@ -290,7 +290,7 @@ export default function Navigation() {
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
+          animation: fadeIn 1.5s ease-out;
         }
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
@@ -467,17 +467,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -553,17 +553,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -644,17 +644,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -735,17 +735,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
@@ -822,17 +822,17 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-1000 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
+                                           <div className="text-base group-hover:scale-110 transition-transform duration-1000">
                                              📋
                                            </div>
                                            <div className="flex-1 min-w-0">
                                              <div className="text-sm font-medium text-blue-200 truncate">{subItem.name}</div>
                                            </div>
                                            <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-300"
+                                             className="w-3 h-3 text-blue-400 group-hover:text-blue-200 group-hover:translate-x-1 transition-all duration-1000"
                                              fill="none" 
                                              stroke="currentColor" 
                                              viewBox="0 0 24 24"
