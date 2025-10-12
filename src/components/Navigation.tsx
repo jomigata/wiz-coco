@@ -648,7 +648,7 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
@@ -773,7 +773,7 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
@@ -898,7 +898,7 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
@@ -1019,7 +1019,7 @@ export default function Navigation() {
                                          <Link
                                            key={subItem.name}
                                            href={subItem.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-blue-400/30 hover:border-white/25 ml-8 shadow-sm hover:shadow-md"
+                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                            onClick={() => setActiveMenu(null)}
                                          >
                                            <div className="text-base group-hover:scale-110 transition-transform duration-300">
