@@ -1675,7 +1675,6 @@ export default function Navigation() {
                                     <div>
                                       <div className="font-semibold text-white">{userName || '사용자'}</div>
                                       <div className="text-sm text-green-300">{userEmail}</div>
-                                      <div className="text-xs text-green-400 capitalize">{userRole}</div>
                                     </div>
                                   </div>
                                 </div>
