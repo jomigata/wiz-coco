@@ -403,17 +403,15 @@ export default function Navigation() {
                                <div className="flex items-center gap-3">
                                  <span className="text-xl">{mainCategory.icon}</span>
                                  <span className="font-medium">{mainCategory.name}</span>
-                                 {/* 대분류가 선택되었을 때 화살표 표시 */}
-                                 {selectedMainCategory === mainCategory.id && (
-                                   <svg 
-                                     className="w-4 h-4 text-white ml-auto"
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24"
-                                   >
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                   </svg>
-                                 )}
+                                 {/* 대분류 화살표 항상 표시 */}
+                                 <svg 
+                                   className="w-4 h-4 text-white ml-auto"
+                                   fill="none" 
+                                   stroke="currentColor" 
+                                   viewBox="0 0 24 24"
+                                 >
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                 </svg>
                              </div>
                              </div>
                            ))}
