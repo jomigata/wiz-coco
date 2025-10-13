@@ -85,7 +85,8 @@ export default function SelfEsteemPage() {
         {/* 검사 목록 - 카드 그리드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {testItems.map((item, index) => (
-            <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
+            <Link key={index} href={item.href} className="block">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
               {/* 카드 헤더 */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
@@ -133,15 +134,8 @@ export default function SelfEsteemPage() {
                   </div>
                 </div>
 
-                {/* 검사 시작 버튼 */}
-                <Link
-                  href={item.href}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2 px-4 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 text-center text-sm font-medium"
-                >
-                  검사 시작 →
-                </Link>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

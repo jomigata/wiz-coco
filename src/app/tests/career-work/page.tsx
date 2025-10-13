@@ -75,63 +75,57 @@ export default function CareerWorkPage() {
         {/* 검사 목록 - 카드 그리드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {testItems.map((item, index) => (
-            <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
-              {/* 카드 헤더 */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-                  {item.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white leading-tight">{item.name}</h3>
-                </div>
-              </div>
-
-              {/* 카드 내용 */}
-              <div className="flex-1 flex flex-col">
-                <p className="text-gray-300 text-sm mb-3 leading-relaxed">{item.desc}</p>
-                
-                {/* 고민 예시 - 축약된 형태 */}
-                <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
-                  <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
-                    <span>💭</span> 주요 고민
-                  </h4>
-                  <div className="space-y-1">
-                    {item.worryExamples.slice(0, 3).map((worry, idx) => (
-                      <div key={idx} className="text-xs text-gray-300 truncate">
-                        • "{worry}"
-                      </div>
-                    ))}
-                    {item.worryExamples.length > 3 && (
-                      <div className="text-xs text-gray-400">
-                        +{item.worryExamples.length - 3}개 더...
-                      </div>
-                    )}
+            <Link key={index} href={item.href} className="block">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
+                {/* 카드 헤더 */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                    {item.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-white leading-tight">{item.name}</h3>
                   </div>
                 </div>
 
-                {/* 카드 하단 */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.difficulty === '쉬움' ? 'bg-green-500/20 text-green-400' :
-                      item.difficulty === '보통' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
-                      {item.difficulty}
-                    </span>
-                    <span className="text-gray-400 text-xs">{item.time}</span>
+                {/* 카드 내용 */}
+                <div className="flex-1 flex flex-col">
+                  <p className="text-gray-300 text-sm mb-3 leading-relaxed">{item.desc}</p>
+                  
+                  {/* 고민 예시 - 축약된 형태 */}
+                  <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
+                    <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
+                      <span>💭</span> 주요 고민
+                    </h4>
+                    <div className="space-y-1">
+                      {item.worryExamples.slice(0, 3).map((worry, idx) => (
+                        <div key={idx} className="text-xs text-gray-300 truncate">
+                          • "{worry}"
+                        </div>
+                      ))}
+                      {item.worryExamples.length > 3 && (
+                        <div className="text-xs text-gray-400">
+                          +{item.worryExamples.length - 3}개 더...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 카드 하단 */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        item.difficulty === '쉬움' ? 'bg-green-500/20 text-green-400' :
+                        item.difficulty === '보통' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {item.difficulty}
+                      </span>
+                      <span className="text-gray-400 text-xs">{item.time}</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* 검사 시작 버튼 */}
-                <Link
-                  href={item.href}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2 px-4 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 text-center text-sm font-medium"
-                >
-                  검사 시작 →
-                </Link>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
