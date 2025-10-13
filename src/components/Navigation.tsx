@@ -469,36 +469,7 @@ export default function Navigation() {
                                      }}
                                      onClick={() => {
                                        setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 대시보드로 이동하면서 카테고리 전달
-                                       const categoryMap: { [key: string]: string } = {
-                                         "성격 및 기질 탐색": "personal-growth",
-                                         "자아정체감 및 가치관": "personal-growth",
-                                         "잠재력 및 역량 개발": "personal-growth",
-                                         "삶의 의미 및 실존적 문제": "personal-growth",
-                                         "가족 관계": "relationships-social",
-                                         "연인 및 부부 관계": "relationships-social",
-                                         "친구 및 동료 관계": "relationships-social",
-                                         "사회적 기술 및 소통": "relationships-social",
-                                         "우울 및 기분 문제": "emotional-mental",
-                                         "불안 및 스트레스": "emotional-mental",
-                                         "외상 및 위기 개입": "emotional-mental",
-                                         "중독 및 충동 조절 문제": "emotional-mental",
-                                         "자존감 및 자기 문제": "emotional-mental",
-                                         "진로 및 직업 문제": "reality-life",
-                                         "경제 및 재정 문제": "reality-life",
-                                         "건강 및 신체 문제": "reality-life",
-                                         "법률 및 행정 문제": "reality-life",
-                                         "일상생활 및 자기 관리": "reality-life",
-                                         "다문화 적응": "culture-environment",
-                                         "디지털 환경 적응": "culture-environment",
-                                         "생애주기별 적응": "culture-environment",
-                                         "특정 사회·환경 문제": "culture-environment"
-                                       };
-                                       const categoryId = categoryMap[item.name];
-                                       if (categoryId) {
-                                         router.push(`/tests?category=${categoryId}`);
-                                         setActiveMenu(null);
-                                       }
+                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -589,36 +560,7 @@ export default function Navigation() {
                                      }}
                                      onClick={() => {
                                        setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 대시보드로 이동하면서 카테고리 전달
-                                       const categoryMap: { [key: string]: string } = {
-                                         "성격 및 기질 탐색": "personal-growth",
-                                         "자아정체감 및 가치관": "personal-growth",
-                                         "잠재력 및 역량 개발": "personal-growth",
-                                         "삶의 의미 및 실존적 문제": "personal-growth",
-                                         "가족 관계": "relationships-social",
-                                         "연인 및 부부 관계": "relationships-social",
-                                         "친구 및 동료 관계": "relationships-social",
-                                         "사회적 기술 및 소통": "relationships-social",
-                                         "우울 및 기분 문제": "emotional-mental",
-                                         "불안 및 스트레스": "emotional-mental",
-                                         "외상 및 위기 개입": "emotional-mental",
-                                         "중독 및 충동 조절 문제": "emotional-mental",
-                                         "자존감 및 자기 문제": "emotional-mental",
-                                         "진로 및 직업 문제": "reality-life",
-                                         "경제 및 재정 문제": "reality-life",
-                                         "건강 및 신체 문제": "reality-life",
-                                         "법률 및 행정 문제": "reality-life",
-                                         "일상생활 및 자기 관리": "reality-life",
-                                         "다문화 적응": "culture-environment",
-                                         "디지털 환경 적응": "culture-environment",
-                                         "생애주기별 적응": "culture-environment",
-                                         "특정 사회·환경 문제": "culture-environment"
-                                       };
-                                       const categoryId = categoryMap[item.name];
-                                       if (categoryId) {
-                                         router.push(`/tests?category=${categoryId}`);
-                                         setActiveMenu(null);
-                                       }
+                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                  >
                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -714,36 +656,7 @@ export default function Navigation() {
                                      }}
                                      onClick={() => {
                                        setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 대시보드로 이동하면서 카테고리 전달
-                                       const categoryMap: { [key: string]: string } = {
-                                         "성격 및 기질 탐색": "personal-growth",
-                                         "자아정체감 및 가치관": "personal-growth",
-                                         "잠재력 및 역량 개발": "personal-growth",
-                                         "삶의 의미 및 실존적 문제": "personal-growth",
-                                         "가족 관계": "relationships-social",
-                                         "연인 및 부부 관계": "relationships-social",
-                                         "친구 및 동료 관계": "relationships-social",
-                                         "사회적 기술 및 소통": "relationships-social",
-                                         "우울 및 기분 문제": "emotional-mental",
-                                         "불안 및 스트레스": "emotional-mental",
-                                         "외상 및 위기 개입": "emotional-mental",
-                                         "중독 및 충동 조절 문제": "emotional-mental",
-                                         "자존감 및 자기 문제": "emotional-mental",
-                                         "진로 및 직업 문제": "reality-life",
-                                         "경제 및 재정 문제": "reality-life",
-                                         "건강 및 신체 문제": "reality-life",
-                                         "법률 및 행정 문제": "reality-life",
-                                         "일상생활 및 자기 관리": "reality-life",
-                                         "다문화 적응": "culture-environment",
-                                         "디지털 환경 적응": "culture-environment",
-                                         "생애주기별 적응": "culture-environment",
-                                         "특정 사회·환경 문제": "culture-environment"
-                                       };
-                                       const categoryId = categoryMap[item.name];
-                                       if (categoryId) {
-                                         router.push(`/tests?category=${categoryId}`);
-                                         setActiveMenu(null);
-                                       }
+                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -839,36 +752,7 @@ export default function Navigation() {
                                      }}
                                      onClick={() => {
                                        setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 대시보드로 이동하면서 카테고리 전달
-                                       const categoryMap: { [key: string]: string } = {
-                                         "성격 및 기질 탐색": "personal-growth",
-                                         "자아정체감 및 가치관": "personal-growth",
-                                         "잠재력 및 역량 개발": "personal-growth",
-                                         "삶의 의미 및 실존적 문제": "personal-growth",
-                                         "가족 관계": "relationships-social",
-                                         "연인 및 부부 관계": "relationships-social",
-                                         "친구 및 동료 관계": "relationships-social",
-                                         "사회적 기술 및 소통": "relationships-social",
-                                         "우울 및 기분 문제": "emotional-mental",
-                                         "불안 및 스트레스": "emotional-mental",
-                                         "외상 및 위기 개입": "emotional-mental",
-                                         "중독 및 충동 조절 문제": "emotional-mental",
-                                         "자존감 및 자기 문제": "emotional-mental",
-                                         "진로 및 직업 문제": "reality-life",
-                                         "경제 및 재정 문제": "reality-life",
-                                         "건강 및 신체 문제": "reality-life",
-                                         "법률 및 행정 문제": "reality-life",
-                                         "일상생활 및 자기 관리": "reality-life",
-                                         "다문화 적응": "culture-environment",
-                                         "디지털 환경 적응": "culture-environment",
-                                         "생애주기별 적응": "culture-environment",
-                                         "특정 사회·환경 문제": "culture-environment"
-                                       };
-                                       const categoryId = categoryMap[item.name];
-                                       if (categoryId) {
-                                         router.push(`/tests?category=${categoryId}`);
-                                         setActiveMenu(null);
-                                       }
+                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -960,36 +844,7 @@ export default function Navigation() {
                                      }}
                                      onClick={() => {
                                        setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 대시보드로 이동하면서 카테고리 전달
-                                       const categoryMap: { [key: string]: string } = {
-                                         "성격 및 기질 탐색": "personal-growth",
-                                         "자아정체감 및 가치관": "personal-growth",
-                                         "잠재력 및 역량 개발": "personal-growth",
-                                         "삶의 의미 및 실존적 문제": "personal-growth",
-                                         "가족 관계": "relationships-social",
-                                         "연인 및 부부 관계": "relationships-social",
-                                         "친구 및 동료 관계": "relationships-social",
-                                         "사회적 기술 및 소통": "relationships-social",
-                                         "우울 및 기분 문제": "emotional-mental",
-                                         "불안 및 스트레스": "emotional-mental",
-                                         "외상 및 위기 개입": "emotional-mental",
-                                         "중독 및 충동 조절 문제": "emotional-mental",
-                                         "자존감 및 자기 문제": "emotional-mental",
-                                         "진로 및 직업 문제": "reality-life",
-                                         "경제 및 재정 문제": "reality-life",
-                                         "건강 및 신체 문제": "reality-life",
-                                         "법률 및 행정 문제": "reality-life",
-                                         "일상생활 및 자기 관리": "reality-life",
-                                         "다문화 적응": "culture-environment",
-                                         "디지털 환경 적응": "culture-environment",
-                                         "생애주기별 적응": "culture-environment",
-                                         "특정 사회·환경 문제": "culture-environment"
-                                       };
-                                       const categoryId = categoryMap[item.name];
-                                       if (categoryId) {
-                                         router.push(`/tests?category=${categoryId}`);
-                                         setActiveMenu(null);
-                                       }
+                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
