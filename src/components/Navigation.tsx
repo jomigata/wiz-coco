@@ -17,6 +17,7 @@ export default function Navigation() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("personal");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // 자동 스크롤 훅들
@@ -465,10 +466,6 @@ export default function Navigation() {
                                        setHoveredCategory(null);
                                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
                                      }}
-                                     onClick={() => {
-                                       setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
-                                     }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
@@ -545,10 +542,6 @@ export default function Navigation() {
                                      onMouseLeave={() => {
                                        setHoveredCategory(null);
                                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                     onClick={() => {
-                                       setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                  >
                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -632,10 +625,6 @@ export default function Navigation() {
                                        setHoveredCategory(null);
                                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
                                      }}
-                                     onClick={() => {
-                                       setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
-                                     }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
@@ -718,10 +707,6 @@ export default function Navigation() {
                                        setHoveredCategory(null);
                                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
                                      }}
-                                     onClick={() => {
-                                       setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
-                                     }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
@@ -799,10 +784,6 @@ export default function Navigation() {
                                      onMouseLeave={() => {
                                        setHoveredCategory(null);
                                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                     onClick={() => {
-                                       setSelectedSubcategory(selectedSubcategory === item.name ? null : item.name);
-                                       // 중분류 클릭 시 하위 카테고리 목록 토글만 수행
                                      }}
                                    >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
