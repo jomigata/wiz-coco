@@ -59,7 +59,7 @@ export default function FamilyRelationsPage() {
           {testItems.map((item, index) => (
             <Link key={index} href={item.href} className="block">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
-              {/* 카드 헤더 */}
+                {/* 카드 헤더 */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                   {item.icon}
