@@ -17,7 +17,6 @@ export default function Navigation() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("personal");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // 자동 스크롤 훅들
@@ -477,16 +476,6 @@ export default function Navigation() {
                                      <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
-                                     <svg 
-                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
-                                         selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       }`}
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                     </svg>
                                    </div>
                                    
                                    {/* 소분류 메뉴 */}
@@ -568,16 +557,6 @@ export default function Navigation() {
                                    <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
-                                     <svg 
-                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
-                                         selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       }`}
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                     </svg>
                                    </div>
                                    
                                    {/* 소분류 메뉴 */}
@@ -664,16 +643,6 @@ export default function Navigation() {
                                      <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
                      </div>
-                                     <svg 
-                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
-                                         selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       }`}
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                     </svg>
                                    </div>
                                    
                                    {/* 소분류 메뉴 */}
@@ -760,16 +729,6 @@ export default function Navigation() {
                                      <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
-                                     <svg 
-                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
-                                         selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       }`}
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                     </svg>
                                    </div>
                                    
                                    {/* 소분류 메뉴 */}
@@ -852,16 +811,6 @@ export default function Navigation() {
                                      <div className="flex-1 min-w-0">
                                        <div className="text-base font-medium text-white truncate">{item.name}</div>
                                      </div>
-                                     <svg 
-                                       className={`w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 ${
-                                         selectedSubcategory === item.name ? 'rotate-90' : ''
-                                       }`}
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                     </svg>
                                    </div>
                                    
                                    {/* 소분류 메뉴 */}
