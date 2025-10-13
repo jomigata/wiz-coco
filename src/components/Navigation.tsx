@@ -399,19 +399,19 @@ export default function Navigation() {
                        // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
                      }}
                    >
-                               <div className="flex items-center gap-3">
-                                 <span className="text-xl">{mainCategory.icon}</span>
-                                 <span className="font-medium">{mainCategory.name}</span>
-                                 {/* 대분류 화살표 항상 표시 */}
-                                   <svg 
-                                     className="w-4 h-4 text-white ml-auto"
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24"
-                                   >
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                   </svg>
-                             </div>
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="text-xl flex-shrink-0">{mainCategory.icon}</span>
+                                <span className="font-medium flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{mainCategory.name}</span>
+                                {/* 대분류 화살표 항상 표시 */}
+                                  <svg 
+                                    className="w-4 h-4 text-white flex-shrink-0"
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                            </div>
                              </div>
                            ))}
                          </div>
@@ -429,44 +429,58 @@ export default function Navigation() {
                                {selectedMainCategory === "cultural" && "문화 및 환경 적응"}
                              </div>
                              <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                               {selectedMainCategory === "personal" && [
-                                 { name: "성격 및 기질 탐색", description: "개인 성격 특성 분석", icon: "🧬", subcategories: [
-                                   { name: "MBTI 성격 유형", href: "/tests/mbti", description: "16가지 성격 유형 분석" },
-                                   { name: "빅5 성격 특성", href: "/tests/big5", description: "5대 성격 특성 분석" },
-                                   { name: "기질 및 성향", href: "/tests/temperament", description: "선천적 기질 분석" }
-                                 ]},
-                                 { name: "자아정체감 및 가치관", description: "자아 인식 및 가치 체계", icon: "🎯", subcategories: [
-                                   { name: "자아정체감", href: "/tests/self-identity", description: "자아 정체감 탐구" },
-                                   { name: "가치관 및 신념", href: "/tests/values-beliefs", description: "개인 가치관 분석" },
-                                   { name: "자존감 측정", href: "/tests/self-esteem", description: "자존감 수준 평가" }
-                                 ]},
-                                 { name: "잠재력 및 역량 개발", description: "개인 역량 및 성장 가능성", icon: "🚀", subcategories: [
-                                   { name: "지능 및 능력", href: "/tests/intelligence", description: "다중지능 분석" },
-                                   { name: "창의성 측정", href: "/tests/creativity", description: "창의적 사고 능력" },
-                                   { name: "리더십 역량", href: "/tests/leadership", description: "리더십 특성 분석" }
-                                 ]},
-                                 { name: "삶의 의미 및 실존적 문제", description: "삶의 목적과 의미 탐구", icon: "🌟", subcategories: [
-                                   { name: "삶의 목적", href: "/tests/life-purpose", description: "삶의 목적 탐구" },
-                                   { name: "실존적 불안", href: "/tests/existential-anxiety", description: "실존적 고민 분석" },
-                                   { name: "삶의 만족도", href: "/tests/life-satisfaction", description: "삶의 만족도 측정" }
-                                 ]}
-                               ].map((item) => (
-                                 <div key={item.name} className="relative">
-                                   <div
-                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
-                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     }`}
-                                     onMouseEnter={() => {
-                                       setHoveredCategory(item.name);
-                                       setSelectedSubcategory(item.name);
-                                     }}
-                                     onMouseLeave={() => {
-                                       setHoveredCategory(null);
-                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                   >
+                              {selectedMainCategory === "personal" && [
+                                { name: "성격 및 기질 탐색", description: "개인 성격 특성 분석", icon: "🧬", subcategories: [
+                                  { name: "MBTI 성격 유형", href: "/tests/mbti", description: "16가지 성격 유형 분석" },
+                                  { name: "빅5 성격 특성", href: "/tests/big5", description: "5대 성격 특성 분석" },
+                                  { name: "기질 및 성향", href: "/tests/temperament", description: "선천적 기질 분석" }
+                                ]},
+                                { name: "자아정체감 및 가치관", description: "자아 인식 및 가치 체계", icon: "🎯", subcategories: [
+                                  { name: "자아정체감", href: "/tests/self-identity", description: "자아 정체감 탐구" },
+                                  { name: "가치관 및 신념", href: "/tests/values-beliefs", description: "개인 가치관 분석" },
+                                  { name: "자존감 측정", href: "/tests/self-esteem", description: "자존감 수준 평가" }
+                                ]},
+                                { name: "잠재력 및 역량 개발", description: "개인 역량 및 성장 가능성", icon: "🚀", subcategories: [
+                                  { name: "지능 및 능력", href: "/tests/intelligence", description: "다중지능 분석" },
+                                  { name: "창의성 측정", href: "/tests/creativity", description: "창의적 사고 능력" },
+                                  { name: "리더십 역량", href: "/tests/leadership", description: "리더십 특성 분석" }
+                                ]},
+                                { name: "삶의 의미 및 실존적 문제", description: "삶의 목적과 의미 탐구", icon: "🌟", subcategories: [
+                                  { name: "삶의 목적", href: "/tests/life-purpose", description: "삶의 목적 탐구" },
+                                  { name: "실존적 불안", href: "/tests/existential-anxiety", description: "실존적 고민 분석" },
+                                  { name: "삶의 만족도", href: "/tests/life-satisfaction", description: "삶의 만족도 측정" }
+                                ]}
+                              ].map((item) => (
+                                <div key={item.name} className="relative">
+                                  <div
+                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                      selectedSubcategory === item.name 
+                                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                        : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
+                                    }`}
+                                    onMouseEnter={() => {
+                                      setHoveredCategory(item.name);
+                                      setSelectedSubcategory(item.name);
+                                    }}
+                                    onMouseLeave={() => {
+                                      setHoveredCategory(null);
+                                      // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                    }}
+                                    onClick={() => {
+                                      // 중분류 클릭 시 해당 대시보드 페이지로 이동
+                                      const categoryMap: { [key: string]: string } = {
+                                        "성격 및 기질 탐색": "personality-temperament",
+                                        "자아정체감 및 가치관": "personal-growth",
+                                        "잠재력 및 역량 개발": "potential-development",
+                                        "삶의 의미 및 실존적 문제": "personal-growth"
+                                      };
+                                      const categoryId = categoryMap[item.name];
+                                      if (categoryId) {
+                                        router.push(`/tests/${categoryId}`);
+                                        setActiveMenu(null);
+                                      }
+                                    }}
+                                  >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
@@ -506,44 +520,58 @@ export default function Navigation() {
                                  </div>
                                ))}
 
-                               {selectedMainCategory === "social" && [
-                                 { name: "가족 관계", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦", subcategories: [
-                                   { name: "가족 역학", href: "/tests/family-dynamics", description: "가족 내 역할 분석" },
-                                   { name: "부모-자녀 관계", href: "/tests/parent-child", description: "부모-자녀 관계 패턴" },
-                                   { name: "형제자매 관계", href: "/tests/sibling-relations", description: "형제자매 관계 분석" }
-                                 ]},
-                                 { name: "연인 및 부부 관계", description: "로맨틱 관계 및 결혼 생활", icon: "💕", subcategories: [
-                                   { name: "연애 스타일", href: "/tests/love-style", description: "연애 스타일 분석" },
-                                   { name: "부부 관계", href: "/tests/marital-relations", description: "부부 관계 만족도" },
-                                   { name: "이별 및 상실", href: "/tests/breakup-loss", description: "이별 후 회복 과정" }
-                                 ]},
-                                 { name: "친구 및 동료 관계", description: "사회적 관계 및 소통", icon: "👥", subcategories: [
-                                   { name: "친구 관계", href: "/tests/friendship", description: "우정 관계 분석" },
-                                   { name: "직장 내 관계", href: "/tests/workplace-relations", description: "직장 내 인간관계" },
-                                   { name: "사회적 기술", href: "/tests/social-skills", description: "사회적 기술 평가" }
-                                 ]},
-                                 { name: "사회적 기술 및 소통", description: "대인관계 기술 및 소통 능력", icon: "💬", subcategories: [
-                                   { name: "소통 스타일", href: "/tests/communication-style", description: "소통 방식 분석" },
-                                   { name: "갈등 해결", href: "/tests/conflict-resolution", description: "갈등 해결 능력" },
-                                   { name: "공감 능력", href: "/tests/empathy", description: "공감 능력 측정" }
-                                 ]}
-                               ].map((item) => (
-                                 <div key={item.name} className="relative">
-                                   <div
-                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
-                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     }`}
-                                     onMouseEnter={() => {
-                                       setHoveredCategory(item.name);
-                                       setSelectedSubcategory(item.name);
-                                     }}
-                                     onMouseLeave={() => {
-                                       setHoveredCategory(null);
-                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                 >
+                              {selectedMainCategory === "social" && [
+                                { name: "가족 관계", description: "가족 내 관계 패턴 분석", icon: "👨‍👩‍👧‍👦", subcategories: [
+                                  { name: "가족 역학", href: "/tests/family-dynamics", description: "가족 내 역할 분석" },
+                                  { name: "부모-자녀 관계", href: "/tests/parent-child", description: "부모-자녀 관계 패턴" },
+                                  { name: "형제자매 관계", href: "/tests/sibling-relations", description: "형제자매 관계 분석" }
+                                ]},
+                                { name: "연인 및 부부 관계", description: "로맨틱 관계 및 결혼 생활", icon: "💕", subcategories: [
+                                  { name: "연애 스타일", href: "/tests/love-style", description: "연애 스타일 분석" },
+                                  { name: "부부 관계", href: "/tests/marital-relations", description: "부부 관계 만족도" },
+                                  { name: "이별 및 상실", href: "/tests/breakup-loss", description: "이별 후 회복 과정" }
+                                ]},
+                                { name: "친구 및 동료 관계", description: "사회적 관계 및 소통", icon: "👥", subcategories: [
+                                  { name: "친구 관계", href: "/tests/friendship", description: "우정 관계 분석" },
+                                  { name: "직장 내 관계", href: "/tests/workplace-relations", description: "직장 내 인간관계" },
+                                  { name: "사회적 기술", href: "/tests/social-skills", description: "사회적 기술 평가" }
+                                ]},
+                                { name: "사회적 기술 및 소통", description: "대인관계 기술 및 소통 능력", icon: "💬", subcategories: [
+                                  { name: "소통 스타일", href: "/tests/communication-style", description: "소통 방식 분석" },
+                                  { name: "갈등 해결", href: "/tests/conflict-resolution", description: "갈등 해결 능력" },
+                                  { name: "공감 능력", href: "/tests/empathy", description: "공감 능력 측정" }
+                                ]}
+                              ].map((item) => (
+                                <div key={item.name} className="relative">
+                                  <div
+                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                      selectedSubcategory === item.name 
+                                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                        : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
+                                    }`}
+                                    onMouseEnter={() => {
+                                      setHoveredCategory(item.name);
+                                      setSelectedSubcategory(item.name);
+                                    }}
+                                    onMouseLeave={() => {
+                                      setHoveredCategory(null);
+                                      // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                    }}
+                                    onClick={() => {
+                                      // 중분류 클릭 시 해당 대시보드 페이지로 이동
+                                      const categoryMap: { [key: string]: string } = {
+                                        "가족 관계": "family-relations",
+                                        "연인 및 부부 관계": "romantic-relations",
+                                        "친구 및 동료 관계": "friend-colleague",
+                                        "사회적 기술 및 소통": "social-communication"
+                                      };
+                                      const categoryId = categoryMap[item.name];
+                                      if (categoryId) {
+                                        router.push(`/tests/${categoryId}`);
+                                        setActiveMenu(null);
+                                      }
+                                    }}
+                                >
                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                    </div>
@@ -583,49 +611,64 @@ export default function Navigation() {
                            </div>
                          ))}
 
-                               {selectedMainCategory === "emotional" && [
-                                 { name: "우울 및 기분 문제", description: "우울감 및 기분 장애", icon: "😔", subcategories: [
-                                   { name: "우울증 선별", href: "/tests/depression-screening", description: "우울증 위험도 평가" },
-                                   { name: "기분 장애", href: "/tests/mood-disorders", description: "기분 장애 분석" },
-                                   { name: "절망감 측정", href: "/tests/hopelessness", description: "절망감 수준 평가" }
-                                 ]},
-                                 { name: "불안 및 스트레스", description: "불안 증상 및 스트레스 관리", icon: "😰", subcategories: [
-                                   { name: "불안 장애", href: "/tests/anxiety-disorders", description: "불안 장애 선별" },
-                                   { name: "스트레스 수준", href: "/tests/stress-level", description: "스트레스 수준 측정" },
-                                   { name: "공황 장애", href: "/tests/panic-disorder", description: "공황 장애 평가" }
-                                 ]},
-                                 { name: "외상 및 위기 개입", description: "트라우마 및 위기 상황", icon: "🆘", subcategories: [
-                                   { name: "외상 후 스트레스", href: "/tests/ptsd", description: "PTSD 선별 검사" },
-                                   { name: "위기 상황 대처", href: "/tests/crisis-coping", description: "위기 대처 능력" },
-                                   { name: "회복력 측정", href: "/tests/resilience", description: "회복력 수준 평가" }
-                                 ]},
-                                 { name: "중독 및 충동 조절 문제", description: "중독성 행동 및 충동 조절", icon: "⚠️", subcategories: [
-                                   { name: "알코올 중독", href: "/tests/alcohol-addiction", description: "알코올 중독 선별" },
-                                   { name: "도박 중독", href: "/tests/gambling-addiction", description: "도박 중독 평가" },
-                                   { name: "충동 조절", href: "/tests/impulse-control", description: "충동 조절 능력" }
-                                 ]},
-                                 { name: "자존감 및 자기 문제", description: "자존감 및 자기 인식", icon: "🪞", subcategories: [
-                                   { name: "자존감 수준", href: "/tests/self-esteem-level", description: "자존감 수준 측정" },
-                                   { name: "자기 효능감", href: "/tests/self-efficacy", description: "자기 효능감 평가" },
-                                   { name: "완벽주의", href: "/tests/perfectionism", description: "완벽주의 성향" }
-                                 ]}
-                               ].map((item) => (
-                                 <div key={item.name} className="relative">
-                                   <div
-                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
-                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     }`}
-                                     onMouseEnter={() => {
-                                       setHoveredCategory(item.name);
-                                       setSelectedSubcategory(item.name);
-                                     }}
-                                     onMouseLeave={() => {
-                                       setHoveredCategory(null);
-                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                   >
+                              {selectedMainCategory === "emotional" && [
+                                { name: "우울 및 기분 문제", description: "우울감 및 기분 장애", icon: "😔", subcategories: [
+                                  { name: "우울증 선별", href: "/tests/depression-screening", description: "우울증 위험도 평가" },
+                                  { name: "기분 장애", href: "/tests/mood-disorders", description: "기분 장애 분석" },
+                                  { name: "절망감 측정", href: "/tests/hopelessness", description: "절망감 수준 평가" }
+                                ]},
+                                { name: "불안 및 스트레스", description: "불안 증상 및 스트레스 관리", icon: "😰", subcategories: [
+                                  { name: "불안 장애", href: "/tests/anxiety-disorders", description: "불안 장애 선별" },
+                                  { name: "스트레스 수준", href: "/tests/stress-level", description: "스트레스 수준 측정" },
+                                  { name: "공황 장애", href: "/tests/panic-disorder", description: "공황 장애 평가" }
+                                ]},
+                                { name: "외상 및 위기 개입", description: "트라우마 및 위기 상황", icon: "🆘", subcategories: [
+                                  { name: "외상 후 스트레스", href: "/tests/ptsd", description: "PTSD 선별 검사" },
+                                  { name: "위기 상황 대처", href: "/tests/crisis-coping", description: "위기 대처 능력" },
+                                  { name: "회복력 측정", href: "/tests/resilience", description: "회복력 수준 평가" }
+                                ]},
+                                { name: "중독 및 충동 조절 문제", description: "중독성 행동 및 충동 조절", icon: "⚠️", subcategories: [
+                                  { name: "알코올 중독", href: "/tests/alcohol-addiction", description: "알코올 중독 선별" },
+                                  { name: "도박 중독", href: "/tests/gambling-addiction", description: "도박 중독 평가" },
+                                  { name: "충동 조절", href: "/tests/impulse-control", description: "충동 조절 능력" }
+                                ]},
+                                { name: "자존감 및 자기 문제", description: "자존감 및 자기 인식", icon: "🪞", subcategories: [
+                                  { name: "자존감 수준", href: "/tests/self-esteem-level", description: "자존감 수준 측정" },
+                                  { name: "자기 효능감", href: "/tests/self-efficacy", description: "자기 효능감 평가" },
+                                  { name: "완벽주의", href: "/tests/perfectionism", description: "완벽주의 성향" }
+                                ]}
+                              ].map((item) => (
+                                <div key={item.name} className="relative">
+                                  <div
+                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                      selectedSubcategory === item.name 
+                                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                        : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
+                                    }`}
+                                    onMouseEnter={() => {
+                                      setHoveredCategory(item.name);
+                                      setSelectedSubcategory(item.name);
+                                    }}
+                                    onMouseLeave={() => {
+                                      setHoveredCategory(null);
+                                      // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                    }}
+                                    onClick={() => {
+                                      // 중분류 클릭 시 해당 대시보드 페이지로 이동
+                                      const categoryMap: { [key: string]: string } = {
+                                        "우울 및 기분 문제": "emotional-mental",
+                                        "불안 및 스트레스": "emotional-mental",
+                                        "외상 및 위기 개입": "trauma-crisis",
+                                        "중독 및 충동 조절 문제": "emotional-mental",
+                                        "자존감 및 자기 문제": "self-esteem"
+                                      };
+                                      const categoryId = categoryMap[item.name];
+                                      if (categoryId) {
+                                        router.push(`/tests/${categoryId}`);
+                                        setActiveMenu(null);
+                                      }
+                                    }}
+                                  >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                        </div>
@@ -665,49 +708,64 @@ export default function Navigation() {
                </div>
                                ))}
 
-                               {selectedMainCategory === "practical" && [
-                                 { name: "진로 및 직업 문제", description: "진로 선택 및 직업 적응", icon: "💼", subcategories: [
-                                   { name: "진로 적성", href: "/tests/career-aptitude", description: "진로 적성 분석" },
-                                   { name: "직업 만족도", href: "/tests/job-satisfaction", description: "직업 만족도 측정" },
-                                   { name: "직장 스트레스", href: "/tests/workplace-stress", description: "직장 스트레스 평가" }
-                                 ]},
-                                 { name: "경제 및 재정 문제", description: "경제적 스트레스 및 관리", icon: "💰", subcategories: [
-                                   { name: "재정 스트레스", href: "/tests/financial-stress", description: "재정 스트레스 측정" },
-                                   { name: "소비 패턴", href: "/tests/spending-patterns", description: "소비 패턴 분석" },
-                                   { name: "경제 불안", href: "/tests/economic-anxiety", description: "경제적 불안감" }
-                                 ]},
-                                 { name: "건강 및 신체 문제", description: "신체 건강 및 관리", icon: "🏥", subcategories: [
-                                   { name: "건강 불안", href: "/tests/health-anxiety", description: "건강 불안 수준" },
-                                   { name: "신체 이미지", href: "/tests/body-image", description: "신체 이미지 인식" },
-                                   { name: "생활 습관", href: "/tests/lifestyle-habits", description: "건강한 생활 습관" }
-                                 ]},
-                                 { name: "법률 및 행정 문제", description: "법적 문제 및 행정 절차", icon: "⚖️", subcategories: [
-                                   { name: "법적 스트레스", href: "/tests/legal-stress", description: "법적 문제 스트레스" },
-                                   { name: "행정 절차", href: "/tests/administrative-procedures", description: "행정 절차 이해도" },
-                                   { name: "권리 인식", href: "/tests/rights-awareness", description: "개인 권리 인식" }
-                                 ]},
-                                 { name: "일상생활 및 자기 관리", description: "일상 생활 관리 및 습관", icon: "📅", subcategories: [
-                                   { name: "시간 관리", href: "/tests/time-management", description: "시간 관리 능력" },
-                                   { name: "자기 관리", href: "/tests/self-care", description: "자기 관리 습관" },
-                                   { name: "생활 만족도", href: "/tests/life-satisfaction", description: "일상생활 만족도" }
-                                 ]}
-                               ].map((item) => (
-                                 <div key={item.name} className="relative">
-                                   <div
-                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
-                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     }`}
-                                     onMouseEnter={() => {
-                                       setHoveredCategory(item.name);
-                                       setSelectedSubcategory(item.name);
-                                     }}
-                                     onMouseLeave={() => {
-                                       setHoveredCategory(null);
-                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                   >
+                              {selectedMainCategory === "practical" && [
+                                { name: "진로 및 직업 문제", description: "진로 선택 및 직업 적응", icon: "💼", subcategories: [
+                                  { name: "진로 적성", href: "/tests/career-aptitude", description: "진로 적성 분석" },
+                                  { name: "직업 만족도", href: "/tests/job-satisfaction", description: "직업 만족도 측정" },
+                                  { name: "직장 스트레스", href: "/tests/workplace-stress", description: "직장 스트레스 평가" }
+                                ]},
+                                { name: "경제 및 재정 문제", description: "경제적 스트레스 및 관리", icon: "💰", subcategories: [
+                                  { name: "재정 스트레스", href: "/tests/financial-stress", description: "재정 스트레스 측정" },
+                                  { name: "소비 패턴", href: "/tests/spending-patterns", description: "소비 패턴 분석" },
+                                  { name: "경제 불안", href: "/tests/economic-anxiety", description: "경제적 불안감" }
+                                ]},
+                                { name: "건강 및 신체 문제", description: "신체 건강 및 관리", icon: "🏥", subcategories: [
+                                  { name: "건강 불안", href: "/tests/health-anxiety", description: "건강 불안 수준" },
+                                  { name: "신체 이미지", href: "/tests/body-image", description: "신체 이미지 인식" },
+                                  { name: "생활 습관", href: "/tests/lifestyle-habits", description: "건강한 생활 습관" }
+                                ]},
+                                { name: "법률 및 행정 문제", description: "법적 문제 및 행정 절차", icon: "⚖️", subcategories: [
+                                  { name: "법적 스트레스", href: "/tests/legal-stress", description: "법적 문제 스트레스" },
+                                  { name: "행정 절차", href: "/tests/administrative-procedures", description: "행정 절차 이해도" },
+                                  { name: "권리 인식", href: "/tests/rights-awareness", description: "개인 권리 인식" }
+                                ]},
+                                { name: "일상생활 및 자기 관리", description: "일상 생활 관리 및 습관", icon: "📅", subcategories: [
+                                  { name: "시간 관리", href: "/tests/time-management", description: "시간 관리 능력" },
+                                  { name: "자기 관리", href: "/tests/self-care", description: "자기 관리 습관" },
+                                  { name: "생활 만족도", href: "/tests/life-satisfaction", description: "일상생활 만족도" }
+                                ]}
+                              ].map((item) => (
+                                <div key={item.name} className="relative">
+                                  <div
+                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                      selectedSubcategory === item.name 
+                                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                        : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
+                                    }`}
+                                    onMouseEnter={() => {
+                                      setHoveredCategory(item.name);
+                                      setSelectedSubcategory(item.name);
+                                    }}
+                                    onMouseLeave={() => {
+                                      setHoveredCategory(null);
+                                      // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                    }}
+                                    onClick={() => {
+                                      // 중분류 클릭 시 해당 대시보드 페이지로 이동
+                                      const categoryMap: { [key: string]: string } = {
+                                        "진로 및 직업 문제": "career-work",
+                                        "경제 및 재정 문제": "reality-life",
+                                        "건강 및 신체 문제": "reality-life",
+                                        "법률 및 행정 문제": "reality-life",
+                                        "일상생활 및 자기 관리": "reality-life"
+                                      };
+                                      const categoryId = categoryMap[item.name];
+                                      if (categoryId) {
+                                        router.push(`/tests/${categoryId}`);
+                                        setActiveMenu(null);
+                                      }
+                                    }}
+                                  >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
@@ -747,45 +805,59 @@ export default function Navigation() {
                                  </div>
                                ))}
 
-                               {selectedMainCategory === "cultural" && [
-                                 { name: "다문화 적응", description: "다문화 환경 적응", icon: "🌍", subcategories: [
-                                   { name: "문화 적응", href: "/tests/cultural-adaptation", description: "문화 적응 능력" },
-                                   { name: "문화 충격", href: "/tests/culture-shock", description: "문화 충격 경험" },
-                                   { name: "다양성 수용", href: "/tests/diversity-acceptance", description: "다양성 수용도" }
-                                 ]},
-                                 { name: "디지털 환경 적응", description: "디지털 시대 적응", icon: "💻", subcategories: [
-                                   { name: "디지털 리터러시", href: "/tests/digital-literacy", description: "디지털 활용 능력" },
-                                   { name: "온라인 관계", href: "/tests/online-relationships", description: "온라인 인간관계" },
-                                   { name: "사이버 불안", href: "/tests/cyber-anxiety", description: "디지털 환경 불안" }
-                                 ]},
-                                 { name: "생애주기별 적응", description: "인생 단계별 적응", icon: "🔄", subcategories: [
-                                   { name: "청소년기", href: "/tests/adolescence", description: "청소년기 적응" },
-                                   { name: "성인기", href: "/tests/adulthood", description: "성인기 적응" },
-                                   { name: "중년기", href: "/tests/middle-age", description: "중년기 적응" },
-                                   { name: "노년기", href: "/tests/elderly", description: "노년기 적응" }
-                                 ]},
-                                 { name: "특정 사회·환경 문제", description: "사회 환경적 문제", icon: "🏘️", subcategories: [
-                                   { name: "사회적 고립", href: "/tests/social-isolation", description: "사회적 고립감" },
-                                   { name: "환경 스트레스", href: "/tests/environmental-stress", description: "환경적 스트레스" },
-                                   { name: "사회적 지지", href: "/tests/social-support", description: "사회적 지지 체계" }
-                                 ]}
-                               ].map((item) => (
-                                 <div key={item.name} className="relative">
-                                   <div
-                                     className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
-                                       selectedSubcategory === item.name 
-                                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
-                                         : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
-                                     }`}
-                                     onMouseEnter={() => {
-                                       setHoveredCategory(item.name);
-                                       setSelectedSubcategory(item.name);
-                                     }}
-                                     onMouseLeave={() => {
-                                       setHoveredCategory(null);
-                                       // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
-                                     }}
-                                   >
+                              {selectedMainCategory === "cultural" && [
+                                { name: "다문화 적응", description: "다문화 환경 적응", icon: "🌍", subcategories: [
+                                  { name: "문화 적응", href: "/tests/cultural-adaptation", description: "문화 적응 능력" },
+                                  { name: "문화 충격", href: "/tests/culture-shock", description: "문화 충격 경험" },
+                                  { name: "다양성 수용", href: "/tests/diversity-acceptance", description: "다양성 수용도" }
+                                ]},
+                                { name: "디지털 환경 적응", description: "디지털 시대 적응", icon: "💻", subcategories: [
+                                  { name: "디지털 리터러시", href: "/tests/digital-literacy", description: "디지털 활용 능력" },
+                                  { name: "온라인 관계", href: "/tests/online-relationships", description: "온라인 인간관계" },
+                                  { name: "사이버 불안", href: "/tests/cyber-anxiety", description: "디지털 환경 불안" }
+                                ]},
+                                { name: "생애주기별 적응", description: "인생 단계별 적응", icon: "🔄", subcategories: [
+                                  { name: "청소년기", href: "/tests/adolescence", description: "청소년기 적응" },
+                                  { name: "성인기", href: "/tests/adulthood", description: "성인기 적응" },
+                                  { name: "중년기", href: "/tests/middle-age", description: "중년기 적응" },
+                                  { name: "노년기", href: "/tests/elderly", description: "노년기 적응" }
+                                ]},
+                                { name: "특정 사회·환경 문제", description: "사회 환경적 문제", icon: "🏘️", subcategories: [
+                                  { name: "사회적 고립", href: "/tests/social-isolation", description: "사회적 고립감" },
+                                  { name: "환경 스트레스", href: "/tests/environmental-stress", description: "환경적 스트레스" },
+                                  { name: "사회적 지지", href: "/tests/social-support", description: "사회적 지지 체계" }
+                                ]}
+                              ].map((item) => (
+                                <div key={item.name} className="relative">
+                                  <div
+                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                      selectedSubcategory === item.name 
+                                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
+                                        : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
+                                    }`}
+                                    onMouseEnter={() => {
+                                      setHoveredCategory(item.name);
+                                      setSelectedSubcategory(item.name);
+                                    }}
+                                    onMouseLeave={() => {
+                                      setHoveredCategory(null);
+                                      // 마우스가 떠나도 선택된 상태 유지 (T02처럼 항상 펼쳐진 상태)
+                                    }}
+                                    onClick={() => {
+                                      // 중분류 클릭 시 해당 대시보드 페이지로 이동
+                                      const categoryMap: { [key: string]: string } = {
+                                        "다문화 적응": "culture-environment",
+                                        "디지털 환경 적응": "culture-environment",
+                                        "생애주기별 적응": "culture-environment",
+                                        "특정 사회·환경 문제": "culture-environment"
+                                      };
+                                      const categoryId = categoryMap[item.name];
+                                      if (categoryId) {
+                                        router.push(`/tests/${categoryId}`);
+                                        setActiveMenu(null);
+                                      }
+                                    }}
+                                  >
                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                        {item.icon}
                                      </div>
