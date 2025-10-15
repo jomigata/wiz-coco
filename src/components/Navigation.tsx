@@ -341,12 +341,12 @@ export default function Navigation() {
 
                  {/* 심리검사 메가 메뉴 */}
                  {isPsychologyTestsOpen && (
-                   <div
-                     data-dropdown-menu="psychology-tests"
-                     className="absolute left-0 mt-0 pt-4 pb-8 w-[700px] min-w-[40rem] max-w-[50rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                     onMouseEnter={() => setActiveMenu('psychology-tests')}
-                     onMouseLeave={() => setActiveMenu(null)}
-                   >
+                  <div
+                    data-dropdown-menu="psychology-tests"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    onMouseEnter={() => setActiveMenu('psychology-tests')}
+                    onMouseLeave={() => setActiveMenu(null)}
+                  >
                     <div className="relative flex h-[70vh]">
                       {/* 왼쪽: 대분류 5개 */}
                       <div className="w-2/5 p-4 border-r border-blue-500/30">
