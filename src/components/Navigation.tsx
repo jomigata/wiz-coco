@@ -347,9 +347,9 @@ export default function Navigation() {
                      onMouseEnter={() => setActiveMenu('psychology-tests')}
                      onMouseLeave={() => setActiveMenu(null)}
                    >
-                     <div className="relative flex h-[70vh]">
-                       {/* 왼쪽: 대분류 5개 */}
-                       <div className="w-1/3 p-4 border-r border-blue-500/30">
+                    <div className="relative flex h-[70vh]">
+                      {/* 왼쪽: 대분류 5개 */}
+                      <div className="w-2/5 p-4 border-r border-blue-500/30">
                          <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
                          <div className="space-y-2">
                            {[
@@ -417,8 +417,8 @@ export default function Navigation() {
                          </div>
                        </div>
 
-                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                       <div className="w-2/3 p-4">
+                      {/* 오른쪽: 선택된 대분류의 중분류 */}
+                      <div className="w-3/5 p-4">
                          {selectedMainCategory ? (
                            <div>
                              <div className="text-lg font-bold text-blue-300 mb-4">
