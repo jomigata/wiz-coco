@@ -117,7 +117,7 @@ export class ReportGenerator {
     
     let riskTrend: 'improving' | 'stable' | 'worsening' = 'stable';
     if (recentSignals.length > 0) {
-      const severityScores = recentSignals.map(signal => {
+      const severityScores: number[] = recentSignals.map(signal => {
         switch (signal.severity) {
           case 'critical': return 4;
           case 'high': return 3;
@@ -128,7 +128,7 @@ export class ReportGenerator {
       });
       
       const avgSeverity = severityScores.length > 0 
-        ? severityScores.reduce((a, b) => a + b, 0) / severityScores.length 
+        ? severityScores.reduce((a: number, b: number) => a + b, 0) / severityScores.length 
         : 0;
       if (avgSeverity > 2.5) {
         riskTrend = 'worsening';
