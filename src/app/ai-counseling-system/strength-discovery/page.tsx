@@ -148,6 +148,7 @@ export default function StrengthDiscoveryPage() {
 
   const currentCategory = strengthCategories[currentCategoryIndex]
   const currentQuestion = currentCategory?.questions[currentQuestionIndex]
+  const CurrentIcon = currentCategory?.icon
   const totalQuestions = strengthCategories.reduce((sum, cat) => sum + cat.questions.length, 0)
   const answeredQuestions = Object.keys(answers).length
   const progress = (answeredQuestions / totalQuestions) * 100
@@ -450,7 +451,7 @@ export default function StrengthDiscoveryPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div className={`p-3 rounded-lg ${currentCategory?.color} mr-4`}>
-                <currentCategory?.icon className="h-6 w-6 text-white" />
+                {CurrentIcon && <CurrentIcon className="h-6 w-6 text-white" />}
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
