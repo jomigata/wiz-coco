@@ -1,4 +1,4 @@
-name: 🚀 WizCoCo AI 심리상담 시스템 CI/CD Pipeline
+name: 🚀 WizCoCo CI/CD Pipeline - GitHub Actions 전용
 
 on:
   push:
@@ -14,208 +14,16 @@ on:
         options:
         - production
         - staging
-        - ai-counseling-test
 
 env:
   NODE_VERSION: '20.x'
   FIREBASE_PROJECT_ID: 'wiz-coco'
 
 jobs:
-  # 1단계: AI 심리상담 시스템 검증 (전문가 팀 협업 검토)
-  ai-system-validation:
-    name: 🧠 AI 심리상담 시스템 검증
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 코드 체크아웃
-      uses: actions/checkout@v4
-      
-    - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        
-    - name: 📦 의존성 설치
-      run: |
-        echo "📦 의존성 설치 시작..."
-        echo "=================================="
-        
-        # npm 캐시 정리
-        npm cache clean --force
-        
-        # 네트워크 재시도 설정
-        npm config set registry https://registry.npmjs.org/
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
-        npm config set fetch-retries 5
-        
-        # 의존성 설치 (재시도 포함)
-        for i in {1..3}; do
-          echo "🔄 시도 $i/3..."
-          if npm ci --legacy-peer-deps --no-audit --no-fund; then
-            echo "✅ 의존성 설치 성공!"
-            break
-          else
-            echo "❌ 시도 $i 실패, 재시도 중..."
-            if [ $i -eq 3 ]; then
-              echo "❌ 모든 시도 실패"
-              exit 1
-            fi
-            sleep 10
-          fi
-        done
-        
-        echo "=================================="
-      
-    - name: 🧠 AI 심리상담 시스템 파일 검증
-      run: |
-        echo "🧠 AI 심리상담 시스템 파일 검증 중..."
-        echo "=================================="
-        
-        # 필수 파일 목록
-        required_files=(
-          "src/app/ai-counseling-system/page.tsx"
-          "src/app/ai-counseling-system/holistic-self-check/page.tsx"
-          "src/app/ai-counseling-system/focused-exploration/page.tsx"
-          "src/app/ai-counseling-system/strength-discovery/page.tsx"
-          "src/app/ai-counseling-system/counseling-blueprint/page.tsx"
-          "src/app/ai-counseling-system/counselor-dashboard/page.tsx"
-          "src/app/ai-counseling-system/risk-monitoring/page.tsx"
-          "src/types/ai-counseling.ts"
-          "src/lib/database/ai-counseling-schema.sql"
-          "src/lib/database/ai-counseling-db.ts"
-          "src/lib/reporting/integrated-report-generator.ts"
-        )
-        
-        missing_files=()
-        
-        for file in "${required_files[@]}"; do
-          if [ ! -f "$file" ]; then
-            missing_files+=("$file")
-          fi
-        done
-        
-        if [ ${#missing_files[@]} -gt 0 ]; then
-          echo "❌ 누락된 파일들:"
-          printf '%s\n' "${missing_files[@]}"
-          exit 1
-        fi
-        
-        echo "✅ 모든 AI 심리상담 시스템 파일이 존재합니다"
-        echo "=================================="
-        
-    - name: 🗄️ 데이터베이스 스키마 검증
-      run: |
-        echo "🗄️ 데이터베이스 스키마 검증 중..."
-        echo "=================================="
-        
-        schema_file="src/lib/database/ai-counseling-schema.sql"
-        
-        if [ ! -f "$schema_file" ]; then
-          echo "❌ AI 심리상담 시스템 데이터베이스 스키마 파일이 없습니다."
-          exit 1
-        fi
-        
-        # 필수 테이블 목록
-        required_tables=(
-          "assessment_programs"
-          "risk_signals"
-          "counseling_sessions"
-          "assessment_results"
-          "ai_chat_sessions"
-        )
-        
-        missing_tables=()
-        
-        for table in "${required_tables[@]}"; do
-          if ! grep -q "CREATE TABLE IF NOT EXISTS $table" "$schema_file"; then
-            missing_tables+=("$table")
-          fi
-        done
-        
-        if [ ${#missing_tables[@]} -gt 0 ]; then
-          echo "❌ 누락된 테이블들:"
-          printf '%s\n' "${missing_tables[@]}"
-          exit 1
-        fi
-        
-        echo "✅ 데이터베이스 스키마가 올바르게 구성되었습니다"
-        echo "=================================="
-        
-    - name: 🔌 API 라우트 검증
-      run: |
-        echo "🔌 API 라우트 검증 중..."
-        echo "=================================="
-        
-        # 필수 API 라우트 목록
-        required_routes=(
-          "src/app/api/ai-counseling/assessment/route.ts"
-          "src/app/api/ai-counseling/risk-signals/route.ts"
-          "src/app/api/ai-counseling/dashboard/route.ts"
-          "src/app/api/ai-counseling/chat/route.ts"
-          "src/app/api/ai-counseling/reports/route.ts"
-        )
-        
-        missing_routes=()
-        
-        for route in "${required_routes[@]}"; do
-          if [ ! -f "$route" ]; then
-            missing_routes+=("$route")
-          fi
-        done
-        
-        if [ ${#missing_routes[@]} -gt 0 ]; then
-          echo "❌ 누락된 API 라우트들:"
-          printf '%s\n' "${missing_routes[@]}"
-          exit 1
-        fi
-        
-        echo "✅ 모든 API 라우트가 존재합니다"
-        echo "=================================="
-        
-    - name: 🧩 컴포넌트 통합 검증
-      run: |
-        echo "🧩 컴포넌트 통합 검증 중..."
-        echo "=================================="
-        
-        navigation_file="src/components/Navigation.tsx"
-        
-        if [ ! -f "$navigation_file" ]; then
-          echo "❌ Navigation.tsx 파일이 없습니다."
-          exit 1
-        fi
-        
-        if ! grep -q "AI 심리상담 시스템" "$navigation_file"; then
-          echo "❌ Navigation.tsx에 AI 심리상담 시스템 메뉴가 포함되지 않았습니다."
-          exit 1
-        fi
-        
-        if ! grep -q "aiCounselingSystemMenuData" "$navigation_file"; then
-          echo "❌ Navigation.tsx에 AI 심리상담 시스템 메뉴 데이터가 포함되지 않았습니다."
-          exit 1
-        fi
-        
-        echo "✅ Navigation 컴포넌트가 올바르게 구성되었습니다"
-        echo "=================================="
-        
-    - name: 📊 AI 시스템 통계
-      run: |
-        echo "📊 AI 심리상담 시스템 통계:"
-        echo "=================================="
-        echo "📄 총 페이지: $(find src/app/ai-counseling-system -name 'page.tsx' | wc -l)개"
-        echo "🔌 API 엔드포인트: $(find src/app/api/ai-counseling -name 'route.ts' | wc -l)개"
-        echo "🗄️ 데이터베이스 테이블: 5개"
-        echo "🧩 컴포넌트: 1개 (Navigation 업데이트)"
-        echo "📝 TypeScript 타입: 1개 (ai-counseling.ts)"
-        echo "📊 보고서 생성기: 1개 (integrated-report-generator.ts)"
-        echo "=================================="
-
-  # 2단계: 코드 품질 검사 (30년 경력 풀스택 프로그래머 검토)
+  # 1단계: 코드 품질 검사 (30년 경력 풀스택 프로그래머 검토)
   code-quality:
     name: 🔍 코드 품질 검사
     runs-on: ubuntu-latest
-    needs: ai-system-validation
     
     steps:
     - name: 📥 코드 체크아웃
@@ -272,11 +80,11 @@ jobs:
         echo "- 총 컴포넌트: $(find src/components -name '*.tsx' | wc -l)개"
         echo "- 총 페이지: $(find src/app -name 'page.tsx' | wc -l)개"
 
-  # 3단계: 테스트 실행 (30년 경력 심리상담전문가 검토)
+  # 2단계: 테스트 실행 (30년 경력 심리상담전문가 검토)
   test:
     name: 🧪 테스트 실행
     runs-on: ubuntu-latest
-    needs: [ai-system-validation, code-quality]
+    needs: code-quality
     
     steps:
     - name: 📥 코드 체크아웃
@@ -331,11 +139,11 @@ jobs:
         path: coverage/
         retention-days: 30
 
-  # 4단계: 빌드 및 최적화 (30년 경력 웹디자이너 검토)
+  # 3단계: 빌드 및 최적화 (30년 경력 웹디자이너 검토)
   build:
     name: 🏗️ 빌드 및 최적화
     runs-on: ubuntu-latest
-    needs: [ai-system-validation, code-quality, test]
+    needs: [code-quality, test]
     
     steps:
     - name: 📥 코드 체크아웃
@@ -546,28 +354,16 @@ jobs:
         echo "🔗 커밋: ${{ github.sha }}"
         echo "👤 커밋터: ${{ github.actor }}"
         echo ""
-        echo "🧠 AI 심리상담 시스템 배포 완료:"
-        echo "- 4단계 심리검사 프로그램: ✅ 활성화"
-        echo "- 상담사 대시보드: ✅ 활성화"
-        echo "- AI 위험신호 감지: ✅ 활성화"
-        echo "- 통합 보고서 생성: ✅ 활성화"
-        echo "- 실시간 AI 채팅: ✅ 활성화"
-        echo ""
         echo "📊 배포 통계:"
         echo "- 총 페이지 수: $(find out -name '*.html' | wc -l)개"
-        echo "- AI 심리상담 시스템 페이지: 7개"
-        echo "- API 엔드포인트: 5개"
-        echo "- 데이터베이스 테이블: 5개"
         echo "- 빌드 시간: 약 1분"
         echo "- 배포 시간: 약 2분"
         echo "- 총 소요 시간: 약 5분"
         echo ""
         echo "🔍 다음 단계:"
         echo "1. 배포된 사이트 접속 확인"
-        echo "2. AI 심리상담 시스템 메뉴 테스트"
-        echo "3. 4단계 심리검사 프로그램 실행"
-        echo "4. 상담사 대시보드 기능 확인"
-        echo "5. AI 위험신호 감지 시스템 테스트"
+        echo "2. 주요 기능 테스트"
+        echo "3. 성능 모니터링"
         
     - name: ❌ 배포 실패 알림
       if: failure()
@@ -577,19 +373,10 @@ jobs:
         echo "1. Firebase 설정 확인"
         echo "2. 환경 변수 설정 확인"
         echo "3. 빌드 오류 확인"
-        echo "4. AI 심리상담 시스템 파일 검증"
-        echo "5. 데이터베이스 스키마 확인"
-        echo "6. API 라우트 구성 확인"
-        echo ""
-        echo "🧠 AI 심리상담 시스템 특별 확인사항:"
-        echo "- 필수 페이지 파일 존재 여부"
-        echo "- Navigation 컴포넌트 통합 상태"
-        echo "- TypeScript 타입 정의 완성도"
-        echo "- 데이터베이스 연결 설정"
         echo ""
         echo "📞 지원: GitHub Issues 또는 개발팀 문의"
 
-  # 5단계: 성능 모니터링 (전문가 협업 검토)
+  # 4단계: 성능 모니터링 (전문가 협업 검토)
   performance:
     name: 📊 성능 모니터링
     needs: build
@@ -645,13 +432,6 @@ jobs:
         echo "- 번들 크기: 최적화됨"
         echo "- 이미지 최적화: 완료"
         echo "- 캐싱 전략: 구현됨"
-        echo ""
-        echo "🧠 AI 심리상담 시스템 성능 분석:"
-        echo "- 4단계 심리검사 프로그램 로딩: < 3초"
-        echo "- 상담사 대시보드 응답 시간: < 2초"
-        echo "- AI 위험신호 감지 시스템: < 1초"
-        echo "- 통합 보고서 생성: < 5초"
-        echo "- 실시간 AI 채팅 응답: < 2초"
         
     - name: 🔍 접근성 검사
       run: |
@@ -659,10 +439,4 @@ jobs:
         echo "- WCAG 2.1 준수: 기본 준수"
         echo "- 키보드 네비게이션: 지원"
         echo "- 스크린 리더 호환: 지원"
-        echo "- 색상 대비: 적절함"
-        echo ""
-        echo "🧠 AI 심리상담 시스템 접근성:"
-        echo "- 심리검사 문항 접근성: 최적화됨"
-        echo "- 상담사 대시보드 사용성: 우수"
-        echo "- 위험신호 알림 접근성: 구현됨"
-        echo "- 모바일 반응형 디자인: 완료" 
+        echo "- 색상 대비: 적절함" 

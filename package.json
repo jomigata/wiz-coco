@@ -34,9 +34,7 @@
     "deploy:auto": "node scripts/auto-deploy.js",
     "deploy:auto:wait": "node scripts/auto-deploy.js --wait",
     "deploy:smart": "node scripts/auto-deploy.js --smart",
-    "deploy:fast": "node scripts/auto-deploy.js --fast",
-    "deploy:ai-counseling": "node scripts/ai-counseling-deploy.js",
-    "deploy:ai-system": "node scripts/ai-counseling-deploy.js"
+    "deploy:fast": "node scripts/auto-deploy.js --fast"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",
@@ -94,7 +92,6 @@
     "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^6.4.17",
-    "@types/pg": "^8.15.5",
     "cross-env": "^7.0.3",
     "ignore-loader": "^0.1.2",
     "jest": "^29.7.0",
