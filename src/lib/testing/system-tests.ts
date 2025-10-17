@@ -30,7 +30,7 @@ export async function testAssessmentProgram(): Promise<boolean> {
     const retrievedProgram = await AssessmentService.getAssessmentProgram(testProgram.id);
     console.log('Assessment program retrieval test:', retrievedProgram ? 'PASSED' : 'FAILED');
     
-    return testProgram && retrievedProgram;
+    return !!(testProgram && retrievedProgram);
   } catch (error) {
     console.error('Assessment program test failed:', error);
     return false;
@@ -129,7 +129,7 @@ export async function testIntegratedReport(): Promise<boolean> {
     const jsonExport = await ReportGenerator.exportToJSON(testReport);
     console.log('Report JSON export test:', jsonExport ? 'PASSED' : 'FAILED');
     
-    return testReport && jsonExport;
+    return !!(testReport && jsonExport);
   } catch (error) {
     console.error('Integrated report test failed:', error);
     return false;

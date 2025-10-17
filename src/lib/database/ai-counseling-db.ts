@@ -200,7 +200,7 @@ export class ClientService {
         JOIN users u ON c.user_id = u.id
         WHERE c.counselor_id = $1
       `;
-      const values = [counselorId];
+      const values: (string | number)[] = [counselorId];
       let paramIndex = 2;
 
       if (filters?.status) {
@@ -345,7 +345,7 @@ export class AssessmentService {
       // 카테고리별 점수 계산
       const categoryScores: Record<string, { total: number; count: number; maxScore: number }> = {};
       
-      questionsResult.rows.forEach(row => {
+      questionsResult.rows.forEach((row: any) => {
         if (row.answer_value !== null) {
           const category = row.category || 'default';
           const score = row.is_reverse ? (6 - row.answer_value) : row.answer_value;
@@ -850,7 +850,7 @@ export class SystemService {
         escalation_criteria: {}
       };
       
-      result.rows.forEach(row => {
+      result.rows.forEach((row: any) => {
         const value = JSON.parse(row.setting_value);
         switch (row.setting_key) {
           case 'ai_model_version':
