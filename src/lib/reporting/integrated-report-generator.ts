@@ -127,7 +127,9 @@ export class ReportGenerator {
         }
       });
       
-      const avgSeverity = severityScores.reduce((a, b) => a + b, 0) / (severityScores.length || 1);
+      const avgSeverity = severityScores.length > 0 
+        ? severityScores.reduce((a, b) => a + b, 0) / severityScores.length 
+        : 0;
       if (avgSeverity > 2.5) {
         riskTrend = 'worsening';
       } else if (avgSeverity < 1.5) {

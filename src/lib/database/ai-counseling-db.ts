@@ -1,7 +1,6 @@
 // AI 심리상담 시스템 데이터베이스 연결 및 쿼리 함수들
 
 import { Pool, PoolClient } from 'pg';
-import '@types/pg';
 import {
   User, Counselor, Client, AssessmentProgram, AssessmentQuestion, AssessmentAnswer,
   AssessmentResult, CounselingSession, RiskSignal, InterventionAction, CounselingGoal,
