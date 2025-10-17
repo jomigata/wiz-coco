@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
         const clientMessage = await AiChatService.sendMessage(messageData);
         
         // AI 응답 생성
-        const session = await AiChatService.getChatMessages(messageData.session_id);
-        const lastMessage = session[session.length - 1];
+        const chatMessages = await AiChatService.getChatMessages(messageData.session_id);
+        const lastMessage = chatMessages[chatMessages.length - 1];
         
         if (lastMessage && lastMessage.sender_type === 'client') {
           const aiResponse = await generateAiResponse(

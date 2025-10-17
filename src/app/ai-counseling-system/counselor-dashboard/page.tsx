@@ -192,7 +192,7 @@ export default function CounselorDashboardPage() {
     return matchesSearch && matchesStatus
   })
 
-  const unacknowledgedAlerts = riskAlerts.filter(alert => !alert.alert.acknowledged)
+  const unacknowledgedAlerts = riskAlerts.filter(alert => !alert.acknowledged)
   const criticalAlerts = riskAlerts.filter(alert => alert.severity === 'critical')
 
   const getStatusColor = (status: string) => {

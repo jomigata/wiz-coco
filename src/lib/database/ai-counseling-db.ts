@@ -1,6 +1,7 @@
 // AI 심리상담 시스템 데이터베이스 연결 및 쿼리 함수들
 
 import { Pool, PoolClient } from 'pg';
+import '@types/pg';
 import {
   User, Counselor, Client, AssessmentProgram, AssessmentQuestion, AssessmentAnswer,
   AssessmentResult, CounselingSession, RiskSignal, InterventionAction, CounselingGoal,
@@ -204,13 +205,13 @@ export class ClientService {
 
       if (filters?.status) {
         query += ` AND c.status = $${paramIndex}`;
-        values.push(filters.status);
+        values.push(filters.status as string);
         paramIndex++;
       }
 
       if (filters?.risk_level) {
         query += ` AND c.risk_level = $${paramIndex}`;
-        values.push(filters.risk_level);
+        values.push(filters.risk_level as string);
         paramIndex++;
       }
 

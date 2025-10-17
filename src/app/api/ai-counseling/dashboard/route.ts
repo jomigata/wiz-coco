@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         const clientFilters: ClientSearchFilters = {};
         if (searchParams.get('status')) clientFilters.status = searchParams.get('status') as any;
         if (searchParams.get('risk_level')) clientFilters.risk_level = searchParams.get('risk_level') as any;
-        if (searchParams.get('search')) clientFilters.search_term = searchParams.get('search');
+        if (searchParams.get('search')) clientFilters.search_term = searchParams.get('search') || undefined;
 
         const clients = await ClientService.getClientsByCounselor(parseInt(counselorId), clientFilters);
         return NextResponse.json({ success: true, data: clients });
