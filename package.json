@@ -34,7 +34,9 @@
     "deploy:auto": "node scripts/auto-deploy.js",
     "deploy:auto:wait": "node scripts/auto-deploy.js --wait",
     "deploy:smart": "node scripts/auto-deploy.js --smart",
-    "deploy:fast": "node scripts/auto-deploy.js --fast"
+    "deploy:fast": "node scripts/auto-deploy.js --fast",
+    "deploy:ai-counseling": "node scripts/ai-counseling-deploy.js",
+    "deploy:ai-system": "node scripts/ai-counseling-deploy.js"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",

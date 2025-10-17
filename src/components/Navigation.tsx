@@ -29,6 +29,7 @@ export default function Navigation() {
   const isCounselingDropdownOpen = activeMenu === 'counseling';
   const isUserMenuOpen = activeMenu === 'additional';
   const isAiMindAssistantOpen = activeMenu === 'ai-mind-assistant';
+  const isAiCounselingSystemOpen = activeMenu === 'ai-counseling-system';
   const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
   const isCounselorOpen = activeMenu === 'counselor';
   const isAdminOpen = activeMenu === 'admin';
@@ -277,6 +278,35 @@ export default function Navigation() {
       items: [
         { name: "AI 감정/스트레스 분석", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 및 스트레스 분석 결과", icon: "📋" },
         { name: "AI 마음 컨디션 리포트", href: "/ai-mind-assistant/growth-level", description: "현재 마음 상태 종합 점검", icon: "🏆" }
+      ]
+    }
+  ];
+
+  // AI 심리상담 시스템 메뉴 데이터
+  const aiCounselingSystemMenuData = [
+    { 
+      category: "4단계 심리검사 프로그램",
+      items: [
+        { name: "통합 자기 점검", href: "/ai-counseling-system/holistic-self-check", description: "5개 대분류 영역 전반적인 삶의 상태 스크리닝", icon: "🧠" },
+        { name: "집중 탐색 모듈", href: "/ai-counseling-system/focused-exploration", description: "선택된 핵심 영역에 대한 심층 분석", icon: "🎯" },
+        { name: "강점 및 자원 탐색", href: "/ai-counseling-system/strength-discovery", description: "내담자의 잠재력과 강점 발견", icon: "⭐" },
+        { name: "상담 청사진", href: "/ai-counseling-system/counseling-blueprint", description: "통합 보고서 및 상담 목표 설정", icon: "📋" }
+      ]
+    },
+    { 
+      category: "상담사 관리 시스템",
+      items: [
+        { name: "상담사 대시보드", href: "/ai-counseling-system/counselor-dashboard", description: "내담자 현황 및 상담 진행 상황 관리", icon: "📊" },
+        { name: "내담자 관리", href: "/ai-counseling-system/client-management", description: "내담자 프로필 및 상담 기록 관리", icon: "👥" },
+        { name: "위험신호 모니터링", href: "/ai-counseling-system/risk-monitoring", description: "AI 기반 위험신호 감지 및 개입", icon: "⚠️" },
+        { name: "AI 채팅 상담", href: "/ai-counseling-system/ai-chat-counseling", description: "AI 상담사와의 실시간 채팅 상담", icon: "💬" }
+      ]
+    },
+    { 
+      category: "분석 및 보고",
+      items: [
+        { name: "진행 상황 분석", href: "/ai-counseling-system/progress-analytics", description: "상담 진행 상황 및 효과 분석", icon: "📈" },
+        { name: "시스템 설정", href: "/ai-counseling-system/system-settings", description: "AI 모델 및 시스템 설정 관리", icon: "⚙️" }
       ]
     }
   ];
@@ -1115,6 +1145,85 @@ export default function Navigation() {
                      />
                    </svg>
                      </Link>
+
+                     {/* AI 심리상담 시스템 */}
+                     <Link
+                       href="/ai-counseling-system"
+                       className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                         activeItem === "/ai-counseling-system" || activeItem.startsWith("/ai-counseling-system/")
+                           ? "text-white bg-purple-600"
+                           : "text-gray-300 hover:text-white hover:bg-purple-800/50"
+                       }`}
+                       onClick={(e) => handleNavLinkClick("/ai-counseling-system", e)}
+                       onMouseEnter={() => setActiveMenu('ai-counseling-system')}
+                       onMouseLeave={() => setActiveMenu(null)}
+                     >
+                       🧠 AI 심리상담 시스템
+                       <svg
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         fill="currentColor"
+                         className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAiCounselingSystemOpen ? "rotate-180" : ""}`}
+                       >
+                         <path
+                           fillRule="evenodd"
+                           d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                           clipRule="evenodd"
+                         />
+                       </svg>
+                     </Link>
+
+                     {/* AI 심리상담 시스템 메가 메뉴 */}
+                     {isAiCounselingSystemOpen && (
+                       <div
+                         data-dropdown-menu="ai-counseling-system"
+                         className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-purple-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                         onMouseEnter={() => setActiveMenu('ai-counseling-system')}
+                         onMouseLeave={() => setActiveMenu(null)}
+                       >
+                         <div className="relative">
+                           {/* 스크롤 가능한 컨텐츠 */}
+                           <div className="px-6 py-4 space-y-6 max-h-96 overflow-y-auto">
+                             {aiCounselingSystemMenuData.map((category, categoryIndex) => (
+                               <div key={category.category} className="space-y-3">
+                                 <div className="flex items-center gap-2">
+                                   <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                                   <h3 className="text-sm font-bold text-purple-300 uppercase tracking-wider">
+                                     {category.category}
+                                   </h3>
+                                 </div>
+                                 <div className="space-y-2">
+                                   {category.items.map((item, itemIndex) => (
+                                     <Link
+                                       key={item.name}
+                                       href={item.href}
+                                       className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                       onClick={() => setActiveMenu(null)}
+                                     >
+                                       <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                         {item.icon}
+                                       </div>
+                                       <div className="flex-1 min-w-0">
+                                         <div className="font-medium text-white truncate">{item.name}</div>
+                                         <div className="text-xs text-purple-300 truncate">{item.description}</div>
+                                       </div>
+                                       <svg 
+                                         className="w-4 h-4 text-purple-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                         fill="none" 
+                                         stroke="currentColor" 
+                                         viewBox="0 0 24 24"
+                                       >
+                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                       </svg>
+                                     </Link>
+                                   ))}
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       </div>
+                     )}
 
                                    {/* AI 마음 비서 메가 메뉴 */}
                   {isAiMindAssistantOpen && (
@@ -2445,6 +2554,36 @@ export default function Navigation() {
                              </Link>
                            ))}
                          </div>
+                 ))}
+               </div>
+
+               {/* AI 심리상담 시스템 */}
+               <div className="space-y-2">
+                 <div className="px-4 py-2 text-sm font-semibold text-purple-300 uppercase tracking-wide">
+                   🧠 AI 심리상담 시스템
+                 </div>
+                 {aiCounselingSystemMenuData.map((category) => (
+                   <div key={category.category} className="ml-4 space-y-1">
+                     <div className="px-2 py-1 text-base font-bold text-purple-400 uppercase tracking-wide">
+                       {category.category}
+                     </div>
+                     {category.items.map((item) => (
+                       <Link
+                         key={item.name}
+                         href={item.href}
+                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
+                         onClick={() => setIsMobileMenuOpen(false)}
+                       >
+                         <div className="flex items-center gap-2">
+                           <span>{item.icon}</span>
+                           <span>{item.name}</span>
+                         </div>
+                         <div className="text-xs text-purple-300 mt-1 ml-6">
+                           {item.description}
+                         </div>
+                       </Link>
+                     ))}
+                   </div>
                  ))}
                </div>
 
