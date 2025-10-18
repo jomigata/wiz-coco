@@ -16,7 +16,7 @@ export default function Navigation() {
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("personal");
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("개인 심리 및 성장");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -133,8 +133,7 @@ export default function Navigation() {
     }
   };
 
-  // 메뉴 데이터는 별도 파일에서 import
-
+  // 메뉴 데이터
   const counselingMenuItems = [
     {
       category: "개인 상담",
@@ -227,7 +226,7 @@ export default function Navigation() {
     }
   ];
 
-  // 통합 관리자 메뉴 데이터 (탑메뉴와 사이드메뉴 일치)
+  // 통합 관리자 메뉴 데이터
   const adminMenuItems = [
     {
       category: "대시보드 & 모니터링",
@@ -257,7 +256,7 @@ export default function Navigation() {
     }
   ];
 
-    const aiMindAssistantSubMenuItems = [
+  const aiMindAssistantSubMenuItems = [
     { 
       category: "일일 체크",
       items: [
@@ -297,7 +296,7 @@ export default function Navigation() {
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          {/* 브랜드 텍스트 - 좌측 끝으로 이동 및 홈페이지 링크 연결 */}
+          {/* 브랜드 텍스트 */}
           <Link href="/" className="flex flex-col items-center group mr-8" onClick={(e) => handleNavLinkClick("/", e)}>
             <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
               AI 심리검사
@@ -311,36 +310,36 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-2">
             <div className="flex space-x-1">
               
-               {/* 심리검사 드롭다운 메뉴 */}
-               <div className="relative">
-                 <Link
-                   href="/tests"
-                   className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                     activeItem === "/tests" || activeItem.startsWith("/tests/")
-                       ? "text-white bg-blue-600"
-                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                   }`}
-                   onClick={(e) => handleNavLinkClick("/tests", e)}
-                   onMouseEnter={() => setActiveMenu('psychology-tests')}
-                   onMouseLeave={() => setActiveMenu(null)}
-                 >
-                   🧠 AI 심리검사
-                   <svg
-                     xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 20 20"
-                     fill="currentColor"
-                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isPsychologyTestsOpen ? "rotate-180" : ""}`}
-                   >
-                     <path
-                       fillRule="evenodd"
-                       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                       clipRule="evenodd"
-                     />
-                   </svg>
-                 </Link>
+              {/* 심리검사 드롭다운 메뉴 */}
+              <div className="relative">
+                <Link
+                  href="/tests"
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                    activeItem === "/tests" || activeItem.startsWith("/tests/")
+                      ? "text-white bg-blue-600"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  }`}
+                  onClick={(e) => handleNavLinkClick("/tests", e)}
+                  onMouseEnter={() => setActiveMenu('psychology-tests')}
+                  onMouseLeave={() => setActiveMenu(null)}
+                >
+                  🧠 AI 심리검사
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isPsychologyTestsOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Link>
 
-                 {/* 심리검사 메가 메뉴 */}
-                 {isPsychologyTestsOpen && (
+                {/* 심리검사 메가 메뉴 */}
+                {isPsychologyTestsOpen && (
                   <div
                     data-dropdown-menu="psychology-tests"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
@@ -350,67 +349,61 @@ export default function Navigation() {
                     <div className="relative flex h-[70vh]">
                       {/* 왼쪽: 대분류 5개 */}
                       <div className="w-2/5 p-4 border-r border-blue-500/30">
-                         <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
-                         <div className="space-y-2">
-                           {testSubMenuItems.map((mainCategory, index) => (
-                   <div
-                     key={mainCategory.category}
-                     className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
-                       selectedMainCategory === mainCategory.category
-                         ? 'bg-blue-600 text-white border-blue-400 shadow-lg'
-                         : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border-blue-500/30 hover:border-blue-400 hover:shadow-md'
-                     }`}
-                     onClick={() => {
-                       setSelectedMainCategory(mainCategory.category);
-                       // 대분류 클릭 시 대시보드로 이동하면서 카테고리 전달
-                       const categoryMap: { [key: string]: string } = {
-                         "개인 심리 및 성장": "personal-growth",
-                         "대인관계 및 사회적응": "relationships-social", 
-                         "정서 문제 및 정신 건강": "emotional-mental",
-                         "현실 문제 및 생활 관리": "reality-life",
-                         "문화 및 환경 적응": "culture-environment"
-                       };
-                       const categoryId = categoryMap[mainCategory.category];
-                       router.push(`/tests?category=${categoryId}`);
-                       setActiveMenu(null);
-                     }}
-                     onMouseEnter={() => {
-                       setSelectedMainCategory(mainCategory.category);
-                       // 각 대분류의 첫 번째 중분류와 소분류 자동 펼침
-                       if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
-                         setSelectedSubcategory(mainCategory.subcategories[0].name);
-                       }
-                     }}
-                     onMouseLeave={() => {
-                       // 마우스가 떠나도 선택된 상태 유지
-                     }}
-                   >
-                               <div className="flex items-center gap-3">
-                                 <span className="text-xl">{mainCategory.icon}</span>
-                                 <span className="font-medium">{mainCategory.category}</span>
-                                 {/* 대분류 화살표 항상 표시 */}
-                                   <svg 
-                                     className="w-4 h-4 text-white ml-auto"
-                                     fill="none" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24"
-                                   >
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                   </svg>
-                             </div>
-                             </div>
-                           ))}
-                         </div>
-                       </div>
+                        <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
+                        <div className="space-y-2">
+                          {testSubMenuItems.map((mainCategory, index) => (
+                            <div
+                              key={mainCategory.category}
+                              className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
+                                selectedMainCategory === mainCategory.category
+                                  ? 'bg-blue-600 text-white border-blue-400 shadow-lg'
+                                  : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border-blue-500/30 hover:border-blue-400 hover:shadow-md'
+                              }`}
+                              onClick={() => {
+                                setSelectedMainCategory(mainCategory.category);
+                                const categoryMap: { [key: string]: string } = {
+                                  "개인 심리 및 성장": "personal-growth",
+                                  "대인관계 및 사회적응": "relationships-social", 
+                                  "정서 문제 및 정신 건강": "emotional-mental",
+                                  "현실 문제 및 생활 관리": "reality-life",
+                                  "문화 및 환경 적응": "culture-environment"
+                                };
+                                const categoryId = categoryMap[mainCategory.category];
+                                router.push(`/tests?category=${categoryId}`);
+                                setActiveMenu(null);
+                              }}
+                              onMouseEnter={() => {
+                                setSelectedMainCategory(mainCategory.category);
+                                if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
+                                  setSelectedSubcategory(mainCategory.subcategories[0].name);
+                                }
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-xl">{mainCategory.icon}</span>
+                                <span className="font-medium">{mainCategory.category}</span>
+                                <svg 
+                                  className="w-4 h-4 text-white ml-auto"
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
                       <div className="w-3/5 p-4">
-                         {selectedMainCategory ? (
-                           <div>
-                             <div className="text-lg font-bold text-blue-300 mb-4">
-                               {selectedMainCategory}
-                             </div>
-                             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                        {selectedMainCategory ? (
+                          <div>
+                            <div className="text-lg font-bold text-blue-300 mb-4">
+                              {selectedMainCategory}
+                            </div>
+                            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                               {testSubMenuItems
                                 .find(category => category.category === selectedMainCategory)
                                 ?.subcategories.map((subcategory) => (
@@ -425,12 +418,7 @@ export default function Navigation() {
                                       setHoveredCategory(subcategory.name);
                                       setSelectedSubcategory(subcategory.name);
                                     }}
-                                    onMouseLeave={() => {
-                                      setHoveredCategory(null);
-                                      // 마우스가 떠나도 선택된 상태 유지
-                                    }}
                                     onClick={() => {
-                                      // 중분류 클릭 시 해당 중분류의 대시보드로 이동
                                       const categoryMap: { [key: string]: string } = {
                                         "성격 및 기질 탐색": "personality-temperament",
                                         "자아정체감 및 가치관": "identity-values",
@@ -443,7 +431,7 @@ export default function Navigation() {
                                         "우울 및 기분 문제": "depression-mood",
                                         "불안 및 스트레스": "anxiety-stress",
                                         "외상 및 위기 개입": "trauma-crisis",
-                                        "중독 및 충동 조절 문제": "addiction-impulse",
+                                        "중독 및 충동 조절": "addiction-impulse",
                                         "진로 및 직업 문제": "career-job",
                                         "경제 및 재정 문제": "financial-economic",
                                         "건강 및 신체 문제": "health-physical",
@@ -451,7 +439,7 @@ export default function Navigation() {
                                         "다문화 적응": "multicultural-adaptation",
                                         "디지털 환경 적응": "digital-environment",
                                         "생애주기별 적응": "lifecycle-adaptation",
-                                        "특정 사회·환경 문제": "social-environmental-issues"
+                                        "사회 환경 적응": "social-environmental-issues"
                                       };
                                       const categoryId = categoryMap[subcategory.name];
                                       if (categoryId) {
@@ -460,1066 +448,725 @@ export default function Navigation() {
                                       }
                                     }}
                                   >
-                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                       {subcategory.icon}
-                                     </div>
-                                     <div className="flex-1 min-w-0">
-                                       <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
-                                     </div>
-                                   </div>
-                                   
-                                   {/* 소분류 메뉴 */}
-                                   {selectedSubcategory === subcategory.name && subcategory.items && (
-                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
-                                       {subcategory.items.map((item) => (
-                 <Link
-                                           key={item.name}
-                                           href={item.href}
-                                           className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
-                                   onClick={() => setActiveMenu(null)}
-                                         >
-                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon}
-                                           </div>
-                                           <div className="flex-1 min-w-0">
-                                             <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{item.name}</div>
-                                             <div className="text-xs text-blue-300 group-hover:text-blue-100 truncate">{item.description}</div>
-                                           </div>
-                                           <svg 
-                                             className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                             fill="none" 
-                                             stroke="currentColor" 
-                                             viewBox="0 0 24 24"
-                                           >
-                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                           </svg>
-                                         </Link>
-                                       ))}
-                                     </div>
-                                   )}
-                                 </div>
-                               ))}
-                             </div>
-                           </div>
-                         ) : (
-                           <div className="flex items-center justify-center h-full text-blue-300">
-                             대분류를 선택해주세요
-                           </div>
-                         )}
-                       </div>
+                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                      {subcategory.icon}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* 소분류 메뉴 */}
+                                  {selectedSubcategory === subcategory.name && subcategory.items && (
+                                    <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
+                                      {subcategory.items.map((item) => (
+                                        <Link
+                                          key={item.name}
+                                          href={item.href}
+                                          className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
+                                          onClick={() => setActiveMenu(null)}
+                                        >
+                                          <div className="text-base group-hover:scale-110 transition-transform duration-300">
+                                            {item.icon}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{item.name}</div>
+                                            <div className="text-xs text-blue-300 group-hover:text-blue-100 truncate">{item.description}</div>
+                                          </div>
+                                          <svg 
+                                            className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                          </svg>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-blue-300">
+                            대분류를 선택해주세요
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-               {/* 상담 프로그램 드롭다운 메뉴 */}
-                       <div className="relative">
-                         <Link
-                   href="/counseling"
-                           className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                     activeItem === "/counseling" || activeItem.startsWith("/counseling/")
-                               ? "text-white bg-blue-600"
-                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                   }`}
-                   onClick={(e) => handleNavLinkClick("/counseling", e)}
-                   onMouseEnter={() => setActiveMenu('counseling')}
-                   onMouseLeave={() => setActiveMenu(null)}
-                 >
-                   💬 상담 프로그램
-                   <svg
-                     xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 20 20"
-                     fill="currentColor"
-                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselingDropdownOpen ? "rotate-180" : ""}`}
-                   >
-                     <path
-                       fillRule="evenodd"
-                       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                       clipRule="evenodd"
-                     />
-                   </svg>
-                         </Link>
+              {/* 상담 프로그램 드롭다운 메뉴 */}
+              <div className="relative">
+                <Link
+                  href="/counseling"
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                    activeItem === "/counseling" || activeItem.startsWith("/counseling/")
+                      ? "text-white bg-blue-600"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  }`}
+                  onClick={(e) => handleNavLinkClick("/counseling", e)}
+                  onMouseEnter={() => setActiveMenu('counseling')}
+                  onMouseLeave={() => setActiveMenu(null)}
+                >
+                  💬 상담 프로그램
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselingDropdownOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Link>
 
-                                                                       {/* 상담 프로그램 메가 메뉴 */}
-                   {isCounselingDropdownOpen && (
-                     <div
-                       data-dropdown-menu="counseling"
-                       className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                       onMouseEnter={() => setActiveMenu('counseling')}
-                       onMouseLeave={() => setActiveMenu(null)}
-                     >
-                       <div className="relative">
-
-                       {/* 상단 화살표 가이드 */}
-                       <div
-                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop > 0;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                           </svg>
-                         </div>
-                       </div>
-
-                       {/* 하단 화살표 가이드 */}
-                       <div
-                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.counseling-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-purple-600/90 to-purple-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-purple-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                           </svg>
-                         </div>
-                       </div>
-
-                       {/* 스크롤 가능한 콘텐츠 */}
+                {/* 상담 프로그램 메가 메뉴 */}
+                {isCounselingDropdownOpen && (
+                  <div
+                    data-dropdown-menu="counseling"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    onMouseEnter={() => setActiveMenu('counseling')}
+                    onMouseLeave={() => setActiveMenu(null)}
+                  >
+                    <div className="relative">
                       <div 
                         ref={counselingScroll.scrollRef}
-                        className="counseling-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         onMouseMove={counselingScroll.handleMouseMove}
                         onMouseLeave={counselingScroll.handleMouseLeave}
-                       onWheel={(e) => {
-                         e.stopPropagation();
-                         const target = e.currentTarget;
-                         const scrollTop = target.scrollTop;
-                         const scrollHeight = target.scrollHeight;
-                         const clientHeight = target.clientHeight;
-                         
-                         if ((scrollTop === 0 && e.deltaY < 0) || 
-                             (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                           e.preventDefault();
-                         }
-                       }}
-                       style={{
-                         overscrollBehavior: 'contain',
-                         scrollbarGutter: 'stable'
-                       }}
-                     >
-                       {counselingMenuItems.map((category) => (
-                         <div key={category.category} className="mb-4 last:mb-0">
-                           <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
-                             {category.category}
-                           </div>
-                           <div className="space-y-1">
-                             {category.items.map((item) => (
-                         <Link
-                                 key={item.name}
-                                 href={item.href}
-                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                 onClick={() => setActiveMenu(null)}
-                               >
-                                 <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                   {item.icon || '💭'}
-                                 </div>
-                                 <div className="flex-1 min-w-0">
-                                   <div className="flex items-center gap-2">
-                                     <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                     {'badge' in item && (item as any).badge && (
-                                       <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                         (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
-                                         (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                         'bg-orange-500 text-white'
-                                       }`}>
-                                         {(item as any).badge}
-                                       </span>
-                                     )}
-                                   </div>
-                                   <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                 </div>
-                                 <svg 
-                                   className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                   fill="none" 
-                                   stroke="currentColor" 
-                                   viewBox="0 0 24 24"
-                                 >
-                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                 </svg>
-                         </Link>
-                             ))}
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                     </div>
-                       </div>
-                     )}
-               </div>
+                      >
+                        {counselingMenuItems.map((category) => (
+                          <div key={category.category} className="mb-4 last:mb-0">
+                            <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
+                              {category.category}
+                            </div>
+                            <div className="space-y-1">
+                              {category.items.map((item) => (
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                  onClick={() => setActiveMenu(null)}
+                                >
+                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                    {item.icon || '💭'}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                      {'badge' in item && (item as any).badge && (
+                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                          (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
+                                          (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                          'bg-orange-500 text-white'
+                                        }`}>
+                                          {(item as any).badge}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-blue-300 truncate">{item.description}</div>
+                                  </div>
+                                  <svg 
+                                    className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-               
-               {/* AI 마음 비서 드롭다운 메뉴 */}
-                     <div className="relative">
-                       <Link
-                    href="/ai-mind-assistant"
-                         className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                      activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
-                             ? "text-white bg-blue-600"
-                             : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                    }`}
-                    onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
+              {/* AI 마음 비서 드롭다운 메뉴 */}
+              <div className="relative">
+                <Link
+                  href="/ai-mind-assistant"
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                    activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
+                      ? "text-white bg-blue-600"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  }`}
+                  onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
+                  onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                  onMouseLeave={() => setActiveMenu(null)}
+                >
+                  🤖 나의 AI 비서
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAiMindAssistantOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Link>
+
+                {/* AI 마음 비서 메가 메뉴 */}
+                {isAiMindAssistantOpen && (
+                  <div
+                    data-dropdown-menu="ai-mind-assistant"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
-                    🤖 나의 AI 비서
-                   <svg
-                     xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 20 20"
-                     fill="currentColor"
-                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAiMindAssistantOpen ? "rotate-180" : ""}`}
-                   >
-                     <path
-                       fillRule="evenodd"
-                       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                       clipRule="evenodd"
-                     />
-                   </svg>
-                     </Link>
+                    <div className="relative">
+                      <div 
+                        ref={aiAssistantScroll.scrollRef}
+                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
+                        onMouseMove={aiAssistantScroll.handleMouseMove}
+                        onMouseLeave={aiAssistantScroll.handleMouseLeave}
+                      >
+                        {aiMindAssistantSubMenuItems.map((category) => (
+                          <div key={category.category} className="mb-4 last:mb-0">
+                            <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                              {category.category}
+                            </div>
+                            <div className="space-y-1">
+                              {category.items.map((item) => (
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                  onClick={() => setActiveMenu(null)}
+                                >
+                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                    {item.icon || '🤖'}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                      {'badge' in item && (item as any).badge && (
+                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                          (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
+                                          (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                          'bg-orange-500 text-white'
+                                        }`}>
+                                          {(item as any).badge}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-green-300 truncate">{item.description}</div>
+                                  </div>
+                                  <svg 
+                                    className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-                                   {/* AI 마음 비서 메가 메뉴 */}
-                  {isAiMindAssistantOpen && (
-                    <div
-                      data-dropdown-menu="ai-mind-assistant"
-                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                      onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
-                      onMouseLeave={() => setActiveMenu(null)}
-                    >
-                     <div className="relative">
-                       {/* 상단 화살표 가이드 */}
-                       <div
-                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.ai-mind-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop > 0;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.ai-mind-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                           </svg>
-               </div>
-             </div>
+              {/* 추가 기능 드롭다운 메뉴 */}
+              <div className="relative">
+                <Link
+                  href="/features"
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                    activeItem === "/features" || activeItem.startsWith("/features/")
+                      ? "text-white bg-blue-600"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  }`}
+                  onClick={(e) => handleNavLinkClick("/features", e)}
+                  onMouseEnter={() => setActiveMenu('additional')}
+                  onMouseLeave={() => setActiveMenu(null)}
+                >
+                  📚 나의 자료실
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Link>
 
-                       {/* 하단 화살표 가이드 */}
-                       <div
-                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.ai-mind-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.ai-mind-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                           </svg>
-           </div>
-         </div>
-
-                       {/* 스크롤 가능한 콘텐츠 */}
-                       <div 
-                         ref={aiAssistantScroll.scrollRef}
-                         className="ai-mind-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
-                         onMouseMove={aiAssistantScroll.handleMouseMove}
-                         onMouseLeave={aiAssistantScroll.handleMouseLeave}
-                         onWheel={(e) => {
-                           e.stopPropagation();
-                           const target = e.currentTarget;
-                           const scrollTop = target.scrollTop;
-                           const scrollHeight = target.scrollHeight;
-                           const clientHeight = target.clientHeight;
-                           
-                           if ((scrollTop === 0 && e.deltaY < 0) || 
-                               (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                             e.preventDefault();
-                           }
-                         }}
-                         style={{
-                           overscrollBehavior: 'contain',
-                           scrollbarGutter: 'stable'
-                         }}
-                       >
-                         {aiMindAssistantSubMenuItems.map((category) => (
-                           <div key={category.category} className="mb-4 last:mb-0">
-                             <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
-                               {category.category}
-                             </div>
-                             <div className="space-y-1">
-                               {category.items.map((item) => (
-                                 <Link
-                                   key={item.name}
-                                   href={item.href}
-                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                   onClick={() => setActiveMenu(null)}
-                                 >
-                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                     {item.icon || '🤖'}
-                                   </div>
-                                   <div className="flex-1 min-w-0">
-                                     <div className="flex items-center gap-2">
-                                       <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                       {'badge' in item && (item as any).badge && (
-                                         <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                           (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                           (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                           'bg-orange-500 text-white'
-                                         }`}>
-                                           {(item as any).badge}
-                                         </span>
-                                       )}
-                                     </div>
-                                     <div className="text-sm text-green-300 truncate">{item.description}</div>
-                                   </div>
-                                   <svg 
-                                     className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-               fill="none"
-               stroke="currentColor"
-               viewBox="0 0 24 24"
-             >
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                   </svg>
-                                 </Link>
-                               ))}
-                             </div>
-                           </div>
-                         ))}
-                       </div>
-                     </div>
-                   </div>
-                 )}
-               </div>
-               
-               {/* 추가 기능 드롭다운 메뉴 */}
-               <div className="relative">
-                                   <Link
-                    href="/features"
-                    className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                      activeItem === "/features" || activeItem.startsWith("/features/")
-                        ? "text-white bg-blue-600"
-                        : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                    }`}
-                    onClick={(e) => handleNavLinkClick("/features", e)}
+                {/* 추가 기능 메가 메뉴 */}
+                {isUserMenuOpen && (
+                  <div
+                    data-dropdown-menu="additional"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('additional')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
-                    📚 나의 자료실
-                   <svg
-                     xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 20 20"
-                     fill="currentColor"
-                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`}
-                   >
-                 <path
-                       fillRule="evenodd"
-                       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                       clipRule="evenodd"
-                     />
-             </svg>
-                 </Link>
-
-                                   {/* 추가 기능 메가 메뉴 */}
-                  {isUserMenuOpen && (
-                    <div
-                      data-dropdown-menu="additional"
-                      className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                      onMouseEnter={() => setActiveMenu('additional')}
-                      onMouseLeave={() => setActiveMenu(null)}
-                    >
-                     <div className="relative">
-                       {/* 상단 화살표 가이드 */}
-                       <div
-                         className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop > 0;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                           </svg>
-              </div>
-            </div>
-
-                       {/* 하단 화살표 가이드 */}
-                       <div
-                         className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                         style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                         ref={(el) => {
-                           if (el) {
-                             const checkScroll = () => {
-                               const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
-                               if (scrollableDiv) {
-                                 const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                 el.style.opacity = shouldShow ? '1' : '0';
-                               }
-                             };
-                             
-                             const scrollableDiv = el.parentElement?.querySelector('.user-scrollable') as HTMLElement;
-                             if (scrollableDiv) {
-                               scrollableDiv.addEventListener('scroll', checkScroll);
-                               checkScroll();
-                               
-                               return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                             }
-                           }
-                         }}
-                       >
-                         <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                           </svg>
-                         </div>
-                       </div>
-
-                       {/* 스크롤 가능한 콘텐츠 */}
-                     <div 
-                       ref={userMenuScroll.scrollRef}
-                       className="user-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
-                       onMouseMove={userMenuScroll.handleMouseMove}
-                       onMouseLeave={userMenuScroll.handleMouseLeave}
-                       onWheel={(e) => {
-                         e.stopPropagation();
-                         const target = e.currentTarget;
-                         const scrollTop = target.scrollTop;
-                         const scrollHeight = target.scrollHeight;
-                         const clientHeight = target.clientHeight;
-                         
-                         if ((scrollTop === 0 && e.deltaY < 0) || 
-                             (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                           e.preventDefault();
-                         }
-                       }}
-                       style={{
-                         overscrollBehavior: 'contain',
-                         scrollbarGutter: 'stable'
-                       }}
-                     >
-                       {personalFeaturesMenu.map((category) => (
-                         <div key={category.category} className="mb-4 last:mb-0">
-                           <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
-                             {category.category}
-                           </div>
-                           <div className="space-y-1">
-                             {category.items.map((item) => (
-                               <Link
-                                 key={item.name}
-                                 href={item.href}
-                                 className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                 onClick={() => setActiveMenu(null)}
-                               >
-                                 <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                   {item.icon || '⚡'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                                   <div className="flex items-center gap-2">
-                                     <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                     {'badge' in item && (item as any).badge && (
-                                       <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                         (item as any).badge === '인기' ? 'bg-red-500 text-white' :
-                                         (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                         'bg-orange-500 text-white'
-                                       }`}>
-                                         {(item as any).badge}
-                                       </span>
-                                     )}
-                                   </div>
-                                   <div className="text-sm text-green-300 truncate">{item.description}</div>
-                      </div>
-                      <svg 
-                                   className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+                    <div className="relative">
+                      <div 
+                        ref={userMenuScroll.scrollRef}
+                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                        onMouseMove={userMenuScroll.handleMouseMove}
+                        onMouseLeave={userMenuScroll.handleMouseLeave}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                             ))}
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                     </div>
-                   </div>
-                 )}
-               </div>
-               
-               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
-               <div className="flex items-center space-x-2">
-                 {isLoggedIn ? (
-                   <>
-                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
-                     {shouldShowCounselorMenu(userEmail) && (
-                       <div className="relative">
-                         <Link
-                           href="/counselor"
-                           className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                             activeItem === "/counselor" || activeItem.startsWith("/counselor/")
-                               ? "text-white bg-blue-600"
-                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                           }`}
-                           onClick={(e) => handleNavLinkClick("/counselor", e)}
-                           onMouseEnter={() => setActiveMenu('counselor')}
-                           onMouseLeave={() => setActiveMenu(null)}
-                         >
-                           👨‍⚕️ 상담사
-                           <svg
-                          xmlns="http://www.w3.org/2000/svg" 
-                             viewBox="0 0 20 20"
-                             fill="currentColor"
-                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorOpen ? "rotate-180" : ""}`}
-                           >
-                             <path
-                               fillRule="evenodd"
-                               d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                               clipRule="evenodd"
-                             />
-                           </svg>
-                         </Link>
-
-                         {/* 상담사 메가 메뉴 */}
-                         {isCounselorOpen && (
-                           <div
-                             data-dropdown-menu="counselor"
-                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                             onMouseEnter={() => setActiveMenu('counselor')}
-                             onMouseLeave={() => setActiveMenu(null)}
-                           >
-                             <div className="relative">
-                               {/* 스크롤 가능한 콘텐츠 */}
-                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
-                                 {counselorMenuItems.map((category) => (
-                                   <div key={category.category} className="mb-4 last:mb-0">
-                                     <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
-                                       {category.category}
-                                     </div>
-                                     <div className="space-y-1">
-                                       {category.items.map((item) => (
-                                         <Link
-                                           key={item.name}
-                                           href={item.href}
-                                           className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                           onClick={() => setActiveMenu(null)}
-                                         >
-                                           <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon || '👨‍⚕️'}
-                                           </div>
-                                           <div className="flex-1 min-w-0">
-                                             <div className="flex items-center gap-2">
-                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                             </div>
-                                           </div>
-                                           <svg 
-                                             className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                          fill="none" 
-                          stroke="currentColor"
-                                             viewBox="0 0 24 24"
-                        >
-                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                                         </Link>
-                                       ))}
-                                     </div>
-                                   </div>
-                                 ))}
-                               </div>
-                             </div>
-                           </div>
-                         )}
-                       </div>
-                     )}
-
-                     {/* 관리자 메뉴 - 관리자만 표시 */}
-                     {shouldShowAdminMenu(userEmail) && (
-                       <div className="relative">
-                         <Link
-                           href="/admin"
-                           className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                             activeItem === "/admin" || activeItem.startsWith("/admin/")
-                               ? "text-white bg-blue-600"
-                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                           }`}
-                           onClick={(e) => handleNavLinkClick("/admin", e)}
-                           onMouseEnter={() => setActiveMenu('admin')}
-                           onMouseLeave={() => setActiveMenu(null)}
-                         >
-                           🔧 관리자
-                           <svg
-                             xmlns="http://www.w3.org/2000/svg"
-                             viewBox="0 0 20 20"
-                             fill="currentColor"
-                             className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAdminOpen ? "rotate-180" : ""}`}
-                           >
-                             <path
-                               fillRule="evenodd"
-                               d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                               clipRule="evenodd"
-                             />
-                           </svg>
-                         </Link>
-
-                         {/* 관리자 메가 메뉴 */}
-                         {isAdminOpen && (
-                           <div
-                             data-dropdown-menu="admin"
-                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                             onMouseEnter={() => setActiveMenu('admin')}
-                             onMouseLeave={() => setActiveMenu(null)}
-                           >
-                             <div className="relative">
-                               {/* 스크롤 가능한 콘텐츠 */}
-                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
-                                 {adminMenuItems.map((category) => (
-                                   <div key={category.category} className="mb-4 last:mb-0">
-                                     <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
-                                       {category.category}
-                                     </div>
-                                     <div className="space-y-1">
-                                       {category.items.map((item) => (
-                                         <Link
-                                           key={item.name}
-                                           href={item.href}
-                                           className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
-                                           onClick={() => setActiveMenu(null)}
-                                         >
-                                           <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                             {item.icon || '🔧'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                                             <div className="flex items-center gap-2">
-                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                             </div>
-                      </div>
-                      <svg 
-                        className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                                         </Link>
-                                       ))}
-                                     </div>
-                                   </div>
-                                 ))}
-                               </div>
-                             </div>
-                           </div>
-                         )}
-                    </div>
-                  )}
-                  
-                     {/* 마이페이지 드롭다운 메뉴 */}
-                     <div className="relative">
-                        <Link
-                         href="/mypage"
-                         className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
-                           activeItem === "/mypage" || activeItem.startsWith("/mypage/")
-                             ? "text-white bg-blue-600"
-                             : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                         }`}
-                         onClick={(e) => handleNavLinkClick("/mypage", e)}
-                         onMouseEnter={() => setActiveMenu('user')}
-                         onMouseLeave={() => setActiveMenu(null)}
-                       >
-                         👤 마이페이지
-                         <svg
-                           xmlns="http://www.w3.org/2000/svg"
-                           viewBox="0 0 20 20"
-                           fill="currentColor"
-                           className={`w-4 h-4 ml-1 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
-                         >
-                           <path
-                             fillRule="evenodd"
-                             d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                             clipRule="evenodd"
-                           />
-                         </svg>
-                       </Link>
-
-                                                                                               {/* 마이페이지 메가 메뉴 */}
-                         {isDropdownOpen && (
-                           <div
-                             data-dropdown-menu="user"
-                             className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                             onMouseEnter={() => setActiveMenu('user')}
-                             onMouseLeave={() => setActiveMenu(null)}
-                           >
-                           <div className="relative">
-                             {/* 상단 화살표 가이드 */}
-                             <div
-                               className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                               style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                               ref={(el) => {
-                                 if (el) {
-                                   const checkScroll = () => {
-                                     const scrollableDiv = el.parentElement?.querySelector('.mypage-scrollable') as HTMLElement;
-                                     if (scrollableDiv) {
-                                       const shouldShow = scrollableDiv.scrollTop > 0;
-                                       el.style.opacity = shouldShow ? '1' : '0';
-                                     }
-                                   };
-                                   
-                                   const scrollableDiv = el.parentElement?.querySelector('.mypage-scrollable') as HTMLElement;
-                                   if (scrollableDiv) {
-                                     scrollableDiv.addEventListener('scroll', checkScroll);
-                                     checkScroll();
-                                     
-                                     return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                                   }
-                                 }
-                               }}
-                             >
-                               <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
-                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                 </svg>
-                          </div>
+                        {personalFeaturesMenu.map((category) => (
+                          <div key={category.category} className="mb-4 last:mb-0">
+                            <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                              {category.category}
                             </div>
-
-                             {/* 하단 화살표 가이드 */}
-                             <div
-                               className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none"
-                               style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
-                               ref={(el) => {
-                                 if (el) {
-                                   const checkScroll = () => {
-                                     const scrollableDiv = el.parentElement?.querySelector('.mypage-scrollable') as HTMLElement;
-                                     if (scrollableDiv) {
-                                       const shouldShow = scrollableDiv.scrollTop + scrollableDiv.clientHeight < scrollableDiv.scrollHeight;
-                                       el.style.opacity = shouldShow ? '1' : '0';
-                                     }
-                                   };
-                                   
-                                   const scrollableDiv = el.parentElement?.querySelector('.mypage-scrollable') as HTMLElement;
-                                   if (scrollableDiv) {
-                                     scrollableDiv.addEventListener('scroll', checkScroll);
-                                     checkScroll();
-                                     
-                                     return () => scrollableDiv.removeEventListener('scroll', checkScroll);
-                                   }
-                                 }
-                               }}
-                             >
-                               <div className="bg-gradient-to-b from-green-600/90 to-green-800/90 text-white px-3 py-1 rounded-full shadow-lg border border-green-400/50">
-                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                 </svg>
-                               </div>
-                             </div>
-
-                             {/* 스크롤 가능한 콘텐츠 */}
-                             <div 
-                               className="mypage-scrollable px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
-                               onWheel={(e) => {
-                                 e.stopPropagation();
-                                 const target = e.currentTarget;
-                                 const scrollTop = target.scrollTop;
-                                 const scrollHeight = target.scrollHeight;
-                                 const clientHeight = target.clientHeight;
-                                 
-                                 if ((scrollTop === 0 && e.deltaY < 0) || 
-                                     (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
-                                   e.preventDefault();
-                                 }
-                               }}
-                               onMouseMove={(e) => {
-                                 const target = e.currentTarget;
-                                 const rect = target.getBoundingClientRect();
-                                 const mouseY = e.clientY - rect.top;
-                                 const height = rect.height;
-                                 
-                                 // 상단 20% 영역에서 자동 스크롤 다운
-                                 if (mouseY < height * 0.2) {
-                                   target.scrollTo({
-                                     top: target.scrollTop - 30,
-                                     behavior: 'smooth'
-                                   });
-                                 }
-                                 // 하단 20% 영역에서 자동 스크롤 업
-                                 else if (mouseY > height * 0.8) {
-                                   target.scrollTo({
-                                     top: target.scrollTop + 30,
-                                     behavior: 'smooth'
-                                   });
-                                 }
-                               }}
-                               style={{
-                                 overscrollBehavior: 'contain',
-                                 scrollbarGutter: 'stable'
-                               }}
-                             >
-                                                               {/* 사용자 정보 헤더 */}
-                                <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                      {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                      <div className="font-semibold text-white">{userName || '사용자'}</div>
-                                      <div className="text-sm text-green-300">{userEmail}</div>
-                                    </div>
+                            <div className="space-y-1">
+                              {category.items.map((item) => (
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                  onClick={() => setActiveMenu(null)}
+                                >
+                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                    {item.icon || '⚡'}
                                   </div>
-                                </div>
-
-                               {/* 마이페이지 메뉴 아이템들 */}
-                               <div className="space-y-1">
-                                 {[
-                                   { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인", icon: "📊" },
-                                   { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
-                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
-                                   { name: "삭제된 코드", href: "/mypage/deleted-codes", description: "삭제된 테스트 코드 복구", icon: "📋" },
-                                   { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️" }
-                                 ].map((item) => (
-                                   <Link
-                                     key={item.name}
-                                     href={item.href}
-                                     className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
-                                     onClick={() => setActiveMenu(null)}
-                                   >
-                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                       {item.icon}
-                                     </div>
-                                     <div className="flex-1 min-w-0">
-                                       <div className="font-medium text-white truncate">{item.name}</div>
-                                       <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                      {'badge' in item && (item as any).badge && (
+                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                          (item as any).badge === '인기' ? 'bg-red-500 text-white' :
+                                          (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                          'bg-orange-500 text-white'
+                                        }`}>
+                                          {(item as any).badge}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-green-300 truncate">{item.description}</div>
+                                  </div>
+                                  <svg 
+                                    className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </Link>
+                              ))}
+                            </div>
                           </div>
-                          <svg 
-                                       className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
+              <div className="flex items-center space-x-2">
+                {isLoggedIn ? (
+                  <>
+                    {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
+                    {shouldShowCounselorMenu(userEmail) && (
+                      <div className="relative">
+                        <Link
+                          href="/counselor"
+                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                            activeItem === "/counselor" || activeItem.startsWith("/counselor/")
+                              ? "text-white bg-blue-600"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                          }`}
+                          onClick={(e) => handleNavLinkClick("/counselor", e)}
+                          onMouseEnter={() => setActiveMenu('counselor')}
+                          onMouseLeave={() => setActiveMenu(null)}
+                        >
+                          👨‍⚕️ 상담사
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg" 
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorOpen ? "rotate-180" : ""}`}
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            <path
+                              fillRule="evenodd"
+                              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </Link>
-                      ))}
 
+                        {/* 상담사 메가 메뉴 */}
+                        {isCounselorOpen && (
+                          <div
+                            data-dropdown-menu="counselor"
+                            className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            onMouseEnter={() => setActiveMenu('counselor')}
+                            onMouseLeave={() => setActiveMenu(null)}
+                          >
+                            <div className="relative">
+                              <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                                {counselorMenuItems.map((category) => (
+                                  <div key={category.category} className="mb-4 last:mb-0">
+                                    <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
+                                      {category.category}
+                                    </div>
+                                    <div className="space-y-1">
+                                      {category.items.map((item) => (
+                                        <Link
+                                          key={item.name}
+                                          href={item.href}
+                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                          onClick={() => setActiveMenu(null)}
+                                        >
+                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                            {item.icon || '👨‍⚕️'}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                            </div>
+                                          </div>
+                                          <svg 
+                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                            fill="none" 
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                          </svg>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                                                                   {/* 로그아웃 버튼 */}
-                                  <div className="mt-4 pt-4 border-t border-green-500/30">
-                                   <button
-                                     onClick={handleLogout}
-                                     className="w-full group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 border border-transparent hover:border-red-500/30 text-left"
-                                   >
-                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                       🚪
-                                     </div>
-                                     <div className="flex-1">
-                                       <div className="font-medium text-white">로그아웃</div>
-                                       <div className="text-xs text-red-300">안전하게 로그아웃</div>
-                                     </div>
-                                     <svg 
-                                       className="w-4 h-4 text-red-300 group-hover:text-white transition-all duration-300"
-                                       fill="none" 
-                                       stroke="currentColor" 
-                                       viewBox="0 0 24 24"
-                                     >
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                     </svg>
-                                   </button>
-                                 </div>
-                               </div>
-                             </div>
-                           </div>
+                    {/* 관리자 메뉴 - 관리자만 표시 */}
+                    {shouldShowAdminMenu(userEmail) && (
+                      <div className="relative">
+                        <Link
+                          href="/admin"
+                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                            activeItem === "/admin" || activeItem.startsWith("/admin/")
+                              ? "text-white bg-blue-600"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                          }`}
+                          onClick={(e) => handleNavLinkClick("/admin", e)}
+                          onMouseEnter={() => setActiveMenu('admin')}
+                          onMouseLeave={() => setActiveMenu(null)}
+                        >
+                          🔧 관리자
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAdminOpen ? "rotate-180" : ""}`}
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </Link>
+
+                        {/* 관리자 메가 메뉴 */}
+                        {isAdminOpen && (
+                          <div
+                            data-dropdown-menu="admin"
+                            className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            onMouseEnter={() => setActiveMenu('admin')}
+                            onMouseLeave={() => setActiveMenu(null)}
+                          >
+                            <div className="relative">
+                              <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                                {adminMenuItems.map((category) => (
+                                  <div key={category.category} className="mb-4 last:mb-0">
+                                    <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
+                                      {category.category}
+                                    </div>
+                                    <div className="space-y-1">
+                                      {category.items.map((item) => (
+                                        <Link
+                                          key={item.name}
+                                          href={item.href}
+                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                          onClick={() => setActiveMenu(null)}
+                                        >
+                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                            {item.icon || '🔧'}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                            </div>
+                                          </div>
+                                          <svg 
+                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                          </svg>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* 마이페이지 드롭다운 메뉴 */}
+                    <div className="relative">
+                      <Link
+                        href="/mypage"
+                        className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                          activeItem === "/mypage" || activeItem.startsWith("/mypage/")
+                            ? "text-white bg-blue-600"
+                            : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                        }`}
+                        onClick={(e) => handleNavLinkClick("/mypage", e)}
+                        onMouseEnter={() => setActiveMenu('user')}
+                        onMouseLeave={() => setActiveMenu(null)}
+                      >
+                        👤 마이페이지
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          className={`w-4 h-4 ml-1 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </Link>
+
+                      {/* 마이페이지 메가 메뉴 */}
+                      {isDropdownOpen && (
+                        <div
+                          data-dropdown-menu="user"
+                          className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                          onMouseEnter={() => setActiveMenu('user')}
+                          onMouseLeave={() => setActiveMenu(null)}
+                        >
+                          <div className="relative">
+                            <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown">
+                              {/* 사용자 정보 헤더 */}
+                              <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                    {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold text-white">{userName || '사용자'}</div>
+                                    <div className="text-sm text-green-300">{userEmail}</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 마이페이지 메뉴 아이템들 */}
+                              <div className="space-y-1">
+                                {[
+                                  { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인", icon: "📊" },
+                                  { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
+                                  { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
+                                  { name: "삭제된 코드", href: "/mypage/deleted-codes", description: "삭제된 테스트 코드 복구", icon: "📋" },
+                                  { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️" }
+                                ].map((item) => (
+                                  <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                    onClick={() => setActiveMenu(null)}
+                                  >
+                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                      {item.icon}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium text-white truncate">{item.name}</div>
+                                      <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                    </div>
+                                    <svg 
+                                      className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                  </Link>
+                                ))}
+
+                                {/* 로그아웃 버튼 */}
+                                <div className="mt-4 pt-4 border-t border-green-500/30">
+                                  <button
+                                    onClick={handleLogout}
+                                    className="w-full group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 border border-transparent hover:border-red-500/30 text-left"
+                                  >
+                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                      🚪
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="font-medium text-white">로그아웃</div>
+                                      <div className="text-xs text-red-300">안전하게 로그아웃</div>
+                                    </div>
+                                    <svg 
+                                      className="w-4 h-4 text-red-300 group-hover:text-white transition-all duration-300"
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                   </>
-                 ) : (
-                   <>
-                     {/* 로그인/회원가입 버튼 */}
-                     <Link
-                       href="/login"
-                       className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 text-gray-300 hover:text-white hover:bg-blue-800/50"
-                       onClick={(e) => handleAuthLinkClick("/login", e)}
-                     >
-                       🔑 로그인
-                     </Link>
-                     <Link
-                       href="/register"
-                       className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700"
-                       onClick={(e) => handleAuthLinkClick("/register", e)}
-                     >
-                       ✨ 회원가입
-                     </Link>
-                   </>
-                 )}
+                  </>
+                ) : (
+                  <>
+                    {/* 로그인/회원가입 버튼 */}
+                    <Link
+                      href="/login"
+                      className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 text-gray-300 hover:text-white hover:bg-blue-800/50"
+                      onClick={(e) => handleAuthLinkClick("/login", e)}
+                    >
+                      🔑 로그인
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700"
+                      onClick={(e) => handleAuthLinkClick("/register", e)}
+                    >
+                      ✨ 회원가입
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
-         </div>
 
-         {/* 모바일 메뉴 버튼 */}
-         <div className="md:hidden">
-           <button
-             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-             className="p-2 text-gray-300 hover:text-white hover:bg-blue-800/50 rounded-lg transition-all duration-300"
-           >
-             <svg
-               className="w-6 h-6"
-               fill="none"
-               stroke="currentColor"
-               viewBox="0 0 24 24"
-             >
-               {isMobileMenuOpen ? (
-                 <path
-                   strokeLinecap="round"
-                   strokeLinejoin="round"
-                   strokeWidth={2}
-                   d="M6 18L18 6M6 6l12 12"
-                 />
-               ) : (
-                 <path
-                   strokeLinecap="round"
-                   strokeLinejoin="round"
-                   strokeWidth={2}
-                   d="M4 6h16M4 12h16M4 18h16"
-                 />
-               )}
-             </svg>
-           </button>
-         </div>
-       </nav>
+        {/* 모바일 메뉴 버튼 */}
+        <div className="md:hidden">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-gray-300 hover:text-white hover:bg-blue-800/50 rounded-lg transition-all duration-300"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isMobileMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
+      </nav>
 
-       {/* 모바일 메뉴 오버레이 */}
-       {isMobileMenuOpen && (
-         <>
-           {/* 배경 오버레이 */}
-           <div 
-             className="fixed inset-0 bg-black/50 z-40 md:hidden"
-             onClick={() => setIsMobileMenuOpen(false)}
-           />
-           
-           {/* 모바일 메뉴 */}
-           <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
-             <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+      {/* 모바일 메뉴 오버레이 */}
+      {isMobileMenuOpen && (
+        <>
+          {/* 배경 오버레이 */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* 모바일 메뉴 */}
+          <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
+            <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
 
-               {/* 심리검사 */}
-               <div className="space-y-3">
-                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
-                   🧠 AI 심리검사
-                 </div>
-                 
-                 {/* 대분류 5개 */}
-                 <div className="space-y-2">
-                   {testSubMenuItems.map((mainCategory, index) => (
-                     <div key={mainCategory.category} className="space-y-2">
-                     {/* 대분류 */}
-                       <div 
-                         className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-blue-200 bg-blue-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
-                           selectedMainCategory === mainCategory.category ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/30'
-                         }`}
-                         onClick={() => setSelectedMainCategory(selectedMainCategory === mainCategory.category ? null : mainCategory.category)}
-                       >
-                         <span className="text-lg">{mainCategory.icon}</span>
-                         <span className="flex-1">{mainCategory.category}</span>
-                         <svg 
-                           className={`w-4 h-4 transition-transform duration-300 ${
-                             selectedMainCategory === mainCategory.category ? 'rotate-90' : ''
-                           }`}
-                           fill="none" 
-                           stroke="currentColor" 
-                           viewBox="0 0 24 24"
-                         >
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                         </svg>
-                       </div>
-                     
-                       {/* 선택된 대분류의 중분류 */}
-                       {selectedMainCategory === mainCategory.category && (
-                         <div className="ml-4 space-y-2 animate-fadeIn">
-                           {mainCategory.subcategories.map((subcategory) => (
-                             <div key={subcategory.name} className="space-y-1">
-                               <div 
-                                 className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 bg-purple-500/20 rounded cursor-pointer transition-all duration-300 ${
-                                   selectedSubcategory === subcategory.name ? 'bg-purple-500/30' : 'hover:bg-purple-500/30'
-                                 }`}
-                                 onClick={() => {
-                                  // 중분류 클릭 시 해당 중분류의 대시보드로 이동
+              {/* 심리검사 */}
+              <div className="space-y-3">
+                <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
+                  🧠 AI 심리검사
+                </div>
+                
+                {/* 대분류 5개 */}
+                <div className="space-y-2">
+                  {testSubMenuItems.map((mainCategory, index) => (
+                    <div key={mainCategory.category} className="space-y-2">
+                      {/* 대분류 */}
+                      <div 
+                        className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-blue-200 bg-blue-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
+                          selectedMainCategory === mainCategory.category ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/30'
+                        }`}
+                        onClick={() => setSelectedMainCategory(selectedMainCategory === mainCategory.category ? null : mainCategory.category)}
+                      >
+                        <span className="text-lg">{mainCategory.icon}</span>
+                        <span className="flex-1">{mainCategory.category}</span>
+                        <svg 
+                          className={`w-4 h-4 transition-transform duration-300 ${
+                            selectedMainCategory === mainCategory.category ? 'rotate-90' : ''
+                          }`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    
+                      {/* 선택된 대분류의 중분류 */}
+                      {selectedMainCategory === mainCategory.category && (
+                        <div className="ml-4 space-y-2 animate-fadeIn">
+                          {mainCategory.subcategories.map((subcategory) => (
+                            <div key={subcategory.name} className="space-y-1">
+                              <div 
+                                className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 bg-purple-500/20 rounded cursor-pointer transition-all duration-300 ${
+                                  selectedSubcategory === subcategory.name ? 'bg-purple-500/30' : 'hover:bg-purple-500/30'
+                                }`}
+                                onClick={() => {
                                   const categoryMap: { [key: string]: string } = {
                                     "성격 및 기질 탐색": "personality-temperament",
                                     "자아정체감 및 가치관": "identity-values",
@@ -1532,7 +1179,7 @@ export default function Navigation() {
                                     "우울 및 기분 문제": "depression-mood",
                                     "불안 및 스트레스": "anxiety-stress",
                                     "외상 및 위기 개입": "trauma-crisis",
-                                    "중독 및 충동 조절 문제": "addiction-impulse",
+                                    "중독 및 충동 조절": "addiction-impulse",
                                     "진로 및 직업 문제": "career-job",
                                     "경제 및 재정 문제": "financial-economic",
                                     "건강 및 신체 문제": "health-physical",
@@ -1540,7 +1187,7 @@ export default function Navigation() {
                                     "다문화 적응": "multicultural-adaptation",
                                     "디지털 환경 적응": "digital-environment",
                                     "생애주기별 적응": "lifecycle-adaptation",
-                                    "특정 사회·환경 문제": "social-environmental-issues"
+                                    "사회 환경 적응": "social-environmental-issues"
                                   };
                                   const categoryId = categoryMap[subcategory.name];
                                   if (categoryId) {
@@ -1548,212 +1195,212 @@ export default function Navigation() {
                                     setActiveMenu(null);
                                   }
                                 }}
-                               >
-                                 <span className="text-lg">{subcategory.icon}</span>
-                                 <span className="flex-1">{subcategory.name}</span>
-                                 <svg 
-                                   className={`w-4 h-4 transition-transform duration-300 ${
-                                     selectedSubcategory === subcategory.name ? 'rotate-90' : ''
-                                   }`}
-                                   fill="none" 
-                                   stroke="currentColor" 
-                                   viewBox="0 0 24 24"
-                                 >
-                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                 </svg>
-                               </div>
-                               
-                               {/* 소분류 */}
-                               {selectedSubcategory === subcategory.name && (
-                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
-                                   {subcategory.items.map((item) => (
-                                     <Link
-                                       key={item.name}
-                                       href={item.href}
-                                       className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                                       onClick={() => setIsMobileMenuOpen(false)}
-                                     >
-                                       <div className="flex items-center gap-2">
-                                         <span className="text-xs">{item.icon}</span>
-                                         <div className="flex-1 min-w-0">
-                                           <div className="font-medium">{item.name}</div>
-                                           <div className="text-xs text-gray-400">{item.description}</div>
-                                         </div>
-                                       </div>
-                                     </Link>
-                                   ))}
-                                 </div>
-                               )}
-                             </div>
-                           ))}
-                         </div>
-                       )}
-                     </div>
-                   ))}
-                 </div>
-               </div>
+                              >
+                                <span className="text-lg">{subcategory.icon}</span>
+                                <span className="flex-1">{subcategory.name}</span>
+                                <svg 
+                                  className={`w-4 h-4 transition-transform duration-300 ${
+                                    selectedSubcategory === subcategory.name ? 'rotate-90' : ''
+                                  }`}
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                              
+                              {/* 소분류 */}
+                              {selectedSubcategory === subcategory.name && (
+                                <div className="ml-4 space-y-1 animate-fadeIn-slow">
+                                  {subcategory.items.map((item) => (
+                                    <Link
+                                      key={item.name}
+                                      href={item.href}
+                                      className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                                      onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs">{item.icon}</span>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-medium">{item.name}</div>
+                                          <div className="text-xs text-gray-400">{item.description}</div>
+                                        </div>
+                                      </div>
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-               {/* 상담 프로그램 */}
-               <div className="space-y-2">
-                 <div className="px-4 py-2 text-sm font-semibold text-purple-300 uppercase tracking-wide">
-                   💬 상담 프로그램
-                 </div>
-                 {counselingMenuItems.map((category) => (
-                   <div key={category.category} className="ml-4 space-y-1">
-                     <div className="px-2 py-1 text-base font-bold text-purple-400 uppercase tracking-wide">
-                       {category.category}
-                       </div>
-                     {category.items.map((item) => (
-                             <Link
-                         key={item.name}
-                               href={item.href}
-                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
-                               onClick={() => setIsMobileMenuOpen(false)}
-                             >
-                               <div className="flex items-center gap-2">
-                           <span>{item.icon}</span>
-                           <span>{item.name}</span>
-                           {'badge' in item && (item as any).badge && (
-                             <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                               (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
-                               (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                               'bg-orange-500 text-white'
-                             }`}>
-                               {(item as any).badge}
-                             </span>
-                           )}
-                               </div>
-                         <div className="text-xs text-purple-300 ml-6 mt-1">{item.description}</div>
-                             </Link>
-                           ))}
-                         </div>
-                 ))}
-               </div>
-
-               {/* AI 마음 비서 */}
-               <div className="space-y-2">
-                                   <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
-                    🤖 나의 AI 비서
+              {/* 상담 프로그램 */}
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-sm font-semibold text-purple-300 uppercase tracking-wide">
+                  💬 상담 프로그램
+                </div>
+                {counselingMenuItems.map((category) => (
+                  <div key={category.category} className="ml-4 space-y-1">
+                    <div className="px-2 py-1 text-base font-bold text-purple-400 uppercase tracking-wide">
+                      {category.category}
+                    </div>
+                    {category.items.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{item.icon}</span>
+                          <span>{item.name}</span>
+                          {'badge' in item && (item as any).badge && (
+                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                              (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
+                              (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                              'bg-orange-500 text-white'
+                            }`}>
+                              {(item as any).badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-purple-300 ml-6 mt-1">{item.description}</div>
+                      </Link>
+                    ))}
                   </div>
-                 {aiMindAssistantSubMenuItems.map((category) => (
-                   <div key={category.category} className="ml-4 space-y-1">
-                     <div className="px-2 py-1 text-base font-bold text-green-400 uppercase tracking-wide">
-                       {category.category}
-                     </div>
-                     {category.items.map((item) => (
-                       <Link
-                         key={item.name}
-                         href={item.href}
-                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                         onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                         <div className="flex items-center gap-2">
-                           <span>{item.icon}</span>
-                           <span>{item.name}</span>
-                           {'badge' in item && (item as any).badge && (
-                             <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                               (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                               (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                               'bg-orange-500 text-white'
-                             }`}>
-                               {(item as any).badge}
-                             </span>
-                       )}
-                     </div>
-                         <div className="text-xs text-green-300 ml-6 mt-1">{item.description}</div>
-                       </Link>
-                   ))}
-                 </div>
-                 ))}
-               </div>
+                ))}
+              </div>
 
-               {/* 추가 기능 */}
-               <div className="space-y-2">
-                                   <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
-                    📚 나의 자료실
+              {/* AI 마음 비서 */}
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
+                  🤖 나의 AI 비서
+                </div>
+                {aiMindAssistantSubMenuItems.map((category) => (
+                  <div key={category.category} className="ml-4 space-y-1">
+                    <div className="px-2 py-1 text-base font-bold text-green-400 uppercase tracking-wide">
+                      {category.category}
+                    </div>
+                    {category.items.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{item.icon}</span>
+                          <span>{item.name}</span>
+                          {'badge' in item && (item as any).badge && (
+                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                              (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
+                              (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                              'bg-orange-500 text-white'
+                            }`}>
+                              {(item as any).badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-green-300 ml-6 mt-1">{item.description}</div>
+                      </Link>
+                    ))}
                   </div>
-                 {personalFeaturesMenu.map((category) => (
-                   <div key={category.category} className="ml-4 space-y-1">
-                     <div className="px-2 py-1 text-base font-bold text-green-400 uppercase tracking-wide">
-                       {category.category}
-                     </div>
-                     {category.items.map((item) => (
-                       <Link
-                         key={item.name}
-                         href={item.href}
-                         className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                         onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                         <div className="flex items-center gap-2">
-                           <span>{item.icon}</span>
-                           <span>{item.name}</span>
-                         </div>
-                         <div className="text-xs text-green-300 ml-6 mt-1">{item.description}</div>
-                       </Link>
-                     ))}
-                   </div>
-                 ))}
-               </div>
+                ))}
+              </div>
 
-               {/* 사용자 메뉴 */}
-               {isLoggedIn ? (
-                 <div className="space-y-2 pt-4 border-t border-white/20">
-                   <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide">
-                     👤 마이페이지
-                   </div>
-                       <Link
-                     href="/mypage"
-                         className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                         onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                     📊 검사 기록
-                       </Link>
-                   <Link
-                     href="/mypage?tab=profile"
-                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
-                     👤 기본 정보
-                   </Link>
-                   <Link
-                     href="/mypage/counseling"
-                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
-                     💬 상담 예약
-                   </Link>
-                     <button
-                       onClick={() => {
-                         setIsMobileMenuOpen(false);
-                         handleLogout();
-                       }}
-                       className="w-full text-left px-4 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-800/30 rounded-lg transition-all duration-300"
-                     >
-                     🚪 로그아웃
-                     </button>
-                 </div>
-               ) : (
-                 <div className="space-y-2 pt-4 border-t border-white/20">
-                   <Link
-                     href="/login"
-                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
-                     🔑 로그인
-                   </Link>
-                   <Link
-                     href="/register"
-                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
-                     ✨ 회원가입
-                   </Link>
-                 </div>
-               )}
-             </div>
-           </div>
-         </>
-       )}
-     </>
-   );
- }
+              {/* 추가 기능 */}
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
+                  📚 나의 자료실
+                </div>
+                {personalFeaturesMenu.map((category) => (
+                  <div key={category.category} className="ml-4 space-y-1">
+                    <div className="px-2 py-1 text-base font-bold text-green-400 uppercase tracking-wide">
+                      {category.category}
+                    </div>
+                    {category.items.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{item.icon}</span>
+                          <span>{item.name}</span>
+                        </div>
+                        <div className="text-xs text-green-300 ml-6 mt-1">{item.description}</div>
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* 사용자 메뉴 */}
+              {isLoggedIn ? (
+                <div className="space-y-2 pt-4 border-t border-white/20">
+                  <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide">
+                    👤 마이페이지
+                  </div>
+                  <Link
+                    href="/mypage"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    📊 검사 기록
+                  </Link>
+                  <Link
+                    href="/mypage?tab=profile"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    👤 기본 정보
+                  </Link>
+                  <Link
+                    href="/mypage/counseling"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    💬 상담 예약
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-800/30 rounded-lg transition-all duration-300"
+                  >
+                    🚪 로그아웃
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2 pt-4 border-t border-white/20">
+                  <Link
+                    href="/login"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    🔑 로그인
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    ✨ 회원가입
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
