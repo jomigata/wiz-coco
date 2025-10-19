@@ -22,6 +22,7 @@ export default function Navigation() {
   
   // 스크롤 상태 관리
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
+  const [scrollIntervals, setScrollIntervals] = useState<{[key: string]: NodeJS.Timeout | null}>({});
   
   // 자동 스크롤 훅들
   const counselingScroll = useAutoScroll();
@@ -57,30 +58,67 @@ export default function Navigation() {
     checkScrollState(menuId, target);
   };
 
-  // 마우스 위치에 따른 동적 스크롤
+  // 부드러운 스크롤 함수
+  const smoothScroll = (menuId: string, direction: 'up' | 'down', scrollElement: HTMLElement) => {
+    const scrollAmount = direction === 'up' ? -8 : 8;
+    const targetScrollTop = Math.max(0, Math.min(
+      scrollElement.scrollHeight - scrollElement.clientHeight,
+      scrollElement.scrollTop + scrollAmount
+    ));
+    
+    scrollElement.scrollTo({
+      top: targetScrollTop,
+      behavior: 'smooth'
+    });
+    
+    // 스크롤 상태 업데이트를 위한 타이머
+    setTimeout(() => {
+      checkScrollState(menuId, scrollElement);
+    }, 100);
+  };
+
+  // 마우스 위치에 따른 동적 스크롤 (개선된 버전)
   const handleMouseMove = (menuId: string, event: React.MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const y = event.clientY - rect.top;
     const height = rect.height;
     
-    // 상단 20% 영역에서 위로 스크롤
-    if (y < height * 0.2) {
-      const scrollElement = event.currentTarget.querySelector('.scrollable-content') as HTMLElement;
-      if (scrollElement) {
-        scrollElement.scrollTop = Math.max(0, scrollElement.scrollTop - 5);
-        checkScrollState(menuId, scrollElement);
+    const scrollElement = event.currentTarget.querySelector('.scrollable-content') as HTMLElement;
+    if (!scrollElement) return;
+    
+    // 기존 스크롤 인터벌 정리
+    if (scrollIntervals[menuId]) {
+      clearInterval(scrollIntervals[menuId]);
+    }
+    
+    // 상단 15% 영역에서 위로 스크롤
+    if (y < height * 0.15) {
+      const interval = setInterval(() => {
+        smoothScroll(menuId, 'up', scrollElement);
+      }, 50);
+      setScrollIntervals(prev => ({ ...prev, [menuId]: interval }));
+    }
+    // 하단 15% 영역에서 아래로 스크롤
+    else if (y > height * 0.85) {
+      const interval = setInterval(() => {
+        smoothScroll(menuId, 'down', scrollElement);
+      }, 50);
+      setScrollIntervals(prev => ({ ...prev, [menuId]: interval }));
+    }
+    // 중간 영역에서는 스크롤 중지
+    else {
+      if (scrollIntervals[menuId]) {
+        clearInterval(scrollIntervals[menuId]);
+        setScrollIntervals(prev => ({ ...prev, [menuId]: null }));
       }
     }
-    // 하단 20% 영역에서 아래로 스크롤
-    else if (y > height * 0.8) {
-      const scrollElement = event.currentTarget.querySelector('.scrollable-content') as HTMLElement;
-      if (scrollElement) {
-        scrollElement.scrollTop = Math.min(
-          scrollElement.scrollHeight - scrollElement.clientHeight,
-          scrollElement.scrollTop + 5
-        );
-        checkScrollState(menuId, scrollElement);
-      }
+  };
+
+  // 마우스가 메뉴를 벗어날 때 스크롤 중지
+  const handleMouseLeave = (menuId: string) => {
+    if (scrollIntervals[menuId]) {
+      clearInterval(scrollIntervals[menuId]);
+      setScrollIntervals(prev => ({ ...prev, [menuId]: null }));
     }
   };
 
@@ -771,14 +809,17 @@ export default function Navigation() {
                     data-dropdown-menu="additional"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('additional')}
-                    onMouseLeave={() => setActiveMenu(null)}
+                    onMouseLeave={() => {
+                      setActiveMenu(null);
+                      handleMouseLeave('additional');
+                    }}
                     onMouseMove={(e) => handleMouseMove('additional', e)}
                   >
                     <div className="relative">
                       {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
                       {scrollStates.additional?.canScrollUp && (
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
-                          <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-green-500/50 animate-pulse"></div>
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-20">
+                          <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-green-400 shadow-lg animate-bounce"></div>
                         </div>
                       )}
                       
@@ -837,8 +878,8 @@ export default function Navigation() {
                       
                       {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
                       {scrollStates.additional?.canScrollDown && (
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-3 z-10">
-                          <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-green-500/50 animate-pulse"></div>
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-4 z-20">
+                          <div className="w-0 h-0 border-l-10 border-r-10 border-t-10 border-transparent border-t-green-400 shadow-lg animate-bounce"></div>
                         </div>
                       )}
                     </div>
@@ -885,14 +926,17 @@ export default function Navigation() {
                             data-dropdown-menu="counselor"
                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => setActiveMenu('counselor')}
-                            onMouseLeave={() => setActiveMenu(null)}
+                            onMouseLeave={() => {
+                              setActiveMenu(null);
+                              handleMouseLeave('counselor');
+                            }}
                             onMouseMove={(e) => handleMouseMove('counselor', e)}
                           >
                             <div className="relative">
                               {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
                               {scrollStates.counselor?.canScrollUp && (
-                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
-                                  <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-blue-500/50 animate-pulse"></div>
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-20">
+                                  <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-blue-400 shadow-lg animate-bounce"></div>
                                 </div>
                               )}
                               
@@ -982,14 +1026,17 @@ export default function Navigation() {
                             data-dropdown-menu="admin"
                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => setActiveMenu('admin')}
-                            onMouseLeave={() => setActiveMenu(null)}
+                            onMouseLeave={() => {
+                              setActiveMenu(null);
+                              handleMouseLeave('admin');
+                            }}
                             onMouseMove={(e) => handleMouseMove('admin', e)}
                           >
                             <div className="relative">
                               {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
                               {scrollStates.admin?.canScrollUp && (
-                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
-                                  <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-blue-500/50 animate-pulse"></div>
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-20">
+                                  <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-blue-400 shadow-lg animate-bounce"></div>
                                 </div>
                               )}
                               
@@ -1034,10 +1081,12 @@ export default function Navigation() {
                                 ))}
                               </div>
                               
-                              {/* 하단 화살표 */}
-                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-10">
-                                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-500/30"></div>
-                              </div>
+                              {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
+                              {scrollStates.admin?.canScrollDown && (
+                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-4 z-20">
+                                  <div className="w-0 h-0 border-l-10 border-r-10 border-t-10 border-transparent border-t-blue-400 shadow-lg animate-bounce"></div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1078,14 +1127,17 @@ export default function Navigation() {
                           data-dropdown-menu="user"
                           className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                           onMouseEnter={() => setActiveMenu('user')}
-                          onMouseLeave={() => setActiveMenu(null)}
+                          onMouseLeave={() => {
+                            setActiveMenu(null);
+                            handleMouseLeave('user');
+                          }}
                           onMouseMove={(e) => handleMouseMove('user', e)}
                         >
                           <div className="relative">
                             {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
                             {scrollStates.user?.canScrollUp && (
-                              <div className="absolute top-0 right-8 transform -translate-y-3 z-10">
-                                <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-green-500/50 animate-pulse"></div>
+                              <div className="absolute top-0 right-8 transform -translate-y-4 z-20">
+                                <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-green-400 shadow-lg animate-bounce"></div>
                               </div>
                             )}
                             
@@ -1167,8 +1219,8 @@ export default function Navigation() {
                             
                             {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
                             {scrollStates.user?.canScrollDown && (
-                              <div className="absolute bottom-0 right-8 transform translate-y-3 z-10">
-                                <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-green-500/50 animate-pulse"></div>
+                              <div className="absolute bottom-0 right-8 transform translate-y-4 z-20">
+                                <div className="w-0 h-0 border-l-10 border-r-10 border-t-10 border-transparent border-t-green-400 shadow-lg animate-bounce"></div>
                               </div>
                             )}
                           </div>
