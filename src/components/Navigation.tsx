@@ -159,6 +159,9 @@ export default function Navigation() {
       items: [
         { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음", icon: "📊" },
         { name: "할당된 검사", href: "/mypage/assigned-tests", description: "상담사가 할당한 검사", icon: "📋" },
+        { name: "AI 프로파일링", href: "/tests/ai-profiling", description: "캠퍼스 라이프 시크릿 리포트", icon: "🔍" },
+        { name: "통합 심리검사", href: "/tests/integrated-assessment", description: "신입생 통합 심리검사", icon: "🎓" },
+        { name: "AI 종합 분석", href: "/tests/ai-analysis", description: "AI 기반 맞춤형 리포트", icon: "🤖" },
         { name: "성장 리포트", href: "/progress", description: "개인 성장 분석 리포트", icon: "📈" },
         { name: "목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
       ]
@@ -196,6 +199,7 @@ export default function Navigation() {
       items: [
         { name: "내담자 목록", href: "/counselor/clients", description: "담당 내담자 관리", icon: "👥" },
         { name: "검사 할당", href: "/counselor/assign-tests", description: "내담자에게 검사 할당", icon: "📋" },
+        { name: "검사 관리", href: "/counselor/test-management", description: "신입생 통합 검사 관리", icon: "🎓" },
         { name: "상담 일정", href: "/counselor/schedule", description: "상담 일정 관리", icon: "📅" },
         { name: "상담 기록", href: "/counselor/sessions", description: "상담 세션 기록", icon: "📝" }
       ]
