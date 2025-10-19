@@ -727,6 +727,11 @@ export default function Navigation() {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     <div className="relative">
+                      {/* 상단 화살표 */}
+                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
+                        <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-green-500/30"></div>
+                      </div>
+                      
                       <div 
                         ref={userMenuScroll.scrollRef}
                         className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
@@ -778,6 +783,11 @@ export default function Navigation() {
                           </div>
                         ))}
                       </div>
+                      
+                      {/* 하단 화살표 */}
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-10">
+                        <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500/30"></div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -825,6 +835,11 @@ export default function Navigation() {
                             onMouseLeave={() => setActiveMenu(null)}
                           >
                             <div className="relative">
+                              {/* 상단 화살표 */}
+                              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
+                                <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-blue-500/30"></div>
+                              </div>
+                              
                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                                 {counselorMenuItems.map((category) => (
                                   <div key={category.category} className="mb-4 last:mb-0">
@@ -846,6 +861,7 @@ export default function Navigation() {
                                             <div className="flex items-center gap-2">
                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
                                             </div>
+                                            <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                           </div>
                                           <svg 
                                             className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
@@ -860,6 +876,11 @@ export default function Navigation() {
                                     </div>
                                   </div>
                                 ))}
+                              </div>
+                              
+                              {/* 하단 화살표 */}
+                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-10">
+                                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-500/30"></div>
                               </div>
                             </div>
                           </div>
@@ -905,6 +926,11 @@ export default function Navigation() {
                             onMouseLeave={() => setActiveMenu(null)}
                           >
                             <div className="relative">
+                              {/* 상단 화살표 */}
+                              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
+                                <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-blue-500/30"></div>
+                              </div>
+                              
                               <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                                 {adminMenuItems.map((category) => (
                                   <div key={category.category} className="mb-4 last:mb-0">
@@ -926,6 +952,7 @@ export default function Navigation() {
                                             <div className="flex items-center gap-2">
                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
                                             </div>
+                                            <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                           </div>
                                           <svg 
                                             className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
@@ -940,6 +967,11 @@ export default function Navigation() {
                                     </div>
                                   </div>
                                 ))}
+                              </div>
+                              
+                              {/* 하단 화살표 */}
+                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-10">
+                                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-500/30"></div>
                               </div>
                             </div>
                           </div>
@@ -984,6 +1016,11 @@ export default function Navigation() {
                           onMouseLeave={() => setActiveMenu(null)}
                         >
                           <div className="relative">
+                            {/* 상단 화살표 */}
+                            <div className="absolute top-0 right-8 transform -translate-y-2 z-10">
+                              <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-green-500/30"></div>
+                            </div>
+                            
                             <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown">
                               {/* 사용자 정보 헤더 */}
                               <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
@@ -1055,6 +1092,11 @@ export default function Navigation() {
                                   </button>
                                 </div>
                               </div>
+                            </div>
+                            
+                            {/* 하단 화살표 */}
+                            <div className="absolute bottom-0 right-8 transform translate-y-2 z-10">
+                              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500/30"></div>
                             </div>
                           </div>
                         </div>
