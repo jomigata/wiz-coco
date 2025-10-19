@@ -20,6 +20,9 @@ export default function Navigation() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
   const dropdownRef = useRef<HTMLDivElement>(null);
   
+  // 스크롤 상태 관리
+  const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
+  
   // 자동 스크롤 훅들
   const counselingScroll = useAutoScroll();
   const aiAssistantScroll = useAutoScroll();
@@ -36,6 +39,50 @@ export default function Navigation() {
   const isLoggedIn = !!user && !loading;
   const userEmail = user?.email || "";
   const userName = user?.displayName || "";
+
+  // 스크롤 상태 감지 함수
+  const checkScrollState = (menuId: string, scrollElement: HTMLElement) => {
+    const canScrollUp = scrollElement.scrollTop > 0;
+    const canScrollDown = scrollElement.scrollTop < (scrollElement.scrollHeight - scrollElement.clientHeight);
+    
+    setScrollStates(prev => ({
+      ...prev,
+      [menuId]: { canScrollUp, canScrollDown }
+    }));
+  };
+
+  // 스크롤 이벤트 핸들러
+  const handleScroll = (menuId: string, event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    checkScrollState(menuId, target);
+  };
+
+  // 마우스 위치에 따른 동적 스크롤
+  const handleMouseMove = (menuId: string, event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const height = rect.height;
+    
+    // 상단 20% 영역에서 위로 스크롤
+    if (y < height * 0.2) {
+      const scrollElement = event.currentTarget.querySelector('.scrollable-content') as HTMLElement;
+      if (scrollElement) {
+        scrollElement.scrollTop = Math.max(0, scrollElement.scrollTop - 5);
+        checkScrollState(menuId, scrollElement);
+      }
+    }
+    // 하단 20% 영역에서 아래로 스크롤
+    else if (y > height * 0.8) {
+      const scrollElement = event.currentTarget.querySelector('.scrollable-content') as HTMLElement;
+      if (scrollElement) {
+        scrollElement.scrollTop = Math.min(
+          scrollElement.scrollHeight - scrollElement.clientHeight,
+          scrollElement.scrollTop + 5
+        );
+        checkScrollState(menuId, scrollElement);
+      }
+    }
+  };
 
   // 기본 useEffect들
   useEffect(() => {
@@ -725,16 +772,20 @@ export default function Navigation() {
                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('additional')}
                     onMouseLeave={() => setActiveMenu(null)}
+                    onMouseMove={(e) => handleMouseMove('additional', e)}
                   >
                     <div className="relative">
-                      {/* 상단 화살표 */}
-                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-                        <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-green-500/30"></div>
-                      </div>
+                      {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
+                      {scrollStates.additional?.canScrollUp && (
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
+                          <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-green-500/50 animate-pulse"></div>
+                        </div>
+                      )}
                       
                       <div 
                         ref={userMenuScroll.scrollRef}
-                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                        className="scrollable-content px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
+                        onScroll={(e) => handleScroll('additional', e)}
                         onMouseMove={userMenuScroll.handleMouseMove}
                         onMouseLeave={userMenuScroll.handleMouseLeave}
                       >
@@ -784,10 +835,12 @@ export default function Navigation() {
                         ))}
                       </div>
                       
-                      {/* 하단 화살표 */}
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-10">
-                        <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500/30"></div>
-                      </div>
+                      {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
+                      {scrollStates.additional?.canScrollDown && (
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-3 z-10">
+                          <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-green-500/50 animate-pulse"></div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -833,14 +886,20 @@ export default function Navigation() {
                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => setActiveMenu('counselor')}
                             onMouseLeave={() => setActiveMenu(null)}
+                            onMouseMove={(e) => handleMouseMove('counselor', e)}
                           >
                             <div className="relative">
-                              {/* 상단 화살표 */}
-                              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-                                <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-blue-500/30"></div>
-                              </div>
+                              {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
+                              {scrollStates.counselor?.canScrollUp && (
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
+                                  <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-blue-500/50 animate-pulse"></div>
+                                </div>
+                              )}
                               
-                              <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                              <div 
+                                className="scrollable-content px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                                onScroll={(e) => handleScroll('counselor', e)}
+                              >
                                 {counselorMenuItems.map((category) => (
                                   <div key={category.category} className="mb-4 last:mb-0">
                                     <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
@@ -924,14 +983,20 @@ export default function Navigation() {
                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => setActiveMenu('admin')}
                             onMouseLeave={() => setActiveMenu(null)}
+                            onMouseMove={(e) => handleMouseMove('admin', e)}
                           >
                             <div className="relative">
-                              {/* 상단 화살표 */}
-                              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-                                <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-blue-500/30"></div>
-                              </div>
+                              {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
+                              {scrollStates.admin?.canScrollUp && (
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
+                                  <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-blue-500/50 animate-pulse"></div>
+                                </div>
+                              )}
                               
-                              <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                              <div 
+                                className="scrollable-content px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                                onScroll={(e) => handleScroll('admin', e)}
+                              >
                                 {adminMenuItems.map((category) => (
                                   <div key={category.category} className="mb-4 last:mb-0">
                                     <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
@@ -1014,14 +1079,20 @@ export default function Navigation() {
                           className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                           onMouseEnter={() => setActiveMenu('user')}
                           onMouseLeave={() => setActiveMenu(null)}
+                          onMouseMove={(e) => handleMouseMove('user', e)}
                         >
                           <div className="relative">
-                            {/* 상단 화살표 */}
-                            <div className="absolute top-0 right-8 transform -translate-y-2 z-10">
-                              <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-green-500/30"></div>
-                            </div>
+                            {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
+                            {scrollStates.user?.canScrollUp && (
+                              <div className="absolute top-0 right-8 transform -translate-y-3 z-10">
+                                <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-green-500/50 animate-pulse"></div>
+                              </div>
+                            )}
                             
-                            <div className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown">
+                            <div 
+                              className="scrollable-content px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto auto-scroll-dropdown"
+                              onScroll={(e) => handleScroll('user', e)}
+                            >
                               {/* 사용자 정보 헤더 */}
                               <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
                                 <div className="flex items-center gap-3">
@@ -1094,10 +1165,12 @@ export default function Navigation() {
                               </div>
                             </div>
                             
-                            {/* 하단 화살표 */}
-                            <div className="absolute bottom-0 right-8 transform translate-y-2 z-10">
-                              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500/30"></div>
-                            </div>
+                            {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
+                            {scrollStates.user?.canScrollDown && (
+                              <div className="absolute bottom-0 right-8 transform translate-y-3 z-10">
+                                <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-green-500/50 animate-pulse"></div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
