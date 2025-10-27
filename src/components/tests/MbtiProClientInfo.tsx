@@ -347,7 +347,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       phone?: string; // 전화번호 오류 필드 추가
     } = {};
 
-    // 필수 필드 순서 정의: 고유번호/예명/별명, 출생연도, 성별, 결혼상태, 개인정보 수집 및 이용동의
+    // 필수 필드 순서 정의: 이름, 출생연도, 성별, 결혼상태, 검사코드, 비밀번호, 개인정보 수집 및 이용동의
     const requiredFields = [
       {
         key: 'name',
@@ -749,7 +749,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
             )}
 
-            {/* 고유번호/예명/별명 입력 - 상담 코드 스타일로 변경 */}
+            {/* 이름 입력 */}
             <div className="relative">
               <label htmlFor="nameField" className="block text-sm font-medium text-emerald-300 mb-1">
                 이름
