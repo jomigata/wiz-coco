@@ -352,7 +352,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       {
         key: 'name',
         condition: !name.trim(),
-        message: '고유번호/예명/별명을 입력해주세요.',
+        message: '이름을 입력해주세요.',
         element: nameRef.current,
         focusDelay: 300
       },
@@ -621,7 +621,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   }, []);
 
   return (
-    <div className="min-h-screen bg-emerald-950 text-white py-6 px-4 overflow-hidden relative">
+    <div className="min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative">
       {/* CSS 애니메이션 추가 */}
       <style jsx>{`
         @keyframes blink {
@@ -654,7 +654,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       <Navigation />
       
       {/* 상단 메뉴의 높이만큼 여백 추가 */}
-      <div className="h-10"></div>
+      <div className="h-4"></div>
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
@@ -752,7 +752,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             {/* 고유번호/예명/별명 입력 - 상담 코드 스타일로 변경 */}
             <div className="relative">
               <label htmlFor="nameField" className="block text-sm font-medium text-emerald-300 mb-1">
-                고유번호/예명/별명
+                이름
               </label>
                   <input 
                     type="text"
@@ -770,7 +770,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       }
                     }}
                     className={`w-full px-4 py-3 rounded-lg ${name.trim() ? 'bg-emerald-600' : 'bg-emerald-800/70'} border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors cursor-text`}
-                    placeholder="고유번호/예명/별명중 1가지만 입력해주세요"
+                    placeholder="이름을 입력해주세요"
                     autoComplete="off"
                     autoCapitalize="off"
                     autoCorrect="off"
@@ -988,8 +988,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               )}
             </div>
 
-            {/* 그룹 코드 및 비밀번호 입력 */}
-            {!showGroupCodeInput ? (
+            {/* 검사 코드 및 비밀번호 입력 - 항상 표시 및 필수 */}
+            {true && (
               <div className="flex justify-end">
                 <div className="relative">
                   <motion.button
@@ -999,7 +999,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     whileTap={{ scale: 0.95 }}
                     className={`px-6 py-2 ${getGroupCodeButtonColor()} text-emerald-200/80 text-sm font-medium rounded-lg shadow-sm hover:bg-emerald-700/60 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-emerald-900`}
                   >
-                    상담코드 입력 <span className='text-blue-400/50 text-xs'>(선택)</span>
+                    검사코드 입력 <span className='text-blue-400/50 text-xs'>(선택)</span>
                   </motion.button>
                 </div>
               </div>
@@ -1007,11 +1007,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               <div className="space-y-6 border border-blue-500/20 rounded-lg p-4 bg-blue-500/10 max-h-[90vh] overflow-y-auto md:space-y-6 space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#1e40af #1e3a8a30' }}>
                 <div className="pb-2 border-b border-white">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-blue-300">상담 코드 정보 <span className="text-blue-400/50 text-xs">(선택)</span></span>
+                    <span className="text-sm font-medium text-emerald-300">검사 코드</span>
                     <button 
                       onClick={() => setShowGroupCodeInput(false)} 
                       className="text-blue-400/70 hover:text-blue-400 transition-colors"
-                      title="상담코드 입력 숨기기"
+                      title="검사코드 입력 숨기기"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1069,7 +1069,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           }
                         }}
                         className={`w-full px-4 py-3 rounded-lg ${groupCode.trim() ? 'bg-emerald-600' : 'bg-emerald-800/70'} border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`}
-                        placeholder="상담 코드 입력"
+                        placeholder="검사 코드 입력"
                         autoComplete="new-password"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -1233,7 +1233,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             }
                           }}
                           className={`w-full px-4 py-3 rounded-lg ${groupPassword.trim() ? 'bg-emerald-600' : 'bg-emerald-800/70'} border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`}
-                          placeholder="비밀번호 입력"
+                          placeholder="비밀번호를 입력해주세요"
                           autoComplete="new-password"
                           autoCorrect="off"
                           autoCapitalize="off"
