@@ -391,10 +391,32 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   // 검사자 정보가 없으면 정보 입력 페이지 표시
   if (!clientInfo) {
     return (
-      <MbtiProClientInfo 
-        onSubmit={handleClientInfoSubmit} 
-        isPersonalTest={true}
-      />
+      <>
+        <Navigation />
+        <div className="relative min-h-screen pb-12 overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 z-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                  <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100" height="100" fill="url(#grid)" />
+            </svg>
+          </div>
+          
+          {/* Gradient orbs */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+
+          <MbtiProClientInfo 
+            onSubmit={handleClientInfoSubmit} 
+            isPersonalTest={true}
+          />
+        </div>
+      </>
     );
   }
 
