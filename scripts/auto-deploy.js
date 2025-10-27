@@ -167,12 +167,12 @@ function generateCommitMessage() {
   const now = new Date();
   const timestamp = now.toISOString().split('T')[0];
   
-  // 한국 시간으로 변환 (UTC+9) - toLocaleTimeString 대신 직접 계산하여 인코딩 문제 방지
+  // 한국 시간으로 변환 (UTC+9) - 영문으로 표시하여 인코딩 문제 완전 차단
   const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
   const hours = String(koreaTime.getUTCHours()).padStart(2, '0');
   const minutes = String(koreaTime.getUTCMinutes()).padStart(2, '0');
   const seconds = String(koreaTime.getUTCSeconds()).padStart(2, '0');
-  const time = `${hours}시 ${minutes}분 ${seconds}초`;
+  const time = `${hours}:${minutes}:${seconds}`;
   
   // 변경사항 분석하여 주요 변경사항 추출
   try {
