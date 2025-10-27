@@ -192,28 +192,28 @@ function generateCommitMessage() {
       docs: files.filter(f => f.includes('docs/') || f.includes('README'))
     };
     
-    // 주요 변경사항 식별
+    // 주요 변경사항 식별 (영문으로 변경하여 인코딩 문제 완전 차단)
     let mainChange = '';
     if (analysis.components.length > 0) {
-      mainChange = 'UI 컴포넌트 개선';
+      mainChange = 'UI Component Update';
     } else if (analysis.pages.length > 0) {
-      mainChange = '페이지 기능 업데이트';
+      mainChange = 'Page Feature Update';
     } else if (analysis.styles.length > 0) {
-      mainChange = '스타일 개선';
+      mainChange = 'Style Improvement';
     } else if (analysis.config.length > 0) {
-      mainChange = '설정 최적화';
+      mainChange = 'Config Optimization';
     } else if (analysis.scripts.length > 0) {
-      mainChange = '배포 시스템 개선';
+      mainChange = 'Deploy System Update';
     } else if (analysis.docs.length > 0) {
-      mainChange = '문서 업데이트';
+      mainChange = 'Documentation Update';
     } else {
-      mainChange = '코드 최적화';
+      mainChange = 'Code Optimization';
     }
     
-    return `🚀 ${mainChange} - ${timestamp} ${time}`;
+    return `${mainChange} - ${timestamp} ${time}`;
   } catch (error) {
     // 오류 발생 시 기본 메시지 사용
-    return `🚀 코드 업데이트 - ${timestamp} ${time}`;
+    return `Code Update - ${timestamp} ${time}`;
   }
 }
 
