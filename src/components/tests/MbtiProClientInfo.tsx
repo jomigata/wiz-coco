@@ -654,7 +654,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       <Navigation />
       
       {/* 상단 메뉴의 높이만큼 여백 추가 */}
-      <div className="h-20"></div>
+      <div className="h-48"></div>
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-10">

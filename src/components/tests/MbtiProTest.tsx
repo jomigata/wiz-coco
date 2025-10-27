@@ -391,32 +391,10 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   // 검사자 정보가 없으면 정보 입력 페이지 표시
   if (!clientInfo) {
     return (
-      <>
-        <Navigation />
-        <div className="relative min-h-screen pb-12 overflow-hidden">
-          {/* Background pattern */}
-          <div className="absolute inset-0 z-0 opacity-10">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-                  <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="100" height="100" fill="url(#grid)" />
-            </svg>
-          </div>
-          
-          {/* Gradient orbs */}
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-
-          <MbtiProClientInfo 
-            onSubmit={handleClientInfoSubmit} 
-            isPersonalTest={true}
-          />
-        </div>
-      </>
+      <MbtiProClientInfo 
+        onSubmit={handleClientInfoSubmit} 
+        isPersonalTest={true}
+      />
     );
   }
 
@@ -474,6 +452,10 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
       <div className="flex-1 bg-emerald-950 py-12 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-4">전문가용 MBTI 검사</h1>
+          </div>
+
           <div className="bg-emerald-900/50 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-emerald-700/50">
             <div className="flex justify-between items-center mb-6">
               <div className="text-emerald-200">문항 {currentQuestion + 1} / {totalQuestions}</div>
@@ -487,8 +469,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               />
             </div>
 
-            <div className="text-center mb-8">
-              <div className="relative overflow-hidden mb-8">
+            <div className="text-center mb-12">
+              <div className="h-[120px] relative overflow-hidden mb-10">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
@@ -498,9 +480,9 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                     animate="center"
                     exit="exit"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="bg-emerald-800/50 backdrop-blur-sm rounded-xl p-8 mb-6 flex items-center justify-center min-h-[80px] border border-emerald-700/20"
+                    className="bg-emerald-800/50 backdrop-blur-sm rounded-xl p-6 mb-8 flex items-center justify-center min-h-[120px] border border-emerald-700/20"
                   >
-                    <h2 className="text-xl text-white text-center leading-relaxed whitespace-normal px-4">
+                    <h2 className="text-xl text-white text-center">
                       {selectedQuestions[currentQuestion].text}
                     </h2>
                   </motion.div>
@@ -645,6 +627,12 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                     </div>
                   </button>
                 </div>
+              </div>
+
+              <div className="text-center mt-8">
+                <p className="text-base text-gray-400 font-medium">
+                  깊이 생각하지 않고, 자연스럽게 떠오르는 대로 선택해주세요.
+                </p>
               </div>
 
               <div className="flex justify-between mt-8">
