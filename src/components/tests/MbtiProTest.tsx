@@ -474,10 +474,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
       <div className="flex-1 bg-emerald-950 py-12 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-4">전문가용 MBTI 검사</h1>
-          </div>
-
           <div className="bg-emerald-900/50 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-emerald-700/50">
             <div className="flex justify-between items-center mb-6">
               <div className="text-emerald-200">문항 {currentQuestion + 1} / {totalQuestions}</div>
@@ -491,8 +487,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               />
             </div>
 
-            <div className="text-center mb-12">
-              <div className="h-[120px] relative overflow-hidden mb-10">
+            <div className="text-center mb-8">
+              <div className="relative overflow-hidden mb-8">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
@@ -502,9 +498,9 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                     animate="center"
                     exit="exit"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="bg-emerald-800/50 backdrop-blur-sm rounded-xl p-6 mb-8 flex items-center justify-center min-h-[120px] border border-emerald-700/20"
+                    className="bg-emerald-800/50 backdrop-blur-sm rounded-xl p-8 mb-6 flex items-center justify-center min-h-[80px] border border-emerald-700/20"
                   >
-                    <h2 className="text-xl text-white text-center">
+                    <h2 className="text-xl text-white text-center leading-relaxed whitespace-normal px-4">
                       {selectedQuestions[currentQuestion].text}
                     </h2>
                   </motion.div>
@@ -649,12 +645,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                     </div>
                   </button>
                 </div>
-              </div>
-
-              <div className="text-center mt-8">
-                <p className="text-base text-gray-400 font-medium">
-                  깊이 생각하지 않고, 자연스럽게 떠오르는 대로 선택해주세요.
-                </p>
               </div>
 
               <div className="flex justify-between mt-8">
