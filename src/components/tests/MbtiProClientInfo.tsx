@@ -621,7 +621,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   }, []);
 
   return (
-    <div className="min-h-screen bg-emerald-950 text-white py-12 px-4 overflow-hidden relative">
+    <div className="min-h-screen bg-emerald-950 text-white py-6 px-4 overflow-hidden relative">
       {/* CSS 애니메이션 추가 */}
       <style jsx>{`
         @keyframes blink {
@@ -654,10 +654,10 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       <Navigation />
       
       {/* 상단 메뉴의 높이만큼 여백 추가 */}
-      <div className="h-20"></div>
+      <div className="h-10"></div>
 
       <div className="max-w-2xl mx-auto relative z-10">
-        <div className="text-center mb-10">
+        <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-white mb-4">
             {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
           </h1>
