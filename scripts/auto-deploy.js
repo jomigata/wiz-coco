@@ -80,7 +80,12 @@ function executeCommand(command, description, options = {}) {
       gitOptions.timeout = 120000; // git push는 가장 긴 타임아웃
     }
     
-    const result = execSync(command, gitOptions);
+    let result = execSync(command, gitOptions);
+    
+    // 결과가 Buffer인 경우 UTF-8로 디코딩
+    if (Buffer.isBuffer(result)) {
+      result = result.toString('utf8');
+    }
     
     log(`✅ ${description} 완료`, 'green');
     if (result && result.trim()) {
@@ -336,9 +341,11 @@ async function attemptRecovery() {
         // 강제 커밋 시도
         const commitMessage = `🚀 자동 복구 커밋 - ${new Date().toISOString()}`;
         execSync(`git commit -m "${commitMessage}"`, { 
-          stdio: 'pipe', 
+          stdio: 'pipe',
+          encoding: 'utf8', 
           timeout: 45000,
-          cwd: process.cwd()
+          cwd: process.cwd(),
+          shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/bash'
         });
         log('✅ 강제 커밋 성공', 'green');
         
@@ -559,7 +566,9 @@ function fastDeploy() {
     
     execSync(`git commit -m "${commitMessage}"`, { 
       stdio: 'pipe',
-      cwd: process.cwd()
+      encoding: 'utf8',
+      cwd: process.cwd(),
+      shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/bash'
     });
     log('✅ 빠른 커밋 성공!', 'green');
     

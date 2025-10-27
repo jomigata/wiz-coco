@@ -988,8 +988,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               )}
             </div>
 
-            {/* 검사 코드 및 비밀번호 입력 - 항상 표시 및 필수 */}
-            {true && (
+            {/* 검사 코드 및 비밀번호 입력 - 항상 표시 */}
+            {!showGroupCodeInput ? (
               <div className="flex justify-end">
                 <div className="relative">
                   <motion.button
