@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
+import Navigation from '@/components/Navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 
 interface Answer {
@@ -391,6 +392,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   if (!clientInfo) {
     return (
       <>
+        <Navigation />
         <div className="relative min-h-screen pb-12 overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
@@ -464,6 +466,12 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       
+      {/* 상단 고정 메뉴 */}
+      <Navigation />
+      
+      {/* 상단 메뉴의 높이만큼 여백 추가 */}
+      <div className="h-20"></div>
+
       <div className="flex-1 bg-emerald-950 py-12 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
