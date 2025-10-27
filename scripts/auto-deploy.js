@@ -48,6 +48,14 @@ function executeCommand(command, description, options = {}) {
   log(`📝 명령어: ${command}`, 'cyan');
   
   try {
+    // UTF-8 인코딩 환경 변수 설정
+    const env = {
+      ...process.env,
+      LANG: 'en_US.UTF-8',
+      LC_ALL: 'en_US.UTF-8',
+      PYTHONIOENCODING: 'utf-8'
+    };
+    
     // Git 명령어에 대한 특별한 처리
     const gitOptions = {
       stdio: 'pipe',
@@ -55,6 +63,8 @@ function executeCommand(command, description, options = {}) {
       cwd: process.cwd(),
       timeout: 30000, // 30초 타임아웃
       maxBuffer: 1024 * 1024, // 1MB 버퍼
+      env: env,
+      shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/bash',
       ...options
     };
     
@@ -149,11 +159,15 @@ function checkGitStatus() {
 
 // 자동 커밋 메시지 생성 함수
 function generateCommitMessage() {
-  const timestamp = new Date().toISOString().split('T')[0];
-  const time = new Date().toLocaleTimeString('ko-KR', { 
-    hour12: false, 
-    timeZone: 'Asia/Seoul' 
-  });
+  const now = new Date();
+  const timestamp = now.toISOString().split('T')[0];
+  
+  // 한국 시간으로 변환 (UTC+9) - toLocaleTimeString 대신 직접 계산하여 인코딩 문제 방지
+  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  const hours = String(koreaTime.getUTCHours()).padStart(2, '0');
+  const minutes = String(koreaTime.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(koreaTime.getUTCSeconds()).padStart(2, '0');
+  const time = `${hours}시 ${minutes}분 ${seconds}초`;
   
   // 변경사항 분석하여 주요 변경사항 추출
   try {
