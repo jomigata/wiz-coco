@@ -371,7 +371,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
   // 단계별 렌더링
   if (currentStep === 'code') {
-    return <MbtiProCodeInput onSubmit={handleCodeSubmit} />;
+    return <MbtiProCodeInput onSubmit={handleCodeSubmit} initialData={codeData} />;
   }
 
   if (currentStep === 'info') {

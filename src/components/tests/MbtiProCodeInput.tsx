@@ -6,11 +6,12 @@ import Navigation from '@/components/Navigation';
 
 interface MbtiProCodeInputProps {
   onSubmit: (codeData: { groupCode: string; groupPassword: string }) => void;
+  initialData?: { groupCode: string; groupPassword: string } | null;
 }
 
-const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit }) => {
-  const [groupCode, setGroupCode] = useState<string>('');
-  const [groupPassword, setGroupPassword] = useState<string>('');
+const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialData }) => {
+  const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
+  const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
   const [errors, setErrors] = useState<{
     groupCode?: string;
     groupPassword?: string;
@@ -48,6 +49,20 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit }) => {
     };
   }, []);
 
+  // 로컬스토리지에서 초기값 복원 (페이지 간 이동 시 유지)
+  useEffect(() => {
+    try {
+      if (!initialData && typeof window !== 'undefined') {
+        const saved = localStorage.getItem('mbti_pro_code_data');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setGroupCode(parsed.groupCode || '');
+          setGroupPassword(parsed.groupPassword || '');
+        }
+      }
+    } catch {}
+  }, [initialData]);
+
   // 폼 유효성 검사
   const validateForm = (): boolean => {
     const newErrors: {
@@ -74,10 +89,16 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit }) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit({
+      const data = {
         groupCode: groupCode.trim(),
         groupPassword: groupPassword.trim()
-      });
+      };
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('mbti_pro_code_data', JSON.stringify(data));
+        }
+      } catch {}
+      onSubmit(data);
     }
   };
 
@@ -126,9 +147,9 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit }) => {
             전문가용 MBTI 검사
           </h1>
           <p className="text-emerald-300 max-w-lg mx-auto">
-            검사코드가 있다면 입력해주세요. 없다면 건너뛰고 검사를 진행할 수 있습니다.
+            검사코드가 없어도 검사를 진행할 수 있습니다.
             <br />
-            검사코드는 상담사가 제공한 코드를 입력하시면 됩니다.
+            검사코드는 상담사가 제공한 경우에만 입력하세요.
           </p>
         </div>
 
