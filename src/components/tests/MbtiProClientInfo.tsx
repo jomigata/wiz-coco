@@ -24,7 +24,7 @@ export interface ClientInfo {
   phone: string;
 }
 
-const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData }) => {
+const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData, onBack }) => {
   const router = useRouter();
   const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
   const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
