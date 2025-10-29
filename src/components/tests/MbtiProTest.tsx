@@ -42,8 +42,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [popupPosition, setPopupPosition] = useState<'bottom' | 'up'>('bottom');
   const [mouseIdleTimer, setMouseIdleTimer] = useState<NodeJS.Timeout | null>(null);
-  const [showCounselCodeModal, setShowCounselCodeModal] = useState<boolean>(false);
-  const [counselCode, setCounselCode] = useState<string>('');
   
   // 검사 단계 상태 추가
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
@@ -736,38 +734,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         </>
       )}
 
-      {/* 상담코드 입력 모달 */}
-      {showCounselCodeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-white mb-4">전문가용 MBTI 검사 시작</h3>
-            <p className="text-emerald-200 mb-4">
-              상담코드가 있다면 입력해주세요. 없다면 비워두고 검사를 진행할 수 있습니다.
-            </p>
-            <input
-              type="text"
-              value={counselCode}
-              onChange={(e) => setCounselCode(e.target.value)}
-              placeholder="상담코드 입력 (선택사항)"
-              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4"
-            />
-            <div className="flex justify-between">
-              <button
-                onClick={() => setShowCounselCodeModal(false)}
-                className="px-4 py-2 text-blue-300 hover:text-blue-200 transition-colors"
-              >
-                로그인하기
-              </button>
-              <button
-                onClick={handleCounselCodeSubmit}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-colors"
-              >
-                검사 시작
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
