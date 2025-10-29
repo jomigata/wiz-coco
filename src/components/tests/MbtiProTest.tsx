@@ -581,7 +581,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               </div>
               
               <div className="flex flex-col gap-8">
-                <div className="relative flex justify-between items-end gap-1 px-2">
+                <div className="relative flex justify-between items-end gap-3 px-2">
                   <div className="absolute top-0 left-0 right-0 h-24 bg-emerald-900/10 rounded-[100%/20px] -z-10"></div>
                   <button
                     onClick={() => handleAnswer(6)}
