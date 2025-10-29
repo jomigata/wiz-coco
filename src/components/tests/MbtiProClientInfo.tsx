@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ChangeEvent, FC, useEffect, useRef, useState, FormEvent } from 'react';
+import React, { ChangeEvent, FC, useEffect, useRef, useState, FormEvent, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -44,6 +44,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     phone?: string;
   }>({});
   const [isClient, setIsClient] = useState<boolean>(false);
+  const yearButtonRefs = useRef<HTMLButtonElement[]>([]);
   
   const birthYearRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
@@ -164,8 +165,25 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   };
 
   const currentYear = new Date().getFullYear();
-  // 7열 x 15행 = 105년을 한 화면에 표시
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  // 연도 배열 메모이제이션 (성능 최적화)
+  const years = useMemo(() => Array.from({ length: 100 }, (_, i) => currentYear - i), [currentYear]);
+
+  const handleYearKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const idxAttr = target.getAttribute('data-year-idx');
+    if (idxAttr == null) return;
+    const idx = parseInt(idxAttr, 10);
+    const cols = 10;
+    let next = idx;
+    if (e.key === 'ArrowRight') next = Math.min(years.length - 1, idx + 1);
+    else if (e.key === 'ArrowLeft') next = Math.max(0, idx - 1);
+    else if (e.key === 'ArrowDown') next = Math.min(years.length - 1, idx + cols);
+    else if (e.key === 'ArrowUp') next = Math.max(0, idx - cols);
+    else return;
+    e.preventDefault();
+    const btn = yearButtonRefs.current[next];
+    if (btn) btn.focus();
+  };
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative">
@@ -301,7 +319,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     exit={{ opacity: 0, y: -10 }}
                     className="year-selector absolute top-full left-0 right-0 mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
-                    <div className="grid grid-cols-10 gap-x-2 gap-y-1">
+                    <div className="grid grid-cols-10 gap-x-2 gap-y-1" onKeyDown={handleYearKeyDown}>
                       {years.map((year, idx) => {
                         const columnIndex = (idx % 10) + 1; // 1~10 (가로)
                         const rowIndex = Math.floor(idx / 10) + 1; // 1~N (세로)
@@ -310,6 +328,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         <motion.button
                           key={year}
                           type="button"
+                          ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
+                          data-year-idx={idx}
                           onClick={() => {
                             setBirthYear(year);
                             setShowYearSelector(false);
@@ -322,7 +342,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded transition-colors ${
                             birthYear === year
                               ? 'bg-emerald-600 text-white border-2 border-emerald-500'
-                              : `${blueBand ? 'bg-sky-900/30' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
+                              : `${blueBand ? 'bg-sky-800/40' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
                           style={{ height: '70%' }}
                         >
@@ -437,10 +457,19 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             <div 
               className={`bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
               ref={privacyRef}
+              role="button"
+              aria-pressed={privacyAgreed}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePrivacyChange();
+                }
+              }}
               onClick={(e) => {
                 const target = e.target as HTMLElement;
-                // 체크박스 자체 클릭은 기본 동작 유지 (이중 토글 방지)
-                if (target.closest('input[type="checkbox"]')) return;
+                // 체크박스 또는 해당 라벨 클릭은 기본 동작 유지 (이중 토글 방지)
+                if (target.closest('input[type="checkbox"]') || target.closest('label[for="privacy"]')) return;
                 handlePrivacyChange();
               }}
             >
