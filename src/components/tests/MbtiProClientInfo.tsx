@@ -276,7 +276,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     exit={{ opacity: 0, y: -10 }}
                     className="year-selector mt-3 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
-                    <div className="grid grid-cols-10 gap-2">
+                    <div className="grid grid-cols-10 gap-x-2 gap-y-1">
                       {years.map((year) => (
                         <motion.button
                           key={year}
@@ -290,7 +290,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           }}
                           whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
-                          className={`px-3 py-2 text-sm font-medium rounded transition-colors ${
+                          className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded transition-colors ${
                             birthYear === year
                               ? 'bg-emerald-600 text-white border-2 border-emerald-500'
                               : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
