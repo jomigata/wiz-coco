@@ -399,6 +399,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           <MbtiProClientInfo 
             onSubmit={handleClientInfoSubmit} 
             isPersonalTest={true}
+            initialData={clientInfo}
           />
         </div>
       </>
@@ -456,8 +457,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       {/* 상단 고정 메뉴 */}
       <Navigation />
       
-      {/* 상단 메뉴의 높이만큼 여백 추가 (50% 축소) */}
-      <div className="h-10"></div>
+      {/* 상단 메뉴의 높이만큼 여백 추가 (기본정보 화면과 동일) */}
+      <div className="h-4"></div>
 
       <div className="flex-1 bg-emerald-950 py-12 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-3xl mx-auto">

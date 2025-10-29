@@ -9,6 +9,7 @@ import Navigation from '@/components/Navigation';
 interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
   isPersonalTest?: boolean;
+  initialData?: ClientInfo | null;
 }
 
 export interface ClientInfo {
@@ -22,17 +23,17 @@ export interface ClientInfo {
   phone: string;
 }
 
-const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest }) => {
+const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData }) => {
   const router = useRouter();
-  const [birthYear, setBirthYear] = useState<number>(0);
-  const [groupCode, setGroupCode] = useState<string>('');
-  const [groupPassword, setGroupPassword] = useState<string>('');
-  const [gender, setGender] = useState<string>('');
-  const [maritalStatus, setMaritalStatus] = useState<string>('');
-  const [name, setName] = useState<string>('');
+  const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
+  const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
+  const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
+  const [gender, setGender] = useState<string>(initialData?.gender || '');
+  const [maritalStatus, setMaritalStatus] = useState<string>(initialData?.maritalStatus || '');
+  const [name, setName] = useState<string>(initialData?.name || '');
   const [showYearSelector, setShowYearSelector] = useState<boolean>(false);
-  const [privacyAgreed, setPrivacyAgreed] = useState<boolean>(true);
-  const [phone, setPhone] = useState<string>('');
+  const [privacyAgreed, setPrivacyAgreed] = useState<boolean>(initialData?.privacyAgreed ?? true);
+  const [phone, setPhone] = useState<string>(initialData?.phone || '');
   const [errors, setErrors] = useState<{
     birthYear?: string;
     gender?: string;
@@ -53,6 +54,20 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // initialData가 변경되면 상태 업데이트
+  useEffect(() => {
+    if (initialData) {
+      setBirthYear(initialData.birthYear || 0);
+      setGroupCode(initialData.groupCode || '');
+      setGroupPassword(initialData.groupPassword || '');
+      setGender(initialData.gender || '');
+      setMaritalStatus(initialData.maritalStatus || '');
+      setName(initialData.name || '');
+      setPrivacyAgreed(initialData.privacyAgreed ?? true);
+      setPhone(initialData.phone || '');
+    }
+  }, [initialData]);
 
   // 연도 선택기 외부 클릭 시 닫기
   useEffect(() => {
