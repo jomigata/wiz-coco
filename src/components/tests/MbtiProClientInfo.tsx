@@ -54,6 +54,23 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     setIsClient(true);
   }, []);
 
+  // 연도 선택기 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showYearSelector && birthYearRef.current && !birthYearRef.current.contains(event.target as Node)) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.year-selector')) {
+          setShowYearSelector(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showYearSelector]);
+
   const validateForm = (): boolean => {
     const newErrors: {
       birthYear?: string;
@@ -195,45 +212,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
             )}
 
-            {/* 출생년도 */}
-            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
-              <div className="mt-4">
-                <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
-                  출생년도 <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="birth-year-field"
-                    name="birth_year_random_name"
-                    value={birthYear || ''}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      const value = parseInt(e.target.value);
-                      setBirthYear(value);
-                      if (errors.birthYear) {
-                        setErrors(prev => ({ ...prev, birthYear: undefined }));
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    placeholder="출생년도를 입력하세요"
-                    min="1950"
-                    max="2010"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    data-form-type="other"
-                    data-lpignore="true"
-                    aria-autocomplete="none"
-                    ref={birthYearRef}
-                  />
-                </div>
-                {errors.birthYear && (
-                  <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
-                )}
-              </div>
-            </div>
-
             {/* 이름 */}
             <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
               <div className="mt-2">
@@ -257,10 +235,79 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
             </div>
 
+            {/* 출생년도 */}
+            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
+              <div className="mt-2">
+                <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
+                  출생년도 <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="birth-year-field"
+                    name="birth_year_random_name"
+                    value={birthYear || ''}
+                    onClick={() => setShowYearSelector(true)}
+                    readOnly
+                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors cursor-pointer"
+                    placeholder="출생년도를 선택하세요"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    data-form-type="other"
+                    data-lpignore="true"
+                    aria-autocomplete="none"
+                    ref={birthYearRef}
+                  />
+                </div>
+                {errors.birthYear && (
+                  <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
+                )}
+              </div>
+              
+              {/* 연도 선택 그리드 */}
+              {showYearSelector && (
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="year-selector mt-3 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+                  >
+                    <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#047857 #065f46'}}>
+                      {years.map((year) => (
+                        <motion.button
+                          key={year}
+                          type="button"
+                          onClick={() => {
+                            setBirthYear(year);
+                            setShowYearSelector(false);
+                            if (errors.birthYear) {
+                              setErrors(prev => ({ ...prev, birthYear: undefined }));
+                            }
+                          }}
+                          whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-3 py-2 text-sm font-medium rounded transition-colors ${
+                            birthYear === year
+                              ? 'bg-emerald-600 text-white border-2 border-emerald-500'
+                              : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
+                          }`}
+                        >
+                          {year}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
+
             {/* 성별과 결혼상태 */}
             <div className="grid grid-cols-2 gap-4">
               {/* 성별 */}
-              <div className="bg-blue-500/15 p-4 rounded-lg border border-blue-400/20">
+              <div className="bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
                 <div className="mt-2">
                   <label className="block text-sm font-medium text-emerald-300 mb-1">
                     성별 <span className="text-red-400">*</span>
@@ -273,7 +320,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
                         gender === '남성'
-                          ? 'bg-blue-600 text-white border-2 border-blue-500'
+                          ? 'bg-teal-600 text-white border-2 border-teal-500'
                           : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
                       }`}
                     >
@@ -289,7 +336,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
                         gender === '여성'
-                          ? 'bg-blue-600 text-white border-2 border-blue-500'
+                          ? 'bg-teal-600 text-white border-2 border-teal-500'
                           : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
                       }`}
                     >
