@@ -60,9 +60,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       if (showYearSelector && birthYearRef.current && !birthYearRef.current.contains(event.target as Node)) {
         const target = event.target as HTMLElement;
         if (!target.closest('.year-selector')) {
-          setShowYearSelector(false);
-        }
+        setShowYearSelector(false);
       }
+    }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -81,7 +81,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       phone?: string;
     } = {};
 
-    if (!birthYear || birthYear < 1950 || birthYear > 2010) {
+    const currentYear = new Date().getFullYear();
+    const minYear = currentYear - 100;
+    if (!birthYear || birthYear < minYear || birthYear > currentYear) {
       newErrors.birthYear = '올바른 출생년도를 입력해주세요.';
     }
 
@@ -218,37 +220,37 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               <div className="mt-2">
                 <label htmlFor="name-field" className="block text-sm font-medium text-emerald-300 mb-1">
                   이름 <span className="text-emerald-400/60 text-xs">(선택)</span>
-                </label>
-                <input
-                  type="text"
+              </label>
+                  <input 
+                    type="text"
                   id="name-field"
                   name="name_random_field"
-                  value={name}
+                    value={name}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                   placeholder="이름을 입력하세요"
-                  autoComplete="off"
-                  autoCorrect="off"
+                    autoComplete="off"
+                    autoCorrect="off"
                   autoCapitalize="off"
-                  spellCheck="false"
+                    spellCheck="false"
                   ref={nameRef}
                 />
               </div>
             </div>
 
             {/* 출생년도 */}
-            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
+            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 relative">
               <div className="mt-2">
                 <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
                   출생년도 <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
                     id="birth-year-field"
                     name="birth_year_random_name"
                     value={birthYear || ''}
-                    onClick={() => setShowYearSelector(true)}
+                  onClick={() => setShowYearSelector(true)}
                     readOnly
                     className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors cursor-pointer"
                     placeholder="출생년도를 선택하세요"
@@ -274,7 +276,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="year-selector mt-3 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+                    className="year-selector absolute top-full left-0 right-0 mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
                     <div className="grid grid-cols-10 gap-x-2 gap-y-1">
                       {years.map((year) => (
@@ -307,19 +309,19 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             </div>
 
             {/* 성별과 결혼상태 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid grid-cols-2 gap-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {/* 성별 */}
               <div className="bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
                 <div className="mt-2">
                   <label className="block text-sm font-medium text-emerald-300 mb-1">
                     성별 <span className="text-red-400">*</span>
-                  </label>
+              </label>
                   <div className="grid grid-cols-2 gap-2">
-                    <motion.button
-                      type="button"
+                <motion.button
+                  type="button"
                       onClick={() => handleGenderSelect('남성')}
                       whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
                         gender === '남성'
                           ? 'bg-teal-600 text-white border-2 border-teal-500'
@@ -330,12 +332,12 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         <span className="mr-1">👨</span>
                         남성
                       </div>
-                    </motion.button>
-                    <motion.button
-                      type="button"
+                </motion.button>
+                <motion.button
+                  type="button"
                       onClick={() => handleGenderSelect('여성')}
                       whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
                         gender === '여성'
                           ? 'bg-teal-600 text-white border-2 border-teal-500'
@@ -346,28 +348,28 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         <span className="mr-1">👩</span>
                         여성
                       </div>
-                    </motion.button>
-                  </div>
-                  {errors.gender && (
-                    <p className="mt-2 text-sm text-red-400">{errors.gender}</p>
-                  )}
-                </div>
+                </motion.button>
               </div>
+              {errors.gender && (
+                    <p className="mt-2 text-sm text-red-400">{errors.gender}</p>
+              )}
+                </div>
+            </div>
 
               {/* 결혼상태 */}
               <div className="bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
                 <div className="mt-2">
                   <label className="block text-sm font-medium text-emerald-300 mb-1">
                     결혼 상태 <span className="text-red-400">*</span>
-                  </label>
+              </label>
                   <div className="grid grid-cols-2 gap-2">
-                    <motion.button
-                      type="button"
+                <motion.button
+                  type="button"
                       onClick={() => handleMaritalStatusSelect('미혼')}
                       whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                        maritalStatus === '미혼'
+                    maritalStatus === '미혼'
                           ? 'bg-teal-600 text-white border-2 border-teal-500'
                           : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
                       }`}
@@ -376,14 +378,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         <span className="mr-1">💍</span>
                         미혼
                       </div>
-                    </motion.button>
-                    <motion.button
-                      type="button"
+                </motion.button>
+                <motion.button
+                  type="button"
                       onClick={() => handleMaritalStatusSelect('기혼')}
                       whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                        maritalStatus === '기혼'
+                    maritalStatus === '기혼'
                           ? 'bg-teal-600 text-white border-2 border-teal-500'
                           : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
                       }`}
@@ -392,20 +394,20 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         <span className="mr-1">💑</span>
                         기혼
                       </div>
-                    </motion.button>
-                  </div>
-                  {errors.maritalStatus && (
-                    <p className="mt-2 text-sm text-red-400">{errors.maritalStatus}</p>
-                  )}
-                </div>
+                </motion.button>
               </div>
+              {errors.maritalStatus && (
+                    <p className="mt-2 text-sm text-red-400">{errors.maritalStatus}</p>
+              )}
             </div>
-
+                  </div>
+                </div>
+                
             {/* 검사코드 입력 부분은 별도 화면으로 분리됨 */}
 
             {/* 개인정보 활용 동의 */}
             <div 
-              className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 cursor-pointer hover:bg-emerald-800/40 transition-colors"
+              className={`bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 cursor-pointer hover:bg-emerald-800/40 transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
               onClick={handlePrivacyChange}
               ref={privacyRef}
             >
@@ -433,7 +435,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               )}
             </div>
 
-            <div className="flex justify-center pt-4">
+            <div className={`flex justify-center pt-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.05 }}
