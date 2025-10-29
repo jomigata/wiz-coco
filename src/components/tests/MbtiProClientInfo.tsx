@@ -901,7 +901,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             {/* 성별 및 결혼 상태 - 한 줄에 배치 */}
             <div className="grid grid-cols-2 gap-4">
               {/* 성별 선택 */}
-              <div className="w-full bg-blue-900/20 p-4 rounded-lg border border-blue-700/30">
+              <div className="w-full bg-blue-500/15 p-4 rounded-lg border border-blue-400/20">
                 <label className="block text-sm font-medium text-emerald-300 mb-3">
                   성별
                 </label>
@@ -945,7 +945,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
 
               {/* 결혼 상태 선택 */}
-              <div className="w-full bg-purple-900/20 p-4 rounded-lg border border-purple-700/30">
+              <div className="w-full bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
                 <label className="block text-sm font-medium text-emerald-300 mb-3">
                   결혼 상태
                 </label>
