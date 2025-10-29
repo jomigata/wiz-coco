@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
+import MbtiProCodeInput from './MbtiProCodeInput';
 import Navigation from '@/components/Navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 
@@ -43,6 +44,10 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   const [mouseIdleTimer, setMouseIdleTimer] = useState<NodeJS.Timeout | null>(null);
   const [showCounselCodeModal, setShowCounselCodeModal] = useState<boolean>(false);
   const [counselCode, setCounselCode] = useState<string>('');
+  
+  // 검사 단계 상태 추가
+  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
+  const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
@@ -75,14 +80,14 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     return type;
   };
 
-  // 상담코드 확인 함수
-  const handleCounselCodeSubmit = () => {
-    setShowCounselCodeModal(false);
-    // 상담코드가 있든 없든 검사 진행
-    if (counselCode.trim()) {
-      console.log(`상담코드 ${counselCode}로 검사를 시작합니다.`);
-    }
+  // 검사코드 입력 핸들러
+  const handleCodeSubmit = (codeData: { groupCode: string; groupPassword: string }) => {
+    console.log('MbtiProTest - 검사코드 제출:', codeData);
+    setCodeData(codeData);
+    setCurrentStep('info');
   };
+
+  // 클라이언트 정보 제출 핸들러 (기존 함수 수정)
 
   useEffect(() => {
     // clientInfo가 있을 때만 질문을 준비합니다
@@ -127,10 +132,11 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       return;
     }
     
-    // 상담코드 추가하여 완성된 정보 생성
+    // 검사코드 데이터와 클라이언트 정보를 결합
     const completeInfo: ClientInfo = {
       ...info,
-      groupCode: counselCode || info.groupCode || '',
+      groupCode: codeData?.groupCode || '',
+      groupPassword: codeData?.groupPassword || '',
       privacyAgreed: info.privacyAgreed || false
     };
     
@@ -138,6 +144,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     
     // 상태 업데이트
     setClientInfo(completeInfo);
+    setCurrentStep('test');
     
     console.log('MbtiProTest - 클라이언트 정보 설정 완료, 검사 시작');
   };
@@ -388,8 +395,12 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     })
   };
 
-  // 검사자 정보가 없으면 정보 입력 페이지 표시
-  if (!clientInfo) {
+  // 단계별 렌더링
+  if (currentStep === 'code') {
+    return <MbtiProCodeInput onSubmit={handleCodeSubmit} />;
+  }
+
+  if (currentStep === 'info') {
     return (
       <>
         <Navigation />
@@ -419,6 +430,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       </>
     );
   }
+
+  // 검사 단계 (currentStep === 'test')
 
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
 

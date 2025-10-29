@@ -991,27 +991,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
             </div>
 
-            {/* 검사 코드 및 비밀번호 입력 - 항상 표시 */}
-            {!showGroupCodeInput ? (
-              <div className="flex justify-end">
-                <div className="relative">
-                  <motion.button
-                    type="button"
-                    onClick={handleGroupCodeButtonClick}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-6 py-2 ${getGroupCodeButtonColor()} text-emerald-200/80 text-sm font-medium rounded-lg shadow-sm hover:bg-emerald-700/60 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-emerald-900`}
-                  >
-                    검사코드 입력 <span className='text-blue-400/50 text-xs'>(선택)</span>
-                  </motion.button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6 border border-blue-500/20 rounded-lg p-4 bg-blue-500/10 max-h-[90vh] overflow-y-auto md:space-y-6 space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#1e40af #1e3a8a30' }}>
-                <div className="pb-2 border-b border-white">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-emerald-300">검사 코드</span>
-                    <button 
+            {/* 검사코드 입력 부분은 별도 화면으로 분리됨 */}
+
+            {/* 개인정보 활용 동의 */}
+            <div 
+              className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 cursor-pointer hover:bg-emerald-800/40 transition-colors"
+              onClick={() => setPrivacyAgreed(!privacyAgreed)}
+              ref={privacyRef}
+            > 
                       onClick={() => setShowGroupCodeInput(false)} 
                       className="text-blue-400/70 hover:text-blue-400 transition-colors"
                       title="검사코드 입력 숨기기"
