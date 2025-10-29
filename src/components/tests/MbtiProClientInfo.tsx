@@ -10,6 +10,7 @@ interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
   isPersonalTest?: boolean;
   initialData?: ClientInfo | null;
+  onBack?: (clientInfo: ClientInfo) => void;
 }
 
 export interface ClientInfo {
@@ -450,7 +451,36 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               )}
             </div>
 
-            <div className={`flex justify-center pt-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className={`flex justify-between items-center pt-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="px-5 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg shadow-sm hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-emerald-900"
+                onClick={() => {
+                  const currentInfo: ClientInfo = {
+                    birthYear,
+                    groupCode,
+                    groupPassword,
+                    gender,
+                    maritalStatus,
+                    name: name.trim(),
+                    privacyAgreed,
+                    phone: phone.trim()
+                  };
+                  try {
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('mbti_pro_client_info', JSON.stringify(currentInfo));
+                    }
+                  } catch {}
+                  if (typeof onBack === 'function') {
+                    onBack(currentInfo);
+                  }
+                }}
+              >
+                이전 페이지
+              </motion.button>
+
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.05 }}

@@ -400,6 +400,11 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
             onSubmit={handleClientInfoSubmit} 
             isPersonalTest={true}
             initialData={clientInfo}
+            onBack={(info) => {
+              // 입력값 유지하며 검사코드 단계로 이동
+              setClientInfo(info);
+              setCurrentStep('code');
+            }}
           />
         </div>
       </>
