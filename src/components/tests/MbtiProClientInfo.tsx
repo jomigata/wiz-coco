@@ -111,7 +111,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       newErrors.maritalStatus = '결혼 상태를 선택해주세요.';
     }
 
-    if (!name || name.trim() === '') {
+    if (!name || !name.trim()) {
       newErrors.name = '이름(가명)을 입력해주세요.';
     }
 
@@ -235,11 +235,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
             )}
 
-            {/* 이름 */}
+            {/* 이름(가명) */}
             <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
               <div className="mt-2">
                 <label htmlFor="name-field" className="block text-sm font-medium text-emerald-300 mb-1">
-                  이름 (가명) <span className="text-red-400">*</span>
+                  이름(가명) <span className="text-red-400">*</span>
               </label>
                   <input 
                     type="text"
@@ -302,60 +302,31 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     className="year-selector absolute top-full left-0 right-0 mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
                     <div className="grid grid-cols-10 gap-x-2 gap-y-1">
-                      {years.map((year, index) => {
-                        // 그라데이션 계산: 최신 년도(0)는 진한 초록, 오래된 년도는 연한 초록으로 변화
-                        // 10년 단위로 색상 변화를 두드러지게 하여 년도 구분 용이
-                        const decadeIndex = Math.floor(index / 10);
-                        const maxDecades = Math.floor(years.length / 10);
-                        const gradientRatio = decadeIndex / Math.max(maxDecades - 1, 1);
-                        
-                        // HSL 색상 값 계산: 년도대별로 구분되도록 조정
-                        const hue = 160 - (gradientRatio * 25); // 160 (진한 초록)에서 135 (연한 청록)으로
-                        const saturation = 55 + (gradientRatio * 25); // 55%에서 80%로
-                        const lightness = 25 + (gradientRatio * 20); // 25%에서 45%로
-                        
-                        const bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-                        const borderColor = `hsl(${hue}, ${saturation}%, ${Math.min(lightness + 12, 60)}%)`;
-                        const hoverColor = `hsl(${hue}, ${saturation}%, ${Math.min(lightness + 8, 50)}%)`;
-                        
+                      {years.map((year, idx) => {
+                        const columnIndex = (idx % 10) + 1; // 1~10
+                        const blueBand = columnIndex >= 4 && columnIndex <= 7;
                         return (
-                          <motion.button
-                            key={year}
-                            type="button"
-                            onClick={() => {
-                              setBirthYear(year);
-                              setShowYearSelector(false);
-                              if (errors.birthYear) {
-                                setErrors(prev => ({ ...prev, birthYear: undefined }));
-                              }
-                            }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded transition-all ${
-                              birthYear === year
-                                ? 'bg-emerald-600 text-white border-2 border-emerald-400 shadow-lg ring-2 ring-emerald-400/50'
-                                : 'text-emerald-100 border hover:border-emerald-500'
-                            }`}
-                            style={{ 
-                              height: '70%',
-                              backgroundColor: birthYear === year ? undefined : `${bgColor}dd`,
-                              borderColor: birthYear === year ? undefined : borderColor,
-                            }}
-                            onMouseEnter={(e) => {
-                              if (birthYear !== year) {
-                                e.currentTarget.style.backgroundColor = hoverColor;
-                                e.currentTarget.style.borderColor = borderColor;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (birthYear !== year) {
-                                e.currentTarget.style.backgroundColor = `${bgColor}dd`;
-                                e.currentTarget.style.borderColor = borderColor;
-                              }
-                            }}
-                          >
-                            {year}
-                          </motion.button>
+                        <motion.button
+                          key={year}
+                          type="button"
+                          onClick={() => {
+                            setBirthYear(year);
+                            setShowYearSelector(false);
+                            if (errors.birthYear) {
+                              setErrors(prev => ({ ...prev, birthYear: undefined }));
+                            }
+                          }}
+                          whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded transition-colors ${
+                            birthYear === year
+                              ? 'bg-emerald-600 text-white border-2 border-emerald-500'
+                              : `${blueBand ? 'bg-sky-900/30' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
+                          }`}
+                          style={{ height: '70%' }}
+                        >
+                          {year}
+                        </motion.button>
                         );
                       })}
                     </div>
@@ -463,8 +434,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
             {/* 개인정보 활용 동의 */}
             <div 
-              className={`bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 cursor-pointer hover:bg-emerald-800/40 transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
-              onClick={handlePrivacyChange}
+              className={`bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
               ref={privacyRef}
             >
               <div className="flex items-start">
@@ -474,15 +444,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     type="checkbox"
                     checked={privacyAgreed}
                     onChange={handlePrivacyChange}
-                    className="w-4 h-4 text-emerald-600 bg-emerald-900 border-emerald-500 rounded focus:ring-emerald-500 focus:ring-2 cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 text-emerald-600 bg-emerald-900 border-emerald-500 rounded focus:ring-emerald-500 focus:ring-2"
                   />
                 </div>
-                <div className="ml-3 text-sm cursor-pointer flex-1">
-                  <label htmlFor="privacy" className="font-medium text-emerald-200 cursor-pointer block select-none">
+                <div className="ml-3 text-sm">
+                  <label htmlFor="privacy" onClick={handlePrivacyChange} className="font-medium text-emerald-200 cursor-pointer select-none">
                     개인정보 활용 동의 <span className="text-red-400">*</span>
                   </label>
-                  <p className="text-emerald-300/80 mt-1 cursor-pointer select-none">
+                  <p className="text-emerald-300/80 mt-1 cursor-pointer select-none" onClick={handlePrivacyChange}>
                     검사 결과 분석 및 상담을 위한 개인정보 수집·이용에 동의합니다.
                   </p>
                 </div>
