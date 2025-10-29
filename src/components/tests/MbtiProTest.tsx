@@ -340,32 +340,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         setCurrentQuestion(prev => prev - 1);
       }, 100);
     } else {
-      // 첫 번째 질문에서는 개인정보 입력 페이지로 돌아감
-      // 이전 정보를 보존하기 위해 clientInfo를 상태로 유지
-      const previousInfo = {...clientInfo};
-      
-      // clientInfo 초기화 전 로컬스토리지에 저장
-      if (typeof window !== 'undefined' && previousInfo) {
-        localStorage.setItem('mbti_pro_client_info', JSON.stringify(previousInfo));
-      }
-      
-      // clientInfo를 null로 설정하여 MbtiProClientInfo 컴포넌트로 돌아감
-      setClientInfo(null);
-      
-      // 다음 렌더링 사이클에서 MbtiProClientInfo가 렌더링된 후 초기값 설정
-      setTimeout(() => {
-        const infoElement = document.getElementById('client-info-form');
-        if (infoElement && previousInfo) {
-          // 개인 정보 유지를 위한 이벤트 발생
-          const infoEvent = new CustomEvent('restore-info', { 
-            detail: previousInfo
-          });
-          infoElement.dispatchEvent(infoEvent);
-          
-          // 콘솔에 디버그 로그
-          console.log('이전 정보로 복원 시도:', previousInfo);
-        }
-      }, 200);
+      // 첫 번째 질문에서는 기본정보 입력 단계로 이동
+      setCurrentStep('info');
     }
   };
 
@@ -480,12 +456,12 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       {/* 상단 고정 메뉴 */}
       <Navigation />
       
-      {/* 상단 메뉴의 높이만큼 여백 추가 */}
-      <div className="h-20"></div>
+      {/* 상단 메뉴의 높이만큼 여백 추가 (50% 축소) */}
+      <div className="h-10"></div>
 
       <div className="flex-1 bg-emerald-950 py-12 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-8">
+          <div className="text-center mb-4">
             <h1 className="text-3xl font-bold text-white mb-4">전문가용 MBTI 검사</h1>
           </div>
 
@@ -640,26 +616,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   </button>
                 </div>
                 
-                <div className="flex justify-center mt-2">
-                  <button
-                    onClick={() => handleAnswer(0)}
-                    className={`group relative w-1/2 py-3 px-10 rounded-2xl bg-emerald-900/20 transition-all duration-300 border border-emerald-800/10 ${isMouseMoved ? 'hover:bg-emerald-900/30 hover:translate-y-[-2px]' : ''}`}
-                  >
-                    {answers[currentQuestion] === 0 && (
-                      <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-emerald-600/50 flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-2">
-                      <div className="w-8 h-8 rounded-full bg-emerald-800/50 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
-                        <span className="text-white/80 text-base font-bold">G</span>
-                      </div>
-                      <span className="text-base font-bold text-emerald-500/50">모르겠다</span>
-                    </div>
-                  </button>
-                </div>
+                {/* G(모르겠다) 옵션 제거 */}
               </div>
 
               <div className="text-center mt-8">
