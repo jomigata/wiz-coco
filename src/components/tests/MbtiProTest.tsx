@@ -586,6 +586,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <button
                     onClick={() => handleAnswer(6)}
                     className={`group relative py-10 px-4 flex-1 rounded-xl bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(56, 189, 248, 0.05), rgba(6, 78, 59, 0.4))' }}
                   >
                     {answers[currentQuestion] === 6 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -605,6 +606,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <button
                     onClick={() => handleAnswer(5)}
                     className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(56, 189, 248, 0.05), rgba(6, 78, 59, 0.4))' }}
                   >
                     {answers[currentQuestion] === 5 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -624,6 +626,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <button
                     onClick={() => handleAnswer(4)}
                     className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(56, 189, 248, 0.05), rgba(6, 78, 59, 0.4))' }}
                   >
                     {answers[currentQuestion] === 4 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -643,6 +646,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <button
                     onClick={() => handleAnswer(3)}
                     className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(251, 146, 60, 0.05), rgba(6, 78, 59, 0.4))' }}
                   >
                     {answers[currentQuestion] === 3 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -662,6 +666,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <button
                     onClick={() => handleAnswer(2)}
                     className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
+                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(251, 146, 60, 0.05), rgba(6, 78, 59, 0.4))' }}
                   >
                     {answers[currentQuestion] === 2 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -681,6 +686,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <button
                     onClick={() => handleAnswer(1)}
                     className={`group relative py-10 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
+                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(251, 146, 60, 0.05), rgba(6, 78, 59, 0.4))' }}
                   >
                     {answers[currentQuestion] === 1 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
