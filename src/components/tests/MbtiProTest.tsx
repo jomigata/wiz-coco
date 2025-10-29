@@ -585,8 +585,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                   <div className="absolute top-0 left-0 right-0 h-24 bg-emerald-900/10 rounded-[100%/20px] -z-10"></div>
                   <button
                     onClick={() => handleAnswer(6)}
-                    className={`group relative py-10 px-4 flex-1 rounded-xl bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
-                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(56, 189, 248, 0.05), rgba(6, 78, 59, 0.4))' }}
+                    className={`group relative py-10 px-4 flex-1 rounded-xl bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-sky-400/60 after:to-transparent after:rounded-b-xl after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
                   >
                     {answers[currentQuestion] === 6 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -605,8 +604,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(5)}
-                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
-                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(56, 189, 248, 0.05), rgba(6, 78, 59, 0.4))' }}
+                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-sky-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
                   >
                     {answers[currentQuestion] === 5 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -625,8 +623,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(4)}
-                    className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
-                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(56, 189, 248, 0.05), rgba(6, 78, 59, 0.4))' }}
+                    className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-sky-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
                   >
                     {answers[currentQuestion] === 4 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -645,8 +642,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(3)}
-                    className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
-                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(251, 146, 60, 0.05), rgba(6, 78, 59, 0.4))' }}
+                    className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-pink-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
                   >
                     {answers[currentQuestion] === 3 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -665,8 +661,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(2)}
-                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
-                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(251, 146, 60, 0.05), rgba(6, 78, 59, 0.4))' }}
+                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-pink-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
                   >
                     {answers[currentQuestion] === 2 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -685,8 +680,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(1)}
-                    className={`group relative py-10 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
-                    style={{ background: 'linear-gradient(to bottom, rgba(6, 78, 59, 0.4), rgba(251, 146, 60, 0.05), rgba(6, 78, 59, 0.4))' }}
+                    className={`group relative py-10 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-pink-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
                   >
                     {answers[currentQuestion] === 1 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
