@@ -47,6 +47,17 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
 
+  // 컴포넌트 마운트 시 검사코드 데이터 초기화 (새로 검사 시작)
+  useEffect(() => {
+    // 페이지 처음 로드될 때만 초기화
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('mbti_pro_code_data');
+      }
+      setCodeData(null);
+    } catch {}
+  }, []); // 빈 배열: 컴포넌트 마운트 시 한 번만 실행
+
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
     const scores = {
@@ -321,6 +332,14 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           }
         }
       }
+      
+      // 검사 완료 시 검사코드 데이터 초기화
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('mbti_pro_code_data');
+        }
+        setCodeData(null);
+      } catch {}
       
       // 다음 페이지로 이동하기 전에 약간의 지연 추가 (UI 표시를 위해)
       await new Promise(resolve => setTimeout(resolve, 800));
