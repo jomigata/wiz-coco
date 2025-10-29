@@ -143,7 +143,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
   const currentYear = new Date().getFullYear();
   // 7열 x 15행 = 105년을 한 화면에 표시
-  const years = Array.from({ length: 105 }, (_, i) => currentYear - i);
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative">
@@ -276,7 +276,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     exit={{ opacity: 0, y: -10 }}
                     className="year-selector mt-3 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-10 gap-2">
                       {years.map((year) => (
                         <motion.button
                           key={year}
@@ -295,6 +295,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                               ? 'bg-emerald-600 text-white border-2 border-emerald-500'
                               : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
                           }`}
+                          style={{ height: '70%' }}
                         >
                           {year}
                         </motion.button>
