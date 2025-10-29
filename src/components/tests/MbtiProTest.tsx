@@ -604,7 +604,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(5)}
-                    className={`group relative py-[30px] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
                   >
                     {answers[currentQuestion] === 5 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -661,7 +661,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
                   <button
                     onClick={() => handleAnswer(2)}
-                    className={`group relative py-[30px] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
+                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
                   >
                     {answers[currentQuestion] === 2 && (
                       <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
