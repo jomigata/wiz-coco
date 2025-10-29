@@ -185,12 +185,13 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     console.log('MbtiProTest - 클라이언트 정보 제출 시작:', info);
     
     // 필수 정보 검증
-    if (!info.birthYear || !info.gender || !info.maritalStatus || !info.privacyAgreed) {
+    if (!info.birthYear || !info.gender || !info.maritalStatus || !info.privacyAgreed || !info.name || info.name.trim() === '') {
       console.error('MbtiProTest - 필수 정보 누락:', {
         birthYear: info.birthYear,
         gender: info.gender,
         maritalStatus: info.maritalStatus,
-        privacyAgreed: info.privacyAgreed
+        privacyAgreed: info.privacyAgreed,
+        name: info.name
       });
       return;
     }
