@@ -898,94 +898,97 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               )}
             </div>
 
-            {/* 성별 선택 */}
-            <div>
-              <label className="block text-sm font-medium text-emerald-300 mb-3">
-                성별
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <motion.button
-                  type="button"
-                  onClick={() => setGender('남')}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`py-3 px-4 rounded-lg flex items-center justify-center transition-all ${
-                    gender === '남'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            {/* 성별 및 결혼 상태 - 한 줄에 배치 */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* 성별 선택 */}
+              <div className="w-full">
+                <label className="block text-sm font-medium text-emerald-300 mb-3">
+                  성별
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <motion.button
+                    type="button"
+                    onClick={() => setGender('남')}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`py-3 px-2 rounded-lg flex items-center justify-center transition-all text-sm ${
+                      gender === '남'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L6.382 6H4a1 1 0 000 2h1.382l-.724 2.171a1 1 0 00.65 1.267l.084.017a1 1 0 001.267-.65L7.382 8h4.343l1.632 3.664a1 1 0 001.321.45l.094-.04a1 1 0 00.45-1.321L13.659 7.5 16.5 6.5l.5.5a1 1 0 001.414-1.414l-2-2a1 1 0 00-1.414 0l-2 2A1 1 0 0013.5 7l.5-.5-.5-1L14 5h-3.382l-.724-2.171A1 1 0 009 2z" clipRule="evenodd" />
                   </svg>
                   남성
                 </motion.button>
-                <motion.button
-                  type="button"
-                  onClick={() => setGender('여')}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`py-3 px-4 rounded-lg flex items-center justify-center transition-all ${
-                    gender === '여'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <motion.button
+                    type="button"
+                    onClick={() => setGender('여')}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`py-3 px-2 rounded-lg flex items-center justify-center transition-all text-sm ${
+                      gender === '여'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zm-6 8.5a.5.5 0 01.5-.5h2.086a6 6 0 0111.828 0H18.5a.5.5 0 010 1h-1v1a6 6 0 01-12 0v-1h-1a.5.5 0 01-.5-.5z" clipRule="evenodd" />
                   </svg>
                   여성
                 </motion.button>
+                </div>
+                {errors.gender && (
+                  <p className="mt-2 text-sm text-red-400" data-error="gender">{errors.gender}</p>
+                )}
               </div>
-              {errors.gender && (
-                <p className="mt-2 text-sm text-red-400" data-error="gender">{errors.gender}</p>
-              )}
-            </div>
 
-            {/* 결혼 상태 선택 */}
-            <div>
-              <label className="block text-sm font-medium text-emerald-300 mb-3">
-                결혼 상태
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <motion.button
-                  type="button"
-                  onClick={() => setMaritalStatus('미혼')}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`py-3 px-4 rounded-lg flex items-center justify-center transition-all ${
-                    maritalStatus === '미혼'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              {/* 결혼 상태 선택 */}
+              <div className="w-full">
+                <label className="block text-sm font-medium text-emerald-300 mb-3">
+                  결혼 상태
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <motion.button
+                    type="button"
+                    onClick={() => setMaritalStatus('미혼')}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`py-3 px-2 rounded-lg flex items-center justify-center transition-all text-sm ${
+                      maritalStatus === '미혼'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
                   </svg>
                   미혼
                 </motion.button>
-                <motion.button
-                  type="button"
-                  onClick={() => setMaritalStatus('기혼')}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`py-3 px-4 rounded-lg flex items-center justify-center transition-all ${
-                    maritalStatus === '기혼'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <motion.button
+                    type="button"
+                    onClick={() => setMaritalStatus('기혼')}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`py-3 px-2 rounded-lg flex items-center justify-center transition-all text-sm ${
+                      maritalStatus === '기혼'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-emerald-800/70 text-emerald-200/90 border border-emerald-700'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path d="M12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                   </svg>
                   기혼
-                </motion.button>
+                  </motion.button>
+                </div>
+                {errors.maritalStatus && (
+                  <p className="mt-2 text-sm text-red-400" data-error="maritalStatus">{errors.maritalStatus}</p>
+                )}
               </div>
-              {errors.maritalStatus && (
-                <p className="mt-2 text-sm text-red-400" data-error="maritalStatus">{errors.maritalStatus}</p>
-              )}
             </div>
 
             {/* 검사 코드 및 비밀번호 입력 - 항상 표시 */}
