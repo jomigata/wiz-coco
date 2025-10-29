@@ -107,17 +107,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit }) => {
         }
       `}</style>
       
-      {/* Background pattern */}
-      <div className="absolute inset-0 z-0 opacity-10">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)" />
-        </svg>
-      </div>
+      {/* 단색 배경 유지: 그리드 제거 */}
       
       {/* Gradient orbs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>

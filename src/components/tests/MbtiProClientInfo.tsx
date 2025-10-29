@@ -197,12 +197,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
             {/* 출생년도 */}
             <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
-              <div className="pb-2 border-b border-white/20">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium text-emerald-300">출생년도</span>
-                </div>
-              </div>
-              
               <div className="mt-4">
                 <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
                   출생년도 <span className="text-red-400">*</span>
@@ -240,17 +234,34 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               </div>
             </div>
 
+            {/* 이름 */}
+            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
+              <div className="mt-2">
+                <label htmlFor="name-field" className="block text-sm font-medium text-emerald-300 mb-1">
+                  이름 <span className="text-emerald-400/60 text-xs">(선택)</span>
+                </label>
+                <input
+                  type="text"
+                  id="name-field"
+                  name="name_random_field"
+                  value={name}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  placeholder="이름을 입력하세요"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  ref={nameRef}
+                />
+              </div>
+            </div>
+
             {/* 성별과 결혼상태 */}
             <div className="grid grid-cols-2 gap-4">
               {/* 성별 */}
               <div className="bg-blue-500/15 p-4 rounded-lg border border-blue-400/20">
-                <div className="pb-2 border-b border-white/20">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-emerald-300">성별</span>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
+                <div className="mt-2">
                   <label className="block text-sm font-medium text-emerald-300 mb-1">
                     성별 <span className="text-red-400">*</span>
                   </label>
@@ -296,13 +307,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
               {/* 결혼상태 */}
               <div className="bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
-                <div className="pb-2 border-b border-white/20">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-emerald-300">결혼 상태</span>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
+                <div className="mt-2">
                   <label className="block text-sm font-medium text-emerald-300 mb-1">
                     결혼 상태 <span className="text-red-400">*</span>
                   </label>
