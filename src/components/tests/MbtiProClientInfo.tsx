@@ -303,8 +303,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                   >
                     <div className="grid grid-cols-10 gap-x-2 gap-y-1">
                       {years.map((year, idx) => {
-                        const columnIndex = (idx % 10) + 1; // 1~10
-                        const blueBand = columnIndex >= 4 && columnIndex <= 7;
+                        const columnIndex = (idx % 10) + 1; // 1~10 (가로)
+                        const rowIndex = Math.floor(idx / 10) + 1; // 1~N (세로)
+                        const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 7);
                         return (
                         <motion.button
                           key={year}
@@ -436,6 +437,12 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             <div 
               className={`bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
               ref={privacyRef}
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                // 체크박스 자체 클릭은 기본 동작 유지 (이중 토글 방지)
+                if (target.closest('input[type="checkbox"]')) return;
+                handlePrivacyChange();
+              }}
             >
               <div className="flex items-start">
                 <div className="flex items-center h-5">
@@ -448,10 +455,10 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                   />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label htmlFor="privacy" onClick={handlePrivacyChange} className="font-medium text-emerald-200 cursor-pointer select-none">
+                  <label htmlFor="privacy" className="font-medium text-emerald-200 cursor-pointer select-none">
                     개인정보 활용 동의 <span className="text-red-400">*</span>
                   </label>
-                  <p className="text-emerald-300/80 mt-1 cursor-pointer select-none" onClick={handlePrivacyChange}>
+                  <p className="text-emerald-300/80 mt-1 cursor-pointer select-none">
                     검사 결과 분석 및 상담을 위한 개인정보 수집·이용에 동의합니다.
                   </p>
                 </div>
