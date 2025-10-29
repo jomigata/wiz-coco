@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
 import MbtiProCodeInput from './MbtiProCodeInput';
@@ -33,6 +33,7 @@ interface MbtiProTestProps {
 
 export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Answer>({});
   const [isMouseMoved, setIsMouseMoved] = useState(false);
@@ -53,10 +54,63 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     try {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('mbti_pro_code_data');
+        localStorage.removeItem('mbti_pro_client_info');
       }
       setCodeData(null);
+      setClientInfo(null);
+      setAnswers({});
     } catch {}
   }, []); // 빈 배열: 컴포넌트 마운트 시 한 번만 실행
+
+  // 페이지를 벗어날 때 모든 입력 데이터 초기화
+  useEffect(() => {
+    const clearAllData = () => {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('mbti_pro_code_data');
+          localStorage.removeItem('mbti_pro_client_info');
+          setCodeData(null);
+          setClientInfo(null);
+          setAnswers({});
+        }
+      } catch {}
+    };
+
+    const handleBeforeUnload = () => {
+      // 결과 페이지로 이동하는 경우는 제외
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/tests/mbti_pro/result')) {
+        clearAllData();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        // 컴포넌트 언마운트 시 초기화 (결과 페이지가 아닌 경우만)
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/tests/mbti_pro/result')) {
+          clearAllData();
+        }
+      };
+    }
+  }, []);
+
+  // 경로 변경 감지 (검사 페이지를 벗어날 때 초기화)
+  useEffect(() => {
+    // 검사 페이지가 아닌 다른 페이지로 이동하면 모든 데이터 초기화
+    if (pathname && !pathname.includes('/tests/mbti_pro')) {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('mbti_pro_code_data');
+          localStorage.removeItem('mbti_pro_client_info');
+        }
+        setCodeData(null);
+        setClientInfo(null);
+        setAnswers({});
+      } catch {}
+    }
+  }, [pathname]);
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
