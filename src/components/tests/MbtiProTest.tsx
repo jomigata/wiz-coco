@@ -460,13 +460,16 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       {/* 상단 메뉴의 높이만큼 여백 추가 (기본정보 화면과 동일) */}
       <div className="h-4"></div>
 
-      <div className="flex-1 bg-emerald-950 py-12 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-4">
+      <div className="flex-1 bg-emerald-950 py-4 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="text-center mb-5">
             <h1 className="text-3xl font-bold text-white mb-4">전문가용 MBTI 검사</h1>
+            <p className="text-emerald-300 max-w-lg mx-auto">
+              깊이 생각하지 말고, 자연스럽게 떠오르는 대로 선택해주세요.
+            </p>
           </div>
 
-          <div className="bg-emerald-900/50 backdrop-blur-sm rounded-3xl shadow-lg p-8 border border-emerald-700/50">
+          <div className="bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8">
             <div className="flex justify-between items-center mb-6">
               <div className="text-emerald-200">문항 {currentQuestion + 1} / {totalQuestions}</div>
               <div className="text-emerald-200">진행률: {Math.round(((currentQuestion + 1) / totalQuestions) * 100)}%</div>
