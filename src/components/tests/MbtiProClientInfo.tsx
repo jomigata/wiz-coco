@@ -445,7 +445,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         // 가로(행) 배경은 4~6번째 줄만, 세로(열)는 4~7번째 유지
                         const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
                         const isSelected = birthYear === year;
-                        const isYearEndingWith1 = year % 10 === 1;
+                        const isYearEndingWith15 = year % 10 === 1 || year % 10 === 5;
                         return (
                         <motion.button
                           key={year}
@@ -466,7 +466,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
                             isSelected
                               ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
-                              : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith1 ? 'text-yellow-300 font-semibold' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
+                              : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith15 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
                         >
                           {/* 선택 연도: 은은한 하단 언더라인과 안쪽 링 강조 */}
