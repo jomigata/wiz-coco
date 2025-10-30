@@ -46,6 +46,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   const [isClient, setIsClient] = useState<boolean>(false);
   const yearButtonRefs = useRef<HTMLButtonElement[]>([]);
   const yearGridRef = useRef<HTMLDivElement>(null);
+  const scrollVelocityRef = useRef<number>(0);
+  const rafIdRef = useRef<number | null>(null);
+  const lastTouchYRef = useRef<number | null>(null);
   
   const birthYearRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
@@ -96,7 +99,30 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     }
   }, [showYearSelector]);
 
-  // 마우스 위치에 따라 자동 스크롤 (가속도 적용)
+  // requestAnimationFrame 기반 연속 스크롤 루프
+  const startAutoScroll = () => {
+    if (rafIdRef.current != null) return;
+    const step = () => {
+      if (!yearGridRef.current) return;
+      const grid = yearGridRef.current;
+      const v = scrollVelocityRef.current;
+      if (Math.abs(v) > 0.1) {
+        grid.scrollTop = grid.scrollTop + v;
+      }
+      rafIdRef.current = requestAnimationFrame(step);
+    };
+    rafIdRef.current = requestAnimationFrame(step);
+  };
+
+  const stopAutoScroll = () => {
+    if (rafIdRef.current != null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    scrollVelocityRef.current = 0;
+  };
+
+  // 마우스 위치에 따라 자동 스크롤 (가속도 적용, 최고 속도 50% 감속)
   const handleYearGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!yearGridRef.current) return;
     
@@ -115,13 +141,17 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     if (mouseY < topThreshold && scrollTop > 0) {
       // 상단에 가까울수록 더 빠르게
       const intensity = (topThreshold - mouseY) / topThreshold; // 0~1
-      const speed = 4 + intensity * 28; // 4~32px/frame
-      grid.scrollTop = Math.max(0, scrollTop - speed);
+      const speed = 2 + intensity * 14; // 50% 감속: 2~16px/frame
+      scrollVelocityRef.current = -speed;
+      startAutoScroll();
     } else if (mouseY > bottomThreshold && scrollTop < scrollHeight - gridHeight) {
       // 하단에 가까울수록 더 빠르게
       const intensity = (mouseY - bottomThreshold) / (gridHeight - bottomThreshold); // 0~1
-      const speed = 4 + intensity * 28; // 4~32px/frame
-      grid.scrollTop = Math.min(scrollHeight - gridHeight, scrollTop + speed);
+      const speed = 2 + intensity * 14; // 2~16px/frame
+      scrollVelocityRef.current = speed;
+      startAutoScroll();
+    } else {
+      scrollVelocityRef.current = 0;
     }
   };
 
@@ -131,6 +161,35 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     e.preventDefault();
     const grid = yearGridRef.current;
     grid.scrollBy({ top: e.deltaY, behavior: 'smooth' });
+  };
+
+  // 마우스가 영역을 벗어나면 자동 스크롤 중지
+  const handleMouseLeave = () => {
+    stopAutoScroll();
+  };
+
+  // 터치 스와이프 가속 스크롤
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!yearGridRef.current) return;
+    lastTouchYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!yearGridRef.current || lastTouchYRef.current == null) return;
+    e.preventDefault();
+    const currentY = e.touches[0].clientY;
+    const dy = lastTouchYRef.current - currentY; // 위로 스와이프(+), 아래로 스와이프(-)
+    lastTouchYRef.current = currentY;
+    // 스와이프 속도를 가변 속도에 매핑 (감속 반영)
+    const maxSpeed = 16; // px/frame
+    const speed = Math.max(-maxSpeed, Math.min(maxSpeed, dy));
+    scrollVelocityRef.current = speed;
+    startAutoScroll();
+  };
+
+  const handleTouchEnd = () => {
+    stopAutoScroll();
+    lastTouchYRef.current = null;
   };
 
   const validateForm = (): boolean => {
@@ -374,7 +433,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       style={{ maxHeight: '336px' }} // 7줄 (48px * 7)
                       onKeyDown={handleYearKeyDown}
                       onMouseMove={handleYearGridMouseMove}
+                      onMouseLeave={handleMouseLeave}
                       onWheel={handleYearGridWheel}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                     >
                       {years.map((year, idx) => {
                         const columnIndex = (idx % 10) + 1; // 1~10 (가로)
@@ -405,9 +468,12 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                               : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
                         >
-                          {/* 선택 연도: 하단 분홍색 바 표시 */}
+                          {/* 선택 연도: 은은한 하단 언더라인과 안쪽 링 강조 */}
                           {isSelected && (
-                            <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-1.5 rounded-full bg-pink-400" />
+                            <>
+                              <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
+                              <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
+                            </>
                           )}
                           <span>{year}</span>
                         </motion.button>
