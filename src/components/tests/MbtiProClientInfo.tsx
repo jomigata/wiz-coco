@@ -391,46 +391,21 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                 <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
                   출생년도 <span className="text-red-400">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                    id="birth-year-field"
-                    name="birth_year_random_name"
-                    value={birthYear ? `${birthYear}년` : ''}
-                  onClick={() => setShowYearSelector(true)}
-                    readOnly
-                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors cursor-pointer"
-                    placeholder="출생년도를 선택하세요"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    data-form-type="other"
-                    data-lpignore="true"
-                    aria-autocomplete="none"
-                    ref={birthYearRef}
-                  />
-                </div>
-                {errors.birthYear && (
-                  <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
-                )}
-              </div>
-              
-              {/* 연도 선택 그리드 */}
+              {/* 연도 선택 그리드 - 타이틀 바로 아래 표시 */}
               {showYearSelector && (
                 <AnimatePresence>
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="year-selector absolute top-full left-0 right-0 mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+                    className="year-selector mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
                     <div
                       ref={yearGridRef}
                       role="grid"
                       aria-label="출생년도 선택"
                       className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
-                      style={{ maxHeight: '336px' }} // 7줄 (48px * 7)
+                      style={{ maxHeight: '336px' }}
                       onKeyDown={handleYearKeyDown}
                       onMouseMove={handleYearGridMouseMove}
                       onMouseLeave={handleMouseLeave}
@@ -440,9 +415,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       onTouchEnd={handleTouchEnd}
                     >
                       {years.map((year, idx) => {
-                        const columnIndex = (idx % 10) + 1; // 1~10 (가로)
-                        const rowIndex = Math.floor(idx / 10) + 1; // 1~N (세로)
-                        // 가로(행) 배경은 4~6번째 줄만, 세로(열)는 4~7번째 유지
+                        const columnIndex = (idx % 10) + 1;
+                        const rowIndex = Math.floor(idx / 10) + 1;
                         const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
                         const isSelected = birthYear === year;
                         const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
@@ -469,7 +443,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                               : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith16 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
                         >
-                          {/* 선택 연도: 은은한 하단 언더라인과 안쪽 링 강조 */}
                           {isSelected && (
                             <>
                               <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
@@ -484,6 +457,32 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                   </motion.div>
                 </AnimatePresence>
               )}
+
+              <div className="relative">
+                <input
+                  type="text"
+                    id="birth-year-field"
+                    name="birth_year_random_name"
+                    value={birthYear ? `${birthYear}년` : ''}
+                  onClick={() => setShowYearSelector(true)}
+                    readOnly
+                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors cursor-pointer"
+                    placeholder="출생년도를 선택하세요"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    data-form-type="other"
+                    data-lpignore="true"
+                    aria-autocomplete="none"
+                    ref={birthYearRef}
+                  />
+                </div>
+                {errors.birthYear && (
+                  <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
+                )}
+              </div>
+              
             </div>
 
             {/* 성별과 결혼상태 */}
