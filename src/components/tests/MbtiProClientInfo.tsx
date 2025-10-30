@@ -330,6 +330,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           type="button"
                           ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
                           data-year-idx={idx}
+                          aria-current={birthYear === year ? "true" : undefined}
                           onClick={() => {
                             setBirthYear(year);
                             setShowYearSelector(false);
@@ -339,12 +340,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           }}
                           whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
-                          className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded transition-colors ${
+                          className={`flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-colors ${
                             birthYear === year
                               ? 'bg-emerald-600 text-white border-2 border-emerald-500'
-                              : `${blueBand ? 'bg-sky-800/40' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
+                              : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
-                          style={{ height: '70%' }}
                         >
                           {year}
                         </motion.button>
