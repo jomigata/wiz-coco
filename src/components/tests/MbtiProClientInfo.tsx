@@ -89,17 +89,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     };
   }, [showYearSelector]);
 
-  // 연도 선택기 열릴 때 초기 스크롤 위치 설정 (2번째 줄이 맨 위에)
+  // 연도 선택기 열릴 때 초기 스크롤 위치 설정 (1번째 줄이 맨 위에)
   useEffect(() => {
     if (showYearSelector && yearGridRef.current) {
-      // 각 줄의 높이 계산 (gap-y-1 + 버튼 높이)
-      const rowHeight = 44 + 4; // min-h-[44px] + gap-y-1 (4px)
-      // 2번째 줄이 맨 위에 오도록 스크롤 (1번째 줄 높이만큼)
-      yearGridRef.current.scrollTop = rowHeight;
+      yearGridRef.current.scrollTop = 0;
     }
   }, [showYearSelector]);
 
-  // 마우스 위치에 따라 자동 스크롤
+  // 마우스 위치에 따라 자동 스크롤 (가속도 적용)
   const handleYearGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!yearGridRef.current) return;
     
@@ -116,10 +113,24 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     const bottomThreshold = gridHeight * 0.8;
     
     if (mouseY < topThreshold && scrollTop > 0) {
-      grid.scrollTop = Math.max(0, scrollTop - 5);
+      // 상단에 가까울수록 더 빠르게
+      const intensity = (topThreshold - mouseY) / topThreshold; // 0~1
+      const speed = 4 + intensity * 28; // 4~32px/frame
+      grid.scrollTop = Math.max(0, scrollTop - speed);
     } else if (mouseY > bottomThreshold && scrollTop < scrollHeight - gridHeight) {
-      grid.scrollTop = Math.min(scrollHeight - gridHeight, scrollTop + 5);
+      // 하단에 가까울수록 더 빠르게
+      const intensity = (mouseY - bottomThreshold) / (gridHeight - bottomThreshold); // 0~1
+      const speed = 4 + intensity * 28; // 4~32px/frame
+      grid.scrollTop = Math.min(scrollHeight - gridHeight, scrollTop + speed);
     }
+  };
+
+  // 휠 스크롤 스무스 처리
+  const handleYearGridWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!yearGridRef.current) return;
+    e.preventDefault();
+    const grid = yearGridRef.current;
+    grid.scrollBy({ top: e.deltaY, behavior: 'smooth' });
   };
 
   const validateForm = (): boolean => {
@@ -213,6 +224,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     else if (e.key === 'ArrowLeft') next = Math.max(0, idx - 1);
     else if (e.key === 'ArrowDown') next = Math.min(years.length - 1, idx + cols);
     else if (e.key === 'ArrowUp') next = Math.max(0, idx - cols);
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = years.length - 1;
     else return;
     e.preventDefault();
     const btn = yearButtonRefs.current[next];
@@ -361,11 +374,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       style={{ maxHeight: '336px' }} // 7줄 (48px * 7)
                       onKeyDown={handleYearKeyDown}
                       onMouseMove={handleYearGridMouseMove}
+                      onWheel={handleYearGridWheel}
                     >
                       {years.map((year, idx) => {
                         const columnIndex = (idx % 10) + 1; // 1~10 (가로)
                         const rowIndex = Math.floor(idx / 10) + 1; // 1~N (세로)
-                        const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 7);
+                        // 가로(행) 배경은 4~6번째 줄만, 세로(열)는 4~7번째 유지
+                        const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
                         const isSelected = birthYear === year;
                         return (
                         <motion.button
@@ -386,16 +401,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           whileTap={{ scale: 0.95 }}
                           className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
                             isSelected
-                              ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/50'
+                              ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
                               : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
                         >
+                          {/* 선택 연도: 하단 분홍색 바 표시 */}
                           {isSelected && (
-                            <span className="absolute top-1 right-1 text-white" aria-hidden="true">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </span>
+                            <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-1.5 rounded-full bg-pink-400" />
                           )}
                           <span>{year}</span>
                         </motion.button>
