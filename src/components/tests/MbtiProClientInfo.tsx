@@ -45,6 +45,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   }>({});
   const [isClient, setIsClient] = useState<boolean>(false);
   const yearButtonRefs = useRef<HTMLButtonElement[]>([]);
+  const yearGridRef = useRef<HTMLDivElement>(null);
   
   const birthYearRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
@@ -87,6 +88,39 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showYearSelector]);
+
+  // 연도 선택기 열릴 때 초기 스크롤 위치 설정 (2번째 줄이 맨 위에)
+  useEffect(() => {
+    if (showYearSelector && yearGridRef.current) {
+      // 각 줄의 높이 계산 (gap-y-1 + 버튼 높이)
+      const rowHeight = 44 + 4; // min-h-[44px] + gap-y-1 (4px)
+      // 2번째 줄이 맨 위에 오도록 스크롤 (1번째 줄 높이만큼)
+      yearGridRef.current.scrollTop = rowHeight;
+    }
+  }, [showYearSelector]);
+
+  // 마우스 위치에 따라 자동 스크롤
+  const handleYearGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!yearGridRef.current) return;
+    
+    const grid = yearGridRef.current;
+    const rect = grid.getBoundingClientRect();
+    const mouseY = e.clientY - rect.top;
+    const gridHeight = rect.height;
+    const scrollHeight = grid.scrollHeight;
+    const scrollTop = grid.scrollTop;
+    
+    // 상단 20% 영역: 위로 스크롤
+    const topThreshold = gridHeight * 0.2;
+    // 하단 20% 영역: 아래로 스크롤
+    const bottomThreshold = gridHeight * 0.8;
+    
+    if (mouseY < topThreshold && scrollTop > 0) {
+      grid.scrollTop = Math.max(0, scrollTop - 5);
+    } else if (mouseY > bottomThreshold && scrollTop < scrollHeight - gridHeight) {
+      grid.scrollTop = Math.min(scrollHeight - gridHeight, scrollTop + 5);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: {
@@ -319,18 +353,28 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     exit={{ opacity: 0, y: -10 }}
                     className="year-selector absolute top-full left-0 right-0 mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
                   >
-                    <div className="grid grid-cols-10 gap-x-2 gap-y-1" onKeyDown={handleYearKeyDown}>
+                    <div
+                      ref={yearGridRef}
+                      role="grid"
+                      aria-label="출생년도 선택"
+                      className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
+                      style={{ maxHeight: '336px' }} // 7줄 (48px * 7)
+                      onKeyDown={handleYearKeyDown}
+                      onMouseMove={handleYearGridMouseMove}
+                    >
                       {years.map((year, idx) => {
                         const columnIndex = (idx % 10) + 1; // 1~10 (가로)
                         const rowIndex = Math.floor(idx / 10) + 1; // 1~N (세로)
                         const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 7);
+                        const isSelected = birthYear === year;
                         return (
                         <motion.button
                           key={year}
                           type="button"
+                          role="gridcell"
                           ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
                           data-year-idx={idx}
-                          aria-current={birthYear === year ? "true" : undefined}
+                          aria-current={isSelected ? "true" : undefined}
                           onClick={() => {
                             setBirthYear(year);
                             setShowYearSelector(false);
@@ -340,13 +384,20 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           }}
                           whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
-                          className={`flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-colors ${
-                            birthYear === year
-                              ? 'bg-emerald-600 text-white border-2 border-emerald-500'
+                          className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
+                            isSelected
+                              ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/50'
                               : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70`
                           }`}
                         >
-                          {year}
+                          {isSelected && (
+                            <span className="absolute top-1 right-1 text-white" aria-hidden="true">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </span>
+                          )}
+                          <span>{year}</span>
                         </motion.button>
                         );
                       })}
