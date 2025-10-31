@@ -51,6 +51,9 @@ interface TestRecord {
   mbtiType?: string;
   userData?: any;
   status: string;
+  name?: string;
+  gender?: string;
+  birthYear?: string;
 }
 
 interface Stats {
@@ -325,20 +328,81 @@ function MyPageContent() {
     try {
       setRecordsLoading(true);
       setRecordsError(null);
-      const raw = JSON.parse(localStorage.getItem('test_records') || '[]');
-      const normalized = (Array.isArray(raw) ? raw : []).map(record => {
-        const normalizedRecord = normalizeTestRecord(record);
-        // 검사 유형 명칭 표준화 적용
-        normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
-        return normalizedRecord;
-      });
       
-      // 모든 검사 기록 포함 (완료된 검사만 필터링하지 않음)
-      const allRecords = normalized.filter(r => r.code && r.testType); // 기본 데이터가 있는 것만
+      const allRecords: TestRecord[] = [];
+      
+      // 1. 기본 test_records에서 로드 (개인용 MBTI, AI 프로파일링 등)
+      const basicRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+      if (Array.isArray(basicRecords)) {
+        basicRecords.forEach(record => {
+          const normalizedRecord = normalizeTestRecord(record);
+          normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
+          
+          // 사용자 정보 추출 (clientInfo 또는 userData에서)
+          const clientInfo = record.userData?.clientInfo || record.clientInfo;
+          if (clientInfo) {
+            normalizedRecord.name = clientInfo.name || clientInfo.userName;
+            normalizedRecord.gender = clientInfo.gender;
+            normalizedRecord.birthYear = clientInfo.birthYear?.toString();
+          }
+          
+          allRecords.push(normalizedRecord);
+        });
+      }
+      
+      // 2. 사용자별 MBTI 기록에서 로드 (전문가용 MBTI)
+      if (user?.email) {
+        const userSpecificKey = `mbti-user-test-records-${user.email}`;
+        const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
+        
+        if (Array.isArray(userRecords)) {
+          userRecords.forEach(record => {
+            const normalizedRecord = normalizeTestRecord(record);
+            normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
+            
+            // 사용자 정보 추출
+            const clientInfo = record.userData?.clientInfo || record.clientInfo;
+            if (clientInfo) {
+              normalizedRecord.name = clientInfo.name || clientInfo.userName;
+              normalizedRecord.gender = clientInfo.gender;
+              normalizedRecord.birthYear = clientInfo.birthYear?.toString();
+            }
+            
+            allRecords.push(normalizedRecord);
+          });
+        }
+      }
+      
+      // 3. 일반 사용자별 키도 확인 (로그인하지 않은 경우)
+      const generalUserRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
+      if (Array.isArray(generalUserRecords)) {
+        generalUserRecords.forEach(record => {
+          const normalizedRecord = normalizeTestRecord(record);
+          normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
+          
+          // 사용자 정보 추출
+          const clientInfo = record.userData?.clientInfo || record.clientInfo;
+          if (clientInfo) {
+            normalizedRecord.name = clientInfo.name || clientInfo.userName;
+            normalizedRecord.gender = clientInfo.gender;
+            normalizedRecord.birthYear = clientInfo.birthYear?.toString();
+          }
+          
+          allRecords.push(normalizedRecord);
+        });
+      }
+      
+      // 중복 제거 (같은 code를 가진 기록)
+      const uniqueRecords = allRecords.filter((record, index, self) => 
+        index === self.findIndex(r => r.code === record.code)
+      );
+      
+      // 기본 데이터가 있는 것만 필터링
+      const validRecords = uniqueRecords.filter(r => r.code && r.testType);
 
-      console.log(`사용자 ${user?.email}의 모든 검사 기록 ${allRecords.length}개를 로드했습니다.`);
+      console.log(`사용자 ${user?.email}의 모든 검사 기록 ${validRecords.length}개를 로드했습니다.`);
 
-      const sorted = allRecords.sort((a: any, b: any) => {
+      const sorted = validRecords.sort((a: any, b: any) => {
         const timeA = new Date(a.timestamp || new Date()).getTime();
         const timeB = new Date(b.timestamp || new Date()).getTime();
         return timeB - timeA;
@@ -1161,7 +1225,7 @@ const getResultPageUrl = (record: TestRecord): string => {
 };
 
 // 정렬 타입 정의
-type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'status';
+type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'status' | 'name' | 'gender' | 'birthYear';
 type SortDirection = 'asc' | 'desc';
 
 // 검사 기록 탭 컴포넌트
@@ -1203,13 +1267,17 @@ function TestRecordsTabContent({
     }
   };
 
-  // 정렬 아이콘 컴포넌트
+  // 정렬 아이콘 컴포넌트 (시각적 개선)
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
-      return <span className="text-blue-400/50 ml-1">↕</span>;
+      return (
+        <span className="text-blue-400/60 ml-2 text-base font-bold drop-shadow-sm">
+          ↕
+        </span>
+      );
     }
     return (
-      <span className="text-blue-200 ml-1">
+      <span className="text-blue-100 ml-2 text-base font-bold drop-shadow-md animate-pulse">
         {sortDirection === 'asc' ? '↑' : '↓'}
       </span>
     );
@@ -1266,6 +1334,18 @@ function TestRecordsTabContent({
       case 'status':
         aValue = a.status || '';
         bValue = b.status || '';
+        break;
+      case 'name':
+        aValue = a.name || '';
+        bValue = b.name || '';
+        break;
+      case 'gender':
+        aValue = a.gender || '';
+        bValue = b.gender || '';
+        break;
+      case 'birthYear':
+        aValue = a.birthYear || '';
+        bValue = b.birthYear || '';
         break;
       default:
         aValue = a.timestamp || '';
@@ -1433,21 +1513,41 @@ function TestRecordsTabContent({
                   <th 
                     scope="col" 
                     className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('mbtiType')}
+                    onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center justify-center">
-                      결과 요약
-                      <SortIcon field="mbtiType" />
+                      이름
+                      <SortIcon field="name" />
                     </div>
                   </th>
                   <th 
                     scope="col" 
                     className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('status')}
+                    onClick={() => handleSort('gender')}
                   >
                     <div className="flex items-center justify-center">
-                      상태
-                      <SortIcon field="status" />
+                      성별
+                      <SortIcon field="gender" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('birthYear')}
+                  >
+                    <div className="flex items-center justify-center">
+                      출생연도
+                      <SortIcon field="birthYear" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('mbtiType')}
+                  >
+                    <div className="flex items-center justify-center">
+                      결과 요약
+                      <SortIcon field="mbtiType" />
                     </div>
                   </th>
                 </tr>
@@ -1470,12 +1570,16 @@ function TestRecordsTabContent({
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
-                      {record.mbtiType || 'N/A'}
+                      {record.name || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full group-hover:bg-green-500/70 group-hover:text-green-100 transition-colors duration-150">
-                        완료
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                      {record.gender || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                      {record.birthYear || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                      {record.mbtiType || 'N/A'}
                     </td>
                   </tr>
                 ))}
