@@ -291,18 +291,54 @@ function MyPageContent() {
     } as TestRecord;
   };
 
-  // 로컬 테스트 기록 로드 (완료된 검사만 + 표준화)
+  // 검사 유형 명칭 표준화 함수
+  const normalizeTestTypeName = (testType: string): string => {
+    if (!testType) return 'Unknown';
+    
+    const type = testType.toLowerCase();
+    if (type.includes('mbti')) {
+      if (type.includes('전문가') || type.includes('pro')) {
+        return '전문가용 MBTI 검사';
+      } else {
+        return '개인용 MBTI 검사';
+      }
+    }
+    if (type.includes('ai') && type.includes('프로파일링')) {
+      return 'AI 프로파일링 검사';
+    }
+    if (type.includes('통합')) {
+      return '통합 평가 검사';
+    }
+    if (type.includes('에고')) {
+      return '에고 검사';
+    }
+    if (type.includes('에니어')) {
+      return '에니어그램 검사';
+    }
+    
+    // 기본값으로 원본 반환 (첫 글자 대문자)
+    return testType.charAt(0).toUpperCase() + testType.slice(1);
+  };
+
+  // 로컬 테스트 기록 로드 (모든 검사 포함 + 표준화)
   const loadLocalTestRecords = (): TestRecord[] => {
     try {
       setRecordsLoading(true);
       setRecordsError(null);
       const raw = JSON.parse(localStorage.getItem('test_records') || '[]');
-      const normalized = (Array.isArray(raw) ? raw : []).map(normalizeTestRecord);
-      const completed = normalized.filter(r => r.status === 'completed');
+      const normalized = (Array.isArray(raw) ? raw : []).map(record => {
+        const normalizedRecord = normalizeTestRecord(record);
+        // 검사 유형 명칭 표준화 적용
+        normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
+        return normalizedRecord;
+      });
+      
+      // 모든 검사 기록 포함 (완료된 검사만 필터링하지 않음)
+      const allRecords = normalized.filter(r => r.code && r.testType); // 기본 데이터가 있는 것만
 
-      console.log(`사용자 ${user?.email}의 완료된 검사 기록 ${completed.length}개를 로드했습니다.`);
+      console.log(`사용자 ${user?.email}의 모든 검사 기록 ${allRecords.length}개를 로드했습니다.`);
 
-      const sorted = completed.sort((a: any, b: any) => {
+      const sorted = allRecords.sort((a: any, b: any) => {
         const timeA = new Date(a.timestamp || new Date()).getTime();
         const timeB = new Date(b.timestamp || new Date()).getTime();
         return timeB - timeA;
@@ -1124,6 +1160,10 @@ const getResultPageUrl = (record: TestRecord): string => {
   return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
 };
 
+// 정렬 타입 정의
+type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'status';
+type SortDirection = 'asc' | 'desc';
+
 // 검사 기록 탭 컴포넌트
 function TestRecordsTabContent({
   searchQuery,
@@ -1143,7 +1183,39 @@ function TestRecordsTabContent({
   testRecords: TestRecord[];
 }) {
   const router = useRouter();
-  // 검색 및 필터링된 기록
+  
+  // 날짜 범위 검색 상태
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
+  // 컬럼 정렬 상태
+  const [sortField, setSortField] = useState<SortField>('timestamp');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  // 컬럼 헤더 클릭 핸들러
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // 같은 필드 클릭 시 방향 변경
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 다른 필드 클릭 시 해당 필드로 변경하고 기본 방향 설정
+      setSortField(field);
+      setSortDirection(field === 'timestamp' ? 'desc' : 'asc');
+    }
+  };
+
+  // 정렬 아이콘 컴포넌트
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <span className="text-blue-400/50 ml-1">↕</span>;
+    }
+    return (
+      <span className="text-blue-200 ml-1">
+        {sortDirection === 'asc' ? '↑' : '↓'}
+      </span>
+    );
+  };
+
+  // 검색, 필터링 및 정렬된 기록
   const filteredRecords = testRecords.filter(record => {
     // 검색 필터
     if (searchQuery) {
@@ -1163,12 +1235,47 @@ function TestRecordsTabContent({
       if (filterType === 'enneagram' && !testType.includes('에니어')) return false;
     }
     
+    // 날짜 범위 필터
+    if (startDate || endDate) {
+      const recordDate = new Date(record.timestamp || 0);
+      if (startDate && recordDate < new Date(startDate)) return false;
+      if (endDate && recordDate > new Date(endDate + ' 23:59:59')) return false;
+    }
+    
     return true;
   }).sort((a, b) => {
-    if (sortOrder === 'newest') {
-      return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+    let aValue: any, bValue: any;
+    
+    switch (sortField) {
+      case 'code':
+        aValue = a.code || '';
+        bValue = b.code || '';
+        break;
+      case 'testType':
+        aValue = a.testType || '';
+        bValue = b.testType || '';
+        break;
+      case 'timestamp':
+        aValue = new Date(a.timestamp || 0).getTime();
+        bValue = new Date(b.timestamp || 0).getTime();
+        break;
+      case 'mbtiType':
+        aValue = a.mbtiType || '';
+        bValue = b.mbtiType || '';
+        break;
+      case 'status':
+        aValue = a.status || '';
+        bValue = b.status || '';
+        break;
+      default:
+        aValue = a.timestamp || '';
+        bValue = b.timestamp || '';
+    }
+    
+    if (sortDirection === 'asc') {
+      return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
     } else {
-      return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
+      return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
     }
   });
 
@@ -1206,45 +1313,73 @@ function TestRecordsTabContent({
       
       {/* 검색 및 필터링 컨트롤 */}
       <motion.div 
-        className="mb-6 flex flex-col md:flex-row gap-4 items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
+        className="mb-6 space-y-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <div className="relative flex-grow">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
+        {/* 첫 번째 행: 텍스트 검색 */}
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative flex-grow">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="검사 코드 또는 이름으로 검색"
+              className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="검사 코드 또는 이름으로 검색"
-            className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          
+          <div className="flex gap-2 flex-shrink-0">
+            <select 
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as any)}
+              className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all" className="bg-blue-800 text-white">전체</option>
+              <option value="mbti" className="bg-blue-800 text-white">MBTI</option>
+              <option value="ego" className="bg-blue-800 text-white">에고그램</option>
+              <option value="enneagram" className="bg-blue-800 text-white">에니어그램</option>
+            </select>
+          </div>
         </div>
-        
-        <div className="flex gap-2 flex-shrink-0">
-          <select 
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as any)}
-            className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all" className="bg-blue-800 text-white">전체</option>
-            <option value="mbti" className="bg-blue-800 text-white">MBTI</option>
-            <option value="ego" className="bg-blue-800 text-white">에고그램</option>
-            <option value="enneagram" className="bg-blue-800 text-white">에니어그램</option>
-          </select>
-          <select 
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as any)}
-            className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="newest" className="bg-blue-800 text-white">최근 검사순</option>
-            <option value="oldest" className="bg-blue-800 text-white">오래된 검사순</option>
-          </select>
+
+        {/* 두 번째 행: 날짜 범위 검색 */}
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex items-center gap-2 text-blue-300 text-sm">
+            <span>검사 기간:</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border-none bg-white/5 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-blue-300">~</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border-none bg-white/5 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {(startDate || endDate) && (
+              <button
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="px-3 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors text-sm"
+              >
+                초기화
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
       
@@ -1265,20 +1400,55 @@ function TestRecordsTabContent({
             <table className="min-w-full divide-y divide-white/20">
               <thead className="bg-white/5">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
-                    검사결과 코드
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('code')}
+                  >
+                    <div className="flex items-center">
+                      검사결과 코드
+                      <SortIcon field="code" />
+                    </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                    검사 유형
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('testType')}
+                  >
+                    <div className="flex items-center justify-center">
+                      검사 유형
+                      <SortIcon field="testType" />
+                    </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                    검사 일시
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('timestamp')}
+                  >
+                    <div className="flex items-center justify-center">
+                      검사 일시
+                      <SortIcon field="timestamp" />
+                    </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                    결과 요약
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('mbtiType')}
+                  >
+                    <div className="flex items-center justify-center">
+                      결과 요약
+                      <SortIcon field="mbtiType" />
+                    </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                    상태
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center justify-center">
+                      상태
+                      <SortIcon field="status" />
+                    </div>
                   </th>
                 </tr>
               </thead>
