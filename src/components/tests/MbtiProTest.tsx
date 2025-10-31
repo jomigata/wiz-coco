@@ -105,7 +105,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           clientInfo,
           codeData,
           timestamp: Date.now(),
-          testType: 'MBTI_PRO'
+          testType: 'MBTI_PRO',
+          totalQuestions: 24 // MBTI Pro 총 질문 수
         });
       }
     };
