@@ -36,31 +36,29 @@ function MbtiTestPageContent() {
   // 저장된 currentQuestion과 전체 진행 상태를 관리
   const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(undefined);
   
-  // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
-  useEffect(() => {
-    const urlResumeTestId = searchParams.get('resume');
-    if (urlResumeTestId && urlResumeTestId !== testId) {
-      console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
-      setTestId(urlResumeTestId);
-      // URL 파라미터에서 온 경우 이어하기 다이얼로그를 자동으로 표시
-      const savedProgress = loadTestProgress(urlResumeTestId);
-      if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-        setHasResumeData(true);
-        // 팝업을 띄우지 않고 바로 이어서 표시
-        setShowResumeDialog(false);
-        setSavedAnswers(savedProgress.answers);
-        // 저장된 currentQuestion 사용 (없으면 마지막 답변한 질문 다음으로 이동)
-        const savedCurrent = savedProgress.currentQuestion !== undefined 
-          ? savedProgress.currentQuestion 
-          : (Object.keys(savedProgress.answers || {}).length > 0
-              ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
-              : 0);
-        setSavedCurrentQuestion(savedCurrent);
-        // 컴포넌트 강제 리마운트로 저장된 답변을 즉시 반영
-        setTestComponentKey(prev => prev + 1);
+    // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
+    useEffect(() => {
+      const urlResumeTestId = searchParams.get('resume');
+      if (urlResumeTestId && urlResumeTestId !== testId) {
+        console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
+        setTestId(urlResumeTestId);
+        // URL 파라미터에서 온 경우에도 이어하기 다이얼로그를 표시
+        const savedProgress = loadTestProgress(urlResumeTestId);
+        if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+          setHasResumeData(true);
+          // 팝업을 표시하여 사용자 확인 받기
+          setShowResumeDialog(true);
+          setSavedAnswers(savedProgress.answers);
+          // 저장된 currentQuestion 사용 (없으면 마지막 답변한 질문 다음으로 이동)
+          const savedCurrent = savedProgress.currentQuestion !== undefined 
+            ? savedProgress.currentQuestion 
+            : (Object.keys(savedProgress.answers || {}).length > 0
+                ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
+                : 0);
+          setSavedCurrentQuestion(savedCurrent);
+        }
       }
-    }
-  }, [searchParams]);
+    }, [searchParams]);
   
   // 저장된 진행 상태 확인
   useEffect(() => {

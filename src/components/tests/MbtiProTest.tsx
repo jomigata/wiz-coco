@@ -146,6 +146,15 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     setClientInfo(null);
     setShowResumeDialog(false);
     setHasResumeData(false);
+    
+    // localStorage에서 검사코드 데이터 삭제
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('mbti_pro_code_data');
+      }
+    } catch (e) {
+      console.error('검사코드 데이터 삭제 오류:', e);
+    }
   };
 
   // MBTI 유형 계산 함수

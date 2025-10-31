@@ -567,7 +567,7 @@ function MyPageContent() {
                     : 'text-blue-300 hover:text-blue-200'
                 }`}
               >
-                검사 기록
+                검사 기록 {testRecords.length > 0 ? `(${testRecords.length})` : ''}
               </button>
               <button
                 onClick={() => changeTab('in-progress')}
@@ -1258,6 +1258,10 @@ function TestRecordsTabContent({
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  // 삭제 모달 상태
+  const [deleteModalRecord, setDeleteModalRecord] = useState<TestRecord | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   // 컬럼 헤더 클릭 핸들러
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -1374,6 +1378,61 @@ function TestRecordsTabContent({
     const resultUrl = getResultPageUrl(record);
     console.log('검사 결과 페이지로 이동:', resultUrl);
     router.push(resultUrl);
+  };
+
+  // 삭제 버튼 클릭 핸들러 (이벤트 전파 방지)
+  const handleDeleteClick = (e: React.MouseEvent, record: TestRecord) => {
+    e.stopPropagation(); // 테이블 행 클릭 이벤트 방지
+    setDeleteModalRecord(record);
+    setShowDeleteModal(true);
+  };
+
+  // 삭제 확인 핸들러
+  const handleDeleteConfirm = () => {
+    if (!deleteModalRecord || !deleteModalRecord.code) {
+      setShowDeleteModal(false);
+      return;
+    }
+
+    try {
+      // test_records에서 삭제
+      const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+      const filteredRecords = allRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
+      localStorage.setItem('test_records', JSON.stringify(filteredRecords));
+
+      // 사용자별 기록에서도 삭제
+      if (typeof window !== 'undefined') {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            const userSpecificKey = `mbti-user-test-records-${user.email}`;
+            const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
+            const filteredUserRecords = userRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
+            localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
+          } catch (e) {
+            console.error('사용자별 기록 삭제 오류:', e);
+          }
+        }
+
+        // 일반 사용자별 키에서도 삭제
+        const generalRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
+        const filteredGeneralRecords = generalRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
+        localStorage.setItem('mbti-user-test-records', JSON.stringify(filteredGeneralRecords));
+
+        // test-result-{code} 키도 삭제
+        localStorage.removeItem(`test-result-${deleteModalRecord.code}`);
+      }
+
+      // 부모 컴포넌트의 testRecords 업데이트를 위해 페이지 리로드
+      window.location.reload();
+    } catch (error) {
+      console.error('검사 기록 삭제 중 오류:', error);
+      alert('검사 기록 삭제 중 오류가 발생했습니다.');
+    }
+
+    setShowDeleteModal(false);
+    setDeleteModalRecord(null);
   };
 
   return (
@@ -1528,6 +1587,12 @@ function TestRecordsTabContent({
                       <SortIcon field="code" />
                     </div>
                   </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider"
+                  >
+                    삭제
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
@@ -1549,6 +1614,14 @@ function TestRecordsTabContent({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50">
                       {record.code || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center" onClick={(e) => handleDeleteClick(e, record)}>
+                      <button
+                        className="px-3 py-1 text-xs font-medium bg-red-600/60 text-red-200 rounded hover:bg-red-600/80 transition-colors"
+                        onClick={(e) => handleDeleteClick(e, record)}
+                      >
+                        삭제
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -1612,6 +1685,66 @@ function TestRecordsTabContent({
             )}
           </div>
         </>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && deleteModalRecord && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 삭제</h3>
+            
+            <div className="mb-6 space-y-2">
+              <p className="text-blue-200">다음 검사 기록을 삭제하시겠습니까?</p>
+              <div className="bg-white/5 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-blue-300">검사 유형:</span>
+                  <span className="text-blue-100">{deleteModalRecord.testType || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-blue-300">검사결과 코드:</span>
+                  <span className="text-blue-100">{deleteModalRecord.code || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-blue-300">검사 일시:</span>
+                  <span className="text-blue-100">
+                    {deleteModalRecord.timestamp ? new Date(deleteModalRecord.timestamp).toLocaleString('ko-KR') : 'N/A'}
+                  </span>
+                </div>
+                {deleteModalRecord.counselorCode && (
+                  <div className="flex justify-between">
+                    <span className="text-blue-300">상담코드:</span>
+                    <span className="text-blue-100">{deleteModalRecord.counselorCode}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-red-300 text-sm mt-4">⚠️ 삭제된 검사 기록은 복구할 수 없습니다.</p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteModalRecord(null);
+                }}
+                className="px-4 py-2 bg-gray-600/60 text-gray-200 rounded-lg hover:bg-gray-600/80 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors"
+              >
+                삭제하기
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );
