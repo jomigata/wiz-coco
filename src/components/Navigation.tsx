@@ -455,7 +455,8 @@ export default function Navigation() {
                                   "대인관계 및 사회적응": "relationships-social", 
                                   "정서 문제 및 정신 건강": "emotional-mental",
                                   "현실 문제 및 생활 관리": "reality-life",
-                                  "문화 및 환경 적응": "culture-environment"
+                                  "문화 및 환경 적응": "culture-environment",
+                                  "임시 검사": "temporary-tests"
                                 };
                                 const categoryId = categoryMap[mainCategory.category];
                                 router.push(`/tests?category=${categoryId}`);
