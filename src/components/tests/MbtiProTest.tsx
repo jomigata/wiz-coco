@@ -9,6 +9,7 @@ import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
 import MbtiProCodeInput from './MbtiProCodeInput';
 import Navigation from '@/components/Navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
+import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
 
 interface Answer {
   [key: string]: number;
@@ -47,70 +48,86 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   // 검사 단계 상태 추가
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [hasResumeData, setHasResumeData] = useState(false);
+  const testId = generateTestId(pathname || '/tests/mbti_pro');
 
-  // 컴포넌트 마운트 시 검사코드 데이터 초기화 (새로 검사 시작)
+  // 컴포넌트 마운트 시 저장된 진행 상태 확인
   useEffect(() => {
-    // 페이지 처음 로드될 때만 초기화
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('mbti_pro_code_data');
-        localStorage.removeItem('mbti_pro_client_info');
-      }
-      setCodeData(null);
-      setClientInfo(null);
-      setAnswers({});
-    } catch {}
-  }, []); // 빈 배열: 컴포넌트 마운트 시 한 번만 실행
+    if (typeof window === 'undefined') return;
+    
+    const savedProgress = loadTestProgress(testId);
+    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      setHasResumeData(true);
+      setShowResumeDialog(true);
+    }
+  }, [testId]);
 
-  // 페이지를 벗어날 때 모든 입력 데이터 초기화
+  // 검사 진행 상태 자동 저장
   useEffect(() => {
-    const clearAllData = () => {
-      try {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('mbti_pro_code_data');
-          localStorage.removeItem('mbti_pro_client_info');
-          setCodeData(null);
-          setClientInfo(null);
-          setAnswers({});
-        }
-      } catch {}
-    };
+    if (currentStep === 'test' && Object.keys(answers).length > 0) {
+      saveTestProgress({
+        testId,
+        testName: '전문가용 MBTI 검사',
+        answers,
+        currentQuestion,
+        currentStep,
+        clientInfo,
+        codeData,
+        timestamp: Date.now(),
+        testType: 'MBTI_PRO'
+      });
+    }
+  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId]);
 
+  // 페이지를 벗어날 때 진행 상태 저장 (초기화 대신)
+  useEffect(() => {
     const handleBeforeUnload = () => {
-      // 결과 페이지로 이동하는 경우는 제외
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/tests/mbti_pro/result')) {
-        clearAllData();
+      if (typeof window !== 'undefined' && currentStep === 'test' && Object.keys(answers).length > 0) {
+        saveTestProgress({
+          testId,
+          testName: '전문가용 MBTI 검사',
+          answers,
+          currentQuestion,
+          currentStep,
+          clientInfo,
+          codeData,
+          timestamp: Date.now(),
+          testType: 'MBTI_PRO'
+        });
       }
     };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', handleBeforeUnload);
-      
-      return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        // 컴포넌트 언마운트 시 초기화 (결과 페이지가 아닌 경우만)
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/tests/mbti_pro/result')) {
-          clearAllData();
-        }
-      };
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }
-  }, []);
+  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId]);
 
-  // 경로 변경 감지 (검사 페이지를 벗어날 때 초기화)
-  useEffect(() => {
-    // 검사 페이지가 아닌 다른 페이지로 이동하면 모든 데이터 초기화
-    if (pathname && !pathname.includes('/tests/mbti_pro')) {
-      try {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('mbti_pro_code_data');
-          localStorage.removeItem('mbti_pro_client_info');
-        }
-        setCodeData(null);
-        setClientInfo(null);
-        setAnswers({});
-      } catch {}
+  // 이어하기 기능: 저장된 진행 상태 복원
+  const handleResumeTest = () => {
+    const savedProgress = loadTestProgress(testId);
+    if (savedProgress) {
+      if (savedProgress.answers) setAnswers(savedProgress.answers);
+      if (savedProgress.currentQuestion !== undefined) setCurrentQuestion(savedProgress.currentQuestion);
+      if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep);
+      if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
+      if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+      setShowResumeDialog(false);
     }
-  }, [pathname]);
+  };
+
+  // 새로 시작하기
+  const handleStartNew = () => {
+    clearTestProgress(testId);
+    setAnswers({});
+    setCurrentQuestion(0);
+    setCurrentStep('code');
+    setCodeData(null);
+    setClientInfo(null);
+    setShowResumeDialog(false);
+    setHasResumeData(false);
+  };
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
@@ -387,7 +404,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         }
       }
       
-      // 검사 완료 시 검사코드 데이터 초기화
+      // 검사 완료 시 진행 상태 삭제
+      clearTestProgress(testId);
       try {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('mbti_pro_code_data');
@@ -441,6 +459,62 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       opacity: 0
     })
   };
+
+  // 이어하기 다이얼로그
+  if (showResumeDialog && hasResumeData) {
+    const savedProgress = loadTestProgress(testId);
+    const answeredCount = savedProgress ? Object.keys(savedProgress.answers || {}).length : 0;
+    const totalCount = totalQuestions;
+    const progressPercent = Math.round((answeredCount / totalCount) * 100);
+    
+    return (
+      <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-emerald-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-emerald-700"
+        >
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
+          <p className="text-emerald-200 mb-6 text-center">
+            진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
+          </p>
+          <div className="bg-emerald-800/50 rounded-lg p-4 mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-emerald-200 text-sm">진행률</span>
+              <span className="text-emerald-300 font-semibold">{progressPercent}%</span>
+            </div>
+            <div className="w-full bg-emerald-900 rounded-full h-2">
+              <div
+                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="text-emerald-300/80 text-xs mt-2 text-center">
+              {answeredCount}개 문항 완료 / 전체 {totalCount}개
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <motion.button
+              onClick={handleStartNew}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              새로 시작
+            </motion.button>
+            <motion.button
+              onClick={handleResumeTest}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              이어서 계속
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   // 단계별 렌더링
   if (currentStep === 'code') {
