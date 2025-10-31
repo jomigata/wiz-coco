@@ -40,13 +40,15 @@ export default function AIProfilingPage() {
   // 진행 상태 자동 저장
   useEffect(() => {
     if (Object.keys(answers).length > 0) {
+      const totalQuestions = chapters.reduce((sum, ch) => sum + ch.questions.length, 0);
       saveTestProgress({
         testId,
         testName: 'AI 프로파일링 검사',
         answers,
         currentChapter,
         timestamp: Date.now(),
-        testType: 'AI_PROFILING'
+        testType: 'AI_PROFILING',
+        totalQuestions
       });
     }
   }, [answers, currentChapter, testId]);
@@ -55,13 +57,15 @@ export default function AIProfilingPage() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (Object.keys(answers).length > 0) {
+        const totalQuestions = chapters.reduce((sum, ch) => sum + ch.questions.length, 0);
         saveTestProgress({
           testId,
           testName: 'AI 프로파일링 검사',
           answers,
           currentChapter,
           timestamp: Date.now(),
-          testType: 'AI_PROFILING'
+          testType: 'AI_PROFILING',
+          totalQuestions
         });
       }
     };

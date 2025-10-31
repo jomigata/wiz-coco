@@ -49,6 +49,9 @@ export default function IntegratedAssessmentPage() {
   // 진행 상태 자동 저장
   useEffect(() => {
     if (Object.keys(answers).length > 0 || currentStep > 0) {
+      const totalQuestions = assessmentSteps.reduce((sum, step) => 
+        sum + (step.questions ? step.questions.length : 0), 0
+      );
       saveTestProgress({
         testId,
         testName: '통합 평가 검사',
@@ -56,7 +59,8 @@ export default function IntegratedAssessmentPage() {
         currentStep,
         studentInfo,
         timestamp: Date.now(),
-        testType: 'INTEGRATED_ASSESSMENT'
+        testType: 'INTEGRATED_ASSESSMENT',
+        totalQuestions
       });
     }
   }, [answers, currentStep, studentInfo, testId]);
@@ -65,6 +69,9 @@ export default function IntegratedAssessmentPage() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (Object.keys(answers).length > 0 || currentStep > 0) {
+        const totalQuestions = assessmentSteps.reduce((sum, step) => 
+          sum + (step.questions ? step.questions.length : 0), 0
+        );
         saveTestProgress({
           testId,
           testName: '통합 평가 검사',
@@ -72,7 +79,8 @@ export default function IntegratedAssessmentPage() {
           currentStep,
           studentInfo,
           timestamp: Date.now(),
-          testType: 'INTEGRATED_ASSESSMENT'
+          testType: 'INTEGRATED_ASSESSMENT',
+          totalQuestions
         });
       }
     };
