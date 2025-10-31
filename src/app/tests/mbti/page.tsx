@@ -22,6 +22,17 @@ export default function MbtiTestPage() {
     if (typeof window === 'undefined') return;
     const savedProgress = loadTestProgress(testId);
     if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      // 완료 여부 확인 (100% 진행률인 경우 제외)
+      const answeredCount = Object.keys(savedProgress.answers || {}).length;
+      const totalQuestions = 48; // MBTI 질문 수
+      
+      // 모든 문항이 완료되었으면 이어하기 표시하지 않음
+      if (answeredCount >= totalQuestions) {
+        // 완료된 검사는 진행 상태 삭제
+        clearTestProgress(testId);
+        return;
+      }
+      
       setHasResumeData(true);
       setShowResumeDialog(true);
       setSavedAnswers(savedProgress.answers);

@@ -27,6 +27,19 @@ export default function IntegratedAssessmentPage() {
     if (typeof window === 'undefined') return;
     const savedProgress = loadTestProgress(testId);
     if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      // 완료 여부 확인 (100% 진행률인 경우 제외)
+      const answeredCount = Object.keys(savedProgress.answers || {}).length;
+      const totalQuestions = assessmentSteps.reduce((sum, step) => 
+        sum + (step.questions ? step.questions.length : 0), 0
+      );
+      
+      // 모든 문항이 완료되었으면 이어하기 표시하지 않음
+      if (totalQuestions > 0 && answeredCount >= totalQuestions) {
+        // 완료된 검사는 진행 상태 삭제
+        clearTestProgress(testId);
+        return;
+      }
+      
       setHasResumeData(true);
       setShowResumeDialog(true);
       if (savedProgress.studentInfo) setStudentInfo(savedProgress.studentInfo);

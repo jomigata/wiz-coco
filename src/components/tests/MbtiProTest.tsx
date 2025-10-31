@@ -58,6 +58,17 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     
     const savedProgress = loadTestProgress(testId);
     if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      // 완료 여부 확인 (100% 진행률인 경우 제외)
+      const answeredCount = Object.keys(savedProgress.answers || {}).length;
+      const savedTotalQuestions = savedProgress.totalQuestions || 24; // MBTI Pro는 기본 24개 질문
+      
+      // 총 문항 수가 있고, 모든 문항이 완료되었으면 이어하기 표시하지 않음
+      if (savedTotalQuestions > 0 && answeredCount >= savedTotalQuestions) {
+        // 완료된 검사는 진행 상태 삭제
+        clearTestProgress(testId);
+        return;
+      }
+      
       setHasResumeData(true);
       setShowResumeDialog(true);
     }
@@ -75,7 +86,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         clientInfo,
         codeData,
         timestamp: Date.now(),
-        testType: 'MBTI_PRO'
+        testType: 'MBTI_PRO',
+        totalQuestions: 24 // MBTI Pro 총 질문 수
       });
     }
   }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId]);
