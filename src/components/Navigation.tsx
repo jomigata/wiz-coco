@@ -8,6 +8,7 @@ import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
+import { sweepAllInProgress } from '@/utils/testResume';
 
 export default function Navigation() {
   const router = useRouter();
@@ -127,6 +128,8 @@ export default function Navigation() {
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
       setActiveItem(path);
+      // 전역 진입 시 진행 상태 정리(이어하기 잔여 데이터 청소)
+      try { sweepAllInProgress(); } catch {}
     }
   }, [user, loading, isLoggedIn, userEmail, userName]);
 

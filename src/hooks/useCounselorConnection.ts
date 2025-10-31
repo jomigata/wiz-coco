@@ -36,6 +36,14 @@ export const useCounselorConnection = () => {
       setError('');
 
       const response = await fetch(`/api/verify-counselor-code?clientId=${user.uid}`);
+      
+      // 응답이 JSON인지 확인
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        // JSON이 아니면 에러로 처리 (HTML 에러 페이지 등)
+        throw new Error('Invalid response format');
+      }
+      
       const result = await response.json();
       
       if (result.success) {

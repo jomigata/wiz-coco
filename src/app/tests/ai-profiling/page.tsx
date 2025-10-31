@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
+import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
 export default function AIProfilingPage() {
@@ -19,19 +19,8 @@ export default function AIProfilingPage() {
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const savedProgress = loadTestProgress(testId);
-    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-      // 완료 여부 확인 (100% 진행률인 경우 제외)
-      const answeredCount = Object.keys(savedProgress.answers || {}).length;
-      const totalQuestions = chapters.reduce((sum, ch) => sum + ch.questions.length, 0);
-      
-      // 모든 문항이 완료되었으면 이어하기 표시하지 않음
-      if (answeredCount >= totalQuestions) {
-        // 완료된 검사는 진행 상태 삭제
-        clearTestProgress(testId);
-        return;
-      }
-      
+    const show = shouldShowResumeDialog(testId);
+    if (show) {
       setHasResumeData(true);
       setShowResumeDialog(true);
     }

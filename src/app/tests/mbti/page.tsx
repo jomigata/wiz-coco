@@ -5,13 +5,16 @@ import Navigation from '@/components/Navigation';
 import MBTITest from '@/components/tests/MBTITest';
 import { useRouter, usePathname } from 'next/navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
-import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
+import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog, sweepAllInProgress } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
 export default function MbtiTestPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const testId = generateTestId(pathname || '/tests/mbti');
+  // testId를 상태로 관리하여 "새로 시작" 시 완전히 새로운 ID 생성
+  const [testId, setTestId] = useState(() => 
+    generateTestId(pathname || '/tests/mbti') + '_' + Date.now()
+  );
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
   const [testComponentKey, setTestComponentKey] = useState(0);
@@ -20,36 +23,22 @@ export default function MbtiTestPage() {
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const savedProgress = loadTestProgress(testId);
-    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-      // 이미 결과가 저장된 경우(검사 기록 존재, 진행 저장 시점보다 최신) 진행 상태 정리
-      try {
-        const recordsStr = localStorage.getItem('test_records');
-        if (recordsStr) {
-          const records = JSON.parse(recordsStr);
-          const latestCompleted = (records || []).filter((r: any) => r && r.testType && r.testType.includes('MBTI'))
-            .map((r: any) => new Date(r.timestamp || 0).getTime())
-            .sort((a: number, b: number) => b - a)[0];
-          if (latestCompleted && latestCompleted > (savedProgress.timestamp || 0)) {
-            clearTestProgress(testId);
-            return;
-          }
-        }
-      } catch {}
-      // 완료 여부 확인 (100% 진행률인 경우 제외)
-      const answeredCount = Object.keys(savedProgress.answers || {}).length;
-      const totalQuestions = 48; // MBTI 질문 수
-      
-      // 모든 문항이 완료되었으면 이어하기 표시하지 않음
-      if (answeredCount >= totalQuestions) {
-        // 완료된 검사는 진행 상태 삭제
-        clearTestProgress(testId);
-        return;
-      }
-      
+    // 전역 정리 먼저 실행
+    try {
+      sweepAllInProgress();
+    } catch {}
+    
+    const show = shouldShowResumeDialog(testId);
+    if (show) {
+      const savedProgress = loadTestProgress(testId);
       setHasResumeData(true);
       setShowResumeDialog(true);
-      setSavedAnswers(savedProgress.answers);
+      setSavedAnswers(savedProgress?.answers || {});
+    } else {
+      // 이어하기 데이터가 없으면 상태 초기화
+      setHasResumeData(false);
+      setShowResumeDialog(false);
+      setSavedAnswers(null);
     }
   }, [testId]);
 
@@ -60,13 +49,46 @@ export default function MbtiTestPage() {
     setTestComponentKey(prev => prev + 1);
   };
 
-  // 새로 시작
+  // 새로 시작 - 완전히 새로운 testId 생성하여 이전 진행 상태와 완전히 분리
   const handleStartNew = () => {
+    // 1. 현재 testId의 진행 상태 완전 삭제
     clearTestProgress(testId);
+    
+    // 2. 완전히 새로운 testId 생성 (타임스탬프 포함)
+    const newTestId = generateTestId(pathname || '/tests/mbti') + '_' + Date.now();
+    setTestId(newTestId);
+    
+    // 3. 모든 상태 초기화
     setSavedAnswers(null);
     setShowResumeDialog(false);
     setHasResumeData(false);
+    
+    // 4. 컴포넌트 강제 리셋
     setTestComponentKey(prev => prev + 1);
+    
+    // 5. localStorage에서 관련 데이터 모두 정리
+    if (typeof window !== 'undefined') {
+      // 이전 testId와 관련된 모든 키 삭제
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes(testId) || key.startsWith(`test_progress_${testId.split('_')[0]}`))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.error(`키 삭제 실패: ${key}`, e);
+        }
+      });
+      
+      // 진행 목록에서도 정리
+      try {
+        sweepAllInProgress();
+      } catch {}
+    }
   };
 
   const handleTestComplete = async (results: any) => {
@@ -86,6 +108,7 @@ export default function MbtiTestPage() {
         timestamp: timestamp,
         answers: results,
         mbtiType: results.mbtiType || 'INTJ', // 기본값 설정
+        status: '완료', // 명시적으로 완료 상태 설정
         userData: {
           name: '게스트 사용자',
           email: 'guest@example.com',
