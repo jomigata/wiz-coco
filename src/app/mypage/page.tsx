@@ -1106,6 +1106,24 @@ function MyPageContent() {
   );
 }
 
+// 검사 유형별 결과 페이지 경로 생성 함수
+const getResultPageUrl = (record: TestRecord): string => {
+  const testType = (record.testType || '').toLowerCase();
+  const code = record.code || '';
+  const mbtiType = record.mbtiType || '';
+  
+  // MBTI 검사 결과 페이지
+  if (testType.includes('mbti')) {
+    return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
+  }
+  
+  // 다른 검사 유형들도 향후 추가 가능
+  // 예: AI 프로파일링, 통합 평가 등
+  
+  // 기본적으로 MBTI 결과 페이지로 이동 (임시)
+  return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
+};
+
 // 검사 기록 탭 컴포넌트
 function TestRecordsTabContent({
   searchQuery,
@@ -1124,6 +1142,7 @@ function TestRecordsTabContent({
   setSortOrder: (order: 'newest' | 'oldest') => void;
   testRecords: TestRecord[];
 }) {
+  const router = useRouter();
   // 검색 및 필터링된 기록
   const filteredRecords = testRecords.filter(record => {
     // 검색 필터
@@ -1152,6 +1171,18 @@ function TestRecordsTabContent({
       return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
     }
   });
+
+  // 검사 기록 클릭 핸들러
+  const handleRecordClick = (record: TestRecord) => {
+    if (!record.code) {
+      console.warn('검사 코드가 없어 결과 페이지로 이동할 수 없습니다:', record);
+      return;
+    }
+    
+    const resultUrl = getResultPageUrl(record);
+    console.log('검사 결과 페이지로 이동:', resultUrl);
+    router.push(resultUrl);
+  };
 
   return (
     <motion.div
@@ -1253,21 +1284,26 @@ function TestRecordsTabContent({
               </thead>
               <tbody className="divide-y divide-white/10">
                 {filteredRecords.map((record, index) => (
-                  <tr key={record.code || index} className="hover:bg-white/10 transition-colors duration-150">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                  <tr 
+                    key={record.code || index} 
+                    onClick={() => handleRecordClick(record)}
+                    className="hover:bg-white/10 transition-colors duration-150 cursor-pointer group"
+                    title="클릭하여 검사 결과 보기"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50">
                       {record.code || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
                       {record.testType || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
                       {record.mbtiType || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full group-hover:bg-green-500/70 group-hover:text-green-100 transition-colors duration-150">
                         완료
                       </span>
                     </td>
