@@ -151,6 +151,10 @@ function MyPageContent() {
     lastTestDate: null,
     favoriteType: null
   });
+  // 통계 기간 필터: week | month | year
+  const [statsPeriod, setStatsPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [recordsLoading, setRecordsLoading] = useState<boolean>(false);
+  const [recordsError, setRecordsError] = useState<string | null>(null);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -257,27 +261,59 @@ function MyPageContent() {
     router.push(`/mypage?${params.toString()}`);
   };
 
-  // 로컬 테스트 기록 로드 (완료된 검사만)
+  // 레코드 정규화: status, testType, timestamp, score
+  const normalizeTestRecord = (record: any): TestRecord => {
+    // status 표준화
+    const rawStatus = (record.status || '').toString().toLowerCase();
+    const status = rawStatus.includes('완료') || rawStatus === 'completed' || rawStatus === 'complete' ? 'completed' : 'in_progress';
+
+    // testType 표준화 (대표 문자열로 통일)
+    const rawType = (record.testType || '').toString().toLowerCase();
+    let testType = '기타';
+    if (rawType.includes('mbti pro') || rawType.includes('mbti_pro') || rawType.includes('전문가')) testType = 'MBTI Pro';
+    else if (rawType.includes('mbti')) testType = 'MBTI';
+    else if (rawType.includes('ai') && rawType.includes('profil')) testType = 'AI 프로파일링';
+    else if (rawType.includes('integrated') || rawType.includes('통합')) testType = '통합 평가';
+    else if (rawType.includes('에고')) testType = '에고그램';
+    else if (rawType.includes('에니어') || rawType.includes('ennea')) testType = '에니어그램';
+
+    // timestamp 보정
+    const timestamp = record.timestamp || record.createdAt || new Date().toISOString();
+
+    return {
+      code: record.code || record.id || '',
+      testType,
+      timestamp,
+      createdAt: record.createdAt,
+      mbtiType: record.mbtiType,
+      userData: record.userData,
+      status
+    } as TestRecord;
+  };
+
+  // 로컬 테스트 기록 로드 (완료된 검사만 + 표준화)
   const loadLocalTestRecords = (): TestRecord[] => {
     try {
-      const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-      
-      // 완료된 검사만 필터링
-      const completedRecords = allRecords.filter((record: any) => {
-        const status = record.status?.toLowerCase() || '';
-        return status === '완료' || status === 'completed' || status === 'complete';
-      });
-      
-      console.log(`사용자 ${user?.email}의 완료된 검사 기록 ${completedRecords.length}개를 로드했습니다.`);
-      
-      return completedRecords.sort((a: any, b: any) => {
+      setRecordsLoading(true);
+      setRecordsError(null);
+      const raw = JSON.parse(localStorage.getItem('test_records') || '[]');
+      const normalized = (Array.isArray(raw) ? raw : []).map(normalizeTestRecord);
+      const completed = normalized.filter(r => r.status === 'completed');
+
+      console.log(`사용자 ${user?.email}의 완료된 검사 기록 ${completed.length}개를 로드했습니다.`);
+
+      const sorted = completed.sort((a: any, b: any) => {
         const timeA = new Date(a.timestamp || new Date()).getTime();
         const timeB = new Date(b.timestamp || new Date()).getTime();
         return timeB - timeA;
       });
+      return sorted;
     } catch (error) {
       console.error('로컬 테스트 기록 로드 오류:', error);
+      setRecordsError('검사 기록을 불러오지 못했습니다.');
       return [];
+    } finally {
+      setRecordsLoading(false);
     }
   };
 
@@ -299,22 +335,41 @@ function MyPageContent() {
 
   // 통계 계산 함수
   const calculateStats = (records: TestRecord[]): Stats => {
-    const totalTests = records.length;
-    const mbtiCount = records.filter(r => r.testType?.includes('MBTI')).length;
-    const egoCount = records.filter(r => r.testType?.includes('에고그램')).length;
-    const enneagramCount = records.filter(r => r.testType?.includes('에니어그램')).length;
-    
-    const lastTest = records.length > 0 ? records[0].timestamp : null;
-    
+    // 기간 필터 적용
+    const now = new Date();
+    const start = new Date(now);
+    if (statsPeriod === 'week') start.setDate(now.getDate() - 7);
+    if (statsPeriod === 'month') start.setMonth(now.getMonth() - 1);
+    if (statsPeriod === 'year') start.setFullYear(now.getFullYear() - 1);
+
+    const periodRecords = records.filter(r => new Date(r.timestamp || 0) >= start);
+
+    const totalTests = periodRecords.length;
+    const mbtiCount = periodRecords.filter(r => (r.testType || '').includes('MBTI')).length;
+    const egoCount = periodRecords.filter(r => (r.testType || '').includes('에고그램')).length;
+    const enneagramCount = periodRecords.filter(r => (r.testType || '').includes('에니어그램')).length;
+
+    // 평균 점수 (score가 있는 레코드만 집계)
+    const scores: number[] = periodRecords
+      .map(r => (r as any).userData?.score)
+      .filter((s: any) => typeof s === 'number');
+    const averageScore = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : 0;
+
+    const lastTest = periodRecords.length > 0 ? periodRecords[0].timestamp : null;
+
     return {
       totalTests,
       mbtiCount,
       egoCount,
       enneagramCount,
-      averageScore: 0, // 필요시 계산
+      averageScore,
       lastTestDate: lastTest || null,
-      favoriteType: mbtiCount > egoCount && mbtiCount > enneagramCount ? 'MBTI' : 
-                    egoCount > enneagramCount ? '에고그램' : '에니어그램'
+      favoriteType:
+        mbtiCount >= egoCount && mbtiCount >= enneagramCount
+          ? 'MBTI'
+          : egoCount >= enneagramCount
+          ? '에고그램'
+          : '에니어그램'
     };
   };
 
@@ -646,7 +701,11 @@ function MyPageContent() {
                           return 0;
                         });
 
-                        return sorted.map((test) => {
+                        // 간단 페이지네이션 (더보기)
+                        const [pageSize] = [10];
+                        const paged = sorted.slice(0, pageSize);
+
+                        return paged.map((test) => {
                           const savedProgress = typeof window !== 'undefined' 
                             ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
                             : {};
@@ -730,6 +789,17 @@ function MyPageContent() {
                   <p className="mt-2 text-blue-200 max-w-2xl">
                     심리 검사 결과와 진행 상황에 대한 통계 정보를 확인할 수 있습니다.
                   </p>
+                  <div className="mt-3 flex gap-3">
+                    <select
+                      value={statsPeriod}
+                      onChange={(e) => setStatsPeriod(e.target.value as any)}
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="week" className="bg-blue-900 text-white">최근 1주</option>
+                      <option value="month" className="bg-blue-900 text-white">최근 1개월</option>
+                      <option value="year" className="bg-blue-900 text-white">최근 1년</option>
+                    </select>
+                  </div>
                 </motion.div>
                 
 
@@ -813,6 +883,59 @@ function MyPageContent() {
                   </motion.div>
                 </div>
                 
+                {/* 추이 그래프 (간단 바 차트) */}
+                <div className="mb-6 bg-white/5 rounded-lg p-4 border border-white/10">
+                  {(() => {
+                    const now = new Date();
+                    const bucketCount = statsPeriod === 'week' ? 7 : statsPeriod === 'month' ? 30 : 12;
+                    const labels: string[] = [];
+                    const counts: number[] = Array(bucketCount).fill(0);
+                    for (let i = bucketCount - 1; i >= 0; i--) {
+                      const d = new Date(now);
+                      if (statsPeriod === 'year') d.setMonth(d.getMonth() - i);
+                      else d.setDate(d.getDate() - i);
+                      labels.push(
+                        statsPeriod === 'year'
+                          ? `${d.getMonth() + 1}월`
+                          : `${d.getMonth() + 1}/${d.getDate()}`
+                      );
+                    }
+                    testRecords.forEach(r => {
+                      const t = new Date(r.timestamp || 0);
+                      for (let i = 0; i < labels.length; i++) {
+                        const d = new Date(now);
+                        const prev = new Date(now);
+                        if (statsPeriod === 'year') {
+                          d.setMonth(d.getMonth() - (labels.length - 1 - i));
+                          prev.setMonth(d.getMonth() - 1);
+                        } else {
+                          d.setDate(d.getDate() - (labels.length - 1 - i));
+                          prev.setDate(d.getDate() - 1);
+                        }
+                        if (t <= d && t > prev) counts[i] += 1;
+                      }
+                    });
+                    const max = Math.max(1, ...counts);
+                    return (
+                      <div>
+                        <div className="flex items-end gap-1 h-24">
+                          {counts.map((c, i) => (
+                            <div key={i} className="flex-1 bg-blue-900/50 rounded-sm">
+                              <div
+                                className="bg-gradient-to-t from-blue-500 to-purple-500 w-full rounded-sm"
+                                style={{ height: `${(c / max) * 100}%` }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-2 grid grid-cols-8 gap-1 text-[10px] text-blue-300/70">
+                          {labels.map((l, i) => (i % Math.ceil(labels.length / 8) === 0 ? <span key={i}>{l}</span> : <span key={i}></span>))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
                 {/* 상세 통계 테이블 */}
                 {testRecords.length > 0 ? (
                   <div className="overflow-x-auto">
