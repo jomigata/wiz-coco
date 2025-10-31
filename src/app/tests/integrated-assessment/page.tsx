@@ -72,7 +72,17 @@ export default function IntegratedAssessmentPage() {
     const savedProgress = loadTestProgress(testId);
     if (savedProgress) {
       setAnswers(savedProgress.answers || {});
-      setCurrentStep(savedProgress.currentStep || 0);
+      // 타입 안전성 체크: number 타입인 경우에만 설정
+      if (savedProgress.currentStep !== undefined) {
+        const step = savedProgress.currentStep;
+        if (typeof step === 'number') {
+          setCurrentStep(step);
+        } else {
+          setCurrentStep(0); // 기본값
+        }
+      } else {
+        setCurrentStep(0);
+      }
       if (savedProgress.studentInfo) setStudentInfo(savedProgress.studentInfo);
       setShowResumeDialog(false);
     }

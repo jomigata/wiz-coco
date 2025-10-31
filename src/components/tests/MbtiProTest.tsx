@@ -110,7 +110,13 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     if (savedProgress) {
       if (savedProgress.answers) setAnswers(savedProgress.answers);
       if (savedProgress.currentQuestion !== undefined) setCurrentQuestion(savedProgress.currentQuestion);
-      if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep);
+      if (savedProgress.currentStep) {
+        // 타입 안전성 체크: string 타입인 경우에만 설정
+        if (typeof savedProgress.currentStep === 'string' && 
+            (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+          setCurrentStep(savedProgress.currentStep);
+        }
+      }
       if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
       if (savedProgress.codeData) setCodeData(savedProgress.codeData);
       setShowResumeDialog(false);

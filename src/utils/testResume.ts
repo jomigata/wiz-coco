@@ -7,11 +7,12 @@ export interface TestProgress {
   testId: string;
   testName: string;
   answers: { [key: string]: any };
-  currentStep?: number;
+  currentStep?: number | string; // number (일반 검사) 또는 string (MBTI Pro: 'code' | 'info' | 'test')
   currentQuestion?: number;
   currentChapter?: number;
   clientInfo?: any;
   codeData?: any;
+  studentInfo?: any;
   timestamp: number;
   testType?: string;
   totalQuestions?: number;
