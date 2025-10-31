@@ -1337,11 +1337,7 @@ function TestRecordsTabContent({
         aValue = a.mbtiType || '';
         bValue = b.mbtiType || '';
         break;
-      case 'status':
-        aValue = a.status || '';
-        bValue = b.status || '';
-        break;
-        case 'counselorCode':
+      case 'counselorCode':
           aValue = a.counselorCode || '';
           bValue = b.counselorCode || '';
           break;
