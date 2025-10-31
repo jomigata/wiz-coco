@@ -140,7 +140,7 @@ function MyPageContent() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'mbti' | 'ego' | 'enneagram'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'mbti-personal' | 'mbti-professional' | 'ai-profiling' | 'integrated' | 'ego' | 'enneagram'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [inProgressTests, setInProgressTests] = useState<any[]>([]);
   const [inProgressFilter, setInProgressFilter] = useState<'all' | 'mbti_pro' | 'mbti' | 'ai-profiling' | 'integrated-assessment'>('all');
@@ -1247,8 +1247,8 @@ function TestRecordsTabContent({
 }: {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  filterType: 'all' | 'mbti' | 'ego' | 'enneagram';
-  setFilterType: (type: 'all' | 'mbti' | 'ego' | 'enneagram') => void;
+  filterType: 'all' | 'mbti-personal' | 'mbti-professional' | 'ai-profiling' | 'integrated' | 'ego' | 'enneagram';
+  setFilterType: (type: 'all' | 'mbti-personal' | 'mbti-professional' | 'ai-profiling' | 'integrated' | 'ego' | 'enneagram') => void;
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   testRecords: TestRecord[];
