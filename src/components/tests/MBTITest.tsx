@@ -15,6 +15,13 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
   const initialAnswers = savedAnswers || {};
   const initialCurrentQuestion = savedCurrentQuestion !== undefined ? savedCurrentQuestion : 0;
   
+  // 디버깅 로그 추가
+  console.log('[MBTITest] 초기화:', { 
+    savedCurrentQuestion, 
+    initialCurrentQuestion, 
+    savedAnswersCount: Object.keys(initialAnswers).length 
+  });
+  
   const [currentQuestion, setCurrentQuestion] = useState(initialCurrentQuestion);
   const [answers, setAnswers] = useState<{ [key: string]: { type: string; answer: number } }>(initialAnswers);
   const [loading, setLoading] = useState(false);

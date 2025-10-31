@@ -214,7 +214,7 @@ function MbtiTestPageContent() {
   if (showResumeDialog && hasResumeData) {
     const savedProgress = loadTestProgress(testId);
     const answeredCount = Object.keys(savedProgress?.answers || {}).length;
-    const totalQuestions = 48; // MBTI 질문 수
+    const totalQuestions = 20; // MBTI 질문 수 (실제 문항수)
     
     return (
       <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4">
@@ -337,7 +337,7 @@ function MBTITestWrapper({ onComplete, testId, savedAnswers, savedCurrentQuestio
         currentQuestion: trackedCurrentQuestion,
         timestamp: Date.now(),
         testType: 'MBTI',
-        totalQuestions: 48
+        totalQuestions: 20
       });
     }
   }, [trackedAnswers, trackedCurrentQuestion, testId]);
@@ -353,7 +353,7 @@ function MBTITestWrapper({ onComplete, testId, savedAnswers, savedCurrentQuestio
           currentQuestion: trackedCurrentQuestion,
           timestamp: Date.now(),
           testType: 'MBTI',
-          totalQuestions: 48
+          totalQuestions: 20
         });
       }
     };

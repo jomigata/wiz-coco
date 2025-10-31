@@ -59,8 +59,8 @@ function isProgressCompleted(progress: TestProgress | null): boolean {
   // 2) 검사 유형별 기본 문항 수 추정치 (fallback)
   const type = (progress.testType || '').toUpperCase();
   const fallbackTotal =
-    type.includes('MBTI PRO') ? 60 : // 예시값: 필요시 실제값으로 조정
-    type.includes('MBTI') ? 48 :
+    type.includes('MBTI PRO') ? 24 : // MBTI Pro 실제 문항수
+    type.includes('MBTI') ? 20 : // 개인용 MBTI 실제 문항수
     type.includes('AI_PROFILING') || type.includes('AI-PROFILING') ? (progress.totalQuestions || 0) :
     type.includes('INTEGRATED') ? (progress.totalQuestions || 0) : 0;
 

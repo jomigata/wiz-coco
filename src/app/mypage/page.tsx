@@ -715,7 +715,7 @@ function MyPageContent() {
                           if (totalQuestions === 0) {
                             const testType = (test.testType || '').toUpperCase();
                             if (testType.includes('MBTI') && !testType.includes('PRO')) {
-                              totalQuestions = 48; // 개인용 MBTI 검사
+                              totalQuestions = 20; // 개인용 MBTI 검사 (실제 문항수)
                             } else if (testType.includes('MBTI_PRO') || testType.includes('MBTI PRO')) {
                               totalQuestions = 24; // MBTI Pro 검사
                             } else if (testType.includes('AI_PROFILING') || testType.includes('AI-PROFILING')) {
