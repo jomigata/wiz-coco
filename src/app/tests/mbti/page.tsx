@@ -1,28 +1,64 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Navigation from '@/components/Navigation';
 import MBTITest from '@/components/tests/MBTITest';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
-export default function MbtiTestPage() {
+function MbtiTestPageContent() {
   const router = useRouter();
   const pathname = usePathname();
-  // testId를 상태로 관리하여 "새로 시작" 시 완전히 새로운 ID 생성
-  const [testId, setTestId] = useState(() => 
-    generateTestId(pathname || '/tests/mbti') + '_' + Date.now()
-  );
+  const searchParams = useSearchParams();
+  
+  // URL에서 resume 파라미터로 전달된 testId 확인 (마이페이지에서 이어하기 클릭 시)
+  const resumeTestId = searchParams.get('resume');
+  
+  // testId를 상태로 관리: resume 파라미터가 있으면 사용, 없으면 새로 생성
+  const [testId, setTestId] = useState(() => {
+    if (resumeTestId) {
+      // 마이페이지에서 이어하기 클릭한 경우, 전달된 testId 사용
+      console.log('[MbtiTestPage] Resume testId from URL:', resumeTestId);
+      return resumeTestId;
+    }
+    // 새로 시작하는 경우, 새로운 testId 생성
+    const newTestId = generateTestId(pathname || '/tests/mbti') + '_' + Date.now();
+    console.log('[MbtiTestPage] New testId generated:', newTestId);
+    return newTestId;
+  });
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
   const [testComponentKey, setTestComponentKey] = useState(0);
   const [savedAnswers, setSavedAnswers] = useState<any>(null);
   
+  // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
+  useEffect(() => {
+    const urlResumeTestId = searchParams.get('resume');
+    if (urlResumeTestId && urlResumeTestId !== testId) {
+      console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
+      setTestId(urlResumeTestId);
+      // URL 파라미터에서 온 경우 이어하기 다이얼로그를 자동으로 표시
+      const savedProgress = loadTestProgress(urlResumeTestId);
+      if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+        setHasResumeData(true);
+        setShowResumeDialog(true);
+        setSavedAnswers(savedProgress.answers);
+      }
+    }
+  }, [searchParams]);
+  
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // URL 파라미터로 resume이 전달된 경우는 이미 처리했으므로 건너뜀
+    const urlResumeTestId = searchParams.get('resume');
+    if (urlResumeTestId && urlResumeTestId === testId) {
+      // URL 파라미터에서 온 경우 이미 처리됨
+      return;
+    }
     
     // 전역 정리는 호출하지 않음 - getInProgressTests에서만 수행
     // 특정 testId만 확인하여 중복 호출 방지
@@ -38,7 +74,7 @@ export default function MbtiTestPage() {
       setShowResumeDialog(false);
       setSavedAnswers(null);
     }
-  }, [testId]);
+  }, [testId, searchParams]);
 
   // 이어하기
   const handleResumeTest = () => {
@@ -311,5 +347,21 @@ function MBTITestWrapper({ onComplete, testId, savedAnswers }: {
       savedCurrentQuestion={savedCurrentQuestion}
       onAnswerChange={handleAnswerChange}
     />
+  );
+}
+
+// Suspense로 감싼 export default 컴포넌트
+export default function MbtiTestPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-emerald-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-emerald-200 text-lg">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <MbtiTestPageContent />
+    </Suspense>
   );
 } 

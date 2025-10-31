@@ -755,7 +755,7 @@ function MyPageContent() {
                                   </p>
                                 </div>
                                 <Link
-                                  href={getTestPath(test.testId, test.testType)}
+                                  href={`${getTestPath(test.testId, test.testType)}?resume=${encodeURIComponent(test.testId)}`}
                                   className="ml-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                                 >
                                   이어하기
