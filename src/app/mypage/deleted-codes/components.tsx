@@ -36,6 +36,16 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
 
+  // 유효/중복 정제 유틸
+  const sanitizeDeletedRecords = (records: DeletedTestRecord[]): DeletedTestRecord[] => {
+    const map = new Map<string, DeletedTestRecord>();
+    records.forEach(r => {
+      if (!r || !r.code || !r.testType) return;
+      if (!map.has(r.code)) map.set(r.code, r);
+    });
+    return Array.from(map.values());
+  };
+
   // Firebase 인증 상태 확인
   useEffect(() => {
     const checkAuthAndLoadUser = async () => {
@@ -102,8 +112,9 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           const parsedRecords = JSON.parse(deletedRecordsStr);
           
           if (Array.isArray(parsedRecords) && parsedRecords.length > 0) {
+            const cleaned = sanitizeDeletedRecords(parsedRecords);
             // 정렬 (기본: 최신순)
-            const sortedRecords = parsedRecords.sort((a, b) => {
+            const sortedRecords = cleaned.sort((a, b) => {
               return new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime();
             });
             
@@ -226,7 +237,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         });
         
         // 4. 테스트 기록 업데이트
-        const updatedTestRecords = [...testRecords, ...restoredRecords];
+        const updatedTestRecords = [...testRecords, ...restoredRecords].filter((r: any) => r && r.code && r.testType);
         localStorage.setItem('test_records', JSON.stringify(updatedTestRecords));
         
         // 5. MBTI 테스트 기록도 함께 복원 (mbti-user-test-records에 추가)
@@ -263,7 +274,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         );
         
         // 7. 삭제된 기록 업데이트
-        localStorage.setItem('deleted_test_records', JSON.stringify(remainingDeletedRecords));
+        localStorage.setItem('deleted_test_records', JSON.stringify(sanitizeDeletedRecords(remainingDeletedRecords)));
         setDeletedRecords(remainingDeletedRecords);
         
         // 8. 선택 초기화

@@ -43,6 +43,31 @@ export function saveTestProgress(progress: TestProgress): void {
 }
 
 /**
+ * 주어진 진행 상태가 100% 완료인지 여부를 판단
+ * - 우선 순위: totalQuestions → 검사 유형별 기본 문항 수 → answers 내 완료 여부
+ */
+function isProgressCompleted(progress: TestProgress | null): boolean {
+  if (!progress || !progress.answers) return false;
+  const answeredCount = Object.keys(progress.answers || {}).length;
+
+  // 1) 저장된 총 문항 수 기준
+  const totalQuestions = progress.totalQuestions || 0;
+  if (totalQuestions > 0 && answeredCount >= totalQuestions) return true;
+
+  // 2) 검사 유형별 기본 문항 수 추정치 (fallback)
+  const type = (progress.testType || '').toUpperCase();
+  const fallbackTotal =
+    type.includes('MBTI PRO') ? 60 : // 예시값: 필요시 실제값으로 조정
+    type.includes('MBTI') ? 48 :
+    type.includes('AI_PROFILING') || type.includes('AI-PROFILING') ? (progress.totalQuestions || 0) :
+    type.includes('INTEGRATED') ? (progress.totalQuestions || 0) : 0;
+
+  if (fallbackTotal > 0 && answeredCount >= fallbackTotal) return true;
+
+  return false;
+}
+
+/**
  * 검사 진행 상태를 localStorage에서 불러오기
  */
 export function loadTestProgress(testId: string): TestProgress | null {
@@ -122,13 +147,9 @@ export function getInProgressTests(): Array<{
         
         const progress = JSON.parse(saved) as TestProgress;
         if (!progress || !progress.answers) return false;
-        
-        // 진행률 계산
-        const answeredCount = Object.keys(progress.answers || {}).length;
-        const totalQuestions = progress.totalQuestions || 0;
-        
-        // 총 문항 수가 있고, 모든 문항이 완료되었으면 제외
-        if (totalQuestions > 0 && answeredCount >= totalQuestions) {
+
+        // 완성 판단
+        if (isProgressCompleted(progress)) {
           completedTestIds.push(test.testId);
           return false;
         }

@@ -617,7 +617,7 @@ function MyPageContent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                  <h2 className="text-2xl font-bold text-blue-100">진행중인 검사</h2>
+                  <h2 className="text-2xl font-bold text-blue-100">진행중인 검사 ({inProgressTests.length})</h2>
                   <p className="mt-2 text-blue-200 max-w-2xl">
                     아직 완료하지 않은 검사들을 확인하고 이어서 진행할 수 있습니다.
                   </p>
