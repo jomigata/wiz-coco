@@ -257,21 +257,65 @@ function MyPageContent() {
     router.push(`/mypage?${params.toString()}`);
   };
 
-  // 로컬 테스트 기록 로드
+  // 로컬 테스트 기록 로드 (완료된 검사만)
   const loadLocalTestRecords = (): TestRecord[] => {
     try {
       const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-      console.log(`사용자 ${user?.email}의 로컬 테스트 기록 ${allRecords.length}개를 로드했습니다.`);
       
-      return allRecords.sort((a: any, b: any) => {
+      // 완료된 검사만 필터링
+      const completedRecords = allRecords.filter((record: any) => {
+        const status = record.status?.toLowerCase() || '';
+        return status === '완료' || status === 'completed' || status === 'complete';
+      });
+      
+      console.log(`사용자 ${user?.email}의 완료된 검사 기록 ${completedRecords.length}개를 로드했습니다.`);
+      
+      return completedRecords.sort((a: any, b: any) => {
         const timeA = new Date(a.timestamp || new Date()).getTime();
         const timeB = new Date(b.timestamp || new Date()).getTime();
         return timeB - timeA;
-      }).slice(0, 10);
+      });
     } catch (error) {
       console.error('로컬 테스트 기록 로드 오류:', error);
       return [];
     }
+  };
+
+  // 검사 기록 로드
+  useEffect(() => {
+    if (user) {
+      const records = loadLocalTestRecords();
+      setTestRecords(records);
+    }
+  }, [user]);
+
+  // 통계 업데이트 (testRecords 변경 시)
+  useEffect(() => {
+    if (testRecords.length >= 0) {
+      const newStats = calculateStats(testRecords);
+      setStats(newStats);
+    }
+  }, [testRecords]);
+
+  // 통계 계산 함수
+  const calculateStats = (records: TestRecord[]): Stats => {
+    const totalTests = records.length;
+    const mbtiCount = records.filter(r => r.testType?.includes('MBTI')).length;
+    const egoCount = records.filter(r => r.testType?.includes('에고그램')).length;
+    const enneagramCount = records.filter(r => r.testType?.includes('에니어그램')).length;
+    
+    const lastTest = records.length > 0 ? records[0].timestamp : null;
+    
+    return {
+      totalTests,
+      mbtiCount,
+      egoCount,
+      enneagramCount,
+      averageScore: 0, // 필요시 계산
+      lastTestDate: lastTest || null,
+      favoriteType: mbtiCount > egoCount && mbtiCount > enneagramCount ? 'MBTI' : 
+                    egoCount > enneagramCount ? '에고그램' : '에니어그램'
+    };
   };
 
   if (isLoading) {
@@ -370,6 +414,16 @@ function MyPageContent() {
                 }`}
               >
                 검사 기록
+              </button>
+              <button
+                onClick={() => changeTab('in-progress')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'in-progress'
+                    ? 'text-blue-200 border-b-2 border-blue-200'
+                    : 'text-blue-300 hover:text-blue-200'
+                }`}
+              >
+                진행중인 검사
               </button>
               <button
                 onClick={() => changeTab('stats')}
@@ -479,25 +533,49 @@ function MyPageContent() {
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            )}
 
-                {/* 진행 중인 검사 목록 */}
-                {inProgressTests.length > 0 && (
-                  <motion.div
-                    className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-blue-100 flex items-center">
-                        <FaClock className="w-5 h-5 mr-2 text-yellow-400" />
-                        진행 중인 검사
-                      </h3>
-                      <span className="text-xs text-blue-300 bg-blue-800/50 px-2 py-1 rounded-full">
-                        {inProgressTests.length}개
-                      </span>
-                    </div>
+            {activeTab === 'records' && (
+              <TestRecordsTabContent
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filterType={filterType}
+                setFilterType={setFilterType}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+                testRecords={testRecords}
+              />
+            )}
 
+            {activeTab === 'in-progress' && (
+              <motion.div
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                {/* 진행중인 검사 섹션 제목 */}
+                <motion.div
+                  className="mb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <h2 className="text-2xl font-bold text-blue-100">진행중인 검사</h2>
+                  <p className="mt-2 text-blue-200 max-w-2xl">
+                    아직 완료하지 않은 검사들을 확인하고 이어서 진행할 수 있습니다.
+                  </p>
+                </motion.div>
+
+                {inProgressTests.length === 0 ? (
+                  <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
+                    <FaClock className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
+                    <p className="text-blue-300 text-lg mb-2">진행중인 검사가 없습니다</p>
+                    <p className="text-blue-400/70 text-sm">새로운 검사를 시작해보세요!</p>
+                  </div>
+                ) : (
+                  <>
                     {/* 필터링 및 정렬 컨트롤 */}
                     <div className="mb-4 flex flex-col md:flex-row gap-3">
                       <div className="flex-1">
@@ -584,185 +662,53 @@ function MyPageContent() {
                               key={test.testId}
                               className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors"
                             >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="text-blue-100 font-medium">{test.testName}</h4>
-                                  <button
-                                    onClick={() => handleClearProgress(test.testId)}
-                                    className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/20 transition-colors"
-                                    title="진행 상태 삭제"
-                                  >
-                                    삭제
-                                  </button>
-                                </div>
-                                {totalQuestions > 0 && (
-                                  <div className="mb-2">
-                                    <div className="flex justify-between items-center mb-1">
-                                      <span className="text-xs text-blue-300">진행률</span>
-                                      <span className="text-xs text-blue-200 font-semibold">{progressPercent}%</span>
-                                    </div>
-                                    <div className="w-full bg-blue-900/50 rounded-full h-1.5">
-                                      <div
-                                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
-                                        style={{ width: `${progressPercent}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-blue-300/80 mt-1">
-                                      {answeredCount}개 완료 / 전체 {totalQuestions}개
-                                    </p>
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-blue-100 font-medium">{test.testName}</h4>
+                                    <button
+                                      onClick={() => handleClearProgress(test.testId)}
+                                      className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/20 transition-colors"
+                                      title="진행 상태 삭제"
+                                    >
+                                      삭제
+                                    </button>
                                   </div>
-                                )}
-                                <p className="text-xs text-blue-300/60">
-                                  마지막 업데이트: {lastUpdate.toLocaleString('ko-KR')}
-                                </p>
-                              </div>
-                              <Link
-                                href={getTestPath(test.testId, test.testType)}
-                                className="ml-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                              >
-                                이어하기
-                              </Link>
+                                  {totalQuestions > 0 && (
+                                    <div className="mb-2">
+                                      <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs text-blue-300">진행률</span>
+                                        <span className="text-xs text-blue-200 font-semibold">{progressPercent}%</span>
+                                      </div>
+                                      <div className="w-full bg-blue-900/50 rounded-full h-1.5">
+                                        <div
+                                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
+                                          style={{ width: `${progressPercent}%` }}
+                                        />
+                                      </div>
+                                      <p className="text-xs text-blue-300/80 mt-1">
+                                        {answeredCount}개 완료 / 전체 {totalQuestions}개
+                                      </p>
+                                    </div>
+                                  )}
+                                  <p className="text-xs text-blue-300/60">
+                                    마지막 업데이트: {lastUpdate.toLocaleString('ko-KR')}
+                                  </p>
+                                </div>
+                                <Link
+                                  href={getTestPath(test.testId, test.testType)}
+                                  className="ml-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                >
+                                  이어하기
+                                </Link>
                               </div>
                             </div>
                           );
                         });
                       })()}
                     </div>
-                  </motion.div>
+                  </>
                 )}
-              </motion.div>
-            )}
-
-            {activeTab === 'records' && (
-              <motion.div
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                {/* 검사 기록 섹션 제목 */}
-                <motion.div
-                  className="mb-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                >
-                  <h2 className="text-2xl font-bold text-blue-100">검사 기록</h2>
-                  <p className="mt-2 text-blue-200 max-w-2xl">
-                    이전에 진행한 심리 검사들의 결과와 기록을 확인할 수 있습니다.
-                  </p>
-                </motion.div>
-                
-                {/* 검색 및 필터링 컨트롤 */}
-                <motion.div 
-                  className="mb-6 flex flex-col md:flex-row gap-4 items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                >
-                  <div className="relative flex-grow">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="검사 코드 또는 이름으로 검색"
-                      className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  
-                  <div className="flex-shrink-0">
-                    <select className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="newest" className="bg-blue-800 text-white">최근 검사순</option>
-                      <option value="oldest" className="bg-blue-800 text-white">오래된 검사순</option>
-                      <option value="type" className="bg-blue-800 text-white">검사 유형별</option>
-                    </select>
-                  </div>
-                </motion.div>
-                
-                {/* 검사 기록 테이블 */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-white/20">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
-                          검사결과 코드
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          검사 유형
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          검사 일시
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          결과 요약
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          상태
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10">
-                      <tr className="hover:bg-white/10 transition-colors duration-150">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
-                          MB23-ABCD1
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          MBTI 검사
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          2023. 11. 15. 오전 09:30
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          INTJ
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                          <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full">
-                            완료
-                          </span>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-white/10 transition-colors duration-150">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
-                          EG23-EFGH2
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          에고그램 검사
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          2023. 11. 20. 오후 03:45
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          N5
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                          <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full">
-                            완료
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                
-                {/* 페이지네이션 */}
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-blue-200">
-                    총 2개의 검사 기록
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="px-3 py-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                      이전
-                    </button>
-                    <span className="px-3 py-2 text-sm text-blue-200">1</span>
-                    <button className="px-3 py-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                      다음
-                    </button>
-                  </div>
-                </div>
               </motion.div>
             )}
 
@@ -802,7 +748,7 @@ function MyPageContent() {
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-blue-300">총 검사 수</p>
-                        <p className="text-2xl font-bold text-blue-100">24</p>
+                        <p className="text-2xl font-bold text-blue-100">{stats.totalTests}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -821,7 +767,7 @@ function MyPageContent() {
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-purple-300">MBTI 검사</p>
-                        <p className="text-2xl font-bold text-purple-100">12</p>
+                        <p className="text-2xl font-bold text-purple-100">{stats.mbtiCount}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -840,7 +786,7 @@ function MyPageContent() {
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-green-300">에고그램</p>
-                        <p className="text-2xl font-bold text-green-100">8</p>
+                        <p className="text-2xl font-bold text-green-100">{stats.egoCount}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -858,90 +804,77 @@ function MyPageContent() {
                         </svg>
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-indigo-300">평균 점수</p>
-                        <p className="text-2xl font-bold text-indigo-100">85.2</p>
+                        <p className="text-sm font-medium text-indigo-300">마지막 검사일</p>
+                        <p className="text-lg font-bold text-indigo-100">
+                          {stats.lastTestDate ? new Date(stats.lastTestDate).toLocaleDateString('ko-KR') : '없음'}
+                        </p>
                       </div>
                     </div>
                   </motion.div>
                 </div>
                 
                 {/* 상세 통계 테이블 */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-white/20">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
-                          검사 유형
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          진행 횟수
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          평균 점수
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          최고 점수
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                          마지막 검사일
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10">
-                      <tr className="hover:bg-white/10 transition-colors duration-150">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
-                          MBTI 성격유형 검사
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          12회
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          92.5점
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          98점
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          2023. 12. 15
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-white/10 transition-colors duration-150">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
-                          에고그램 검사
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          8회
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          87.8점
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          95점
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          2023. 12. 10
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-white/10 transition-colors duration-150">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
-                          에니어그램 검사
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          4회
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          78.5점
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          85점
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
-                          2023. 11. 28
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                {testRecords.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-white/20">
+                      <thead className="bg-white/5">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                            검사 유형
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                            진행 횟수
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                            마지막 검사일
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/10">
+                        {(() => {
+                          // 검사 유형별 그룹화
+                          const grouped = testRecords.reduce((acc: any, record) => {
+                            const type = record.testType || '기타';
+                            if (!acc[type]) {
+                              acc[type] = [];
+                            }
+                            acc[type].push(record);
+                            return acc;
+                          }, {});
+
+                          return Object.entries(grouped).map(([type, records]: [string, any]) => {
+                            const recordsArray = records as TestRecord[];
+                            const lastRecord = recordsArray.sort((a, b) => 
+                              new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+                            )[0];
+
+                            return (
+                              <tr key={type} className="hover:bg-white/10 transition-colors duration-150">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                                  {type}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                                  {recordsArray.length}회
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                                  {lastRecord.timestamp 
+                                    ? new Date(lastRecord.timestamp).toLocaleDateString('ko-KR')
+                                    : 'N/A'}
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
+                    <FaBrain className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
+                    <p className="text-blue-300 text-lg mb-2">통계 데이터가 없습니다</p>
+                    <p className="text-blue-400/70 text-sm">검사를 완료하면 통계 정보가 표시됩니다</p>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -1034,6 +967,189 @@ function MyPageContent() {
         </main>
       </div>
     </div>
+  );
+}
+
+// 검사 기록 탭 컴포넌트
+function TestRecordsTabContent({
+  searchQuery,
+  setSearchQuery,
+  filterType,
+  setFilterType,
+  sortOrder,
+  setSortOrder,
+  testRecords
+}: {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  filterType: 'all' | 'mbti' | 'ego' | 'enneagram';
+  setFilterType: (type: 'all' | 'mbti' | 'ego' | 'enneagram') => void;
+  sortOrder: 'newest' | 'oldest';
+  setSortOrder: (order: 'newest' | 'oldest') => void;
+  testRecords: TestRecord[];
+}) {
+  // 검색 및 필터링된 기록
+  const filteredRecords = testRecords.filter(record => {
+    // 검색 필터
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        record.code?.toLowerCase().includes(query) ||
+        record.testType?.toLowerCase().includes(query) ||
+        record.mbtiType?.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+    }
+    
+    // 타입 필터
+    if (filterType !== 'all') {
+      const testType = record.testType?.toLowerCase() || '';
+      if (filterType === 'mbti' && !testType.includes('mbti')) return false;
+      if (filterType === 'ego' && !testType.includes('에고')) return false;
+      if (filterType === 'enneagram' && !testType.includes('에니어')) return false;
+    }
+    
+    return true;
+  }).sort((a, b) => {
+    if (sortOrder === 'newest') {
+      return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+    } else {
+      return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
+    }
+  });
+
+  return (
+    <motion.div
+      className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.5 }}
+    >
+      {/* 검사 기록 섹션 제목 */}
+      <motion.div
+        className="mb-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <h2 className="text-2xl font-bold text-blue-100">검사 기록</h2>
+        <p className="mt-2 text-blue-200 max-w-2xl">
+          완료한 심리 검사들의 결과와 기록을 확인할 수 있습니다.
+        </p>
+      </motion.div>
+      
+      {/* 검색 및 필터링 컨트롤 */}
+      <motion.div 
+        className="mb-6 flex flex-col md:flex-row gap-4 items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <div className="relative flex-grow">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="검사 코드 또는 이름으로 검색"
+            className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div className="flex gap-2 flex-shrink-0">
+          <select 
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as any)}
+            className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all" className="bg-blue-800 text-white">전체</option>
+            <option value="mbti" className="bg-blue-800 text-white">MBTI</option>
+            <option value="ego" className="bg-blue-800 text-white">에고그램</option>
+            <option value="enneagram" className="bg-blue-800 text-white">에니어그램</option>
+          </select>
+          <select 
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as any)}
+            className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="newest" className="bg-blue-800 text-white">최근 검사순</option>
+            <option value="oldest" className="bg-blue-800 text-white">오래된 검사순</option>
+          </select>
+        </div>
+      </motion.div>
+      
+      {/* 검사 기록 테이블 */}
+      {filteredRecords.length === 0 ? (
+        <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
+          <FaClipboard className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
+          <p className="text-blue-300 text-lg mb-2">
+            {testRecords.length === 0 ? '완료한 검사가 없습니다' : '검색 결과가 없습니다'}
+          </p>
+          <p className="text-blue-400/70 text-sm">
+            {testRecords.length === 0 ? '새로운 검사를 시작해보세요!' : '다른 검색어를 시도해보세요'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-white/20">
+              <thead className="bg-white/5">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                    검사결과 코드
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                    검사 유형
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                    검사 일시
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                    결과 요약
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                    상태
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {filteredRecords.map((record, index) => (
+                  <tr key={record.code || index} className="hover:bg-white/10 transition-colors duration-150">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
+                      {record.code || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                      {record.testType || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                      {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100">
+                      {record.mbtiType || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <span className="px-2 py-1 text-xs font-medium bg-green-600/60 text-green-200 rounded-full">
+                        완료
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* 페이지네이션 */}
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-sm text-blue-200">
+              총 {filteredRecords.length}개의 검사 기록
+            </div>
+          </div>
+        </>
+      )}
+    </motion.div>
   );
 }
 
