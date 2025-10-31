@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { getInProgressTests } from '@/utils/testResume';
 
 // 삭제된 테스트 기록 타입 정의
 interface DeletedTestRecord {
@@ -35,6 +36,15 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
+  const [inProgressCount, setInProgressCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isEmbedded && typeof window !== 'undefined') {
+      try {
+        setInProgressCount(getInProgressTests().length);
+      } catch {}
+    }
+  }, [isEmbedded]);
 
   // 유효/중복 정제 유틸
   const sanitizeDeletedRecords = (records: DeletedTestRecord[]): DeletedTestRecord[] => {
@@ -449,6 +459,12 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
             >
               검사 기록
+            </Link>
+            <Link
+              href="/mypage?tab=in-progress"
+              className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
+            >
+              진행중인 검사 {inProgressCount > 0 ? `(${inProgressCount})` : ''}
             </Link>
             <Link
               href="/mypage?tab=stats"

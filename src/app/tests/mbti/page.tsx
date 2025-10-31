@@ -22,6 +22,20 @@ export default function MbtiTestPage() {
     if (typeof window === 'undefined') return;
     const savedProgress = loadTestProgress(testId);
     if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      // 이미 결과가 저장된 경우(검사 기록 존재, 진행 저장 시점보다 최신) 진행 상태 정리
+      try {
+        const recordsStr = localStorage.getItem('test_records');
+        if (recordsStr) {
+          const records = JSON.parse(recordsStr);
+          const latestCompleted = (records || []).filter((r: any) => r && r.testType && r.testType.includes('MBTI'))
+            .map((r: any) => new Date(r.timestamp || 0).getTime())
+            .sort((a: number, b: number) => b - a)[0];
+          if (latestCompleted && latestCompleted > (savedProgress.timestamp || 0)) {
+            clearTestProgress(testId);
+            return;
+          }
+        }
+      } catch {}
       // 완료 여부 확인 (100% 진행률인 경우 제외)
       const answeredCount = Object.keys(savedProgress.answers || {}).length;
       const totalQuestions = 48; // MBTI 질문 수
