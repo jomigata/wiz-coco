@@ -51,9 +51,7 @@ interface TestRecord {
   mbtiType?: string;
   userData?: any;
   status: string;
-  name?: string;
-  gender?: string;
-  birthYear?: string;
+  counselorCode?: string;
 }
 
 interface Stats {
@@ -338,12 +336,10 @@ function MyPageContent() {
           const normalizedRecord = normalizeTestRecord(record);
           normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
           
-          // 사용자 정보 추출 (clientInfo 또는 userData에서)
+          // 상담코드 추출 (clientInfo 또는 userData에서)
           const clientInfo = record.userData?.clientInfo || record.clientInfo;
-          if (clientInfo) {
-            normalizedRecord.name = clientInfo.name || clientInfo.userName;
-            normalizedRecord.gender = clientInfo.gender;
-            normalizedRecord.birthYear = clientInfo.birthYear?.toString();
+          if (clientInfo && clientInfo.counselorCode) {
+            normalizedRecord.counselorCode = clientInfo.counselorCode;
           }
           
           allRecords.push(normalizedRecord);
@@ -363,12 +359,10 @@ function MyPageContent() {
             const normalizedRecord = normalizeTestRecord(record);
             normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
             
-            // 사용자 정보 추출
+            // 상담코드 추출
             const clientInfo = record.userData?.clientInfo || record.clientInfo;
-            if (clientInfo) {
-              normalizedRecord.name = clientInfo.name || clientInfo.userName;
-              normalizedRecord.gender = clientInfo.gender;
-              normalizedRecord.birthYear = clientInfo.birthYear?.toString();
+            if (clientInfo && clientInfo.counselorCode) {
+              normalizedRecord.counselorCode = clientInfo.counselorCode;
             }
             
             allRecords.push(normalizedRecord);
@@ -386,12 +380,10 @@ function MyPageContent() {
           const normalizedRecord = normalizeTestRecord(record);
           normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
           
-          // 사용자 정보 추출
+          // 상담코드 추출
           const clientInfo = record.userData?.clientInfo || record.clientInfo;
-          if (clientInfo) {
-            normalizedRecord.name = clientInfo.name || clientInfo.userName;
-            normalizedRecord.gender = clientInfo.gender;
-            normalizedRecord.birthYear = clientInfo.birthYear?.toString();
+          if (clientInfo && clientInfo.counselorCode) {
+            normalizedRecord.counselorCode = clientInfo.counselorCode;
           }
           
           allRecords.push(normalizedRecord);
@@ -1232,7 +1224,7 @@ const getResultPageUrl = (record: TestRecord): string => {
 };
 
 // 정렬 타입 정의
-type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'status' | 'name' | 'gender' | 'birthYear';
+type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'counselorCode';
 type SortDirection = 'asc' | 'desc';
 
 // 검사 기록 탭 컴포넌트
@@ -1262,6 +1254,10 @@ function TestRecordsTabContent({
   // 컬럼 정렬 상태
   const [sortField, setSortField] = useState<SortField>('timestamp');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   // 컬럼 헤더 클릭 핸들러
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -1345,18 +1341,10 @@ function TestRecordsTabContent({
         aValue = a.status || '';
         bValue = b.status || '';
         break;
-      case 'name':
-        aValue = a.name || '';
-        bValue = b.name || '';
-        break;
-      case 'gender':
-        aValue = a.gender || '';
-        bValue = b.gender || '';
-        break;
-      case 'birthYear':
-        aValue = a.birthYear || '';
-        bValue = b.birthYear || '';
-        break;
+        case 'counselorCode':
+          aValue = a.counselorCode || '';
+          bValue = b.counselorCode || '';
+          break;
       default:
         aValue = a.timestamp || '';
         bValue = b.timestamp || '';
@@ -1368,6 +1356,17 @@ function TestRecordsTabContent({
       return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
     }
   });
+
+  // 페이지네이션 적용
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+
+  // 페이지 변경 시 첫 페이지로 리셋
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterType, startDate, endDate, sortField, sortDirection]);
 
   // 검사 기록 클릭 핸들러
   const handleRecordClick = (record: TestRecord) => {
@@ -1395,7 +1394,7 @@ function TestRecordsTabContent({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <h2 className="text-2xl font-bold text-blue-100">검사 기록</h2>
+        <h2 className="text-2xl font-bold text-blue-100">검사 기록 ({filteredRecords.length})</h2>
         <p className="mt-2 text-blue-200 max-w-2xl">
           완료한 심리 검사들의 결과와 기록을 확인할 수 있습니다.
         </p>
@@ -1495,12 +1494,12 @@ function TestRecordsTabContent({
                 <tr>
                   <th 
                     scope="col" 
-                    className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('code')}
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('timestamp')}
                   >
-                    <div className="flex items-center">
-                      검사결과 코드
-                      <SortIcon field="code" />
+                    <div className="flex items-center justify-center">
+                      검사 일시
+                      <SortIcon field="timestamp" />
                     </div>
                   </th>
                   <th 
@@ -1516,83 +1515,44 @@ function TestRecordsTabContent({
                   <th 
                     scope="col" 
                     className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('timestamp')}
+                    onClick={() => handleSort('counselorCode')}
                   >
                     <div className="flex items-center justify-center">
-                      검사 일시
-                      <SortIcon field="timestamp" />
+                      상담코드
+                      <SortIcon field="counselorCode" />
                     </div>
                   </th>
                   <th 
                     scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('name')}
+                    className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('code')}
                   >
-                    <div className="flex items-center justify-center">
-                      이름
-                      <SortIcon field="name" />
-                    </div>
-                  </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('gender')}
-                  >
-                    <div className="flex items-center justify-center">
-                      성별
-                      <SortIcon field="gender" />
-                    </div>
-                  </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('birthYear')}
-                  >
-                    <div className="flex items-center justify-center">
-                      출생연도
-                      <SortIcon field="birthYear" />
-                    </div>
-                  </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('mbtiType')}
-                  >
-                    <div className="flex items-center justify-center">
-                      결과 요약
-                      <SortIcon field="mbtiType" />
+                    <div className="flex items-center">
+                      검사결과 코드
+                      <SortIcon field="code" />
                     </div>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {filteredRecords.map((record, index) => (
+                {paginatedRecords.map((record, index) => (
                   <tr 
                     key={record.code || index} 
                     onClick={() => handleRecordClick(record)}
                     className="hover:bg-white/10 transition-colors duration-150 cursor-pointer group"
                     title="클릭하여 검사 결과 보기"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50">
-                      {record.code || 'N/A'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                      {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
                       {record.testType || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
-                      {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
+                      {record.counselorCode || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
-                      {record.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
-                      {record.gender || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
-                      {record.birthYear || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
-                      {record.mbtiType || 'N/A'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50">
+                      {record.code || 'N/A'}
                     </td>
                   </tr>
                 ))}
@@ -1603,8 +1563,57 @@ function TestRecordsTabContent({
           {/* 페이지네이션 */}
           <div className="mt-6 flex items-center justify-between">
             <div className="text-sm text-blue-200">
-              총 {filteredRecords.length}개의 검사 기록
+              총 {filteredRecords.length}개의 검사 기록 ({currentPage}/{totalPages} 페이지)
             </div>
+            
+            {totalPages > 1 && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  이전
+                </button>
+                
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-blue-600/60 text-blue-200 hover:bg-blue-600/80'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  다음
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}

@@ -416,6 +416,22 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
             // 로컬 스토리지에 저장
             localStorage.setItem(userSpecificKey, JSON.stringify(records));
             
+            // test_records에도 저장 (마이페이지에서 표시되도록)
+            try {
+              const globalRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+              globalRecords.unshift(testRecord);
+              
+              // 최대 50개까지만 저장
+              if (globalRecords.length > 50) {
+                globalRecords.splice(50);
+              }
+              
+              localStorage.setItem('test_records', JSON.stringify(globalRecords));
+              console.log(`전문가용 MBTI 검사 기록 test_records에도 저장 완료:`, testRecord);
+            } catch (globalError) {
+              console.error('test_records 저장 오류:', globalError);
+            }
+            
             console.log(`전문가용 MBTI 검사 기록 저장 완료 (사용자: ${currentUserEmail || '익명'}):`, testRecord);
           } catch (storageError) {
             console.error('검사 기록 저장 오류:', storageError);
