@@ -9,9 +9,12 @@ export interface TestProgress {
   answers: { [key: string]: any };
   currentStep?: number;
   currentQuestion?: number;
+  currentChapter?: number;
   clientInfo?: any;
+  codeData?: any;
   timestamp: number;
   testType?: string;
+  totalQuestions?: number;
 }
 
 /**

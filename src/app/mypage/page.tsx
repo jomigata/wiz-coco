@@ -17,6 +17,7 @@ import { doc, getDoc } from 'firebase/firestore';
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
+import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 
 
 
@@ -138,6 +139,7 @@ function MyPageContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'mbti' | 'ego' | 'enneagram'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [inProgressTests, setInProgressTests] = useState<any[]>([]);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     mbtiCount: 0,
@@ -213,6 +215,37 @@ function MyPageContent() {
 
     checkAuthAndLoadUser();
   }, [firebaseUser, firebaseLoading]);
+
+  // 진행 중인 검사 목록 로드
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const inProgress = getInProgressTests();
+      setInProgressTests(inProgress);
+      
+      // 주기적으로 목록 갱신 (5초마다)
+      const interval = setInterval(() => {
+        const updated = getInProgressTests();
+        setInProgressTests(updated);
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  // 진행 중인 검사 삭제
+  const handleClearProgress = (testId: string) => {
+    clearTestProgress(testId);
+    setInProgressTests(getInProgressTests());
+  };
+
+  // 검사 경로 매핑
+  const getTestPath = (testId: string, testType?: string): string => {
+    if (testId.includes('mbti_pro')) return '/tests/mbti_pro';
+    if (testId.includes('mbti')) return '/tests/mbti';
+    if (testId.includes('ai-profiling') || testType === 'AI_PROFILING') return '/tests/ai-profiling';
+    if (testId.includes('integrated-assessment')) return '/tests/integrated-assessment';
+    return '/tests';
+  };
 
   // 탭 변경 함수
   const changeTab = (tabName: string) => {
@@ -444,6 +477,87 @@ function MyPageContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* 진행 중인 검사 목록 */}
+                {inProgressTests.length > 0 && (
+                  <motion.div
+                    className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-blue-100 flex items-center">
+                        <FaClock className="w-5 h-5 mr-2 text-yellow-400" />
+                        진행 중인 검사
+                      </h3>
+                      <span className="text-xs text-blue-300 bg-blue-800/50 px-2 py-1 rounded-full">
+                        {inProgressTests.length}개
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {inProgressTests.map((test) => {
+                        const savedProgress = typeof window !== 'undefined' 
+                          ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
+                          : {};
+                        const answeredCount = Object.keys(savedProgress.answers || {}).length;
+                        const totalQuestions = savedProgress.totalQuestions || 0;
+                        const progressPercent = totalQuestions > 0 
+                          ? Math.round((answeredCount / totalQuestions) * 100)
+                          : 0;
+                        const lastUpdate = new Date(test.timestamp);
+                        
+                        return (
+                          <div
+                            key={test.testId}
+                            className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="text-blue-100 font-medium">{test.testName}</h4>
+                                  <button
+                                    onClick={() => handleClearProgress(test.testId)}
+                                    className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/20 transition-colors"
+                                    title="진행 상태 삭제"
+                                  >
+                                    삭제
+                                  </button>
+                                </div>
+                                {totalQuestions > 0 && (
+                                  <div className="mb-2">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className="text-xs text-blue-300">진행률</span>
+                                      <span className="text-xs text-blue-200 font-semibold">{progressPercent}%</span>
+                                    </div>
+                                    <div className="w-full bg-blue-900/50 rounded-full h-1.5">
+                                      <div
+                                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
+                                        style={{ width: `${progressPercent}%` }}
+                                      />
+                                    </div>
+                                    <p className="text-xs text-blue-300/80 mt-1">
+                                      {answeredCount}개 완료 / 전체 {totalQuestions}개
+                                    </p>
+                                  </div>
+                                )}
+                                <p className="text-xs text-blue-300/60">
+                                  마지막 업데이트: {lastUpdate.toLocaleString('ko-KR')}
+                                </p>
+                              </div>
+                              <Link
+                                href={getTestPath(test.testId, test.testType)}
+                                className="ml-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                              >
+                                이어하기
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
 

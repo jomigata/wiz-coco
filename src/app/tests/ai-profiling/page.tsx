@@ -2,12 +2,80 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
+import { motion } from 'framer-motion';
 
 export default function AIProfilingPage() {
+  const pathname = usePathname();
+  const testId = generateTestId(pathname || '/tests/ai-profiling');
   const [currentChapter, setCurrentChapter] = useState(0);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [hasResumeData, setHasResumeData] = useState(false);
+
+  // 저장된 진행 상태 확인
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedProgress = loadTestProgress(testId);
+    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      setHasResumeData(true);
+      setShowResumeDialog(true);
+    }
+  }, [testId]);
+
+  // 진행 상태 자동 저장
+  useEffect(() => {
+    if (Object.keys(answers).length > 0) {
+      saveTestProgress({
+        testId,
+        testName: 'AI 프로파일링 검사',
+        answers,
+        currentChapter,
+        timestamp: Date.now(),
+        testType: 'AI_PROFILING'
+      });
+    }
+  }, [answers, currentChapter, testId]);
+
+  // 페이지 이탈 시 저장
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (Object.keys(answers).length > 0) {
+        saveTestProgress({
+          testId,
+          testName: 'AI 프로파일링 검사',
+          answers,
+          currentChapter,
+          timestamp: Date.now(),
+          testType: 'AI_PROFILING'
+        });
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [answers, currentChapter, testId]);
+
+  // 이어하기
+  const handleResumeTest = () => {
+    const savedProgress = loadTestProgress(testId);
+    if (savedProgress) {
+      setAnswers(savedProgress.answers || {});
+      setCurrentChapter(savedProgress.currentChapter || 0);
+      setShowResumeDialog(false);
+    }
+  };
+
+  // 새로 시작
+  const handleStartNew = () => {
+    clearTestProgress(testId);
+    setAnswers({});
+    setCurrentChapter(0);
+    setShowResumeDialog(false);
+    setHasResumeData(false);
+  };
 
   const chapters = [
     {
@@ -186,6 +254,8 @@ export default function AIProfilingPage() {
     } else {
       setIsCompleted(true);
       setShowResult(true);
+      // 검사 완료 시 진행 상태 삭제
+      clearTestProgress(testId);
     }
   };
 
@@ -252,6 +322,61 @@ export default function AIProfilingPage() {
 
   const currentChapterData = chapters[currentChapter];
   const profile = showResult ? generateProfile() : null;
+
+  // 이어하기 다이얼로그
+  if (showResumeDialog && hasResumeData) {
+    const savedProgress = loadTestProgress(testId);
+    const answeredCount = Object.keys(savedProgress?.answers || {}).length;
+    const totalQuestions = chapters.reduce((sum, ch) => sum + ch.questions.length, 0);
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-blue-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-blue-700"
+        >
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
+          <p className="text-blue-200 mb-6 text-center">
+            진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
+          </p>
+          <div className="bg-blue-800/50 rounded-lg p-4 mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-blue-200 text-sm">진행률</span>
+              <span className="text-blue-300 font-semibold">{Math.round((answeredCount / totalQuestions) * 100)}%</span>
+            </div>
+            <div className="w-full bg-blue-900 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${Math.round((answeredCount / totalQuestions) * 100)}%` }}
+              />
+            </div>
+            <p className="text-blue-300/80 text-xs mt-2 text-center">
+              {answeredCount}개 문항 완료 / 전체 {totalQuestions}개
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <motion.button
+              onClick={handleStartNew}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              새로 시작
+            </motion.button>
+            <motion.button
+              onClick={handleResumeTest}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              이어서 계속
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (showResult && profile) {
     return (
