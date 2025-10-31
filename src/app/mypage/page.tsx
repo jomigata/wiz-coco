@@ -710,7 +710,20 @@ function MyPageContent() {
                             ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
                             : {};
                           const answeredCount = Object.keys(savedProgress.answers || {}).length;
-                          const totalQuestions = savedProgress.totalQuestions || 0;
+                          // totalQuestions가 없으면 검사 유형별 기본값 사용
+                          let totalQuestions = savedProgress.totalQuestions || 0;
+                          if (totalQuestions === 0) {
+                            const testType = (test.testType || '').toUpperCase();
+                            if (testType.includes('MBTI') && !testType.includes('PRO')) {
+                              totalQuestions = 48; // 개인용 MBTI 검사
+                            } else if (testType.includes('MBTI_PRO') || testType.includes('MBTI PRO')) {
+                              totalQuestions = 24; // MBTI Pro 검사
+                            } else if (testType.includes('AI_PROFILING') || testType.includes('AI-PROFILING')) {
+                              totalQuestions = savedProgress.totalQuestions || 0; // AI 프로파일링은 동적
+                            } else if (testType.includes('INTEGRATED')) {
+                              totalQuestions = savedProgress.totalQuestions || 0; // 통합 평가는 동적
+                            }
+                          }
                           const progressPercent = totalQuestions > 0 
                             ? Math.round((answeredCount / totalQuestions) * 100)
                             : 0;

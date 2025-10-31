@@ -33,6 +33,9 @@ function MbtiTestPageContent() {
   const [testComponentKey, setTestComponentKey] = useState(0);
   const [savedAnswers, setSavedAnswers] = useState<any>(null);
   
+  // 저장된 currentQuestion과 전체 진행 상태를 관리
+  const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(undefined);
+  
   // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
   useEffect(() => {
     const urlResumeTestId = searchParams.get('resume');
@@ -43,8 +46,18 @@ function MbtiTestPageContent() {
       const savedProgress = loadTestProgress(urlResumeTestId);
       if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
         setHasResumeData(true);
-        setShowResumeDialog(true);
+        // 팝업을 띄우지 않고 바로 이어서 표시
+        setShowResumeDialog(false);
         setSavedAnswers(savedProgress.answers);
+        // 저장된 currentQuestion 사용 (없으면 마지막 답변한 질문 다음으로 이동)
+        const savedCurrent = savedProgress.currentQuestion !== undefined 
+          ? savedProgress.currentQuestion 
+          : (Object.keys(savedProgress.answers || {}).length > 0
+              ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
+              : 0);
+        setSavedCurrentQuestion(savedCurrent);
+        // 컴포넌트 강제 리마운트로 저장된 답변을 즉시 반영
+        setTestComponentKey(prev => prev + 1);
       }
     }
   }, [searchParams]);
@@ -68,11 +81,19 @@ function MbtiTestPageContent() {
       setHasResumeData(true);
       setShowResumeDialog(true);
       setSavedAnswers(savedProgress?.answers || {});
+      // 저장된 currentQuestion 설정
+      const savedCurrent = savedProgress?.currentQuestion !== undefined 
+        ? savedProgress.currentQuestion 
+        : (savedProgress && Object.keys(savedProgress.answers || {}).length > 0
+            ? Math.max(...Object.keys(savedProgress.answers || {}).map(k => parseInt(k) || 0)) + 1
+            : 0);
+      setSavedCurrentQuestion(savedCurrent);
     } else {
       // 이어하기 데이터가 없으면 상태 초기화
       setHasResumeData(false);
       setShowResumeDialog(false);
       setSavedAnswers(null);
+      setSavedCurrentQuestion(undefined);
     }
   }, [testId, searchParams]);
 
@@ -255,6 +276,7 @@ function MbtiTestPageContent() {
           onComplete={handleTestComplete}
           testId={testId}
           savedAnswers={savedAnswers}
+          savedCurrentQuestion={savedCurrentQuestion}
         />
       </div>
     </>
@@ -262,10 +284,11 @@ function MbtiTestPageContent() {
 }
 
 // MBTITest 래퍼 컴포넌트 (진행 상태 자동 저장)
-function MBTITestWrapper({ onComplete, testId, savedAnswers }: { 
+function MBTITestWrapper({ onComplete, testId, savedAnswers, savedCurrentQuestion: propSavedCurrentQuestion }: { 
   onComplete: (results: any) => void;
   testId: string;
   savedAnswers?: any;
+  savedCurrentQuestion?: number;
 }) {
   // 저장된 답변을 정규화 (문자열 키를 숫자로 변환)
   const normalizeAnswers = (rawAnswers: any): { [key: string]: { type: string; answer: number } } => {
@@ -286,9 +309,13 @@ function MBTITestWrapper({ onComplete, testId, savedAnswers }: {
   };
 
   const normalizedSavedAnswers = normalizeAnswers(savedAnswers);
-  const savedCurrentQuestion = savedAnswers && Object.keys(normalizedSavedAnswers).length > 0
-    ? Math.max(...Object.keys(normalizedSavedAnswers).map(k => parseInt(k) || 0))
-    : undefined;
+  
+  // prop으로 전달된 savedCurrentQuestion 우선 사용, 없으면 마지막 답변한 질문 다음으로 계산
+  const savedCurrentQuestion = propSavedCurrentQuestion !== undefined
+    ? propSavedCurrentQuestion
+    : (savedAnswers && Object.keys(normalizedSavedAnswers).length > 0
+        ? Math.max(...Object.keys(normalizedSavedAnswers).map(k => parseInt(k) || 0)) + 1
+        : 0);
 
   // MBTITest 컴포넌트의 상태를 추적하기 위한 state
   const [trackedAnswers, setTrackedAnswers] = useState<any>(normalizedSavedAnswers);
