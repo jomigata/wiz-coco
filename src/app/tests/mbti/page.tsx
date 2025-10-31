@@ -197,34 +197,63 @@ function MBTITestWrapper({ onComplete, testId, savedAnswers }: {
   testId: string;
   savedAnswers?: any;
 }) {
-  const [answers, setAnswers] = useState<any>(savedAnswers || {});
-  const [currentQuestion, setCurrentQuestion] = useState(savedAnswers ? Object.keys(savedAnswers).length : 0);
-  const [internalAnswers, setInternalAnswers] = useState<any>(savedAnswers || {});
+  // 저장된 답변을 정규화 (문자열 키를 숫자로 변환)
+  const normalizeAnswers = (rawAnswers: any): { [key: string]: { type: string; answer: number } } => {
+    if (!rawAnswers) return {};
+    const normalized: { [key: string]: { type: string; answer: number } } = {};
+    
+    Object.keys(rawAnswers).forEach((key) => {
+      const value = rawAnswers[key];
+      if (typeof value === 'object' && value.type && value.answer !== undefined) {
+        normalized[key] = value;
+      } else if (typeof value === 'number') {
+        // 숫자만 있는 경우 기본 타입 설정 (나중에 질문에서 가져올 수 있음)
+        normalized[key] = { type: '', answer: value };
+      }
+    });
+    
+    return normalized;
+  };
 
-  // 답변 저장 감지 및 진행 상태 저장
+  const normalizedSavedAnswers = normalizeAnswers(savedAnswers);
+  const savedCurrentQuestion = savedAnswers && Object.keys(normalizedSavedAnswers).length > 0
+    ? Math.max(...Object.keys(normalizedSavedAnswers).map(k => parseInt(k) || 0))
+    : undefined;
+
+  // MBTITest 컴포넌트의 상태를 추적하기 위한 state
+  const [trackedAnswers, setTrackedAnswers] = useState<any>(normalizedSavedAnswers);
+  const [trackedCurrentQuestion, setTrackedCurrentQuestion] = useState<number>(savedCurrentQuestion || 0);
+
+  // 답변 변경 핸들러 (MBTITest에서 직접 호출)
+  const handleAnswerChange = (newAnswers: any, newCurrentQuestion: number) => {
+    setTrackedAnswers(newAnswers);
+    setTrackedCurrentQuestion(newCurrentQuestion);
+  };
+
+  // 답변 변경 시 자동 저장
   useEffect(() => {
-    if (Object.keys(internalAnswers).length > 0) {
+    if (Object.keys(trackedAnswers).length > 0) {
       saveTestProgress({
         testId,
         testName: '개인용 MBTI 검사',
-        answers: internalAnswers,
-        currentQuestion,
+        answers: trackedAnswers,
+        currentQuestion: trackedCurrentQuestion,
         timestamp: Date.now(),
         testType: 'MBTI',
         totalQuestions: 48
       });
     }
-  }, [internalAnswers, currentQuestion, testId]);
+  }, [trackedAnswers, trackedCurrentQuestion, testId]);
 
   // 페이지 이탈 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (Object.keys(internalAnswers).length > 0) {
+      if (Object.keys(trackedAnswers).length > 0) {
         saveTestProgress({
           testId,
           testName: '개인용 MBTI 검사',
-          answers: internalAnswers,
-          currentQuestion,
+          answers: trackedAnswers,
+          currentQuestion: trackedCurrentQuestion,
           timestamp: Date.now(),
           testType: 'MBTI',
           totalQuestions: 48
@@ -233,13 +262,20 @@ function MBTITestWrapper({ onComplete, testId, savedAnswers }: {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [internalAnswers, currentQuestion, testId]);
+  }, [trackedAnswers, trackedCurrentQuestion, testId]);
 
   const handleComplete = (results: any) => {
     clearTestProgress(testId);
     onComplete(results);
   };
 
-  // MBTITest는 내부 상태를 관리하므로, 래퍼로 감싸서 진행 상태 저장만 처리
-  return <MBTITest onComplete={handleComplete} />;
+  // MBTITest에 저장된 답변과 현재 질문 번호 전달
+  return (
+    <MBTITest 
+      onComplete={handleComplete}
+      savedAnswers={normalizedSavedAnswers}
+      savedCurrentQuestion={savedCurrentQuestion}
+      onAnswerChange={handleAnswerChange}
+    />
+  );
 } 

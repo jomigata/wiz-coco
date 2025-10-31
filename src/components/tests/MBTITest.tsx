@@ -5,11 +5,18 @@ import { questions } from '@/data/mbtiQuestions';
 
 interface Props {
   onComplete: (results: { [key: string]: { type: string; answer: number } }) => void;
+  savedAnswers?: { [key: string]: { type: string; answer: number } };
+  savedCurrentQuestion?: number;
+  onAnswerChange?: (answers: { [key: string]: { type: string; answer: number } }, currentQuestion: number) => void;
 }
 
-export default function MBTITest({ onComplete }: Props) {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: string]: { type: string; answer: number } }>({});
+export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestion, onAnswerChange }: Props) {
+  // 저장된 답변이 있으면 복원, 없으면 처음부터 시작
+  const initialAnswers = savedAnswers || {};
+  const initialCurrentQuestion = savedCurrentQuestion !== undefined ? savedCurrentQuestion : 0;
+  
+  const [currentQuestion, setCurrentQuestion] = useState(initialCurrentQuestion);
+  const [answers, setAnswers] = useState<{ [key: string]: { type: string; answer: number } }>(initialAnswers);
   const [loading, setLoading] = useState(false);
   const [showStar, setShowStar] = useState(false);
   
@@ -47,6 +54,13 @@ export default function MBTITest({ onComplete }: Props) {
       default: return '';
     }
   };
+
+  // 답변 변경 시 부모 컴포넌트에 알림 (진행 상태 저장용)
+  useEffect(() => {
+    if (onAnswerChange && Object.keys(answers).length > 0) {
+      onAnswerChange(answers, currentQuestion);
+    }
+  }, [answers, currentQuestion, onAnswerChange]);
 
   const handleAnswer = (value: number) => {
     setShowStar(false);

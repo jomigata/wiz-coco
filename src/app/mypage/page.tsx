@@ -140,6 +140,8 @@ function MyPageContent() {
   const [filterType, setFilterType] = useState<'all' | 'mbti' | 'ego' | 'enneagram'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [inProgressTests, setInProgressTests] = useState<any[]>([]);
+  const [inProgressFilter, setInProgressFilter] = useState<'all' | 'mbti_pro' | 'mbti' | 'ai-profiling' | 'integrated-assessment'>('all');
+  const [inProgressSort, setInProgressSort] = useState<'recent' | 'progress' | 'name'>('recent');
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     mbtiCount: 0,
@@ -495,23 +497,93 @@ function MyPageContent() {
                         {inProgressTests.length}개
                       </span>
                     </div>
+
+                    {/* 필터링 및 정렬 컨트롤 */}
+                    <div className="mb-4 flex flex-col md:flex-row gap-3">
+                      <div className="flex-1">
+                        <select
+                          value={inProgressFilter}
+                          onChange={(e) => setInProgressFilter(e.target.value as any)}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all" className="bg-blue-900 text-white">전체 검사</option>
+                          <option value="mbti_pro" className="bg-blue-900 text-white">MBTI Pro</option>
+                          <option value="mbti" className="bg-blue-900 text-white">MBTI</option>
+                          <option value="ai-profiling" className="bg-blue-900 text-white">AI 프로파일링</option>
+                          <option value="integrated-assessment" className="bg-blue-900 text-white">통합 평가</option>
+                        </select>
+                      </div>
+                      <div className="flex-1">
+                        <select
+                          value={inProgressSort}
+                          onChange={(e) => setInProgressSort(e.target.value as any)}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="recent" className="bg-blue-900 text-white">최근 업데이트순</option>
+                          <option value="progress" className="bg-blue-900 text-white">진행률순</option>
+                          <option value="name" className="bg-blue-900 text-white">이름순</option>
+                        </select>
+                      </div>
+                    </div>
+
                     <div className="space-y-3">
-                      {inProgressTests.map((test) => {
-                        const savedProgress = typeof window !== 'undefined' 
-                          ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
-                          : {};
-                        const answeredCount = Object.keys(savedProgress.answers || {}).length;
-                        const totalQuestions = savedProgress.totalQuestions || 0;
-                        const progressPercent = totalQuestions > 0 
-                          ? Math.round((answeredCount / totalQuestions) * 100)
-                          : 0;
-                        const lastUpdate = new Date(test.timestamp);
-                        
-                        return (
-                          <div
-                            key={test.testId}
-                            className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors"
-                          >
+                      {(() => {
+                        // 필터링
+                        let filtered = inProgressTests;
+                        if (inProgressFilter !== 'all') {
+                          filtered = filtered.filter(test => {
+                            if (inProgressFilter === 'mbti_pro') return test.testId.includes('mbti_pro');
+                            if (inProgressFilter === 'mbti') return test.testId.includes('mbti') && !test.testId.includes('mbti_pro');
+                            if (inProgressFilter === 'ai-profiling') return test.testId.includes('ai-profiling');
+                            if (inProgressFilter === 'integrated-assessment') return test.testId.includes('integrated-assessment');
+                            return true;
+                          });
+                        }
+
+                        // 정렬
+                        const sorted = [...filtered].sort((a, b) => {
+                          if (inProgressSort === 'recent') {
+                            return b.timestamp - a.timestamp;
+                          } else if (inProgressSort === 'progress') {
+                            const progressA = typeof window !== 'undefined' 
+                              ? (() => {
+                                  const saved = JSON.parse(localStorage.getItem(`test_progress_${a.testId}`) || '{}');
+                                  const answeredCount = Object.keys(saved.answers || {}).length;
+                                  const totalQuestions = saved.totalQuestions || 0;
+                                  return totalQuestions > 0 ? answeredCount / totalQuestions : 0;
+                                })()
+                              : 0;
+                            const progressB = typeof window !== 'undefined' 
+                              ? (() => {
+                                  const saved = JSON.parse(localStorage.getItem(`test_progress_${b.testId}`) || '{}');
+                                  const answeredCount = Object.keys(saved.answers || {}).length;
+                                  const totalQuestions = saved.totalQuestions || 0;
+                                  return totalQuestions > 0 ? answeredCount / totalQuestions : 0;
+                                })()
+                              : 0;
+                            return progressB - progressA;
+                          } else if (inProgressSort === 'name') {
+                            return a.testName.localeCompare(b.testName, 'ko');
+                          }
+                          return 0;
+                        });
+
+                        return sorted.map((test) => {
+                          const savedProgress = typeof window !== 'undefined' 
+                            ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
+                            : {};
+                          const answeredCount = Object.keys(savedProgress.answers || {}).length;
+                          const totalQuestions = savedProgress.totalQuestions || 0;
+                          const progressPercent = totalQuestions > 0 
+                            ? Math.round((answeredCount / totalQuestions) * 100)
+                            : 0;
+                          const lastUpdate = new Date(test.timestamp);
+                          
+                          return (
+                            <div
+                              key={test.testId}
+                              className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors"
+                            >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
@@ -551,10 +623,11 @@ function MyPageContent() {
                               >
                                 이어하기
                               </Link>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        });
+                      })()}
                     </div>
                   </motion.div>
                 )}
