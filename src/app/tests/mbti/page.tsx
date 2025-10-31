@@ -5,7 +5,7 @@ import Navigation from '@/components/Navigation';
 import MBTITest from '@/components/tests/MBTITest';
 import { useRouter, usePathname } from 'next/navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
-import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog, sweepAllInProgress } from '@/utils/testResume';
+import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
 export default function MbtiTestPage() {
@@ -23,11 +23,9 @@ export default function MbtiTestPage() {
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    // 전역 정리 먼저 실행
-    try {
-      sweepAllInProgress();
-    } catch {}
     
+    // 전역 정리는 호출하지 않음 - getInProgressTests에서만 수행
+    // 특정 testId만 확인하여 중복 호출 방지
     const show = shouldShowResumeDialog(testId);
     if (show) {
       const savedProgress = loadTestProgress(testId);
@@ -84,10 +82,9 @@ export default function MbtiTestPage() {
         }
       });
       
-      // 진행 목록에서도 정리
-      try {
-        sweepAllInProgress();
-      } catch {}
+      // 진행 목록에서도 정리 (선택적)
+      // 주의: sweepAllInProgress는 모든 진행 상태를 정리하므로 신중하게 사용
+      // getInProgressTests 호출 시 자동으로 정리되므로 여기서는 호출하지 않음
     }
   };
 

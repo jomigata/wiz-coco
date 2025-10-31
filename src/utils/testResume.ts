@@ -71,6 +71,7 @@ function isProgressCompleted(progress: TestProgress | null): boolean {
 
 /**
  * 완료 기록이 진행 저장보다 최신(또는 거의 동일)인지 확인
+ * 주의: 같은 testId를 가진 완료 기록만 확인 (다른 검사의 완료 기록과 혼동 방지)
  */
 function hasNewerOrSameCompletion(progress: TestProgress): boolean {
   try {
@@ -79,6 +80,10 @@ function hasNewerOrSameCompletion(progress: TestProgress): boolean {
     if (!recordsStr) return false;
     const records = JSON.parse(recordsStr) as any[];
     if (!Array.isArray(records) || records.length === 0) return false;
+    
+    // testId에서 검사 식별자 추출 (타임스탬프 제거)
+    const progressTestId = progress.testId || '';
+    const baseTestId = progressTestId.split('_').slice(0, -1).join('_'); // 마지막 타임스탬프 제거
     
     // 검사 유형 매칭 (더 정확하게)
     const progressType = (progress.testType || '').toLowerCase();
@@ -90,19 +95,20 @@ function hasNewerOrSameCompletion(progress: TestProgress): boolean {
       const isCompleted = r.status === '완료' || r.status === 'completed' || r.code;
       
       // 타입 매칭 로직 개선
+      let typeMatches = false;
       if (progressType.includes('mbti') && !progressType.includes('pro')) {
         // 일반 MBTI 검사
-        return recordType.includes('mbti') && !recordType.includes('pro') && isCompleted;
+        typeMatches = recordType.includes('mbti') && !recordType.includes('pro') && !recordType.includes('전문가');
       } else if (progressType.includes('mbti_pro')) {
         // MBTI Pro 검사
-        return (recordType.includes('mbti') || recordType.includes('전문가')) && isCompleted;
+        typeMatches = (recordType.includes('mbti') && recordType.includes('전문가')) || recordType.includes('mbti pro');
       } else if (progressType.includes('ai_profiling') || progressType.includes('ai-profiling')) {
-        return recordType.includes('ai') && recordType.includes('프로파일링') && isCompleted;
+        typeMatches = recordType.includes('ai') && recordType.includes('프로파일링');
       } else if (progressType.includes('integrated')) {
-        return recordType.includes('통합') && isCompleted;
+        typeMatches = recordType.includes('통합');
       }
       
-      return false;
+      return typeMatches && isCompleted;
     });
     
     if (matchingRecords.length === 0) return false;
@@ -115,10 +121,20 @@ function hasNewerOrSameCompletion(progress: TestProgress): boolean {
     if (!latestCompleted || latestCompleted === 0) return false;
     
     const progressTs = Number(progress.timestamp) || 0;
-    const threshold = 10 * 60 * 1000; // 10분 허용오차
     
-    // 완료 기록이 진행 저장보다 최신이거나 ±10분 이내면 완료로 간주
-    return latestCompleted > progressTs || Math.abs(latestCompleted - progressTs) <= threshold;
+    // 진행 상태가 완료 기록보다 오래 전 것이면 완료로 간주하지 않음
+    // (같은 검사를 다시 시작한 경우를 고려)
+    // 완료 기록이 진행 저장보다 최신이면서, 시간 차이가 5분 이내인 경우만 완료로 간주
+    const timeDiff = latestCompleted - progressTs;
+    const threshold = 5 * 60 * 1000; // 5분 허용오차로 축소
+    
+    // 완료 기록이 진행 저장보다 최신이고, 5분 이내에 생성된 경우만 완료로 간주
+    // 이렇게 하면 진행 중인 검사를 삭제하지 않음
+    if (timeDiff > 0 && timeDiff <= threshold) {
+      return true;
+    }
+    
+    return false;
   } catch (e) {
     console.error('hasNewerOrSameCompletion 오류:', e);
     return false;
@@ -183,33 +199,32 @@ export function sweepAllInProgress(): void {
 
 /**
  * 이어하기 팝업을 보여줄지 여부 판단 (정리 수행 후 결과 반환)
+ * 주의: 전역 정리(sweepAllInProgress)는 호출하지 않음 - 특정 testId만 검증
  */
 export function shouldShowResumeDialog(testId: string): boolean {
   try {
     if (typeof window === 'undefined') return false;
     
-    // 1. 전역 정리 먼저 실행 (다른 검사의 완료 기록 확인)
-    sweepAllInProgress();
-    
-    // 2. 특정 testId에 대한 정리 수행
+    // 특정 testId에 대한 정리만 수행 (전역 정리는 하지 않음)
+    // 전역 정리는 getInProgressTests에서만 수행하여 중복 호출 방지
     const removed = cleanupProgressForTest(testId);
     if (removed) {
       return false;
     }
     
-    // 3. 진행 상태 로드 및 검증
+    // 진행 상태 로드 및 검증
     const progress = loadTestProgress(testId);
     if (!progress || !progress.answers || Object.keys(progress.answers).length === 0) {
       return false;
     }
     
-    // 4. 추가 검증: 답변 수가 0이거나 총 문항 수 이상이면 표시하지 않음
+    // 추가 검증: 답변 수가 0이거나 총 문항 수 이상이면 표시하지 않음
     const answeredCount = Object.keys(progress.answers).length;
     if (answeredCount === 0) {
       return false;
     }
     
-    // 5. 총 문항 수 기반 완료 여부 재확인
+    // 총 문항 수 기반 완료 여부 재확인
     const totalQuestions = progress.totalQuestions || 0;
     if (totalQuestions > 0 && answeredCount >= totalQuestions) {
       // 완료된 것으로 간주하고 삭제

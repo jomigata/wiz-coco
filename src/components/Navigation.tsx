@@ -8,7 +8,6 @@ import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
-import { sweepAllInProgress } from '@/utils/testResume';
 
 export default function Navigation() {
   const router = useRouter();
@@ -128,8 +127,8 @@ export default function Navigation() {
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
       setActiveItem(path);
-      // 전역 진입 시 진행 상태 정리(이어하기 잔여 데이터 청소)
-      try { sweepAllInProgress(); } catch {}
+      // 전역 정리는 제거 - getInProgressTests에서만 수행하여 중복 호출 방지
+      // 페이지 이동 시마다 실행되면 진행 중인 검사까지 삭제될 수 있음
     }
   }, [user, loading, isLoggedIn, userEmail, userName]);
 
