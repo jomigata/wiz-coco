@@ -210,7 +210,8 @@ function generateCommitMessage() {
       mainChange = 'Code Optimization';
     }
     
-    return `${mainChange} - ${timestamp} ${time}`;
+    // Always ASCII/English to avoid mojibake in GitHub UI/logs
+    return `${mainChange} - ${timestamp} ${time} KST`;
   } catch (error) {
     // 오류 발생 시 기본 메시지 사용
     return `Code Update - ${timestamp} ${time}`;
@@ -339,7 +340,7 @@ async function attemptRecovery() {
         log('✅ 강제 스테이징 성공', 'green');
         
         // 강제 커밋 시도
-        const commitMessage = `🚀 자동 복구 커밋 - ${new Date().toISOString()}`;
+        const commitMessage = `Recovery Commit - ${new Date().toISOString()}`;
         execSync(`git commit -m "${commitMessage}"`, { 
           stdio: 'pipe',
           encoding: 'utf8', 
@@ -462,25 +463,26 @@ function smartDeploy() {
 // 스마트 커밋 메시지 생성
 function generateSmartCommitMessage(analysis) {
   const timestamp = new Date().toISOString().split('T')[0];
-  const time = new Date().toLocaleTimeString('ko-KR', { 
+  const time = new Date().toLocaleTimeString('en-US', { 
     hour12: false, 
     timeZone: 'Asia/Seoul' 
   });
   
-  let message = `🚀 스마트 배포 - ${timestamp} ${time}`;
+  // English-only commit message to prevent encoding issues
+  let message = `Smart Deploy - ${timestamp} ${time} KST`;
   
   // 변경사항에 따른 메시지 추가
   if (analysis.components.length > 0) {
-    message += `\n🔧 컴포넌트 업데이트 (${analysis.components.length}개)`;
+    message += `\nComponents updated: ${analysis.components.length}`;
   }
   if (analysis.pages.length > 0) {
-    message += `\n📄 페이지 업데이트 (${analysis.pages.length}개)`;
+    message += `\nPages updated: ${analysis.pages.length}`;
   }
   if (analysis.styles.length > 0) {
-    message += `\n🎨 스타일 업데이트 (${analysis.styles.length}개)`;
+    message += `\nStyles updated: ${analysis.styles.length}`;
   }
   if (analysis.config.length > 0) {
-    message += `\n⚙️ 설정 업데이트 (${analysis.config.length}개)`;
+    message += `\nConfigs updated: ${analysis.config.length}`;
   }
   
   return message;
@@ -492,13 +494,13 @@ function executeSmartDeploy(commitMessage) {
   
   try {
     // 변경사항 스테이징
-    executeCommand('git add .', '스마트 스테이징');
+    executeCommand('git add .', 'Smart staging');
     
     // 스마트 커밋
-    executeCommand(`git commit -m "${commitMessage}"`, '스마트 커밋');
+    executeCommand(`git commit -m "${commitMessage}"`, 'Smart commit');
     
     // GitHub 푸시
-    executeCommand('git push origin main', '스마트 푸시');
+    executeCommand('git push origin main', 'Smart push');
     
     log('🎉 스마트 배포 완료!', 'bright');
     
@@ -561,7 +563,7 @@ function fastDeploy() {
     
     // 3단계: 빠른 커밋
     log('📋 3단계: 빠른 커밋', 'cyan');
-    const commitMessage = `⚡ 고속 배포 - ${new Date().toISOString()}`;
+  const commitMessage = `Fast Deploy - ${new Date().toISOString()}`;
     log('💾 빠른 커밋 생성 중...', 'blue');
     
     execSync(`git commit -m "${commitMessage}"`, { 
