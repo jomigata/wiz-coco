@@ -478,7 +478,7 @@ function MyPageContent() {
                     : 'text-blue-300 hover:text-blue-200'
                 }`}
               >
-                진행중인 검사
+                진행중인 검사 {inProgressTests.length > 0 ? `(${inProgressTests.length})` : ''}
               </button>
               <button
                 onClick={() => changeTab('stats')}

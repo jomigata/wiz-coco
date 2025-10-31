@@ -112,42 +112,31 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           const parsedRecords = JSON.parse(deletedRecordsStr);
           
           if (Array.isArray(parsedRecords) && parsedRecords.length > 0) {
-            const cleaned = sanitizeDeletedRecords(parsedRecords);
-            // 정렬 (기본: 최신순)
+            // 1) 유효 데이터만 유지 (코드/유형 필수)
+            let cleaned = sanitizeDeletedRecords(parsedRecords);
+
+            // 2) 보관기간 적용 (기본 180일)
+            const retentionMs = 180 * 24 * 60 * 60 * 1000;
+            const now = Date.now();
+            cleaned = cleaned.filter(r => {
+              const t = new Date(r.deletedAt || r.timestamp || 0).getTime();
+              return !!r.code && !!r.testType && !!t && now - t <= retentionMs;
+            });
+
+            // 3) 정렬 (기본: 최신순)
             const sortedRecords = cleaned.sort((a, b) => {
               return new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime();
             });
             
             setDeletedRecords(sortedRecords);
+            // 저장본도 정제 결과로 업데이트
+            localStorage.setItem('deleted_test_records', JSON.stringify(sortedRecords));
           } else {
             setDeletedRecords([]);
           }
         } else {
-          // 개발 테스트용 더미 데이터
-          const dummyDeletedRecords = [
-            {
-              code: 'MB23-ABCD1',
-              timestamp: '2023-11-15T09:30:00',
-              testType: 'MBTI 검사',
-              userData: { name: '홍길동', birthYear: 1990, gender: '남성' },
-              deletedAt: '2023-12-20T14:30:00'
-            },
-            {
-              code: 'MB23-EFGH2',
-              timestamp: '2023-11-20T15:45:00',
-              testType: 'MBTI 검사',
-              userData: { name: '김철수', birthYear: 1985, gender: '남성' },
-              deletedAt: '2023-12-18T10:15:00'
-            },
-            {
-              code: 'MB23-IJKL3',
-              timestamp: '2023-11-25T11:20:00',
-              testType: 'MBTI 검사',
-              userData: { name: '이영희', birthYear: 1992, gender: '여성' },
-              deletedAt: '2023-12-15T16:45:00'
-            }
-          ];
-          setDeletedRecords(dummyDeletedRecords);
+          // 더미 데이터 사용 금지: 실제 자료가 없으면 빈 목록
+          setDeletedRecords([]);
         }
       }
     } catch (error) {
