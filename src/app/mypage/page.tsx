@@ -354,9 +354,12 @@ function MyPageContent() {
       if (user?.email) {
         const userSpecificKey = `mbti-user-test-records-${user.email}`;
         const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
+        console.log(`[MyPage] 사용자별 기록 키: ${userSpecificKey}`);
+        console.log(`[MyPage] 사용자별 기록 수: ${Array.isArray(userRecords) ? userRecords.length : 0}`);
         
         if (Array.isArray(userRecords)) {
           userRecords.forEach(record => {
+            console.log(`[MyPage] 사용자별 기록:`, record);
             const normalizedRecord = normalizeTestRecord(record);
             normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
             
@@ -375,8 +378,11 @@ function MyPageContent() {
       
       // 3. 일반 사용자별 키도 확인 (로그인하지 않은 경우)
       const generalUserRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
+      console.log(`[MyPage] 일반 사용자 기록 수: ${Array.isArray(generalUserRecords) ? generalUserRecords.length : 0}`);
+      
       if (Array.isArray(generalUserRecords)) {
         generalUserRecords.forEach(record => {
+          console.log(`[MyPage] 일반 사용자 기록:`, record);
           const normalizedRecord = normalizeTestRecord(record);
           normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
           
@@ -400,7 +406,8 @@ function MyPageContent() {
       // 기본 데이터가 있는 것만 필터링
       const validRecords = uniqueRecords.filter(r => r.code && r.testType);
 
-      console.log(`사용자 ${user?.email}의 모든 검사 기록 ${validRecords.length}개를 로드했습니다.`);
+      console.log(`[MyPage] 사용자 ${user?.email}의 모든 검사 기록 ${validRecords.length}개를 로드했습니다.`);
+      console.log(`[MyPage] 최종 기록 목록:`, validRecords);
 
       const sorted = validRecords.sort((a: any, b: any) => {
         const timeA = new Date(a.timestamp || new Date()).getTime();
@@ -1298,7 +1305,10 @@ function TestRecordsTabContent({
     // 타입 필터
     if (filterType !== 'all') {
       const testType = record.testType?.toLowerCase() || '';
-      if (filterType === 'mbti' && !testType.includes('mbti')) return false;
+      if (filterType === 'mbti-personal' && !testType.includes('개인용')) return false;
+      if (filterType === 'mbti-professional' && !testType.includes('전문가용')) return false;
+      if (filterType === 'ai-profiling' && !testType.includes('ai') && !testType.includes('프로파일링')) return false;
+      if (filterType === 'integrated' && !testType.includes('통합')) return false;
       if (filterType === 'ego' && !testType.includes('에고')) return false;
       if (filterType === 'enneagram' && !testType.includes('에니어')) return false;
     }
@@ -1422,7 +1432,10 @@ function TestRecordsTabContent({
               className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all" className="bg-blue-800 text-white">전체</option>
-              <option value="mbti" className="bg-blue-800 text-white">MBTI</option>
+              <option value="mbti-personal" className="bg-blue-800 text-white">개인용 MBTI</option>
+              <option value="mbti-professional" className="bg-blue-800 text-white">전문가용 MBTI</option>
+              <option value="ai-profiling" className="bg-blue-800 text-white">AI 프로파일링</option>
+              <option value="integrated" className="bg-blue-800 text-white">통합 평가</option>
               <option value="ego" className="bg-blue-800 text-white">에고그램</option>
               <option value="enneagram" className="bg-blue-800 text-white">에니어그램</option>
             </select>
