@@ -21,6 +21,22 @@ export interface TestCategory {
 
 export const testSubMenuItems: TestCategory[] = [
   {
+    category: "임시 검사",
+    icon: "🔬",
+    subcategories: [
+      {
+        name: "임시 검사",
+        icon: "🧪",
+        items: [
+          { name: "MBTI Pro 검사", href: "/tests/mbti_pro", description: "전문가용 MBTI 성격 유형 검사", icon: "🧠" },
+          { name: "MBTI 검사", href: "/tests/mbti", description: "개인용 MBTI 성격 유형 검사", icon: "🔍" },
+          { name: "AI 프로파일링 검사", href: "/tests/ai-profiling", description: "AI 기반 종합 성격 프로파일링 검사", icon: "🤖" },
+          { name: "통합 평가 검사", href: "/tests/integrated-assessment", description: "종합 심리 평가 검사", icon: "📊" }
+        ]
+      }
+    ]
+  },
+  {
     category: "개인 심리 및 성장",
     icon: "🚀",
     subcategories: [
@@ -246,22 +262,6 @@ export const testSubMenuItems: TestCategory[] = [
           { name: "사회적 불평등 대처", href: "/tests/social-inequality", description: "사회적 불평등과 차별에 대한 심리적 대처", icon: "⚖️" },
           { name: "환경 문제 인식", href: "/tests/environmental-awareness", description: "환경 문제에 대한 개인의 역할과 책임감", icon: "🌱" },
           { name: "비전통적 삶의 방식", href: "/tests/non-traditional-lifestyle", description: "비혼, 비출산 등 새로운 삶의 방식 선택과 적응", icon: "🆕" }
-        ]
-      }
-    ]
-  },
-  {
-    category: "임시 검사",
-    icon: "🔬",
-    subcategories: [
-      {
-        name: "임시 검사",
-        icon: "🧪",
-        items: [
-          { name: "MBTI Pro 검사", href: "/tests/mbti_pro", description: "전문가용 MBTI 성격 유형 검사", icon: "🧠" },
-          { name: "MBTI 검사", href: "/tests/mbti", description: "개인용 MBTI 성격 유형 검사", icon: "🔍" },
-          { name: "AI 프로파일링 검사", href: "/tests/ai-profiling", description: "AI 기반 종합 성격 프로파일링 검사", icon: "🤖" },
-          { name: "통합 평가 검사", href: "/tests/integrated-assessment", description: "종합 심리 평가 검사", icon: "📊" }
         ]
       }
     ]
