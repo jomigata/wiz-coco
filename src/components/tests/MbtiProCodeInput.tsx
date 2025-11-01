@@ -7,9 +7,10 @@ import Navigation from '@/components/Navigation';
 interface MbtiProCodeInputProps {
   onSubmit: (codeData: { groupCode: string; groupPassword: string }) => void;
   initialData?: { groupCode: string; groupPassword: string } | null;
+  isPersonalTest?: boolean;
 }
 
-const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialData }) => {
+const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialData, isPersonalTest = false }) => {
   const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
   const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
   const [errors, setErrors] = useState<{
@@ -140,16 +141,16 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       
-      {/* 상단 메뉴 */}
-      <Navigation />
+      {/* 상단 메뉴 - 개인용 검사에서는 제거 */}
+      {!isPersonalTest && <Navigation />}
       
       {/* 상단 메뉴의 높이만큼 여백 추가 */}
-      <div className="h-4"></div>
+      {!isPersonalTest && <div className="h-4"></div>}
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-white mb-4">
-            전문가용 MBTI 검사
+            {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
           </h1>
           <p className="text-emerald-300 max-w-lg mx-auto">
             검사코드가 없어도 검사를 진행할 수 있습니다.
@@ -196,7 +197,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
               
               <div>
                 <label htmlFor="group-password-field" className="block text-sm font-medium text-blue-300 mb-1">
-                  상담 코드 / 비밀번호 <span className="text-blue-400/50 text-xs">(선택)</span>
+                  검사 코드 / 비밀번호 <span className="text-blue-400/50 text-xs">(선택)</span>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="autocomplete-blocker">

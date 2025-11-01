@@ -1395,6 +1395,24 @@ function TestRecordsTabContent({
     }
 
     try {
+      // 삭제된 기록을 deleted_test_records에 추가
+      if (typeof window !== 'undefined') {
+        const deletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
+        const deletedRecord = {
+          ...deleteModalRecord,
+          deletedAt: new Date().toISOString(),
+          status: '삭제됨'
+        };
+        deletedRecords.unshift(deletedRecord);
+        
+        // 최대 100개까지만 저장
+        if (deletedRecords.length > 100) {
+          deletedRecords.splice(100);
+        }
+        
+        localStorage.setItem('deleted_test_records', JSON.stringify(deletedRecords));
+      }
+
       // test_records에서 삭제
       const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
       const filteredRecords = allRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
@@ -1573,7 +1591,7 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('counselorCode')}
                   >
                     <div className="flex items-center justify-center">
-                      상담코드
+                      검사코드
                       <SortIcon field="counselorCode" />
                     </div>
                   </th>
@@ -1599,25 +1617,39 @@ function TestRecordsTabContent({
                 {paginatedRecords.map((record, index) => (
                   <tr 
                     key={record.code || index} 
-                    onClick={() => handleRecordClick(record)}
-                    className="hover:bg-white/10 transition-colors duration-150 cursor-pointer group"
-                    title="클릭하여 검사 결과 보기"
+                    className="hover:bg-white/10 transition-colors duration-150 group"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                    <td 
+                      onClick={() => handleRecordClick(record)}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      title="클릭하여 검사 결과 보기"
+                    >
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                    <td 
+                      onClick={() => handleRecordClick(record)}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      title="클릭하여 검사 결과 보기"
+                    >
                       {record.testType || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50">
+                    <td 
+                      onClick={() => handleRecordClick(record)}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      title="클릭하여 검사 결과 보기"
+                    >
                       {record.counselorCode || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50">
+                    <td 
+                      onClick={() => handleRecordClick(record)}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      title="클릭하여 검사 결과 보기"
+                    >
                       {record.code || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center" onClick={(e) => handleDeleteClick(e, record)}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
-                        className="px-3 py-1 text-xs font-medium bg-red-600/60 text-red-200 rounded hover:bg-red-600/80 transition-colors"
+                        className="px-3 py-1 text-xs font-medium bg-red-950/80 text-red-400/70 rounded hover:bg-red-900/90 hover:text-red-300/80 transition-colors"
                         onClick={(e) => handleDeleteClick(e, record)}
                       >
                         삭제
@@ -1689,12 +1721,12 @@ function TestRecordsTabContent({
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-md w-full mx-4"
+            className="bg-gray-900/98 backdrop-blur-md rounded-xl p-6 shadow-lg border border-gray-700 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 삭제</h3>
@@ -1718,12 +1750,12 @@ function TestRecordsTabContent({
                 </div>
                 {deleteModalRecord.counselorCode && (
                   <div className="flex justify-between">
-                    <span className="text-blue-300">상담코드:</span>
+                    <span className="text-blue-300">검사코드:</span>
                     <span className="text-blue-100">{deleteModalRecord.counselorCode}</span>
                   </div>
                 )}
               </div>
-              <p className="text-red-300 text-sm mt-4">⚠️ 삭제된 검사 기록은 복구할 수 없습니다.</p>
+              <p className="text-blue-300 text-sm mt-4">삭제된 검사기록은 삭제코드 에서 확인할수 있습니다.</p>
             </div>
 
             <div className="flex gap-3 justify-end">

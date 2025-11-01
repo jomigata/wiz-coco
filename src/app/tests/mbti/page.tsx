@@ -180,8 +180,21 @@ function MbtiTestPageContent() {
     setShowResumeDialog(false);
     const savedProgress = loadTestProgress(testId);
     
-    // 저장된 단계 정보 복원
-    if (savedProgress) {
+    // 저장된 답변이 있으면 무조건 테스트 단계로 이동
+    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      setCurrentStep('test');
+      if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+      if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
+      // 저장된 답변과 질문 번호 복원
+      setSavedAnswers(savedProgress.answers);
+      const savedCurrent = savedProgress.currentQuestion !== undefined 
+        ? savedProgress.currentQuestion 
+        : (Object.keys(savedProgress.answers || {}).length > 0
+            ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
+            : 0);
+      setSavedCurrentQuestion(savedCurrent);
+    } else if (savedProgress) {
+      // 답변이 없으면 저장된 단계 정보로 복원
       if (savedProgress.currentStep === 'code') {
         setCurrentStep('code');
       } else if (savedProgress.currentStep === 'info') {
@@ -192,12 +205,12 @@ function MbtiTestPageContent() {
         if (savedProgress.codeData) setCodeData(savedProgress.codeData);
         if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
       }
-    } else {
-      setCurrentStep('test');
     }
     
-    // MBTITest 컴포넌트에 저장된 답변 전달
-    setTestComponentKey(prev => prev + 1);
+    // MBTITest 컴포넌트에 저장된 답변 전달 (답변이 있는 경우에만)
+    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+      setTestComponentKey(prev => prev + 1);
+    }
   };
 
   // 새로 시작 - 완전히 새로운 testId 생성하여 이전 진행 상태와 완전히 분리
@@ -371,13 +384,14 @@ function MbtiTestPageContent() {
   // 단계별 렌더링
   return (
     <>
-      <Navigation />
+      {currentStep !== 'code' && <Navigation />}
       
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (
           <MbtiProCodeInput
             onSubmit={handleCodeSubmit}
             initialData={codeData}
+            isPersonalTest={true}
           />
         )}
         
@@ -400,6 +414,7 @@ function MbtiTestPageContent() {
             codeData={codeData}
             clientInfo={clientInfo}
             onStepChange={setCurrentStep}
+            onBack={() => setCurrentStep('info')}
           />
         )}
       </div>
@@ -415,7 +430,8 @@ function MBTITestWrapper({
   savedCurrentQuestion: propSavedCurrentQuestion,
   codeData,
   clientInfo,
-  onStepChange
+  onStepChange,
+  onBack
 }: { 
   onComplete: (results: any) => void;
   testId: string;
@@ -424,6 +440,7 @@ function MBTITestWrapper({
   codeData?: any;
   clientInfo?: any;
   onStepChange?: (step: 'code' | 'info' | 'test') => void;
+  onBack?: () => void;
 }) {
   // 저장된 답변을 정규화 (문자열 키를 숫자로 변환)
   const normalizeAnswers = (rawAnswers: any): { [key: string]: { type: string; answer: number } } => {
@@ -460,6 +477,13 @@ function MBTITestWrapper({
   const handleAnswerChange = (newAnswers: any, newCurrentQuestion: number) => {
     setTrackedAnswers(newAnswers);
     setTrackedCurrentQuestion(newCurrentQuestion);
+  };
+
+  // 이전 페이지로 돌아가기 핸들러
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    }
   };
 
   // 답변 변경 시 자동 저장
@@ -511,6 +535,7 @@ function MBTITestWrapper({
       savedAnswers={normalizedSavedAnswers}
       savedCurrentQuestion={savedCurrentQuestion}
       onAnswerChange={handleAnswerChange}
+      onBack={handleBack}
     />
   );
 }

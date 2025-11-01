@@ -8,9 +8,10 @@ interface Props {
   savedAnswers?: { [key: string]: { type: string; answer: number } };
   savedCurrentQuestion?: number;
   onAnswerChange?: (answers: { [key: string]: { type: string; answer: number } }, currentQuestion: number) => void;
+  onBack?: () => void;
 }
 
-export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestion, onAnswerChange }: Props) {
+export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestion, onAnswerChange, onBack }: Props) {
   // 저장된 답변이 있으면 복원, 없으면 처음부터 시작
   const initialAnswers = savedAnswers || {};
   const initialCurrentQuestion = savedCurrentQuestion !== undefined ? savedCurrentQuestion : 0;
@@ -175,8 +176,20 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
         </div>
       </div>
 
+      {/* 이전페이지 버튼 - 질문1일 때만 표시 */}
+      {currentQuestion === 0 && onBack && (
+        <div className="fixed bottom-6 left-6 z-50">
+          <button
+            onClick={onBack}
+            className="px-4 py-2 bg-emerald-800/60 text-emerald-200 rounded-lg hover:bg-emerald-700/80 transition-colors shadow-lg"
+          >
+            ← 이전페이지
+          </button>
+        </div>
+      )}
+
       {/* 메인 컨텐츠 영역 - 질문이 잘 보이도록 패딩 조정 */}
-      <div className="max-w-3xl mx-auto pt-56 px-6 pb-12"
+      <div className="max-w-3xl mx-auto pt-20 px-6 pb-12"
         tabIndex={0}
         ref={containerRef}
       >

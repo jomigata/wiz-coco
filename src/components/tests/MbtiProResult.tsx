@@ -1223,7 +1223,7 @@ const MbtiProResult: React.FC = () => {
               
               {clientInfo.groupCode && (
                 <div className="bg-white/10 p-4 rounded-lg border border-white/15">
-                  <h3 className="text-sm font-medium text-blue-300">상담 코드</h3>
+                  <h3 className="text-sm font-medium text-blue-300">검사 코드</h3>
                   <p className="text-xl font-semibold text-white">{clientInfo.groupCode}</p>
                 </div>
               )}
