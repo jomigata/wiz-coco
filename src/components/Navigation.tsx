@@ -78,8 +78,8 @@ export default function Navigation() {
         if (key.startsWith('test-progress-')) {
           try {
             const progress = JSON.parse(localStorage.getItem(key) || '{}');
-            // currentStep이 'test'이고 답변이 있는 경우만 숨김
-            if (progress.currentStep === 'test' && progress.answers && Object.keys(progress.answers).length > 0) {
+            // currentStep이 'code', 'info', 'test' 중 하나이면 숨김 (검사 코드 입력 단계부터)
+            if (progress.currentStep === 'code' || progress.currentStep === 'info' || progress.currentStep === 'test') {
               // 현재 경로와 관련된 검사인지 확인
               const keyPath = key.replace('test-progress-', '');
               if (pathname?.includes(keyPath.split('_')[0])) {

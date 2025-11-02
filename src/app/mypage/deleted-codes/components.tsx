@@ -41,6 +41,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
+  const [sortField, setSortField] = useState<'timestamp' | 'testType' | 'code' | 'deletedAt'>('deletedAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [inProgressCount, setInProgressCount] = useState<number>(0);
   const [testRecordsCount, setTestRecordsCount] = useState<number>(0);
   const [deletedCodesCount, setDeletedCodesCount] = useState<number>(0);
@@ -197,17 +199,32 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       (record.userData?.name && record.userData.name.toLowerCase().includes(searchLower))
     );
   }).sort((a, b) => {
-    if (sortOrder === 'newest') {
-      return new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime();
-    } else if (sortOrder === 'oldest') {
-      return new Date(a.deletedAt).getTime() - new Date(b.deletedAt).getTime();
-    } else if (sortOrder === 'codeAsc') {
-      return a.code.localeCompare(b.code);
-    } else if (sortOrder === 'codeDesc') {
-      return b.code.localeCompare(a.code);
+    // 컬럼 헤더 클릭 정렬 우선
+    let comparison = 0;
+    
+    if (sortField === 'timestamp') {
+      comparison = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    } else if (sortField === 'testType') {
+      comparison = (a.testType || '').localeCompare(b.testType || '');
+    } else if (sortField === 'code') {
+      comparison = (a.code || '').localeCompare(b.code || '');
+    } else if (sortField === 'deletedAt') {
+      comparison = new Date(a.deletedAt).getTime() - new Date(b.deletedAt).getTime();
     }
-    return 0;
+    
+    // 정렬 방향 적용
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
+  
+  // 컬럼 헤더 클릭 핸들러
+  const handleSort = (field: 'timestamp' | 'testType' | 'code' | 'deletedAt') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
@@ -248,6 +265,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     
     // MBTI 검사 결과 페이지
     if (testType.includes('mbti')) {
+      // mbtiType이 없으면 결과 데이터에서 가져오기 시도
+      if (!mbtiType && record.result?.mbtiType) {
+        return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(record.result.mbtiType)}`;
+      }
       return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType || 'INTJ')}`;
     }
     
@@ -260,6 +281,38 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     if (!record.code) {
       console.warn('검사 코드가 없어 결과 페이지로 이동할 수 없습니다:', record);
       return;
+    }
+    
+    // 삭제된 기록의 결과 데이터를 임시로 복원 (결과 페이지에서 읽을 수 있도록)
+    if (record.result && typeof window !== 'undefined') {
+      try {
+        // 결과 데이터를 localStorage에 임시 저장
+        localStorage.setItem(`test-result-${record.code}`, JSON.stringify(record.result));
+        
+        // test_records에도 임시로 추가 (결과 페이지가 여기서도 찾을 수 있도록)
+        const testRecordsStr = localStorage.getItem('test_records') || '[]';
+        const testRecords = JSON.parse(testRecordsStr);
+        const tempRecord = {
+          code: record.code,
+          testType: record.testType,
+          timestamp: record.timestamp,
+          result: record.result,
+          mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ'
+        };
+        
+        // 이미 존재하는지 확인
+        const existingIndex = testRecords.findIndex((r: any) => r.code === record.code);
+        if (existingIndex >= 0) {
+          // 기존 레코드 업데이트
+          testRecords[existingIndex] = { ...testRecords[existingIndex], ...tempRecord };
+        } else {
+          // 새 레코드 추가
+          testRecords.push(tempRecord);
+        }
+        localStorage.setItem('test_records', JSON.stringify(testRecords));
+      } catch (error) {
+        console.error('결과 데이터 임시 저장 오류:', error);
+      }
     }
     
     const resultUrl = getResultPageUrl(record);
@@ -423,6 +476,15 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         
         // 5. 선택 초기화
         setSelectedRecords([]);
+        
+        // 6. 삭제코드 숫자 업데이트
+        const updatedDeletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
+        setDeletedCodesCount(updatedDeletedRecords.length);
+        
+        // 7. 페이지 새로고침으로 목록 업데이트
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     } catch (error) {
       console.error('영구 삭제 오류:', error);
@@ -678,20 +740,75 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
                         />
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                        검사 일시
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        onClick={() => handleSort('timestamp')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          검사 일시
+                          {sortField === 'timestamp' && (
+                            <span className="text-xs">
+                              {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                        검사 유형
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        onClick={() => handleSort('testType')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          검사 유형
+                          {sortField === 'testType' && (
+                            <span className="text-xs">
+                              {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                        검사코드
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        onClick={() => handleSort('code')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          검사코드
+                          {sortField === 'code' && (
+                            <span className="text-xs">
+                              {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
-                        검사결과 코드
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        onClick={() => handleSort('code')}
+                      >
+                        <div className="flex items-center gap-1">
+                          검사결과 코드
+                          {sortField === 'code' && (
+                            <span className="text-xs">
+                              {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                        삭제 일시
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        onClick={() => handleSort('deletedAt')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          삭제 일시
+                          {sortField === 'deletedAt' && (
+                            <span className="text-xs">
+                              {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
                       <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
                         복구
@@ -745,7 +862,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                         >
                           {formatDate(record.deletedAt)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150">
+                        <td 
+                          className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150 cursor-pointer"
+                          onClick={(e) => handleSingleRestoreClick(e, record)}
+                        >
                           <button
                             onClick={(e) => handleSingleRestoreClick(e, record)}
                             className="px-3 py-1 text-xs font-medium bg-green-600/70 text-white rounded hover:bg-green-600/90 hover:text-green-100 transition-colors"
@@ -784,7 +904,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       
       {/* 복원 확인 모달 */}
       {showRestoreConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <motion.div 
             className="bg-blue-900/80 backdrop-blur-sm rounded-xl p-6 max-w-md w-full mx-4 border border-white/20"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -825,7 +945,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
 
       {/* 개별 복구 확인 모달 */}
       {showSingleRestoreConfirm && singleRestoreRecord && (
-        <div className="fixed inset-0 bg-blue-950/95 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowSingleRestoreConfirm(false)}>
+        <div className="fixed inset-0 flex items-center justify-center z-50" onClick={() => setShowSingleRestoreConfirm(false)}>
           <motion.div 
             className="bg-indigo-950/98 backdrop-blur-md rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -888,7 +1008,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       
       {/* 영구 삭제 확인 모달 */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <motion.div 
             className="bg-blue-900/80 backdrop-blur-sm rounded-xl p-6 max-w-md w-full mx-4 border border-white/20"
             initial={{ opacity: 0, scale: 0.9 }}
