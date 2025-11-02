@@ -148,10 +148,14 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="relative pt-20">
-      {/* 상단 제목 및 진행률 표시 영역 */}
-      <div className="fixed top-20 left-0 right-0 z-40 bg-emerald-950/95 backdrop-blur-sm border-b border-emerald-800/50 py-6">
-        <div className="max-w-4xl mx-auto px-6">
+    <div className="relative">
+      {/* 메인 컨텐츠 영역 - 모든 내용을 하나의 페이지로 통합 */}
+      <div className="max-w-3xl mx-auto pt-8 px-6 pb-12"
+        tabIndex={0}
+        ref={containerRef}
+      >
+        {/* 상단 제목 및 진행률 표시 영역 - 메인 컨텐츠 안으로 이동 */}
+        <div className="mb-8">
           <div className="text-center mb-6">
             <h1 className="text-4xl font-bold text-white mb-2">개인용 MBTI 검사</h1>
             <p className="text-emerald-200">자신에게 맞는 답변을 선택해주세요</p>
@@ -174,25 +178,6 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 이전페이지 버튼 - 질문1일 때만 표시 */}
-      {currentQuestion === 0 && onBack && (
-        <div className="fixed bottom-6 left-6 z-50">
-          <button
-            onClick={onBack}
-            className="px-4 py-2 bg-emerald-800/60 text-emerald-200 rounded-lg hover:bg-emerald-700/80 transition-colors shadow-lg"
-          >
-            ← 이전페이지
-          </button>
-        </div>
-      )}
-
-      {/* 메인 컨텐츠 영역 - 질문이 잘 보이도록 패딩 조정 */}
-      <div className="max-w-3xl mx-auto pt-20 px-6 pb-12"
-        tabIndex={0}
-        ref={containerRef}
-      >
         {/* 질문 표시 영역 - 더 명확하게 강조 */}
         <div 
           key={currentQuestion}
@@ -297,15 +282,21 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
 
         <div className="flex justify-between items-center">
           <button
-            onClick={handlePrevQuestion}
+            onClick={() => {
+              if (currentQuestion === 0 && onBack) {
+                onBack();
+              } else if (currentQuestion > 0) {
+                handlePrevQuestion();
+              }
+            }}
             className={`px-5 py-2 rounded-lg font-medium 
-              ${currentQuestion > 0 
+              ${(currentQuestion > 0 || (currentQuestion === 0 && onBack))
                 ? 'bg-emerald-700/50 text-emerald-200 hover:bg-emerald-700/80' 
                 : 'bg-emerald-900/30 text-emerald-700 cursor-not-allowed'
               } transition-all duration-300`}
-            disabled={currentQuestion === 0}
+            disabled={currentQuestion === 0 && !onBack}
           >
-            이전 문항
+            이전페이지
           </button>
           
           <div className="text-sm text-emerald-300">

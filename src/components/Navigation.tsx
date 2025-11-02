@@ -8,6 +8,7 @@ import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
+import { getInProgressTests } from '@/utils/testResume';
 
 export default function Navigation() {
   const router = useRouter();
@@ -38,6 +39,21 @@ export default function Navigation() {
   const isAdminOpen = activeMenu === 'admin';
 
   const isLoggedIn = !!user && !loading;
+  const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
+
+  // 진행중인 검사 수 가져오기
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateCount = () => {
+        const tests = getInProgressTests();
+        setInProgressTestsCount(tests.length);
+      };
+      updateCount();
+      // 주기적으로 업데이트 (5초마다)
+      const interval = setInterval(updateCount, 5000);
+      return () => clearInterval(interval);
+    }
+  }, []);
   const userEmail = user?.email || "";
   const userName = user?.displayName || "";
 
@@ -1110,6 +1126,11 @@ export default function Navigation() {
                         onMouseLeave={() => setActiveMenu(null)}
                       >
                         👤 마이페이지
+                        {inProgressTestsCount > 0 && (
+                          <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
+                            진행중인 검사 ({inProgressTestsCount}개)
+                          </span>
+                        )}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"

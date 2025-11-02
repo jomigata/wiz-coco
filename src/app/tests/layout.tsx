@@ -183,8 +183,8 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
       
       {/* 메인 콘텐츠 영역 - 전체 화면 최적화 */}
       <div className="pt-16">
-        {/* 페이지 헤더 - mbti_pro 페이지에서는 숨김 */}
-        {!pathname.includes('/mbti_pro') && (
+        {/* 페이지 헤더 - mbti_pro 및 mbti 페이지에서는 숨김 */}
+        {!pathname.includes('/mbti_pro') && !pathname.includes('/mbti') && (
           <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700/50 px-8 py-6">
             <div className="flex items-center justify-between">
               <div>

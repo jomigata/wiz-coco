@@ -143,6 +143,19 @@ function MyPageContent() {
   const [inProgressTests, setInProgressTests] = useState<any[]>([]);
   const [inProgressFilter, setInProgressFilter] = useState<'all' | 'mbti_pro' | 'mbti' | 'ai-profiling' | 'integrated-assessment'>('all');
   const [inProgressSort, setInProgressSort] = useState<'recent' | 'progress' | 'name'>('recent');
+  const [deletedCodesCount, setDeletedCodesCount] = useState(0);
+
+  // 삭제된 코드 수 가져오기
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const deletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
+        setDeletedCodesCount(Array.isArray(deletedRecords) ? deletedRecords.length : 0);
+      } catch (error) {
+        setDeletedCodesCount(0);
+      }
+    }
+  }, [activeTab]);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     mbtiCount: 0,
@@ -593,7 +606,7 @@ function MyPageContent() {
                 href="/mypage/deleted-codes"
                 className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
               >
-                삭제코드
+                삭제코드 {deletedCodesCount > 0 && `(${deletedCodesCount})`}
               </Link>
             </motion.div>
 
@@ -1649,7 +1662,7 @@ function TestRecordsTabContent({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
-                        className="px-3 py-1 text-xs font-medium bg-red-950/80 text-red-400/70 rounded hover:bg-red-900/90 hover:text-red-300/80 transition-colors"
+                        className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
                         onClick={(e) => handleDeleteClick(e, record)}
                       >
                         삭제
@@ -1721,12 +1734,12 @@ function TestRecordsTabContent({
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-blue-900/80 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-gray-900/98 backdrop-blur-md rounded-xl p-6 shadow-lg border border-gray-700 max-w-md w-full mx-4"
+            className="bg-blue-800/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-600 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 삭제</h3>

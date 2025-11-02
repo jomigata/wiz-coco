@@ -49,19 +49,13 @@ function MbtiTestPageContent() {
       if (urlResumeTestId && urlResumeTestId !== testId) {
         console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
         setTestId(urlResumeTestId);
-        // URL 파라미터에서 온 경우에도 이어하기 다이얼로그를 표시
+        // URL 파라미터에서 온 경우 이어하기 다이얼로그를 먼저 표시
         const savedProgress = loadTestProgress(urlResumeTestId);
         if (savedProgress) {
-          // 저장된 단계 정보 복원
-          if (savedProgress.currentStep === 'code') {
-            setCurrentStep('code');
-          } else if (savedProgress.currentStep === 'info') {
-            setCurrentStep('info');
-            if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-          } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-            // 테스트 단계인 경우 이어하기 팝업 표시
-            setHasResumeData(true);
-            setShowResumeDialog(true);
+          // 진행 중인 검사 데이터가 있으면 항상 이어하기 다이얼로그 표시
+          setHasResumeData(true);
+          setShowResumeDialog(true);
+          if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
             setSavedAnswers(savedProgress.answers);
             // 저장된 currentQuestion 사용
             const savedCurrent = savedProgress.currentQuestion !== undefined 
@@ -70,14 +64,9 @@ function MbtiTestPageContent() {
                   ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
                   : 0);
             setSavedCurrentQuestion(savedCurrent);
-            if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-            if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-          } else {
-            // 단계 정보만 있고 답변이 없는 경우
-            if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep as any);
-            if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-            if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
           }
+          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+          if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
         }
       }
     }, [searchParams]);
