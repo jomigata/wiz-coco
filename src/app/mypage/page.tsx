@@ -1651,7 +1651,7 @@ function TestRecordsTabContent({
 
       setSelectedRecords([]);
       setShowBulkDeleteModal(false);
-      window.location.reload();
+      // 페이지 새로고침 없이 이벤트만 발생 (부모 컴포넌트가 처리)
     } catch (error) {
       console.error('검사 기록 일괄 삭제 중 오류:', error);
       alert('검사 기록 일괄 삭제 중 오류가 발생했습니다.');
@@ -1733,15 +1733,15 @@ function TestRecordsTabContent({
       window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
       window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
       
-      // 페이지 리로드
-      window.location.reload();
+      // 모달 닫기
+      setShowDeleteModal(false);
+      setDeleteModalRecord(null);
     } catch (error) {
       console.error('검사 기록 삭제 중 오류:', error);
       alert('검사 기록 삭제 중 오류가 발생했습니다.');
+      setShowDeleteModal(false);
+      setDeleteModalRecord(null);
     }
-
-    setShowDeleteModal(false);
-    setDeleteModalRecord(null);
   };
 
   return (
@@ -1825,7 +1825,7 @@ function TestRecordsTabContent({
                 <button
                   onClick={handleBulkDeleteClick}
                   disabled={selectedRecords.length === 0}
-                  className="px-4 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-red-800/50 text-red-300 rounded-lg hover:bg-red-800/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   선택 삭제 ({selectedRecords.length})
                 </button>

@@ -55,6 +55,24 @@ function MbtiTestPageContent() {
           // 진행 중인 검사 데이터가 있으면 항상 이어하기 다이얼로그 표시
           setHasResumeData(true);
           setShowResumeDialog(true);
+          
+          // 저장된 currentStep 복원 (중요!)
+          if (savedProgress.currentStep) {
+            if (typeof savedProgress.currentStep === 'string' && 
+                (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+              setCurrentStep(savedProgress.currentStep);
+            }
+          } else {
+            // currentStep이 없으면 답변 상태에 따라 결정
+            if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+              setCurrentStep('test');
+            } else if (savedProgress.clientInfo) {
+              setCurrentStep('info');
+            } else {
+              setCurrentStep('code');
+            }
+          }
+          
           if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
             setSavedAnswers(savedProgress.answers);
             // 저장된 currentQuestion 사용

@@ -646,7 +646,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                 whileTap={{ scale: 0.97 }}
                 className={`px-5 py-3 font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-emerald-900 ${
                   isPersonalTest 
-                    ? 'bg-green-700/60 text-green-200 hover:bg-green-700 focus:ring-green-500'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500'
                     : 'bg-gray-700/60 text-gray-200 hover:bg-gray-700 focus:ring-gray-500'
                 }`}
                 onClick={() => {
