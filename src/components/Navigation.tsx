@@ -60,7 +60,7 @@ export default function Navigation() {
     }
   }, []);
 
-  // 실제 검사 진행 중인지 확인 (질문이 진행 중일 때만 숨김)
+  // 실제 검사 진행 중인지 확인 (질문이 진행 중일 때만 숨김, 코드 입력/정보 입력 단계에서는 보임)
   useEffect(() => {
     if (typeof window === 'undefined' || !isTestPage) {
       setIsTestInProgress(false);
@@ -69,20 +69,21 @@ export default function Navigation() {
 
     // 현재 경로에 해당하는 검사 진행 상태 확인
     try {
-      const testIdKey = `test-progress-${pathname?.replace(/\/tests\//, '') || ''}`;
       // localStorage의 모든 키 확인하여 현재 경로와 관련된 진행 상태 찾기
       const allKeys = Object.keys(localStorage);
       let foundTestInProgress = false;
 
       for (const key of allKeys) {
-        if (key.startsWith('test-progress-')) {
+        if (key.startsWith('test_progress_')) {
           try {
             const progress = JSON.parse(localStorage.getItem(key) || '{}');
-            // currentStep이 'code', 'info', 'test' 중 하나이면 숨김 (검사 코드 입력 단계부터)
-            if (progress.currentStep === 'code' || progress.currentStep === 'info' || progress.currentStep === 'test') {
+            // currentStep이 'test'일 때만 숨김 (실제 질문 진행 중)
+            // 'code'와 'info' 단계에서는 팝업 표시
+            if (progress.currentStep === 'test') {
               // 현재 경로와 관련된 검사인지 확인
-              const keyPath = key.replace('test-progress-', '');
-              if (pathname?.includes(keyPath.split('_')[0])) {
+              const keyPath = key.replace('test_progress_', '');
+              const pathBase = pathname?.replace(/\/tests\//, '').split('/')[0] || '';
+              if (keyPath.includes(pathBase) || pathname?.includes(keyPath.split('_')[0])) {
                 foundTestInProgress = true;
                 break;
               }
@@ -1641,10 +1642,10 @@ export default function Navigation() {
         </>
       )}
 
-      {/* 진행중인 검사 팝업 - 말풍선 형태 (상단 우측, 모든 페이지 표시, 실제 검사 진행 중일 때만 숨김) */}
+      {/* 진행중인 검사 팝업 - 말풍선 형태 (상단 우측, 모든 페이지 표시, 실제 질문 진행 중일 때만 숨김) */}
       {inProgressTestsCount > 0 && !isTestInProgress && (
         <div 
-          className="fixed top-20 right-6 z-40"
+          className="fixed top-20 right-6 z-[9999]"
           onClick={handleInProgressTestsClick}
           style={{ cursor: 'pointer' }}
         >

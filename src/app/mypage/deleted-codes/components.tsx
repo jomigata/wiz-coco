@@ -263,13 +263,44 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     const code = record.code || '';
     const mbtiType = record.mbtiType || '';
     
-    // MBTI 검사 결과 페이지
+    // 전문가용 MBTI 검사 결과 페이지
+    if (testType.includes('전문가용') || testType.includes('mbti pro') || testType.includes('mbti_pro') || 
+        testType.includes('professional') || code.startsWith('MP') || record.counselorCode?.startsWith('MP')) {
+      // 결과 데이터 확인
+      try {
+        const resultData = record.result || (typeof window !== 'undefined' 
+          ? (() => {
+              try {
+                return JSON.parse(localStorage.getItem(`test-result-${code}`) || 'null');
+              } catch {
+                return null;
+              }
+            })()
+          : null);
+        
+        if (resultData) {
+          const dataStr = encodeURIComponent(JSON.stringify({
+            code: code,
+            mbtiType: mbtiType || resultData.mbtiType || 'INTJ',
+            answers: resultData.answers || {},
+            timestamp: record.timestamp,
+            userData: record.userData || resultData.userData
+          }));
+          return `/tests/mbti_pro/result?data=${dataStr}`;
+        }
+        // 결과 데이터가 없으면 코드만 전달
+        return `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
+      } catch (e) {
+        console.error('전문가용 MBTI 결과 페이지 URL 생성 오류:', e);
+        return `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
+      }
+    }
+    
+    // 개인용 MBTI 검사 결과 페이지
     if (testType.includes('mbti')) {
       // mbtiType이 없으면 결과 데이터에서 가져오기 시도
-      if (!mbtiType && record.result?.mbtiType) {
-        return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(record.result.mbtiType)}`;
-      }
-      return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType || 'INTJ')}`;
+      const finalMbtiType = mbtiType || record.result?.mbtiType || 'INTJ';
+      return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(finalMbtiType)}`;
     }
     
     // 기본적으로 MBTI 결과 페이지로 이동
@@ -284,10 +315,12 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     }
     
     // 삭제된 기록의 결과 데이터를 임시로 복원 (결과 페이지에서 읽을 수 있도록)
-    if (record.result && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       try {
-        // 결과 데이터를 localStorage에 임시 저장
-        localStorage.setItem(`test-result-${record.code}`, JSON.stringify(record.result));
+        // result 데이터가 있는 경우
+        if (record.result) {
+          localStorage.setItem(`test-result-${record.code}`, JSON.stringify(record.result));
+        }
         
         // test_records에도 임시로 추가 (결과 페이지가 여기서도 찾을 수 있도록)
         const testRecordsStr = localStorage.getItem('test_records') || '[]';
@@ -297,19 +330,37 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           testType: record.testType,
           timestamp: record.timestamp,
           result: record.result,
-          mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ'
+          mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ',
+          counselorCode: record.counselorCode,
+          userData: record.userData
         };
         
         // 이미 존재하는지 확인
         const existingIndex = testRecords.findIndex((r: any) => r.code === record.code);
         if (existingIndex >= 0) {
-          // 기존 레코드 업데이트
+          // 기존 레코드 업데이트 (result 포함)
           testRecords[existingIndex] = { ...testRecords[existingIndex], ...tempRecord };
         } else {
           // 새 레코드 추가
           testRecords.push(tempRecord);
         }
         localStorage.setItem('test_records', JSON.stringify(testRecords));
+        
+        // 전문가용 MBTI인 경우 추가 데이터 저장
+        const isProfessional = (record.testType || '').toLowerCase().includes('전문가용') || 
+                               (record.testType || '').toLowerCase().includes('mbti pro') ||
+                               code.startsWith('MP');
+        if (isProfessional && record.result) {
+          // 전문가용 MBTI 결과 데이터 저장
+          const proResultData = {
+            code: code,
+            mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ',
+            answers: record.result.answers || {},
+            timestamp: record.timestamp,
+            userData: record.userData || record.result.userData
+          };
+          localStorage.setItem(`mbti_pro_result_data`, JSON.stringify(proResultData));
+        }
       } catch (error) {
         console.error('결과 데이터 임시 저장 오류:', error);
       }
@@ -1051,7 +1102,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
 
       {/* 개별 복구 확인 모달 */}
       {showSingleRestoreConfirm && singleRestoreRecord && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" onClick={() => setShowSingleRestoreConfirm(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowSingleRestoreConfirm(false)}>
           <motion.div 
             className="bg-indigo-950 rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
             initial={{ opacity: 0, scale: 0.9 }}

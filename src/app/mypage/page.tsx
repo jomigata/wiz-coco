@@ -1358,13 +1358,47 @@ const getResultPageUrl = (record: TestRecord): string => {
   const code = record.code || '';
   const mbtiType = record.mbtiType || '';
   
-  // MBTI 검사 결과 페이지
+  // 전문가용 MBTI 검사 결과 페이지
+  if (testType.includes('전문가용') || testType.includes('mbti pro') || testType.includes('mbti_pro') || 
+      testType.includes('professional') || code.startsWith('MP') || record.counselorCode?.startsWith('MP')) {
+    // 결과 데이터 확인
+    try {
+      const resultData = typeof window !== 'undefined' 
+        ? localStorage.getItem(`test-result-${code}`) 
+        : null;
+      if (resultData) {
+        const data = JSON.parse(resultData);
+        const dataStr = encodeURIComponent(JSON.stringify({
+          code: code,
+          mbtiType: mbtiType || data.mbtiType || 'INTJ',
+          answers: data.answers || {},
+          timestamp: record.timestamp,
+          userData: record.userData || data.userData
+        }));
+        return `/tests/mbti_pro/result?data=${dataStr}`;
+      }
+      // 결과 데이터가 없으면 코드만 전달
+      return `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
+    } catch (e) {
+      console.error('전문가용 MBTI 결과 페이지 URL 생성 오류:', e);
+      return `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
+    }
+  }
+  
+  // 개인용 MBTI 검사 결과 페이지
   if (testType.includes('mbti')) {
     return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
   }
   
-  // 다른 검사 유형들도 향후 추가 가능
-  // 예: AI 프로파일링, 통합 평가 등
+  // AI 프로파일링 검사 결과 페이지
+  if (testType.includes('ai') && testType.includes('프로파일링')) {
+    return `/tests/ai-profiling/result?code=${encodeURIComponent(code)}`;
+  }
+  
+  // 통합 평가 검사 결과 페이지
+  if (testType.includes('통합')) {
+    return `/tests/integrated-assessment/result?code=${encodeURIComponent(code)}`;
+  }
   
   // 기본적으로 MBTI 결과 페이지로 이동 (임시)
   return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
@@ -1405,6 +1439,8 @@ function TestRecordsTabContent({
   // 삭제 모달 상태
   const [deleteModalRecord, setDeleteModalRecord] = useState<TestRecord | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   // 컬럼 헤더 클릭 핸들러
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -1525,6 +1561,103 @@ function TestRecordsTabContent({
     router.push(resultUrl);
   };
 
+  // 체크박스 선택/해제
+  const toggleSelection = (code: string) => {
+    setSelectedRecords(prev => 
+      prev.includes(code) 
+        ? prev.filter(c => c !== code)
+        : [...prev, code]
+    );
+  };
+
+  // 전체 선택/해제
+  const toggleAllSelection = () => {
+    if (selectedRecords.length === paginatedRecords.length) {
+      setSelectedRecords([]);
+    } else {
+      setSelectedRecords(paginatedRecords.map(r => r.code).filter(Boolean) as string[]);
+    }
+  };
+
+  // 일괄 삭제 확인
+  const handleBulkDeleteClick = () => {
+    if (selectedRecords.length === 0) {
+      alert('삭제할 기록을 선택해주세요.');
+      return;
+    }
+    setShowBulkDeleteModal(true);
+  };
+
+  // 일괄 삭제 실행
+  const handleBulkDeleteConfirm = () => {
+    if (selectedRecords.length === 0) return;
+
+    try {
+      if (typeof window !== 'undefined') {
+        // 삭제할 레코드 정보 수집
+        const recordsToDelete = selectedRecords.map(code => {
+          const record = testRecords.find(r => r.code === code);
+          return record ? {
+            ...record,
+            deletedAt: new Date().toISOString()
+          } : null;
+        }).filter(Boolean) as any[];
+
+        // 기존 삭제된 레코드 가져오기
+        const deletedRecordsStr = localStorage.getItem('deleted_test_records') || '[]';
+        const deletedRecords = JSON.parse(deletedRecordsStr);
+        const updatedDeletedRecords = [...deletedRecords, ...recordsToDelete];
+        
+        // 최대 100개까지만 저장
+        if (updatedDeletedRecords.length > 100) {
+          updatedDeletedRecords.splice(100);
+        }
+        
+        localStorage.setItem('deleted_test_records', JSON.stringify(updatedDeletedRecords));
+
+        // test_records에서 삭제
+        const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+        const filteredRecords = allRecords.filter((r: TestRecord) => !selectedRecords.includes(r.code));
+        localStorage.setItem('test_records', JSON.stringify(filteredRecords));
+
+        // 사용자별 기록에서도 삭제
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            const userSpecificKey = `mbti-user-test-records-${user.email}`;
+            const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
+            const filteredUserRecords = userRecords.filter((r: TestRecord) => !selectedRecords.includes(r.code));
+            localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
+          } catch (e) {
+            console.error('사용자별 기록 삭제 오류:', e);
+          }
+        }
+
+        // 일반 사용자별 키에서도 삭제
+        const generalRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
+        const filteredGeneralRecords = generalRecords.filter((r: TestRecord) => !selectedRecords.includes(r.code));
+        localStorage.setItem('mbti-user-test-records', JSON.stringify(filteredGeneralRecords));
+
+        // test-result-{code} 키도 삭제
+        selectedRecords.forEach(code => {
+          localStorage.removeItem(`test-result-${code}`);
+        });
+
+        // 부모 컴포넌트에 업데이트 이벤트 발생
+        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+        window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
+      }
+
+      setSelectedRecords([]);
+      setShowBulkDeleteModal(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('검사 기록 일괄 삭제 중 오류:', error);
+      alert('검사 기록 일괄 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   // 삭제 버튼 클릭 핸들러 (이벤트 전파 방지)
   const handleDeleteClick = (e: React.MouseEvent, record: TestRecord) => {
     e.stopPropagation(); // 테이블 행 클릭 이벤트 방지
@@ -1585,9 +1718,22 @@ function TestRecordsTabContent({
 
         // test-result-{code} 키도 삭제
         localStorage.removeItem(`test-result-${deleteModalRecord.code}`);
+        
+        // 전문가용 MBTI 결과 데이터도 삭제
+        const testType = (deleteModalRecord.testType || '').toLowerCase();
+        const isProfessional = testType.includes('전문가용') || 
+                               testType.includes('mbti pro') ||
+                               deleteModalRecord.code.startsWith('MP');
+        if (isProfessional) {
+          localStorage.removeItem(`mbti_pro_result_data`);
+        }
       }
 
-      // 부모 컴포넌트의 testRecords 업데이트를 위해 페이지 리로드
+      // 부모 컴포넌트에 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+      window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
+      
+      // 페이지 리로드
       window.location.reload();
     } catch (error) {
       console.error('검사 기록 삭제 중 오류:', error);
@@ -1674,9 +1820,28 @@ function TestRecordsTabContent({
       ) : (
         <>
           <div className="overflow-x-auto">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleBulkDeleteClick}
+                  disabled={selectedRecords.length === 0}
+                  className="px-4 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  선택 삭제 ({selectedRecords.length})
+                </button>
+              </div>
+            </div>
             <table className="min-w-full divide-y divide-white/20">
               <thead className="bg-white/5">
                 <tr>
+                  <th scope="col" className="px-6 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
+                      onChange={toggleAllSelection}
+                      className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                    />
+                  </th>
                   <th 
                     scope="col" 
                     className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
@@ -1731,6 +1896,15 @@ function TestRecordsTabContent({
                     key={record.code || index} 
                     className="group"
                   >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedRecords.includes(record.code || '')}
+                        onChange={() => toggleSelection(record.code || '')}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                      />
+                    </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
                       className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
@@ -1834,9 +2008,44 @@ function TestRecordsTabContent({
         </>
       )}
 
-      {/* 삭제 확인 모달 */}
+      {/* 일괄 삭제 확인 모달 */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowBulkDeleteModal(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 일괄 삭제</h3>
+            <p className="text-blue-200 mb-6">
+              선택한 {selectedRecords.length}개의 검사 기록을 삭제하시겠습니까?
+            </p>
+            <p className="text-blue-300 text-sm mb-6">
+              삭제된 검사기록은 삭제코드 페이지에서 확인할 수 있습니다.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="px-4 py-2 bg-gray-600/60 text-gray-200 rounded-lg hover:bg-gray-600/80 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleBulkDeleteConfirm}
+                className="px-4 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors"
+              >
+                삭제하기
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 개별 삭제 확인 모달 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
