@@ -1630,37 +1630,37 @@ function TestRecordsTabContent({
                 {paginatedRecords.map((record, index) => (
                   <tr 
                     key={record.code || index} 
-                    className="group hover:bg-white/10 transition-colors duration-150"
+                    className="group"
                   >
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.testType || 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.counselorCode || 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.code || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150">
                       <button
                         className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
                         onClick={(e) => handleDeleteClick(e, record)}
