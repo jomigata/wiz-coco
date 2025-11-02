@@ -1660,7 +1660,10 @@ function TestRecordsTabContent({
                     >
                       {record.code || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150">
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150 cursor-pointer"
+                      onClick={(e) => handleDeleteClick(e, record)}
+                    >
                       <button
                         className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
                         onClick={(e) => handleDeleteClick(e, record)}

@@ -42,13 +42,8 @@ export default function Navigation() {
   const isLoggedIn = !!user && !loading;
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
 
-  // 검사 진행 페이지인지 확인 (결과 페이지는 제외)
-  const isTestInProgressPage = pathname?.startsWith('/tests/') && 
-    !pathname?.includes('/result') && 
-    pathname !== '/tests';
-  
-  // 마이페이지인지 확인
-  const isMyPage = pathname?.startsWith('/mypage');
+  // 심리검사 페이지인지 확인 (모든 /tests/ 경로)
+  const isTestPage = pathname?.startsWith('/tests/') || pathname === '/tests';
 
   // 진행중인 검사 수 가져오기
   useEffect(() => {
@@ -1606,54 +1601,32 @@ export default function Navigation() {
         </>
       )}
 
-      {/* 진행중인 검사 팝업 - 말풍선 형태 */}
-      {inProgressTestsCount > 0 && !isTestInProgressPage && (
+      {/* 진행중인 검사 팝업 - 말풍선 형태 (상단 우측, 모든 페이지 표시, 심리검사 페이지 제외) */}
+      {inProgressTestsCount > 0 && !isTestPage && (
         <div 
-          className={`fixed ${isMyPage ? 'bottom-6 right-6' : 'top-16 left-0 right-0'} z-40`}
+          className="fixed top-20 right-6 z-40"
           onClick={handleInProgressTestsClick}
           style={{ cursor: 'pointer' }}
         >
-          {isMyPage ? (
-            // 마이페이지 - 하단 우측 말풍선 형태 (300px 고정)
-            <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl w-[300px] px-5 py-4 border-2 border-purple-400/50 backdrop-blur-sm animate-pulse hover:animate-none hover:shadow-purple-500/50 transition-all duration-300">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl flex-shrink-0">📋</div>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="font-bold text-white text-base leading-tight">
-                    진행중인 검사
-                  </span>
-                  <span className="text-purple-100 text-sm mt-1">
-                    {inProgressTestsCount}개 검사 대기중
-                  </span>
-                  <span className="text-purple-200 text-xs mt-1 italic">
-                    클릭하여 확인 →
-                  </span>
-                </div>
-              </div>
-              {/* 말풍선 꼬리 */}
-              <div className="absolute -bottom-2 right-12 w-4 h-4 bg-gradient-to-br from-purple-600 to-indigo-600 transform rotate-45 border-r-2 border-b-2 border-purple-400/50"></div>
-            </div>
-          ) : (
-            // 일반 페이지 - 상단 배너 형태
-            <div className="bg-gradient-to-r from-purple-600/95 via-indigo-600/95 to-purple-700/95 backdrop-blur-sm border-b border-purple-400/50 shadow-lg">
-              <div className="container max-w-7xl mx-auto px-6 py-3">
-                <div className="flex items-center justify-center space-x-2 text-white">
-                  <span className="text-lg">📋</span>
-                  <span className="font-semibold text-sm md:text-base">
-                    진행중인 검사 ({inProgressTestsCount}개) - 클릭하여 확인하기
-                  </span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5" 
-                    viewBox="0 0 20 20" 
-                    fill="currentColor"
-                  >
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
+          {/* 상단 우측 말풍선 형태 (300px 고정) */}
+          <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl w-[300px] px-5 py-4 border-2 border-purple-400/50 backdrop-blur-sm animate-pulse hover:animate-none hover:shadow-purple-500/50 transition-all duration-300">
+            <div className="flex items-center space-x-3">
+              <div className="text-3xl flex-shrink-0">📋</div>
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="font-bold text-white text-base leading-tight">
+                  진행중인 검사
+                </span>
+                <span className="text-purple-100 text-sm mt-1">
+                  {inProgressTestsCount}개 검사 대기중
+                </span>
+                <span className="text-purple-200 text-xs mt-1 italic">
+                  클릭하여 확인 →
+                </span>
               </div>
             </div>
-          )}
+            {/* 말풍선 꼬리 (우측 하단) */}
+            <div className="absolute -bottom-2 right-12 w-4 h-4 bg-gradient-to-br from-purple-600 to-indigo-600 transform rotate-45 border-r-2 border-b-2 border-purple-400/50"></div>
+          </div>
         </div>
       )}
     </>
