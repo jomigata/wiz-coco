@@ -1737,7 +1737,7 @@ function TestRecordsTabContent({
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-blue-950/30 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-blue-950/95 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

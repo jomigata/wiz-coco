@@ -8,7 +8,7 @@ import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
-import { getInProgressTests } from '@/utils/testResume';
+import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 
 export default function Navigation() {
   const router = useRouter();
@@ -41,11 +41,12 @@ export default function Navigation() {
 
   const isLoggedIn = !!user && !loading;
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
+  const [isTestInProgress, setIsTestInProgress] = useState(false);
 
   // 심리검사 페이지인지 확인 (모든 /tests/ 경로)
   const isTestPage = pathname?.startsWith('/tests/') || pathname === '/tests';
 
-  // 진행중인 검사 수 가져오기
+  // 진행중인 검사 수 가져오기 및 실제 검사 진행 중인지 확인
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const updateCount = () => {
@@ -58,6 +59,45 @@ export default function Navigation() {
       return () => clearInterval(interval);
     }
   }, []);
+
+  // 실제 검사 진행 중인지 확인 (질문이 진행 중일 때만 숨김)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isTestPage) {
+      setIsTestInProgress(false);
+      return;
+    }
+
+    // 현재 경로에 해당하는 검사 진행 상태 확인
+    try {
+      const testIdKey = `test-progress-${pathname?.replace(/\/tests\//, '') || ''}`;
+      // localStorage의 모든 키 확인하여 현재 경로와 관련된 진행 상태 찾기
+      const allKeys = Object.keys(localStorage);
+      let foundTestInProgress = false;
+
+      for (const key of allKeys) {
+        if (key.startsWith('test-progress-')) {
+          try {
+            const progress = JSON.parse(localStorage.getItem(key) || '{}');
+            // currentStep이 'test'이고 답변이 있는 경우만 숨김
+            if (progress.currentStep === 'test' && progress.answers && Object.keys(progress.answers).length > 0) {
+              // 현재 경로와 관련된 검사인지 확인
+              const keyPath = key.replace('test-progress-', '');
+              if (pathname?.includes(keyPath.split('_')[0])) {
+                foundTestInProgress = true;
+                break;
+              }
+            }
+          } catch (e) {
+            // JSON 파싱 오류 무시
+          }
+        }
+      }
+
+      setIsTestInProgress(foundTestInProgress);
+    } catch (error) {
+      setIsTestInProgress(false);
+    }
+  }, [pathname, isTestPage]);
 
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
@@ -1601,8 +1641,8 @@ export default function Navigation() {
         </>
       )}
 
-      {/* 진행중인 검사 팝업 - 말풍선 형태 (상단 우측, 모든 페이지 표시, 심리검사 페이지 제외) */}
-      {inProgressTestsCount > 0 && !isTestPage && (
+      {/* 진행중인 검사 팝업 - 말풍선 형태 (상단 우측, 모든 페이지 표시, 실제 검사 진행 중일 때만 숨김) */}
+      {inProgressTestsCount > 0 && !isTestInProgress && (
         <div 
           className="fixed top-20 right-6 z-40"
           onClick={handleInProgressTestsClick}

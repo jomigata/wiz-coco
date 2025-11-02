@@ -13,11 +13,14 @@ interface DeletedTestRecord {
   code: string;
   timestamp: string;
   testType: string;
+  mbtiType?: string;
+  counselorCode?: string;
   userData?: {
     birthYear?: number;
     gender?: string;
     name?: string;
     testDate?: string;
+    counselorCode?: string;
   };
   result?: any;
   deletedAt: string;
@@ -33,6 +36,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [showSingleRestoreConfirm, setShowSingleRestoreConfirm] = useState<boolean>(false);
+  const [singleRestoreRecord, setSingleRestoreRecord] = useState<DeletedTestRecord | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
@@ -235,6 +240,56 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     }
   };
 
+  // 검사 결과 페이지 경로 생성 함수
+  const getResultPageUrl = (record: DeletedTestRecord): string => {
+    const testType = (record.testType || '').toLowerCase();
+    const code = record.code || '';
+    const mbtiType = record.mbtiType || '';
+    
+    // MBTI 검사 결과 페이지
+    if (testType.includes('mbti')) {
+      return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType || 'INTJ')}`;
+    }
+    
+    // 기본적으로 MBTI 결과 페이지로 이동
+    return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType || 'INTJ')}`;
+  };
+
+  // 검사 기록 클릭 핸들러
+  const handleRecordClick = (record: DeletedTestRecord) => {
+    if (!record.code) {
+      console.warn('검사 코드가 없어 결과 페이지로 이동할 수 없습니다:', record);
+      return;
+    }
+    
+    const resultUrl = getResultPageUrl(record);
+    router.push(resultUrl);
+  };
+
+  // 개별 복구 핸들러
+  const handleSingleRestoreClick = (e: React.MouseEvent, record: DeletedTestRecord) => {
+    e.stopPropagation();
+    setSingleRestoreRecord(record);
+    setShowSingleRestoreConfirm(true);
+  };
+
+  // 개별 복구 확인 함수
+  const handleSingleRestoreConfirm = () => {
+    if (!singleRestoreRecord) return;
+    
+    // 단일 레코드를 selectedRecords에 설정하고 복원 실행
+    setSelectedRecords([singleRestoreRecord.code]);
+    setShowSingleRestoreConfirm(false);
+    
+    // 복원 실행
+    restoreSelectedRecords();
+    
+    // 복원 후 마이페이지 새로고침
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
   // 선택된 기록 복원 함수
   const restoreSelectedRecords = () => {
     if (selectedRecords.length === 0) return;
@@ -306,12 +361,19 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         setSelectedRecords([]);
         
         console.log(`${restoredRecords.length}개의 기록 복원 완료`);
+        
+        // 복원 후 마이페이지 새로고침
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     } catch (error) {
       console.error('기록 복원 오류:', error);
     } finally {
       setIsProcessing(false);
       setShowRestoreConfirm(false);
+      setShowSingleRestoreConfirm(false);
+      setSingleRestoreRecord(null);
     }
   };
 
@@ -616,48 +678,81 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
                         />
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
-                        검사결과 코드
+                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                        검사 일시
                       </th>
                       <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
                         검사 유형
                       </th>
                       <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                        검사 일시
+                        검사코드
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
-                        고유번호/예명/별명
+                      <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                        검사결과 코드
                       </th>
                       <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
                         삭제 일시
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                        복구
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
                     {filteredRecords.map((record) => (
-                      <tr key={record.code} className="hover:bg-white/10 transition-colors duration-150">
+                      <tr key={record.code} className="group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={selectedRecords.includes(record.code)}
                             onChange={() => toggleSelection(record.code)}
                             className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-300">
-                          {record.code}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
-                          {record.testType}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
+                        <td 
+                          onClick={() => handleRecordClick(record)}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          title="클릭하여 검사 결과 보기"
+                        >
                           {formatDate(record.timestamp)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
-                          {record.userData?.name || '-'}
+                        <td 
+                          onClick={() => handleRecordClick(record)}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          title="클릭하여 검사 결과 보기"
+                        >
+                          {record.testType}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
+                        <td 
+                          onClick={() => handleRecordClick(record)}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          title="클릭하여 검사 결과 보기"
+                        >
+                          {record.counselorCode || record.userData?.counselorCode || '-'}
+                        </td>
+                        <td 
+                          onClick={() => handleRecordClick(record)}
+                          className="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-300 hover:bg-white/10 hover:text-yellow-200 cursor-pointer transition-colors duration-150"
+                          title="클릭하여 검사 결과 보기"
+                        >
+                          {record.code}
+                        </td>
+                        <td 
+                          onClick={() => handleRecordClick(record)}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          title="클릭하여 검사 결과 보기"
+                        >
                           {formatDate(record.deletedAt)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150">
+                          <button
+                            onClick={(e) => handleSingleRestoreClick(e, record)}
+                            className="px-3 py-1 text-xs font-medium bg-green-600/70 text-white rounded hover:bg-green-600/90 hover:text-green-100 transition-colors"
+                            disabled={isProcessing}
+                          >
+                            복구
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -710,6 +805,69 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               </button>
               <button
                 onClick={restoreSelectedRecords}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    처리 중...
+                  </>
+                ) : "복원하기"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 개별 복구 확인 모달 */}
+      {showSingleRestoreConfirm && singleRestoreRecord && (
+        <div className="fixed inset-0 bg-blue-950/95 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowSingleRestoreConfirm(false)}>
+          <motion.div 
+            className="bg-indigo-950/98 backdrop-blur-md rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-white mb-4">복원 확인</h3>
+            <p className="text-blue-200 mb-4">
+              다음 검사 기록을 복원하시겠습니까?
+            </p>
+            <div className="bg-white/5 rounded-lg p-4 space-y-2 mb-6">
+              <div className="flex justify-between">
+                <span className="text-blue-300">검사 유형:</span>
+                <span className="text-blue-100">{singleRestoreRecord.testType || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-300">검사결과 코드:</span>
+                <span className="text-blue-100">{singleRestoreRecord.code || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-300">검사 일시:</span>
+                <span className="text-blue-100">{singleRestoreRecord.timestamp ? formatDate(singleRestoreRecord.timestamp) : 'N/A'}</span>
+              </div>
+            </div>
+            <p className="text-blue-300 text-sm mb-6">
+              복원된 기록은 검사 기록 목록에서 다시 확인할 수 있습니다.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowSingleRestoreConfirm(false);
+                  setSingleRestoreRecord(null);
+                }}
+                className="px-4 py-2 bg-gray-700/60 text-gray-200 rounded hover:bg-gray-700 transition-colors"
+                disabled={isProcessing}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSingleRestoreConfirm}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center"
                 disabled={isProcessing}
               >
