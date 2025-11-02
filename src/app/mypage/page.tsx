@@ -148,7 +148,7 @@ function MyPageContent() {
   const [resumeModalTest, setResumeModalTest] = useState<any>(null);
 
   // 삭제된 코드 수 가져오기
-  useEffect(() => {
+  const updateDeletedCodesCount = () => {
     if (typeof window !== 'undefined') {
       try {
         const deletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
@@ -157,7 +157,37 @@ function MyPageContent() {
         setDeletedCodesCount(0);
       }
     }
+  };
+
+  useEffect(() => {
+    updateDeletedCodesCount();
   }, [activeTab]);
+
+  // 삭제코드 업데이트 이벤트 리스너
+  useEffect(() => {
+    const handleDeletedCodesUpdate = () => {
+      updateDeletedCodesCount();
+    };
+
+    window.addEventListener('deletedCodesUpdated', handleDeletedCodesUpdate);
+    return () => {
+      window.removeEventListener('deletedCodesUpdated', handleDeletedCodesUpdate);
+    };
+  }, []);
+
+  // 검사기록 업데이트 이벤트 리스너
+  useEffect(() => {
+    const handleTestRecordsUpdate = () => {
+      // 검사기록 재로드
+      const updatedRecords = loadLocalTestRecords();
+      setTestRecords(updatedRecords);
+    };
+
+    window.addEventListener('testRecordsUpdated', handleTestRecordsUpdate);
+    return () => {
+      window.removeEventListener('testRecordsUpdated', handleTestRecordsUpdate);
+    };
+  }, []);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     mbtiCount: 0,

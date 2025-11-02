@@ -163,27 +163,66 @@ function MbtiResultContent() {
   // 로컬 스토리지에서 테스트 결과 가져오기
   const getTestResultFromLocalStorage = (code: string) => {
     try {
-      // 직접 코드로 저장된 결과 찾기
+      // 1. 직접 코드로 저장된 결과 찾기
       const directResult = localStorage.getItem(`test-result-${code}`);
       if (directResult) {
-        return JSON.parse(directResult);
+        const parsed = JSON.parse(directResult);
+        if (parsed && (parsed.answers || parsed.mbtiType)) {
+          return parsed;
+        }
       }
 
-      // 사용자별 검사 기록에서 찾기
+      // 2. test_records에서 찾기
+      const testRecordsStr = localStorage.getItem('test_records');
+      if (testRecordsStr) {
+        const records = JSON.parse(testRecordsStr);
+        const foundRecord = records.find((record: any) => record.code === code);
+        if (foundRecord) {
+          if (foundRecord.result) {
+            return foundRecord.result;
+          }
+          // result가 없으면 레코드 자체를 반환 (일부 결과는 레코드에 직접 포함될 수 있음)
+          if (foundRecord.answers || foundRecord.mbtiType) {
+            return foundRecord;
+          }
+        }
+      }
+
+      // 3. 사용자별 검사 기록에서 찾기
       const userEmail = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').email : null;
       if (userEmail) {
         const userRecordsKey = `mbti-user-test-records-${userEmail}`;
         const userRecords = localStorage.getItem(userRecordsKey);
         if (userRecords) {
           const records = JSON.parse(userRecords);
-          const foundRecord = records.find((record: any) => record.testCode === code);
-          if (foundRecord && foundRecord.userData) {
+          const foundRecord = records.find((record: any) => record.testCode === code || record.code === code);
+          if (foundRecord) {
+            if (foundRecord.result) {
+              return foundRecord.result;
+            }
+            if (foundRecord.userData) {
+              return foundRecord.userData;
+            }
+          }
+        }
+      }
+
+      // 4. 일반 mbti-user-test-records에서 찾기
+      const generalRecords = localStorage.getItem('mbti-user-test-records');
+      if (generalRecords) {
+        const records = JSON.parse(generalRecords);
+        const foundRecord = records.find((record: any) => record.testCode === code || record.code === code);
+        if (foundRecord) {
+          if (foundRecord.result) {
+            return foundRecord.result;
+          }
+          if (foundRecord.userData) {
             return foundRecord.userData;
           }
         }
       }
 
-      // 최근 검사 결과에서 찾기 (코드가 일치하지 않더라도)
+      // 5. 최근 검사 결과에서 찾기 (코드가 일치하지 않더라도)
       if (typeof window !== 'undefined') {
         const recentCode = localStorage.getItem('mbti_test_code');
         if (recentCode === code) {

@@ -327,20 +327,99 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   };
 
   // 개별 복구 확인 함수
-  const handleSingleRestoreConfirm = () => {
+  const handleSingleRestoreConfirm = async () => {
     if (!singleRestoreRecord) return;
     
-    // 단일 레코드를 selectedRecords에 설정하고 복원 실행
-    setSelectedRecords([singleRestoreRecord.code]);
+    setIsProcessing(true);
     setShowSingleRestoreConfirm(false);
     
-    // 복원 실행
-    restoreSelectedRecords();
-    
-    // 복원 후 마이페이지 새로고침
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
+    try {
+      if (typeof window !== 'undefined') {
+        // 1. 기존 테스트 기록 가져오기
+        const testRecordsStr = localStorage.getItem('test_records') || '[]';
+        const testRecords = JSON.parse(testRecordsStr);
+        
+        // 2. 복원할 레코드 준비
+        const { deletedAt, ...restoredRecord } = singleRestoreRecord;
+        const cleanedRecord = {
+          ...restoredRecord,
+          status: '완료'
+        };
+        
+        // 3. 중복 체크 후 추가
+        const existingIndex = testRecords.findIndex((r: any) => r.code === cleanedRecord.code);
+        if (existingIndex >= 0) {
+          testRecords[existingIndex] = cleanedRecord;
+        } else {
+          testRecords.push(cleanedRecord);
+        }
+        
+        // 4. 테스트 기록 업데이트
+        const updatedTestRecords = testRecords.filter((r: any) => r && r.code && r.testType);
+        localStorage.setItem('test_records', JSON.stringify(updatedTestRecords));
+        
+        // 5. 검사결과 데이터 복원 (test-result-{code})
+        if (cleanedRecord.result) {
+          localStorage.setItem(`test-result-${cleanedRecord.code}`, JSON.stringify(cleanedRecord.result));
+        }
+        
+        // 6. MBTI 테스트 기록도 함께 복원
+        if (cleanedRecord.testType.toLowerCase().includes('mbti')) {
+          const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
+          let mbtiRecords = [];
+          
+          try {
+            mbtiRecords = JSON.parse(mbtiRecordsStr);
+          } catch (e) {
+            console.error('MBTI 테스트 기록 파싱 오류:', e);
+            mbtiRecords = [];
+          }
+          
+          const mbtiRecord = {
+            testCode: cleanedRecord.code,
+            testType: cleanedRecord.testType,
+            timestamp: cleanedRecord.timestamp,
+            userData: cleanedRecord.userData,
+            result: cleanedRecord.result
+          };
+          
+          const existingMbtiIndex = mbtiRecords.findIndex((r: any) => r.testCode === cleanedRecord.code);
+          if (existingMbtiIndex >= 0) {
+            mbtiRecords[existingMbtiIndex] = mbtiRecord;
+          } else {
+            mbtiRecords.push(mbtiRecord);
+          }
+          
+          localStorage.setItem('mbti-user-test-records', JSON.stringify(mbtiRecords));
+        }
+        
+        // 7. 삭제된 기록에서 복원된 레코드 제거
+        const remainingDeletedRecords = deletedRecords.filter(record =>
+          record.code !== singleRestoreRecord.code
+        );
+        
+        // 8. 삭제된 기록 업데이트
+        localStorage.setItem('deleted_test_records', JSON.stringify(sanitizeDeletedRecords(remainingDeletedRecords)));
+        setDeletedRecords(remainingDeletedRecords);
+        
+        // 9. 카운트 즉시 업데이트
+        setDeletedCodesCount(remainingDeletedRecords.length);
+        setTestRecordsCount(updatedTestRecords.length);
+        
+        // 10. 부모 컴포넌트에 업데이트 이벤트 발생
+        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+        window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
+        
+        console.log(`기록 복원 완료: ${cleanedRecord.code}`);
+        
+        setSingleRestoreRecord(null);
+      }
+    } catch (error) {
+      console.error('기록 복원 오류:', error);
+      alert('기록 복원 중 오류가 발생했습니다.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // 선택된 기록 복원 함수
@@ -369,11 +448,28 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           };
         });
         
-        // 4. 테스트 기록 업데이트
-        const updatedTestRecords = [...testRecords, ...restoredRecords].filter((r: any) => r && r.code && r.testType);
-        localStorage.setItem('test_records', JSON.stringify(updatedTestRecords));
+        // 4. 검사결과 데이터 복원 (test-result-{code})
+        restoredRecords.forEach(record => {
+          if (record.result && record.code) {
+            localStorage.setItem(`test-result-${record.code}`, JSON.stringify(record.result));
+          }
+        });
         
-        // 5. MBTI 테스트 기록도 함께 복원 (mbti-user-test-records에 추가)
+        // 5. 테스트 기록 업데이트 (중복 체크)
+        const updatedTestRecords = [...testRecords];
+        restoredRecords.forEach(restoredRecord => {
+          const existingIndex = updatedTestRecords.findIndex((r: any) => r.code === restoredRecord.code);
+          if (existingIndex >= 0) {
+            updatedTestRecords[existingIndex] = restoredRecord;
+          } else {
+            updatedTestRecords.push(restoredRecord);
+          }
+        });
+        
+        const finalTestRecords = updatedTestRecords.filter((r: any) => r && r.code && r.testType);
+        localStorage.setItem('test_records', JSON.stringify(finalTestRecords));
+        
+        // 6. MBTI 테스트 기록도 함께 복원 (mbti-user-test-records에 추가)
         const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
         let mbtiRecords = [];
         
@@ -384,7 +480,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           mbtiRecords = [];
         }
         
-        // MBTI 관련 레코드만 필터링하여 추가
+        // MBTI 관련 레코드만 필터링하여 추가 (중복 체크)
         const mbtiRestoredRecords = restoredRecords
           .filter(record => record.testType.toLowerCase().includes('mbti'))
           .map(record => ({
@@ -396,29 +492,39 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           }));
         
         if (mbtiRestoredRecords.length > 0) {
-          const updatedMbtiRecords = [...mbtiRecords, ...mbtiRestoredRecords];
-          localStorage.setItem('mbti-user-test-records', JSON.stringify(updatedMbtiRecords));
+          mbtiRestoredRecords.forEach(mbtiRecord => {
+            const existingIndex = mbtiRecords.findIndex((r: any) => r.testCode === mbtiRecord.testCode);
+            if (existingIndex >= 0) {
+              mbtiRecords[existingIndex] = mbtiRecord;
+            } else {
+              mbtiRecords.push(mbtiRecord);
+            }
+          });
+          localStorage.setItem('mbti-user-test-records', JSON.stringify(mbtiRecords));
           console.log(`${mbtiRestoredRecords.length}개의 MBTI 테스트 기록 복원 완료`);
         }
         
-        // 6. 삭제된 기록에서 복원된 레코드 제거
+        // 7. 삭제된 기록에서 복원된 레코드 제거
         const remainingDeletedRecords = deletedRecords.filter(record =>
           !selectedRecords.includes(record.code)
         );
         
-        // 7. 삭제된 기록 업데이트
+        // 8. 삭제된 기록 업데이트
         localStorage.setItem('deleted_test_records', JSON.stringify(sanitizeDeletedRecords(remainingDeletedRecords)));
         setDeletedRecords(remainingDeletedRecords);
         
-        // 8. 선택 초기화
+        // 9. 선택 초기화
         setSelectedRecords([]);
         
-        console.log(`${restoredRecords.length}개의 기록 복원 완료`);
+        // 10. 카운트 즉시 업데이트
+        setDeletedCodesCount(remainingDeletedRecords.length);
+        setTestRecordsCount(finalTestRecords.length);
         
-        // 복원 후 마이페이지 새로고침
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // 11. 부모 컴포넌트에 업데이트 이벤트 발생
+        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+        window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
+        
+        console.log(`${restoredRecords.length}개의 기록 복원 완료`);
       }
     } catch (error) {
       console.error('기록 복원 오류:', error);
