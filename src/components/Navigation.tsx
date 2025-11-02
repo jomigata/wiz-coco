@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
@@ -12,6 +12,7 @@ import { getInProgressTests } from '@/utils/testResume';
 
 export default function Navigation() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading, logout } = useFirebaseAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
@@ -41,6 +42,11 @@ export default function Navigation() {
   const isLoggedIn = !!user && !loading;
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
 
+  // 검사 진행 페이지인지 확인 (결과 페이지는 제외)
+  const isTestInProgressPage = pathname?.startsWith('/tests/') && 
+    !pathname?.includes('/result') && 
+    pathname !== '/tests';
+
   // 진행중인 검사 수 가져오기
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -54,6 +60,11 @@ export default function Navigation() {
       return () => clearInterval(interval);
     }
   }, []);
+
+  // 진행중인 검사 팝업 클릭 핸들러
+  const handleInProgressTestsClick = () => {
+    router.push('/mypage?tab=in-progress');
+  };
   const userEmail = user?.email || "";
   const userName = user?.displayName || "";
 
@@ -1126,11 +1137,6 @@ export default function Navigation() {
                         onMouseLeave={() => setActiveMenu(null)}
                       >
                         👤 마이페이지
-                        {inProgressTestsCount > 0 && (
-                          <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
-                            진행중인 검사 ({inProgressTestsCount}개)
-                          </span>
-                        )}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"
@@ -1595,6 +1601,32 @@ export default function Navigation() {
             </div>
           </div>
         </>
+      )}
+
+      {/* 진행중인 검사 팝업 - 네비게이션 바 아래 */}
+      {inProgressTestsCount > 0 && !isTestInProgressPage && (
+        <div 
+          className="fixed top-16 left-0 right-0 z-40 bg-blue-600/95 backdrop-blur-sm border-b border-blue-500/50 shadow-lg"
+          onClick={handleInProgressTestsClick}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="container max-w-7xl mx-auto px-6 py-3">
+            <div className="flex items-center justify-center space-x-2 text-white">
+              <span className="text-lg">📋</span>
+              <span className="font-semibold text-sm md:text-base">
+                진행중인 검사 ({inProgressTestsCount}개) - 클릭하여 확인하기
+              </span>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
