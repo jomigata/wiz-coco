@@ -46,6 +46,9 @@ export default function Navigation() {
   const isTestInProgressPage = pathname?.startsWith('/tests/') && 
     !pathname?.includes('/result') && 
     pathname !== '/tests';
+  
+  // 마이페이지인지 확인
+  const isMyPage = pathname?.startsWith('/mypage');
 
   // 진행중인 검사 수 가져오기
   useEffect(() => {
@@ -1603,29 +1606,51 @@ export default function Navigation() {
         </>
       )}
 
-      {/* 진행중인 검사 팝업 - 네비게이션 바 아래 */}
+      {/* 진행중인 검사 팝업 - 말풍선 형태 */}
       {inProgressTestsCount > 0 && !isTestInProgressPage && (
         <div 
-          className="fixed top-16 left-0 right-0 z-40 bg-blue-600/95 backdrop-blur-sm border-b border-blue-500/50 shadow-lg"
+          className={`fixed ${isMyPage ? 'bottom-6 right-6' : 'top-16 left-0 right-0'} z-40`}
           onClick={handleInProgressTestsClick}
           style={{ cursor: 'pointer' }}
         >
-          <div className="container max-w-7xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-center space-x-2 text-white">
-              <span className="text-lg">📋</span>
-              <span className="font-semibold text-sm md:text-base">
-                진행중인 검사 ({inProgressTestsCount}개) - 클릭하여 확인하기
-              </span>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5" 
-                viewBox="0 0 20 20" 
-                fill="currentColor"
-              >
-                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-              </svg>
+          {isMyPage ? (
+            // 마이페이지 - 하단 우측 말풍선 형태
+            <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl px-6 py-4 border-2 border-purple-400/50 backdrop-blur-sm animate-pulse hover:animate-none hover:shadow-purple-500/50 transition-all duration-300">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">📋</div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-white text-sm md:text-base">
+                    진행중인 검사
+                  </span>
+                  <span className="text-purple-100 text-xs md:text-sm">
+                    {inProgressTestsCount}개 - 클릭하여 확인
+                  </span>
+                </div>
+              </div>
+              {/* 말풍선 꼬리 */}
+              <div className="absolute -bottom-2 right-8 w-4 h-4 bg-gradient-to-br from-purple-600 to-indigo-600 transform rotate-45 border-r-2 border-b-2 border-purple-400/50"></div>
             </div>
-          </div>
+          ) : (
+            // 일반 페이지 - 상단 배너 형태
+            <div className="bg-gradient-to-r from-purple-600/95 via-indigo-600/95 to-purple-700/95 backdrop-blur-sm border-b border-purple-400/50 shadow-lg">
+              <div className="container max-w-7xl mx-auto px-6 py-3">
+                <div className="flex items-center justify-center space-x-2 text-white">
+                  <span className="text-lg">📋</span>
+                  <span className="font-semibold text-sm md:text-base">
+                    진행중인 검사 ({inProgressTestsCount}개) - 클릭하여 확인하기
+                  </span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5" 
+                    viewBox="0 0 20 20" 
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

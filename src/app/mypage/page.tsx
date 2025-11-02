@@ -580,7 +580,7 @@ function MyPageContent() {
                     : 'text-blue-300 hover:text-blue-200'
                 }`}
               >
-                검사 기록 {testRecords.length > 0 ? `(${testRecords.length})` : ''}
+                검사 기록 ({testRecords.length})
               </button>
               <button
                 onClick={() => changeTab('in-progress')}
@@ -590,7 +590,7 @@ function MyPageContent() {
                     : 'text-blue-300 hover:text-blue-200'
                 }`}
               >
-                진행중인 검사 {inProgressTests.length > 0 ? `(${inProgressTests.length})` : ''}
+                진행중인 검사 ({inProgressTests.length})
               </button>
               <button
                 onClick={() => changeTab('stats')}
@@ -606,7 +606,7 @@ function MyPageContent() {
                 href="/mypage/deleted-codes"
                 className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
               >
-                삭제코드 {deletedCodesCount > 0 && `(${deletedCodesCount})`}
+                삭제코드 ({deletedCodesCount})
               </Link>
             </motion.div>
 
@@ -1630,32 +1630,32 @@ function TestRecordsTabContent({
                 {paginatedRecords.map((record, index) => (
                   <tr 
                     key={record.code || index} 
-                    className="hover:bg-white/10 transition-colors duration-150 group"
+                    className="group"
                   >
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.testType || 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.counselorCode || 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 group-hover:text-blue-50 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.code || 'N/A'}
@@ -1734,12 +1734,12 @@ function TestRecordsTabContent({
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-blue-900/80 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-blue-950/95 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-blue-800/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-600 max-w-md w-full mx-4"
+            className="bg-indigo-950/98 backdrop-blur-md rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 삭제</h3>
