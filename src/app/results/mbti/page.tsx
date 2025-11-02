@@ -82,6 +82,7 @@ const generateUniqueTestCode = () => {
 // 메인 컨텐츠 컴포넌트
 function MbtiResultContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [mbtiType, setMbtiType] = useState<string>('');
   const [testCode, setTestCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
