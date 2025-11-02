@@ -61,6 +61,17 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     setIsClient(true);
   }, []);
 
+  // 개인용 검사일 때 이름 입력칸에 자동 포커스
+  useEffect(() => {
+    if (isPersonalTest && nameRef.current) {
+      // 약간의 지연을 주어 DOM이 완전히 렌더링된 후 포커스
+      const timer = setTimeout(() => {
+        nameRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isPersonalTest]);
+
   // initialData가 변경되면 상태 업데이트
   useEffect(() => {
     if (initialData) {
@@ -303,16 +314,18 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
         }
       `}</style>
       
-      <div className="absolute inset-0 z-0 opacity-10">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)" />
-        </svg>
-      </div>
+      {!isPersonalTest && (
+        <div className="absolute inset-0 z-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
+      )}
       
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
@@ -325,7 +338,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-white mb-4">
-            전문가용 MBTI 검사
+            {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
           </h1>
           <p className="text-emerald-300 max-w-lg mx-auto">
             검사 진행을 위해 기본 정보를 입력해주세요.
@@ -631,7 +644,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                 type="button"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="px-5 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg shadow-sm hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-emerald-900"
+                className={`px-5 py-3 font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-emerald-900 ${
+                  isPersonalTest 
+                    ? 'bg-green-700/60 text-green-200 hover:bg-green-700 focus:ring-green-500'
+                    : 'bg-gray-700/60 text-gray-200 hover:bg-gray-700 focus:ring-gray-500'
+                }`}
                 onClick={() => {
                   const currentInfo: ClientInfo = {
                     birthYear,

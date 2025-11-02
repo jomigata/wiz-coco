@@ -349,11 +349,11 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         // 전문가용 MBTI인 경우 추가 데이터 저장
         const isProfessional = (record.testType || '').toLowerCase().includes('전문가용') || 
                                (record.testType || '').toLowerCase().includes('mbti pro') ||
-                               code.startsWith('MP');
+                               record.code.startsWith('MP');
         if (isProfessional && record.result) {
           // 전문가용 MBTI 결과 데이터 저장
           const proResultData = {
-            code: code,
+            code: record.code,
             mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ',
             answers: record.result.answers || {},
             timestamp: record.timestamp,
