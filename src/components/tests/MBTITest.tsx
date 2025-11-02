@@ -98,8 +98,22 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
 
   const handlePrevQuestion = () => {
     if (currentQuestion > 0) {
+      // 답변 저장 (이전 문항으로 이동 전)
+      if (onAnswerChange && Object.keys(answers).length > 0) {
+        onAnswerChange(answers, currentQuestion);
+      }
       setShowStar(true);
       setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
+  const handleBack = () => {
+    // 이전페이지로 이동 전 답변 저장
+    if (onAnswerChange && Object.keys(answers).length > 0) {
+      onAnswerChange(answers, currentQuestion);
+    }
+    if (onBack) {
+      onBack();
     }
   };
 
@@ -284,19 +298,19 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
           <button
             onClick={() => {
               if (currentQuestion === 0 && onBack) {
-                onBack();
+                handleBack();
               } else if (currentQuestion > 0) {
                 handlePrevQuestion();
               }
             }}
             className={`px-5 py-2 rounded-lg font-medium 
               ${(currentQuestion > 0 || (currentQuestion === 0 && onBack))
-                ? 'bg-emerald-700/50 text-emerald-200 hover:bg-emerald-700/80' 
+                ? 'bg-emerald-600/70 text-emerald-100 hover:bg-emerald-600/90' 
                 : 'bg-emerald-900/30 text-emerald-700 cursor-not-allowed'
               } transition-all duration-300`}
             disabled={currentQuestion === 0 && !onBack}
           >
-            이전페이지
+            {currentQuestion === 0 ? '이전페이지' : '이전 문항'}
           </button>
           
           <div className="text-sm text-emerald-300">

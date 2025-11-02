@@ -37,14 +37,40 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('newest');
   const [inProgressCount, setInProgressCount] = useState<number>(0);
+  const [testRecordsCount, setTestRecordsCount] = useState<number>(0);
+  const [deletedCodesCount, setDeletedCodesCount] = useState<number>(0);
 
   useEffect(() => {
     if (!isEmbedded && typeof window !== 'undefined') {
       try {
         setInProgressCount(getInProgressTests().length);
+        
+        // 검사 기록 수 가져오기
+        const allRecords: any[] = [];
+        const globalRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+        if (Array.isArray(globalRecords)) {
+          allRecords.push(...globalRecords);
+        }
+        if (firebaseUser?.email) {
+          const userRecords = JSON.parse(localStorage.getItem(`mbti-user-test-records-${firebaseUser.email}`) || '[]');
+          if (Array.isArray(userRecords)) {
+            allRecords.push(...userRecords);
+          }
+        }
+        const generalRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
+        if (Array.isArray(generalRecords)) {
+          allRecords.push(...generalRecords);
+        }
+        // 중복 제거
+        const uniqueRecords = Array.from(new Map(allRecords.map(r => [r.code, r])).values());
+        setTestRecordsCount(uniqueRecords.filter(r => r.code && r.testType).length);
+        
+        // 삭제코드 수 가져오기
+        const deletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
+        setDeletedCodesCount(Array.isArray(deletedRecords) ? deletedRecords.length : 0);
       } catch {}
     }
-  }, [isEmbedded]);
+  }, [isEmbedded, firebaseUser]);
 
   // 유효/중복 정제 유틸
   const sanitizeDeletedRecords = (records: DeletedTestRecord[]): DeletedTestRecord[] => {
@@ -458,13 +484,13 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               href="/mypage?tab=records"
               className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
             >
-              검사 기록
+              검사 기록 ({testRecordsCount})
             </Link>
             <Link
               href="/mypage?tab=in-progress"
               className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
             >
-              진행중인 검사 {inProgressCount > 0 ? `(${inProgressCount})` : ''}
+              진행중인 검사 ({inProgressCount})
             </Link>
             <Link
               href="/mypage?tab=stats"
@@ -476,7 +502,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               href="/mypage/deleted-codes"
               className="px-4 py-2 font-medium text-blue-200 border-b-2 border-blue-200"
             >
-              삭제코드
+              삭제코드 ({deletedCodesCount})
             </Link>
           </motion.div>
         )}

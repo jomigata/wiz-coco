@@ -1614,21 +1614,24 @@ export default function Navigation() {
           style={{ cursor: 'pointer' }}
         >
           {isMyPage ? (
-            // 마이페이지 - 하단 우측 말풍선 형태
-            <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl px-6 py-4 border-2 border-purple-400/50 backdrop-blur-sm animate-pulse hover:animate-none hover:shadow-purple-500/50 transition-all duration-300">
+            // 마이페이지 - 하단 우측 말풍선 형태 (300px 고정)
+            <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl w-[300px] px-5 py-4 border-2 border-purple-400/50 backdrop-blur-sm animate-pulse hover:animate-none hover:shadow-purple-500/50 transition-all duration-300">
               <div className="flex items-center space-x-3">
-                <div className="text-2xl">📋</div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-white text-sm md:text-base">
+                <div className="text-3xl flex-shrink-0">📋</div>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="font-bold text-white text-base leading-tight">
                     진행중인 검사
                   </span>
-                  <span className="text-purple-100 text-xs md:text-sm">
-                    {inProgressTestsCount}개 - 클릭하여 확인
+                  <span className="text-purple-100 text-sm mt-1">
+                    {inProgressTestsCount}개 검사 대기중
+                  </span>
+                  <span className="text-purple-200 text-xs mt-1 italic">
+                    클릭하여 확인 →
                   </span>
                 </div>
               </div>
               {/* 말풍선 꼬리 */}
-              <div className="absolute -bottom-2 right-8 w-4 h-4 bg-gradient-to-br from-purple-600 to-indigo-600 transform rotate-45 border-r-2 border-b-2 border-purple-400/50"></div>
+              <div className="absolute -bottom-2 right-12 w-4 h-4 bg-gradient-to-br from-purple-600 to-indigo-600 transform rotate-45 border-r-2 border-b-2 border-purple-400/50"></div>
             </div>
           ) : (
             // 일반 페이지 - 상단 배너 형태
