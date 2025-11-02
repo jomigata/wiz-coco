@@ -144,6 +144,8 @@ function MyPageContent() {
   const [inProgressFilter, setInProgressFilter] = useState<'all' | 'mbti_pro' | 'mbti' | 'ai-profiling' | 'integrated-assessment'>('all');
   const [inProgressSort, setInProgressSort] = useState<'recent' | 'progress' | 'name'>('recent');
   const [deletedCodesCount, setDeletedCodesCount] = useState(0);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [resumeModalTest, setResumeModalTest] = useState<any>(null);
 
   // 삭제된 코드 수 가져오기
   useEffect(() => {
@@ -771,129 +773,231 @@ function MyPageContent() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      {(() => {
-                        // 필터링
-                        let filtered = inProgressTests;
-                        if (inProgressFilter !== 'all') {
-                          filtered = filtered.filter(test => {
-                            if (inProgressFilter === 'mbti_pro') return test.testId.includes('mbti_pro');
-                            if (inProgressFilter === 'mbti') return test.testId.includes('mbti') && !test.testId.includes('mbti_pro');
-                            if (inProgressFilter === 'ai-profiling') return test.testId.includes('ai-profiling');
-                            if (inProgressFilter === 'integrated-assessment') return test.testId.includes('integrated-assessment');
-                            return true;
-                          });
-                        }
-
-                        // 정렬
-                        const sorted = [...filtered].sort((a, b) => {
-                          if (inProgressSort === 'recent') {
-                            return b.timestamp - a.timestamp;
-                          } else if (inProgressSort === 'progress') {
-                            const progressA = typeof window !== 'undefined' 
-                              ? (() => {
-                                  const saved = JSON.parse(localStorage.getItem(`test_progress_${a.testId}`) || '{}');
-                                  const answeredCount = Object.keys(saved.answers || {}).length;
-                                  const totalQuestions = saved.totalQuestions || 0;
-                                  return totalQuestions > 0 ? answeredCount / totalQuestions : 0;
-                                })()
-                              : 0;
-                            const progressB = typeof window !== 'undefined' 
-                              ? (() => {
-                                  const saved = JSON.parse(localStorage.getItem(`test_progress_${b.testId}`) || '{}');
-                                  const answeredCount = Object.keys(saved.answers || {}).length;
-                                  const totalQuestions = saved.totalQuestions || 0;
-                                  return totalQuestions > 0 ? answeredCount / totalQuestions : 0;
-                                })()
-                              : 0;
-                            return progressB - progressA;
-                          } else if (inProgressSort === 'name') {
-                            return a.testName.localeCompare(b.testName, 'ko');
-                          }
-                          return 0;
-                        });
-
-                        // 간단 페이지네이션 (더보기)
-                        const [pageSize] = [10];
-                        const paged = sorted.slice(0, pageSize);
-
-                        return paged.map((test) => {
-                          const savedProgress = typeof window !== 'undefined' 
-                            ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
-                            : {};
-                          const answeredCount = Object.keys(savedProgress.answers || {}).length;
-                          // totalQuestions가 없으면 검사 유형별 기본값 사용
-                          let totalQuestions = savedProgress.totalQuestions || 0;
-                          if (totalQuestions === 0) {
-                            const testType = (test.testType || '').toUpperCase();
-                            if (testType.includes('MBTI') && !testType.includes('PRO')) {
-                              totalQuestions = 20; // 개인용 MBTI 검사 (실제 문항수)
-                            } else if (testType.includes('MBTI_PRO') || testType.includes('MBTI PRO')) {
-                              totalQuestions = 24; // MBTI Pro 검사
-                            } else if (testType.includes('AI_PROFILING') || testType.includes('AI-PROFILING')) {
-                              totalQuestions = savedProgress.totalQuestions || 0; // AI 프로파일링은 동적
-                            } else if (testType.includes('INTEGRATED')) {
-                              totalQuestions = savedProgress.totalQuestions || 0; // 통합 평가는 동적
+                    {/* 테이블 형태로 변경 */}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-white/20">
+                        <thead className="bg-white/5">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                              검사 유형
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                              진행률
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                              완료 현황
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                              마지막 업데이트
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                              작업
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/10">
+                          {(() => {
+                            // 필터링
+                            let filtered = inProgressTests;
+                            if (inProgressFilter !== 'all') {
+                              filtered = filtered.filter(test => {
+                                if (inProgressFilter === 'mbti_pro') return test.testId.includes('mbti_pro');
+                                if (inProgressFilter === 'mbti') return test.testId.includes('mbti') && !test.testId.includes('mbti_pro');
+                                if (inProgressFilter === 'ai-profiling') return test.testId.includes('ai-profiling');
+                                if (inProgressFilter === 'integrated-assessment') return test.testId.includes('integrated-assessment');
+                                return true;
+                              });
                             }
-                          }
-                          const progressPercent = totalQuestions > 0 
-                            ? Math.round((answeredCount / totalQuestions) * 100)
-                            : 0;
-                          const lastUpdate = new Date(test.timestamp);
-                          
-                          return (
-                            <div
-                              key={test.testId}
-                              className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-blue-100 font-medium">{test.testName}</h4>
-                                    <button
-                                      onClick={() => handleClearProgress(test.testId)}
-                                      className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/20 transition-colors"
-                                      title="진행 상태 삭제"
-                                    >
-                                      삭제
-                                    </button>
-                                  </div>
-                                  {totalQuestions > 0 && (
-                                    <div className="mb-2">
-                                      <div className="flex justify-between items-center mb-1">
-                                        <span className="text-xs text-blue-300">진행률</span>
-                                        <span className="text-xs text-blue-200 font-semibold">{progressPercent}%</span>
+
+                            // 정렬
+                            const sorted = [...filtered].sort((a, b) => {
+                              if (inProgressSort === 'recent') {
+                                return b.timestamp - a.timestamp;
+                              } else if (inProgressSort === 'progress') {
+                                const progressA = typeof window !== 'undefined' 
+                                  ? (() => {
+                                      const saved = JSON.parse(localStorage.getItem(`test_progress_${a.testId}`) || '{}');
+                                      const answeredCount = Object.keys(saved.answers || {}).length;
+                                      const totalQuestions = saved.totalQuestions || 0;
+                                      return totalQuestions > 0 ? answeredCount / totalQuestions : 0;
+                                    })()
+                                  : 0;
+                                const progressB = typeof window !== 'undefined' 
+                                  ? (() => {
+                                      const saved = JSON.parse(localStorage.getItem(`test_progress_${b.testId}`) || '{}');
+                                      const answeredCount = Object.keys(saved.answers || {}).length;
+                                      const totalQuestions = saved.totalQuestions || 0;
+                                      return totalQuestions > 0 ? answeredCount / totalQuestions : 0;
+                                    })()
+                                  : 0;
+                                return progressB - progressA;
+                              } else if (inProgressSort === 'name') {
+                                return a.testName.localeCompare(b.testName, 'ko');
+                              }
+                              return 0;
+                            });
+
+                            // 간단 페이지네이션 (더보기)
+                            const [pageSize] = [10];
+                            const paged = sorted.slice(0, pageSize);
+
+                            return paged.map((test) => {
+                              const savedProgress = typeof window !== 'undefined' 
+                                ? JSON.parse(localStorage.getItem(`test_progress_${test.testId}`) || '{}')
+                                : {};
+                              const answeredCount = Object.keys(savedProgress.answers || {}).length;
+                              // totalQuestions가 없으면 검사 유형별 기본값 사용
+                              let totalQuestions = savedProgress.totalQuestions || 0;
+                              if (totalQuestions === 0) {
+                                const testType = (test.testType || '').toUpperCase();
+                                if (testType.includes('MBTI') && !testType.includes('PRO')) {
+                                  totalQuestions = 20; // 개인용 MBTI 검사 (실제 문항수)
+                                } else if (testType.includes('MBTI_PRO') || testType.includes('MBTI PRO')) {
+                                  totalQuestions = 24; // MBTI Pro 검사
+                                } else if (testType.includes('AI_PROFILING') || testType.includes('AI-PROFILING')) {
+                                  totalQuestions = savedProgress.totalQuestions || 0; // AI 프로파일링은 동적
+                                } else if (testType.includes('INTEGRATED')) {
+                                  totalQuestions = savedProgress.totalQuestions || 0; // 통합 평가는 동적
+                                }
+                              }
+                              const progressPercent = totalQuestions > 0 
+                                ? Math.round((answeredCount / totalQuestions) * 100)
+                                : 0;
+                              const lastUpdate = new Date(test.timestamp);
+                              
+                              return (
+                                <tr key={test.testId} className="hover:bg-white/5 transition-colors">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-blue-100 font-medium">{test.testName}</div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <div className="flex items-center justify-center">
+                                      <div className="w-full max-w-xs">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span className="text-xs text-blue-300">{progressPercent}%</span>
+                                        </div>
+                                        <div className="w-full bg-blue-900/50 rounded-full h-2">
+                                          <div
+                                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${progressPercent}%` }}
+                                          />
+                                        </div>
                                       </div>
-                                      <div className="w-full bg-blue-900/50 rounded-full h-1.5">
-                                        <div
-                                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
-                                          style={{ width: `${progressPercent}%` }}
-                                        />
-                                      </div>
-                                      <p className="text-xs text-blue-300/80 mt-1">
-                                        {answeredCount}개 완료 / 전체 {totalQuestions}개
-                                      </p>
                                     </div>
-                                  )}
-                                  <p className="text-xs text-blue-300/60">
-                                    마지막 업데이트: {lastUpdate.toLocaleString('ko-KR')}
-                                  </p>
-                                </div>
-                                <Link
-                                  href={`${getTestPath(test.testId, test.testType)}?resume=${encodeURIComponent(test.testId)}`}
-                                  className="ml-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                                >
-                                  이어하기
-                                </Link>
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <span className="text-blue-200 text-sm">
+                                      {answeredCount}개 완료 / 전체 {totalQuestions}개
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <span className="text-blue-300 text-sm">
+                                      {lastUpdate.toLocaleString('ko-KR')}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button
+                                        onClick={() => handleClearProgress(test.testId)}
+                                        className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/20 transition-colors"
+                                        title="진행 상태 삭제"
+                                      >
+                                        삭제
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setResumeModalTest(test);
+                                          setShowResumeModal(true);
+                                        }}
+                                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                      >
+                                        이어하기
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            });
+                          })()}
+                        </tbody>
+                      </table>
                     </div>
                   </>
                 )}
               </motion.div>
+            )}
+
+            {/* 이어하기 확인 모달 */}
+            {showResumeModal && resumeModalTest && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowResumeModal(false)}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-xl font-bold text-blue-200 mb-4 text-center">이어하기</h3>
+                  <p className="text-blue-200 mb-4 text-center">
+                    진행 중이던 검사를 이어서 계속하시겠습니까?
+                  </p>
+                  {(() => {
+                    const savedProgress = typeof window !== 'undefined' 
+                      ? JSON.parse(localStorage.getItem(`test_progress_${resumeModalTest.testId}`) || '{}')
+                      : {};
+                    const answeredCount = Object.keys(savedProgress.answers || {}).length;
+                    let totalQuestions = savedProgress.totalQuestions || 0;
+                    if (totalQuestions === 0) {
+                      const testType = (resumeModalTest.testType || '').toUpperCase();
+                      if (testType.includes('MBTI') && !testType.includes('PRO')) {
+                        totalQuestions = 20;
+                      } else if (testType.includes('MBTI_PRO') || testType.includes('MBTI PRO')) {
+                        totalQuestions = 24;
+                      }
+                    }
+                    const progressPercent = totalQuestions > 0 
+                      ? Math.round((answeredCount / totalQuestions) * 100)
+                      : 0;
+                    return (
+                      <div className="bg-white/5 rounded-lg p-4 mb-6">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-blue-300 text-sm">진행률</span>
+                          <span className="text-blue-200 font-semibold">{progressPercent}%</span>
+                        </div>
+                        <div className="w-full bg-blue-900/50 rounded-full h-2 mb-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                        <p className="text-blue-300/80 text-xs text-center">
+                          {answeredCount}개 완료 / 전체 {totalQuestions}개
+                        </p>
+                      </div>
+                    );
+                  })()}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowResumeModal(false);
+                        setResumeModalTest(null);
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-600/60 text-gray-200 rounded-lg hover:bg-gray-600/80 transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={() => {
+                        const testPath = getTestPath(resumeModalTest.testId, resumeModalTest.testType);
+                        router.push(`${testPath}?resume=${encodeURIComponent(resumeModalTest.testId)}`);
+                      }}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"
+                    >
+                      이어서 계속
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
             )}
 
             {activeTab === 'stats' && (
@@ -1260,10 +1364,6 @@ function TestRecordsTabContent({
 }) {
   const router = useRouter();
   
-  // 날짜 범위 검색 상태
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  
   // 컬럼 정렬 상태
   const [sortField, setSortField] = useState<SortField>('timestamp');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -1310,6 +1410,7 @@ function TestRecordsTabContent({
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
         record.code?.toLowerCase().includes(query) ||
+        record.counselorCode?.toLowerCase().includes(query) ||
         record.testType?.toLowerCase().includes(query) ||
         record.mbtiType?.toLowerCase().includes(query);
       if (!matchesSearch) return false;
@@ -1319,18 +1420,19 @@ function TestRecordsTabContent({
     if (filterType !== 'all') {
       const testType = record.testType?.toLowerCase() || '';
       if (filterType === 'mbti-personal' && !testType.includes('개인용')) return false;
-      if (filterType === 'mbti-professional' && !testType.includes('전문가용')) return false;
+      if (filterType === 'mbti-professional') {
+        // 전문가용 MBTI 검사: '전문가용', 'mbti pro', 'mbti_pro', 'professional' 등을 포함하는지 확인
+        const isProfessional = testType.includes('전문가용') || 
+                               testType.includes('mbti pro') || 
+                               testType.includes('mbti_pro') || 
+                               testType.includes('professional') ||
+                               (testType.includes('mbti') && (record.code?.startsWith('MP') || record.counselorCode?.startsWith('MP')));
+        if (!isProfessional) return false;
+      }
       if (filterType === 'ai-profiling' && !testType.includes('ai') && !testType.includes('프로파일링')) return false;
       if (filterType === 'integrated' && !testType.includes('통합')) return false;
       if (filterType === 'ego' && !testType.includes('에고')) return false;
       if (filterType === 'enneagram' && !testType.includes('에니어')) return false;
-    }
-    
-    // 날짜 범위 필터
-    if (startDate || endDate) {
-      const recordDate = new Date(record.timestamp || 0);
-      if (startDate && recordDate < new Date(startDate)) return false;
-      if (endDate && recordDate > new Date(endDate + ' 23:59:59')) return false;
     }
     
     return true;
@@ -1379,7 +1481,7 @@ function TestRecordsTabContent({
   // 페이지 변경 시 첫 페이지로 리셋
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterType, startDate, endDate, sortField, sortDirection]);
+  }, [searchQuery, filterType, sortField, sortDirection]);
 
   // 검사 기록 클릭 핸들러
   const handleRecordClick = (record: TestRecord) => {
@@ -1524,39 +1626,6 @@ function TestRecordsTabContent({
               <option value="ego" className="bg-blue-800 text-white">에고그램</option>
               <option value="enneagram" className="bg-blue-800 text-white">에니어그램</option>
             </select>
-          </div>
-        </div>
-
-        {/* 두 번째 행: 날짜 범위 검색 */}
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <div className="flex items-center gap-2 text-blue-300 text-sm">
-            <span>검사 기간:</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 border-none bg-white/5 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-blue-300">~</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 border-none bg-white/5 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {(startDate || endDate) && (
-              <button
-                onClick={() => {
-                  setStartDate('');
-                  setEndDate('');
-                }}
-                className="px-3 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors text-sm"
-              >
-                초기화
-              </button>
-            )}
           </div>
         </div>
       </motion.div>
@@ -1737,12 +1806,12 @@ function TestRecordsTabContent({
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-indigo-950/98 backdrop-blur-md rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
+            className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 삭제</h3>

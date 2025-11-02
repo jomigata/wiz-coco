@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import { generateTestCode } from '@/utils/testCodeGenerator';
@@ -323,12 +323,15 @@ function MbtiResultContent() {
             <p className="text-xl text-blue-200">결과를 불러오는 중입니다...</p>
           </div>
         ) : error ? (
-          <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+          <div className="text-center bg-indigo-950 rounded-xl p-8 shadow-lg border border-indigo-700">
             <div className="text-red-300 mb-4 text-4xl">⚠️</div>
             <p className="text-white text-lg mb-6">{error}</p>
-            <Link href="/tests/mbti" className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-              테스트 다시 하기
-            </Link>
+            <button 
+              onClick={() => router.back()}
+              className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              뒤로 돌아가기
+            </button>
           </div>
         ) : (
           <div className="space-y-8">

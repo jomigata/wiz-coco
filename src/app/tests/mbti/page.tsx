@@ -320,10 +320,11 @@ function MbtiTestPageContent() {
   };
 
   // 이어하기 다이얼로그
-  if (showResumeDialog && hasResumeData) {
+  if (showResumeDialog) {
     const savedProgress = loadTestProgress(testId);
-    const answeredCount = Object.keys(savedProgress?.answers || {}).length;
+    const answeredCount = savedProgress ? Object.keys(savedProgress.answers || {}).length : 0;
     const totalQuestions = 20; // MBTI 질문 수 (실제 문항수)
+    const actualHasResumeData = savedProgress && Object.keys(savedProgress.answers || {}).length > 0;
     
     return (
       <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4">
@@ -334,40 +335,58 @@ function MbtiTestPageContent() {
         >
           <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
           <p className="text-emerald-200 mb-6 text-center">
-            진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
+            {actualHasResumeData 
+              ? '진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?'
+              : '검사를 새로 시작하시겠습니까?'}
           </p>
-          <div className="bg-emerald-800/50 rounded-lg p-4 mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-emerald-200 text-sm">진행률</span>
-              <span className="text-emerald-300 font-semibold">{Math.round((answeredCount / totalQuestions) * 100)}%</span>
+          {actualHasResumeData && (
+            <div className="bg-emerald-800/50 rounded-lg p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-emerald-200 text-sm">진행률</span>
+                <span className="text-emerald-300 font-semibold">{Math.round((answeredCount / totalQuestions) * 100)}%</span>
+              </div>
+              <div className="w-full bg-emerald-900 rounded-full h-2">
+                <div
+                  className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.round((answeredCount / totalQuestions) * 100)}%` }}
+                />
+              </div>
+              <p className="text-emerald-300/80 text-xs mt-2 text-center">
+                {answeredCount}개 문항 완료 / 전체 {totalQuestions}개
+              </p>
             </div>
-            <div className="w-full bg-emerald-900 rounded-full h-2">
-              <div
-                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${Math.round((answeredCount / totalQuestions) * 100)}%` }}
-              />
-            </div>
-            <p className="text-emerald-300/80 text-xs mt-2 text-center">
-              {answeredCount}개 문항 완료 / 전체 {totalQuestions}개
-            </p>
-          </div>
+          )}
           <div className="flex gap-3">
-            <motion.button
-              onClick={handleStartNew}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              새로 시작
-            </motion.button>
-            <motion.button
-              onClick={handleResumeTest}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
-            >
-              이어서 계속
-            </motion.button>
+            {actualHasResumeData && (
+              <>
+                <motion.button
+                  onClick={handleStartNew}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  새로 시작
+                </motion.button>
+                <motion.button
+                  onClick={handleResumeTest}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  이어서 계속
+                </motion.button>
+              </>
+            )}
+            {!actualHasResumeData && (
+              <motion.button
+                onClick={handleStartNew}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                새로 시작
+              </motion.button>
+            )}
           </div>
         </motion.div>
       </div>

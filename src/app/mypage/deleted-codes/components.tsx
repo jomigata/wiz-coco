@@ -947,7 +947,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       {showSingleRestoreConfirm && singleRestoreRecord && (
         <div className="fixed inset-0 flex items-center justify-center z-50" onClick={() => setShowSingleRestoreConfirm(false)}>
           <motion.div 
-            className="bg-indigo-950/98 backdrop-blur-md rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
+            className="bg-indigo-950 rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
