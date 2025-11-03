@@ -130,6 +130,15 @@ function MyPageContent() {
   const initialTab = searchParams.get('tab') || 'profile';
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
+  
+  // URL 파라미터 변경 시 activeTab 업데이트
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') || 'profile';
+    if (tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+  
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
