@@ -890,19 +890,20 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             )}
             
             {filteredRecords.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-white/20">
-                  <thead className="bg-white/5">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
-                        <input
-                          type="checkbox"
-                          id="select-all-header"
-                          checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
-                          onChange={toggleAllSelection}
-                          className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
-                        />
-                      </th>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-white/20">
+                    <thead className="bg-white/5">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                          <input
+                            type="checkbox"
+                            id="select-all-header"
+                            checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
+                            onChange={toggleAllSelection}
+                            className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                          />
+                        </th>
                       <th 
                         scope="col" 
                         className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
@@ -1049,12 +1050,12 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                         );
                       });
                     })()}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* 페이지네이션 */}
-              {filteredRecords.length > itemsPerPage && (
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* 페이지네이션 */}
+                {filteredRecords.length > itemsPerPage && (
                 <div className="mt-6 flex items-center justify-between">
                   <div className="text-sm text-blue-200">
                     총 {filteredRecords.length}개 중 {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredRecords.length)}개 표시
@@ -1101,9 +1102,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                     >
                       다음
                     </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </>
             ) : (
               <div className="text-center py-12">
                 <svg
