@@ -184,6 +184,17 @@ function MyPageContent() {
     };
 
     window.addEventListener('testRecordsUpdated', handleTestRecordsUpdate);
+    
+    // 페이지 로드 시 sessionStorage 확인하여 검사기록 목록으로 돌아왔는지 확인
+    if (typeof window !== 'undefined') {
+      const returnToTestRecords = sessionStorage.getItem('returnToTestRecords');
+      if (returnToTestRecords === 'true') {
+        // 이벤트 발생하여 목록 업데이트
+        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+        sessionStorage.removeItem('returnToTestRecords');
+      }
+    }
+    
     return () => {
       window.removeEventListener('testRecordsUpdated', handleTestRecordsUpdate);
     };
@@ -1556,6 +1567,11 @@ function TestRecordsTabContent({
       return;
     }
     
+    // 검사기록 목록에서 왔음을 표시 (돌아올 때 새로고침 없이 표시하기 위해)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('returnToTestRecords', 'true');
+    }
+    
     const resultUrl = getResultPageUrl(record);
     console.log('검사 결과 페이지로 이동:', resultUrl);
     router.push(resultUrl);
@@ -1825,7 +1841,7 @@ function TestRecordsTabContent({
                 <button
                   onClick={handleBulkDeleteClick}
                   disabled={selectedRecords.length === 0}
-                  className="px-4 py-2 bg-red-800/50 text-red-300 rounded-lg hover:bg-red-800/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-purple-700/60 text-purple-200 rounded-lg hover:bg-purple-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   선택 삭제 ({selectedRecords.length})
                 </button>
@@ -1839,7 +1855,7 @@ function TestRecordsTabContent({
                       type="checkbox"
                       checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
                       onChange={toggleAllSelection}
-                      className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                      className="w-5 h-5 text-purple-600 border-2 border-purple-400 rounded focus:ring-purple-500"
                     />
                   </th>
                   <th 
@@ -1902,7 +1918,7 @@ function TestRecordsTabContent({
                         checked={selectedRecords.includes(record.code || '')}
                         onChange={() => toggleSelection(record.code || '')}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-purple-600 border-white/30 rounded focus:ring-purple-500"
                       />
                     </td>
                     <td 
@@ -2008,9 +2024,9 @@ function TestRecordsTabContent({
         </>
       )}
 
-      {/* 일괄 삭제 확인 모달 */}
+      {/* 일괄 삭제 확인 모달 - 화면 중앙 고정 */}
       {showBulkDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowBulkDeleteModal(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }} onClick={() => setShowBulkDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -2043,9 +2059,9 @@ function TestRecordsTabContent({
         </div>
       )}
 
-      {/* 개별 삭제 확인 모달 */}
+      {/* 개별 삭제 확인 모달 - 화면 중앙 고정 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }} onClick={() => setShowDeleteModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

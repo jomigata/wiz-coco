@@ -1185,9 +1185,30 @@ const MbtiProResult: React.FC = () => {
           </h1>
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
           
-          <Link href="/mypage?tab=records" className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block">
-            ← 검사기록 페이지로 돌아가기
-          </Link>
+          {(() => {
+            // sessionStorage에서 삭제코드 목록으로 돌아가야 하는지 확인
+            const returnToDeletedCodes = typeof window !== 'undefined' ? sessionStorage.getItem('returnToDeletedCodes') : null;
+            if (returnToDeletedCodes === 'true') {
+              return (
+                <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem('returnToDeletedCodes');
+                    }
+                    window.history.back();
+                  }}
+                  className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block"
+                >
+                  ← 이전 페이지로 돌아가기
+                </button>
+              );
+            }
+            return (
+              <Link href="/mypage?tab=records" className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block">
+                ← 검사기록 페이지로 돌아가기
+              </Link>
+            );
+          })()}
         </div>
 
         {/* 검사자 결과정보 섹션 */}
@@ -1513,12 +1534,33 @@ const MbtiProResult: React.FC = () => {
             >
               PDF저장 / 인쇄하기
             </button>
-            <Link 
-              href="/mypage?tab=records"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md flex items-center"
-            >
-              검사기록 돌아가기
-            </Link>
+            {(() => {
+              // sessionStorage에서 삭제코드 목록으로 돌아가야 하는지 확인
+              const returnToDeletedCodes = typeof window !== 'undefined' ? sessionStorage.getItem('returnToDeletedCodes') : null;
+              if (returnToDeletedCodes === 'true') {
+                return (
+                  <button
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('returnToDeletedCodes');
+                      }
+                      window.history.back();
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md flex items-center"
+                  >
+                    이전 페이지로 돌아가기
+                  </button>
+                );
+              }
+              return (
+                <Link 
+                  href="/mypage?tab=records"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md flex items-center"
+                >
+                  검사기록 돌아가기
+                </Link>
+              );
+            })()}
           </div>
         </div>
       </div>

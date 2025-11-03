@@ -95,12 +95,34 @@ function MbtiResultContent() {
     const type = searchParams.get('type');
     
     if (code) {
+      // URL에서 받은 코드를 그대로 사용 (검사기록 목록의 코드와 일치)
       setTestCode(code);
       fetchTestResult(code);
     } else {
-      // 코드가 없으면 새로 생성
-      const newCode = generateUniqueTestCode();
-      setTestCode(newCode);
+      // 코드가 없으면 로컬 스토리지에서 최근 결과 찾기
+      try {
+        const testRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+        if (testRecords.length > 0) {
+          // 가장 최근 기록의 코드 사용
+          const latestRecord = testRecords[testRecords.length - 1];
+          if (latestRecord.code) {
+            setTestCode(latestRecord.code);
+            fetchTestResult(latestRecord.code);
+          } else {
+            // 코드가 없으면 새로 생성
+            const newCode = generateUniqueTestCode();
+            setTestCode(newCode);
+          }
+        } else {
+          // 기록이 없으면 새로 생성
+          const newCode = generateUniqueTestCode();
+          setTestCode(newCode);
+        }
+      } catch (e) {
+        // 오류 발생 시 새로 생성
+        const newCode = generateUniqueTestCode();
+        setTestCode(newCode);
+      }
     }
     
     if (type) {

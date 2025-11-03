@@ -61,8 +61,20 @@ export default function Navigation() {
   }, []);
 
   // 실제 검사 진행 중인지 확인 (질문이 진행 중일 때만 숨김, 코드 입력/정보 입력 단계에서는 보임)
+  // 검사결과 페이지(/results/)에서는 항상 표시
   useEffect(() => {
-    if (typeof window === 'undefined' || !isTestPage) {
+    if (typeof window === 'undefined') {
+      setIsTestInProgress(false);
+      return;
+    }
+
+    // 검사결과 페이지에서는 항상 팝업 표시
+    if (pathname?.startsWith('/results/') || pathname?.startsWith('/tests/') && pathname?.includes('/result')) {
+      setIsTestInProgress(false);
+      return;
+    }
+
+    if (!isTestPage) {
       setIsTestInProgress(false);
       return;
     }

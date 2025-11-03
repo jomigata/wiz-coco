@@ -57,21 +57,31 @@ function MbtiTestPageContent() {
           setShowResumeDialog(true);
           
           // 저장된 currentStep 복원 (중요!)
+          // 먼저 currentStep이 있는지 확인하고, 없으면 상태에 따라 결정
           if (savedProgress.currentStep) {
             if (typeof savedProgress.currentStep === 'string' && 
                 (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+              // 저장된 단계로 복원
               setCurrentStep(savedProgress.currentStep);
+              console.log('[MbtiTestPage] 저장된 currentStep으로 복원:', savedProgress.currentStep);
             }
           } else {
             // currentStep이 없으면 답변 상태에 따라 결정
             if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
               setCurrentStep('test');
+              console.log('[MbtiTestPage] 답변이 있어 test 단계로 설정');
             } else if (savedProgress.clientInfo) {
               setCurrentStep('info');
+              console.log('[MbtiTestPage] clientInfo가 있어 info 단계로 설정');
             } else {
               setCurrentStep('code');
+              console.log('[MbtiTestPage] 기본값으로 code 단계 설정');
             }
           }
+          
+          // currentStep을 즉시 설정한 후, 다이얼로그가 닫힐 때까지 기다리지 않고 바로 렌더링하도록 함
+          // 하지만 다이얼로그가 표시되는 동안에는 currentStep 변경이 적용되지 않으므로
+          // handleResumeTest에서도 currentStep 복원을 확인해야 함
           
           if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
             setSavedAnswers(savedProgress.answers);
@@ -191,36 +201,52 @@ function MbtiTestPageContent() {
     setShowResumeDialog(false);
     const savedProgress = loadTestProgress(testId);
     
-    // 저장된 답변이 있으면 무조건 테스트 단계로 이동
-    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-      setCurrentStep('test');
-      if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-      if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-      // 저장된 답변과 질문 번호 복원
-      setSavedAnswers(savedProgress.answers);
-      const savedCurrent = savedProgress.currentQuestion !== undefined 
-        ? savedProgress.currentQuestion 
-        : (Object.keys(savedProgress.answers || {}).length > 0
-            ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
-            : 0);
-      setSavedCurrentQuestion(savedCurrent);
-    } else if (savedProgress) {
-      // 답변이 없으면 저장된 단계 정보로 복원
-      if (savedProgress.currentStep === 'code') {
-        setCurrentStep('code');
-      } else if (savedProgress.currentStep === 'info') {
-        setCurrentStep('info');
-        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+    console.log('[MbtiTestPage] handleResumeTest - savedProgress:', savedProgress);
+    
+    if (savedProgress) {
+      // currentStep을 먼저 복원 (중요!)
+      if (savedProgress.currentStep) {
+        if (typeof savedProgress.currentStep === 'string' && 
+            (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+          setCurrentStep(savedProgress.currentStep);
+          console.log('[MbtiTestPage] handleResumeTest - currentStep 복원:', savedProgress.currentStep);
+        }
       } else {
-        setCurrentStep('test');
+        // currentStep이 없으면 상태에 따라 결정
+        if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+          setCurrentStep('test');
+          console.log('[MbtiTestPage] handleResumeTest - 답변이 있어 test 단계로 설정');
+        } else if (savedProgress.clientInfo) {
+          setCurrentStep('info');
+          console.log('[MbtiTestPage] handleResumeTest - clientInfo가 있어 info 단계로 설정');
+        } else {
+          setCurrentStep('code');
+          console.log('[MbtiTestPage] handleResumeTest - 기본값으로 code 단계 설정');
+        }
+      }
+      
+      // 저장된 답변이 있으면 테스트 단계로 이동 (currentStep이 이미 설정되었으므로 덮어쓰지 않음)
+      if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+        // currentStep이 'test'가 아니면 'test'로 설정
+        if (savedProgress.currentStep !== 'test') {
+          setCurrentStep('test');
+        }
+        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
+        // 저장된 답변과 질문 번호 복원
+        setSavedAnswers(savedProgress.answers);
+        const savedCurrent = savedProgress.currentQuestion !== undefined 
+          ? savedProgress.currentQuestion 
+          : (Object.keys(savedProgress.answers || {}).length > 0
+              ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
+              : 0);
+        setSavedCurrentQuestion(savedCurrent);
+        setTestComponentKey(prev => prev + 1);
+      } else {
+        // 답변이 없으면 저장된 단계 정보를 사용 (이미 위에서 설정됨)
         if (savedProgress.codeData) setCodeData(savedProgress.codeData);
         if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
       }
-    }
-    
-    // MBTITest 컴포넌트에 저장된 답변 전달 (답변이 있는 경우에만)
-    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-      setTestComponentKey(prev => prev + 1);
     }
   };
 

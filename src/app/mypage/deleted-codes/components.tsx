@@ -46,6 +46,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [inProgressCount, setInProgressCount] = useState<number>(0);
   const [testRecordsCount, setTestRecordsCount] = useState<number>(0);
   const [deletedCodesCount, setDeletedCodesCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (!isEmbedded && typeof window !== 'undefined') {
@@ -367,6 +369,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     }
     
     const resultUrl = getResultPageUrl(record);
+    // 이전 페이지 정보 저장 (삭제코드 목록으로 돌아가기 위해)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('returnToDeletedCodes', 'true');
+    }
     router.push(resultUrl);
   };
 
@@ -973,7 +979,14 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
-                    {filteredRecords.map((record) => (
+                    {(() => {
+                      // 페이지네이션 계산
+                      const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+                      const startIndex = (currentPage - 1) * itemsPerPage;
+                      const endIndex = startIndex + itemsPerPage;
+                      const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+                      
+                      return paginatedRecords.map((record) => (
                       <tr key={record.code} className="group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
@@ -1032,10 +1045,63 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      ));
+                    })()}
                   </tbody>
                 </table>
               </div>
+              
+              {/* 페이지네이션 */}
+              {filteredRecords.length > itemsPerPage && (
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="text-sm text-blue-200">
+                    총 {filteredRecords.length}개 중 {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredRecords.length)}개 표시
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      이전
+                    </button>
+                    {Array.from({ length: Math.min(5, Math.ceil(filteredRecords.length / itemsPerPage)) }, (_, i) => {
+                      let pageNum: number;
+                      const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-1 text-sm rounded transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-blue-600/60 text-blue-200 hover:bg-blue-600/80'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setCurrentPage(Math.min(Math.ceil(filteredRecords.length / itemsPerPage), currentPage + 1))}
+                      disabled={currentPage >= Math.ceil(filteredRecords.length / itemsPerPage)}
+                      className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      다음
+                    </button>
+                  </div>
+                </div>
+              )}
             ) : (
               <div className="text-center py-12">
                 <svg
