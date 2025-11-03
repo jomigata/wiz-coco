@@ -986,8 +986,9 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                       const endIndex = startIndex + itemsPerPage;
                       const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
                       
-                      return paginatedRecords.map((record) => (
-                      <tr key={record.code} className="group">
+                      return paginatedRecords.map((record) => {
+                        return (
+                        <tr key={record.code} className="group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
                             type="checkbox"
@@ -1045,7 +1046,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           </button>
                         </td>
                       </tr>
-                      ));
+                        );
+                      });
                     })()}
                   </tbody>
                 </table>
