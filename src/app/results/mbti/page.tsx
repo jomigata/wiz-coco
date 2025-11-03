@@ -389,7 +389,19 @@ function MbtiResultContent() {
             <div className="text-red-300 mb-4 text-4xl">⚠️</div>
             <p className="text-white text-lg mb-6">{error}</p>
             <button 
-              onClick={() => router.back()}
+              onClick={() => {
+                // sessionStorage에서 검사기록 목록으로 돌아가야 하는지 확인
+                const returnToTestRecords = typeof window !== 'undefined' ? sessionStorage.getItem('returnToTestRecords') : null;
+                if (returnToTestRecords === 'true') {
+                  if (typeof window !== 'undefined') {
+                    sessionStorage.removeItem('returnToTestRecords');
+                    // 검사기록 목록으로 직접 이동
+                    router.push('/mypage?tab=records');
+                  }
+                } else {
+                  router.back();
+                }
+              }}
               className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               뒤로 돌아가기

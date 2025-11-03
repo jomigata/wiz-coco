@@ -185,20 +185,24 @@ function MyPageContent() {
 
     window.addEventListener('testRecordsUpdated', handleTestRecordsUpdate);
     
-    // 페이지 로드 시 sessionStorage 확인하여 검사기록 목록으로 돌아왔는지 확인
-    if (typeof window !== 'undefined') {
-      const returnToTestRecords = sessionStorage.getItem('returnToTestRecords');
-      if (returnToTestRecords === 'true') {
-        // 이벤트 발생하여 목록 업데이트
-        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
-        sessionStorage.removeItem('returnToTestRecords');
-      }
-    }
-    
     return () => {
       window.removeEventListener('testRecordsUpdated', handleTestRecordsUpdate);
     };
   }, []);
+
+  // 검사기록 탭으로 돌아올 때 목록 업데이트
+  useEffect(() => {
+    if (activeTab === 'records' && typeof window !== 'undefined') {
+      const returnToTestRecords = sessionStorage.getItem('returnToTestRecords');
+      if (returnToTestRecords === 'true') {
+        // 약간의 지연 후 이벤트 발생 (탭이 완전히 렌더링된 후)
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+          sessionStorage.removeItem('returnToTestRecords');
+        }, 100);
+      }
+    }
+  }, [activeTab]);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     mbtiCount: 0,
@@ -2026,7 +2030,22 @@ function TestRecordsTabContent({
 
       {/* 일괄 삭제 확인 모달 - 화면 중앙 고정 */}
       {showBulkDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }} onClick={() => setShowBulkDeleteModal(false)}>
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0,
+            margin: 0,
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }} 
+          onClick={() => setShowBulkDeleteModal(false)}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -2061,7 +2080,22 @@ function TestRecordsTabContent({
 
       {/* 개별 삭제 확인 모달 - 화면 중앙 고정 */}
       {showDeleteModal && deleteModalRecord && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }} onClick={() => setShowDeleteModal(false)}>
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0,
+            margin: 0,
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }} 
+          onClick={() => setShowDeleteModal(false)}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
