@@ -360,15 +360,19 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         timestamp: completionTime // 검사 완료 시간 기록
       };
       
+      // 검사 코드 생성 (로그인 사용자만)
+      let testCode: string | null = null;
+      if (isLoggedIn) {
+        testCode = generateTestCode('PROFESSIONAL');
+      }
+      
       // 로컬 스토리지에 검사 완료 시간 저장
       if (typeof window !== 'undefined') {
         localStorage.setItem('mbti_pro_completion_time', completionTime);
         
         // 마이페이지 검사 기록에 추가 (로그인 사용자만)
-        if (isLoggedIn) {
+        if (isLoggedIn && testCode) {
           try {
-            const testCode = generateTestCode('PROFESSIONAL');
-            
             const testRecord = {
               code: testCode,
               testType: '전문가용 MBTI 검사',
@@ -460,8 +464,10 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       // 다음 페이지로 이동하기 전에 약간의 지연 추가 (UI 표시를 위해)
       await new Promise(resolve => setTimeout(resolve, 800));
       
+      // 생성한 testCode를 URL 파라미터로 전달 (검사기록 목록의 코드와 일치시키기 위해)
       const queryString = encodeURIComponent(JSON.stringify(testData));
-      router.push(`/tests/mbti_pro/result?data=${queryString}`);
+      const testCodeParam = testCode ? `&code=${encodeURIComponent(testCode)}` : '';
+      router.push(`/tests/mbti_pro/result?data=${queryString}${testCodeParam}`);
     } catch (error) {
       console.error('검사 완료 중 오류 발생:', error);
       setIsLoading(false); // 오류 발생 시 로딩 상태 해제
