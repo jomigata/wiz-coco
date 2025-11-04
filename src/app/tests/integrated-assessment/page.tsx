@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
-export default function IntegratedAssessmentPage() {
+function IntegratedAssessmentPageContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const testId = generateTestId(pathname || '/tests/integrated-assessment');
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
@@ -25,6 +26,29 @@ export default function IntegratedAssessmentPage() {
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // URL 파라미터로 resume이 전달된 경우 바로 진행 상태 복원
+    const resumeParam = searchParams.get('resume');
+    if (resumeParam) {
+      const savedProgress = loadTestProgress(testId);
+      if (savedProgress) {
+        setAnswers(savedProgress.answers || {});
+        // 타입 안전성 체크: number 타입인 경우에만 설정
+        if (savedProgress.currentStep !== undefined) {
+          const step = savedProgress.currentStep;
+          if (typeof step === 'number') {
+            setCurrentStep(step);
+          } else {
+            setCurrentStep(0); // 기본값
+          }
+        } else {
+          setCurrentStep(0);
+        }
+        if (savedProgress.studentInfo) setStudentInfo(savedProgress.studentInfo);
+      }
+      return; // 팝업 표시하지 않고 바로 진행
+    }
+    
     const show = shouldShowResumeDialog(testId);
     if (show) {
       const savedProgress = loadTestProgress(testId);
@@ -32,7 +56,7 @@ export default function IntegratedAssessmentPage() {
       setShowResumeDialog(true);
       if (savedProgress?.studentInfo) setStudentInfo(savedProgress.studentInfo);
     }
-  }, [testId]);
+  }, [testId, searchParams]);
 
   // 진행 상태 자동 저장
   useEffect(() => {
@@ -775,5 +799,17 @@ export default function IntegratedAssessmentPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function IntegratedAssessmentPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
+        <div className="text-white text-lg">로딩 중...</div>
+      </div>
+    }>
+      <IntegratedAssessmentPageContent />
+    </Suspense>
   );
 }

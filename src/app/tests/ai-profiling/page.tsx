@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
-export default function AIProfilingPage() {
+function AIProfilingPageContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const testId = generateTestId(pathname || '/tests/ai-profiling');
   const [currentChapter, setCurrentChapter] = useState(0);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
@@ -19,12 +20,24 @@ export default function AIProfilingPage() {
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // URL 파라미터로 resume이 전달된 경우 바로 진행 상태 복원
+    const resumeParam = searchParams.get('resume');
+    if (resumeParam) {
+      const savedProgress = loadTestProgress(testId);
+      if (savedProgress) {
+        setAnswers(savedProgress.answers || {});
+        setCurrentChapter(savedProgress.currentChapter || 0);
+      }
+      return; // 팝업 표시하지 않고 바로 진행
+    }
+    
     const show = shouldShowResumeDialog(testId);
     if (show) {
       setHasResumeData(true);
       setShowResumeDialog(true);
     }
-  }, [testId]);
+  }, [testId, searchParams]);
 
   // 진행 상태 자동 저장
   useEffect(() => {
@@ -524,5 +537,17 @@ export default function AIProfilingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AIProfilingPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
+        <div className="text-white text-lg">로딩 중...</div>
+      </div>
+    }>
+      <AIProfilingPageContent />
+    </Suspense>
   );
 }
