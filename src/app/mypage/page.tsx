@@ -2043,7 +2043,6 @@ function TestRecordsTabContent({
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
           onClick={() => setShowBulkDeleteModal(false)}
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -2083,7 +2082,6 @@ function TestRecordsTabContent({
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
           onClick={() => setShowDeleteModal(false)}
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -2139,7 +2137,8 @@ function TestRecordsTabContent({
               </button>
             </div>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
     </motion.div>
   );

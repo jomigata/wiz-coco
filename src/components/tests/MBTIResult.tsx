@@ -426,10 +426,22 @@ export default function MBTIResult({ results, onRetake }: Props) {
       <div className="mt-8 flex flex-wrap gap-4 justify-center">
         {isLoggedIn && (
           <button
-            onClick={handleGoToTestRecords}
+            onClick={() => {
+              // sessionStorage에서 검사기록 목록으로 돌아가야 하는지 확인
+              const returnToTestRecords = typeof window !== 'undefined' ? sessionStorage.getItem('returnToTestRecords') : null;
+              if (returnToTestRecords === 'true') {
+                if (typeof window !== 'undefined') {
+                  sessionStorage.removeItem('returnToTestRecords');
+                  // 검사기록 목록으로 직접 이동
+                  router.push('/mypage?tab=records');
+                }
+              } else {
+                router.back();
+              }
+            }}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md"
           >
-            검사기록 페이지로 돌아가기
+            뒤로 돌아가기
           </button>
         )}
         <button
