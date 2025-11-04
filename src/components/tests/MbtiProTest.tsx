@@ -478,6 +478,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       try {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('mbti_pro_code_data');
+          // 검사 완료 직후임을 표시하는 플래그 설정
+          sessionStorage.setItem('testJustCompleted', 'true');
         }
         setCodeData(null);
       } catch {}

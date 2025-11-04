@@ -49,19 +49,14 @@ function MbtiTestPageContent() {
       if (urlResumeTestId && urlResumeTestId !== testId) {
         console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
         setTestId(urlResumeTestId);
-        // URL 파라미터에서 온 경우 항상 이어하기 다이얼로그를 먼저 표시
+        // 마이페이지에서 resume 파라미터로 왔을 경우 이미 팝업을 봤으므로 바로 진행 상태 복원
         const savedProgress = loadTestProgress(urlResumeTestId);
         if (savedProgress) {
-          // 진행 중인 검사 데이터가 있으면 항상 이어하기 다이얼로그 표시
-          setHasResumeData(true);
-          setShowResumeDialog(true);
-          
+          // 팝업 표시하지 않고 바로 진행 상태 복원
           // 저장된 currentStep 복원 (중요!)
-          // 먼저 currentStep이 있는지 확인하고, 없으면 상태에 따라 결정
           if (savedProgress.currentStep) {
             if (typeof savedProgress.currentStep === 'string' && 
                 (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-              // 저장된 단계로 복원
               setCurrentStep(savedProgress.currentStep);
               console.log('[MbtiTestPage] 저장된 currentStep으로 복원:', savedProgress.currentStep);
             }
@@ -79,38 +74,32 @@ function MbtiTestPageContent() {
             }
           }
           
-          // currentStep을 즉시 설정한 후, 다이얼로그가 닫힐 때까지 기다리지 않고 바로 렌더링하도록 함
-          // 하지만 다이얼로그가 표시되는 동안에는 currentStep 변경이 적용되지 않으므로
-          // handleResumeTest에서도 currentStep 복원을 확인해야 함
-          
           if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
             setSavedAnswers(savedProgress.answers);
-            // 저장된 currentQuestion 사용
             const savedCurrent = savedProgress.currentQuestion !== undefined 
               ? savedProgress.currentQuestion 
               : (Object.keys(savedProgress.answers || {}).length > 0
                   ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
                   : 0);
             setSavedCurrentQuestion(savedCurrent);
+            setTestComponentKey(prev => prev + 1);
           }
           if (savedProgress.codeData) setCodeData(savedProgress.codeData);
           if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        } else {
-          // savedProgress가 없어도 팝업 표시 (이어하기 데이터 없음 상태)
-          setHasResumeData(false);
-          setShowResumeDialog(true);
         }
+        // resume 파라미터가 있으면 팝업 표시하지 않고 바로 진행
+        return;
       }
-    }, [searchParams]);
+    }, [searchParams, testId]);
   
   // 저장된 진행 상태 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // URL 파라미터로 resume이 전달된 경우는 이미 처리했으므로 건너뜀
+    // URL 파라미터로 resume이 전달된 경우는 이미 처리했으므로 건너뜀 (팝업 표시하지 않음)
     const urlResumeTestId = searchParams.get('resume');
-    if (urlResumeTestId && urlResumeTestId === testId) {
-      // URL 파라미터에서 온 경우 이미 처리됨
+    if (urlResumeTestId) {
+      // URL 파라미터에서 온 경우 이미 처리됨 (팝업 표시하지 않음)
       return;
     }
     
@@ -346,6 +335,11 @@ function MbtiTestPageContent() {
       
       // 검사 완료 시 진행 상태 삭제
       clearTestProgress(testId);
+      
+      // 검사 완료 직후임을 표시하는 플래그 설정
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('testJustCompleted', 'true');
+      }
       
       // 결과 페이지로 이동
       const resultPath = `/results/mbti?code=${encodeURIComponent(testCode)}&type=${encodeURIComponent(results.mbtiType || 'INTJ')}`;

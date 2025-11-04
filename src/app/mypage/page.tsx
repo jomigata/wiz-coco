@@ -1855,7 +1855,7 @@ function TestRecordsTabContent({
                 <button
                   onClick={handleBulkDeleteClick}
                   disabled={selectedRecords.length === 0}
-                  className="px-4 py-2 bg-purple-700/60 text-purple-200 rounded-lg hover:bg-purple-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-pink-400/50 text-pink-100 rounded-lg hover:bg-pink-400/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   선택 삭제 ({selectedRecords.length})
                 </button>
@@ -1869,7 +1869,7 @@ function TestRecordsTabContent({
                       type="checkbox"
                       checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
                       onChange={toggleAllSelection}
-                      className="w-5 h-5 text-purple-600 border-2 border-purple-400 rounded focus:ring-purple-500"
+                      className="w-4 h-4 text-pink-400 border-2 border-pink-300/60 rounded focus:ring-pink-400"
                     />
                   </th>
                   <th 
@@ -1932,7 +1932,7 @@ function TestRecordsTabContent({
                         checked={selectedRecords.includes(record.code || '')}
                         onChange={() => toggleSelection(record.code || '')}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-4 h-4 text-purple-600 border-white/30 rounded focus:ring-purple-500"
+                        className="w-4 h-4 text-pink-400 border-white/30 rounded focus:ring-pink-400"
                       />
                     </td>
                     <td 
