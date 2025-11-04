@@ -156,6 +156,8 @@ function MyPageContent() {
   const [deletedCodesCount, setDeletedCodesCount] = useState(0);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [resumeModalTest, setResumeModalTest] = useState<any>(null);
+  const [showDeleteProgressModal, setShowDeleteProgressModal] = useState(false);
+  const [deleteProgressTest, setDeleteProgressTest] = useState<any>(null);
 
   // 삭제된 코드 수 가져오기
   const updateDeletedCodesCount = () => {
@@ -310,9 +312,33 @@ function MyPageContent() {
   }, []);
 
   // 진행 중인 검사 삭제
-  const handleClearProgress = (testId: string) => {
-    clearTestProgress(testId);
-    setInProgressTests(getInProgressTests());
+  const handleClearProgress = (test: any) => {
+    setDeleteProgressTest(test);
+    setShowDeleteProgressModal(true);
+  };
+
+  const handleConfirmDeleteProgress = () => {
+    if (deleteProgressTest) {
+      clearTestProgress(deleteProgressTest.testId);
+      setInProgressTests(getInProgressTests());
+      setShowDeleteProgressModal(false);
+      setDeleteProgressTest(null);
+    }
+  };
+
+  const handleStartFromBeginning = () => {
+    if (deleteProgressTest) {
+      // 진행 상태 삭제
+      clearTestProgress(deleteProgressTest.testId);
+      setInProgressTests(getInProgressTests());
+      
+      // 검사 페이지로 이동 (새로 시작)
+      const testPath = getTestPath(deleteProgressTest.testId, deleteProgressTest.testType);
+      router.push(testPath);
+      
+      setShowDeleteProgressModal(false);
+      setDeleteProgressTest(null);
+    }
   };
 
   // 검사 경로 매핑
@@ -962,7 +988,7 @@ function MyPageContent() {
                                         이어하기
                                       </button>
                                       <button
-                                        onClick={() => handleClearProgress(test.testId)}
+                                        onClick={() => handleClearProgress(test)}
                                         className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white text-sm rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-200 transform hover:scale-105 shadow-lg"
                                         title="진행 상태 삭제"
                                       >
@@ -1044,12 +1070,92 @@ function MyPageContent() {
                     <button
                       onClick={() => {
                         const testPath = getTestPath(resumeModalTest.testId, resumeModalTest.testType);
-                        router.push(`${testPath}?resume=${encodeURIComponent(resumeModalTest.testId)}`);
+                        router.push(`${testPath}?resume=${resumeModalTest.testId}`);
+                        setShowResumeModal(false);
+                        setResumeModalTest(null);
                       }}
                       className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"
                     >
                       이어서 계속
                     </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* 삭제 확인 모달 */}
+            {showDeleteProgressModal && deleteProgressTest && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowDeleteProgressModal(false)}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-xl font-bold text-red-300 mb-4 text-center">진행 상태 삭제</h3>
+                  <p className="text-blue-200 mb-4 text-center">
+                    진행 중인 검사의 진행 상태를 삭제하시겠습니까?
+                  </p>
+                  {(() => {
+                    const savedProgress = typeof window !== 'undefined' 
+                      ? JSON.parse(localStorage.getItem(`test_progress_${deleteProgressTest.testId}`) || '{}')
+                      : {};
+                    const answeredCount = Object.keys(savedProgress.answers || {}).length;
+                    let totalQuestions = savedProgress.totalQuestions || 0;
+                    if (totalQuestions === 0) {
+                      const testType = (deleteProgressTest.testType || '').toUpperCase();
+                      if (testType.includes('MBTI') && !testType.includes('PRO')) {
+                        totalQuestions = 20;
+                      } else if (testType.includes('MBTI_PRO') || testType.includes('MBTI PRO')) {
+                        totalQuestions = 24;
+                      }
+                    }
+                    const progressPercent = totalQuestions > 0 
+                      ? Math.round((answeredCount / totalQuestions) * 100)
+                      : 0;
+                    return (
+                      <div className="bg-white/5 rounded-lg p-4 mb-6">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-blue-300 text-sm">현재 진행률</span>
+                          <span className="text-blue-200 font-semibold">{progressPercent}%</span>
+                        </div>
+                        <div className="w-full bg-blue-900/50 rounded-full h-2 mb-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                        <p className="text-blue-300/80 text-xs text-center">
+                          {answeredCount}개 완료 / 전체 {totalQuestions}개
+                        </p>
+                      </div>
+                    );
+                  })()}
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={handleStartFromBeginning}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    >
+                      처음부터 새로시작
+                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setShowDeleteProgressModal(false);
+                          setDeleteProgressTest(null);
+                        }}
+                        className="flex-1 px-4 py-2 bg-gray-600/60 text-gray-200 rounded-lg hover:bg-gray-600/80 transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={handleConfirmDeleteProgress}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-colors"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               </div>
