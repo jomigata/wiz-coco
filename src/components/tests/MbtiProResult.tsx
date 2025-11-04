@@ -1568,12 +1568,24 @@ const MbtiProResult: React.FC = () => {
                 );
               }
               return (
-                <Link 
-                  href="/mypage?tab=records"
+                <button
+                  onClick={() => {
+                    // sessionStorage에서 검사기록 목록으로 돌아가야 하는지 확인
+                    const returnToTestRecords = typeof window !== 'undefined' ? sessionStorage.getItem('returnToTestRecords') : null;
+                    if (returnToTestRecords === 'true') {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('returnToTestRecords');
+                        // 검사기록 목록으로 직접 이동
+                        window.location.href = '/mypage?tab=records';
+                      }
+                    } else {
+                      window.history.back();
+                    }
+                  }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md flex items-center"
                 >
-                  검사기록 돌아가기
-                </Link>
+                  뒤로 돌아가기
+                </button>
               );
             })()}
           </div>
