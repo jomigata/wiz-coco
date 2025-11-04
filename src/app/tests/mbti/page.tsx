@@ -39,21 +39,53 @@ function MbtiTestPageContent() {
   const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(undefined);
   
   // 개인용 MBTI 검사 단계 관리 (전문가용과 동일한 구조)
-  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
-  const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
-  const [clientInfo, setClientInfo] = useState<any>(null);
+  // 초기 상태에서 resume 파라미터가 있으면 진행 상태에 따라 currentStep 설정
+  const getInitialStep = (): 'code' | 'info' | 'test' => {
+    if (typeof window === 'undefined' || !resumeTestId) return 'code';
+    const savedProgress = loadTestProgress(resumeTestId);
+    if (savedProgress) {
+      if (savedProgress.currentStep && 
+          (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+        return savedProgress.currentStep;
+      } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+        return 'test';
+      } else if (savedProgress.clientInfo) {
+        return 'info';
+      }
+    }
+    return 'code';
+  };
+  
+  // 초기 상태에서 resume 파라미터가 있으면 진행 상태 복원
+  const getInitialProgress = () => {
+    if (typeof window === 'undefined' || !resumeTestId) {
+      return { codeData: null, clientInfo: null };
+    }
+    const savedProgress = loadTestProgress(resumeTestId);
+    if (savedProgress) {
+      return {
+        codeData: savedProgress.codeData || null,
+        clientInfo: savedProgress.clientInfo || null
+      };
+    }
+    return { codeData: null, clientInfo: null };
+  };
+  
+  const initialProgress = getInitialProgress();
+  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
+  const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(initialProgress.codeData);
+  const [clientInfo, setClientInfo] = useState<any>(initialProgress.clientInfo);
   
     // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
     useEffect(() => {
       const urlResumeTestId = searchParams.get('resume');
       if (urlResumeTestId && urlResumeTestId !== testId) {
         console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
-        setTestId(urlResumeTestId);
+        
         // 마이페이지에서 resume 파라미터로 왔을 경우 이미 팝업을 봤으므로 바로 진행 상태 복원
         const savedProgress = loadTestProgress(urlResumeTestId);
         if (savedProgress) {
-          // 팝업 표시하지 않고 바로 진행 상태 복원
-          // 저장된 currentStep 복원 (중요!)
+          // currentStep을 먼저 복원 (중요!) - testId 변경 전에 설정
           if (savedProgress.currentStep) {
             if (typeof savedProgress.currentStep === 'string' && 
                 (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
@@ -74,6 +106,7 @@ function MbtiTestPageContent() {
             }
           }
           
+          // 다른 상태들도 복원
           if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
             setSavedAnswers(savedProgress.answers);
             const savedCurrent = savedProgress.currentQuestion !== undefined 
@@ -86,6 +119,12 @@ function MbtiTestPageContent() {
           }
           if (savedProgress.codeData) setCodeData(savedProgress.codeData);
           if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
+          
+          // testId는 마지막에 설정 (다른 상태들이 먼저 설정되도록)
+          setTestId(urlResumeTestId);
+        } else {
+          // 진행 상태가 없어도 testId는 설정
+          setTestId(urlResumeTestId);
         }
         // resume 파라미터가 있으면 팝업 표시하지 않고 바로 진행
         return;
