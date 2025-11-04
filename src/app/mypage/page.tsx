@@ -963,7 +963,7 @@ function MyPageContent() {
                                       </button>
                                       <button
                                         onClick={() => handleClearProgress(test.testId)}
-                                        className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                        className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white text-sm rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-200 transform hover:scale-105 shadow-lg"
                                         title="진행 상태 삭제"
                                       >
                                         삭제
