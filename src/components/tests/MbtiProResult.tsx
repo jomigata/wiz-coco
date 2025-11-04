@@ -209,14 +209,44 @@ const MbtiProResult: React.FC = () => {
     gender: '여'
   };
   
-  // 결과 코드 관리 (파라미터 > 코드 파라미터 > 생성값 순)
+  // 결과 코드 관리 (우선순위: URL codeParam > dataParam의 testCode > 로컬 스토리지 최근 기록 > 새로 생성)
   React.useEffect(() => {
-    if (paramTestCode) {
-      setResultCode(paramTestCode);
-      setIsCodeGenerated(true);
-    } else if (codeParam && !resultCode) {
+    // 1. URL의 code 파라미터가 있으면 우선 사용 (검사기록 목록에서 클릭한 경우)
+    if (codeParam) {
+      console.log(`URL에서 결과 코드 사용: ${codeParam}`);
       setResultCode(codeParam);
       setIsCodeGenerated(true);
+      return;
+    }
+    
+    // 2. data 파라미터에 testCode가 있으면 사용 (검사 완료 직후 전달된 경우)
+    if (paramTestCode) {
+      console.log(`data 파라미터에서 결과 코드 사용: ${paramTestCode}`);
+      setResultCode(paramTestCode);
+      setIsCodeGenerated(true);
+      return;
+    }
+    
+    // 3. 로컬 스토리지에서 최근 검사 기록의 코드 찾기 (검사 완료 직후)
+    if (!resultCode && typeof window !== 'undefined') {
+      try {
+        const testRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+        if (testRecords.length > 0) {
+          // 가장 최근 기록 찾기 (전문가용 MBTI 검사)
+          const recentRecord = testRecords.find((r: any) => 
+            r.testType && (r.testType.includes('전문가용') || r.testType.includes('MBTI Pro') || r.testType.includes('MBTI_PRO'))
+          ) || testRecords[0]; // 없으면 첫 번째 기록
+          
+          if (recentRecord && recentRecord.code) {
+            console.log(`로컬 스토리지에서 최근 검사 기록 코드 사용: ${recentRecord.code}`);
+            setResultCode(recentRecord.code);
+            setIsCodeGenerated(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('로컬 스토리지에서 코드 찾기 오류:', e);
+      }
     }
   }, [paramTestCode, codeParam, resultCode]);
   
@@ -699,102 +729,92 @@ const MbtiProResult: React.FC = () => {
     });
   };
   
-  // 결과 코드 초기화 및 생성
+  // 결과 코드 초기화 및 생성 (이미 위에서 처리되므로 여기서는 새 코드 생성만 처리)
   React.useEffect(() => {
-    // 디버깅을 위한 로그 추가
-    console.log("코드 생성 로직 시작: ", { codeParam, resultCode, isCodeGenerated });
-    
-    // URL에서 code 파라미터가 있는 경우 해당 코드를 사용
-    if (codeParam) {
-      console.log(`URL에서 결과 코드 사용: ${codeParam}`);
-      setResultCode(codeParam);
-      setIsCodeGenerated(true);
-      return;
-    }
-
-    // 코드가 이미 생성되어 있으면 새로 생성하지 않음
+    // 코드가 이미 설정되어 있으면 새로 생성하지 않음
     if (isCodeGenerated && resultCode) {
       console.log(`기존 결과 코드 유지: ${resultCode}`);
       return;
     }
 
-    // 새로운 통합 코드 생성 시스템 사용
-    const generateNewCode = async () => {
-      if (typeof window === 'undefined') return;
-
-      try {
-        console.log("새로운 통합 코드 생성 시작");
-        
-        // 현재 경로와 클라이언트 정보를 기반으로 코드 생성
-        const result = await generateContextualTestCode(
-          clientInfo,
-          undefined, // userId는 현재 미사용
-          window.location.pathname
-        );
-        
-        if (result.success && result.code) {
-          console.log(`새로운 코드 생성 성공: ${result.code}`);
-          setResultCode(result.code);
-          setIsCodeGenerated(true);
-        } else {
-          console.error(`코드 생성 실패: ${result.message}`);
-          // 실패 시 기존 로직으로 폴백
+    // 위의 useEffect에서 처리되지 않은 경우에만 새 코드 생성 (폴백)
+    // 주로 dataParam과 codeParam이 모두 없는 경우
+    if (!codeParam && !paramTestCode && !resultCode && typeof window !== 'undefined') {
+      console.log("코드 생성 로직: 모든 파라미터가 없어 새 코드 생성 시도");
+      
+      // 새로운 통합 코드 생성 시스템 사용
+      const generateNewCode = async () => {
+        try {
+          console.log("새로운 통합 코드 생성 시작");
+          
+          // 현재 경로와 클라이언트 정보를 기반으로 코드 생성
+          const result = await generateContextualTestCode(
+            clientInfo,
+            undefined, // userId는 현재 미사용
+            window.location.pathname
+          );
+          
+          if (result.success && result.code) {
+            console.log(`새로운 코드 생성 성공: ${result.code}`);
+            setResultCode(result.code);
+            setIsCodeGenerated(true);
+          } else {
+            console.error(`코드 생성 실패: ${result.message}`);
+            // 실패 시 기존 로직으로 폴백
+            const fallbackCode = generateFallbackCode();
+            if (fallbackCode) {
+              setResultCode(fallbackCode);
+              setIsCodeGenerated(true);
+            }
+          }
+        } catch (error) {
+          console.error('코드 생성 중 오류:', error);
+          // 오류 시 기존 로직으로 폴백
           const fallbackCode = generateFallbackCode();
           if (fallbackCode) {
             setResultCode(fallbackCode);
             setIsCodeGenerated(true);
           }
         }
-      } catch (error) {
-        console.error('코드 생성 중 오류:', error);
-        // 오류 시 기존 로직으로 폴백
-        const fallbackCode = generateFallbackCode();
-        if (fallbackCode) {
-          setResultCode(fallbackCode);
-          setIsCodeGenerated(true);
-        }
-      }
-    };
+      };
 
-    // 폴백 코드 생성 함수 (기존 로직 간소화)
-    const generateFallbackCode = (): string | null => {
-      try {
-        const year = new Date().getFullYear();
-        const yearCode = String(year).slice(-2);
-        const timestamp = Date.now().toString().slice(-6);
-        
-        // 검사 유형에 따른 접두사 결정
-        let prefixCode = "MP"; // 기본값: 전문가용 MBTI 검사
-        
-        if (typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          const isGroupTest = clientInfo?.groupCode && clientInfo?.groupCode.length > 0;
+      // 폴백 코드 생성 함수 (기존 로직 간소화)
+      const generateFallbackCode = (): string | null => {
+        try {
+          const year = new Date().getFullYear();
+          const yearCode = String(year).slice(-2);
+          const timestamp = Date.now().toString().slice(-6);
           
-          if (currentPath.includes('/tests/mbti_pro')) {
-            prefixCode = isGroupTest ? "MG" : "MP";
-          } else if (isGroupTest) {
-            prefixCode = "MG";
-          } else {
-            prefixCode = "MA";
+          // 검사 유형에 따른 접두사 결정
+          let prefixCode = "MP"; // 기본값: 전문가용 MBTI 검사
+          
+          if (typeof window !== 'undefined') {
+            const currentPath = window.location.pathname;
+            const isGroupTest = clientInfo?.groupCode && clientInfo?.groupCode.length > 0;
+            
+            if (currentPath.includes('/tests/mbti_pro')) {
+              prefixCode = isGroupTest ? "MG" : "MP";
+            } else if (isGroupTest) {
+              prefixCode = "MG";
+            } else {
+              prefixCode = "MA";
+            }
           }
+          
+          // 간단한 폴백 코드 생성
+          const fallbackCode = `${prefixCode}${yearCode}0-AA${timestamp.slice(-3)}`;
+          console.log(`폴백 코드 생성: ${fallbackCode}`);
+          return fallbackCode;
+          
+        } catch (error) {
+          console.error('폴백 코드 생성 실패:', error);
+          return null;
         }
-        
-        // 간단한 폴백 코드 생성
-        const fallbackCode = `${prefixCode}${yearCode}0-AA${timestamp.slice(-3)}`;
-        console.log(`폴백 코드 생성: ${fallbackCode}`);
-        return fallbackCode;
-        
-      } catch (error) {
-        console.error('폴백 코드 생성 실패:', error);
-        return null;
-      }
-    };
+      };
 
-    // 코드가 아직 생성되지 않은 경우에만 생성
-    if (!isCodeGenerated) {
       generateNewCode();
     }
-  }, [codeParam, isCodeGenerated, clientInfo]); // clientInfo 의존성 추가
+  }, [codeParam, paramTestCode, isCodeGenerated, resultCode, clientInfo]);
 
   // 현재 한국 시간 가져오기
   const getKoreanTime = () => {

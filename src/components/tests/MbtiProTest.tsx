@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
 import MbtiProCodeInput from './MbtiProCodeInput';
@@ -35,6 +35,7 @@ interface MbtiProTestProps {
 export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Answer>({});
   const [isMouseMoved, setIsMouseMoved] = useState(false);
@@ -56,6 +57,26 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    // 마이페이지에서 resume 파라미터로 왔을 경우 이미 팝업을 봤으므로 다시 표시하지 않음
+    const resumeParam = searchParams.get('resume');
+    if (resumeParam) {
+      // resume 파라미터가 있으면 바로 진행 상태 복원
+      const savedProgress = loadTestProgress(testId);
+      if (savedProgress) {
+        if (savedProgress.answers) setAnswers(savedProgress.answers);
+        if (savedProgress.currentQuestion !== undefined) setCurrentQuestion(savedProgress.currentQuestion);
+        if (savedProgress.currentStep) {
+          if (typeof savedProgress.currentStep === 'string' && 
+              (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+            setCurrentStep(savedProgress.currentStep);
+          }
+        }
+        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
+        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+      }
+      return; // 팝업 표시하지 않고 바로 진행
+    }
+    
     const savedProgress = loadTestProgress(testId);
     if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
       // 완료 여부 확인 (100% 진행률인 경우 제외)
@@ -72,7 +93,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       setHasResumeData(true);
       setShowResumeDialog(true);
     }
-  }, [testId]);
+  }, [testId, searchParams]);
 
   // 검사 진행 상태 자동 저장
   useEffect(() => {
