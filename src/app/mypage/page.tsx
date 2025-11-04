@@ -2037,11 +2037,12 @@ function TestRecordsTabContent({
         </>
       )}
 
-      {/* 일괄 삭제 확인 모달 - 화면 중앙 고정 */}
-      {showBulkDeleteModal && (
+      {/* 일괄 삭제 확인 모달 - 화면 중앙 고정 (Portal 사용) */}
+      {showBulkDeleteModal && typeof window !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
           onClick={() => setShowBulkDeleteModal(false)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -2072,7 +2073,8 @@ function TestRecordsTabContent({
               </button>
             </div>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 개별 삭제 확인 모달 - 화면 중앙 고정 */}

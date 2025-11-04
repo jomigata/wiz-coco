@@ -1204,9 +1204,24 @@ const MbtiProResult: React.FC = () => {
               );
             }
             return (
-              <Link href="/mypage?tab=records" className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block">
-                ← 검사기록 페이지로 돌아가기
-              </Link>
+              <button
+                onClick={() => {
+                  // sessionStorage에서 검사기록 목록으로 돌아가야 하는지 확인
+                  const returnToTestRecords = typeof window !== 'undefined' ? sessionStorage.getItem('returnToTestRecords') : null;
+                  if (returnToTestRecords === 'true') {
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem('returnToTestRecords');
+                      // 검사기록 목록으로 직접 이동
+                      window.location.href = '/mypage?tab=records';
+                    }
+                  } else {
+                    window.history.back();
+                  }
+                }}
+                className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block"
+              >
+                ← 뒤로 돌아가기
+              </button>
             );
           })()}
         </div>
