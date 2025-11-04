@@ -18,17 +18,17 @@ function MbtiTestPageContent() {
   // URL에서 resume 파라미터로 전달된 testId 확인 (마이페이지에서 이어하기 클릭 시)
   const resumeTestId = searchParams.get('resume');
   
-  // testId를 상태로 관리: resume 파라미터가 있으면 사용, 없으면 새로 생성
+  // testId를 상태로 관리: resume 파라미터가 있으면 사용, 없으면 고정된 testId 사용 (다른 검사들과 동일하게)
   const [testId, setTestId] = useState(() => {
     if (resumeTestId) {
       // 마이페이지에서 이어하기 클릭한 경우, 전달된 testId 사용
       console.log('[MbtiTestPage] Resume testId from URL:', resumeTestId);
       return resumeTestId;
     }
-    // 새로 시작하는 경우, 새로운 testId 생성
-    const newTestId = generateTestId(pathname || '/tests/mbti') + '_' + Date.now();
-    console.log('[MbtiTestPage] New testId generated:', newTestId);
-    return newTestId;
+    // 새로 시작하는 경우, 고정된 testId 사용 (다른 검사들과 동일하게)
+    const fixedTestId = generateTestId(pathname || '/tests/mbti');
+    console.log('[MbtiTestPage] Fixed testId:', fixedTestId);
+    return fixedTestId;
   });
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
