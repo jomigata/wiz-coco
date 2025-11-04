@@ -573,7 +573,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               whileTap={{ scale: 0.98 }}
               className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
             >
-              새로 시작
+              처음부터 시작
             </motion.button>
             <motion.button
               onClick={handleResumeTest}

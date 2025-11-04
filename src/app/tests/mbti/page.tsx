@@ -33,10 +33,6 @@ function MbtiTestPageContent() {
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
   const [testComponentKey, setTestComponentKey] = useState(0);
-  const [savedAnswers, setSavedAnswers] = useState<any>(null);
-  
-  // 저장된 currentQuestion과 전체 진행 상태를 관리
-  const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(undefined);
   
   // 개인용 MBTI 검사 단계 관리 (전문가용과 동일한 구조)
   // 초기 상태에서 resume 파라미터가 있으면 진행 상태에 따라 currentStep 설정
@@ -59,22 +55,38 @@ function MbtiTestPageContent() {
   // 초기 상태에서 resume 파라미터가 있으면 진행 상태 복원
   const getInitialProgress = () => {
     if (typeof window === 'undefined' || !resumeTestId) {
-      return { codeData: null, clientInfo: null };
+      return { codeData: null, clientInfo: null, savedAnswers: null, savedCurrentQuestion: undefined };
     }
     const savedProgress = loadTestProgress(resumeTestId);
     if (savedProgress) {
+      const savedCurrent = savedProgress.currentQuestion !== undefined 
+        ? savedProgress.currentQuestion 
+        : (savedProgress.answers && Object.keys(savedProgress.answers).length > 0
+            ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
+            : 0);
       return {
         codeData: savedProgress.codeData || null,
-        clientInfo: savedProgress.clientInfo || null
+        clientInfo: savedProgress.clientInfo || null,
+        savedAnswers: savedProgress.answers || null,
+        savedCurrentQuestion: savedCurrent
       };
     }
-    return { codeData: null, clientInfo: null };
+    return { codeData: null, clientInfo: null, savedAnswers: null, savedCurrentQuestion: undefined };
   };
   
   const initialProgress = getInitialProgress();
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(initialProgress.codeData);
   const [clientInfo, setClientInfo] = useState<any>(initialProgress.clientInfo);
+  const [savedAnswers, setSavedAnswers] = useState<any>(initialProgress.savedAnswers);
+  const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(initialProgress.savedCurrentQuestion);
+  // 초기 상태에서 resume 파라미터가 있고 답변이 있으면 testComponentKey 설정
+  const [testComponentKey, setTestComponentKey] = useState(() => {
+    if (initialProgress.savedAnswers && Object.keys(initialProgress.savedAnswers).length > 0) {
+      return 1; // 초기화 시 답변이 있으면 컴포넌트 리렌더링을 위해 1로 설정
+    }
+    return 0;
+  });
   
     // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
     useEffect(() => {
@@ -442,7 +454,7 @@ function MbtiTestPageContent() {
                   whileTap={{ scale: 0.98 }}
                   className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  새로 시작
+                  처음부터 시작
                 </motion.button>
                 <motion.button
                   onClick={handleResumeTest}
