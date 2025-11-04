@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
@@ -2077,11 +2078,12 @@ function TestRecordsTabContent({
         document.body
       )}
 
-      {/* 개별 삭제 확인 모달 - 화면 중앙 고정 */}
-      {showDeleteModal && deleteModalRecord && (
+      {/* 개별 삭제 확인 모달 - 화면 중앙 고정 (Portal 사용) */}
+      {showDeleteModal && deleteModalRecord && typeof window !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
           onClick={() => setShowDeleteModal(false)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
