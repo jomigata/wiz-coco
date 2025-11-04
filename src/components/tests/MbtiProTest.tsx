@@ -490,7 +490,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       // 생성한 testCode를 URL 파라미터로 전달 (검사기록 목록의 코드와 일치시키기 위해)
       const queryString = encodeURIComponent(JSON.stringify(testData));
       const testCodeParam = testCode ? `&code=${encodeURIComponent(testCode)}` : '';
-      router.push(`/tests/mbti_pro/result?data=${queryString}${testCodeParam}`);
+      router.push(`/tests/mbti_pro/result?data=${queryString}${testCodeParam}&from=completion`);
     } catch (error) {
       console.error('검사 완료 중 오류 발생:', error);
       setIsLoading(false); // 오류 발생 시 로딩 상태 해제

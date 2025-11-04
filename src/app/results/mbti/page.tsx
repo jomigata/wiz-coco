@@ -88,11 +88,21 @@ function MbtiResultContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [testResult, setTestResult] = useState<any>(null);
+  const [isFromCompletion, setIsFromCompletion] = useState<boolean>(false);
   
   useEffect(() => {
     // URL 파라미터에서 테스트 코드와 MBTI 유형 가져오기
     const code = searchParams.get('code');
     const type = searchParams.get('type');
+    const from = searchParams.get('from');
+    
+    // 검사 완료 직후인지 확인 (URL 파라미터 또는 sessionStorage)
+    if (from === 'completion' || (typeof window !== 'undefined' && sessionStorage.getItem('testJustCompleted') === 'true')) {
+      setIsFromCompletion(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('testJustCompleted', 'true');
+      }
+    }
     
     if (code) {
       // URL에서 받은 코드를 그대로 사용 (검사기록 목록의 코드와 일치)
@@ -459,9 +469,8 @@ function MbtiResultContent() {
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
-                    // 검사 완료 직후인지 확인
-                    const testJustCompleted = sessionStorage.getItem('testJustCompleted');
-                    if (testJustCompleted === 'true') {
+                    // 검사 완료 직후인지 확인 (상태 또는 sessionStorage)
+                    if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
                       sessionStorage.removeItem('testJustCompleted');
                       // 검사 완료 직후는 무조건 검사기록 목록으로 이동
                       router.push('/mypage?tab=records');

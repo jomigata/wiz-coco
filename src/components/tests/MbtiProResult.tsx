@@ -142,6 +142,7 @@ const MbtiProResult: React.FC = () => {
   const searchParams = useSearchParams();
   const dataParam = searchParams.get('data');
   const codeParam = searchParams.get('code');
+  const fromParam = searchParams.get('from');
   const [loadedAnswers, setLoadedAnswers] = React.useState<Answer>({});
   const [loadedClientInfo, setLoadedClientInfo] = React.useState<ClientInfo | null>(null);
   const [isDataLoading, setIsDataLoading] = React.useState<boolean>(codeParam !== null && !dataParam);
@@ -151,6 +152,17 @@ const MbtiProResult: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = React.useState<boolean>(false);
   const scrollButtonRef = React.useRef<HTMLButtonElement>(null);
   const [isAlreadySaved, setIsAlreadySaved] = React.useState<boolean>(false);
+  const [isFromCompletion, setIsFromCompletion] = React.useState<boolean>(false);
+  
+  // 검사 완료 직후인지 확인 (URL 파라미터 또는 sessionStorage)
+  React.useEffect(() => {
+    if (fromParam === 'completion' || (typeof window !== 'undefined' && sessionStorage.getItem('testJustCompleted') === 'true')) {
+      setIsFromCompletion(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('testJustCompleted', 'true');
+      }
+    }
+  }, [fromParam]);
   
   // 초기화 로직 수정
   const { answers: paramAnswers = {}, clientInfo: paramClientInfo = null, testCode: paramTestCode = null, timestamp: paramTimestamp = null } = 
@@ -1227,9 +1239,8 @@ const MbtiProResult: React.FC = () => {
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
-                    // 검사 완료 직후인지 확인
-                    const testJustCompleted = sessionStorage.getItem('testJustCompleted');
-                    if (testJustCompleted === 'true') {
+                    // 검사 완료 직후인지 확인 (상태 또는 sessionStorage)
+                    if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
                       sessionStorage.removeItem('testJustCompleted');
                       // 검사 완료 직후는 무조건 검사기록 목록으로 이동
                       window.location.href = '/mypage?tab=records';
