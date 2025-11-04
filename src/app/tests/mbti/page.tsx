@@ -32,7 +32,6 @@ function MbtiTestPageContent() {
   });
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
-  const [testComponentKey, setTestComponentKey] = useState(0);
   
   // 개인용 MBTI 검사 단계 관리 (전문가용과 동일한 구조)
   // 초기 상태에서 resume 파라미터가 있으면 진행 상태에 따라 currentStep 설정
