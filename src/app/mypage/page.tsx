@@ -953,13 +953,6 @@ function MyPageContent() {
                                   <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <div className="flex items-center justify-center gap-2">
                                       <button
-                                        onClick={() => handleClearProgress(test.testId)}
-                                        className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/20 transition-colors"
-                                        title="진행 상태 삭제"
-                                      >
-                                        삭제
-                                      </button>
-                                      <button
                                         onClick={() => {
                                           setResumeModalTest(test);
                                           setShowResumeModal(true);
@@ -967,6 +960,13 @@ function MyPageContent() {
                                         className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                                       >
                                         이어하기
+                                      </button>
+                                      <button
+                                        onClick={() => handleClearProgress(test.testId)}
+                                        className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                        title="진행 상태 삭제"
+                                      >
+                                        삭제
                                       </button>
                                     </div>
                                   </td>
