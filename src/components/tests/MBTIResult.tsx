@@ -432,20 +432,13 @@ export default function MBTIResult({ results, onRetake }: Props) {
                 const testJustCompleted = sessionStorage.getItem('testJustCompleted');
                 if (testJustCompleted === 'true') {
                   sessionStorage.removeItem('testJustCompleted');
-                  // 검사 완료 직후는 검사기록 목록으로 이동
+                  // 검사 완료 직후는 무조건 검사기록 목록으로 이동
                   router.push('/mypage?tab=records');
                   return;
                 }
                 
-                // sessionStorage에서 검사기록 목록으로 돌아가야 하는지 확인
-                const returnToTestRecords = sessionStorage.getItem('returnToTestRecords');
-                if (returnToTestRecords === 'true') {
-                  sessionStorage.removeItem('returnToTestRecords');
-                  // 검사기록 목록으로 직접 이동
-                  router.push('/mypage?tab=records');
-                } else {
-                  router.back();
-                }
+                // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
+                router.back();
               }
             }}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md"
