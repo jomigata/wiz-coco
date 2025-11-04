@@ -2040,26 +2040,14 @@ function TestRecordsTabContent({
       {/* 일괄 삭제 확인 모달 - 화면 중앙 고정 */}
       {showBulkDeleteModal && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" 
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0,
-            margin: 0,
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }} 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
           onClick={() => setShowBulkDeleteModal(false)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
+            className="bg-indigo-950 rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 일괄 삭제</h3>
@@ -2090,26 +2078,14 @@ function TestRecordsTabContent({
       {/* 개별 삭제 확인 모달 - 화면 중앙 고정 */}
       {showDeleteModal && deleteModalRecord && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" 
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0,
-            margin: 0,
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }} 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
           onClick={() => setShowDeleteModal(false)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
+            className="bg-indigo-950 rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-red-200 mb-4">검사 기록 삭제</h3>

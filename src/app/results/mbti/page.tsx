@@ -455,6 +455,24 @@ function MbtiResultContent() {
             {/* 버튼 그룹 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
+                onClick={() => {
+                  // sessionStorage에서 검사기록 목록으로 돌아가야 하는지 확인
+                  const returnToTestRecords = typeof window !== 'undefined' ? sessionStorage.getItem('returnToTestRecords') : null;
+                  if (returnToTestRecords === 'true') {
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem('returnToTestRecords');
+                      // 검사기록 목록으로 직접 이동
+                      router.push('/mypage?tab=records');
+                    }
+                  } else {
+                    router.back();
+                  }
+                }}
+                className="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium rounded-lg transition-all duration-300 shadow-lg"
+              >
+                ← 뒤로 돌아가기
+              </button>
+              <button
                 onClick={shareResult}
                 className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg"
               >
