@@ -1865,12 +1865,14 @@ function TestRecordsTabContent({
               <thead className="bg-white/5">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
-                      onChange={toggleAllSelection}
-                      className="w-4 h-4 text-pink-400 border-2 border-pink-300/60 rounded focus:ring-pink-400"
-                    />
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
+                        onChange={toggleAllSelection}
+                        className="w-4 h-4 text-pink-400 border-2 border-pink-300/80 rounded focus:ring-pink-400 cursor-pointer"
+                      />
+                    </div>
                   </th>
                   <th 
                     scope="col" 
@@ -1927,13 +1929,15 @@ function TestRecordsTabContent({
                     className="group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedRecords.includes(record.code || '')}
-                        onChange={() => toggleSelection(record.code || '')}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-4 h-4 text-pink-400 border-white/30 rounded focus:ring-pink-400"
-                      />
+                      <div className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRecords.includes(record.code || '')}
+                          onChange={() => toggleSelection(record.code || '')}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 text-pink-400 border border-white/30 rounded focus:ring-pink-400 cursor-pointer"
+                        />
+                      </div>
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
