@@ -1122,7 +1122,7 @@ const MbtiProResult: React.FC = () => {
   // 로딩 중일 때 표시할 UI
   if (isDataLoading) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full pt-16 pb-12">
         <Navigation />
         <div className="h-20"></div>
         
@@ -1138,7 +1138,7 @@ const MbtiProResult: React.FC = () => {
           </svg>
         </div>
         
-        <div className="container mx-auto px-4 py-6 relative z-10">
+        <div className="container mx-auto max-w-4xl py-6 relative z-10">
           <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
             <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-xl text-blue-200">결과를 불러오는 중입니다...</p>
@@ -1149,7 +1149,7 @@ const MbtiProResult: React.FC = () => {
   }
 
   return (
-    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full pt-16 pb-12">
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -1209,7 +1209,7 @@ const MbtiProResult: React.FC = () => {
       <div className="container mx-auto max-w-4xl relative z-10">
         <div className="space-y-8">
           {/* 버튼 그룹 - 최상단 */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4 mt-[30px]">
           {/* 뒤로 돌아가기 버튼 - 좌측 */}
           {(() => {
             // sessionStorage에서 삭제코드 목록으로 돌아가야 하는지 확인
