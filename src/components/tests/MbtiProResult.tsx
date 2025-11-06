@@ -23,7 +23,6 @@ import { Line, Radar } from 'react-chartjs-2';
 import Link from 'next/link';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { AnimatePresence, motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import useApiRequestLock from '@/hooks/useApiRequestLock';
 import { setWithExpiry, getItem, setItem, removeItem } from '@/utils/localStorageManager';
 import { addToSyncQueue, setupSyncMonitor } from '@/utils/syncService';
@@ -1122,9 +1121,7 @@ const MbtiProResult: React.FC = () => {
   // 로딩 중일 때 표시할 UI
   if (isDataLoading) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full left-0 right-0 pt-16 pb-12" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
-        <Navigation />
-        <div className="h-20"></div>
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
         
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
@@ -1149,7 +1146,7 @@ const MbtiProResult: React.FC = () => {
   }
 
   return (
-    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full left-0 right-0 pt-16 pb-12" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
+    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -1166,9 +1163,6 @@ const MbtiProResult: React.FC = () => {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      
-      {/* 네비게이션 컴포넌트 추가 */}
-      <Navigation />
       
       {/* 최상단으로 스크롤하는 버튼 - 스타일 수정 및 중복 버튼 문제 해결 */}
       <AnimatePresence mode="wait" initial={false}>
