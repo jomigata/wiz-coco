@@ -26,6 +26,12 @@ Cursor 에이전트가 사용자 개입 없이 완전 자동으로 GitHub 배포
 - 배포 상태 모니터링
 - 완료 알림 자동 생성
 
+### **5. 커밋 메시지 규칙**
+- **모든 커밋 메시지는 반드시 영어로만 작성**
+- 한국어, 일본어, 중국어 등 다른 언어 사용 금지
+- 커밋 메시지 형식: `type: brief description` (예: `fix: resolve double scrollbar issue`)
+- 가능한 타입: `feat`, `fix`, `refactor`, `style`, `docs`, `test`, `chore`
+
 ## 📋 **사용 가능한 명령어**
 
 ```bash
