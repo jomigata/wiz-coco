@@ -6,7 +6,7 @@ import Navigation from '@/components/Navigation';
 
 export default function MbtiProResultPage() {
   return (
-    <div className="fixed inset-0 w-full h-full" style={{ margin: 0, padding: 0, overflow: 'auto' }}>
+    <div className="min-h-screen">
       <Navigation />
       <Suspense fallback={
         <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
