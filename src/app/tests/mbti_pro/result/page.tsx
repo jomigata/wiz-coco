@@ -6,10 +6,10 @@ import Navigation from '@/components/Navigation';
 
 export default function MbtiProResultPage() {
   return (
-    <div className="min-h-screen" style={{ margin: 0, padding: 0, width: '100%', overflowX: 'hidden' }}>
+    <div className="min-h-screen">
       <Navigation />
       <Suspense fallback={
-        <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12" style={{ margin: 0, paddingLeft: 0, paddingRight: 0, width: '100%', left: 0, right: 0 }}>
+        <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
