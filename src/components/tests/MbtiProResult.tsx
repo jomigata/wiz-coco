@@ -1210,8 +1210,9 @@ const MbtiProResult: React.FC = () => {
       </AnimatePresence>
 
       <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
-        {/* 버튼 그룹 - 최상단 */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+        <div className="space-y-8">
+          {/* 버튼 그룹 - 최상단 */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
           {/* 뒤로 돌아가기 버튼 - 좌측 */}
           {(() => {
             // sessionStorage에서 삭제코드 목록으로 돌아가야 하는지 확인
@@ -1313,13 +1314,13 @@ const MbtiProResult: React.FC = () => {
           </div>
         </div>
 
-        {/* 헤더 섹션 */}
-        <div className="mb-8 relative">
-          <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
-            검사 결과
-          </h1>
+          {/* 헤더 섹션 */}
+          <div className="mb-8 relative">
+            <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
+              전문가용 MBTI 검사 결과
+            </h1>
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
           {resultCode && (
             <p className="text-blue-200 mt-4">
@@ -1694,7 +1695,8 @@ const MbtiProResult: React.FC = () => {
             })()}
           </div>
         </div>
-      </div>
+          </div>
+        </div>
     </main>
   );
 };

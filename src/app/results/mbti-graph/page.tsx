@@ -259,8 +259,9 @@ function MbtiGraphResults() {
         </div>
         
         <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
-          {/* 버튼 그룹 - 최상단 */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+          <div className="space-y-8">
+            {/* 버튼 그룹 - 최상단 */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
             {/* 뒤로 돌아가기 버튼 - 좌측 */}
             <button
               onClick={() => {
@@ -371,6 +372,7 @@ function MbtiGraphResults() {
             </Link>
           </div>
         </div>
+          </div>
       </main>
     </div>
   );

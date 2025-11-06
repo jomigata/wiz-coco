@@ -79,8 +79,9 @@ function InsideMbtiResultContent() {
         <section className="relative z-10 py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-5xl mx-auto">
-              {/* 버튼 그룹 - 최상단 */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+              <div className="space-y-8">
+                {/* 버튼 그룹 - 최상단 */}
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
                 {/* 뒤로 돌아가기 버튼 - 좌측 */}
                 <button
                   onClick={() => {
@@ -295,6 +296,7 @@ function InsideMbtiResultContent() {
                     실제 관계는 더 복잡하며 개인의 성숙도, 경험, 상황 등 다양한 요소에 영향을 받습니다.
                   </p>
                 </div>
+              </div>
               </div>
             </div>
           </div>
