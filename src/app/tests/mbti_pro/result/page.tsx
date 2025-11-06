@@ -7,7 +7,7 @@ import Navigation from '@/components/Navigation';
 export default function MbtiProResultPage() {
   return (
     <Suspense fallback={
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full pt-16 pb-12">
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full left-0 right-0 pt-16 pb-12" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
         <Navigation />
         <div className="h-20"></div>
         

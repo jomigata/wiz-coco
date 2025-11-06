@@ -1122,7 +1122,7 @@ const MbtiProResult: React.FC = () => {
   // 로딩 중일 때 표시할 UI
   if (isDataLoading) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full pt-16 pb-12">
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full left-0 right-0 pt-16 pb-12" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
         <Navigation />
         <div className="h-20"></div>
         
@@ -1149,7 +1149,7 @@ const MbtiProResult: React.FC = () => {
   }
 
   return (
-    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full pt-16 pb-12">
+    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen w-full left-0 right-0 pt-16 pb-12" style={{ margin: 0, paddingLeft: 0, paddingRight: 0 }}>
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
