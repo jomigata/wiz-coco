@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { mbtiProDescriptions } from '@/data/mbtiProDescriptions';
 import { questions } from '@/data/mbtiProQuestions';
 import {
@@ -140,6 +140,7 @@ const incrementExtendedChar = (char: string): string => {
 // 컴포넌트 정의
 const MbtiProResult: React.FC = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const dataParam = searchParams.get('data');
   const codeParam = searchParams.get('code');
   const fromParam = searchParams.get('from');
@@ -1208,9 +1209,10 @@ const MbtiProResult: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <div className="container mx-auto max-w-4xl relative z-10">
-        {/* 뒤로 돌아가기 버튼 - 최상단 좌측 */}
-        <div className="mb-4">
+      <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
+        {/* 버튼 그룹 - 최상단 */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+          {/* 뒤로 돌아가기 버튼 - 좌측 */}
           {(() => {
             // sessionStorage에서 삭제코드 목록으로 돌아가야 하는지 확인
             const returnToDeletedCodes = typeof window !== 'undefined' ? sessionStorage.getItem('returnToDeletedCodes') : null;
@@ -1221,7 +1223,7 @@ const MbtiProResult: React.FC = () => {
                     if (typeof window !== 'undefined') {
                       sessionStorage.removeItem('returnToDeletedCodes');
                     }
-                    window.history.back();
+                    router.back();
                   }}
                   className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
                 >
@@ -1240,12 +1242,12 @@ const MbtiProResult: React.FC = () => {
                     if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
                       sessionStorage.removeItem('testJustCompleted');
                       // 검사 완료 직후는 무조건 검사기록 목록으로 이동
-                      window.location.href = '/mypage?tab=records';
+                      router.push('/mypage?tab=records');
                       return;
                     }
                     
                     // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
-                    window.history.back();
+                    router.back();
                   }
                 }}
                 className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
@@ -1257,8 +1259,61 @@ const MbtiProResult: React.FC = () => {
               </button>
             );
           })()}
+          
+          {/* 결과 공유하기 및 테스트 다시 하기 버튼 - 우측 */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => {
+                const mbtiType = calculateDominantDirections(directionResults.percentages).join('');
+                const mbtiTypeKey = mbtiType as unknown as keyof typeof mbtiProDescriptions;
+                const description = mbtiProDescriptions[mbtiTypeKey];
+                const shareData = {
+                  title: `내 MBTI 결과는 ${mbtiType}입니다!`,
+                  text: description ? `${description.title} - ${description.description}` : mbtiType,
+                  url: typeof window !== 'undefined' ? window.location.href : ''
+                };
+
+                if (typeof window !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                  navigator.share(shareData)
+                    .then(() => {
+                      console.log('결과 공유 성공');
+                    })
+                    .catch(err => {
+                      console.error('공유 오류:', err);
+                      fallbackShare();
+                    });
+                } else {
+                  fallbackShare();
+                }
+                
+                function fallbackShare() {
+                  if (typeof window !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(window.location.href)
+                      .then(() => {
+                        alert('결과 주소가 클립보드에 복사되었습니다!');
+                      })
+                      .catch(() => {
+                        alert(`결과 주소: ${window.location.href}`);
+                      });
+                  } else if (typeof window !== 'undefined') {
+                    alert(`결과 주소: ${window.location.href}`);
+                  }
+                }
+              }}
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-sm sm:text-base"
+            >
+              결과 공유하기
+            </button>
+            <Link 
+              href="/tests/mbti_pro"
+              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center text-sm sm:text-base"
+            >
+              테스트 다시 하기
+            </Link>
+          </div>
         </div>
 
+        {/* 헤더 섹션 */}
         <div className="mb-8 relative">
           <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
           <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
@@ -1266,6 +1321,11 @@ const MbtiProResult: React.FC = () => {
             검사 결과
           </h1>
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
+          {resultCode && (
+            <p className="text-blue-200 mt-4">
+              테스트 코드: <span className="font-mono font-semibold">{resultCode}</span>
+            </p>
+          )}
         </div>
 
         {/* 검사자 결과정보 섹션 */}

@@ -79,8 +79,9 @@ function InsideMbtiResultContent() {
         <section className="relative z-10 py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-5xl mx-auto">
-              {/* 뒤로 돌아가기 버튼 - 최상단 좌측 */}
-              <div className="mb-4">
+              {/* 버튼 그룹 - 최상단 */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+                {/* 뒤로 돌아가기 버튼 - 좌측 */}
                 <button
                   onClick={() => {
                     if (typeof window !== 'undefined') {
@@ -103,6 +104,55 @@ function InsideMbtiResultContent() {
                   </svg>
                   <span className="font-medium">뒤로 돌아가기</span>
                 </button>
+                
+                {/* 결과 공유하기 및 테스트 다시 하기 버튼 - 우측 */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      const shareData = {
+                        title: `${result.person1.name}님과 ${result.person2.name}님의 관계 분석 결과`,
+                        text: `${result.person1.mbti}와 ${result.person2.mbti}의 ${relationshipTypeData[result.relationshipType]} 호환성: ${result.analysis?.compatibility}%`,
+                        url: typeof window !== 'undefined' ? window.location.href : ''
+                      };
+
+                      if (typeof window !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                        navigator.share(shareData)
+                          .then(() => {
+                            console.log('결과 공유 성공');
+                          })
+                          .catch(err => {
+                            console.error('공유 오류:', err);
+                            fallbackShare();
+                          });
+                      } else {
+                        fallbackShare();
+                      }
+                      
+                      function fallbackShare() {
+                        if (typeof window !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(window.location.href)
+                            .then(() => {
+                              alert('결과 주소가 클립보드에 복사되었습니다!');
+                            })
+                            .catch(() => {
+                              alert(`결과 주소: ${window.location.href}`);
+                            });
+                        } else if (typeof window !== 'undefined') {
+                          alert(`결과 주소: ${window.location.href}`);
+                        }
+                      }
+                    }}
+                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-sm sm:text-base"
+                  >
+                    결과 공유하기
+                  </button>
+                  <Link 
+                    href="/tests/inside-mbti"
+                    className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center text-sm sm:text-base"
+                  >
+                    테스트 다시 하기
+                  </Link>
+                </div>
               </div>
 
               {/* 헤더 섹션 */}
