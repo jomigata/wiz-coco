@@ -6,7 +6,7 @@ import Navigation from '@/components/Navigation';
 
 export default function MbtiProResultPage() {
   return (
-    <div className="min-h-screen">
+    <>
       <Navigation />
       <Suspense fallback={
         <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
@@ -32,6 +32,6 @@ export default function MbtiProResultPage() {
       }>
         <MbtiProResult />
       </Suspense>
-    </div>
+    </>
   );
 } 
