@@ -1209,14 +1209,8 @@ const MbtiProResult: React.FC = () => {
       </AnimatePresence>
 
       <div className="container mx-auto max-w-4xl relative z-10">
-        <div className="mb-8 relative">
-          <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
-            검사 결과
-          </h1>
-          <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-          
+        {/* 뒤로 돌아가기 버튼 - 최상단 좌측 */}
+        <div className="mb-4">
           {(() => {
             // sessionStorage에서 삭제코드 목록으로 돌아가야 하는지 확인
             const returnToDeletedCodes = typeof window !== 'undefined' ? sessionStorage.getItem('returnToDeletedCodes') : null;
@@ -1229,9 +1223,12 @@ const MbtiProResult: React.FC = () => {
                     }
                     window.history.back();
                   }}
-                  className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block"
+                  className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
                 >
-                  ← 이전 페이지로 돌아가기
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="font-medium">이전 페이지로 돌아가기</span>
                 </button>
               );
             }
@@ -1251,12 +1248,24 @@ const MbtiProResult: React.FC = () => {
                     window.history.back();
                   }
                 }}
-                className="text-blue-300 hover:text-blue-200 transition-colors mt-4 inline-block"
+                className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
               >
-                ← 뒤로 돌아가기
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">뒤로 돌아가기</span>
               </button>
             );
           })()}
+        </div>
+
+        <div className="mb-8 relative">
+          <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+          <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
+            검사 결과
+          </h1>
+          <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
         </div>
 
         {/* 검사자 결과정보 섹션 */}

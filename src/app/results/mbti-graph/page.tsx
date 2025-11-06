@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import MBTIResult from '@/components/tests/MBTIResult';
@@ -105,6 +105,7 @@ const LoadingResults = () => (
 // 클라이언트 컴포넌트
 function MbtiGraphResults() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
@@ -242,35 +243,85 @@ function MbtiGraphResults() {
   
   // 결과 컴포넌트 표시 - 로컬 스토리지에서 가져온 데이터 사용
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900">
+    <div className="min-h-screen">
       <Navigation />
-      <div className="pt-20 px-4 pb-12 max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">MBTI 테스트 결과</h1>
-          <div className="w-24 h-1 bg-indigo-500 mx-auto mb-4"></div>
-          <p className="text-indigo-200">테스트 코드: {code}</p>
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+        {/* Background pattern */}
+        <div className="absolute inset-0 z-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
         </div>
+        
+        <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
+          {/* 뒤로 돌아가기 버튼 - 최상단 좌측 */}
+          <div className="mb-4">
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  // 검사 완료 직후인지 확인
+                  if (sessionStorage.getItem('testJustCompleted') === 'true') {
+                    sessionStorage.removeItem('testJustCompleted');
+                    // 검사 완료 직후는 무조건 검사기록 목록으로 이동
+                    router.push('/mypage?tab=records');
+                    return;
+                  }
+                  
+                  // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
+                  router.back();
+                }
+              }}
+              className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">뒤로 돌아가기</span>
+            </button>
+          </div>
+
+          {/* 헤더 섹션 */}
+          <div className="mb-8 relative">
+            <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
+              MBTI 테스트 결과
+            </h1>
+            <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
+            {code && (
+              <p className="text-blue-200 mt-4">
+                테스트 코드: <span className="font-mono font-semibold">{code}</span>
+              </p>
+            )}
+          </div>
         
         <MBTIResult 
           results={testResults}
           onRetake={handleRetake}
         />
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Link 
-            href="/tests/mbti"
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors text-center"
-          >
-            테스트 다시 하기
-          </Link>
-          <Link 
-            href="/mypage/test-records"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-center"
-          >
-            테스트 기록 보기
-          </Link>
+          {/* 버튼 그룹 */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <Link 
+              href="/tests/mbti"
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center"
+            >
+              테스트 다시 하기
+            </Link>
+            <Link 
+              href="/mypage?tab=records"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center"
+            >
+              테스트 기록 보기
+            </Link>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

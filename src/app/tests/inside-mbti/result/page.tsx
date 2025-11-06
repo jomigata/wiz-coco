@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
@@ -9,6 +9,7 @@ import { MbtiType, RelationshipAnalysis, mbtiData, relationshipTypeData, analyze
 // 클라이언트 컴포넌트에서 useSearchParams 사용
 function InsideMbtiResultContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [result, setResult] = useState<{
     person1: { name: string; mbti: string };
     person2: { name: string; mbti: string };
@@ -78,11 +79,46 @@ function InsideMbtiResultContent() {
         <section className="relative z-10 py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-5xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
-                <h1 className="text-4xl font-bold text-white text-center mb-2">관계 분석 결과</h1>
-                <p className="text-blue-200 text-center mb-4">
+              {/* 뒤로 돌아가기 버튼 - 최상단 좌측 */}
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      // 검사 완료 직후인지 확인
+                      if (sessionStorage.getItem('testJustCompleted') === 'true') {
+                        sessionStorage.removeItem('testJustCompleted');
+                        // 검사 완료 직후는 무조건 검사기록 목록으로 이동
+                        router.push('/mypage?tab=records');
+                        return;
+                      }
+                      
+                      // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
+                      router.back();
+                    }
+                  }}
+                  className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="font-medium">뒤로 돌아가기</span>
+                </button>
+              </div>
+
+              {/* 헤더 섹션 */}
+              <div className="mb-8 relative">
+                <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+                <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
+                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
+                  관계 분석 결과
+                </h1>
+                <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
+                <p className="text-blue-200 mt-4">
                   {result.person1.name}님({result.person1.mbti})과 {result.person2.name}님({result.person2.mbti})의 {relationshipTypeData[result.relationshipType]} 분석 결과
                 </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
                 
                 {/* 검사 코드 표시 */}
                 {result.resultCode && (

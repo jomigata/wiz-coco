@@ -421,6 +421,49 @@ function MbtiResultContent() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* 버튼 그룹 - 최상단 */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+              {/* 뒤로 돌아가기 버튼 - 좌측 */}
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    // 검사 완료 직후인지 확인 (상태 또는 sessionStorage)
+                    if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
+                      sessionStorage.removeItem('testJustCompleted');
+                      // 검사 완료 직후는 무조건 검사기록 목록으로 이동
+                      router.push('/mypage?tab=records');
+                      return;
+                    }
+                    
+                    // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
+                    router.back();
+                  }
+                }}
+                className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">뒤로 돌아가기</span>
+              </button>
+              
+              {/* 결과 공유하기 및 테스트 다시 하기 버튼 - 우측 */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={shareResult}
+                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-sm sm:text-base"
+                >
+                  결과 공유하기
+                </button>
+                <Link 
+                  href="/tests/mbti"
+                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center text-sm sm:text-base"
+                >
+                  테스트 다시 하기
+                </Link>
+              </div>
+            </div>
+
             {/* 헤더 섹션 */}
             <div className="mb-8 relative">
               <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
@@ -462,41 +505,6 @@ function MbtiResultContent() {
                   <span className="ml-2">개인용 MBTI 검사</span>
                 </div>
               </div>
-            </div>
-            
-            {/* 버튼 그룹 */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    // 검사 완료 직후인지 확인 (상태 또는 sessionStorage)
-                    if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
-                      sessionStorage.removeItem('testJustCompleted');
-                      // 검사 완료 직후는 무조건 검사기록 목록으로 이동
-                      router.push('/mypage?tab=records');
-                      return;
-                    }
-                    
-                    // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
-                    router.back();
-                  }
-                }}
-                className="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium rounded-lg transition-all duration-300 shadow-lg"
-              >
-                ← 뒤로 돌아가기
-              </button>
-              <button
-                onClick={shareResult}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg"
-              >
-                결과 공유하기
-              </button>
-              <Link 
-                href="/tests/mbti"
-                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center"
-              >
-                테스트 다시 하기
-              </Link>
             </div>
 
             {/* 안내 메시지 */}

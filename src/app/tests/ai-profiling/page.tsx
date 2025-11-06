@@ -2,13 +2,16 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
+import { generateTestCode } from '@/utils/testCodeGenerator';
 import { motion } from 'framer-motion';
+import Navigation from '@/components/Navigation';
 
 function AIProfilingPageContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const testId = generateTestId(pathname || '/tests/ai-profiling');
   const [currentChapter, setCurrentChapter] = useState(0);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
@@ -16,6 +19,7 @@ function AIProfilingPageContent() {
   const [showResult, setShowResult] = useState(false);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
+  const [testCode, setTestCode] = useState<string>('');
 
   // 저장된 진행 상태 확인
   useEffect(() => {
@@ -271,6 +275,48 @@ function AIProfilingPageContent() {
     } else {
       setIsCompleted(true);
       setShowResult(true);
+      
+      // 검사 코드 생성 및 검사기록 목록에 저장
+      const generatedCode = generateTestCode('AMATEUR'); // AI 프로파일링은 개인용으로 분류
+      setTestCode(generatedCode);
+      
+      // 검사 기록 저장
+      if (typeof window !== 'undefined') {
+        const timestamp = new Date().toISOString();
+        const profile = generateProfile();
+        
+        const testData = {
+          testType: 'AI 프로파일링 검사',
+          code: generatedCode,
+          timestamp: timestamp,
+          answers: answers,
+          status: '완료',
+          userData: {
+            profile: profile,
+            answers: answers
+          }
+        };
+        
+        // 기존 테스트 기록 가져오기
+        const existingRecords = localStorage.getItem('test_records');
+        let records = existingRecords ? JSON.parse(existingRecords) : [];
+        
+        // 새 기록 추가
+        records.push(testData);
+        
+        // 최대 50개까지만 유지
+        if (records.length > 50) {
+          records = records.slice(-50);
+        }
+        
+        // 저장
+        localStorage.setItem('test_records', JSON.stringify(records));
+        localStorage.setItem(`test-result-${generatedCode}`, JSON.stringify(testData));
+        
+        // 검사 완료 직후임을 표시하는 플래그 설정
+        sessionStorage.setItem('testJustCompleted', 'true');
+      }
+      
       // 검사 완료 시 진행 상태 삭제
       clearTestProgress(testId);
     }
@@ -397,15 +443,62 @@ function AIProfilingPageContent() {
 
   if (showResult && profile) {
     return (
-      <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4">
-              🔍
-            </div>
-            <h1 className="text-4xl font-bold text-white mb-2">캠퍼스 라이프 시크릿 리포트</h1>
-            <p className="text-gray-300 text-lg">당신만을 위한 맞춤형 분석 결과</p>
+      <div className="min-h-screen">
+        <Navigation />
+        <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+          {/* Background pattern */}
+          <div className="absolute inset-0 z-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                  <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100" height="100" fill="url(#grid)" />
+            </svg>
           </div>
+          
+          <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
+            {/* 뒤로 돌아가기 버튼 - 최상단 좌측 */}
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    // 검사 완료 직후인지 확인
+                    if (sessionStorage.getItem('testJustCompleted') === 'true') {
+                      sessionStorage.removeItem('testJustCompleted');
+                      // 검사 완료 직후는 무조건 검사기록 목록으로 이동
+                      router.push('/mypage?tab=records');
+                      return;
+                    }
+                    
+                    // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
+                    router.back();
+                  }
+                }}
+                className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">뒤로 돌아가기</span>
+              </button>
+            </div>
+
+            {/* 헤더 섹션 */}
+            <div className="mb-8 relative">
+              <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+              <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
+              <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
+                캠퍼스 라이프 시크릿 리포트
+              </h1>
+              <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
+              {testCode && (
+                <p className="text-blue-200 mt-4">
+                  테스트 코드: <span className="font-mono font-semibold">{testCode}</span>
+                </p>
+              )}
+            </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 mb-6">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -440,15 +533,17 @@ function AIProfilingPageContent() {
             </div>
           </div>
 
-          <div className="text-center">
-            <Link 
-              href="/tests"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-300"
-            >
-              다른 검사도 해보기
-            </Link>
+            {/* 버튼 그룹 */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Link 
+                href="/tests"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg text-center"
+              >
+                다른 검사도 해보기
+              </Link>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
