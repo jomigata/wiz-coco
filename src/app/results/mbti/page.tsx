@@ -388,7 +388,7 @@ function MbtiResultContent() {
         </svg>
       </div>
       
-      <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
+      <div className="container mx-auto max-w-4xl relative z-10">
         {isLoading ? (
           <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
             <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>

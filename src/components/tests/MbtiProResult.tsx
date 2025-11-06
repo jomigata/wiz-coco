@@ -1170,9 +1170,6 @@ const MbtiProResult: React.FC = () => {
       {/* 네비게이션 컴포넌트 추가 */}
       <Navigation />
       
-      {/* Navigation 컴포넌트 높이만큼 여백 추가 */}
-      <div className="h-20"></div>
-      
       {/* 최상단으로 스크롤하는 버튼 - 스타일 수정 및 중복 버튼 문제 해결 */}
       <AnimatePresence mode="wait" initial={false}>
         {showScrollTop && (
@@ -1209,7 +1206,7 @@ const MbtiProResult: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <div className="container mx-auto max-w-4xl relative z-10 px-4 py-6">
+      <div className="container mx-auto max-w-4xl relative z-10">
         <div className="space-y-8">
           {/* 버튼 그룹 - 최상단 */}
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
