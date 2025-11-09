@@ -1420,7 +1420,7 @@ function TestRecordsContent() {
                           </th>
                           <th 
                             scope="col" 
-                            className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            className="px-4 py-3 text-center text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => {
                               if (sortField === 'code') {
                                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -1430,7 +1430,7 @@ function TestRecordsContent() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center justify-center gap-1">
                               코드
                               <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
                                 <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
@@ -1440,7 +1440,7 @@ function TestRecordsContent() {
                           </th>
                           <th 
                             scope="col" 
-                            className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            className="px-4 py-3 text-center text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => {
                               if (sortField === 'timestamp') {
                                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -1450,7 +1450,7 @@ function TestRecordsContent() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center justify-center gap-1">
                               검사일시
                               <span className={`text-xs ${sortField === 'timestamp' ? 'text-red-500' : 'text-blue-300'}`}>
                                 <span className={sortField === 'timestamp' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
@@ -1460,7 +1460,7 @@ function TestRecordsContent() {
                           </th>
                           <th 
                             scope="col" 
-                            className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            className="px-4 py-3 text-center text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => {
                               if (sortField === 'testType') {
                                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -1470,7 +1470,7 @@ function TestRecordsContent() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center justify-center gap-1">
                               검사유형
                               <span className={`text-xs ${sortField === 'testType' ? 'text-red-500' : 'text-blue-300'}`}>
                                 <span className={sortField === 'testType' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
