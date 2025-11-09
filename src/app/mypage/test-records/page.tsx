@@ -908,8 +908,18 @@ function TestRecordsContent() {
         return sortDirection === 'asc' ? comparison : -comparison;
       });
     
-    return filtered;
-  }, [testRecords, searchTerm, filterType, sortOrder, sortField, sortDirection]);
+      return filtered;
+    }, [testRecords, searchTerm, filterType, sortOrder, sortField, sortDirection]);
+
+  // 컬럼 헤더 클릭 핸들러 (삭제코드 페이지와 동일한 구조)
+  const handleSort = (field: 'code' | 'timestamp' | 'testType') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // 페이지네이션을 위한 계산
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
@@ -1426,14 +1436,7 @@ function TestRecordsContent() {
                           <th 
                             scope="col" 
                             className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
-                            onClick={() => {
-                              if (sortField === 'code') {
-                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setSortField('code');
-                                setSortDirection('asc');
-                              }
-                            }}
+                            onClick={() => handleSort('code')}
                           >
                             <div className="flex items-center justify-center gap-1">
                               코드
@@ -1446,14 +1449,7 @@ function TestRecordsContent() {
                           <th 
                             scope="col" 
                             className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
-                            onClick={() => {
-                              if (sortField === 'timestamp') {
-                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setSortField('timestamp');
-                                setSortDirection('desc');
-                              }
-                            }}
+                            onClick={() => handleSort('timestamp')}
                           >
                             <div className="flex items-center justify-center gap-1">
                               검사일시
@@ -1466,14 +1462,7 @@ function TestRecordsContent() {
                           <th 
                             scope="col" 
                             className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
-                            onClick={() => {
-                              if (sortField === 'testType') {
-                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setSortField('testType');
-                                setSortDirection('asc');
-                              }
-                            }}
+                            onClick={() => handleSort('testType')}
                           >
                             <div className="flex items-center justify-center gap-1">
                               검사유형
