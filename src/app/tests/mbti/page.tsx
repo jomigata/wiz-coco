@@ -87,6 +87,9 @@ function MbtiTestPageContent() {
     return 0;
   });
   
+  // 검사 완료 처리 중복 방지 플래그
+  const [isCompleting, setIsCompleting] = useState(false);
+  
     // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
     useEffect(() => {
       const urlResumeTestId = searchParams.get('resume');
@@ -446,7 +449,14 @@ function MbtiTestPageContent() {
   };
 
   const handleTestComplete = async (results: any) => {
+    // 중복 실행 방지
+    if (isCompleting) {
+      console.log('[MbtiTestPage] 검사 완료 처리 이미 진행 중, 중복 호출 무시');
+      return;
+    }
+    
     try {
+      setIsCompleting(true);
       console.log('[MbtiTestPage] 검사 완료 처리 시작');
       
       // 테스트 코드 생성
@@ -473,7 +483,7 @@ function MbtiTestPageContent() {
       
       // 로컬 스토리지에 결과 저장 (중복 방지)
       if (typeof window !== 'undefined') {
-        // 기존 테스트 기록 가져오기
+        // 1. test_records에 저장 (중복 체크)
         const existingRecords = localStorage.getItem('test_records');
         let records = existingRecords ? JSON.parse(existingRecords) : [];
         
@@ -483,11 +493,11 @@ function MbtiTestPageContent() {
         if (existingIndex >= 0) {
           // 이미 존재하는 경우 업데이트
           records[existingIndex] = testData;
-          console.log('[MbtiTestPage] 기존 기록 업데이트:', testCode);
+          console.log('[MbtiTestPage] 기존 기록 업데이트 (test_records):', testCode);
         } else {
           // 새 기록 추가
           records.push(testData);
-          console.log('[MbtiTestPage] 새 기록 추가:', testCode);
+          console.log('[MbtiTestPage] 새 기록 추가 (test_records):', testCode);
         }
         
         // 최대 50개까지만 유지
@@ -498,6 +508,58 @@ function MbtiTestPageContent() {
         // 저장
         localStorage.setItem('test_records', JSON.stringify(records));
         localStorage.setItem(`test-result-${testCode}`, JSON.stringify(testData));
+        
+        // 2. mbti-user-test-records에 저장 (중복 체크)
+        const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
+        let mbtiRecords: any[] = [];
+        
+        try {
+          mbtiRecords = JSON.parse(mbtiRecordsStr);
+          if (!Array.isArray(mbtiRecords)) {
+            mbtiRecords = [];
+          }
+        } catch (e) {
+          console.error('[MbtiTestPage] mbti-user-test-records 파싱 오류:', e);
+          mbtiRecords = [];
+        }
+        
+        // mbti-user-test-records 형식으로 데이터 구성
+        const mbtiRecord = {
+          testCode: testCode,
+          testType: '개인용 MBTI 검사',
+          timestamp: timestamp,
+          userData: testData.userData,
+          result: {
+            code: testCode,
+            timestamp: timestamp,
+            testType: '개인용 MBTI 검사',
+            answers: results,
+            mbtiType: results.mbtiType || 'INTJ'
+          },
+          answers: results,
+          mbtiType: results.mbtiType || 'INTJ'
+        };
+        
+        // 중복 체크: 같은 testCode가 이미 존재하는지 확인
+        const existingMbtiIndex = mbtiRecords.findIndex((record: any) => record.testCode === testCode);
+        
+        if (existingMbtiIndex >= 0) {
+          // 이미 존재하는 경우 업데이트
+          mbtiRecords[existingMbtiIndex] = mbtiRecord;
+          console.log('[MbtiTestPage] 기존 기록 업데이트 (mbti-user-test-records):', testCode);
+        } else {
+          // 새 기록 추가 (맨 앞에 추가)
+          mbtiRecords.unshift(mbtiRecord);
+          console.log('[MbtiTestPage] 새 기록 추가 (mbti-user-test-records):', testCode);
+        }
+        
+        // 최대 100개까지만 유지
+        if (mbtiRecords.length > 100) {
+          mbtiRecords = mbtiRecords.slice(0, 100);
+        }
+        
+        // 저장
+        localStorage.setItem('mbti-user-test-records', JSON.stringify(mbtiRecords));
         
         console.log('[MbtiTestPage] 로컬 스토리지에 결과 저장 완료:', testCode);
       }
@@ -523,6 +585,8 @@ function MbtiTestPageContent() {
       
       // 에러 발생 시 마이페이지로 이동
       router.push('/mypage?tab=records');
+    } finally {
+      setIsCompleting(false);
     }
   };
 
