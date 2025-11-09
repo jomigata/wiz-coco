@@ -1586,16 +1586,10 @@ function TestRecordsTabContent({
 
   // 정렬 아이콘 컴포넌트 (시각적 개선)
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return (
-        <span className="text-blue-400/60 ml-2 text-base font-bold drop-shadow-sm">
-          ↕
-        </span>
-      );
-    }
     return (
-      <span className="text-blue-100 ml-2 text-base font-bold drop-shadow-md animate-pulse">
-        {sortDirection === 'asc' ? '↑' : '↓'}
+      <span className={`text-xs ${sortField === field ? 'text-red-500' : 'text-blue-300'}`}>
+        <span className={sortField === field && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+        <span className={sortField === field && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
       </span>
     );
   };
