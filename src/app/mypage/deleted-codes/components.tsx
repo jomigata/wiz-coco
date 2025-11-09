@@ -1071,7 +1071,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
-                          {record.counselorCode || record.userData?.counselorCode || '-'}
+                          {record.counselorCode || record.userData?.counselorCode || record.code || '-'}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}

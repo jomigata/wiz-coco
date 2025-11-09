@@ -60,7 +60,7 @@ export default function Navigation() {
     }
   }, []);
 
-  // 실제 검사 진행 중인지 확인 (질문이 진행 중일 때만 숨김, 코드 입력/정보 입력 단계에서는 보임)
+  // 실제 검사 진행 중인지 확인 (모든 검사 진행 중에는 말풍선 숨김)
   // 검사결과 페이지(/results/)에서는 항상 표시
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -74,49 +74,13 @@ export default function Navigation() {
       return;
     }
 
-    if (!isTestPage) {
-      setIsTestInProgress(false);
+    // 모든 검사 페이지(/tests/)에서는 말풍선 숨김
+    if (isTestPage) {
+      setIsTestInProgress(true);
       return;
     }
 
-    // 현재 경로에 해당하는 검사 진행 상태 확인
-    try {
-      // localStorage의 모든 키 확인하여 현재 경로와 관련된 진행 상태 찾기
-      const allKeys = Object.keys(localStorage);
-      let foundTestInProgress = false;
-
-      for (const key of allKeys) {
-        if (key.startsWith('test_progress_')) {
-          try {
-            const progress = JSON.parse(localStorage.getItem(key) || '{}');
-            // 개인용 MBTI 검사(/tests/mbti)에서는 모든 단계에서 말풍선 숨김
-            // 전문가용 MBTI 검사에서는 기존 로직 유지 (currentStep이 'test'일 때만 숨김)
-            const keyPath = key.replace('test_progress_', '');
-            const pathBase = pathname?.replace(/\/tests\//, '').split('/')[0] || '';
-            
-            if (keyPath.includes(pathBase) || pathname?.includes(keyPath.split('_')[0])) {
-              // 개인용 MBTI 검사인 경우 (경로가 /tests/mbti)
-              if (pathname?.includes('/tests/mbti') && !pathname?.includes('/tests/mbti_pro')) {
-                // 개인용 MBTI는 모든 단계에서 말풍선 숨김
-                foundTestInProgress = true;
-                break;
-              }
-              // 전문가용 MBTI나 다른 검사는 기존 로직 유지
-              else if (progress.currentStep === 'test') {
-                foundTestInProgress = true;
-                break;
-              }
-            }
-          } catch (e) {
-            // JSON 파싱 오류 무시
-          }
-        }
-      }
-
-      setIsTestInProgress(foundTestInProgress);
-    } catch (error) {
-      setIsTestInProgress(false);
-    }
+    setIsTestInProgress(false);
   }, [pathname, isTestPage]);
 
   // 진행중인 검사 팝업 클릭 핸들러

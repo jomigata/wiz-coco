@@ -2058,7 +2058,7 @@ function TestRecordsTabContent({
                       className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
-                      {record.counselorCode || 'N/A'}
+                      {record.counselorCode || record.code || 'N/A'}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
