@@ -159,7 +159,22 @@ function MbtiResultContent() {
         return;
       }
 
-      // 2. 로컬에서 찾지 못한 경우 API 시도
+      // 2. 삭제된 기록에서 찾기
+      console.log('[MbtiResult] 삭제된 기록에서 검색 시도');
+      const deletedResult = getDeletedTestResult(code);
+      if (deletedResult) {
+        console.log('[MbtiResult] 삭제된 기록에서 결과 발견:', deletedResult);
+        setTestResult(deletedResult);
+        
+        // MBTI 타입 계산 및 설정
+        const calculatedMbtiType = calculateMbtiType(deletedResult.answers);
+        setMbtiType(calculatedMbtiType);
+        setIsLoading(false);
+        setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
+        return;
+      }
+
+      // 3. 로컬에서 찾지 못한 경우 API 시도
       console.log('[MbtiResult] 로컬 스토리지에서 찾지 못함, API 요청 시도');
       const response = await fetch(`/api/save-test-result?code=${code}`, {
         credentials: 'include'
@@ -268,6 +283,24 @@ function MbtiResultContent() {
       return null;
     } catch (error) {
       console.error('[MbtiResult] 로컬 스토리지 조회 오류:', error);
+      return null;
+    }
+  };
+
+  // 삭제된 테스트 결과 가져오기
+  const getDeletedTestResult = (code: string) => {
+    try {
+      const deletedRecords = localStorage.getItem('deleted_test_records');
+      if (deletedRecords) {
+        const records = JSON.parse(deletedRecords);
+        const foundRecord = records.find((record: any) => record.code === code);
+        if (foundRecord) {
+          return foundRecord;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('[MbtiResult] 삭제된 기록 조회 오류:', error);
       return null;
     }
   };

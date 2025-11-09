@@ -416,9 +416,22 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         localStorage.setItem('test_records', JSON.stringify(updatedTestRecords));
         
         // 5. 검사결과 데이터 복원 (test-result-{code})
-        if (cleanedRecord.result) {
-          localStorage.setItem(`test-result-${cleanedRecord.code}`, JSON.stringify(cleanedRecord.result));
-        }
+        // 복구 시 완전한 데이터 구조로 복원
+        const completeResultData = {
+          testType: cleanedRecord.testType,
+          code: cleanedRecord.code,
+          timestamp: cleanedRecord.timestamp,
+          answers: (cleanedRecord as any).answers || (cleanedRecord as any).result?.answers || {},
+          mbtiType: cleanedRecord.mbtiType || cleanedRecord.result?.mbtiType || 'INTJ',
+          status: '완료',
+          userData: cleanedRecord.userData || {
+            name: '게스트 사용자',
+            email: 'guest@example.com',
+            testType: cleanedRecord.testType
+          }
+        };
+        
+        localStorage.setItem(`test-result-${cleanedRecord.code}`, JSON.stringify(completeResultData));
         
         // 6. MBTI 테스트 기록도 함께 복원
         if (cleanedRecord.testType.toLowerCase().includes('mbti')) {
@@ -436,8 +449,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             testCode: cleanedRecord.code,
             testType: cleanedRecord.testType,
             timestamp: cleanedRecord.timestamp,
-            userData: cleanedRecord.userData,
-            result: cleanedRecord.result
+            userData: completeResultData.userData,
+            result: completeResultData,
+            answers: completeResultData.answers,
+            mbtiType: completeResultData.mbtiType
           };
           
           const existingMbtiIndex = mbtiRecords.findIndex((r: any) => r.testCode === cleanedRecord.code);

@@ -89,13 +89,20 @@ export default function Navigation() {
         if (key.startsWith('test_progress_')) {
           try {
             const progress = JSON.parse(localStorage.getItem(key) || '{}');
-            // currentStep이 'test'일 때만 숨김 (실제 질문 진행 중)
-            // 'code'와 'info' 단계에서는 팝업 표시
-            if (progress.currentStep === 'test') {
-              // 현재 경로와 관련된 검사인지 확인
-              const keyPath = key.replace('test_progress_', '');
-              const pathBase = pathname?.replace(/\/tests\//, '').split('/')[0] || '';
-              if (keyPath.includes(pathBase) || pathname?.includes(keyPath.split('_')[0])) {
+            // 개인용 MBTI 검사(/tests/mbti)에서는 모든 단계에서 말풍선 숨김
+            // 전문가용 MBTI 검사에서는 기존 로직 유지 (currentStep이 'test'일 때만 숨김)
+            const keyPath = key.replace('test_progress_', '');
+            const pathBase = pathname?.replace(/\/tests\//, '').split('/')[0] || '';
+            
+            if (keyPath.includes(pathBase) || pathname?.includes(keyPath.split('_')[0])) {
+              // 개인용 MBTI 검사인 경우 (경로가 /tests/mbti)
+              if (pathname?.includes('/tests/mbti') && !pathname?.includes('/tests/mbti_pro')) {
+                // 개인용 MBTI는 모든 단계에서 말풍선 숨김
+                foundTestInProgress = true;
+                break;
+              }
+              // 전문가용 MBTI나 다른 검사는 기존 로직 유지
+              else if (progress.currentStep === 'test') {
                 foundTestInProgress = true;
                 break;
               }

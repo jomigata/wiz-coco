@@ -404,14 +404,24 @@ function MbtiTestPageContent() {
         }
       };
       
-      // 로컬 스토리지에 결과 저장
+      // 로컬 스토리지에 결과 저장 (중복 방지)
       if (typeof window !== 'undefined') {
         // 기존 테스트 기록 가져오기
         const existingRecords = localStorage.getItem('test_records');
         let records = existingRecords ? JSON.parse(existingRecords) : [];
         
-        // 새 기록 추가
-        records.push(testData);
+        // 중복 체크: 같은 testCode가 이미 존재하는지 확인
+        const existingIndex = records.findIndex((record: any) => record.code === testCode);
+        
+        if (existingIndex >= 0) {
+          // 이미 존재하는 경우 업데이트
+          records[existingIndex] = testData;
+          console.log('[MbtiTestPage] 기존 기록 업데이트:', testCode);
+        } else {
+          // 새 기록 추가
+          records.push(testData);
+          console.log('[MbtiTestPage] 새 기록 추가:', testCode);
+        }
         
         // 최대 50개까지만 유지
         if (records.length > 50) {
