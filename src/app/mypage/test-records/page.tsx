@@ -1452,7 +1452,7 @@ function TestRecordsContent() {
                             onClick={() => handleSort('timestamp')}
                           >
                             <div className="flex items-center justify-center gap-1">
-                              검사일시
+                              검사 일시
                               <span className={`text-xs ${sortField === 'timestamp' ? 'text-red-500' : 'text-blue-300'}`}>
                                 <span className={sortField === 'timestamp' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
                                 <span className={sortField === 'timestamp' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
@@ -1465,7 +1465,7 @@ function TestRecordsContent() {
                             onClick={() => handleSort('testType')}
                           >
                             <div className="flex items-center justify-center gap-1">
-                              검사유형
+                              검사 유형
                               <span className={`text-xs ${sortField === 'testType' ? 'text-red-500' : 'text-blue-300'}`}>
                                 <span className={sortField === 'testType' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
                                 <span className={sortField === 'testType' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
