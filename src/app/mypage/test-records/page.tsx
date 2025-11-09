@@ -1254,9 +1254,9 @@ function TestRecordsContent() {
                       onClick={() => {
                         if (selectedRecords.length > 0) setShowDeleteConfirm(true);
                       }}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                         selectedRecords.length > 0 
-                          ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer' 
+                          ? 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white cursor-pointer shadow-lg shadow-red-600/50' 
                           : 'bg-[#8A569B] hover:bg-[#9A66AB] text-white cursor-pointer'
                       }`}
                       disabled={selectedRecords.length === 0}
