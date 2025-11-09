@@ -242,15 +242,22 @@ function MbtiTestPageContent() {
   const handleCodeSubmit = (codeData: { groupCode: string; groupPassword: string }) => {
     console.log('[MbtiTestPage] 검사코드 제출:', codeData);
     setCodeData(codeData);
+    
+    // 저장된 진행 상태에서 최신 답변 가져오기
+    const savedProgress = loadTestProgress(testId);
+    const latestAnswers = savedProgress?.answers || savedAnswers || {};
+    
     setCurrentStep('info');
     
-    // 진행 상태 저장
+    // 진행 상태 저장 (기존 답변 유지)
     saveTestProgress({
       testId,
       testName: '개인용 MBTI 검사',
-      answers: {},
+      answers: latestAnswers, // 기존 답변 유지
+      currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
       currentStep: 'info',
       codeData: codeData,
+      clientInfo: clientInfo, // 기존 clientInfo 유지
       timestamp: Date.now(),
       testType: 'MBTI',
       totalQuestions: 20
@@ -261,13 +268,19 @@ function MbtiTestPageContent() {
   const handleClientInfoSubmit = (info: any) => {
     console.log('[MbtiTestPage] 기본정보 제출:', info);
     setClientInfo(info);
+    
+    // 저장된 진행 상태에서 최신 답변 가져오기
+    const savedProgress = loadTestProgress(testId);
+    const latestAnswers = savedProgress?.answers || savedAnswers || {};
+    
     setCurrentStep('test');
     
-    // 진행 상태 저장
+    // 진행 상태 저장 (기존 답변 유지)
     saveTestProgress({
       testId,
       testName: '개인용 MBTI 검사',
-      answers: {},
+      answers: latestAnswers, // 기존 답변 유지
+      currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
       currentStep: 'test',
       codeData: codeData,
       clientInfo: info,

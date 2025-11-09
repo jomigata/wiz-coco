@@ -28,6 +28,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   const router = useRouter();
   const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
   const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
+  const [isYearSelected, setIsYearSelected] = useState<boolean>(false); // 년도 선택 여부 추적
   const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
   const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
   const [gender, setGender] = useState<string>(initialData?.gender || '');
@@ -216,7 +217,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     } = {};
 
     const currentYear = new Date().getFullYear();
-    const minYear = currentYear - 100;
+    const minYear = currentYear - 99;
     if (!birthYear || birthYear < minYear || birthYear > currentYear) {
       newErrors.birthYear = `올바른 출생년도를 입력해주세요. (${minYear}년~${currentYear}년)`;
     }
@@ -424,7 +425,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       if (numericValue.length === 4) {
                         const year = parseInt(numericValue, 10);
                         const currentYear = new Date().getFullYear();
-                        const minYear = currentYear - 100;
+                        const minYear = currentYear - 99;
                         
                         if (year >= minYear && year <= currentYear) {
                           setBirthYear(year);
@@ -454,11 +455,17 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     onBlur={() => {
                       // 포커스가 벗어날 때 약간의 지연을 주어 클릭 이벤트가 먼저 처리되도록
                       setTimeout(() => {
+                        // 년도 선택 목록에서 선택한 경우에는 검증하지 않음
+                        if (isYearSelected) {
+                          setIsYearSelected(false); // 플래그 리셋
+                          return;
+                        }
+                        
                         // 포커스가 벗어날 때 유효성 검사
                         if (birthYearInput.length === 4) {
                           const year = parseInt(birthYearInput, 10);
                           const currentYear = new Date().getFullYear();
-                          const minYear = currentYear - 100;
+                          const minYear = currentYear - 99;
                           
                           if (year >= minYear && year <= currentYear) {
                             setBirthYear(year);
@@ -466,7 +473,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             setBirthYearInput('');
                             setBirthYear(0);
                             const currentYear = new Date().getFullYear();
-                            const minYear = currentYear - 100;
+                            const minYear = currentYear - 99;
                             setErrors(prev => ({ 
                               ...prev, 
                               birthYear: `올바른 출생년도를 입력해주세요. (${minYear}년~${currentYear}년)` 
@@ -542,6 +549,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             aria-current={isSelected ? "true" : undefined}
                             onClick={() => {
                               // 선택한 값으로 설정 (입력하던 값 무시)
+                              setIsYearSelected(true); // 선택 플래그 설정
                               setBirthYear(year);
                               setBirthYearInput(String(year));
                               setShowYearSelector(false);
