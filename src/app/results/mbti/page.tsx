@@ -466,7 +466,7 @@ function MbtiResultContent() {
           <div className="space-y-8">
             {/* 버튼 그룹 - 최상단 */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4 mt-[30px]">
-              {/* 뒤로 돌아가기 버튼 - 좌측 */}
+              {/* 검사기록으로 가기 버튼 - 좌측 */}
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
@@ -487,7 +487,7 @@ function MbtiResultContent() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="font-medium">뒤로 돌아가기</span>
+                <span className="font-medium">검사기록으로 가기</span>
               </button>
               
               {/* 결과 공유하기 및 테스트 다시 하기 버튼 - 우측 */}
