@@ -89,6 +89,7 @@ function MbtiResultContent() {
   const [error, setError] = useState<string>('');
   const [testResult, setTestResult] = useState<any>(null);
   const [isFromCompletion, setIsFromCompletion] = useState<boolean>(false);
+  const [isFromDeletedCodes, setIsFromDeletedCodes] = useState<boolean>(false);
   
   useEffect(() => {
     // URL 파라미터에서 테스트 코드와 MBTI 유형 가져오기
@@ -102,6 +103,11 @@ function MbtiResultContent() {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('testJustCompleted', 'true');
       }
+    }
+    
+    // 삭제코드 페이지에서 접근한 경우 확인
+    if (typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true') {
+      setIsFromDeletedCodes(true);
     }
     
     if (code) {
@@ -545,10 +551,17 @@ function MbtiResultContent() {
           <div className="space-y-8">
             {/* 버튼 그룹 - 최상단 */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4 mt-[30px]">
-              {/* 검사기록으로 가기 버튼 - 좌측 */}
+              {/* 뒤로 돌아가기 / 검사기록으로 가기 버튼 - 좌측 */}
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
+                    // 삭제코드 페이지에서 접근한 경우
+                    if (isFromDeletedCodes || sessionStorage.getItem('returnToDeletedCodes') === 'true') {
+                      sessionStorage.removeItem('returnToDeletedCodes');
+                      router.back();
+                      return;
+                    }
+                    
                     // 검사 완료 직후인지 확인 (상태 또는 sessionStorage)
                     if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
                       sessionStorage.removeItem('testJustCompleted');
@@ -557,7 +570,7 @@ function MbtiResultContent() {
                       return;
                     }
                     
-                    // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
+                    // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
                     router.back();
                   }
                 }}
@@ -566,7 +579,11 @@ function MbtiResultContent() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="font-medium">검사기록으로 가기</span>
+                <span className="font-medium">
+                  {isFromDeletedCodes || (typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true') 
+                    ? '뒤로 돌아가기' 
+                    : '검사기록으로 가기'}
+                </span>
               </button>
               
               {/* 결과 공유하기 및 테스트 다시 하기 버튼 - 우측 */}
