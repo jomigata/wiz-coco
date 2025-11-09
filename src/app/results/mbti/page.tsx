@@ -166,47 +166,74 @@ function MbtiResultContent() {
         console.log('[MbtiResult] 삭제된 기록에서 결과 발견:', deletedResult);
         
         // 삭제된 기록의 데이터 구조 정리
-        let resultData = deletedResult;
+        let resultData: any = null;
         
-        // result 필드가 있으면 그것을 사용, 없으면 레코드 자체를 사용
-        if (deletedResult.result) {
-          resultData = {
-            ...deletedResult.result,
-            code: deletedResult.code,
-            timestamp: deletedResult.timestamp,
-            testType: deletedResult.testType
-          };
-        } else {
-          // result가 없으면 레코드 자체를 결과로 사용
-          resultData = {
-            ...deletedResult,
-            answers: deletedResult.answers || deletedResult.result?.answers || {},
-            mbtiType: deletedResult.mbtiType || deletedResult.result?.mbtiType,
-            userData: deletedResult.userData || deletedResult.result?.userData
-          };
+        try {
+          // result 필드가 있으면 그것을 사용, 없으면 레코드 자체를 사용
+          if (deletedResult.result && typeof deletedResult.result === 'object') {
+            resultData = {
+              ...deletedResult.result,
+              code: deletedResult.code,
+              timestamp: deletedResult.timestamp,
+              testType: deletedResult.testType,
+              // answers가 없으면 빈 객체로 설정
+              answers: deletedResult.result.answers || deletedResult.answers || {},
+              mbtiType: deletedResult.result.mbtiType || deletedResult.mbtiType
+            };
+          } else {
+            // result가 없으면 레코드 자체를 결과로 사용
+            resultData = {
+              ...deletedResult,
+              // answers가 없으면 빈 객체로 설정
+              answers: deletedResult.answers || deletedResult.result?.answers || {},
+              mbtiType: deletedResult.mbtiType || deletedResult.result?.mbtiType,
+              userData: deletedResult.userData || deletedResult.result?.userData
+            };
+          }
+          
+          // answers가 null이나 undefined인 경우 빈 객체로 설정
+          if (!resultData.answers || typeof resultData.answers !== 'object') {
+            resultData.answers = {};
+          }
+          
+          setTestResult(resultData);
+          
+          // MBTI 타입 계산 및 설정
+          let calculatedMbtiType = 'INTJ'; // 기본값
+          
+          // 답변 데이터가 있고 유효한 객체인 경우에만 계산
+          if (resultData.answers && 
+              typeof resultData.answers === 'object' && 
+              Object.keys(resultData.answers).length > 0) {
+            try {
+              calculatedMbtiType = calculateMbtiType(resultData.answers);
+            } catch (calcError) {
+              console.error('[MbtiResult] MBTI 타입 계산 오류:', calcError);
+              // 계산 실패 시 저장된 mbtiType 사용
+              calculatedMbtiType = resultData.mbtiType || 
+                                    deletedResult.mbtiType || 
+                                    deletedResult.result?.mbtiType || 
+                                    'INTJ';
+            }
+          } else if (resultData.mbtiType) {
+            calculatedMbtiType = resultData.mbtiType;
+          } else if (deletedResult.mbtiType) {
+            calculatedMbtiType = deletedResult.mbtiType;
+          } else if (deletedResult.result?.mbtiType) {
+            calculatedMbtiType = deletedResult.result.mbtiType;
+          }
+          
+          setMbtiType(calculatedMbtiType);
+          setIsLoading(false);
+          // 삭제된 기록이어도 결과를 표시하므로 에러 메시지 제거
+          // setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
+          return;
+        } catch (error) {
+          console.error('[MbtiResult] 삭제된 기록 처리 오류:', error);
+          setError('삭제된 검사 결과를 불러오는 중 오류가 발생했습니다.');
+          setIsLoading(false);
+          return;
         }
-        
-        setTestResult(resultData);
-        
-        // MBTI 타입 계산 및 설정
-        let calculatedMbtiType = 'INTJ'; // 기본값
-        
-        // 답변 데이터가 있으면 계산, 없으면 저장된 mbtiType 사용
-        if (resultData.answers && Object.keys(resultData.answers).length > 0) {
-          calculatedMbtiType = calculateMbtiType(resultData.answers);
-        } else if (resultData.mbtiType) {
-          calculatedMbtiType = resultData.mbtiType;
-        } else if (deletedResult.mbtiType) {
-          calculatedMbtiType = deletedResult.mbtiType;
-        } else if (deletedResult.result?.mbtiType) {
-          calculatedMbtiType = deletedResult.result.mbtiType;
-        }
-        
-        setMbtiType(calculatedMbtiType);
-        setIsLoading(false);
-        // 삭제된 기록이어도 결과를 표시하므로 에러 메시지 제거
-        // setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
-        return;
       }
 
       // 3. 로컬에서 찾지 못한 경우 API 시도
@@ -341,7 +368,13 @@ function MbtiResultContent() {
   };
 
   // MBTI 타입 계산 함수
-  const calculateMbtiType = (answers: { [key: string]: { type: string; answer: number } }) => {
+  const calculateMbtiType = (answers: { [key: string]: { type: string; answer: number } } | null | undefined) => {
+    // null이나 undefined 체크
+    if (!answers || typeof answers !== 'object') {
+      console.warn('[MbtiResult] calculateMbtiType: answers가 유효하지 않음', answers);
+      return 'INTJ'; // 기본값 반환
+    }
+
     const typeScores = {
       'E': 0, 'I': 0,
       'S': 0, 'N': 0,
@@ -349,36 +382,57 @@ function MbtiResultContent() {
       'J': 0, 'P': 0
     };
 
-    // 답변 분석
-    Object.values(answers).forEach(answer => {
-      const { type, answer: score } = answer;
-      
-      if (type === 'E-I') {
-        if (score >= 5) {
-          typeScores.E += score - 4;
-        } else {
-          typeScores.I += 4 - score;
-        }
-      } else if (type === 'S-N') {
-        if (score >= 5) {
-          typeScores.S += score - 4;
-        } else {
-          typeScores.N += 4 - score;
-        }
-      } else if (type === 'T-F') {
-        if (score >= 5) {
-          typeScores.T += score - 4;
-        } else {
-          typeScores.F += 4 - score;
-        }
-      } else if (type === 'J-P') {
-        if (score >= 5) {
-          typeScores.J += score - 4;
-        } else {
-          typeScores.P += 4 - score;
-        }
+    try {
+      // 답변 분석
+      const answerValues = Object.values(answers);
+      if (!answerValues || answerValues.length === 0) {
+        console.warn('[MbtiResult] calculateMbtiType: 답변이 없음');
+        return 'INTJ'; // 기본값 반환
       }
-    });
+
+      answerValues.forEach(answer => {
+        // answer가 유효한지 체크
+        if (!answer || typeof answer !== 'object') {
+          return; // 유효하지 않은 답변은 건너뛰기
+        }
+
+        const { type, answer: score } = answer;
+        
+        // type과 score가 유효한지 체크
+        if (!type || typeof score !== 'number' || isNaN(score)) {
+          return; // 유효하지 않은 데이터는 건너뛰기
+        }
+        
+        if (type === 'E-I') {
+          if (score >= 5) {
+            typeScores.E += score - 4;
+          } else {
+            typeScores.I += 4 - score;
+          }
+        } else if (type === 'S-N') {
+          if (score >= 5) {
+            typeScores.S += score - 4;
+          } else {
+            typeScores.N += 4 - score;
+          }
+        } else if (type === 'T-F') {
+          if (score >= 5) {
+            typeScores.T += score - 4;
+          } else {
+            typeScores.F += 4 - score;
+          }
+        } else if (type === 'J-P') {
+          if (score >= 5) {
+            typeScores.J += score - 4;
+          } else {
+            typeScores.P += 4 - score;
+          }
+        }
+      });
+    } catch (error) {
+      console.error('[MbtiResult] calculateMbtiType 오류:', error);
+      return 'INTJ'; // 기본값 반환
+    }
 
     // 우세한 타입 결정
     const mbtiType = 
