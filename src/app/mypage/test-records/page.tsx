@@ -1482,32 +1482,78 @@ function TestRecordsContent() {
       
       {/* 삭제 확인 모달 */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-blue-900/80 backdrop-blur-sm rounded-xl p-6 max-w-md w-full mx-4 border border-white/20">
-            <h3 className="text-xl font-bold text-white mb-4">정말 삭제하시겠습니까?</h3>
-            <p className="text-blue-200 mb-2">
-              선택한 {selectedRecords.length}개의 검사 기록을 삭제합니다.
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-[#8A569B] rounded-xl p-8 max-w-md w-full mx-4 border border-white/20 shadow-2xl"
+          >
+            {/* 제목 */}
+            <h3 className="text-2xl font-bold text-white mb-4">삭제 확인</h3>
+            
+            {/* 주요 질문 */}
+            <p className="text-white text-lg mb-6">
+              다음 검사 기록을 삭제하시겠습니까?
             </p>
-            <p className="text-blue-200 mb-6">
+            
+            {/* 검사 기록 상세 정보 */}
+            <div className="bg-[#6B3F7A] rounded-lg p-4 mb-6 space-y-2">
+              {selectedRecords.length === 1 ? (
+                // 단일 기록인 경우 상세 정보 표시
+                (() => {
+                  const record = testRecords.find(r => r.code === selectedRecords[0]);
+                  if (!record) return null;
+                  
+                  const recordDate = new Date(record.timestamp);
+                  const formattedDate = recordDate.toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                  });
+                  
+                  return (
+                    <>
+                      <p className="text-white text-sm">검사 유형: {record.testType || '개인용 MBTI 검사'}</p>
+                      <p className="text-white text-sm">검사결과 코드: {record.code}</p>
+                      <p className="text-white text-sm">검사 일시: {formattedDate}</p>
+                    </>
+                  );
+                })()
+              ) : (
+                // 여러 기록인 경우 요약 정보 표시
+                <p className="text-white text-sm">
+                  선택한 {selectedRecords.length}개의 검사 기록
+                </p>
+              )}
+            </div>
+            
+            {/* 추가 안내 */}
+            <p className="text-white/90 text-sm mb-6">
               삭제된 기록은 삭제코드 페이지에서 복원 가능합니다.
             </p>
-            <div className="flex justify-end space-x-3">
+            
+            {/* 버튼 그룹 */}
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-blue-800/50 text-white rounded hover:bg-blue-700/50 transition-colors"
+                className="px-6 py-3 bg-[#4A4A4A] text-white rounded-lg hover:bg-[#5A5A5A] transition-colors font-medium"
                 disabled={isDeleting}
               >
                 취소
               </button>
               <button
                 onClick={deleteSelectedRecords}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 disabled={isDeleting}
               >
-                {isDeleting ? '삭제 중...' : '삭제'}
+                {isDeleting ? '삭제 중...' : '삭제하기'}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
