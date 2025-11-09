@@ -164,14 +164,38 @@ function MbtiResultContent() {
       const deletedResult = getDeletedTestResult(code);
       if (deletedResult) {
         console.log('[MbtiResult] 삭제된 기록에서 결과 발견:', deletedResult);
-        setTestResult(deletedResult);
+        
+        // 삭제된 기록의 데이터 구조 정리
+        let resultData = deletedResult;
+        
+        // result 필드가 있으면 그것을 사용, 없으면 레코드 자체를 사용
+        if (deletedResult.result) {
+          resultData = {
+            ...deletedResult.result,
+            code: deletedResult.code,
+            timestamp: deletedResult.timestamp,
+            testType: deletedResult.testType
+          };
+        } else {
+          // result가 없으면 레코드 자체를 결과로 사용
+          resultData = {
+            ...deletedResult,
+            answers: deletedResult.answers || deletedResult.result?.answers || {},
+            mbtiType: deletedResult.mbtiType || deletedResult.result?.mbtiType,
+            userData: deletedResult.userData || deletedResult.result?.userData
+          };
+        }
+        
+        setTestResult(resultData);
         
         // MBTI 타입 계산 및 설정
         let calculatedMbtiType = 'INTJ'; // 기본값
         
         // 답변 데이터가 있으면 계산, 없으면 저장된 mbtiType 사용
-        if (deletedResult.answers && Object.keys(deletedResult.answers).length > 0) {
-          calculatedMbtiType = calculateMbtiType(deletedResult.answers);
+        if (resultData.answers && Object.keys(resultData.answers).length > 0) {
+          calculatedMbtiType = calculateMbtiType(resultData.answers);
+        } else if (resultData.mbtiType) {
+          calculatedMbtiType = resultData.mbtiType;
         } else if (deletedResult.mbtiType) {
           calculatedMbtiType = deletedResult.mbtiType;
         } else if (deletedResult.result?.mbtiType) {
@@ -180,7 +204,8 @@ function MbtiResultContent() {
         
         setMbtiType(calculatedMbtiType);
         setIsLoading(false);
-        setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
+        // 삭제된 기록이어도 결과를 표시하므로 에러 메시지 제거
+        // setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
         return;
       }
 

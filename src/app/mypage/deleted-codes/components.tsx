@@ -23,6 +23,7 @@ interface DeletedTestRecord {
     counselorCode?: string;
   };
   result?: any;
+  answers?: any; // 답변 데이터 추가
   deletedAt: string;
 }
 
@@ -347,6 +348,48 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           testRecords.push(tempRecord);
         }
         localStorage.setItem('test_records', JSON.stringify(testRecords));
+        
+        // 개인용 MBTI 검사인 경우 mbti-user-test-records에도 저장
+        const isPersonalMbti = (record.testType || '').toLowerCase().includes('개인용') || 
+                               (record.testType || '').toLowerCase().includes('mbti') && 
+                               !(record.testType || '').toLowerCase().includes('전문가용') &&
+                               !(record.testType || '').toLowerCase().includes('mbti pro') &&
+                               !record.code.startsWith('MP');
+        
+        if (isPersonalMbti) {
+          try {
+            const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
+            const mbtiRecords = JSON.parse(mbtiRecordsStr);
+            
+            const mbtiRecord = {
+              testCode: record.code,
+              testType: record.testType,
+              timestamp: record.timestamp,
+              userData: record.userData || record.result?.userData || {},
+              result: record.result || {
+                code: record.code,
+                timestamp: record.timestamp,
+                testType: record.testType,
+                answers: record.result?.answers || (record as any).answers || {},
+                mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ'
+              },
+              answers: record.result?.answers || (record as any).answers || {},
+              mbtiType: record.mbtiType || record.result?.mbtiType || 'INTJ'
+            };
+            
+            // 이미 존재하는지 확인
+            const existingMbtiIndex = mbtiRecords.findIndex((r: any) => r.testCode === record.code);
+            if (existingMbtiIndex >= 0) {
+              mbtiRecords[existingMbtiIndex] = mbtiRecord;
+            } else {
+              mbtiRecords.push(mbtiRecord);
+            }
+            
+            localStorage.setItem('mbti-user-test-records', JSON.stringify(mbtiRecords));
+          } catch (error) {
+            console.error('개인용 MBTI 기록 저장 오류:', error);
+          }
+        }
         
         // 전문가용 MBTI인 경우 추가 데이터 저장
         const isProfessional = (record.testType || '').toLowerCase().includes('전문가용') || 
