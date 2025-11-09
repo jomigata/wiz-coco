@@ -82,10 +82,24 @@ function InsideMbtiResultContent() {
               <div className="space-y-8">
                 {/* 버튼 그룹 - 최상단 */}
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
-                {/* 뒤로 돌아가기 버튼 - 좌측 */}
+                {/* 뒤로 돌아가기 / 검사기록으로 가기 버튼 - 좌측 */}
                 <button
                   onClick={() => {
                     if (typeof window !== 'undefined') {
+                      // 삭제코드 페이지에서 접근한 경우
+                      if (sessionStorage.getItem('returnToDeletedCodes') === 'true') {
+                        sessionStorage.removeItem('returnToDeletedCodes');
+                        router.back();
+                        return;
+                      }
+                      
+                      // 검사기록 페이지에서 접근한 경우
+                      if (sessionStorage.getItem('returnToTestRecords') === 'true') {
+                        sessionStorage.removeItem('returnToTestRecords');
+                        router.back();
+                        return;
+                      }
+                      
                       // 검사 완료 직후인지 확인
                       if (sessionStorage.getItem('testJustCompleted') === 'true') {
                         sessionStorage.removeItem('testJustCompleted');
@@ -94,7 +108,7 @@ function InsideMbtiResultContent() {
                         return;
                       }
                       
-                      // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
+                      // 그 외의 경우 이전 페이지로 이동
                       router.back();
                     }
                   }}
@@ -103,7 +117,14 @@ function InsideMbtiResultContent() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  <span className="font-medium">뒤로 돌아가기</span>
+                  <span className="font-medium">
+                    {(typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true') ||
+                     (typeof window !== 'undefined' && sessionStorage.getItem('returnToTestRecords') === 'true')
+                      ? '뒤로 돌아가기' 
+                      : (typeof window !== 'undefined' && sessionStorage.getItem('testJustCompleted') === 'true')
+                        ? '검사기록으로 가기'
+                        : '뒤로 돌아가기'}
+                  </span>
                 </button>
                 
                 {/* 결과 공유하기 및 테스트 다시 하기 버튼 - 우측 */}

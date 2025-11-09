@@ -562,6 +562,13 @@ function MbtiResultContent() {
                       return;
                     }
                     
+                    // 검사기록 페이지에서 접근한 경우
+                    if (sessionStorage.getItem('returnToTestRecords') === 'true') {
+                      sessionStorage.removeItem('returnToTestRecords');
+                      router.back();
+                      return;
+                    }
+                    
                     // 검사 완료 직후인지 확인 (상태 또는 sessionStorage)
                     if (isFromCompletion || sessionStorage.getItem('testJustCompleted') === 'true') {
                       sessionStorage.removeItem('testJustCompleted');
@@ -570,7 +577,7 @@ function MbtiResultContent() {
                       return;
                     }
                     
-                    // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
+                    // 그 외의 경우 이전 페이지로 이동
                     router.back();
                   }
                 }}
@@ -580,9 +587,12 @@ function MbtiResultContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 <span className="font-medium">
-                  {isFromDeletedCodes || (typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true') 
+                  {(isFromDeletedCodes || (typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true')) ||
+                   (typeof window !== 'undefined' && sessionStorage.getItem('returnToTestRecords') === 'true')
                     ? '뒤로 돌아가기' 
-                    : '검사기록으로 가기'}
+                    : (isFromCompletion || (typeof window !== 'undefined' && sessionStorage.getItem('testJustCompleted') === 'true'))
+                      ? '검사기록으로 가기'
+                      : '뒤로 돌아가기'}
                 </span>
               </button>
               

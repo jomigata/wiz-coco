@@ -1099,6 +1099,11 @@ function TestRecordsContent() {
       console.error('로컬 스토리지 저장 오류:', e);
     }
     
+    // 검사기록 페이지에서 접근한 경우 플래그 설정
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('returnToTestRecords', 'true');
+    }
+    
     console.log(`테스트 결과 페이지로 이동: ${resultPath}`);
     router.push(resultPath);
   };
