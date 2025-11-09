@@ -277,6 +277,50 @@ function MbtiTestPageContent() {
     });
   };
 
+  // 이전 단계로 돌아가기 핸들러들
+  const handleBackFromInfo = (currentClientInfo: any) => {
+    // 기본정보 입력에서 코드 입력으로 돌아가기
+    console.log('[MbtiTestPage] 기본정보 -> 코드 입력으로 이동');
+    
+    // 현재 입력된 정보를 상태에 저장
+    setClientInfo(currentClientInfo);
+    
+    // 현재 상태 저장 (clientInfo 유지)
+    saveTestProgress({
+      testId,
+      testName: '개인용 MBTI 검사',
+      answers: {},
+      currentStep: 'code',
+      codeData: codeData,
+      clientInfo: currentClientInfo, // 현재 입력된 정보 유지
+      timestamp: Date.now(),
+      testType: 'MBTI',
+      totalQuestions: 20
+    });
+    
+    setCurrentStep('code');
+  };
+
+  const handleBackFromTest = () => {
+    // 테스트에서 기본정보 입력으로 돌아가기
+    console.log('[MbtiTestPage] 테스트 -> 기본정보 입력으로 이동');
+    
+    // 현재 상태 저장 (답변과 clientInfo 모두 유지)
+    saveTestProgress({
+      testId,
+      testName: '개인용 MBTI 검사',
+      answers: savedAnswers || {},
+      currentStep: 'info',
+      codeData: codeData,
+      clientInfo: clientInfo,
+      timestamp: Date.now(),
+      testType: 'MBTI',
+      totalQuestions: 20
+    });
+    
+    setCurrentStep('info');
+  };
+
   // 이어하기
   const handleResumeTest = () => {
     setShowResumeDialog(false);
@@ -552,7 +596,7 @@ function MbtiTestPageContent() {
             onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
             initialData={clientInfo}
-            onBack={() => setCurrentStep('code')}
+            onBack={handleBackFromInfo}
           />
         )}
         
@@ -566,7 +610,7 @@ function MbtiTestPageContent() {
             codeData={codeData}
             clientInfo={clientInfo}
             onStepChange={setCurrentStep}
-            onBack={() => setCurrentStep('info')}
+            onBack={handleBackFromTest}
           />
         )}
       </div>

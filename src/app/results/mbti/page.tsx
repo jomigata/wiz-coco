@@ -167,7 +167,17 @@ function MbtiResultContent() {
         setTestResult(deletedResult);
         
         // MBTI 타입 계산 및 설정
-        const calculatedMbtiType = calculateMbtiType(deletedResult.answers);
+        let calculatedMbtiType = 'INTJ'; // 기본값
+        
+        // 답변 데이터가 있으면 계산, 없으면 저장된 mbtiType 사용
+        if (deletedResult.answers && Object.keys(deletedResult.answers).length > 0) {
+          calculatedMbtiType = calculateMbtiType(deletedResult.answers);
+        } else if (deletedResult.mbtiType) {
+          calculatedMbtiType = deletedResult.mbtiType;
+        } else if (deletedResult.result?.mbtiType) {
+          calculatedMbtiType = deletedResult.result.mbtiType;
+        }
+        
         setMbtiType(calculatedMbtiType);
         setIsLoading(false);
         setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
