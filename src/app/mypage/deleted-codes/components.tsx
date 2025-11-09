@@ -969,11 +969,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                       >
                         <div className="flex items-center justify-center gap-1">
                           검사 일시
-                          {sortField === 'timestamp' && (
-                            <span className="text-xs">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
+                          <span className={`text-xs ${sortField === 'timestamp' ? 'text-red-500' : 'text-blue-300'}`}>
+                            <span className={sortField === 'timestamp' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                            <span className={sortField === 'timestamp' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          </span>
                         </div>
                       </th>
                       <th 
@@ -983,11 +982,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                       >
                         <div className="flex items-center justify-center gap-1">
                           검사 유형
-                          {sortField === 'testType' && (
-                            <span className="text-xs">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
+                          <span className={`text-xs ${sortField === 'testType' ? 'text-red-500' : 'text-blue-300'}`}>
+                            <span className={sortField === 'testType' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                            <span className={sortField === 'testType' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          </span>
                         </div>
                       </th>
                       <th 
@@ -997,11 +995,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                       >
                         <div className="flex items-center justify-center gap-1">
                           검사코드
-                          {sortField === 'code' && (
-                            <span className="text-xs">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
+                          <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
+                            <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                            <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          </span>
                         </div>
                       </th>
                       <th 
@@ -1011,11 +1008,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                       >
                         <div className="flex items-center gap-1">
                           검사결과 코드
-                          {sortField === 'code' && (
-                            <span className="text-xs">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
+                          <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
+                            <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                            <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          </span>
                         </div>
                       </th>
                       <th 
@@ -1025,11 +1021,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                       >
                         <div className="flex items-center justify-center gap-1">
                           삭제 일시
-                          {sortField === 'deletedAt' && (
-                            <span className="text-xs">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
+                          <span className={`text-xs ${sortField === 'deletedAt' ? 'text-red-500' : 'text-blue-300'}`}>
+                            <span className={sortField === 'deletedAt' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                            <span className={sortField === 'deletedAt' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          </span>
                         </div>
                       </th>
                       <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">

@@ -121,6 +121,8 @@ function TestRecordsContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [sortField, setSortField] = useState<'code' | 'timestamp' | 'testType'>('timestamp');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [codeStats, setCodeStats] = useState<CodeGenerationStats>({
@@ -859,7 +861,7 @@ function TestRecordsContent() {
   const filteredRecords = React.useMemo(() => {
     if (!testRecords.length) return [];
     
-    return testRecords
+    let filtered = testRecords
       .filter(record => {
         // 검색어 필터링
         if (searchTerm) {
@@ -881,21 +883,33 @@ function TestRecordsContent() {
         return true;
       })
       .sort((a, b) => {
-        // 정렬
-        const timeA = new Date(a.timestamp).getTime();
-        const timeB = new Date(b.timestamp).getTime();
+        // 컬럼 헤더 클릭 정렬 우선
+        let comparison = 0;
         
-        if (sortOrder === 'newest') {
-          return timeB - timeA;
-        } else if (sortOrder === 'oldest') {
-          return timeA - timeB;
-        } else {
-          // 추가 정렬 기준이 있다면 여기에 구현할 수 있음
-          // 기본값은 최신순
-          return timeB - timeA;
+        if (sortField === 'code') {
+          comparison = (a.code || '').localeCompare(b.code || '');
+        } else if (sortField === 'timestamp') {
+          comparison = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+        } else if (sortField === 'testType') {
+          comparison = (a.testType || '').localeCompare(b.testType || '');
         }
+        
+        // sortOrder도 고려 (하위 정렬 기준)
+        if (comparison === 0 && sortOrder === 'newest') {
+          const timeA = new Date(a.timestamp).getTime();
+          const timeB = new Date(b.timestamp).getTime();
+          comparison = timeB - timeA;
+        } else if (comparison === 0 && sortOrder === 'oldest') {
+          const timeA = new Date(a.timestamp).getTime();
+          const timeB = new Date(b.timestamp).getTime();
+          comparison = timeA - timeB;
+        }
+        
+        return sortDirection === 'asc' ? comparison : -comparison;
       });
-  }, [testRecords, searchTerm, filterType, sortOrder]);
+    
+    return filtered;
+  }, [testRecords, searchTerm, filterType, sortOrder, sortField, sortDirection]);
 
   // 페이지네이션을 위한 계산
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
@@ -1404,14 +1418,65 @@ function TestRecordsContent() {
                               className="rounded bg-white/10 border-white/20 text-blue-500 focus:ring-blue-500"
                             />
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
-                            코드
+                          <th 
+                            scope="col" 
+                            className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            onClick={() => {
+                              if (sortField === 'code') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('code');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-1">
+                              코드
+                              <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
+                                <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                                <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                              </span>
+                            </div>
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
-                            검사일시
+                          <th 
+                            scope="col" 
+                            className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            onClick={() => {
+                              if (sortField === 'timestamp') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('timestamp');
+                                setSortDirection('desc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-1">
+                              검사일시
+                              <span className={`text-xs ${sortField === 'timestamp' ? 'text-red-500' : 'text-blue-300'}`}>
+                                <span className={sortField === 'timestamp' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                                <span className={sortField === 'timestamp' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                              </span>
+                            </div>
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
-                            검사유형
+                          <th 
+                            scope="col" 
+                            className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            onClick={() => {
+                              if (sortField === 'testType') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('testType');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-1">
+                              검사유형
+                              <span className={`text-xs ${sortField === 'testType' ? 'text-red-500' : 'text-blue-300'}`}>
+                                <span className={sortField === 'testType' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                                <span className={sortField === 'testType' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                              </span>
+                            </div>
                           </th>
                           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
                             상태
