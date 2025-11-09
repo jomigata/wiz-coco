@@ -318,11 +318,21 @@ function MbtiTestPageContent() {
     // 테스트에서 기본정보 입력으로 돌아가기
     console.log('[MbtiTestPage] 테스트 -> 기본정보 입력으로 이동');
     
-    // 현재 상태 저장 (답변과 clientInfo 모두 유지)
+    // 저장된 진행 상태에서 최신 답변 가져오기 (MBTITestWrapper에서 자동 저장된 최신 값)
+    const savedProgress = loadTestProgress(testId);
+    const latestAnswers = savedProgress?.answers || savedAnswers || {};
+    const latestCurrentQuestion = savedProgress?.currentQuestion || savedCurrentQuestion || 0;
+    
+    // 최신 답변을 상태에 반영
+    setSavedAnswers(latestAnswers);
+    setSavedCurrentQuestion(latestCurrentQuestion);
+    
+    // 현재 상태 저장 (최신 답변과 clientInfo 모두 유지)
     saveTestProgress({
       testId,
       testName: '개인용 MBTI 검사',
-      answers: savedAnswers || {},
+      answers: latestAnswers, // 최신 답변 사용
+      currentQuestion: latestCurrentQuestion,
       currentStep: 'info',
       codeData: codeData,
       clientInfo: clientInfo,
@@ -624,6 +634,11 @@ function MbtiTestPageContent() {
             clientInfo={clientInfo}
             onStepChange={setCurrentStep}
             onBack={handleBackFromTest}
+            onAnswersUpdate={(answers, currentQuestion) => {
+              // 답변 변경 시 부모 컴포넌트 상태 업데이트
+              setSavedAnswers(answers);
+              setSavedCurrentQuestion(currentQuestion);
+            }}
           />
         )}
       </div>
@@ -640,7 +655,8 @@ function MBTITestWrapper({
   codeData,
   clientInfo,
   onStepChange,
-  onBack
+  onBack,
+  onAnswersUpdate
 }: { 
   onComplete: (results: any) => void;
   testId: string;
@@ -650,6 +666,7 @@ function MBTITestWrapper({
   clientInfo?: any;
   onStepChange?: (step: 'code' | 'info' | 'test') => void;
   onBack?: () => void;
+  onAnswersUpdate?: (answers: any, currentQuestion: number) => void;
 }) {
   // 저장된 답변을 정규화 (문자열 키를 숫자로 변환)
   const normalizeAnswers = (rawAnswers: any): { [key: string]: { type: string; answer: number } } => {
@@ -686,6 +703,11 @@ function MBTITestWrapper({
   const handleAnswerChange = (newAnswers: any, newCurrentQuestion: number) => {
     setTrackedAnswers(newAnswers);
     setTrackedCurrentQuestion(newCurrentQuestion);
+    
+    // 부모 컴포넌트에 답변 업데이트 알림
+    if (onAnswersUpdate) {
+      onAnswersUpdate(newAnswers, newCurrentQuestion);
+    }
   };
 
   // 이전 페이지로 돌아가기 핸들러

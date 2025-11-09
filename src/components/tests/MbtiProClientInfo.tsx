@@ -547,20 +547,32 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
                             data-year-idx={idx}
                             aria-current={isSelected ? "true" : undefined}
-                            onClick={() => {
-                              // 선택한 값으로 설정 (입력하던 값 무시)
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              // 선택한 값으로 강제 설정 (입력하던 값 완전히 무시)
                               setIsYearSelected(true); // 선택 플래그 설정
+                              
+                              // 입력값을 선택한 값으로 강제 덮어쓰기
+                              const yearString = String(year);
+                              setBirthYearInput(yearString);
                               setBirthYear(year);
-                              setBirthYearInput(String(year));
-                              setShowYearSelector(false);
+                              
                               // 에러 메시지 제거
                               if (errors.birthYear) {
                                 setErrors(prev => ({ ...prev, birthYear: undefined }));
                               }
+                              
+                              // 목록 닫기
+                              setShowYearSelector(false);
+                              
                               // 입력칸 포커스 제거하여 onBlur 이벤트 방지
-                              if (birthYearRef.current) {
-                                birthYearRef.current.blur();
-                              }
+                              setTimeout(() => {
+                                if (birthYearRef.current) {
+                                  birthYearRef.current.blur();
+                                }
+                              }, 0);
                             }}
                             whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
                             whileTap={{ scale: 0.95 }}
