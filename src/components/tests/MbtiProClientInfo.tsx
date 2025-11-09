@@ -454,10 +454,16 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     }}
                     onBlur={() => {
                       // 포커스가 벗어날 때 약간의 지연을 주어 클릭 이벤트가 먼저 처리되도록
-                      setTimeout(() => {
+                      const blurTimeout = setTimeout(() => {
                         // 년도 선택 목록에서 선택한 경우에는 검증하지 않음
                         if (isYearSelected) {
                           setIsYearSelected(false); // 플래그 리셋
+                          return;
+                        }
+                        
+                        // birthYear가 설정되어 있고 입력값과 일치하면 선택한 값으로 간주
+                        if (birthYear > 0 && String(birthYear) === birthYearInput) {
+                          // 선택한 값이므로 검증하지 않음
                           return;
                         }
                         
@@ -480,16 +486,21 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             }));
                           }
                         } else if (birthYearInput.length > 0 && birthYearInput.length < 4) {
-                          // 4자리가 아닌 경우 초기화
-                          setBirthYearInput('');
-                          setBirthYear(0);
-                          setErrors(prev => ({ 
-                            ...prev, 
-                            birthYear: '4자리 연도를 입력해주세요.' 
-                          }));
+                          // 4자리가 아닌 경우 초기화 (단, birthYear가 설정되어 있지 않은 경우에만)
+                          if (birthYear === 0) {
+                            setBirthYearInput('');
+                            setBirthYear(0);
+                            setErrors(prev => ({ 
+                              ...prev, 
+                              birthYear: '4자리 연도를 입력해주세요.' 
+                            }));
+                          }
                         }
                         setShowYearSelector(false);
-                      }, 200);
+                      }, 300); // 지연 시간을 300ms로 증가하여 선택 이벤트가 먼저 처리되도록
+                      
+                      // blurTimeout을 ref에 저장하여 선택 시 취소할 수 있도록
+                      (birthYearRef.current as any)?._blurTimeout = blurTimeout;
                     }}
                     className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     placeholder="4자리 연도 입력 또는 클릭하여 선택"
@@ -551,6 +562,12 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                               e.preventDefault();
                               e.stopPropagation();
                               
+                              // onBlur의 setTimeout 취소 (이미 실행 중인 검증 방지)
+                              if (birthYearRef.current && (birthYearRef.current as any)?._blurTimeout) {
+                                clearTimeout((birthYearRef.current as any)._blurTimeout);
+                                (birthYearRef.current as any)._blurTimeout = null;
+                              }
+                              
                               // 선택한 값으로 강제 설정 (입력하던 값 완전히 무시)
                               setIsYearSelected(true); // 선택 플래그 설정
                               
@@ -559,10 +576,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                               setBirthYearInput(yearString);
                               setBirthYear(year);
                               
-                              // 에러 메시지 제거
-                              if (errors.birthYear) {
-                                setErrors(prev => ({ ...prev, birthYear: undefined }));
-                              }
+                              // 에러 메시지 즉시 제거
+                              setErrors(prev => ({ ...prev, birthYear: undefined }));
                               
                               // 목록 닫기
                               setShowYearSelector(false);
