@@ -218,7 +218,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     const currentYear = new Date().getFullYear();
     const minYear = currentYear - 100;
     if (!birthYear || birthYear < minYear || birthYear > currentYear) {
-      newErrors.birthYear = '올바른 출생년도를 입력해주세요.';
+      newErrors.birthYear = `올바른 출생년도를 입력해주세요. (${minYear}년~${currentYear}년)`;
     }
 
     if (!gender) {
@@ -433,9 +433,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             setErrors(prev => ({ ...prev, birthYear: undefined }));
                           }
                         } else {
+                          const currentYear = new Date().getFullYear();
+                          const minYear = currentYear - 100;
                           setErrors(prev => ({ 
                             ...prev, 
-                            birthYear: '올바른 출생년도를 입력해주세요. (1900년~현재년도)' 
+                            birthYear: `올바른 출생년도를 입력해주세요. (${minYear}년~${currentYear}년)` 
                           }));
                         }
                       } else if (numericValue.length > 0) {
@@ -463,9 +465,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           } else {
                             setBirthYearInput('');
                             setBirthYear(0);
+                            const currentYear = new Date().getFullYear();
+                            const minYear = currentYear - 100;
                             setErrors(prev => ({ 
                               ...prev, 
-                              birthYear: '올바른 출생년도를 입력해주세요. (1900년~현재년도)' 
+                              birthYear: `올바른 출생년도를 입력해주세요. (${minYear}년~${currentYear}년)` 
                             }));
                           }
                         } else if (birthYearInput.length > 0 && birthYearInput.length < 4) {
@@ -493,6 +497,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     ref={birthYearRef}
                   />
                 </div>
+                
+                {/* 경고 문구 - 입력칸과 년도 선택 목록 사이 */}
+                {errors.birthYear && (
+                  <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
+                )}
                 
                 {/* 연도 선택 그리드 - 입력칸 바로 아래 표시 */}
                 {showYearSelector && (
@@ -532,11 +541,17 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                             data-year-idx={idx}
                             aria-current={isSelected ? "true" : undefined}
                             onClick={() => {
+                              // 선택한 값으로 설정 (입력하던 값 무시)
                               setBirthYear(year);
                               setBirthYearInput(String(year));
                               setShowYearSelector(false);
+                              // 에러 메시지 제거
                               if (errors.birthYear) {
                                 setErrors(prev => ({ ...prev, birthYear: undefined }));
+                              }
+                              // 입력칸 포커스 제거하여 onBlur 이벤트 방지
+                              if (birthYearRef.current) {
+                                birthYearRef.current.blur();
                               }
                             }}
                             whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
@@ -560,10 +575,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       </div>
                     </motion.div>
                   </AnimatePresence>
-                )}
-                
-                {errors.birthYear && (
-                  <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
                 )}
               </div>
               
