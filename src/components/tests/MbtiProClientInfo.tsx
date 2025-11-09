@@ -500,7 +500,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       }, 300); // 지연 시간을 300ms로 증가하여 선택 이벤트가 먼저 처리되도록
                       
                       // blurTimeout을 ref에 저장하여 선택 시 취소할 수 있도록
-                      (birthYearRef.current as any)?._blurTimeout = blurTimeout;
+                      if (birthYearRef.current) {
+                        (birthYearRef.current as any)._blurTimeout = blurTimeout;
+                      }
                     }}
                     className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     placeholder="4자리 연도 입력 또는 클릭하여 선택"
