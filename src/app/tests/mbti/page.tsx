@@ -465,10 +465,14 @@ function MbtiTestPageContent() {
       // 현재 시간
       const timestamp = new Date().toISOString();
       
+      // counselorCode 생성 (groupCode를 counselorCode로 사용)
+      const counselorCode = codeData?.groupCode || null;
+      
       // 결과 데이터 구성
       const testData = {
         testType: '개인용 MBTI 검사',
         code: testCode,
+        counselorCode: counselorCode, // 상담사 코드 추가
         timestamp: timestamp,
         answers: results,
         mbtiType: results.mbtiType || 'INTJ', // 기본값 설정
@@ -477,7 +481,10 @@ function MbtiTestPageContent() {
           name: clientInfo?.name || '게스트 사용자',
           email: 'guest@example.com',
           testType: '개인용 MBTI 검사',
-          clientInfo: clientInfo || {}
+          clientInfo: {
+            ...(clientInfo || {}),
+            counselorCode: counselorCode // clientInfo에도 counselorCode 추가
+          }
         }
       };
       
@@ -528,6 +535,7 @@ function MbtiTestPageContent() {
           testCode: testCode,
           testType: '개인용 MBTI 검사',
           timestamp: timestamp,
+          counselorCode: counselorCode, // counselorCode 추가
           userData: testData.userData,
           result: {
             code: testCode,

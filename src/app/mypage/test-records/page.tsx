@@ -1495,7 +1495,7 @@ function TestRecordsContent() {
                               />
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-white">
-                              {record.code}
+                              {record.counselorCode || record.userData?.counselorCode || record.code || '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
                               {formatDate(record.timestamp)}
