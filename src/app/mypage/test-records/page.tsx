@@ -1420,7 +1420,7 @@ function TestRecordsContent() {
                           </th>
                           <th 
                             scope="col" 
-                            className="px-4 py-3 text-center text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => {
                               if (sortField === 'code') {
                                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -1440,7 +1440,7 @@ function TestRecordsContent() {
                           </th>
                           <th 
                             scope="col" 
-                            className="px-4 py-3 text-center text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => {
                               if (sortField === 'timestamp') {
                                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -1460,7 +1460,7 @@ function TestRecordsContent() {
                           </th>
                           <th 
                             scope="col" 
-                            className="px-4 py-3 text-center text-xs font-medium text-blue-300 uppercase tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => {
                               if (sortField === 'testType') {
                                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
