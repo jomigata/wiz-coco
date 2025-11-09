@@ -27,6 +27,7 @@ export interface ClientInfo {
 const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData, onBack }) => {
   const router = useRouter();
   const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
+  const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
   const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
   const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
   const [gender, setGender] = useState<string>(initialData?.gender || '');
@@ -76,6 +77,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   useEffect(() => {
     if (initialData) {
       setBirthYear(initialData.birthYear || 0);
+      setBirthYearInput(initialData.birthYear ? String(initialData.birthYear) : '');
       setGroupCode(initialData.groupCode || '');
       setGroupPassword(initialData.groupPassword || '');
       setGender(initialData.gender || '');
@@ -403,94 +405,163 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               <div className="mt-2">
                 <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
                   출생년도 <span className="text-red-400">*</span>
-              </label>
-              {/* 연도 선택 그리드 - 타이틀 바로 아래 표시 */}
-              {showYearSelector && (
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="year-selector mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
-                  >
-                    <div
-                      ref={yearGridRef}
-                      role="grid"
-                      aria-label="출생년도 선택"
-                      className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
-                      style={{ maxHeight: '336px' }}
-                      onKeyDown={handleYearKeyDown}
-                      onMouseMove={handleYearGridMouseMove}
-                      onMouseLeave={handleMouseLeave}
-                      onWheel={handleYearGridWheel}
-                      onTouchStart={handleTouchStart}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                    >
-                      {years.map((year, idx) => {
-                        const columnIndex = (idx % 10) + 1;
-                        const rowIndex = Math.floor(idx / 10) + 1;
-                        const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
-                        const isSelected = birthYear === year;
-                        const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
-                        return (
-                        <motion.button
-                          key={year}
-                          type="button"
-                          role="gridcell"
-                          ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
-                          data-year-idx={idx}
-                          aria-current={isSelected ? "true" : undefined}
-                          onClick={() => {
-                            setBirthYear(year);
-                            setShowYearSelector(false);
-                            if (errors.birthYear) {
-                              setErrors(prev => ({ ...prev, birthYear: undefined }));
-                            }
-                          }}
-                          whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
-                            isSelected
-                              ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
-                              : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith16 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
-                          }`}
-                        >
-                          {isSelected && (
-                            <>
-                              <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
-                              <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
-                            </>
-                          )}
-                          <span>{year}</span>
-                        </motion.button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              )}
-
-              <div className="relative">
-                <input
-                  type="text"
+                </label>
+                
+                {/* 입력칸 - 년도 선택 목록 위로 이동 */}
+                <div className="relative">
+                  <input
+                    type="text"
                     id="birth-year-field"
                     name="birth_year_random_name"
-                    value={birthYear ? `${birthYear}년` : ''}
-                  onClick={() => setShowYearSelector(true)}
-                    readOnly
-                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors cursor-pointer"
-                    placeholder="출생년도를 선택하세요"
+                    value={birthYearInput}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      const value = e.target.value;
+                      // 숫자만 입력 허용, 최대 4자리
+                      const numericValue = value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setBirthYearInput(numericValue);
+                      
+                      // 4자리가 입력되면 자동으로 birthYear 업데이트
+                      if (numericValue.length === 4) {
+                        const year = parseInt(numericValue, 10);
+                        const currentYear = new Date().getFullYear();
+                        const minYear = currentYear - 100;
+                        
+                        if (year >= minYear && year <= currentYear) {
+                          setBirthYear(year);
+                          setShowYearSelector(false); // 입력 완료 시 목록 닫기
+                          if (errors.birthYear) {
+                            setErrors(prev => ({ ...prev, birthYear: undefined }));
+                          }
+                        } else {
+                          setErrors(prev => ({ 
+                            ...prev, 
+                            birthYear: '올바른 출생년도를 입력해주세요. (1900년~현재년도)' 
+                          }));
+                        }
+                      } else if (numericValue.length > 0) {
+                        // 입력 중일 때는 에러 제거
+                        if (errors.birthYear) {
+                          setErrors(prev => ({ ...prev, birthYear: undefined }));
+                        }
+                      }
+                    }}
+                    onFocus={() => {
+                      // 입력칸 클릭 시 년도 목록 표시
+                      setShowYearSelector(true);
+                    }}
+                    onBlur={() => {
+                      // 포커스가 벗어날 때 약간의 지연을 주어 클릭 이벤트가 먼저 처리되도록
+                      setTimeout(() => {
+                        // 포커스가 벗어날 때 유효성 검사
+                        if (birthYearInput.length === 4) {
+                          const year = parseInt(birthYearInput, 10);
+                          const currentYear = new Date().getFullYear();
+                          const minYear = currentYear - 100;
+                          
+                          if (year >= minYear && year <= currentYear) {
+                            setBirthYear(year);
+                          } else {
+                            setBirthYearInput('');
+                            setBirthYear(0);
+                            setErrors(prev => ({ 
+                              ...prev, 
+                              birthYear: '올바른 출생년도를 입력해주세요. (1900년~현재년도)' 
+                            }));
+                          }
+                        } else if (birthYearInput.length > 0 && birthYearInput.length < 4) {
+                          // 4자리가 아닌 경우 초기화
+                          setBirthYearInput('');
+                          setBirthYear(0);
+                          setErrors(prev => ({ 
+                            ...prev, 
+                            birthYear: '4자리 연도를 입력해주세요.' 
+                          }));
+                        }
+                        setShowYearSelector(false);
+                      }, 200);
+                    }}
+                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    placeholder="4자리 연도 입력 또는 클릭하여 선택"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck="false"
                     data-form-type="other"
                     data-lpignore="true"
-                    aria-autocomplete="none"
+                    maxLength={4}
+                    inputMode="numeric"
                     ref={birthYearRef}
                   />
                 </div>
+                
+                {/* 연도 선택 그리드 - 입력칸 바로 아래 표시 */}
+                {showYearSelector && (
+                  <AnimatePresence>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="year-selector mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+                    >
+                      <div
+                        ref={yearGridRef}
+                        role="grid"
+                        aria-label="출생년도 선택"
+                        className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
+                        style={{ maxHeight: '336px' }}
+                        onKeyDown={handleYearKeyDown}
+                        onMouseMove={handleYearGridMouseMove}
+                        onMouseLeave={handleMouseLeave}
+                        onWheel={handleYearGridWheel}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                      >
+                        {years.map((year, idx) => {
+                          const columnIndex = (idx % 10) + 1;
+                          const rowIndex = Math.floor(idx / 10) + 1;
+                          const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
+                          const isSelected = birthYear === year;
+                          const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
+                          return (
+                          <motion.button
+                            key={year}
+                            type="button"
+                            role="gridcell"
+                            ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
+                            data-year-idx={idx}
+                            aria-current={isSelected ? "true" : undefined}
+                            onClick={() => {
+                              setBirthYear(year);
+                              setBirthYearInput(String(year));
+                              setShowYearSelector(false);
+                              if (errors.birthYear) {
+                                setErrors(prev => ({ ...prev, birthYear: undefined }));
+                              }
+                            }}
+                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
+                              isSelected
+                                ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
+                                : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith16 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
+                            }`}
+                          >
+                            {isSelected && (
+                              <>
+                                <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
+                                <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
+                              </>
+                            )}
+                            <span>{year}</span>
+                          </motion.button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+                
                 {errors.birthYear && (
                   <p className="mt-2 text-sm text-red-400">{errors.birthYear}</p>
                 )}
