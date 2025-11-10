@@ -1471,19 +1471,6 @@ function TestRecordsContent() {
                           <th 
                             scope="col" 
                             className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
-                            onClick={() => handleSort('code')}
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              코드
-                              <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
-                                <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
-                                <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
-                              </span>
-                            </div>
-                          </th>
-                          <th 
-                            scope="col" 
-                            className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
                             onClick={() => handleSort('timestamp')}
                           >
                             <div className="flex items-center justify-center gap-1">
@@ -1507,14 +1494,33 @@ function TestRecordsContent() {
                               </span>
                             </div>
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
-                            상태
+                          <th 
+                            scope="col" 
+                            className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                            onClick={() => handleSort('code')}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              검사코드
+                              <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
+                                <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
+                                <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                              </span>
+                            </div>
+                          </th>
+                          <th 
+                            scope="col" 
+                            className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              검사결과 코드
+                              <span className="text-xs text-blue-300">
+                                <span className="text-blue-300/50">▲</span>
+                                <span className="text-blue-300/50">▼</span>
+                              </span>
+                            </div>
                           </th>
                           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
-                            결과
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider">
-                            액션
+                            삭제
                           </th>
                         </tr>
                       </thead>
@@ -1529,43 +1535,45 @@ function TestRecordsContent() {
                                 className="rounded bg-white/10 border-white/20 text-blue-500 focus:ring-blue-500"
                               />
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-white">
-                              {record.counselorCode || 
-                               record.userData?.counselorCode || 
-                               record.userData?.clientInfo?.counselorCode ||
-                               record.userData?.clientInfo?.groupCode ||
-                               record.userData?.groupCode ||
-                               record.code || 
-                               '-'}
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
+                            <td 
+                              onClick={() => viewTestDetail(record.code)}
+                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                              title="클릭하여 검사 결과 보기"
+                            >
                               {formatDate(record.timestamp)}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
                               {record.testType}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                record.status === '완료' || record.status === 'completed' 
-                                  ? 'bg-green-900/40 text-green-300' 
-                                  : 'bg-yellow-900/40 text-yellow-300'
-                              }`}>
-                                {record.status || '완료'}
-                              </span>
+                            <td 
+                              onClick={() => viewTestDetail(record.code)}
+                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                              title="클릭하여 검사 결과 보기"
+                            >
+                              {record.counselorCode || 
+                               record.userData?.counselorCode || 
+                               record.userData?.clientInfo?.counselorCode ||
+                               record.userData?.clientInfo?.groupCode ||
+                               record.userData?.groupCode ||
+                               '-'}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
-                              {record.result ? 
-                                (typeof record.result === 'string' 
-                                  ? record.result 
-                                  : record.result.mbtiType || record.result.type || '결과 있음') 
-                                : '-'}
+                            <td 
+                              onClick={() => viewTestDetail(record.code)}
+                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                              title="클릭하여 검사 결과 보기"
+                            >
+                              {record.code || '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
                               <button
-                                onClick={() => viewTestDetail(record.code)}
-                                className="bg-blue-600/40 hover:bg-blue-600/60 text-white px-3 py-1 rounded transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRecords([record.code]);
+                                  setShowDeleteConfirm(true);
+                                }}
+                                className="bg-red-600/40 hover:bg-red-600/60 text-white px-3 py-1 rounded transition-colors"
                               >
-                                상세보기
+                                삭제
                               </button>
                             </td>
                           </tr>
