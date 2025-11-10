@@ -1322,7 +1322,62 @@ const MbtiProResult: React.FC = () => {
           {/* 검사코드와 검사결과 코드 표시 */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             {(() => {
-              const counselorCode = clientInfo?.groupCode || null;
+              // 검사코드 추출 (여러 위치에서 확인)
+              let counselorCode = null;
+              
+              // 1. clientInfo에서 확인
+              if (clientInfo?.groupCode) {
+                counselorCode = clientInfo.groupCode;
+              }
+              
+              // 2. 로컬 스토리지에서 로드된 데이터 확인
+              if (!counselorCode && loadedClientInfo?.groupCode) {
+                counselorCode = loadedClientInfo.groupCode;
+              }
+              
+              // 3. URL 파라미터에서 확인
+              if (!counselorCode && paramClientInfo?.groupCode) {
+                counselorCode = paramClientInfo.groupCode;
+              }
+              
+              // 4. 로컬 스토리지에서 test_records나 mbti-user-test-records 확인
+              if (!counselorCode && typeof window !== 'undefined' && resultCode) {
+                try {
+                  // test_records에서 확인
+                  const testRecordsStr = localStorage.getItem('test_records');
+                  if (testRecordsStr) {
+                    const testRecords = JSON.parse(testRecordsStr);
+                    const foundRecord = testRecords.find((r: any) => r.code === resultCode);
+                    if (foundRecord) {
+                      counselorCode = foundRecord.counselorCode || 
+                                      foundRecord.userData?.counselorCode || 
+                                      foundRecord.userData?.clientInfo?.counselorCode ||
+                                      foundRecord.userData?.clientInfo?.groupCode ||
+                                      foundRecord.userData?.groupCode ||
+                                      null;
+                    }
+                  }
+                  
+                  // mbti-user-test-records에서 확인
+                  if (!counselorCode) {
+                    const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records');
+                    if (mbtiRecordsStr) {
+                      const mbtiRecords = JSON.parse(mbtiRecordsStr);
+                      const foundRecord = mbtiRecords.find((r: any) => r.testCode === resultCode || r.code === resultCode);
+                      if (foundRecord) {
+                        counselorCode = foundRecord.counselorCode || 
+                                       foundRecord.userData?.counselorCode || 
+                                       foundRecord.userData?.clientInfo?.counselorCode ||
+                                       foundRecord.userData?.clientInfo?.groupCode ||
+                                       foundRecord.userData?.groupCode ||
+                                       null;
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.error('검사코드 추출 오류:', e);
+                }
+              }
               
               return (
                 <>
@@ -1356,7 +1411,7 @@ const MbtiProResult: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {clientInfo.name && clientInfo.name !== "-" && (
                 <div className="bg-white/10 p-4 rounded-lg border border-white/15">
-                  <h3 className="text-sm font-medium text-blue-300">고유번호/예명/별명</h3>
+                  <h3 className="text-sm font-medium text-blue-300">이름(가명)</h3>
                   <p className="text-xl font-semibold text-white">{clientInfo.name}</p>
                 </div>
               )}
