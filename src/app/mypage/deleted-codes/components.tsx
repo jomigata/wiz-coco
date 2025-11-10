@@ -21,6 +21,12 @@ interface DeletedTestRecord {
     name?: string;
     testDate?: string;
     counselorCode?: string;
+    clientInfo?: {
+      counselorCode?: string;
+      groupCode?: string;
+      [key: string]: any;
+    };
+    groupCode?: string;
   };
   result?: any;
   answers?: any; // 답변 데이터 추가
