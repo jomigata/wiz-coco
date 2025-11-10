@@ -373,12 +373,25 @@ const MbtiProResult: React.FC = () => {
                     setLoadedAnswers(record.result.answers);
                   }
                   
+                  // userData에서 clientInfo 우선 확인
                   if (record.userData) {
-                    setLoadedClientInfo({
-                      name: record.userData.name,
-                      gender: record.userData.gender,
-                      birthYear: record.userData.birthYear
-                    });
+                    // clientInfo가 있으면 우선 사용
+                    if (record.userData.clientInfo) {
+                      setLoadedClientInfo({
+                        name: record.userData.clientInfo.name || record.userData.name,
+                        gender: record.userData.clientInfo.gender || record.userData.gender,
+                        birthYear: record.userData.clientInfo.birthYear || record.userData.birthYear,
+                        groupCode: record.userData.clientInfo.groupCode || record.userData.groupCode
+                      });
+                    } else {
+                      // clientInfo가 없으면 userData 직접 사용
+                      setLoadedClientInfo({
+                        name: record.userData.name,
+                        gender: record.userData.gender,
+                        birthYear: record.userData.birthYear,
+                        groupCode: record.userData.groupCode
+                      });
+                    }
                   }
                   
                   foundData = true;
@@ -1319,7 +1332,7 @@ const MbtiProResult: React.FC = () => {
               전문가용 MBTI 검사 결과
             </h1>
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-          {/* 검사코드와 검사결과 코드 표시 */}
+          {/* 검사코드 표시 (상단에 1개만) */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             {(() => {
               // 검사코드 추출 (여러 위치에서 확인)
@@ -1384,11 +1397,6 @@ const MbtiProResult: React.FC = () => {
                   {counselorCode && (
                     <p className="text-blue-200">
                       검사코드: <span className="font-mono font-semibold">{counselorCode}</span>
-                    </p>
-                  )}
-                  {resultCode && (
-                    <p className="text-blue-200">
-                      검사결과 코드: <span className="font-mono font-semibold">{resultCode}</span>
                     </p>
                   )}
                 </>
