@@ -30,6 +30,7 @@ interface TestRecord {
   code: string;
   timestamp: string;
   testType: string;
+  counselorCode?: string;
   userData?: {
     birthYear?: number;
     gender?: string;
@@ -38,6 +39,7 @@ interface TestRecord {
     answers?: any;
     clientInfo?: any;
     groupCode?: string;
+    counselorCode?: string;
   };
   result?: any;
   status?: string;
