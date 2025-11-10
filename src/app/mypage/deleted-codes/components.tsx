@@ -1077,13 +1077,17 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
-                          {record.counselorCode || 
-                           record.userData?.counselorCode || 
-                           record.userData?.clientInfo?.counselorCode ||
-                           record.userData?.clientInfo?.groupCode ||
-                           record.userData?.groupCode ||
-                           record.code || 
-                           '-'}
+                          {(() => {
+                            // 타입 안전한 검사코드 추출
+                            const userData = record.userData as any;
+                            return record.counselorCode || 
+                                   userData?.counselorCode || 
+                                   userData?.clientInfo?.counselorCode ||
+                                   userData?.clientInfo?.groupCode ||
+                                   userData?.groupCode ||
+                                   record.code || 
+                                   '-';
+                          })()}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
