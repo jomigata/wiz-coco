@@ -394,15 +394,24 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         // 마이페이지 검사 기록에 추가 (로그인 사용자만)
         if (isLoggedIn && testCode) {
           try {
+            // counselorCode 생성 (groupCode를 counselorCode로 사용)
+            const counselorCode = clientInfo?.groupCode || codeData?.groupCode || null;
+            
             const testRecord = {
               code: testCode,
+              counselorCode: counselorCode, // counselorCode 추가
               testType: '전문가용 MBTI 검사',
               timestamp: completionTime,
               mbtiType: calculateMbtiType(answers),
               userData: {
                 answers: answers,
                 result: calculateMbtiType(answers),
-                clientInfo: clientInfo
+                clientInfo: {
+                  ...(clientInfo || {}),
+                  counselorCode: counselorCode // clientInfo에도 counselorCode 추가
+                },
+                counselorCode: counselorCode, // userData에도 counselorCode 추가
+                groupCode: clientInfo?.groupCode || codeData?.groupCode || undefined
               },
               status: '완료'
             };

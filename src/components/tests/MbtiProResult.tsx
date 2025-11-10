@@ -1039,9 +1039,13 @@ const MbtiProResult: React.FC = () => {
   // 로컬 테스트 기록 업데이트
   const updateLocalTestRecords = (testResult: any) => {
     try {
+      // counselorCode 생성 (groupCode를 counselorCode로 사용)
+      const counselorCode = clientInfo?.groupCode || null;
+      
       // 테스트 기록 객체 생성
       const newRecord = {
         code: testResult.code,
+        counselorCode: counselorCode, // counselorCode 추가
         timestamp: testResult.timestamp || new Date().toISOString(),
         testType: testResult.testType || 'MBTI 전문가용 검사',
         userData: {
@@ -1049,7 +1053,12 @@ const MbtiProResult: React.FC = () => {
           gender: clientInfo?.gender || '-',
           birthYear: clientInfo?.birthYear || null,
           testDate: testResult.testDate || new Date().toISOString(),
-          groupCode: clientInfo?.groupCode || '-'
+          groupCode: clientInfo?.groupCode || '-',
+          counselorCode: counselorCode, // userData에도 counselorCode 추가
+          clientInfo: {
+            ...(clientInfo || {}),
+            counselorCode: counselorCode // clientInfo에도 counselorCode 추가
+          }
         },
         result: {
           mbtiType: testResult.mbtiType,
