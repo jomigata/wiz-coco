@@ -621,9 +621,32 @@ function MbtiResultContent() {
                 개인용 MBTI 검사 결과
               </h1>
               <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-              <p className="text-blue-200 mt-4">
-                테스트 코드: <span className="font-mono font-semibold">{testCode}</span>
-              </p>
+              {/* 검사코드와 검사결과 코드 표시 */}
+              <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                {(() => {
+                  const counselorCode = testResult?.counselorCode || 
+                                       testResult?.userData?.counselorCode || 
+                                       testResult?.userData?.clientInfo?.counselorCode ||
+                                       testResult?.userData?.clientInfo?.groupCode ||
+                                       testResult?.userData?.groupCode ||
+                                       null;
+                  
+                  return (
+                    <>
+                      {counselorCode && (
+                        <p className="text-blue-200">
+                          검사코드: <span className="font-mono font-semibold">{counselorCode}</span>
+                        </p>
+                      )}
+                      {testCode && (
+                        <p className="text-blue-200">
+                          검사결과 코드: <span className="font-mono font-semibold">{testCode}</span>
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
 
             {/* MBTI 유형 결과 카드 */}

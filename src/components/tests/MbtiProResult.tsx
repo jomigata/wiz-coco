@@ -1319,11 +1319,27 @@ const MbtiProResult: React.FC = () => {
               전문가용 MBTI 검사 결과
             </h1>
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-          {resultCode && (
-            <p className="text-blue-200 mt-4">
-              테스트 코드: <span className="font-mono font-semibold">{resultCode}</span>
-            </p>
-          )}
+          {/* 검사코드와 검사결과 코드 표시 */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            {(() => {
+              const counselorCode = clientInfo?.groupCode || null;
+              
+              return (
+                <>
+                  {counselorCode && (
+                    <p className="text-blue-200">
+                      검사코드: <span className="font-mono font-semibold">{counselorCode}</span>
+                    </p>
+                  )}
+                  {resultCode && (
+                    <p className="text-blue-200">
+                      검사결과 코드: <span className="font-mono font-semibold">{resultCode}</span>
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
         </div>
 
         {/* 검사자 결과정보 섹션 */}
