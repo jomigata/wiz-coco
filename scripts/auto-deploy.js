@@ -289,7 +289,21 @@ async function autoDeploy() {
     log('📋 5단계: 배포 상태 확인', 'cyan');
     log('🔍 배포 상태 확인 중...', 'blue');
     log('📊 GitHub Actions가 자동으로 실행됩니다', 'green');
-    log('🌐 Actions URL: https://github.com/jomigata/wiz-coco/actions', 'cyan');
+    
+    // 커밋 해시로 최신 워크플로우 실행 링크 생성
+    const commitHashShort = commitHash.trim().substring(0, 8);
+    const actionsUrl = 'https://github.com/jomigata/wiz-coco/actions';
+    const latestRunUrl = `https://github.com/jomigata/wiz-coco/actions/runs?query=sha%3A${commitHash.trim()}`;
+    
+    log('🌐 Actions 페이지:', 'cyan');
+    log(`   전체 Actions: ${actionsUrl}`, 'cyan');
+    log(`   최신 실행: ${latestRunUrl}`, 'cyan');
+    log('', 'reset');
+    log('💡 Actions 상태 확인 방법:', 'yellow');
+    log('   1. 위의 Actions 페이지 링크를 클릭하세요', 'yellow');
+    log('   2. 브라우저에서 F5 키 또는 새로고침 버튼을 눌러 최신 상태를 확인하세요', 'yellow');
+    log('   3. 최신 실행 링크에서 해당 커밋의 워크플로우 실행 상태를 바로 확인할 수 있습니다', 'yellow');
+    log('', 'reset');
     
     // 6단계: 배포 완료 대기 (선택적)
     if (process.argv.includes('--wait')) {
@@ -375,24 +389,47 @@ async function attemptRecovery() {
 
 // 배포 완료 대기 함수 (선택적)
 async function waitForDeployment() {
+  const commitHash = execSync('git rev-parse HEAD', { 
+    encoding: 'utf8', 
+    stdio: 'pipe',
+    timeout: 10000 
+  }).trim();
+  
+  const latestRunUrl = `https://github.com/jomigata/wiz-coco/actions/runs?query=sha%3A${commitHash}`;
+  
+  log('⏳ GitHub Actions 실행 상태 모니터링 시작...', 'yellow');
+  log(`🌐 최신 실행 확인: ${latestRunUrl}`, 'cyan');
+  log('💡 브라우저에서 위 링크를 열고 F5 키를 눌러 새로고침하면 최신 상태를 확인할 수 있습니다', 'yellow');
+  log('', 'reset');
+  
   return new Promise((resolve) => {
+    let checkCount = 0;
+    const maxChecks = 20; // 최대 10분 (30초 * 20)
+    
     const interval = setInterval(() => {
-      log('⏳ GitHub Actions 실행 중...', 'yellow');
+      checkCount++;
+      const remainingTime = Math.ceil((maxChecks - checkCount) * 30 / 60);
+      log(`⏳ GitHub Actions 실행 중... (${checkCount}/${maxChecks} 확인, 약 ${remainingTime}분 남음)`, 'yellow');
+      log(`💡 상태 확인: ${latestRunUrl}`, 'cyan');
+      log('   브라우저에서 F5 키를 눌러 새로고침하세요', 'yellow');
+      
+      if (checkCount >= maxChecks) {
+        clearInterval(interval);
+        log('⏰ 자동 대기 시간 종료', 'yellow');
+        log('🌐 Actions 페이지에서 수동으로 확인하세요:', 'cyan');
+        log(`   ${latestRunUrl}`, 'cyan');
+        resolve();
+      }
     }, 30000); // 30초마다 상태 출력
     
     // 사용자가 Ctrl+C로 중단할 수 있도록
     process.on('SIGINT', () => {
       clearInterval(interval);
       log('🛑 사용자에 의해 중단됨', 'yellow');
+      log('🌐 Actions 페이지에서 수동으로 확인하세요:', 'cyan');
+      log(`   ${latestRunUrl}`, 'cyan');
       resolve();
     });
-    
-    // 10분 후 자동 종료
-    setTimeout(() => {
-      clearInterval(interval);
-      log('⏰ 자동 대기 시간 종료', 'yellow');
-      resolve();
-    }, 600000);
   });
 }
 
