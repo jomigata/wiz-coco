@@ -310,8 +310,18 @@ const MbtiProResult: React.FC = () => {
             setLoadedAnswers(resultData.answers);
           }
           
+          // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
           if (resultData.clientInfo) {
             setLoadedClientInfo(resultData.clientInfo);
+          } else if (resultData.userData?.clientInfo) {
+            setLoadedClientInfo(resultData.userData.clientInfo);
+          } else if (resultData.userData) {
+            setLoadedClientInfo({
+              name: resultData.userData.name,
+              gender: resultData.userData.gender,
+              birthYear: resultData.userData.birthYear,
+              groupCode: resultData.userData.groupCode
+            });
           }
           
           setIsDataLoading(false);
@@ -336,7 +346,20 @@ const MbtiProResult: React.FC = () => {
             if (storedCode === codeParam) {
               console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾았습니다.`);
               setLoadedAnswers(savedData.answers || {});
-              setLoadedClientInfo(savedData.clientInfo);
+              
+              // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
+              if (savedData.clientInfo) {
+                setLoadedClientInfo(savedData.clientInfo);
+              } else if ((savedData as any).userData?.clientInfo) {
+                setLoadedClientInfo((savedData as any).userData.clientInfo);
+              } else if ((savedData as any).userData) {
+                setLoadedClientInfo({
+                  name: (savedData as any).userData.name,
+                  gender: (savedData as any).userData.gender,
+                  birthYear: (savedData as any).userData.birthYear,
+                  groupCode: (savedData as any).userData.groupCode
+                });
+              }
               
               // 데이터가 성공적으로 로드된 후 즉시 코드 생성을 위한 상태 설정
               setResultCode(codeParam);
