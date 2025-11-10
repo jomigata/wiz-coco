@@ -16,6 +16,8 @@
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 // 색상 코드
 const colors = {
@@ -291,24 +293,40 @@ async function autoDeploy() {
     log('📊 GitHub Actions가 자동으로 실행됩니다', 'green');
     
     // 커밋 해시로 최신 워크플로우 실행 링크 생성
-    const commitHashShort = commitHash.trim().substring(0, 8);
+    const commitHashFull = commitHash.trim();
+    const commitHashShort = commitHashFull.substring(0, 8);
     const actionsUrl = 'https://github.com/jomigata/wiz-coco/actions';
-    const latestRunUrl = `https://github.com/jomigata/wiz-coco/actions/runs?query=sha%3A${commitHash.trim()}`;
+    const latestRunUrl = `https://github.com/jomigata/wiz-coco/actions/runs?query=sha%3A${commitHashFull}`;
     
     log('🌐 Actions 페이지:', 'cyan');
     log(`   전체 Actions: ${actionsUrl}`, 'cyan');
     log(`   최신 실행: ${latestRunUrl}`, 'cyan');
     log('', 'reset');
-    log('💡 Actions 상태 확인 방법:', 'yellow');
-    log('   1. 위의 Actions 페이지 링크를 클릭하세요', 'yellow');
-    log('   2. 브라우저에서 F5 키 또는 새로고침 버튼을 눌러 최신 상태를 확인하세요', 'yellow');
-    log('   3. 최신 실행 링크에서 해당 커밋의 워크플로우 실행 상태를 바로 확인할 수 있습니다', 'yellow');
-    log('', 'reset');
+    
+    // 자동 상태 모니터링 시작 (기본적으로 활성화)
+    const shouldMonitor = !process.argv.includes('--no-monitor');
+    if (shouldMonitor) {
+      log('🔄 GitHub Actions 상태 자동 모니터링 시작...', 'yellow');
+      log('💡 터미널에서 실시간으로 Actions 상태를 확인할 수 있습니다', 'yellow');
+      log('   (--no-monitor 옵션으로 자동 모니터링을 비활성화할 수 있습니다)', 'yellow');
+      log('', 'reset');
+      
+      // 백그라운드에서 상태 모니터링 시작 (비동기)
+      monitorActionsStatus(commitHashFull).catch(err => {
+        log(`⚠️ Actions 상태 모니터링 오류: ${err.message}`, 'yellow');
+      });
+    } else {
+      log('💡 Actions 상태 확인 방법:', 'yellow');
+      log('   1. 위의 Actions 페이지 링크를 클릭하세요', 'yellow');
+      log('   2. 브라우저에서 F5 키 또는 새로고침 버튼을 눌러 최신 상태를 확인하세요', 'yellow');
+      log('   3. 최신 실행 링크에서 해당 커밋의 워크플로우 실행 상태를 바로 확인할 수 있습니다', 'yellow');
+      log('', 'reset');
+    }
     
     // 6단계: 배포 완료 대기 (선택적)
     if (process.argv.includes('--wait')) {
       log('⏳ 배포 완료 대기 중... (Ctrl+C로 중단 가능)', 'yellow');
-      await waitForDeployment();
+      await waitForDeployment(commitHashFull);
     }
     
     log('🎉 완전 자동화 배포 완료!', 'bright');
@@ -387,50 +405,157 @@ async function attemptRecovery() {
   }
 }
 
+// GitHub Actions 상태 모니터링 함수 (자동)
+async function monitorActionsStatus(commitHash) {
+  const maxChecks = 40; // 최대 20분 (30초 * 40)
+  let checkCount = 0;
+  let lastStatus = null;
+  
+  return new Promise((resolve) => {
+    const interval = setInterval(async () => {
+      checkCount++;
+      
+      try {
+        // GitHub Actions API를 통해 워크플로우 실행 상태 확인
+        const status = await checkWorkflowStatus(commitHash);
+        
+        if (status) {
+          const statusEmoji = status.conclusion === 'success' ? '✅' : 
+                             status.conclusion === 'failure' ? '❌' : 
+                             status.status === 'in_progress' ? '🔄' : '⏳';
+          const statusText = status.conclusion === 'success' ? '성공' : 
+                            status.conclusion === 'failure' ? '실패' : 
+                            status.status === 'in_progress' ? '진행 중' : '대기 중';
+          
+          // 상태가 변경되었을 때만 출력
+          if (lastStatus !== status.status + status.conclusion) {
+            log(`📊 Actions 상태: ${statusEmoji} ${statusText}`, 
+                status.conclusion === 'success' ? 'green' : 
+                status.conclusion === 'failure' ? 'red' : 'yellow');
+            
+            if (status.runUrl) {
+              log(`   실행 링크: ${status.runUrl}`, 'cyan');
+            }
+            
+            if (status.conclusion === 'success') {
+              log('🎉 배포가 성공적으로 완료되었습니다!', 'bright');
+              clearInterval(interval);
+              resolve();
+              return;
+            } else if (status.conclusion === 'failure') {
+              log('❌ 배포가 실패했습니다. Actions 페이지에서 로그를 확인하세요.', 'red');
+              clearInterval(interval);
+              resolve();
+              return;
+            }
+            
+            lastStatus = status.status + (status.conclusion || '');
+          }
+        }
+      } catch (error) {
+        // API 호출 실패는 조용히 무시 (네트워크 문제 등)
+        if (checkCount % 4 === 0) { // 2분마다 한 번만 경고
+          log(`⚠️ Actions 상태 확인 중 오류 (재시도 중...): ${error.message}`, 'yellow');
+        }
+      }
+      
+      if (checkCount >= maxChecks) {
+        clearInterval(interval);
+        log('⏰ 자동 모니터링 시간 종료', 'yellow');
+        log('🌐 Actions 페이지에서 수동으로 확인하세요:', 'cyan');
+        log(`   https://github.com/jomigata/wiz-coco/actions/runs?query=sha%3A${commitHash}`, 'cyan');
+        resolve();
+      }
+    }, 30000); // 30초마다 상태 확인
+  });
+}
+
+// GitHub Actions 워크플로우 상태 확인 함수
+function checkWorkflowStatus(commitHash) {
+  return new Promise((resolve, reject) => {
+    const owner = 'jomigata';
+    const repo = 'wiz-coco';
+    
+    // GitHub API 엔드포인트 (공개 저장소는 인증 없이도 가능)
+    const apiUrl = `/repos/${owner}/${repo}/actions/runs?head_sha=${commitHash}&per_page=1`;
+    
+    const options = {
+      hostname: 'api.github.com',
+      path: apiUrl,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'WizCoCo-Deploy-Script',
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    };
+    
+    const req = https.request(options, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          if (res.statusCode === 200) {
+            const response = JSON.parse(data);
+            if (response.workflow_runs && response.workflow_runs.length > 0) {
+              const run = response.workflow_runs[0];
+              resolve({
+                status: run.status,
+                conclusion: run.conclusion,
+                runUrl: run.html_url,
+                createdAt: run.created_at,
+                updatedAt: run.updated_at
+              });
+            } else {
+              resolve(null); // 아직 워크플로우가 시작되지 않음
+            }
+          } else if (res.statusCode === 403) {
+            // API rate limit 또는 인증 필요
+            reject(new Error('API rate limit 또는 인증이 필요합니다'));
+          } else {
+            reject(new Error(`API 호출 실패: ${res.statusCode}`));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    
+    req.on('error', (error) => {
+      reject(error);
+    });
+    
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error('API 호출 타임아웃'));
+    });
+    
+    req.end();
+  });
+}
+
 // 배포 완료 대기 함수 (선택적)
-async function waitForDeployment() {
-  const commitHash = execSync('git rev-parse HEAD', { 
-    encoding: 'utf8', 
-    stdio: 'pipe',
-    timeout: 10000 
-  }).trim();
+async function waitForDeployment(commitHash) {
+  if (!commitHash) {
+    commitHash = execSync('git rev-parse HEAD', { 
+      encoding: 'utf8', 
+      stdio: 'pipe',
+      timeout: 10000 
+    }).trim();
+  }
   
   const latestRunUrl = `https://github.com/jomigata/wiz-coco/actions/runs?query=sha%3A${commitHash}`;
   
   log('⏳ GitHub Actions 실행 상태 모니터링 시작...', 'yellow');
   log(`🌐 최신 실행 확인: ${latestRunUrl}`, 'cyan');
-  log('💡 브라우저에서 위 링크를 열고 F5 키를 눌러 새로고침하면 최신 상태를 확인할 수 있습니다', 'yellow');
+  log('💡 터미널에서 실시간으로 Actions 상태를 확인할 수 있습니다', 'yellow');
   log('', 'reset');
   
-  return new Promise((resolve) => {
-    let checkCount = 0;
-    const maxChecks = 20; // 최대 10분 (30초 * 20)
-    
-    const interval = setInterval(() => {
-      checkCount++;
-      const remainingTime = Math.ceil((maxChecks - checkCount) * 30 / 60);
-      log(`⏳ GitHub Actions 실행 중... (${checkCount}/${maxChecks} 확인, 약 ${remainingTime}분 남음)`, 'yellow');
-      log(`💡 상태 확인: ${latestRunUrl}`, 'cyan');
-      log('   브라우저에서 F5 키를 눌러 새로고침하세요', 'yellow');
-      
-      if (checkCount >= maxChecks) {
-        clearInterval(interval);
-        log('⏰ 자동 대기 시간 종료', 'yellow');
-        log('🌐 Actions 페이지에서 수동으로 확인하세요:', 'cyan');
-        log(`   ${latestRunUrl}`, 'cyan');
-        resolve();
-      }
-    }, 30000); // 30초마다 상태 출력
-    
-    // 사용자가 Ctrl+C로 중단할 수 있도록
-    process.on('SIGINT', () => {
-      clearInterval(interval);
-      log('🛑 사용자에 의해 중단됨', 'yellow');
-      log('🌐 Actions 페이지에서 수동으로 확인하세요:', 'cyan');
-      log(`   ${latestRunUrl}`, 'cyan');
-      resolve();
-    });
-  });
+  // 자동 상태 모니터링 시작
+  await monitorActionsStatus(commitHash);
 }
 
 // 스마트 배포 함수 (강화된 변경사항 분석 및 최적화)
