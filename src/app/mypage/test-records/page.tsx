@@ -675,15 +675,28 @@ function TestRecordsContent() {
             if (Array.isArray(mbtiRecords) && mbtiRecords.length > 0) {
               mbtiRecords.forEach(record => {
                 if (record.testCode) {
+                  // counselorCode 추출 (여러 위치에서 확인)
+                  const counselorCode = record.counselorCode || 
+                                       record.userData?.counselorCode || 
+                                       record.userData?.clientInfo?.counselorCode ||
+                                       record.userData?.clientInfo?.groupCode ||
+                                       record.userData?.groupCode ||
+                                       null;
+                  
                   // 맵에 테스트 코드를 키로 추가
                   allRecordsMap.set(record.testCode, {
                     code: record.testCode,
                     timestamp: record.timestamp || new Date().toISOString(),
                     testType: record.testType || 'MBTI 검사',
-                    userData: record.userData || {},
+                    counselorCode: counselorCode, // counselorCode 추가
+                    userData: {
+                      ...(record.userData || {}),
+                      counselorCode: counselorCode, // userData에도 추가
+                      groupCode: record.userData?.groupCode || record.userData?.clientInfo?.groupCode || undefined
+                    },
                     result: record.result || {}
                   });
-                  console.log(`mbti-user-test-records에서 찾은 기록: ${record.testCode}`);
+                  console.log(`mbti-user-test-records에서 찾은 기록: ${record.testCode}, counselorCode: ${counselorCode}`);
                 }
               });
             }
@@ -708,13 +721,27 @@ function TestRecordsContent() {
                 const codeRegex = /^(MB|MP|EP|AP|EA|AA|EG|AG)\d{2,3}-[A-Z]{5}$|^(MB|MP|EP|AP|EA|AA|EG|AG)\d{1,3}[A-Za-z0-9\-]{1,10}$/;
                 return record.code && codeRegex.test(record.code);
               }).forEach(record => {
+                // counselorCode 추출 (여러 위치에서 확인)
+                const counselorCode = record.counselorCode || 
+                                     record.userData?.counselorCode || 
+                                     record.userData?.clientInfo?.counselorCode ||
+                                     record.userData?.clientInfo?.groupCode ||
+                                     record.userData?.groupCode ||
+                                     null;
+                
                 // 해당 코드의 기록이 아직 맵에 없는 경우에만 추가
                 if (!allRecordsMap.has(record.code)) {
                   allRecordsMap.set(record.code, {
                     ...record,
-                    status: record.status || '완료' // 상태 정보가 없으면 '완료'로 설정
+                    counselorCode: counselorCode || record.counselorCode, // counselorCode 추가
+                    status: record.status || '완료', // 상태 정보가 없으면 '완료'로 설정
+                    userData: {
+                      ...(record.userData || {}),
+                      counselorCode: counselorCode || record.userData?.counselorCode,
+                      groupCode: record.userData?.groupCode || record.userData?.clientInfo?.groupCode || undefined
+                    }
                   });
-                  console.log(`test_records에서만 찾은 기록: ${record.code}`);
+                  console.log(`test_records에서만 찾은 기록: ${record.code}, counselorCode: ${counselorCode}`);
                 } else {
                   // 이미 맵에 있지만 test_records의 정보가 더 상세한 경우 병합
                   const existingRecord = allRecordsMap.get(record.code);
@@ -722,11 +749,17 @@ function TestRecordsContent() {
                     const mergedRecord = {
                       ...existingRecord,
                       ...record,
-                      userData: { ...(existingRecord.userData || {}), ...(record.userData || {}) },
+                      counselorCode: counselorCode || existingRecord.counselorCode || record.counselorCode, // counselorCode 병합
+                      userData: { 
+                        ...(existingRecord.userData || {}), 
+                        ...(record.userData || {}),
+                        counselorCode: counselorCode || existingRecord.userData?.counselorCode || record.userData?.counselorCode,
+                        groupCode: record.userData?.groupCode || record.userData?.clientInfo?.groupCode || existingRecord.userData?.groupCode
+                      },
                       result: { ...(existingRecord.result || {}), ...(record.result || {}) }
                     };
                     allRecordsMap.set(record.code, mergedRecord);
-                    console.log(`기존 기록과 병합: ${record.code}`);
+                    console.log(`기존 기록과 병합: ${record.code}, counselorCode: ${mergedRecord.counselorCode}`);
                   }
                 }
               });
@@ -1497,7 +1530,13 @@ function TestRecordsContent() {
                               />
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-white">
-                              {record.counselorCode || record.userData?.counselorCode || record.code || '-'}
+                              {record.counselorCode || 
+                               record.userData?.counselorCode || 
+                               record.userData?.clientInfo?.counselorCode ||
+                               record.userData?.clientInfo?.groupCode ||
+                               record.userData?.groupCode ||
+                               record.code || 
+                               '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
                               {formatDate(record.timestamp)}
