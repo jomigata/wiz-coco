@@ -50,6 +50,17 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   
   // 검사 단계 상태 추가
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
+  
+  // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentStep === 'code' || currentStep === 'info' || currentStep === 'test') {
+        sessionStorage.setItem('currentTestStep', currentStep);
+      } else {
+        sessionStorage.removeItem('currentTestStep');
+      }
+    }
+  }, [currentStep]);
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
@@ -547,6 +558,8 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           localStorage.removeItem('mbti_pro_code_data');
           // 검사 완료 직후임을 표시하는 플래그 설정
           sessionStorage.setItem('testJustCompleted', 'true');
+          // 검사 완료 시 currentTestStep 정리
+          sessionStorage.removeItem('currentTestStep');
         }
         setCodeData(null);
       } catch {}

@@ -91,6 +91,17 @@ function MbtiTestPageContent() {
   
   const initialProgress = getInitialProgress();
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
+  
+  // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentStep === 'code' || currentStep === 'info' || currentStep === 'test') {
+        sessionStorage.setItem('currentTestStep', currentStep);
+      } else {
+        sessionStorage.removeItem('currentTestStep');
+      }
+    }
+  }, [currentStep]);
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(initialProgress.codeData);
   const [clientInfo, setClientInfo] = useState<any>(initialProgress.clientInfo);
   const [savedAnswers, setSavedAnswers] = useState<any>(initialProgress.savedAnswers);
@@ -746,6 +757,8 @@ function MbtiTestPageContent() {
       // 검사 완료 직후임을 표시하는 플래그 설정
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('testJustCompleted', 'true');
+        // 검사 완료 시 currentTestStep 정리
+        sessionStorage.removeItem('currentTestStep');
       }
       
       // 결과 페이지로 이동 (검사 완료 직후임을 표시하는 파라미터 추가)

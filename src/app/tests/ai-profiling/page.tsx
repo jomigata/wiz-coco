@@ -14,6 +14,18 @@ function AIProfilingPageContent() {
   const router = useRouter();
   const testId = generateTestId(pathname || '/tests/ai-profiling');
   const [currentChapter, setCurrentChapter] = useState(0);
+  
+  // currentChapter 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // currentChapter가 0보다 크면 검사 진행 중으로 간주
+      if (currentChapter > 0) {
+        sessionStorage.setItem('currentTestStep', 'test');
+      } else {
+        sessionStorage.removeItem('currentTestStep');
+      }
+    }
+  }, [currentChapter]);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);

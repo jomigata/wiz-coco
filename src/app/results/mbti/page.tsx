@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
@@ -91,64 +91,14 @@ function MbtiResultContent() {
   const [isFromCompletion, setIsFromCompletion] = useState<boolean>(false);
   const [isFromDeletedCodes, setIsFromDeletedCodes] = useState<boolean>(false);
   
-  useEffect(() => {
-    // URL 파라미터에서 테스트 코드와 MBTI 유형 가져오기
-    const code = searchParams.get('code');
-    const type = searchParams.get('type');
-    const from = searchParams.get('from');
-    
-    // 검사 완료 직후인지 확인 (URL 파라미터 또는 sessionStorage)
-    if (from === 'completion' || (typeof window !== 'undefined' && sessionStorage.getItem('testJustCompleted') === 'true')) {
-      setIsFromCompletion(true);
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('testJustCompleted', 'true');
-      }
-    }
-    
-    // 삭제코드 페이지에서 접근한 경우 확인
-    if (typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true') {
-      setIsFromDeletedCodes(true);
-    }
-    
-    if (code) {
-      // URL에서 받은 코드를 그대로 사용 (검사기록 목록의 코드와 일치)
-      setTestCode(code);
-      fetchTestResult(code);
-    } else {
-      // 코드가 없으면 로컬 스토리지에서 최근 결과 찾기
-      try {
-        const testRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-        if (testRecords.length > 0) {
-          // 가장 최근 기록의 코드 사용
-          const latestRecord = testRecords[testRecords.length - 1];
-          if (latestRecord.code) {
-            setTestCode(latestRecord.code);
-            fetchTestResult(latestRecord.code);
-          } else {
-            // 코드가 없으면 새로 생성
-            const newCode = generateUniqueTestCode();
-            setTestCode(newCode);
-          }
-        } else {
-          // 기록이 없으면 새로 생성
-          const newCode = generateUniqueTestCode();
-          setTestCode(newCode);
-        }
-      } catch (e) {
-        // 오류 발생 시 새로 생성
-        const newCode = generateUniqueTestCode();
-        setTestCode(newCode);
-      }
-    }
-    
-    if (type) {
-      setMbtiType(type.toUpperCase());
-      setIsLoading(false);
-    }
-  }, [searchParams]);
+  // 데이터 로딩 완료 플래그 추가 (중복 호출 방지)
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   
-  // 테스트 결과 가져오기
-  const fetchTestResult = async (code: string) => {
+  // 테스트 결과 가져오기 (useCallback으로 메모이제이션)
+  const fetchTestResult = useCallback(async (code: string) => {
+    // 이미 데이터가 로드되었으면 다시 로드하지 않음
+    if (isDataLoaded) return;
+    
     try {
       console.log('[MbtiResult] 테스트 코드로 결과 조회 시작:', code);
       
@@ -156,12 +106,36 @@ function MbtiResultContent() {
       const localResult = getTestResultFromLocalStorage(code);
       if (localResult) {
         console.log('[MbtiResult] 로컬 스토리지에서 결과 발견:', localResult);
-        setTestResult(localResult);
+        
+        // timestamp와 testType이 없으면 test_records에서 보완
+        let finalResult = localResult;
+        if (!localResult.timestamp || !localResult.testType) {
+          try {
+            const testRecordsStr = localStorage.getItem('test_records');
+            if (testRecordsStr) {
+              const records = JSON.parse(testRecordsStr);
+              const foundRecord = records.find((record: any) => record.code === code);
+              if (foundRecord) {
+                finalResult = {
+                  ...localResult,
+                  timestamp: localResult.timestamp || foundRecord.timestamp,
+                  testType: localResult.testType || foundRecord.testType,
+                  userData: localResult.userData || foundRecord.userData
+                };
+              }
+            }
+          } catch (e) {
+            console.warn('[MbtiResult] test_records에서 보완 데이터 가져오기 실패:', e);
+          }
+        }
+        
+        setTestResult(finalResult);
         
         // MBTI 타입 계산 및 설정
-        const calculatedMbtiType = calculateMbtiType(localResult.answers);
+        const calculatedMbtiType = calculateMbtiType(finalResult.answers);
         setMbtiType(calculatedMbtiType);
         setIsLoading(false);
+        setIsDataLoaded(true);
         return;
       }
 
@@ -231,6 +205,7 @@ function MbtiResultContent() {
           
           setMbtiType(calculatedMbtiType);
           setIsLoading(false);
+          setIsDataLoaded(true);
           // 삭제된 기록이어도 결과를 표시하므로 에러 메시지 제거
           // setError('이 검사 결과는 삭제된 상태입니다. 복구하시려면 마이페이지 > 삭제코드에서 복구하실 수 있습니다.');
           return;
@@ -280,14 +255,17 @@ function MbtiResultContent() {
           if (resultData.mbtiType) {
             setMbtiType(resultData.mbtiType.toUpperCase());
           }
+          setIsDataLoaded(true);
         } else {
           console.warn('[MbtiResult] API 응답에 데이터가 없음');
           setError('테스트 결과를 찾을 수 없습니다. 테스트를 다시 시도해주세요.');
+          setIsDataLoaded(true);
         }
       } else {
         console.warn('[MbtiResult] API 응답 오류:', response.status);
         const errorData = await response.json();
         setError(errorData.message || '테스트 결과를 불러올 수 없습니다.');
+        setIsDataLoaded(true);
       }
       
       setIsLoading(false);
@@ -296,8 +274,66 @@ function MbtiResultContent() {
       setError('테스트 결과를 불러오는 중 오류가 발생했습니다.');
       setIsLoading(false);
     }
-  };
-
+  }, [isDataLoaded]);
+  
+  useEffect(() => {
+    // 이미 데이터가 로드되었으면 다시 로드하지 않음
+    if (isDataLoaded) return;
+    
+    // URL 파라미터에서 테스트 코드와 MBTI 유형 가져오기
+    const code = searchParams.get('code');
+    const type = searchParams.get('type');
+    const from = searchParams.get('from');
+    
+    // 검사 완료 직후인지 확인 (URL 파라미터 또는 sessionStorage)
+    if (from === 'completion' || (typeof window !== 'undefined' && sessionStorage.getItem('testJustCompleted') === 'true')) {
+      setIsFromCompletion(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('testJustCompleted', 'true');
+      }
+    }
+    
+    // 삭제코드 페이지에서 접근한 경우 확인
+    if (typeof window !== 'undefined' && sessionStorage.getItem('returnToDeletedCodes') === 'true') {
+      setIsFromDeletedCodes(true);
+    }
+    
+    if (code) {
+      // URL에서 받은 코드를 그대로 사용 (검사기록 목록의 코드와 일치)
+      setTestCode(code);
+      fetchTestResult(code);
+    } else {
+      // 코드가 없으면 로컬 스토리지에서 최근 결과 찾기
+      try {
+        const testRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
+        if (testRecords.length > 0) {
+          // 가장 최근 기록의 코드 사용
+          const latestRecord = testRecords[testRecords.length - 1];
+          if (latestRecord.code) {
+            setTestCode(latestRecord.code);
+            fetchTestResult(latestRecord.code);
+          } else {
+            // 코드가 없으면 새로 생성
+            const newCode = generateUniqueTestCode();
+            setTestCode(newCode);
+          }
+        } else {
+          // 기록이 없으면 새로 생성
+          const newCode = generateUniqueTestCode();
+          setTestCode(newCode);
+        }
+      } catch (e) {
+        // 오류 발생 시 새로 생성
+        const newCode = generateUniqueTestCode();
+        setTestCode(newCode);
+      }
+    }
+    
+    if (type) {
+      setMbtiType(type.toUpperCase());
+    }
+  }, [searchParams, isDataLoaded, fetchTestResult]);
+  
   // 로컬 스토리지에서 테스트 결과 가져오기
   const getTestResultFromLocalStorage = (code: string) => {
     try {
@@ -306,6 +342,26 @@ function MbtiResultContent() {
       if (directResult) {
         const parsed = JSON.parse(directResult);
         if (parsed && (parsed.answers || parsed.mbtiType)) {
+          // timestamp와 testType이 없으면 test_records에서 보완
+          if (!parsed.timestamp || !parsed.testType) {
+            const testRecordsStr = localStorage.getItem('test_records');
+            if (testRecordsStr) {
+              try {
+                const records = JSON.parse(testRecordsStr);
+                const foundRecord = records.find((record: any) => record.code === code);
+                if (foundRecord) {
+                  return {
+                    ...parsed,
+                    timestamp: parsed.timestamp || foundRecord.timestamp,
+                    testType: parsed.testType || foundRecord.testType,
+                    userData: parsed.userData || foundRecord.userData
+                  };
+                }
+              } catch (e) {
+                console.warn('[MbtiResult] test_records에서 보완 데이터 가져오기 실패:', e);
+              }
+            }
+          }
           return parsed;
         }
       }
@@ -327,7 +383,13 @@ function MbtiResultContent() {
           }
           // result가 없으면 레코드 자체를 반환 (일부 결과는 레코드에 직접 포함될 수 있음)
           if (foundRecord.answers || foundRecord.mbtiType) {
-            return foundRecord;
+            // timestamp와 testType이 항상 포함되도록 보장
+            return {
+              ...foundRecord,
+              timestamp: foundRecord.timestamp,
+              testType: foundRecord.testType,
+              userData: foundRecord.userData
+            };
           }
         }
       }

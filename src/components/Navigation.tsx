@@ -60,7 +60,7 @@ export default function Navigation() {
     }
   }, []);
 
-  // 실제 검사 진행 중인지 확인 (모든 검사 진행 중에는 말풍선 숨김)
+  // 실제 검사 진행 중인지 확인 (시작 페이지와 질문 답변 페이지에서는 말풍선 숨김)
   // 검사결과 페이지(/results/)에서는 항상 표시
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -69,14 +69,26 @@ export default function Navigation() {
     }
 
     // 검사결과 페이지에서는 항상 팝업 표시
-    if (pathname?.startsWith('/results/') || pathname?.startsWith('/tests/') && pathname?.includes('/result')) {
+    if (pathname?.startsWith('/results/') || (pathname?.startsWith('/tests/') && pathname?.includes('/result'))) {
       setIsTestInProgress(false);
       return;
     }
 
-    // 모든 검사 페이지(/tests/)에서는 말풍선 숨김
+    // 검사 페이지(/tests/)에서도 기본적으로 말풍선 표시
+    // 단, 시작 페이지(코드입력, 정보입력)나 질문 답변 페이지에서는 숨김
     if (isTestPage) {
-      setIsTestInProgress(true);
+      // sessionStorage에서 현재 검사 단계 확인
+      const currentTestStep = sessionStorage.getItem('currentTestStep');
+      
+      // 시작 페이지나 질문 답변 페이지인 경우 말풍선 숨김
+      // 'code': 코드입력, 'info': 정보입력, 'test': 질문 답변 중
+      if (currentTestStep === 'code' || currentTestStep === 'info' || currentTestStep === 'test') {
+        setIsTestInProgress(true);
+        return;
+      }
+      
+      // 검사 대시보드나 다른 페이지에서는 말풍선 표시
+      setIsTestInProgress(false);
       return;
     }
 
