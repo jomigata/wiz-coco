@@ -26,17 +26,18 @@ export interface ClientInfo {
 
 const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData, onBack }) => {
   const router = useRouter();
-  const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
-  const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
+  // initialData를 초기값으로 사용하되, 변경 시에도 업데이트되도록 함
+  const [birthYear, setBirthYear] = useState<number>(() => initialData?.birthYear || 0);
+  const [birthYearInput, setBirthYearInput] = useState<string>(() => initialData?.birthYear ? String(initialData.birthYear) : '');
   const [isYearSelected, setIsYearSelected] = useState<boolean>(false); // 년도 선택 여부 추적
-  const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
-  const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
-  const [gender, setGender] = useState<string>(initialData?.gender || '');
-  const [maritalStatus, setMaritalStatus] = useState<string>(initialData?.maritalStatus || '');
-  const [name, setName] = useState<string>(initialData?.name || '');
+  const [groupCode, setGroupCode] = useState<string>(() => initialData?.groupCode || '');
+  const [groupPassword, setGroupPassword] = useState<string>(() => initialData?.groupPassword || '');
+  const [gender, setGender] = useState<string>(() => initialData?.gender || '');
+  const [maritalStatus, setMaritalStatus] = useState<string>(() => initialData?.maritalStatus || '');
+  const [name, setName] = useState<string>(() => initialData?.name || '');
   const [showYearSelector, setShowYearSelector] = useState<boolean>(false);
-  const [privacyAgreed, setPrivacyAgreed] = useState<boolean>(initialData?.privacyAgreed ?? true);
-  const [phone, setPhone] = useState<string>(initialData?.phone || '');
+  const [privacyAgreed, setPrivacyAgreed] = useState<boolean>(() => initialData?.privacyAgreed ?? true);
+  const [phone, setPhone] = useState<string>(() => initialData?.phone || '');
   const [errors, setErrors] = useState<{
     birthYear?: string;
     gender?: string;

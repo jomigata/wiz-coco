@@ -815,6 +815,7 @@ function MbtiTestPageContent() {
   }, [currentStep, testId]); // currentStep이 변경될 때마다 실행
 
   // 단계별 렌더링
+  // 컴포넌트 key를 사용하여 currentStep 변경 시 강제 리마운트하여 저장된 값 복원 보장
   return (
     <>
       {currentStep !== 'code' && <Navigation />}
@@ -822,6 +823,7 @@ function MbtiTestPageContent() {
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (
           <MbtiProCodeInput
+            key={`code-${testId}-${currentStep}`} // key를 사용하여 컴포넌트 리마운트 보장
             onSubmit={handleCodeSubmit}
             initialData={codeData}
             isPersonalTest={true}
@@ -830,6 +832,7 @@ function MbtiTestPageContent() {
         
         {currentStep === 'info' && (
           <MbtiProClientInfo
+            key={`info-${testId}-${currentStep}`} // key를 사용하여 컴포넌트 리마운트 보장
             onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
             initialData={clientInfo}
