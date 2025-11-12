@@ -269,7 +269,7 @@ function AIProfilingPageContent() {
     }));
   };
 
-  const nextChapter = () => {
+  const nextChapter = async () => {
     if (currentChapter < chapters.length - 1) {
       setCurrentChapter(currentChapter + 1);
     } else {

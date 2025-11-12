@@ -289,28 +289,31 @@ const MbtiProResult: React.FC = () => {
           if (firebaseResult) {
             console.log(`✅ Firebase DB에서 검사 결과 찾음: ${codeParam}`);
             
+            // 타입 안전성을 위해 any로 캐스팅 (Firestore 데이터는 동적 구조)
+            const resultData = firebaseResult as any;
+            
             // Firebase 데이터에서 answers와 clientInfo 추출
-            if (firebaseResult.answers) {
-              setLoadedAnswers(firebaseResult.answers);
+            if (resultData.answers) {
+              setLoadedAnswers(resultData.answers);
             }
             
             // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
-            if (firebaseResult.clientInfo) {
-              setLoadedClientInfo(firebaseResult.clientInfo);
-            } else if (firebaseResult.userData?.clientInfo) {
-              setLoadedClientInfo(firebaseResult.userData.clientInfo);
-            } else if (firebaseResult.userData) {
+            if (resultData.clientInfo) {
+              setLoadedClientInfo(resultData.clientInfo);
+            } else if (resultData.userData?.clientInfo) {
+              setLoadedClientInfo(resultData.userData.clientInfo);
+            } else if (resultData.userData) {
               setLoadedClientInfo({
-                name: firebaseResult.userData.name,
-                gender: firebaseResult.userData.gender,
-                birthYear: firebaseResult.userData.birthYear,
-                groupCode: firebaseResult.userData.groupCode
+                name: resultData.userData.name,
+                gender: resultData.userData.gender,
+                birthYear: resultData.userData.birthYear,
+                groupCode: resultData.userData.groupCode
               });
             }
             
             // Firebase 데이터를 LocalStorage에 캐시 저장
             try {
-              localStorage.setItem(`test-result-${codeParam}`, JSON.stringify(firebaseResult));
+              localStorage.setItem(`test-result-${codeParam}`, JSON.stringify(resultData));
               console.log('✅ Firebase 데이터를 LocalStorage 캐시에 저장 완료');
             } catch (cacheError) {
               console.warn('LocalStorage 캐시 저장 실패:', cacheError);
