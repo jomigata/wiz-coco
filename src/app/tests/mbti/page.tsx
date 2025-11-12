@@ -20,15 +20,21 @@ function MbtiTestPageContent() {
   
   // testId를 상태로 관리: resume 파라미터가 있으면 사용, 없으면 고정된 testId 사용 (다른 검사들과 동일하게)
   const [testId, setTestId] = useState(() => {
-    if (resumeTestId) {
-      // 마이페이지에서 이어하기 클릭한 경우, 전달된 testId 사용
-      console.log('[MbtiTestPage] Resume testId from URL:', resumeTestId);
-      return resumeTestId;
+    try {
+      if (resumeTestId) {
+        // 마이페이지에서 이어하기 클릭한 경우, 전달된 testId 사용
+        console.log('[MbtiTestPage] Resume testId from URL:', resumeTestId);
+        return resumeTestId;
+      }
+      // 새로 시작하는 경우, 고정된 testId 사용 (다른 검사들과 동일하게)
+      const fixedTestId = generateTestId(pathname || '/tests/mbti');
+      console.log('[MbtiTestPage] Fixed testId:', fixedTestId);
+      return fixedTestId;
+    } catch (error) {
+      console.warn('[MbtiTestPage] testId 초기화 에러:', error);
+      // 에러 발생 시 기본값 사용
+      return 'mbti-test-default';
     }
-    // 새로 시작하는 경우, 고정된 testId 사용 (다른 검사들과 동일하게)
-    const fixedTestId = generateTestId(pathname || '/tests/mbti');
-    console.log('[MbtiTestPage] Fixed testId:', fixedTestId);
-    return fixedTestId;
   });
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
@@ -36,18 +42,28 @@ function MbtiTestPageContent() {
   // 개인용 MBTI 검사 단계 관리 (전문가용과 동일한 구조)
   // 초기 상태에서 resume 파라미터가 있으면 진행 상태에 따라 currentStep 설정
   const getInitialStep = (): 'code' | 'info' | 'test' => {
-    if (typeof window === 'undefined' || !resumeTestId) return 'code';
-    const savedProgress = loadTestProgress(resumeTestId);
-    if (savedProgress) {
-      if (savedProgress.currentStep && 
-          (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-        return savedProgress.currentStep;
-      } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-        return 'test';
-      } else if (savedProgress.clientInfo) {
-        return 'info';
+    // 서버 사이드에서는 항상 'code'로 시작
+    if (typeof window === 'undefined') return 'code';
+    
+    // 클라이언트 사이드에서만 저장된 진행 상태 확인
+    if (!resumeTestId) return 'code';
+    
+    try {
+      const savedProgress = loadTestProgress(resumeTestId);
+      if (savedProgress) {
+        if (savedProgress.currentStep && 
+            (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
+          return savedProgress.currentStep;
+        } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
+          return 'test';
+        } else if (savedProgress.clientInfo) {
+          return 'info';
+        }
       }
+    } catch (error) {
+      console.warn('[MbtiTestPage] getInitialStep 에러:', error);
     }
+    
     return 'code';
   };
   
@@ -81,8 +97,12 @@ function MbtiTestPageContent() {
   const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(initialProgress.savedCurrentQuestion);
   // 초기 상태에서 resume 파라미터가 있고 답변이 있으면 testComponentKey 설정
   const [testComponentKey, setTestComponentKey] = useState(() => {
-    if (initialProgress.savedAnswers && Object.keys(initialProgress.savedAnswers).length > 0) {
-      return 1; // 초기화 시 답변이 있으면 컴포넌트 리렌더링을 위해 1로 설정
+    try {
+      if (initialProgress.savedAnswers && Object.keys(initialProgress.savedAnswers).length > 0) {
+        return 1; // 초기화 시 답변이 있으면 컴포넌트 리렌더링을 위해 1로 설정
+      }
+    } catch (error) {
+      console.warn('[MbtiTestPage] testComponentKey 초기화 에러:', error);
     }
     return 0;
   });
