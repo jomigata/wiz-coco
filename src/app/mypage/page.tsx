@@ -1955,7 +1955,11 @@ function TestRecordsTabContent({
                 <button
                   onClick={handleBulkDeleteClick}
                   disabled={selectedRecords.length === 0}
-                  className="px-4 py-2 bg-pink-400/50 text-pink-100 rounded-lg hover:bg-pink-400/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    selectedRecords.length > 0
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-pink-400/50 text-pink-100 hover:bg-pink-400/60'
+                  }`}
                 >
                   선택 삭제 ({selectedRecords.length})
                 </button>

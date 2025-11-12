@@ -253,9 +253,32 @@ function MbtiResultContent() {
         
         if (data.success && data.data) {
           console.log('[MbtiResult] API에서 결과 조회 성공:', data.data);
-          setTestResult(data.data);
-          if (data.data.mbtiType) {
-            setMbtiType(data.data.mbtiType.toUpperCase());
+          
+          // API 응답에 timestamp나 testType이 없으면 test_records에서 보완
+          let resultData = data.data;
+          if (!resultData.timestamp || !resultData.testType) {
+            try {
+              const testRecordsStr = localStorage.getItem('test_records');
+              if (testRecordsStr) {
+                const records = JSON.parse(testRecordsStr);
+                const foundRecord = records.find((record: any) => record.code === code);
+                if (foundRecord) {
+                  resultData = {
+                    ...resultData,
+                    timestamp: resultData.timestamp || foundRecord.timestamp,
+                    testType: resultData.testType || foundRecord.testType,
+                    userData: resultData.userData || foundRecord.userData
+                  };
+                }
+              }
+            } catch (e) {
+              console.warn('[MbtiResult] test_records에서 보완 데이터 가져오기 실패:', e);
+            }
+          }
+          
+          setTestResult(resultData);
+          if (resultData.mbtiType) {
+            setMbtiType(resultData.mbtiType.toUpperCase());
           }
         } else {
           console.warn('[MbtiResult] API 응답에 데이터가 없음');
@@ -294,7 +317,13 @@ function MbtiResultContent() {
         const foundRecord = records.find((record: any) => record.code === code);
         if (foundRecord) {
           if (foundRecord.result) {
-            return foundRecord.result;
+            // result에 timestamp와 testType이 없으면 레코드에서 가져오기
+            return {
+              ...foundRecord.result,
+              timestamp: foundRecord.result.timestamp || foundRecord.timestamp,
+              testType: foundRecord.result.testType || foundRecord.testType,
+              userData: foundRecord.result.userData || foundRecord.userData
+            };
           }
           // result가 없으면 레코드 자체를 반환 (일부 결과는 레코드에 직접 포함될 수 있음)
           if (foundRecord.answers || foundRecord.mbtiType) {
@@ -313,10 +342,19 @@ function MbtiResultContent() {
           const foundRecord = records.find((record: any) => record.testCode === code || record.code === code);
           if (foundRecord) {
             if (foundRecord.result) {
-              return foundRecord.result;
+              return {
+                ...foundRecord.result,
+                timestamp: foundRecord.result.timestamp || foundRecord.timestamp,
+                testType: foundRecord.result.testType || foundRecord.testType,
+                userData: foundRecord.result.userData || foundRecord.userData
+              };
             }
             if (foundRecord.userData) {
-              return foundRecord.userData;
+              return {
+                ...foundRecord.userData,
+                timestamp: foundRecord.userData.timestamp || foundRecord.timestamp,
+                testType: foundRecord.userData.testType || foundRecord.testType
+              };
             }
           }
         }
@@ -329,10 +367,19 @@ function MbtiResultContent() {
         const foundRecord = records.find((record: any) => record.testCode === code || record.code === code);
         if (foundRecord) {
           if (foundRecord.result) {
-            return foundRecord.result;
+            return {
+              ...foundRecord.result,
+              timestamp: foundRecord.result.timestamp || foundRecord.timestamp,
+              testType: foundRecord.result.testType || foundRecord.testType,
+              userData: foundRecord.result.userData || foundRecord.userData
+            };
           }
           if (foundRecord.userData) {
-            return foundRecord.userData;
+            return {
+              ...foundRecord.userData,
+              timestamp: foundRecord.userData.timestamp || foundRecord.timestamp,
+              testType: foundRecord.userData.testType || foundRecord.testType
+            };
           }
         }
       }
@@ -670,11 +717,35 @@ function MbtiResultContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
                 <div>
                   <span className="text-blue-300 font-medium">검사 일시:</span>
-                  <span className="ml-2">{new Date().toLocaleString('ko-KR')}</span>
+                  <span className="ml-2">
+                    {testResult?.timestamp 
+                      ? new Date(testResult.timestamp).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: true
+                        })
+                      : testResult?.userData?.timestamp
+                        ? new Date(testResult.userData.timestamp).toLocaleString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true
+                          })
+                        : new Date().toLocaleString('ko-KR')}
+                  </span>
                 </div>
                 <div>
                   <span className="text-blue-300 font-medium">검사 유형:</span>
-                  <span className="ml-2">개인용 MBTI 검사</span>
+                  <span className="ml-2">
+                    {testResult?.testType || testResult?.userData?.testType || '개인용 MBTI 검사'}
+                  </span>
                 </div>
               </div>
             </div>

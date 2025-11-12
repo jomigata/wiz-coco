@@ -9,7 +9,6 @@ import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils'
 import { testSubMenuItems } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
-import SyncStatus from '@/components/common/SyncStatus';
 
 export default function Navigation() {
   const router = useRouter();
@@ -942,8 +941,6 @@ export default function Navigation() {
 
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex items-center space-x-2">
-                {/* 동기화 상태 표시 */}
-                <SyncStatus className="mr-2" />
                 {isLoggedIn ? (
                   <>
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
