@@ -11,8 +11,9 @@ interface MbtiProCodeInputProps {
 }
 
 const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialData, isPersonalTest = false }) => {
-  const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
-  const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
+  // initialData를 초기값으로 사용하되, 변경 시에도 업데이트되도록 함
+  const [groupCode, setGroupCode] = useState<string>(() => initialData?.groupCode || '');
+  const [groupPassword, setGroupPassword] = useState<string>(() => initialData?.groupPassword || '');
   const [errors, setErrors] = useState<{
     groupCode?: string;
     groupPassword?: string;
