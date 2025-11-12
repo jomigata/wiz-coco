@@ -302,13 +302,15 @@ function MbtiTestPageContent() {
     const savedProgress = loadTestProgress(testId);
     
     // 현재 입력된 정보를 상태에 저장
-    setClientInfo(currentClientInfo);
+    const updatedClientInfo = currentClientInfo ? { ...currentClientInfo } : null;
+    setClientInfo(updatedClientInfo);
     
     // 저장된 codeData 복원 (이전에 입력한 값 유지)
-    if (savedProgress?.codeData) {
-      setCodeData(savedProgress.codeData);
-      console.log('[MbtiTestPage] 저장된 codeData 복원:', savedProgress.codeData);
-    }
+    const restoredCodeData = savedProgress?.codeData || codeData;
+    console.log('[MbtiTestPage] 복원할 codeData:', restoredCodeData);
+    
+    // 상태 업데이트 (강제로 새로운 객체 생성)
+    setCodeData(restoredCodeData ? { ...restoredCodeData } : null);
     
     // 현재 상태 저장 (clientInfo와 codeData 모두 유지)
     saveTestProgress({
@@ -317,8 +319,8 @@ function MbtiTestPageContent() {
       answers: savedProgress?.answers || {},
       currentQuestion: savedProgress?.currentQuestion || 0,
       currentStep: 'code',
-      codeData: savedProgress?.codeData || codeData, // 저장된 값 우선 사용
-      clientInfo: currentClientInfo, // 현재 입력된 정보 유지
+      codeData: restoredCodeData, // 저장된 값 우선 사용
+      clientInfo: updatedClientInfo, // 현재 입력된 정보 유지
       timestamp: Date.now(),
       testType: 'MBTI',
       totalQuestions: 20
@@ -337,14 +339,15 @@ function MbtiTestPageContent() {
     const latestCurrentQuestion = savedProgress?.currentQuestion || savedCurrentQuestion || 0;
     
     // 저장된 codeData와 clientInfo 복원 (이전에 입력한 값 유지)
-    if (savedProgress?.codeData) {
-      setCodeData(savedProgress.codeData);
-      console.log('[MbtiTestPage] 저장된 codeData 복원:', savedProgress.codeData);
-    }
-    if (savedProgress?.clientInfo) {
-      setClientInfo(savedProgress.clientInfo);
-      console.log('[MbtiTestPage] 저장된 clientInfo 복원:', savedProgress.clientInfo);
-    }
+    const restoredCodeData = savedProgress?.codeData || codeData;
+    const restoredClientInfo = savedProgress?.clientInfo || clientInfo;
+    
+    console.log('[MbtiTestPage] 복원할 codeData:', restoredCodeData);
+    console.log('[MbtiTestPage] 복원할 clientInfo:', restoredClientInfo);
+    
+    // 상태 업데이트 (강제로 새로운 객체 생성)
+    setCodeData(restoredCodeData ? { ...restoredCodeData } : null);
+    setClientInfo(restoredClientInfo ? { ...restoredClientInfo } : null);
     
     // 최신 답변을 상태에 반영
     setSavedAnswers(latestAnswers);
@@ -357,8 +360,8 @@ function MbtiTestPageContent() {
       answers: latestAnswers, // 최신 답변 사용
       currentQuestion: latestCurrentQuestion,
       currentStep: 'info',
-      codeData: savedProgress?.codeData || codeData, // 저장된 값 우선 사용
-      clientInfo: savedProgress?.clientInfo || clientInfo, // 저장된 값 우선 사용
+      codeData: restoredCodeData, // 저장된 값 우선 사용
+      clientInfo: restoredClientInfo, // 저장된 값 우선 사용
       timestamp: Date.now(),
       testType: 'MBTI',
       totalQuestions: 20
@@ -396,22 +399,14 @@ function MbtiTestPageContent() {
         }
       }
       
-      // 저장된 데이터 복원 (항상 우선 복원)
-      if (savedProgress.codeData) {
-        setCodeData(savedProgress.codeData);
-        console.log('[MbtiTestPage] handleResumeTest - codeData 복원:', savedProgress.codeData);
-      }
-      if (savedProgress.clientInfo) {
-        setClientInfo(savedProgress.clientInfo);
-        console.log('[MbtiTestPage] handleResumeTest - clientInfo 복원:', savedProgress.clientInfo);
-      }
-      
       // 저장된 답변이 있으면 테스트 단계로 이동 (currentStep이 이미 설정되었으므로 덮어쓰지 않음)
       if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
         // currentStep이 'test'가 아니면 'test'로 설정
         if (savedProgress.currentStep !== 'test') {
           setCurrentStep('test');
         }
+        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
         // 저장된 답변과 질문 번호 복원
         setSavedAnswers(savedProgress.answers);
         const savedCurrent = savedProgress.currentQuestion !== undefined 
@@ -421,6 +416,10 @@ function MbtiTestPageContent() {
               : 0);
         setSavedCurrentQuestion(savedCurrent);
         setTestComponentKey(prev => prev + 1);
+      } else {
+        // 답변이 없으면 저장된 단계 정보를 사용 (이미 위에서 설정됨)
+        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
+        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
       }
     }
   };
@@ -799,12 +798,12 @@ function MbtiTestPageContent() {
     
     const savedProgress = loadTestProgress(testId);
     if (savedProgress) {
-      // codeData 복원 (저장된 값이 있으면 항상 복원)
+      // codeData 복원 (항상 저장된 값으로 덮어쓰기)
       if (savedProgress.codeData) {
         setCodeData(savedProgress.codeData);
         console.log('[MbtiTestPage] useEffect - 저장된 codeData 복원:', savedProgress.codeData);
       }
-      // clientInfo 복원 (저장된 값이 있으면 항상 복원)
+      // clientInfo 복원 (항상 저장된 값으로 덮어쓰기)
       if (savedProgress.clientInfo) {
         setClientInfo(savedProgress.clientInfo);
         console.log('[MbtiTestPage] useEffect - 저장된 clientInfo 복원:', savedProgress.clientInfo);
@@ -820,7 +819,7 @@ function MbtiTestPageContent() {
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (
           <MbtiProCodeInput
-            key={`code-${testId}-${codeData ? JSON.stringify(codeData) : 'empty'}`}
+            key={`code-${testId}-${JSON.stringify(codeData)}`} // 강제 리렌더링
             onSubmit={handleCodeSubmit}
             initialData={codeData}
             isPersonalTest={true}
@@ -829,7 +828,7 @@ function MbtiTestPageContent() {
         
         {currentStep === 'info' && (
           <MbtiProClientInfo
-            key={`info-${testId}-${clientInfo ? JSON.stringify(clientInfo) : 'empty'}`}
+            key={`info-${testId}-${JSON.stringify(clientInfo)}`} // 강제 리렌더링
             onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
             initialData={clientInfo}

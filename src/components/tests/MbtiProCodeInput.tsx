@@ -50,30 +50,23 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
     };
   }, []);
 
-  // initialData가 변경되면 상태 업데이트 (이어하기 시 저장된 값 복원)
+  // 로컬스토리지에서 초기값 복원 (페이지 간 이동 시 유지)
+  // 단, initialData가 명시적으로 null이면 복원하지 않음 (새로 시작하기 클릭 시)
   useEffect(() => {
-    if (initialData !== undefined) {
-      if (initialData === null) {
-        // 새로 시작하기로 명시적으로 null이 전달된 경우 초기화
-        setGroupCode('');
-        setGroupPassword('');
-      } else if (initialData) {
-        // 저장된 값이 있으면 복원
-        setGroupCode(initialData.groupCode || '');
-        setGroupPassword(initialData.groupPassword || '');
-        console.log('[MbtiProCodeInput] initialData로 값 복원:', initialData);
-      }
-    } else if (typeof window !== 'undefined') {
-      // initialData가 undefined인 경우 localStorage에서 복원 시도
-      try {
+    try {
+      if (initialData === undefined && typeof window !== 'undefined') {
         const saved = localStorage.getItem('mbti_pro_code_data');
         if (saved) {
           const parsed = JSON.parse(saved);
           setGroupCode(parsed.groupCode || '');
           setGroupPassword(parsed.groupPassword || '');
         }
-      } catch {}
-    }
+      } else if (initialData === null) {
+        // 새로 시작하기로 명시적으로 null이 전달된 경우 초기화
+        setGroupCode('');
+        setGroupPassword('');
+      }
+    } catch {}
   }, [initialData]);
 
   // 폼 유효성 검사
