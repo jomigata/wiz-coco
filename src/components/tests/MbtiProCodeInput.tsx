@@ -55,11 +55,14 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
   useEffect(() => {
     try {
       if (initialData === undefined && typeof window !== 'undefined') {
-        const saved = localStorage.getItem('mbti_pro_code_data');
+        // 개인용과 전문가용 구분하여 저장소 키 사용
+        const storageKey = isPersonalTest ? 'mbti_personal_code_data' : 'mbti_pro_code_data';
+        const saved = localStorage.getItem(storageKey);
         if (saved) {
           const parsed = JSON.parse(saved);
           setGroupCode(parsed.groupCode || '');
           setGroupPassword(parsed.groupPassword || '');
+          console.log(`[MbtiProCodeInput] LocalStorage에서 복원 (${isPersonalTest ? '개인용' : '전문가용'}):`, parsed);
         }
       } else if (initialData === null) {
         // 새로 시작하기로 명시적으로 null이 전달된 경우 초기화
@@ -67,7 +70,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
         setGroupPassword('');
       }
     } catch {}
-  }, [initialData]);
+  }, [initialData, isPersonalTest]);
 
   // 폼 유효성 검사
   const validateForm = (): boolean => {
@@ -101,7 +104,10 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
       };
       try {
         if (typeof window !== 'undefined') {
-          localStorage.setItem('mbti_pro_code_data', JSON.stringify(data));
+          // 개인용과 전문가용 구분하여 저장소 키 사용
+          const storageKey = isPersonalTest ? 'mbti_personal_code_data' : 'mbti_pro_code_data';
+          localStorage.setItem(storageKey, JSON.stringify(data));
+          console.log(`[MbtiProCodeInput] LocalStorage 저장 (${isPersonalTest ? '개인용' : '전문가용'}):`, data);
         }
       } catch {}
       onSubmit(data);

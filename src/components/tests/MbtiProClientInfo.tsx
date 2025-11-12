@@ -86,8 +86,30 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       setName(initialData.name || '');
       setPrivacyAgreed(initialData.privacyAgreed ?? true);
       setPhone(initialData.phone || '');
+      console.log('[MbtiProClientInfo] initialData로 상태 업데이트:', initialData);
+    } else if (initialData === undefined && typeof window !== 'undefined') {
+      // initialData가 없으면 LocalStorage에서 복원 시도
+      try {
+        const storageKey = isPersonalTest ? 'mbti_personal_client_info' : 'mbti_pro_client_info';
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setBirthYear(parsed.birthYear || 0);
+          setBirthYearInput(parsed.birthYear ? String(parsed.birthYear) : '');
+          setGroupCode(parsed.groupCode || '');
+          setGroupPassword(parsed.groupPassword || '');
+          setGender(parsed.gender || '');
+          setMaritalStatus(parsed.maritalStatus || '');
+          setName(parsed.name || '');
+          setPrivacyAgreed(parsed.privacyAgreed ?? true);
+          setPhone(parsed.phone || '');
+          console.log(`[MbtiProClientInfo] LocalStorage에서 복원 (${isPersonalTest ? '개인용' : '전문가용'}):`, parsed);
+        }
+      } catch (error) {
+        console.error('[MbtiProClientInfo] LocalStorage 복원 실패:', error);
+      }
     }
-  }, [initialData]);
+  }, [initialData, isPersonalTest]);
 
   // 연도 선택기 외부 클릭 시 닫기
   useEffect(() => {
