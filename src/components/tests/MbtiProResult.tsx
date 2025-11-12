@@ -411,23 +411,25 @@ const MbtiProResult: React.FC = () => {
                     setLoadedAnswers(record.result.answers);
                   }
                   
-                  // userData에서 clientInfo 우선 확인
+                  // userData에서 clientInfo 우선 확인 (가장 정확한 입력값)
                   if (record.userData) {
-                    // clientInfo가 있으면 우선 사용
+                    // clientInfo가 있으면 우선 사용 (실제 입력값)
                     if (record.userData.clientInfo) {
                       setLoadedClientInfo({
-                        name: record.userData.clientInfo.name || record.userData.name,
-                        gender: record.userData.clientInfo.gender || record.userData.gender,
-                        birthYear: record.userData.clientInfo.birthYear || record.userData.birthYear,
-                        groupCode: record.userData.clientInfo.groupCode || record.userData.groupCode
+                        name: record.userData.clientInfo.name || record.userData.name || '-',
+                        gender: record.userData.clientInfo.gender || record.userData.gender || '-',
+                        birthYear: record.userData.clientInfo.birthYear || record.userData.birthYear || null,
+                        groupCode: record.userData.clientInfo.groupCode || record.userData.groupCode || null,
+                        privacyAgreed: record.userData.clientInfo.privacyAgreed || false
                       });
                     } else {
                       // clientInfo가 없으면 userData 직접 사용
                       setLoadedClientInfo({
-                        name: record.userData.name,
-                        gender: record.userData.gender,
-                        birthYear: record.userData.birthYear,
-                        groupCode: record.userData.groupCode
+                        name: record.userData.name || '-',
+                        gender: record.userData.gender || '-',
+                        birthYear: record.userData.birthYear || null,
+                        groupCode: record.userData.groupCode || null,
+                        privacyAgreed: false
                       });
                     }
                   }
