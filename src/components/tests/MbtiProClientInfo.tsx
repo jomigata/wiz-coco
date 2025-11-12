@@ -74,18 +74,33 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     }
   }, [isPersonalTest]);
 
-  // initialData가 변경되면 상태 업데이트
+  // initialData가 변경되면 항상 상태 업데이트 (저장된 값 복원)
   useEffect(() => {
-    if (initialData) {
-      setBirthYear(initialData.birthYear || 0);
-      setBirthYearInput(initialData.birthYear ? String(initialData.birthYear) : '');
-      setGroupCode(initialData.groupCode || '');
-      setGroupPassword(initialData.groupPassword || '');
-      setGender(initialData.gender || '');
-      setMaritalStatus(initialData.maritalStatus || '');
-      setName(initialData.name || '');
-      setPrivacyAgreed(initialData.privacyAgreed ?? true);
-      setPhone(initialData.phone || '');
+    if (initialData !== undefined) {
+      if (initialData === null) {
+        // 새로 시작하기로 명시적으로 null이 전달된 경우 초기화
+        setBirthYear(0);
+        setBirthYearInput('');
+        setGroupCode('');
+        setGroupPassword('');
+        setGender('');
+        setMaritalStatus('');
+        setName('');
+        setPrivacyAgreed(true);
+        setPhone('');
+      } else if (initialData) {
+        // initialData가 있으면 항상 그 값을 사용 (저장된 값 복원)
+        setBirthYear(initialData.birthYear || 0);
+        setBirthYearInput(initialData.birthYear ? String(initialData.birthYear) : '');
+        setGroupCode(initialData.groupCode || '');
+        setGroupPassword(initialData.groupPassword || '');
+        setGender(initialData.gender || '');
+        setMaritalStatus(initialData.maritalStatus || '');
+        setName(initialData.name || '');
+        setPrivacyAgreed(initialData.privacyAgreed ?? true);
+        setPhone(initialData.phone || '');
+        console.log('[MbtiProClientInfo] initialData로 값 복원:', initialData);
+      }
     }
   }, [initialData]);
 

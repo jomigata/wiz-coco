@@ -246,21 +246,27 @@ function MbtiTestPageContent() {
     console.log('[MbtiTestPage] 검사코드 제출:', codeData);
     setCodeData(codeData);
     
-    // 저장된 진행 상태에서 최신 답변 가져오기
+    // 저장된 진행 상태에서 최신 데이터 가져오기
     const savedProgress = loadTestProgress(testId);
     const latestAnswers = savedProgress?.answers || savedAnswers || {};
+    const latestClientInfo = savedProgress?.clientInfo || clientInfo; // 저장된 clientInfo 우선 사용
+    
+    // clientInfo가 저장된 값이 있으면 복원
+    if (savedProgress?.clientInfo) {
+      setClientInfo(savedProgress.clientInfo);
+    }
     
     setCurrentStep('info');
     
-    // 진행 상태 저장 (기존 답변 유지)
+    // 진행 상태 저장 (기존 답변과 clientInfo 모두 유지)
     saveTestProgress({
       testId,
       testName: '개인용 MBTI 검사',
       answers: latestAnswers, // 기존 답변 유지
       currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
       currentStep: 'info',
-      codeData: codeData,
-      clientInfo: clientInfo, // 기존 clientInfo 유지
+      codeData: codeData, // 새로 입력한 검사코드
+      clientInfo: latestClientInfo, // 저장된 clientInfo 유지
       timestamp: Date.now(),
       testType: 'MBTI',
       totalQuestions: 20
@@ -795,13 +801,13 @@ function MbtiTestPageContent() {
     
     const savedProgress = loadTestProgress(testId);
     if (savedProgress) {
-      // codeData 복원
-      if (savedProgress.codeData && !codeData) {
+      // codeData 복원 (저장된 값이 있으면 항상 복원)
+      if (savedProgress.codeData) {
         setCodeData(savedProgress.codeData);
         console.log('[MbtiTestPage] useEffect - 저장된 codeData 복원:', savedProgress.codeData);
       }
-      // clientInfo 복원
-      if (savedProgress.clientInfo && !clientInfo) {
+      // clientInfo 복원 (저장된 값이 있으면 항상 복원)
+      if (savedProgress.clientInfo) {
         setClientInfo(savedProgress.clientInfo);
         console.log('[MbtiTestPage] useEffect - 저장된 clientInfo 복원:', savedProgress.clientInfo);
       }
