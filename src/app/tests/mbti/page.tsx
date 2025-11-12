@@ -819,7 +819,7 @@ function MbtiTestPageContent() {
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (
           <MbtiProCodeInput
-            key={`code-${testId}-${JSON.stringify(codeData)}`} // 강제 리렌더링
+            key={`code-${testId}-${codeData ? `${codeData.groupCode || 'empty'}-${codeData.groupPassword || 'empty'}` : 'null'}`}
             onSubmit={handleCodeSubmit}
             initialData={codeData}
             isPersonalTest={true}
@@ -828,7 +828,7 @@ function MbtiTestPageContent() {
         
         {currentStep === 'info' && (
           <MbtiProClientInfo
-            key={`info-${testId}-${JSON.stringify(clientInfo)}`} // 강제 리렌더링
+            key={`info-${testId}-${clientInfo ? `${clientInfo.name || 'empty'}-${clientInfo.birthYear || 'empty'}-${clientInfo.gender || 'empty'}` : 'null'}`}
             onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
             initialData={clientInfo}
