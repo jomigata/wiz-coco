@@ -820,6 +820,7 @@ function MbtiTestPageContent() {
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (
           <MbtiProCodeInput
+            key={`code-${testId}-${codeData ? JSON.stringify(codeData) : 'empty'}`}
             onSubmit={handleCodeSubmit}
             initialData={codeData}
             isPersonalTest={true}
@@ -828,6 +829,7 @@ function MbtiTestPageContent() {
         
         {currentStep === 'info' && (
           <MbtiProClientInfo
+            key={`info-${testId}-${clientInfo ? JSON.stringify(clientInfo) : 'empty'}`}
             onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
             initialData={clientInfo}
