@@ -468,108 +468,189 @@ function MbtiTestPageContent() {
       // counselorCode 생성 (groupCode를 counselorCode로 사용)
       const counselorCode = codeData?.groupCode || null;
       
-      // 결과 데이터 구성
-      const testData = {
-        testType: '개인용 MBTI 검사',
-        code: testCode,
-        counselorCode: counselorCode, // 상담사 코드 추가
-        timestamp: timestamp,
-        answers: results,
-        mbtiType: results.mbtiType || 'INTJ', // 기본값 설정
-        status: '완료', // 명시적으로 완료 상태 설정
-        userData: {
-          name: clientInfo?.name || '게스트 사용자',
-          email: 'guest@example.com',
-          testType: '개인용 MBTI 검사',
-          clientInfo: {
-            ...(clientInfo || {}),
-            counselorCode: counselorCode // clientInfo에도 counselorCode 추가
-          }
-        }
-      };
+      // 현재 로그인한 사용자 정보 가져오기
+      let currentUserId = null;
+      let currentUserEmail = null;
       
-      // 로컬 스토리지에 결과 저장 (중복 방지)
-      if (typeof window !== 'undefined') {
-        // 1. test_records에 저장 (중복 체크)
-        const existingRecords = localStorage.getItem('test_records');
-        let records = existingRecords ? JSON.parse(existingRecords) : [];
-        
-        // 중복 체크: 같은 testCode가 이미 존재하는지 확인
-        const existingIndex = records.findIndex((record: any) => record.code === testCode);
-        
-        if (existingIndex >= 0) {
-          // 이미 존재하는 경우 업데이트
-          records[existingIndex] = testData;
-          console.log('[MbtiTestPage] 기존 기록 업데이트 (test_records):', testCode);
-        } else {
-          // 새 기록 추가
-          records.push(testData);
-          console.log('[MbtiTestPage] 새 기록 추가 (test_records):', testCode);
+      // Firebase Auth에서 사용자 정보 가져오기
+      try {
+        const { initializeFirebase, auth } = await import('@/lib/firebase');
+        const { testResults } = await import('@/utils/firebaseIntegration');
+        initializeFirebase();
+        if (auth && auth.currentUser) {
+          currentUserId = auth.currentUser.uid;
+          currentUserEmail = auth.currentUser.email;
         }
         
-        // 최대 50개까지만 유지
-        if (records.length > 50) {
-          records = records.slice(-50);
-        }
-        
-        // 저장
-        localStorage.setItem('test_records', JSON.stringify(records));
-        localStorage.setItem(`test-result-${testCode}`, JSON.stringify(testData));
-        
-        // 2. mbti-user-test-records에 저장 (중복 체크)
-        const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
-        let mbtiRecords: any[] = [];
-        
-        try {
-          mbtiRecords = JSON.parse(mbtiRecordsStr);
-          if (!Array.isArray(mbtiRecords)) {
-            mbtiRecords = [];
-          }
-        } catch (e) {
-          console.error('[MbtiTestPage] mbti-user-test-records 파싱 오류:', e);
-          mbtiRecords = [];
-        }
-        
-        // mbti-user-test-records 형식으로 데이터 구성
-        const mbtiRecord = {
-          testCode: testCode,
+        // 결과 데이터 구성
+        const testData = {
           testType: '개인용 MBTI 검사',
+          code: testCode,
+          counselorCode: counselorCode,
           timestamp: timestamp,
-          counselorCode: counselorCode, // counselorCode 추가
-          userData: testData.userData,
-          result: {
-            code: testCode,
-            timestamp: timestamp,
-            testType: '개인용 MBTI 검사',
-            answers: results,
-            mbtiType: results.mbtiType || 'INTJ'
-          },
           answers: results,
-          mbtiType: results.mbtiType || 'INTJ'
+          mbtiType: results.mbtiType || 'INTJ',
+          status: '완료',
+          userId: currentUserId, // Firebase 저장을 위한 userId 추가
+          userData: {
+            name: clientInfo?.name || '게스트 사용자',
+            email: currentUserEmail || 'guest@example.com',
+            testType: '개인용 MBTI 검사',
+            clientInfo: {
+              ...(clientInfo || {}),
+              counselorCode: counselorCode
+            }
+          }
         };
         
-        // 중복 체크: 같은 testCode가 이미 존재하는지 확인
-        const existingMbtiIndex = mbtiRecords.findIndex((record: any) => record.testCode === testCode);
-        
-        if (existingMbtiIndex >= 0) {
-          // 이미 존재하는 경우 업데이트
-          mbtiRecords[existingMbtiIndex] = mbtiRecord;
-          console.log('[MbtiTestPage] 기존 기록 업데이트 (mbti-user-test-records):', testCode);
+        // 1. Firebase DB에 먼저 저장 (주 저장소)
+        let firebaseSaveSuccess = false;
+        if (currentUserId) {
+          try {
+            await testResults.saveTestResult({
+              ...testData,
+              userId: currentUserId,
+              createdAt: new Date(timestamp)
+            });
+            firebaseSaveSuccess = true;
+            console.log('✅ Firebase DB에 개인용 MBTI 검사 결과 저장 성공:', testCode);
+          } catch (firebaseError) {
+            console.error('❌ Firebase DB 저장 실패:', firebaseError);
+          }
         } else {
-          // 새 기록 추가 (맨 앞에 추가)
-          mbtiRecords.unshift(mbtiRecord);
-          console.log('[MbtiTestPage] 새 기록 추가 (mbti-user-test-records):', testCode);
+          console.warn('⚠️ 사용자 ID가 없어 Firebase 저장을 건너뜁니다.');
         }
         
-        // 최대 100개까지만 유지
-        if (mbtiRecords.length > 100) {
-          mbtiRecords = mbtiRecords.slice(0, 100);
+        // 2. 성공 후 LocalStorage에 캐시 저장
+        if (typeof window !== 'undefined') {
+          // 1. test_records에 저장 (중복 체크)
+          const existingRecords = localStorage.getItem('test_records');
+          let records = existingRecords ? JSON.parse(existingRecords) : [];
+        
+          // 중복 체크: 같은 testCode가 이미 존재하는지 확인
+          const existingIndex = records.findIndex((record: any) => record.code === testCode);
+          
+          if (existingIndex >= 0) {
+            // 이미 존재하는 경우 업데이트
+            records[existingIndex] = testData;
+            console.log('[MbtiTestPage] 기존 기록 업데이트 (test_records):', testCode);
+          } else {
+            // 새 기록 추가
+            records.push(testData);
+            console.log('[MbtiTestPage] 새 기록 추가 (test_records):', testCode);
+          }
+          
+          // 최대 50개까지만 유지
+          if (records.length > 50) {
+            records = records.slice(-50);
+          }
+          
+          // 저장
+          localStorage.setItem('test_records', JSON.stringify(records));
+          localStorage.setItem(`test-result-${testCode}`, JSON.stringify(testData));
+          
+          // 2. mbti-user-test-records에 저장 (중복 체크)
+          const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
+          let mbtiRecords: any[] = [];
+          
+          try {
+            mbtiRecords = JSON.parse(mbtiRecordsStr);
+            if (!Array.isArray(mbtiRecords)) {
+              mbtiRecords = [];
+            }
+          } catch (e) {
+            console.error('[MbtiTestPage] mbti-user-test-records 파싱 오류:', e);
+            mbtiRecords = [];
+          }
+          
+          // mbti-user-test-records 형식으로 데이터 구성
+          const mbtiRecord = {
+            testCode: testCode,
+            testType: '개인용 MBTI 검사',
+            timestamp: timestamp,
+            counselorCode: counselorCode,
+            userData: testData.userData,
+            result: {
+              code: testCode,
+              timestamp: timestamp,
+              testType: '개인용 MBTI 검사',
+              answers: results,
+              mbtiType: results.mbtiType || 'INTJ'
+            },
+            answers: results,
+            mbtiType: results.mbtiType || 'INTJ'
+          };
+          
+          // 중복 체크: 같은 testCode가 이미 존재하는지 확인
+          const existingMbtiIndex = mbtiRecords.findIndex((record: any) => record.testCode === testCode);
+          
+          if (existingMbtiIndex >= 0) {
+            // 이미 존재하는 경우 업데이트
+            mbtiRecords[existingMbtiIndex] = mbtiRecord;
+            console.log('[MbtiTestPage] 기존 기록 업데이트 (mbti-user-test-records):', testCode);
+          } else {
+            // 새 기록 추가 (맨 앞에 추가)
+            mbtiRecords.unshift(mbtiRecord);
+            console.log('[MbtiTestPage] 새 기록 추가 (mbti-user-test-records):', testCode);
+          }
+          
+          // 최대 100개까지만 유지
+          if (mbtiRecords.length > 100) {
+            mbtiRecords = mbtiRecords.slice(0, 100);
+          }
+          
+          // 저장
+          localStorage.setItem('mbti-user-test-records', JSON.stringify(mbtiRecords));
+          
+          // Firebase 저장 성공 여부를 기록
+          if (firebaseSaveSuccess) {
+            console.log('[MbtiTestPage] ✅ 검사 기록 저장 완료 (Firebase + LocalStorage 캐시):', testCode);
+          } else {
+            console.log('[MbtiTestPage] ⚠️ 검사 기록 LocalStorage 캐시 저장 완료 (Firebase 저장 실패):', testCode);
+          }
         }
+      } catch (authError) {
+        console.warn('Firebase Auth에서 사용자 정보 가져오기 실패:', authError);
+        // Firebase 없이 LocalStorage만 저장 (폴백)
+        const testData = {
+          testType: '개인용 MBTI 검사',
+          code: testCode,
+          counselorCode: counselorCode,
+          timestamp: timestamp,
+          answers: results,
+          mbtiType: results.mbtiType || 'INTJ',
+          status: '완료',
+          userData: {
+            name: clientInfo?.name || '게스트 사용자',
+            email: 'guest@example.com',
+            testType: '개인용 MBTI 검사',
+            clientInfo: {
+              ...(clientInfo || {}),
+              counselorCode: counselorCode
+            }
+          }
+        };
         
-        // 저장
-        localStorage.setItem('mbti-user-test-records', JSON.stringify(mbtiRecords));
-        
-        console.log('[MbtiTestPage] 로컬 스토리지에 결과 저장 완료:', testCode);
+        if (typeof window !== 'undefined') {
+          // LocalStorage에 저장 (폴백)
+          const existingRecords = localStorage.getItem('test_records');
+          let records = existingRecords ? JSON.parse(existingRecords) : [];
+          
+          const existingIndex = records.findIndex((record: any) => record.code === testCode);
+          if (existingIndex >= 0) {
+            records[existingIndex] = testData;
+          } else {
+            records.push(testData);
+          }
+          
+          if (records.length > 50) {
+            records = records.slice(-50);
+          }
+          
+          localStorage.setItem('test_records', JSON.stringify(records));
+          localStorage.setItem(`test-result-${testCode}`, JSON.stringify(testData));
+          console.log('[MbtiTestPage] ⚠️ LocalStorage만 저장 완료 (Firebase 사용 불가):', testCode);
+        }
       }
       
       // 검사 완료 시 진행 상태 삭제

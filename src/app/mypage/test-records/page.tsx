@@ -564,44 +564,75 @@ function TestRecordsContent() {
     }
   }, [router]);
 
-  // DB에서 테스트 기록 가져오기
+  // Firebase DB에서 테스트 기록 가져오기 (주 저장소)
   const fetchTestRecordsFromDB = async (userId: string, token: string) => {
     try {
       // 로딩 상태 설정
       setIsLoading(true);
       
-      // API 호출
-      const response = await fetch('/api/user-tests', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // 1. Firebase DB에서 먼저 조회
+      try {
+        const { initializeFirebase } = await import('@/lib/firebase');
+        const { testResults } = await import('@/utils/firebaseIntegration');
+        initializeFirebase();
+        
+        const firebaseRecords = await testResults.getUserTestResults(userId);
+        
+        if (firebaseRecords && firebaseRecords.length > 0) {
+          // Firebase 데이터를 TestRecord 형식으로 변환
+          const formattedRecords: TestRecord[] = firebaseRecords.map((test: any) => ({
+            code: test.code,
+            timestamp: test.timestamp || test.createdAt?.toDate?.()?.toISOString() || test.testDate || new Date().toISOString(),
+            testType: test.testType || 'MBTI',
+            counselorCode: test.counselorCode,
+            userData: test.userData || {},
+            status: test.status || 'completed',
+            result: test.mbtiType || test.result || null
+          }));
+          
+          setTestRecords(formattedRecords);
+          calculateCodeStats(formattedRecords);
+          
+          // Firebase 데이터를 LocalStorage에 캐시 업데이트
+          try {
+            const cacheData = {
+              records: formattedRecords,
+              lastUpdated: new Date().toISOString(),
+              userId: userId
+            };
+            localStorage.setItem('test_records_cache', JSON.stringify(cacheData));
+            console.log('✅ Firebase 데이터를 LocalStorage 캐시에 업데이트 완료');
+          } catch (cacheError) {
+            console.warn('LocalStorage 캐시 업데이트 실패:', cacheError);
+          }
+          
+          setIsLoading(false);
+          return;
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error('테스트 기록을 가져오는데 실패했습니다.');
+      } catch (firebaseError) {
+        console.warn('Firebase DB 조회 실패, LocalStorage 캐시 확인:', firebaseError);
       }
       
-      const data = await response.json();
-      
-      if (data.tests && Array.isArray(data.tests)) {
-        // 기록 가공
-        const formattedRecords: TestRecord[] = data.tests.map((test: any) => ({
-          code: test.code,
-          timestamp: test.testDate || test.createdAt,
-          testType: test.testType || 'MBTI',
-          userData: test.userData || {},
-          status: 'completed',
-          result: test.mbtiType || null
-        }));
-        
-        setTestRecords(formattedRecords);
-        
-        // 코드 통계 계산
-        calculateCodeStats(formattedRecords);
-      } else {
-        // 데이터가 없는 경우
-        setTestRecords([]);
+      // 2. Firebase 조회 실패 시 LocalStorage 캐시 사용
+      const cacheDataStr = localStorage.getItem('test_records_cache');
+      if (cacheDataStr) {
+        try {
+          const cacheData = JSON.parse(cacheDataStr);
+          if (cacheData.userId === userId && cacheData.records && Array.isArray(cacheData.records)) {
+            setTestRecords(cacheData.records);
+            calculateCodeStats(cacheData.records);
+            setIsLoading(false);
+            console.log('✅ LocalStorage 캐시에서 검사 기록 로드 완료');
+            return;
+          }
+        } catch (cacheError) {
+          console.warn('캐시 데이터 파싱 실패:', cacheError);
+        }
       }
+      
+      // 3. 캐시도 없으면 LocalStorage에서 직접 로드 (최종 폴백)
+      fetchLocalTestRecords();
+      
     } catch (error) {
       console.error('DB 테스트 기록 로드 오류:', error);
       

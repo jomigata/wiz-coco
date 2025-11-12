@@ -10,6 +10,8 @@ import MbtiProCodeInput from './MbtiProCodeInput';
 import Navigation from '@/components/Navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
+import { initializeFirebase, auth } from '@/lib/firebase';
+import { testResults } from '@/utils/firebaseIntegration';
 
 interface Answer {
   [key: string]: number;
@@ -397,70 +399,107 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
             // counselorCode 생성 (groupCode를 counselorCode로 사용)
             const counselorCode = clientInfo?.groupCode || codeData?.groupCode || null;
             
+            // 현재 로그인한 사용자 정보 가져오기
+            let currentUserId = null;
+            let currentUserEmail = null;
+            
+            // Firebase Auth에서 사용자 정보 가져오기
+            try {
+              initializeFirebase();
+              if (auth && auth.currentUser) {
+                currentUserId = auth.currentUser.uid;
+                currentUserEmail = auth.currentUser.email;
+              }
+            } catch (authError) {
+              console.warn('Firebase Auth에서 사용자 정보 가져오기 실패:', authError);
+            }
+            
+            // LocalStorage에서도 사용자 정보 확인 (폴백)
+            if (!currentUserEmail) {
+              const currentUserData = localStorage.getItem('user');
+              if (currentUserData) {
+                try {
+                  const userData = JSON.parse(currentUserData);
+                  currentUserEmail = userData.email;
+                  currentUserId = userData.id || currentUserId;
+                } catch (parseError) {
+                  console.error('사용자 데이터 파싱 오류:', parseError);
+                }
+              }
+            }
+            
             const testRecord = {
               code: testCode,
-              counselorCode: counselorCode, // counselorCode 추가
+              counselorCode: counselorCode,
               testType: '전문가용 MBTI 검사',
               timestamp: completionTime,
               mbtiType: calculateMbtiType(answers),
+              userId: currentUserId, // Firebase 저장을 위한 userId 추가
               userData: {
                 answers: answers,
                 result: calculateMbtiType(answers),
                 clientInfo: {
                   ...(clientInfo || {}),
-                  counselorCode: counselorCode // clientInfo에도 counselorCode 추가
+                  counselorCode: counselorCode
                 },
-                counselorCode: counselorCode, // userData에도 counselorCode 추가
+                counselorCode: counselorCode,
                 groupCode: clientInfo?.groupCode || codeData?.groupCode || undefined
               },
               status: '완료'
             };
             
-            // 현재 로그인한 사용자 이메일 가져오기
-            const currentUserData = localStorage.getItem('user');
-            let currentUserEmail = null;
-            
-            if (currentUserData) {
+            // 1. Firebase DB에 먼저 저장 (주 저장소)
+            let firebaseSaveSuccess = false;
+            if (currentUserId) {
               try {
-                const userData = JSON.parse(currentUserData);
-                currentUserEmail = userData.email;
-              } catch (parseError) {
-                console.error('사용자 데이터 파싱 오류:', parseError);
+                await testResults.saveTestResult({
+                  ...testRecord,
+                  userId: currentUserId,
+                  createdAt: new Date(completionTime)
+                });
+                firebaseSaveSuccess = true;
+                console.log('✅ Firebase DB에 검사 결과 저장 성공:', testCode);
+              } catch (firebaseError) {
+                console.error('❌ Firebase DB 저장 실패:', firebaseError);
+                // Firebase 저장 실패해도 LocalStorage에 저장 (오프라인 지원)
               }
+            } else {
+              console.warn('⚠️ 사용자 ID가 없어 Firebase 저장을 건너뜁니다.');
             }
             
-            // 사용자별 키로 저장
-            const userSpecificKey = currentUserEmail ? `mbti-user-test-records-${currentUserEmail}` : 'mbti-user-test-records';
-            
-            // 기존 검사 기록 가져오기
-            const existingRecords = localStorage.getItem(userSpecificKey);
-            let records = [];
-            
-            if (existingRecords) {
-              try {
-                records = JSON.parse(existingRecords);
-                if (!Array.isArray(records)) {
+            // 2. 성공 후 LocalStorage에 캐시 저장
+            try {
+              // 사용자별 키로 저장
+              const userSpecificKey = currentUserEmail ? `mbti-user-test-records-${currentUserEmail}` : 'mbti-user-test-records';
+              
+              // 기존 검사 기록 가져오기
+              const existingRecords = localStorage.getItem(userSpecificKey);
+              let records = [];
+              
+              if (existingRecords) {
+                try {
+                  records = JSON.parse(existingRecords);
+                  if (!Array.isArray(records)) {
+                    records = [];
+                  }
+                } catch (parseError) {
+                  console.error('기존 검사 기록 파싱 오류:', parseError);
                   records = [];
                 }
-              } catch (parseError) {
-                console.error('기존 검사 기록 파싱 오류:', parseError);
-                records = [];
               }
-            }
-            
-            // 새 기록 추가
-            records.unshift(testRecord);
-            
-            // 최대 50개까지만 저장
-            if (records.length > 50) {
-              records = records.slice(0, 50);
-            }
-            
-            // 로컬 스토리지에 저장
-            localStorage.setItem(userSpecificKey, JSON.stringify(records));
-            
-            // test_records에도 저장 (마이페이지에서 표시되도록)
-            try {
+              
+              // 새 기록 추가
+              records.unshift(testRecord);
+              
+              // 최대 50개까지만 저장
+              if (records.length > 50) {
+                records = records.slice(0, 50);
+              }
+              
+              // 로컬 스토리지에 저장
+              localStorage.setItem(userSpecificKey, JSON.stringify(records));
+              
+              // test_records에도 저장 (마이페이지에서 표시되도록)
               const globalRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
               globalRecords.unshift(testRecord);
               
@@ -470,12 +509,16 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               }
               
               localStorage.setItem('test_records', JSON.stringify(globalRecords));
-              console.log(`전문가용 MBTI 검사 기록 test_records에도 저장 완료:`, testRecord);
-            } catch (globalError) {
-              console.error('test_records 저장 오류:', globalError);
+              
+              // Firebase 저장 성공 여부를 기록
+              if (firebaseSaveSuccess) {
+                console.log(`✅ 검사 기록 저장 완료 (Firebase + LocalStorage 캐시):`, testRecord);
+              } else {
+                console.log(`⚠️ 검사 기록 LocalStorage 캐시 저장 완료 (Firebase 저장 실패):`, testRecord);
+              }
+            } catch (storageError) {
+              console.error('❌ LocalStorage 캐시 저장 오류:', storageError);
             }
-            
-            console.log(`전문가용 MBTI 검사 기록 저장 완료 (사용자: ${currentUserEmail || '익명'}):`, testRecord);
           } catch (storageError) {
             console.error('검사 기록 저장 오류:', storageError);
           }

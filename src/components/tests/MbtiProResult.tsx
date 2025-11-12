@@ -271,96 +271,77 @@ const MbtiProResult: React.FC = () => {
   }, [paramTimestamp]);
   
   // 코드 파라미터로부터 데이터 로드 (마이페이지에서 넘어온 경우)
-  // dataParam이 있어도 test_records에서 더 정확한 데이터를 로드
+  // Firebase DB에서 먼저 조회, 실패 시 LocalStorage 캐시 사용
   React.useEffect(() => {
     if (codeParam && typeof window !== 'undefined') {
       setIsDataLoading(true);
       console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾는 중... (dataParam 존재: ${!!dataParam})`);
       
-      // 1. 직접 결과 코드로 저장된 데이터 검색 (가장 정확한 방법)
-      const directDataKey = `mbti-test-data-code-${codeParam}`;
-      const directData = localStorage.getItem(directDataKey);
-      
-      if (directData) {
+      // 1. Firebase DB에서 먼저 조회 (주 저장소)
+      const loadFromFirebase = async () => {
         try {
-          const savedData = JSON.parse(directData) as TestData;
-          console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 직접 찾았습니다.`);
-          setLoadedAnswers(savedData.answers || {});
+          const { initializeFirebase } = await import('@/lib/firebase');
+          const { testResults } = await import('@/utils/firebaseIntegration');
+          initializeFirebase();
           
-          // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
-          if (savedData.clientInfo) {
-            setLoadedClientInfo(savedData.clientInfo);
-          } else if ((savedData as any).userData?.clientInfo) {
-            setLoadedClientInfo((savedData as any).userData.clientInfo);
-          } else if ((savedData as any).userData) {
-            setLoadedClientInfo({
-              name: (savedData as any).userData.name,
-              gender: (savedData as any).userData.gender,
-              birthYear: (savedData as any).userData.birthYear,
-              groupCode: (savedData as any).userData.groupCode
-            });
-          }
+          const firebaseResult = await testResults.getTestResultByCode(codeParam);
           
-          setIsDataLoading(false);
-          
-          // 데이터가 성공적으로 로드된 후 즉시 코드 생성을 위한 상태 설정
-          setResultCode(codeParam);
-          setIsCodeGenerated(true);
-          
-          return;
-        } catch (error) {
-          console.error('테스트 데이터 직접 파싱 오류:', error);
-        }
-      }
-      
-      // 2. test-result 키를 검색
-      const testResultKey = `test-result-${codeParam}`;
-      const testResultData = localStorage.getItem(testResultKey);
-      
-      if (testResultData) {
-        try {
-          const resultData = JSON.parse(testResultData);
-          console.log(`코드 ${codeParam}에 해당하는 테스트 결과 데이터를 찾았습니다.`);
-          
-          if (resultData.answers) {
-            setLoadedAnswers(resultData.answers);
-          }
-          
-          // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
-          if (resultData.clientInfo) {
-            setLoadedClientInfo(resultData.clientInfo);
-          } else if (resultData.userData?.clientInfo) {
-            setLoadedClientInfo(resultData.userData.clientInfo);
-          } else if (resultData.userData) {
-            setLoadedClientInfo({
-              name: resultData.userData.name,
-              gender: resultData.userData.gender,
-              birthYear: resultData.userData.birthYear,
-              groupCode: resultData.userData.groupCode
-            });
-          }
-          
-          setIsDataLoading(false);
-          setResultCode(codeParam);
-          setIsCodeGenerated(true);
-          return;
-        } catch (error) {
-          console.error('테스트 결과 데이터 파싱 오류:', error);
-        }
-      }
-      
-      // 3. 키 패턴 `mbti-test-data-*`를 검색하여 관련 데이터 찾기
-      let foundData = false;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('mbti-test-data-') && localStorage.getItem(key)) {
-          try {
-            const savedData = JSON.parse(localStorage.getItem(key) || '{}') as TestData;
-            const codeKey = key.replace('mbti-test-data-', '');
-            const storedCode = localStorage.getItem(`mbti-result-code-${codeKey}`);
+          if (firebaseResult) {
+            console.log(`✅ Firebase DB에서 검사 결과 찾음: ${codeParam}`);
             
-            if (storedCode === codeParam) {
-              console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾았습니다.`);
+            // Firebase 데이터에서 answers와 clientInfo 추출
+            if (firebaseResult.answers) {
+              setLoadedAnswers(firebaseResult.answers);
+            }
+            
+            // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
+            if (firebaseResult.clientInfo) {
+              setLoadedClientInfo(firebaseResult.clientInfo);
+            } else if (firebaseResult.userData?.clientInfo) {
+              setLoadedClientInfo(firebaseResult.userData.clientInfo);
+            } else if (firebaseResult.userData) {
+              setLoadedClientInfo({
+                name: firebaseResult.userData.name,
+                gender: firebaseResult.userData.gender,
+                birthYear: firebaseResult.userData.birthYear,
+                groupCode: firebaseResult.userData.groupCode
+              });
+            }
+            
+            // Firebase 데이터를 LocalStorage에 캐시 저장
+            try {
+              localStorage.setItem(`test-result-${codeParam}`, JSON.stringify(firebaseResult));
+              console.log('✅ Firebase 데이터를 LocalStorage 캐시에 저장 완료');
+            } catch (cacheError) {
+              console.warn('LocalStorage 캐시 저장 실패:', cacheError);
+            }
+            
+            setIsDataLoading(false);
+            setResultCode(codeParam);
+            setIsCodeGenerated(true);
+            return true; // Firebase에서 성공적으로 로드됨
+          }
+        } catch (firebaseError) {
+          console.warn('Firebase DB 조회 실패, LocalStorage 캐시 확인:', firebaseError);
+        }
+        return false; // Firebase에서 로드 실패
+      };
+      
+      // Firebase에서 로드 시도
+      loadFromFirebase().then((firebaseLoaded) => {
+        if (firebaseLoaded) {
+          return; // Firebase에서 성공적으로 로드됨
+        }
+        
+        // 2. Firebase 조회 실패 시 LocalStorage 캐시에서 조회
+        // 2-1. 직접 결과 코드로 저장된 데이터 검색
+        const directDataKey = `mbti-test-data-code-${codeParam}`;
+        const directData = localStorage.getItem(directDataKey);
+        
+          if (directData) {
+            try {
+              const savedData = JSON.parse(directData) as TestData;
+              console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 직접 찾았습니다.`);
               setLoadedAnswers(savedData.answers || {});
               
               // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
@@ -377,79 +358,146 @@ const MbtiProResult: React.FC = () => {
                 });
               }
               
-              // 데이터가 성공적으로 로드된 후 즉시 코드 생성을 위한 상태 설정
+              setIsDataLoading(false);
               setResultCode(codeParam);
               setIsCodeGenerated(true);
-              
-              foundData = true;
-              break;
+              return;
+            } catch (error) {
+              console.error('테스트 데이터 직접 파싱 오류:', error);
             }
-          } catch (error) {
-            console.error('테스트 데이터 파싱 오류:', error);
           }
-        }
-      }
-      
-      // 4. test_records에서 해당 코드를 검색
-      if (!foundData) {
-        const testRecordsStr = localStorage.getItem('test_records');
-        if (testRecordsStr) {
-          try {
-            const testRecords = JSON.parse(testRecordsStr);
-            if (Array.isArray(testRecords)) {
-              const record = testRecords.find(record => record.code === codeParam);
-              if (record && record.result) {
-                console.log(`코드 ${codeParam}에 해당하는 테스트 기록을 찾았습니다.`);
+          
+          // 2-2. test-result 키를 검색
+          const testResultKey = `test-result-${codeParam}`;
+          const testResultData = localStorage.getItem(testResultKey);
+          
+          if (testResultData) {
+            try {
+              const resultData = JSON.parse(testResultData);
+              console.log(`코드 ${codeParam}에 해당하는 테스트 결과 데이터를 찾았습니다.`);
+              
+              if (resultData.answers) {
+                setLoadedAnswers(resultData.answers);
+              }
+              
+              // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
+              if (resultData.clientInfo) {
+                setLoadedClientInfo(resultData.clientInfo);
+              } else if (resultData.userData?.clientInfo) {
+                setLoadedClientInfo(resultData.userData.clientInfo);
+              } else if (resultData.userData) {
+                setLoadedClientInfo({
+                  name: resultData.userData.name,
+                  gender: resultData.userData.gender,
+                  birthYear: resultData.userData.birthYear,
+                  groupCode: resultData.userData.groupCode
+                });
+              }
+              
+              setIsDataLoading(false);
+              setResultCode(codeParam);
+              setIsCodeGenerated(true);
+              return;
+            } catch (error) {
+              console.error('테스트 결과 데이터 파싱 오류:', error);
+            }
+          }
+          
+          // 2-3. 키 패턴 `mbti-test-data-*`를 검색하여 관련 데이터 찾기
+          let foundData = false;
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('mbti-test-data-') && localStorage.getItem(key)) {
+              try {
+                const savedData = JSON.parse(localStorage.getItem(key) || '{}') as TestData;
+                const codeKey = key.replace('mbti-test-data-', '');
+                const storedCode = localStorage.getItem(`mbti-result-code-${codeKey}`);
                 
-                // 결과에서 answers와 clientInfo가 있으면 사용
-                if (record.result) {
-                  // 기본 데이터 설정
+                if (storedCode === codeParam) {
+                  console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾았습니다.`);
+                  setLoadedAnswers(savedData.answers || {});
+                  
+                  // clientInfo 우선순위: clientInfo > userData.clientInfo > userData
+                  if (savedData.clientInfo) {
+                    setLoadedClientInfo(savedData.clientInfo);
+                  } else if ((savedData as any).userData?.clientInfo) {
+                    setLoadedClientInfo((savedData as any).userData.clientInfo);
+                  } else if ((savedData as any).userData) {
+                    setLoadedClientInfo({
+                      name: (savedData as any).userData.name,
+                      gender: (savedData as any).userData.gender,
+                      birthYear: (savedData as any).userData.birthYear,
+                      groupCode: (savedData as any).userData.groupCode
+                    });
+                  }
+                  
                   setResultCode(codeParam);
                   setIsCodeGenerated(true);
-                  
-                  // 기타 결과 데이터가 있으면 설정
-                  if (record.result.answers) {
-                    setLoadedAnswers(record.result.answers);
-                  }
-                  
-                  // userData에서 clientInfo 우선 확인 (가장 정확한 입력값)
-                  if (record.userData) {
-                    // clientInfo가 있으면 우선 사용 (실제 입력값)
-                    if (record.userData.clientInfo) {
-                      setLoadedClientInfo({
-                        name: record.userData.clientInfo.name || record.userData.name || '-',
-                        gender: record.userData.clientInfo.gender || record.userData.gender || '-',
-                        birthYear: record.userData.clientInfo.birthYear || record.userData.birthYear || null,
-                        groupCode: record.userData.clientInfo.groupCode || record.userData.groupCode || null,
-                        privacyAgreed: record.userData.clientInfo.privacyAgreed || false
-                      });
-                    } else {
-                      // clientInfo가 없으면 userData 직접 사용
-                      setLoadedClientInfo({
-                        name: record.userData.name || '-',
-                        gender: record.userData.gender || '-',
-                        birthYear: record.userData.birthYear || null,
-                        groupCode: record.userData.groupCode || null,
-                        privacyAgreed: false
-                      });
-                    }
-                  }
-                  
                   foundData = true;
+                  break;
                 }
+              } catch (error) {
+                console.error('테스트 데이터 파싱 오류:', error);
               }
             }
-          } catch (error) {
-            console.error('테스트 기록 파싱 오류:', error);
           }
-        }
-      }
-      
-      setIsDataLoading(false);
-      
-      if (!foundData) {
-        console.warn(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾을 수 없습니다.`);
-      }
+          
+          // 2-4. test_records에서 해당 코드를 검색
+          if (!foundData) {
+            const testRecordsStr = localStorage.getItem('test_records');
+            if (testRecordsStr) {
+              try {
+                const testRecords = JSON.parse(testRecordsStr);
+                if (Array.isArray(testRecords)) {
+                  const record = testRecords.find(record => record.code === codeParam);
+                  if (record && record.result) {
+                    console.log(`코드 ${codeParam}에 해당하는 테스트 기록을 찾았습니다.`);
+                    
+                    if (record.result) {
+                      setResultCode(codeParam);
+                      setIsCodeGenerated(true);
+                      
+                      if (record.result.answers) {
+                        setLoadedAnswers(record.result.answers);
+                      }
+                      
+                      // userData에서 clientInfo 우선 확인 (가장 정확한 입력값)
+                      if (record.userData) {
+                        if (record.userData.clientInfo) {
+                          setLoadedClientInfo({
+                            name: record.userData.clientInfo.name || record.userData.name || '-',
+                            gender: record.userData.clientInfo.gender || record.userData.gender || '-',
+                            birthYear: record.userData.clientInfo.birthYear || record.userData.birthYear || null,
+                            groupCode: record.userData.clientInfo.groupCode || record.userData.groupCode || null,
+                            privacyAgreed: record.userData.clientInfo.privacyAgreed || false
+                          });
+                        } else {
+                          setLoadedClientInfo({
+                            name: record.userData.name || '-',
+                            gender: record.userData.gender || '-',
+                            birthYear: record.userData.birthYear || null,
+                            groupCode: record.userData.groupCode || null,
+                            privacyAgreed: false
+                          });
+                        }
+                      }
+                      
+                      foundData = true;
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('테스트 기록 파싱 오류:', error);
+              }
+            }
+          }
+          
+          setIsDataLoading(false);
+          
+          if (!foundData) {
+            console.warn(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾을 수 없습니다.`);
+          }
+        });
     }
   }, [codeParam, dataParam]);
   
