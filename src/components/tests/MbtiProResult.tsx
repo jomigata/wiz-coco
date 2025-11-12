@@ -145,7 +145,7 @@ const MbtiProResult: React.FC = () => {
   const fromParam = searchParams.get('from');
   const [loadedAnswers, setLoadedAnswers] = React.useState<Answer>({});
   const [loadedClientInfo, setLoadedClientInfo] = React.useState<ClientInfo | null>(null);
-  const [isDataLoading, setIsDataLoading] = React.useState<boolean>(codeParam !== null && !dataParam);
+  const [isDataLoading, setIsDataLoading] = React.useState<boolean>(codeParam !== null);
   const [resultTimestamp, setResultTimestamp] = React.useState<string | null>(null);
   const [resultCode, setResultCode] = React.useState<string>('');
   const [isCodeGenerated, setIsCodeGenerated] = React.useState<boolean>(false);
@@ -214,13 +214,13 @@ const MbtiProResult: React.FC = () => {
     }
   }, [answers, codeParam, paramClientInfo, loadedClientInfo]);
   
-  // 클라이언트 정보 관리 (codeParam이 있으면 로드된 데이터 우선, 없으면 파라미터 > 로드된 데이터 > 기본값 순)
-  // codeParam이 있을 때는 test_records에서 로드한 userData.clientInfo가 가장 정확하므로 우선 사용
-  const clientInfo = (codeParam && loadedClientInfo) ? loadedClientInfo : (paramClientInfo || loadedClientInfo || {
+  // 클라이언트 정보 관리 (우선순위: loadedClientInfo > paramClientInfo > 기본값)
+  // codeParam이 있을 때는 test_records에서 로드한 userData.clientInfo가 가장 정확하므로 최우선 사용
+  const clientInfo = loadedClientInfo || paramClientInfo || {
     name: '테스트 사용자',
     birthYear: 1990,
     gender: '여'
-  });
+  };
   
   // 결과 코드 관리 (우선순위: URL codeParam > dataParam의 testCode > 로컬 스토리지 최근 기록 > 새로 생성)
   React.useEffect(() => {
@@ -271,10 +271,11 @@ const MbtiProResult: React.FC = () => {
   }, [paramTimestamp]);
   
   // 코드 파라미터로부터 데이터 로드 (마이페이지에서 넘어온 경우)
+  // dataParam이 있어도 test_records에서 더 정확한 데이터를 로드
   React.useEffect(() => {
-    if (codeParam && !dataParam && typeof window !== 'undefined') {
+    if (codeParam && typeof window !== 'undefined') {
       setIsDataLoading(true);
-      console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾는 중...`);
+      console.log(`코드 ${codeParam}에 해당하는 테스트 데이터를 찾는 중... (dataParam 존재: ${!!dataParam})`);
       
       // 1. 직접 결과 코드로 저장된 데이터 검색 (가장 정확한 방법)
       const directDataKey = `mbti-test-data-code-${codeParam}`;
