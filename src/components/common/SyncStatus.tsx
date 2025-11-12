@@ -13,7 +13,7 @@ export default function SyncStatus({ className = '' }: SyncStatusProps) {
   const [queueCount, setQueueCount] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  // 온라인/오프라인 상태 모니터링
+  // 온라인/오프라인 상태 모니터링 및 자동 동기화
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -32,8 +32,14 @@ export default function SyncStatus({ className = '' }: SyncStatusProps) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // 초기 큐 개수 확인
-    updateQueueCount();
+    // 초기 큐 개수 확인 및 페이지 로드/새로고침 시 자동 동기화
+    const initialQueueCount = updateQueueCount();
+    if (navigator.onLine && initialQueueCount > 0) {
+      // 약간의 지연 후 동기화 (컴포넌트 마운트 완료 후)
+      setTimeout(() => {
+        syncQueue();
+      }, 1000);
+    }
 
     // 주기적으로 큐 개수 업데이트 (5초마다)
     const interval = setInterval(() => {
@@ -47,19 +53,26 @@ export default function SyncStatus({ className = '' }: SyncStatusProps) {
     };
   }, []);
 
-  // 큐 개수 업데이트
-  const updateQueueCount = () => {
+  // 큐 개수 업데이트 및 반환
+  const updateQueueCount = (): number => {
     try {
       const queue = getOfflineQueue();
-      setQueueCount(queue.length);
+      const count = queue.length;
+      setQueueCount(count);
+      return count;
     } catch (error) {
       console.error('큐 개수 확인 오류:', error);
+      return 0;
     }
   };
 
   // 큐 동기화
   const syncQueue = async () => {
-    if (!isOnline || queueCount === 0) return;
+    if (!isOnline) return;
+    
+    // 현재 큐 개수 확인
+    const currentQueueCount = updateQueueCount();
+    if (currentQueueCount === 0) return;
 
     setIsSyncing(true);
     try {
@@ -74,12 +87,6 @@ export default function SyncStatus({ className = '' }: SyncStatusProps) {
     }
   };
 
-  // 수동 동기화 버튼 클릭
-  const handleManualSync = () => {
-    if (isOnline && queueCount > 0) {
-      syncQueue();
-    }
-  };
 
   // 상태에 따른 스타일
   const getStatusColor = () => {
@@ -113,15 +120,6 @@ export default function SyncStatus({ className = '' }: SyncStatusProps) {
       <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 ${getStatusColor()}`}>
         <span className="text-sm">{getStatusIcon()}</span>
         <span className="text-xs font-medium">{getStatusText()}</span>
-        {queueCount > 0 && isOnline && !isSyncing && (
-          <button
-            onClick={handleManualSync}
-            className="ml-2 px-2 py-0.5 text-xs bg-blue-500/50 hover:bg-blue-500/70 rounded transition-colors"
-            title="수동 동기화"
-          >
-            동기화
-          </button>
-        )}
       </div>
       {lastSyncTime && (
         <span className="text-xs text-gray-400">
