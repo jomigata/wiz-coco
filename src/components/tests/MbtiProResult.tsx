@@ -214,12 +214,13 @@ const MbtiProResult: React.FC = () => {
     }
   }, [answers, codeParam, paramClientInfo, loadedClientInfo]);
   
-  // 클라이언트 정보 관리 (파라미터 > 로드된 데이터 > 기본값 순)
-  const clientInfo = paramClientInfo || loadedClientInfo || {
+  // 클라이언트 정보 관리 (codeParam이 있으면 로드된 데이터 우선, 없으면 파라미터 > 로드된 데이터 > 기본값 순)
+  // codeParam이 있을 때는 test_records에서 로드한 userData.clientInfo가 가장 정확하므로 우선 사용
+  const clientInfo = (codeParam && loadedClientInfo) ? loadedClientInfo : (paramClientInfo || loadedClientInfo || {
     name: '테스트 사용자',
     birthYear: 1990,
     gender: '여'
-  };
+  });
   
   // 결과 코드 관리 (우선순위: URL codeParam > dataParam의 testCode > 로컬 스토리지 최근 기록 > 새로 생성)
   React.useEffect(() => {
