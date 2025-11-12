@@ -461,7 +461,22 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                 console.log('✅ Firebase DB에 검사 결과 저장 성공:', testCode);
               } catch (firebaseError) {
                 console.error('❌ Firebase DB 저장 실패:', firebaseError);
-                // Firebase 저장 실패해도 LocalStorage에 저장 (오프라인 지원)
+                // Firebase 저장 실패 시 오프라인 큐에 추가
+                try {
+                  const { addToOfflineQueue } = await import('@/utils/offlineQueue');
+                  addToOfflineQueue({
+                    type: 'save',
+                    collection: 'test_results',
+                    data: {
+                      ...testRecord,
+                      userId: currentUserId,
+                      createdAt: new Date(completionTime)
+                    }
+                  });
+                  console.log('✅ 오프라인 큐에 작업 추가 완료');
+                } catch (queueError) {
+                  console.error('오프라인 큐 추가 실패:', queueError);
+                }
               }
             } else {
               console.warn('⚠️ 사용자 ID가 없어 Firebase 저장을 건너뜁니다.');

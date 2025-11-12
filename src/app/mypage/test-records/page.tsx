@@ -647,6 +647,93 @@ function TestRecordsContent() {
   useEffect(() => {
     fetchLocalTestRecords();
   }, []);
+  
+  // 실시간 동기화 설정 (Firestore onSnapshot)
+  useEffect(() => {
+    if (!firebaseUser || !firebaseUser.uid) return;
+    
+    let unsubscribe: (() => void) | null = null;
+    
+    const setupRealtimeSync = async () => {
+      try {
+        const { initializeFirebase } = await import('@/lib/firebase');
+        const { collection, query, where, orderBy, onSnapshot } = await import('firebase/firestore');
+        initializeFirebase();
+        const { db } = await import('@/lib/firebase');
+        
+        if (!db) {
+          console.warn('Firestore가 초기화되지 않았습니다.');
+          return;
+        }
+        
+        // 실시간 리스너 설정
+        const q = query(
+          collection(db, 'test_results'),
+          where('userId', '==', firebaseUser.uid),
+          orderBy('createdAt', 'desc')
+        );
+        
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          console.log('🔄 실시간 업데이트 수신:', snapshot.docs.length, '개 문서');
+          
+          const updatedRecords: TestRecord[] = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              code: data.code,
+              timestamp: data.timestamp || data.createdAt?.toDate?.()?.toISOString() || data.testDate || new Date().toISOString(),
+              testType: data.testType || 'MBTI',
+              counselorCode: data.counselorCode,
+              userData: data.userData || {},
+              status: data.status || 'completed',
+              result: data.mbtiType || data.result || null
+            };
+          });
+          
+          setTestRecords(updatedRecords);
+          calculateCodeStats(updatedRecords);
+          
+          // LocalStorage 캐시 업데이트
+          try {
+            const cacheData = {
+              records: updatedRecords,
+              lastUpdated: new Date().toISOString(),
+              userId: firebaseUser.uid
+            };
+            localStorage.setItem('test_records_cache', JSON.stringify(cacheData));
+            console.log('✅ 실시간 업데이트를 LocalStorage 캐시에 반영 완료');
+          } catch (cacheError) {
+            console.warn('LocalStorage 캐시 업데이트 실패:', cacheError);
+          }
+        }, (error) => {
+          console.error('실시간 동기화 오류:', error);
+        });
+        
+        console.log('✅ 실시간 동기화 설정 완료');
+      } catch (error) {
+        console.error('실시간 동기화 설정 오류:', error);
+      }
+    };
+    
+    setupRealtimeSync();
+    
+    // 정리 함수
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+        console.log('실시간 동기화 구독 해제');
+      }
+    };
+  }, [firebaseUser]);
+  
+  // 오프라인 큐 자동 동기화 설정
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const { setupOfflineSync } = require('@/utils/offlineQueue');
+    const cleanup = setupOfflineSync();
+    
+    return cleanup;
+  }, []);
 
   // 선택된 레코드 로드
   useEffect(() => {
