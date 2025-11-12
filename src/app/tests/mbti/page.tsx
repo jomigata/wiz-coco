@@ -246,27 +246,21 @@ function MbtiTestPageContent() {
     console.log('[MbtiTestPage] 검사코드 제출:', codeData);
     setCodeData(codeData);
     
-    // 저장된 진행 상태에서 최신 데이터 가져오기
+    // 저장된 진행 상태에서 최신 답변 가져오기
     const savedProgress = loadTestProgress(testId);
     const latestAnswers = savedProgress?.answers || savedAnswers || {};
-    const latestClientInfo = savedProgress?.clientInfo || clientInfo; // 저장된 clientInfo 우선 사용
-    
-    // clientInfo가 저장된 값이 있으면 복원
-    if (savedProgress?.clientInfo) {
-      setClientInfo(savedProgress.clientInfo);
-    }
     
     setCurrentStep('info');
     
-    // 진행 상태 저장 (기존 답변과 clientInfo 모두 유지)
+    // 진행 상태 저장 (기존 답변 유지)
     saveTestProgress({
       testId,
       testName: '개인용 MBTI 검사',
       answers: latestAnswers, // 기존 답변 유지
       currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
       currentStep: 'info',
-      codeData: codeData, // 새로 입력한 검사코드
-      clientInfo: latestClientInfo, // 저장된 clientInfo 유지
+      codeData: codeData,
+      clientInfo: clientInfo, // 기존 clientInfo 유지
       timestamp: Date.now(),
       testType: 'MBTI',
       totalQuestions: 20
@@ -815,7 +809,6 @@ function MbtiTestPageContent() {
   }, [currentStep, testId]); // currentStep이 변경될 때마다 실행
 
   // 단계별 렌더링
-  // 컴포넌트 key를 사용하여 currentStep 변경 시 강제 리마운트하여 저장된 값 복원 보장
   return (
     <>
       {currentStep !== 'code' && <Navigation />}
@@ -823,7 +816,6 @@ function MbtiTestPageContent() {
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (
           <MbtiProCodeInput
-            key={`code-${testId}-${currentStep}`} // key를 사용하여 컴포넌트 리마운트 보장
             onSubmit={handleCodeSubmit}
             initialData={codeData}
             isPersonalTest={true}
@@ -832,7 +824,6 @@ function MbtiTestPageContent() {
         
         {currentStep === 'info' && (
           <MbtiProClientInfo
-            key={`info-${testId}-${currentStep}`} // key를 사용하여 컴포넌트 리마운트 보장
             onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
             initialData={clientInfo}

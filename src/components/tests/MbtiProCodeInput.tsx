@@ -11,9 +11,8 @@ interface MbtiProCodeInputProps {
 }
 
 const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialData, isPersonalTest = false }) => {
-  // initialData를 초기값으로 사용하되, 변경 시에도 업데이트되도록 함
-  const [groupCode, setGroupCode] = useState<string>(() => initialData?.groupCode || '');
-  const [groupPassword, setGroupPassword] = useState<string>(() => initialData?.groupPassword || '');
+  const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
+  const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
   const [errors, setErrors] = useState<{
     groupCode?: string;
     groupPassword?: string;
@@ -51,7 +50,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
     };
   }, []);
 
-  // initialData가 변경되면 항상 상태 업데이트 (저장된 값 복원)
+  // initialData가 변경되면 상태 업데이트 (이어하기 시 저장된 값 복원)
   useEffect(() => {
     if (initialData !== undefined) {
       if (initialData === null) {
@@ -59,13 +58,13 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
         setGroupCode('');
         setGroupPassword('');
       } else if (initialData) {
-        // initialData가 있으면 항상 그 값을 사용 (저장된 값 복원)
+        // 저장된 값이 있으면 복원
         setGroupCode(initialData.groupCode || '');
         setGroupPassword(initialData.groupPassword || '');
         console.log('[MbtiProCodeInput] initialData로 값 복원:', initialData);
       }
     } else if (typeof window !== 'undefined') {
-      // initialData가 undefined인 경우에만 localStorage에서 복원
+      // initialData가 undefined인 경우 localStorage에서 복원 시도
       try {
         const saved = localStorage.getItem('mbti_pro_code_data');
         if (saved) {

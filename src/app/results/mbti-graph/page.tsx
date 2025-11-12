@@ -367,11 +367,11 @@ function MbtiGraphResults() {
             <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
             {/* 검사코드와 검사결과 코드 표시 */}
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              {code && (
+            {code && (
                 <p className="text-blue-200">
                   검사결과 코드: <span className="font-mono font-semibold">{code}</span>
-                </p>
-              )}
+              </p>
+            )}
             </div>
           </div>
         

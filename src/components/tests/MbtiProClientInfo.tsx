@@ -26,18 +26,17 @@ export interface ClientInfo {
 
 const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData, onBack }) => {
   const router = useRouter();
-  // initialData를 초기값으로 사용하되, 변경 시에도 업데이트되도록 함
-  const [birthYear, setBirthYear] = useState<number>(() => initialData?.birthYear || 0);
-  const [birthYearInput, setBirthYearInput] = useState<string>(() => initialData?.birthYear ? String(initialData.birthYear) : '');
+  const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
+  const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
   const [isYearSelected, setIsYearSelected] = useState<boolean>(false); // 년도 선택 여부 추적
-  const [groupCode, setGroupCode] = useState<string>(() => initialData?.groupCode || '');
-  const [groupPassword, setGroupPassword] = useState<string>(() => initialData?.groupPassword || '');
-  const [gender, setGender] = useState<string>(() => initialData?.gender || '');
-  const [maritalStatus, setMaritalStatus] = useState<string>(() => initialData?.maritalStatus || '');
-  const [name, setName] = useState<string>(() => initialData?.name || '');
+  const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
+  const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
+  const [gender, setGender] = useState<string>(initialData?.gender || '');
+  const [maritalStatus, setMaritalStatus] = useState<string>(initialData?.maritalStatus || '');
+  const [name, setName] = useState<string>(initialData?.name || '');
   const [showYearSelector, setShowYearSelector] = useState<boolean>(false);
-  const [privacyAgreed, setPrivacyAgreed] = useState<boolean>(() => initialData?.privacyAgreed ?? true);
-  const [phone, setPhone] = useState<string>(() => initialData?.phone || '');
+  const [privacyAgreed, setPrivacyAgreed] = useState<boolean>(initialData?.privacyAgreed ?? true);
+  const [phone, setPhone] = useState<string>(initialData?.phone || '');
   const [errors, setErrors] = useState<{
     birthYear?: string;
     gender?: string;
@@ -75,7 +74,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
     }
   }, [isPersonalTest]);
 
-  // initialData가 변경되면 항상 상태 업데이트 (저장된 값 복원)
+  // initialData가 변경되면 상태 업데이트 (이어하기 시 저장된 값 복원)
   useEffect(() => {
     if (initialData !== undefined) {
       if (initialData === null) {
@@ -90,7 +89,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
         setPrivacyAgreed(true);
         setPhone('');
       } else if (initialData) {
-        // initialData가 있으면 항상 그 값을 사용 (저장된 값 복원)
+        // 저장된 값이 있으면 복원
         setBirthYear(initialData.birthYear || 0);
         setBirthYearInput(initialData.birthYear ? String(initialData.birthYear) : '');
         setGroupCode(initialData.groupCode || '');
@@ -422,7 +421,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               <div className="mt-2">
                 <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
                   출생년도 <span className="text-red-400">*</span>
-                </label>
+              </label>
                 
                 {/* 입력칸 - 년도 선택 목록 위로 이동 */}
                 <div className="relative">
@@ -540,42 +539,42 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                 )}
                 
                 {/* 연도 선택 그리드 - 입력칸 바로 아래 표시 */}
-                {showYearSelector && (
-                  <AnimatePresence>
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="year-selector mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+              {showYearSelector && (
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="year-selector mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+                  >
+                    <div
+                      ref={yearGridRef}
+                      role="grid"
+                      aria-label="출생년도 선택"
+                      className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
+                      style={{ maxHeight: '336px' }}
+                      onKeyDown={handleYearKeyDown}
+                      onMouseMove={handleYearGridMouseMove}
+                      onMouseLeave={handleMouseLeave}
+                      onWheel={handleYearGridWheel}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                     >
-                      <div
-                        ref={yearGridRef}
-                        role="grid"
-                        aria-label="출생년도 선택"
-                        className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
-                        style={{ maxHeight: '336px' }}
-                        onKeyDown={handleYearKeyDown}
-                        onMouseMove={handleYearGridMouseMove}
-                        onMouseLeave={handleMouseLeave}
-                        onWheel={handleYearGridWheel}
-                        onTouchStart={handleTouchStart}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={handleTouchEnd}
-                      >
-                        {years.map((year, idx) => {
-                          const columnIndex = (idx % 10) + 1;
-                          const rowIndex = Math.floor(idx / 10) + 1;
-                          const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
-                          const isSelected = birthYear === year;
-                          const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
-                          return (
-                          <motion.button
-                            key={year}
-                            type="button"
-                            role="gridcell"
-                            ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
-                            data-year-idx={idx}
-                            aria-current={isSelected ? "true" : undefined}
+                      {years.map((year, idx) => {
+                        const columnIndex = (idx % 10) + 1;
+                        const rowIndex = Math.floor(idx / 10) + 1;
+                        const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
+                        const isSelected = birthYear === year;
+                        const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
+                        return (
+                        <motion.button
+                          key={year}
+                          type="button"
+                          role="gridcell"
+                          ref={(el: HTMLButtonElement | null) => { if (el) yearButtonRefs.current[idx] = el; }}
+                          data-year-idx={idx}
+                          aria-current={isSelected ? "true" : undefined}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -592,7 +591,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                               // 입력값을 선택한 값으로 강제 덮어쓰기
                               const yearString = String(year);
                               setBirthYearInput(yearString);
-                              setBirthYear(year);
+                            setBirthYear(year);
                               
                               // 에러 메시지 즉시 제거
                               setErrors(prev => ({ ...prev, birthYear: undefined }));
@@ -606,28 +605,28 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                                   birthYearRef.current.blur();
                                 }
                               }, 0);
-                            }}
-                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
-                            whileTap={{ scale: 0.95 }}
-                            className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
-                              isSelected
-                                ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
-                                : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith16 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
-                            }`}
-                          >
-                            {isSelected && (
-                              <>
-                                <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
-                                <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
-                              </>
-                            )}
-                            <span>{year}</span>
-                          </motion.button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
+                          }}
+                          whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
+                            isSelected
+                              ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
+                              : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith16 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
+                          }`}
+                        >
+                          {isSelected && (
+                            <>
+                              <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
+                              <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
+                            </>
+                          )}
+                          <span>{year}</span>
+                        </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
                 )}
               </div>
               
