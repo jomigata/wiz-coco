@@ -285,36 +285,121 @@ function AIProfilingPageContent() {
         const timestamp = new Date().toISOString();
         const profile = generateProfile();
         
-        const testData = {
-          testType: 'AI 프로파일링 검사',
-          code: generatedCode,
-          timestamp: timestamp,
-          answers: answers,
-          status: '완료',
-          userData: {
-            profile: profile,
-            answers: answers
+        // 현재 로그인한 사용자 정보 가져오기
+        let currentUserId = null;
+        let currentUserEmail = null;
+        
+        // Firebase Auth에서 사용자 정보 가져오기
+        try {
+          const { initializeFirebase, auth } = await import('@/lib/firebase');
+          const { testResults } = await import('@/utils/firebaseIntegration');
+          initializeFirebase();
+          if (auth && auth.currentUser) {
+            currentUserId = auth.currentUser.uid;
+            currentUserEmail = auth.currentUser.email;
           }
-        };
-        
-        // 기존 테스트 기록 가져오기
-        const existingRecords = localStorage.getItem('test_records');
-        let records = existingRecords ? JSON.parse(existingRecords) : [];
-        
-        // 새 기록 추가
-        records.push(testData);
-        
-        // 최대 50개까지만 유지
-        if (records.length > 50) {
-          records = records.slice(-50);
+          
+          const testData = {
+            testType: 'AI 프로파일링 검사',
+            code: generatedCode,
+            timestamp: timestamp,
+            answers: answers,
+            status: '완료',
+            userId: currentUserId, // Firebase 저장을 위한 userId 추가
+            userData: {
+              profile: profile,
+              answers: answers
+            }
+          };
+          
+          // 1. Firebase DB에 먼저 저장 (주 저장소)
+          let firebaseSaveSuccess = false;
+          if (currentUserId) {
+            try {
+              await testResults.saveTestResult({
+                ...testData,
+                userId: currentUserId,
+                createdAt: new Date(timestamp)
+              });
+              firebaseSaveSuccess = true;
+              console.log('✅ Firebase DB에 AI 프로파일링 검사 결과 저장 성공:', generatedCode);
+            } catch (firebaseError) {
+              console.error('❌ Firebase DB 저장 실패:', firebaseError);
+              // Firebase 저장 실패 시 오프라인 큐에 추가
+              try {
+                const { addToOfflineQueue } = await import('@/utils/offlineQueue');
+                addToOfflineQueue({
+                  type: 'save',
+                  collection: 'test_results',
+                  data: {
+                    ...testData,
+                    userId: currentUserId,
+                    createdAt: new Date(timestamp)
+                  }
+                });
+                console.log('✅ 오프라인 큐에 작업 추가 완료');
+              } catch (queueError) {
+                console.error('오프라인 큐 추가 실패:', queueError);
+              }
+            }
+          } else {
+            console.warn('⚠️ 사용자 ID가 없어 Firebase 저장을 건너뜁니다.');
+          }
+          
+          // 2. 성공 후 LocalStorage에 캐시 저장
+          // 기존 테스트 기록 가져오기
+          const existingRecords = localStorage.getItem('test_records');
+          let records = existingRecords ? JSON.parse(existingRecords) : [];
+          
+          // 새 기록 추가
+          records.push(testData);
+          
+          // 최대 50개까지만 유지
+          if (records.length > 50) {
+            records = records.slice(-50);
+          }
+          
+          // 저장
+          localStorage.setItem('test_records', JSON.stringify(records));
+          localStorage.setItem(`test-result-${generatedCode}`, JSON.stringify(testData));
+          
+          // Firebase 저장 성공 여부를 기록
+          if (firebaseSaveSuccess) {
+            console.log(`✅ AI 프로파일링 검사 기록 저장 완료 (Firebase + LocalStorage 캐시):`, generatedCode);
+          } else {
+            console.log(`⚠️ AI 프로파일링 검사 기록 LocalStorage 캐시 저장 완료 (Firebase 저장 실패):`, generatedCode);
+          }
+          
+          // 검사 완료 직후임을 표시하는 플래그 설정
+          sessionStorage.setItem('testJustCompleted', 'true');
+        } catch (authError) {
+          console.warn('Firebase Auth에서 사용자 정보 가져오기 실패:', authError);
+          // Firebase 없이 LocalStorage만 저장 (폴백)
+          const testData = {
+            testType: 'AI 프로파일링 검사',
+            code: generatedCode,
+            timestamp: timestamp,
+            answers: answers,
+            status: '완료',
+            userData: {
+              profile: profile,
+              answers: answers
+            }
+          };
+          
+          const existingRecords = localStorage.getItem('test_records');
+          let records = existingRecords ? JSON.parse(existingRecords) : [];
+          records.push(testData);
+          
+          if (records.length > 50) {
+            records = records.slice(-50);
+          }
+          
+          localStorage.setItem('test_records', JSON.stringify(records));
+          localStorage.setItem(`test-result-${generatedCode}`, JSON.stringify(testData));
+          sessionStorage.setItem('testJustCompleted', 'true');
+          console.log('⚠️ LocalStorage만 저장 완료 (Firebase 사용 불가):', generatedCode);
         }
-        
-        // 저장
-        localStorage.setItem('test_records', JSON.stringify(records));
-        localStorage.setItem(`test-result-${generatedCode}`, JSON.stringify(testData));
-        
-        // 검사 완료 직후임을 표시하는 플래그 설정
-        sessionStorage.setItem('testJustCompleted', 'true');
       }
       
       // 검사 완료 시 진행 상태 삭제
