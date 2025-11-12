@@ -246,18 +246,22 @@ function MbtiTestPageContent() {
     console.log('[MbtiTestPage] 검사코드 제출:', codeData);
     setCodeData(codeData);
     
-    // 전문가용과 동일하게 LocalStorage에도 저장
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('mbti_personal_code_data', JSON.stringify(codeData));
-        console.log('[MbtiTestPage] 검사코드 LocalStorage 저장 완료:', codeData);
-      }
-    } catch (error) {
-      console.error('[MbtiTestPage] 검사코드 LocalStorage 저장 실패:', error);
-    }
+    // 진행 상태 저장 (전문가용과 동일)
+    const savedProgress = loadTestProgress(testId);
+    saveTestProgress({
+      testId,
+      testName: '개인용 MBTI 검사',
+      answers: savedProgress?.answers || {},
+      currentQuestion: savedProgress?.currentQuestion || 0,
+      currentStep: 'info',
+      codeData: codeData,
+      clientInfo: savedProgress?.clientInfo || null,
+      timestamp: Date.now(),
+      testType: 'MBTI',
+      totalQuestions: 20
+    });
     
     // 저장된 진행 상태에서 최신 답변 가져오기
-    const savedProgress = loadTestProgress(testId);
     const latestAnswers = savedProgress?.answers || savedAnswers || {};
     
     setCurrentStep('info');
@@ -280,28 +284,24 @@ function MbtiTestPageContent() {
   // 기본정보 제출 핸들러
   const handleClientInfoSubmit = (info: any) => {
     console.log('[MbtiTestPage] 기본정보 제출:', info);
+    setClientInfo(info);
     
-    // 검사코드 정보와 결합 (전문가용과 동일)
-    const completeClientInfo = {
-      ...info,
-      groupCode: codeData?.groupCode || '',
-      groupPassword: codeData?.groupPassword || ''
-    };
-    
-    setClientInfo(completeClientInfo);
-    
-    // 전문가용과 동일하게 LocalStorage에도 저장
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('mbti_personal_client_info', JSON.stringify(completeClientInfo));
-        console.log('[MbtiTestPage] 기본정보 LocalStorage 저장 완료:', completeClientInfo);
-      }
-    } catch (error) {
-      console.error('[MbtiTestPage] 기본정보 LocalStorage 저장 실패:', error);
-    }
+    // 진행 상태 저장 (전문가용과 동일)
+    const savedProgress = loadTestProgress(testId);
+    saveTestProgress({
+      testId,
+      testName: '개인용 MBTI 검사',
+      answers: savedProgress?.answers || {},
+      currentQuestion: savedProgress?.currentQuestion || 0,
+      currentStep: 'test',
+      codeData: codeData,
+      clientInfo: info,
+      timestamp: Date.now(),
+      testType: 'MBTI',
+      totalQuestions: 20
+    });
     
     // 저장된 진행 상태에서 최신 답변 가져오기
-    const savedProgress = loadTestProgress(testId);
     const latestAnswers = savedProgress?.answers || savedAnswers || {};
     
     setCurrentStep('test');
@@ -314,7 +314,7 @@ function MbtiTestPageContent() {
       currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
       currentStep: 'test',
       codeData: codeData,
-      clientInfo: completeClientInfo,
+      clientInfo: info,
       timestamp: Date.now(),
       testType: 'MBTI',
       totalQuestions: 20
@@ -830,39 +830,57 @@ function MbtiTestPageContent() {
       if (savedProgress.codeData) {
         setCodeData(savedProgress.codeData);
         console.log('[MbtiTestPage] useEffect - 저장된 codeData 복원:', savedProgress.codeData);
-      } else {
-        // 진행 상태에 없으면 LocalStorage에서 복원 시도
-        try {
-          const saved = localStorage.getItem('mbti_personal_code_data');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            setCodeData(parsed);
-            console.log('[MbtiTestPage] useEffect - LocalStorage에서 codeData 복원:', parsed);
-          }
-        } catch (error) {
-          console.error('[MbtiTestPage] LocalStorage codeData 복원 실패:', error);
-        }
       }
-      
       // clientInfo 복원 (항상 저장된 값으로 덮어쓰기)
       if (savedProgress.clientInfo) {
         setClientInfo(savedProgress.clientInfo);
         console.log('[MbtiTestPage] useEffect - 저장된 clientInfo 복원:', savedProgress.clientInfo);
-      } else {
-        // 진행 상태에 없으면 LocalStorage에서 복원 시도
-        try {
-          const saved = localStorage.getItem('mbti_personal_client_info');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            setClientInfo(parsed);
-            console.log('[MbtiTestPage] useEffect - LocalStorage에서 clientInfo 복원:', parsed);
-          }
-        } catch (error) {
-          console.error('[MbtiTestPage] LocalStorage clientInfo 복원 실패:', error);
-        }
       }
     }
   }, [currentStep, testId]); // currentStep이 변경될 때마다 실행
+
+  // 검사 진행 상태 자동 저장 (전문가용과 동일)
+  useEffect(() => {
+    if (currentStep === 'test' && Object.keys(savedAnswers || {}).length > 0) {
+      saveTestProgress({
+        testId,
+        testName: '개인용 MBTI 검사',
+        answers: savedAnswers,
+        currentQuestion: savedCurrentQuestion || 0,
+        currentStep,
+        clientInfo,
+        codeData,
+        timestamp: Date.now(),
+        testType: 'MBTI',
+        totalQuestions: 20
+      });
+    }
+  }, [savedAnswers, savedCurrentQuestion, currentStep, clientInfo, codeData, testId]);
+
+  // 페이지를 벗어날 때 진행 상태 저장 (전문가용과 동일)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (typeof window !== 'undefined' && currentStep === 'test' && Object.keys(savedAnswers || {}).length > 0) {
+        saveTestProgress({
+          testId,
+          testName: '개인용 MBTI 검사',
+          answers: savedAnswers,
+          currentQuestion: savedCurrentQuestion || 0,
+          currentStep,
+          clientInfo,
+          codeData,
+          timestamp: Date.now(),
+          testType: 'MBTI',
+          totalQuestions: 20
+        });
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [savedAnswers, savedCurrentQuestion, currentStep, clientInfo, codeData, testId]);
 
   // 단계별 렌더링
   return (
