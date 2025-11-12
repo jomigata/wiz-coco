@@ -1097,6 +1097,8 @@ function TestRecordsContent() {
     if (!testRecord) {
       console.warn('현재 상태에서 해당 코드의 테스트 기록을 찾을 수 없습니다:', code);
       // 결과 페이지에서 검색하도록 바로 이동 처리 (오류 메시지는 결과 페이지에서 표시됨)
+      router.push(`/tests/mbti_pro/result?code=${encodeURIComponent(code)}`);
+      return;
     } else {
       console.log('테스트 기록을 찾았습니다:', testRecord);
     }
@@ -1107,13 +1109,38 @@ function TestRecordsContent() {
     
     // 모든 유형을 전문가용 MBTI 결과 페이지로 연결
     try {
-      const clientInfo = testRecord?.userData?.clientInfo || { 
-        name: testRecord?.userData?.name || '테스트 사용자',
-        groupCode: testRecord?.userData?.groupCode || '6666',
-        birthYear: testRecord?.userData?.birthYear || 1972,
-        gender: testRecord?.userData?.gender || '여',
-        privacyAgreed: true
-      };
+      // clientInfo 우선순위: userData.clientInfo > userData 직접 > 기본값
+      // userData.clientInfo가 가장 정확한 실제 입력값이므로 최우선 사용
+      let clientInfo = null;
+      
+      if (testRecord?.userData?.clientInfo) {
+        // userData.clientInfo가 있으면 최우선 사용 (실제 입력값)
+        clientInfo = {
+          name: testRecord.userData.clientInfo.name || testRecord.userData.name || '테스트 사용자',
+          groupCode: testRecord.userData.clientInfo.groupCode || testRecord.userData.groupCode || null,
+          birthYear: testRecord.userData.clientInfo.birthYear || testRecord.userData.birthYear || null,
+          gender: testRecord.userData.clientInfo.gender || testRecord.userData.gender || '여',
+          privacyAgreed: testRecord.userData.clientInfo.privacyAgreed || false
+        };
+      } else if (testRecord?.userData) {
+        // userData만 있으면 직접 사용
+        clientInfo = {
+          name: testRecord.userData.name || '테스트 사용자',
+          groupCode: testRecord.userData.groupCode || null,
+          birthYear: testRecord.userData.birthYear || null,
+          gender: testRecord.userData.gender || '여',
+          privacyAgreed: false
+        };
+      } else {
+        // 기본값
+        clientInfo = {
+          name: '테스트 사용자',
+          groupCode: null,
+          birthYear: null,
+          gender: '여',
+          privacyAgreed: false
+        };
+      }
       
       const dataObj = {
         answers: testRecord?.userData?.answers || {},
@@ -1122,17 +1149,18 @@ function TestRecordsContent() {
       };
       
       const dataStr = encodeURIComponent(JSON.stringify(dataObj));
-      resultPath = `/tests/mbti_pro/result?data=${dataStr}`;
+      // code 파라미터도 함께 전달하여 결과 페이지에서 test_records에서 직접 로드할 수 있도록 함
+      resultPath = `/tests/mbti_pro/result?code=${encodeURIComponent(code)}&data=${dataStr}`;
       
       // URL 길이 체크 (너무 길면 절단될 수 있음)
       if (resultPath.length > 2000) {
         console.warn('URL이 너무 깁니다. 데이터를 로컬 스토리지에 저장합니다.');
         localStorage.setItem('mbti_pro_result_data', JSON.stringify(dataObj));
-        resultPath = `/tests/mbti_pro/result`;
+        resultPath = `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
       }
     } catch (e) {
       console.error('URL 생성 오류:', e);
-      resultPath = `/tests/mbti_pro/result`;
+      resultPath = `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
     }
     
     // 검사 코드를 로컬 스토리지에 저장하여 결과 페이지가 확인할 수 있도록 함
