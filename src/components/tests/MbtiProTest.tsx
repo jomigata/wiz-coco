@@ -54,13 +54,14 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // 코드입력, 정보입력, 문항선택(selectedQuestions.length === 0), 질문 답변 단계에서는 말풍선 숨김
       if (currentStep === 'code' || currentStep === 'info' || currentStep === 'test') {
         sessionStorage.setItem('currentTestStep', currentStep);
       } else {
         sessionStorage.removeItem('currentTestStep');
       }
     }
-  }, [currentStep]);
+  }, [currentStep, selectedQuestions.length]);
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);

@@ -93,6 +93,7 @@ function MbtiTestPageContent() {
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
   
   // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
+  // 코드입력, 정보입력, 질문 답변 단계에서는 말풍선 숨김
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (currentStep === 'code' || currentStep === 'info' || currentStep === 'test') {
