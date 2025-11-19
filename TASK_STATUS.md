@@ -1,0 +1,15 @@
+- [x] Analyze project structure <!-- id: 0 -->
+- [x] Generate overview and structure list <!-- id: 1 -->
+- [x] **System Verification & Synchronization** <!-- id: 2 -->
+    - [x] Check local git status against target commit `bff31eb` <!-- id: 3 -->
+    - [x] Verify `performance-monitor.yml` existence and config <!-- id: 4 -->
+    - [x] Confirm Firebase deployment status <!-- id: 5 -->
+    - [x] **[NEW] System Restoration to `bff31eb`** <!-- id: 14 -->
+- [ ] **Team Review & Optimization** <!-- id: 6 -->
+    - [ ] Review current codebase against "Expert Team" standards <!-- id: 7 -->
+    - [ ] Identify areas for improvement (UI/UX, Psychology content) <!-- id: 8 -->
+- [ ] **Automated Deployment Setup** <!-- id: 9 -->
+    - [ ] Verify/Create automated push script <!-- id: 10 -->
+    - [ ] Ensure "One-Click" link generation for reports <!-- id: 11 -->
+- [ ] **Future Roadmap & Documentation** <!-- id: 12 -->
+    - [ ] Compile "Completed vs Future" task list with links <!-- id: 13 -->
