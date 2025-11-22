@@ -926,13 +926,13 @@ export default function Navigation() {
                 {isAiMindAssistantOpen && (
                   <div
                     data-dropdown-menu="ai-mind-assistant"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-[800px] min-w-[50rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-[800px] min-w-[50rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     <div className="relative flex h-[70vh]">
                       {/* 왼쪽: 그룹 및 대분류 */}
-                      <div className="w-2/5 p-4 border-r border-green-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                      <div className="w-2/5 p-4 border-r border-blue-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                         <div 
                           ref={aiAssistantScroll.scrollRef}
                           className="space-y-2"
@@ -941,14 +941,14 @@ export default function Navigation() {
                         >
                         {/* 나의마음 그룹 */}
                         <div className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                          <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                             나의 마음
                           </div>
                           <div className="space-y-1">
                             {/* 일일 체크 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "일일 체크" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
                                 }`}
                                 onMouseEnter={() => {
@@ -971,10 +971,10 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">일일 체크</div>
-                                  <div className="text-sm text-green-300 truncate">4개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">4개 중분류</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -986,7 +986,7 @@ export default function Navigation() {
                             {/* 마음 SOS */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "마음 SOS" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
                                 }`}
                                 onMouseEnter={() => {
@@ -1009,10 +1009,10 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">마음 SOS</div>
-                                  <div className="text-sm text-green-300 truncate">2개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">2개 중분류</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1026,14 +1026,14 @@ export default function Navigation() {
 
                         {/* AI기록분석 그룹 */}
                         <div className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                          <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                             AI 기록 분석
                           </div>
                           <div className="space-y-1">
                             {/* AI 리포트 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "AI 리포트" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
                                 }`}
                                 onMouseEnter={() => {
@@ -1056,10 +1056,10 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">AI 리포트</div>
-                                  <div className="text-sm text-green-300 truncate">4개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">4개 중분류</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1071,7 +1071,7 @@ export default function Navigation() {
                             {/* 검사 기록 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "검사 기록" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
                                 }`}
                                 onMouseEnter={() => {
@@ -1094,10 +1094,10 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">검사 기록</div>
-                                  <div className="text-sm text-green-300 truncate">2개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">2개 중분류</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1111,14 +1111,14 @@ export default function Navigation() {
 
                         {/* AI상담사 그룹 */}
                         <div className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
+                          <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                             AI 상담사
                           </div>
                           <div className="space-y-1">
                             {/* 도와줘요 상담사님 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "도와줘요 상담사님" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
                                 }`}
                                 onMouseEnter={() => {
@@ -1141,10 +1141,10 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">도와줘요 상담사님</div>
-                                  <div className="text-sm text-green-300 truncate">3개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">3개 중분류</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1156,7 +1156,7 @@ export default function Navigation() {
                             {/* 셀프 치료 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "셀프 치료" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
                                 }`}
                                 onMouseEnter={() => {
@@ -1179,10 +1179,10 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">셀프 치료</div>
-                                  <div className="text-sm text-green-300 truncate">3개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">3개 중분류</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1197,22 +1197,22 @@ export default function Navigation() {
                       </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div className="w-3/5 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                      <div className="w-3/5 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                         {selectedAiAssistantMainCategory ? (
                           <div>
-                            <div className="text-lg font-bold text-green-300 mb-4">
+                            <div className="text-lg font-bold text-purple-300 mb-4">
                               {selectedAiAssistantMainCategory}
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                               {aiMindAssistantSubMenuItems
                                 .find(category => category.category === selectedAiAssistantMainCategory)
                                 ?.subcategories.map((subcategory) => (
                                 <div key={subcategory.name} className="relative">
                                   <div
-                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                    className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
-                                        ? 'bg-green-600 text-white border-green-400 shadow-lg' 
-                                        : 'bg-gradient-to-r from-green-500/25 to-emerald-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-green-500/40 hover:border-white/30'
+                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' 
+                                        : ''
                                     }`}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
@@ -1242,11 +1242,11 @@ export default function Navigation() {
                                         )}
                                       </div>
                                       {subcategory.items && subcategory.items.length > 0 && (
-                                        <div className="text-sm text-green-300 truncate mt-1">{subcategory.items[0].description}</div>
+                                        <div className="text-sm text-blue-300 truncate">{subcategory.items[0].description}</div>
                                       )}
                                     </div>
                                     <svg 
-                                      className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                       fill="none" 
                                       stroke="currentColor" 
                                       viewBox="0 0 24 24"
@@ -1259,7 +1259,7 @@ export default function Navigation() {
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-center h-full text-green-300">
+                          <div className="flex items-center justify-center h-full text-blue-300">
                             대분류를 선택해주세요
                           </div>
                         )}
