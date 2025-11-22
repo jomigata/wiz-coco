@@ -922,21 +922,23 @@ export default function Navigation() {
                   </svg>
                 </Link>
 
-                {/* AI 마음 비서 메가 메뉴 - 상담 프로그램과 동일한 스타일 */}
+                {/* AI 마음 비서 메가 메뉴 - 중분류가 옆으로 펼쳐지는 구조 */}
                 {isAiMindAssistantOpen && (
                   <div
                     data-dropdown-menu="ai-mind-assistant"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 mt-0 pt-4 pb-8 w-[800px] min-w-[50rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
-                    <div className="relative">
-                      <div 
-                        ref={aiAssistantScroll.scrollRef}
-                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900"
-                        onMouseMove={aiAssistantScroll.handleMouseMove}
-                        onMouseLeave={aiAssistantScroll.handleMouseLeave}
-                      >
+                    <div className="relative flex h-[70vh]">
+                      {/* 왼쪽: 그룹 및 대분류 */}
+                      <div className="w-2/5 p-4 border-r border-green-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                        <div 
+                          ref={aiAssistantScroll.scrollRef}
+                          className="space-y-2"
+                          onMouseMove={aiAssistantScroll.handleMouseMove}
+                          onMouseLeave={aiAssistantScroll.handleMouseLeave}
+                        >
                         {/* 나의마음 그룹 */}
                         <div className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-base font-bold text-green-300 uppercase tracking-wide mb-2">
@@ -972,7 +974,7 @@ export default function Navigation() {
                                   <div className="text-sm text-green-300 truncate">4개 중분류</div>
                                 </div>
                                 <svg 
-                                  className={`w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300 ${selectedAiAssistantMainCategory === "일일 체크" ? "rotate-90" : ""}`}
+                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -980,45 +982,6 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </div>
-                              {/* 일일 체크 중분류 */}
-                              {selectedAiAssistantMainCategory === "일일 체크" && (
-                                <div className="mt-1 ml-4 space-y-1 animate-fadeIn">
-                                  {aiMindAssistantSubMenuItems.find(c => c.category === "일일 체크")?.subcategories.map((subcategory) => (
-                                    <div key={subcategory.name} className="relative">
-                                      <div
-                                        className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-300 border border-green-400/30 hover:border-green-400 cursor-pointer ${
-                                          selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-600 text-white border-green-400' : ''
-                                        }`}
-                                        onMouseEnter={() => setSelectedAiAssistantSubcategory(subcategory.name)}
-                                        onClick={() => {
-                                          if (subcategory.items && subcategory.items.length > 0) {
-                                            router.push(subcategory.items[0].href);
-                                            setActiveMenu(null);
-                                          }
-                                        }}
-                                      >
-                                        <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                          {subcategory.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-sm font-medium text-green-200 group-hover:text-white truncate">{subcategory.name}</div>
-                                          {subcategory.items && subcategory.items.length > 0 && (
-                                            <div className="text-xs text-green-300 group-hover:text-green-100 truncate">{subcategory.items[0].description}</div>
-                                          )}
-                                        </div>
-                                        <svg 
-                                          className="w-3 h-3 text-green-400 group-hover:text-white transition-all duration-300"
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                             {/* 마음 SOS */}
                             <div className="relative">
@@ -1049,7 +1012,7 @@ export default function Navigation() {
                                   <div className="text-sm text-green-300 truncate">2개 중분류</div>
                                 </div>
                                 <svg 
-                                  className={`w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300 ${selectedAiAssistantMainCategory === "마음 SOS" ? "rotate-90" : ""}`}
+                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1057,56 +1020,6 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </div>
-                              {/* 마음 SOS 중분류 */}
-                              {selectedAiAssistantMainCategory === "마음 SOS" && (
-                                <div className="mt-1 ml-4 space-y-1 animate-fadeIn">
-                                  {aiMindAssistantSubMenuItems.find(c => c.category === "마음 SOS")?.subcategories.map((subcategory) => (
-                                    <div key={subcategory.name} className="relative">
-                                      <div
-                                        className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-300 border border-green-400/30 hover:border-green-400 cursor-pointer ${
-                                          selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-600 text-white border-green-400' : ''
-                                        }`}
-                                        onMouseEnter={() => setSelectedAiAssistantSubcategory(subcategory.name)}
-                                        onClick={() => {
-                                          if (subcategory.items && subcategory.items.length > 0) {
-                                            router.push(subcategory.items[0].href);
-                                            setActiveMenu(null);
-                                          }
-                                        }}
-                                      >
-                                        <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                          {subcategory.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <div className="text-sm font-medium text-green-200 group-hover:text-white truncate">{subcategory.name}</div>
-                                            {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
-                                              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                                (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                                'bg-orange-500 text-white'
-                                              }`}>
-                                                {(subcategory.items[0] as any).badge}
-                                              </span>
-                                            )}
-                                          </div>
-                                          {subcategory.items && subcategory.items.length > 0 && (
-                                            <div className="text-xs text-green-300 group-hover:text-green-100 truncate">{subcategory.items[0].description}</div>
-                                          )}
-                                        </div>
-                                        <svg 
-                                          className="w-3 h-3 text-green-400 group-hover:text-white transition-all duration-300"
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -1146,7 +1059,7 @@ export default function Navigation() {
                                   <div className="text-sm text-green-300 truncate">4개 중분류</div>
                                 </div>
                                 <svg 
-                                  className={`w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300 ${selectedAiAssistantMainCategory === "AI 리포트" ? "rotate-90" : ""}`}
+                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1154,45 +1067,6 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </div>
-                              {/* AI 리포트 중분류 */}
-                              {selectedAiAssistantMainCategory === "AI 리포트" && (
-                                <div className="mt-1 ml-4 space-y-1 animate-fadeIn">
-                                  {aiMindAssistantSubMenuItems.find(c => c.category === "AI 리포트")?.subcategories.map((subcategory) => (
-                                    <div key={subcategory.name} className="relative">
-                                      <div
-                                        className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-300 border border-green-400/30 hover:border-green-400 cursor-pointer ${
-                                          selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-600 text-white border-green-400' : ''
-                                        }`}
-                                        onMouseEnter={() => setSelectedAiAssistantSubcategory(subcategory.name)}
-                                        onClick={() => {
-                                          if (subcategory.items && subcategory.items.length > 0) {
-                                            router.push(subcategory.items[0].href);
-                                            setActiveMenu(null);
-                                          }
-                                        }}
-                                      >
-                                        <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                          {subcategory.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-sm font-medium text-green-200 group-hover:text-white truncate">{subcategory.name}</div>
-                                          {subcategory.items && subcategory.items.length > 0 && (
-                                            <div className="text-xs text-green-300 group-hover:text-green-100 truncate">{subcategory.items[0].description}</div>
-                                          )}
-                                        </div>
-                                        <svg 
-                                          className="w-3 h-3 text-green-400 group-hover:text-white transition-all duration-300"
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                             {/* 검사 기록 */}
                             <div className="relative">
@@ -1223,7 +1097,7 @@ export default function Navigation() {
                                   <div className="text-sm text-green-300 truncate">2개 중분류</div>
                                 </div>
                                 <svg 
-                                  className={`w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300 ${selectedAiAssistantMainCategory === "검사 기록" ? "rotate-90" : ""}`}
+                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1231,45 +1105,6 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </div>
-                              {/* 검사 기록 중분류 */}
-                              {selectedAiAssistantMainCategory === "검사 기록" && (
-                                <div className="mt-1 ml-4 space-y-1 animate-fadeIn">
-                                  {aiMindAssistantSubMenuItems.find(c => c.category === "검사 기록")?.subcategories.map((subcategory) => (
-                                    <div key={subcategory.name} className="relative">
-                                      <div
-                                        className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-300 border border-green-400/30 hover:border-green-400 cursor-pointer ${
-                                          selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-600 text-white border-green-400' : ''
-                                        }`}
-                                        onMouseEnter={() => setSelectedAiAssistantSubcategory(subcategory.name)}
-                                        onClick={() => {
-                                          if (subcategory.items && subcategory.items.length > 0) {
-                                            router.push(subcategory.items[0].href);
-                                            setActiveMenu(null);
-                                          }
-                                        }}
-                                      >
-                                        <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                          {subcategory.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-sm font-medium text-green-200 group-hover:text-white truncate">{subcategory.name}</div>
-                                          {subcategory.items && subcategory.items.length > 0 && (
-                                            <div className="text-xs text-green-300 group-hover:text-green-100 truncate">{subcategory.items[0].description}</div>
-                                          )}
-                                        </div>
-                                        <svg 
-                                          className="w-3 h-3 text-green-400 group-hover:text-white transition-all duration-300"
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -1309,7 +1144,7 @@ export default function Navigation() {
                                   <div className="text-sm text-green-300 truncate">3개 중분류</div>
                                 </div>
                                 <svg 
-                                  className={`w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300 ${selectedAiAssistantMainCategory === "도와줘요 상담사님" ? "rotate-90" : ""}`}
+                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1317,45 +1152,6 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </div>
-                              {/* 도와줘요 상담사님 중분류 */}
-                              {selectedAiAssistantMainCategory === "도와줘요 상담사님" && (
-                                <div className="mt-1 ml-4 space-y-1 animate-fadeIn">
-                                  {aiMindAssistantSubMenuItems.find(c => c.category === "도와줘요 상담사님")?.subcategories.map((subcategory) => (
-                                    <div key={subcategory.name} className="relative">
-                                      <div
-                                        className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-300 border border-green-400/30 hover:border-green-400 cursor-pointer ${
-                                          selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-600 text-white border-green-400' : ''
-                                        }`}
-                                        onMouseEnter={() => setSelectedAiAssistantSubcategory(subcategory.name)}
-                                        onClick={() => {
-                                          if (subcategory.items && subcategory.items.length > 0) {
-                                            router.push(subcategory.items[0].href);
-                                            setActiveMenu(null);
-                                          }
-                                        }}
-                                      >
-                                        <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                          {subcategory.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-sm font-medium text-green-200 group-hover:text-white truncate">{subcategory.name}</div>
-                                          {subcategory.items && subcategory.items.length > 0 && (
-                                            <div className="text-xs text-green-300 group-hover:text-green-100 truncate">{subcategory.items[0].description}</div>
-                                          )}
-                                        </div>
-                                        <svg 
-                                          className="w-3 h-3 text-green-400 group-hover:text-white transition-all duration-300"
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                             {/* 셀프 치료 */}
                             <div className="relative">
@@ -1386,7 +1182,7 @@ export default function Navigation() {
                                   <div className="text-sm text-green-300 truncate">3개 중분류</div>
                                 </div>
                                 <svg 
-                                  className={`w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300 ${selectedAiAssistantMainCategory === "셀프 치료" ? "rotate-90" : ""}`}
+                                  className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1394,48 +1190,79 @@ export default function Navigation() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </div>
-                              {/* 셀프 치료 중분류 */}
-                              {selectedAiAssistantMainCategory === "셀프 치료" && (
-                                <div className="mt-1 ml-4 space-y-1 animate-fadeIn">
-                                  {aiMindAssistantSubMenuItems.find(c => c.category === "셀프 치료")?.subcategories.map((subcategory) => (
-                                    <div key={subcategory.name} className="relative">
-                                      <div
-                                        className={`group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-lg hover:bg-green-600 hover:text-white transition-all duration-300 border border-green-400/30 hover:border-green-400 cursor-pointer ${
-                                          selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-600 text-white border-green-400' : ''
-                                        }`}
-                                        onMouseEnter={() => setSelectedAiAssistantSubcategory(subcategory.name)}
-                                        onClick={() => {
-                                          if (subcategory.items && subcategory.items.length > 0) {
-                                            router.push(subcategory.items[0].href);
-                                            setActiveMenu(null);
-                                          }
-                                        }}
-                                      >
-                                        <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                          {subcategory.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-sm font-medium text-green-200 group-hover:text-white truncate">{subcategory.name}</div>
-                                          {subcategory.items && subcategory.items.length > 0 && (
-                                            <div className="text-xs text-green-300 group-hover:text-green-100 truncate">{subcategory.items[0].description}</div>
-                                          )}
-                                        </div>
-                                        <svg 
-                                          className="w-3 h-3 text-green-400 group-hover:text-white transition-all duration-300"
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>
+                        </div>
+                      </div>
+
+                      {/* 오른쪽: 선택된 대분류의 중분류 */}
+                      <div className="w-3/5 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-green-900">
+                        {selectedAiAssistantMainCategory ? (
+                          <div>
+                            <div className="text-lg font-bold text-green-300 mb-4">
+                              {selectedAiAssistantMainCategory}
+                            </div>
+                            <div className="space-y-2">
+                              {aiMindAssistantSubMenuItems
+                                .find(category => category.category === selectedAiAssistantMainCategory)
+                                ?.subcategories.map((subcategory) => (
+                                <div key={subcategory.name} className="relative">
+                                  <div
+                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                      selectedAiAssistantSubcategory === subcategory.name 
+                                        ? 'bg-green-600 text-white border-green-400 shadow-lg' 
+                                        : 'bg-gradient-to-r from-green-500/25 to-emerald-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-green-500/40 hover:border-white/30'
+                                    }`}
+                                    onMouseEnter={() => {
+                                      setHoveredCategory(subcategory.name);
+                                      setSelectedAiAssistantSubcategory(subcategory.name);
+                                    }}
+                                    onClick={() => {
+                                      if (subcategory.items && subcategory.items.length > 0) {
+                                        router.push(subcategory.items[0].href);
+                                        setActiveMenu(null);
+                                      }
+                                    }}
+                                  >
+                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                      {subcategory.icon}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
+                                        {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
+                                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                            (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
+                                            (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                            'bg-orange-500 text-white'
+                                          }`}>
+                                            {(subcategory.items[0] as any).badge}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {subcategory.items && subcategory.items.length > 0 && (
+                                        <div className="text-sm text-green-300 truncate mt-1">{subcategory.items[0].description}</div>
+                                      )}
+                                    </div>
+                                    <svg 
+                                      className="w-4 h-4 text-green-300 group-hover:text-white transition-all duration-300"
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-green-300">
+                            대분류를 선택해주세요
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
