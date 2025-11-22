@@ -429,21 +429,21 @@ export default function Navigation() {
           name: "오늘의 감정일기",
           icon: "📝",
           items: [
-            { name: "오늘의 감정일기", href: "/ai-mind-assistant/emotion-diary", description: "AI가 분석하는 감정 변화", icon: "📝" }
+            { name: "오늘의 감정일기", href: "/ai-mind-assistant/daily-thought", description: "AI가 분석하는 감정 변화", icon: "📝" }
           ]
         },
         {
           name: "나의 목표 관리",
           icon: "🎯",
           items: [
-            { name: "나의 목표 관리", href: "/ai-mind-assistant/goal-management", description: "개인 목표 설정 및 추적", icon: "🎯" }
+            { name: "나의 목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
           ]
         },
         {
           name: "일정 관리",
           icon: "📅",
           items: [
-            { name: "일정 관리", href: "/ai-mind-assistant/schedule-management", description: "상담 예약 및 일정 관리", icon: "📅" }
+            { name: "일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리", icon: "📅" }
           ]
         }
       ]
@@ -477,7 +477,7 @@ export default function Navigation() {
           name: "일상 추적",
           icon: "📝",
           items: [
-            { name: "일상 추적", href: "/ai-mind-assistant/daily-tracking", description: "매일의 마음 상태 기록", icon: "📝" }
+            { name: "일상 추적", href: "/mypage/daily-tracking", description: "매일의 마음 상태 기록", icon: "📝" }
           ]
         },
         {
@@ -491,14 +491,14 @@ export default function Navigation() {
           name: "AI 종합 분석 리포트",
           icon: "🏆",
           items: [
-            { name: "AI 종합 분석 리포트", href: "/ai-mind-assistant/comprehensive-report", description: "현재 마음 상태 종합 점검", icon: "🏆" }
+            { name: "AI 종합 분석 리포트", href: "/tests/ai-analysis", description: "현재 마음 상태 종합 점검", icon: "🏆" }
           ]
         },
         {
           name: "K-MBTI 궁합",
           icon: "💕",
           items: [
-            { name: "K-MBTI 궁합", href: "/ai-mind-assistant/mbti-compatibility", description: "AI 기반 MBTI 궁합 분석", icon: "💕" }
+            { name: "K-MBTI 궁합", href: "/mbti-compatibility", description: "AI 기반 MBTI 궁합 분석", icon: "💕" }
           ]
         }
       ]
@@ -559,21 +559,21 @@ export default function Navigation() {
           name: "학습 치료",
           icon: "📚",
           items: [
-            { name: "학습 치료", href: "/ai-mind-assistant/learning-therapy", description: "심리학 교육 콘텐츠", icon: "📚" }
+            { name: "학습 치료", href: "/learning", description: "심리학 교육 콘텐츠", icon: "📚" }
           ]
         },
         {
           name: "AI 맞춤 치료",
           icon: "🤖",
           items: [
-            { name: "AI 맞춤 치료", href: "/ai-mind-assistant/ai-custom-therapy", description: "AI 기반 상담 추천", icon: "🤖" }
+            { name: "AI 맞춤 치료", href: "/recommendations", description: "AI 기반 상담 추천", icon: "🤖" }
           ]
         },
         {
           name: "상담사 할당 치료",
           icon: "👨‍⚕️",
           items: [
-            { name: "상담사 할당 치료", href: "/ai-mind-assistant/counselor-assigned-therapy", description: "상담사가 할당한 치료 프로그램", icon: "👨‍⚕️" }
+            { name: "상담사 할당 치료", href: "/counselor/treatment-plans", description: "상담사가 할당한 치료 프로그램", icon: "👨‍⚕️" }
           ]
         }
       ]
@@ -948,8 +948,8 @@ export default function Navigation() {
                             {/* 일일 체크 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "일일 체크" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "일일 체크" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("일일 체크");
@@ -986,8 +986,8 @@ export default function Navigation() {
                             {/* 마음 SOS */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "마음 SOS" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "마음 SOS" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("마음 SOS");
@@ -1033,8 +1033,8 @@ export default function Navigation() {
                             {/* AI 리포트 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "AI 리포트" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "AI 리포트" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("AI 리포트");
@@ -1071,8 +1071,8 @@ export default function Navigation() {
                             {/* 검사 기록 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "검사 기록" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "검사 기록" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("검사 기록");
@@ -1118,8 +1118,8 @@ export default function Navigation() {
                             {/* 도와줘요 상담사님 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "도와줘요 상담사님" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "도와줘요 상담사님" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("도와줘요 상담사님");
@@ -1156,8 +1156,8 @@ export default function Navigation() {
                             {/* 셀프 치료 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "셀프 치료" ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "셀프 치료" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("셀프 치료");
@@ -1206,12 +1206,18 @@ export default function Navigation() {
                             <div className="space-y-1">
                               {aiMindAssistantSubMenuItems
                                 .find(category => category.category === selectedAiAssistantMainCategory)
-                                ?.subcategories.map((subcategory) => (
-                                <div key={subcategory.name} className="relative">
+                                ?.subcategories.map((subcategory, index) => (
+                                <div 
+                                  key={subcategory.name} 
+                                  className="relative animate-fadeIn-slow"
+                                  style={{
+                                    animationDelay: `${index * 0.1}s`
+                                  }}
+                                >
                                   <div
-                                    className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20 cursor-pointer ${
+                                    className={`group flex items-center gap-4 px-4 py-3 w-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
-                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-white/20' 
+                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' 
                                         : ''
                                     }`}
                                     onMouseEnter={() => {
@@ -1225,14 +1231,14 @@ export default function Navigation() {
                                       }
                                     }}
                                   >
-                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                       {subcategory.icon}
                                     </div>
-                                    <div className="flex-1 min-w-0">
+                                    <div className="flex-1 min-w-0 pr-4">
                                       <div className="flex items-center gap-2">
-                                        <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
+                                        <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
                                         {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
-                                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
                                             (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
                                             (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
                                             'bg-orange-500 text-white'
@@ -1242,11 +1248,11 @@ export default function Navigation() {
                                         )}
                                       </div>
                                       {subcategory.items && subcategory.items.length > 0 && (
-                                        <div className="text-sm text-blue-300 truncate">{subcategory.items[0].description}</div>
+                                        <div className="text-sm text-blue-300 mt-1 whitespace-nowrap">{subcategory.items[0].description}</div>
                                       )}
                                     </div>
                                     <svg 
-                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0"
                                       fill="none" 
                                       stroke="currentColor" 
                                       viewBox="0 0 24 24"
