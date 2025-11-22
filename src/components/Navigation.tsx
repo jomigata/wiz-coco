@@ -20,7 +20,7 @@ export default function Navigation() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("개인 심리 및 성장");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
-  const [selectedAiAssistantMainCategory, setSelectedAiAssistantMainCategory] = useState<string | null>("일일 체크");
+  const [selectedAiAssistantMainCategory, setSelectedAiAssistantMainCategory] = useState<string | null>(null);
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -948,8 +948,10 @@ export default function Navigation() {
                             {/* 일일 체크 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "일일 체크" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "일일 체크" 
+                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("일일 체크");
@@ -959,10 +961,16 @@ export default function Navigation() {
                                   }
                                 }}
                                 onClick={() => {
-                                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === "일일 체크" ? null : "일일 체크");
                                   const category = aiMindAssistantSubMenuItems.find(c => c.category === "일일 체크");
                                   if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
+                                    const firstSubcategory = category.subcategories[0];
+                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
+                                      router.push(firstSubcategory.items[0].href);
+                                      setActiveMenu(null);
+                                    } else {
+                                      setSelectedAiAssistantMainCategory("일일 체크");
+                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
+                                    }
                                   }
                                 }}
                               >
@@ -986,8 +994,10 @@ export default function Navigation() {
                             {/* 마음 SOS */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "마음 SOS" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "마음 SOS" 
+                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("마음 SOS");
@@ -997,10 +1007,16 @@ export default function Navigation() {
                                   }
                                 }}
                                 onClick={() => {
-                                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === "마음 SOS" ? null : "마음 SOS");
                                   const category = aiMindAssistantSubMenuItems.find(c => c.category === "마음 SOS");
                                   if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
+                                    const firstSubcategory = category.subcategories[0];
+                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
+                                      router.push(firstSubcategory.items[0].href);
+                                      setActiveMenu(null);
+                                    } else {
+                                      setSelectedAiAssistantMainCategory("마음 SOS");
+                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
+                                    }
                                   }
                                 }}
                               >
@@ -1033,8 +1049,10 @@ export default function Navigation() {
                             {/* AI 리포트 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "AI 리포트" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "AI 리포트" 
+                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("AI 리포트");
@@ -1044,10 +1062,16 @@ export default function Navigation() {
                                   }
                                 }}
                                 onClick={() => {
-                                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === "AI 리포트" ? null : "AI 리포트");
                                   const category = aiMindAssistantSubMenuItems.find(c => c.category === "AI 리포트");
                                   if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
+                                    const firstSubcategory = category.subcategories[0];
+                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
+                                      router.push(firstSubcategory.items[0].href);
+                                      setActiveMenu(null);
+                                    } else {
+                                      setSelectedAiAssistantMainCategory("AI 리포트");
+                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
+                                    }
                                   }
                                 }}
                               >
@@ -1071,8 +1095,10 @@ export default function Navigation() {
                             {/* 검사 기록 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "검사 기록" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "검사 기록" 
+                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("검사 기록");
@@ -1082,10 +1108,16 @@ export default function Navigation() {
                                   }
                                 }}
                                 onClick={() => {
-                                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === "검사 기록" ? null : "검사 기록");
                                   const category = aiMindAssistantSubMenuItems.find(c => c.category === "검사 기록");
                                   if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
+                                    const firstSubcategory = category.subcategories[0];
+                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
+                                      router.push(firstSubcategory.items[0].href);
+                                      setActiveMenu(null);
+                                    } else {
+                                      setSelectedAiAssistantMainCategory("검사 기록");
+                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
+                                    }
                                   }
                                 }}
                               >
@@ -1118,8 +1150,10 @@ export default function Navigation() {
                             {/* 도와줘요 상담사님 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "도와줘요 상담사님" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "도와줘요 상담사님" 
+                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("도와줘요 상담사님");
@@ -1129,10 +1163,16 @@ export default function Navigation() {
                                   }
                                 }}
                                 onClick={() => {
-                                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === "도와줘요 상담사님" ? null : "도와줘요 상담사님");
                                   const category = aiMindAssistantSubMenuItems.find(c => c.category === "도와줘요 상담사님");
                                   if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
+                                    const firstSubcategory = category.subcategories[0];
+                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
+                                      router.push(firstSubcategory.items[0].href);
+                                      setActiveMenu(null);
+                                    } else {
+                                      setSelectedAiAssistantMainCategory("도와줘요 상담사님");
+                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
+                                    }
                                   }
                                 }}
                               >
@@ -1156,8 +1196,10 @@ export default function Navigation() {
                             {/* 셀프 치료 */}
                             <div className="relative">
                               <div
-                                className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "셀프 치료" ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' : ''
+                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                  selectedAiAssistantMainCategory === "셀프 치료" 
+                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("셀프 치료");
@@ -1167,10 +1209,16 @@ export default function Navigation() {
                                   }
                                 }}
                                 onClick={() => {
-                                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === "셀프 치료" ? null : "셀프 치료");
                                   const category = aiMindAssistantSubMenuItems.find(c => c.category === "셀프 치료");
                                   if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
+                                    const firstSubcategory = category.subcategories[0];
+                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
+                                      router.push(firstSubcategory.items[0].href);
+                                      setActiveMenu(null);
+                                    } else {
+                                      setSelectedAiAssistantMainCategory("셀프 치료");
+                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
+                                    }
                                   }
                                 }}
                               >
@@ -1215,10 +1263,10 @@ export default function Navigation() {
                                   }}
                                 >
                                   <div
-                                    className={`group flex items-center gap-4 px-4 py-3 w-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-blue-300/60 cursor-pointer ${
+                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
-                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-blue-300/80' 
-                                        : ''
+                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                        : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
