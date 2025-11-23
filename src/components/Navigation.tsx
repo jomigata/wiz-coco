@@ -99,6 +99,31 @@ export default function Navigation() {
     setIsTestInProgress(false);
   }, [pathname, isTestPage]);
 
+  // 중분류 버튼 중 가장 큰 버튼의 너비 계산
+  useEffect(() => {
+    if (selectedAiAssistantMainCategory) {
+      // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
+      const timer = setTimeout(() => {
+        let maxWidth = 0;
+        buttonRefs.current.forEach((ref) => {
+          if (ref) {
+            const width = ref.offsetWidth;
+            if (width > maxWidth) {
+              maxWidth = width;
+            }
+          }
+        });
+        if (maxWidth > 0) {
+          setMaxButtonWidth(maxWidth);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setMaxButtonWidth(0);
+    }
+  }, [selectedAiAssistantMainCategory]);
+
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
     router.push('/mypage?tab=in-progress');
