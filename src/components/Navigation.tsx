@@ -1296,7 +1296,7 @@ export default function Navigation() {
                       </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div className="w-3/5 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                      <div className="w-3/5 px-4 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
                         {selectedAiAssistantMainCategory ? (
                           <div>
                             <div className="text-lg font-bold text-purple-300 mb-4">
@@ -1321,7 +1321,7 @@ export default function Navigation() {
                                         buttonRefs.current.set(`${selectedAiAssistantMainCategory}-${subcategory.name}`, el);
                                       }
                                     }}
-                                    className={`group inline-flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                    className={`group flex items-center justify-between gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
@@ -1340,25 +1340,27 @@ export default function Navigation() {
                                       }
                                     }}
                                   >
-                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                                      {subcategory.icon}
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                      <div className="flex items-center gap-2">
-                                        <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
-                                        {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
-                                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
-                                            (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                            (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                            'bg-orange-500 text-white'
-                                          }`}>
-                                            {(subcategory.items[0] as any).badge}
-                                          </span>
+                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                        {subcategory.icon}
+                                      </div>
+                                      <div className="flex flex-col gap-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
+                                          {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
+                                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
+                                              (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
+                                              (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                              'bg-orange-500 text-white'
+                                            }`}>
+                                              {(subcategory.items[0] as any).badge}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {subcategory.items && subcategory.items.length > 0 && (
+                                          <div className="text-sm text-blue-300 whitespace-nowrap">{subcategory.items[0].description}</div>
                                         )}
                                       </div>
-                                      {subcategory.items && subcategory.items.length > 0 && (
-                                        <div className="text-sm text-blue-300 whitespace-nowrap">{subcategory.items[0].description}</div>
-                                      )}
                                     </div>
                                     <svg 
                                       className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0"
