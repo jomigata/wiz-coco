@@ -23,6 +23,8 @@ export default function Navigation() {
   const [selectedAiAssistantMainCategory, setSelectedAiAssistantMainCategory] = useState<string | null>(null);
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [maxButtonWidth, setMaxButtonWidth] = useState<number>(0);
+  const buttonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   // 스크롤 상태 관리
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
@@ -1275,7 +1277,7 @@ export default function Navigation() {
                             <div className="text-lg font-bold text-purple-300 mb-4">
                               {selectedAiAssistantMainCategory}
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1" style={{ width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto' }}>
                               {aiMindAssistantSubMenuItems
                                 .find(category => category.category === selectedAiAssistantMainCategory)
                                 ?.subcategories.map((subcategory, index) => (
@@ -1289,11 +1291,19 @@ export default function Navigation() {
                                   }}
                                 >
                                   <div
+                                    ref={(el) => {
+                                      if (el) {
+                                        buttonRefs.current.set(`${selectedAiAssistantMainCategory}-${subcategory.name}`, el);
+                                      }
+                                    }}
                                     className={`group inline-flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
+                                    style={{
+                                      width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto'
+                                    }}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
                                       setSelectedAiAssistantSubcategory(subcategory.name);
