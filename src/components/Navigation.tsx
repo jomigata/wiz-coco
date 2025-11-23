@@ -904,7 +904,19 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
-                  onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                  onMouseEnter={() => {
+                    setActiveMenu('ai-mind-assistant');
+                    // 첫 번째 대분류 자동 선택
+                    if (!selectedAiAssistantMainCategory) {
+                      const firstCategory = aiMindAssistantSubMenuItems[0];
+                      if (firstCategory) {
+                        setSelectedAiAssistantMainCategory(firstCategory.category);
+                        if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
+                          setSelectedAiAssistantSubcategory(firstCategory.subcategories[0].name);
+                        }
+                      }
+                    }
+                  }}
                   onMouseLeave={() => setActiveMenu(null)}
                 >
                   🤖 나의 AI 비서
@@ -927,7 +939,19 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="ai-mind-assistant"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[800px] min-w-[50rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                    onMouseEnter={() => {
+                      setActiveMenu('ai-mind-assistant');
+                      // 첫 번째 대분류 자동 선택
+                      if (!selectedAiAssistantMainCategory) {
+                        const firstCategory = aiMindAssistantSubMenuItems[0];
+                        if (firstCategory) {
+                          setSelectedAiAssistantMainCategory(firstCategory.category);
+                          if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
+                            setSelectedAiAssistantSubcategory(firstCategory.subcategories[0].name);
+                          }
+                        }
+                      }
+                    }}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     <div className="relative flex h-[70vh]">
@@ -1256,14 +1280,16 @@ export default function Navigation() {
                                 .find(category => category.category === selectedAiAssistantMainCategory)
                                 ?.subcategories.map((subcategory, index) => (
                                 <div 
-                                  key={subcategory.name} 
-                                  className="relative animate-fadeIn-slow"
+                                  key={`${selectedAiAssistantMainCategory}-${subcategory.name}-${index}`}
+                                  className="relative"
                                   style={{
-                                    animationDelay: `${index * 0.1}s`
+                                    animation: 'fadeIn 0.3s ease-out',
+                                    animationDelay: `${index * 0.1}s`,
+                                    animationFillMode: 'both'
                                   }}
                                 >
                                   <div
-                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                    className={`group flex items-center gap-4 px-4 py-3 w-full rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
