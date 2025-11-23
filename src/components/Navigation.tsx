@@ -1289,7 +1289,7 @@ export default function Navigation() {
                                   }}
                                 >
                                   <div
-                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                                    className={`group inline-flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
@@ -1308,7 +1308,7 @@ export default function Navigation() {
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                       {subcategory.icon}
                                     </div>
-                                    <div className="flex-1 min-w-0 pr-4">
+                                    <div className="flex flex-col gap-1">
                                       <div className="flex items-center gap-2">
                                         <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
                                         {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
@@ -1322,7 +1322,7 @@ export default function Navigation() {
                                         )}
                                       </div>
                                       {subcategory.items && subcategory.items.length > 0 && (
-                                        <div className="text-sm text-blue-300 mt-1 whitespace-nowrap">{subcategory.items[0].description}</div>
+                                        <div className="text-sm text-blue-300 whitespace-nowrap">{subcategory.items[0].description}</div>
                                       )}
                                     </div>
                                     <svg 
