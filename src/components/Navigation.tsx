@@ -1289,7 +1289,7 @@ export default function Navigation() {
                                   }}
                                 >
                                   <div
-                                    className={`group flex items-center gap-4 px-4 py-3 w-full rounded-xl transition-all duration-300 cursor-pointer ${
+                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
