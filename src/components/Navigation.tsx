@@ -141,7 +141,7 @@ export default function Navigation() {
           setLeftColumnWidth(leftWidth);
           
           // 4단계: 부모 컨테이너 너비 계산 (왼쪽 컬럼 + 오른쪽 컬럼)
-          const rightColumnWidth = maxContentW > 0 ? (maxContentW + 32 + 16 + 16 + 16 + 32 + 4 + 28) : 0; // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(12px)
+          const rightColumnWidth = maxContentW > 0 ? (maxContentW + 32 + 16 + 16 + 16 + 32 + 4 + 24) : 0; // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(8px)
           const totalWidth = leftWidth + rightColumnWidth;
           if (totalWidth > 0) {
             setParentContainerWidth(totalWidth);
@@ -1346,11 +1346,11 @@ export default function Navigation() {
                       <div 
                         className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         style={{
-                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 28}px` : 'auto', // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(12px) = 좌측보다 작은 우측 공백
-                          minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 28}px` : 'auto', // 최소 너비 설정으로 일관성 유지
-                          maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 28}px` : 'none', // 최대 너비 설정으로 컨테이너 크기 고정
+                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'auto', // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(8px) = 좌측보다 작은 우측 공백
+                          minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'auto', // 최소 너비 설정으로 일관성 유지
+                          maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'none', // 최대 너비 설정으로 컨테이너 크기 고정
                           paddingLeft: '16px', // 좌측 패딩
-                          paddingRight: '12px', // 우측 패딩 (좌측보다 작게 설정)
+                          paddingRight: '8px', // 우측 패딩 (좌측보다 작게 설정)
                           paddingTop: '16px',
                           paddingBottom: '16px',
                           boxSizing: 'content-box' // 패딩을 포함하지 않은 너비 계산 (width에 패딩이 포함되지 않음)
