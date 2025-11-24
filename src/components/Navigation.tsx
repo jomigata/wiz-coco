@@ -371,7 +371,6 @@ export default function Navigation() {
         { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음", icon: "📊" },
         { name: "할당된 검사", href: "/mypage/assigned-tests", description: "상담사가 할당한 검사", icon: "📋" },
         { name: "AI 프로파일링", href: "/tests/ai-profiling", description: "캠퍼스 라이프 시크릿 리포트", icon: "🔍" },
-        { name: "통합 심리검사", href: "/tests/integrated-assessment", description: "신입생 통합 심리검사", icon: "🎓" },
         { name: "AI 종합 분석", href: "/tests/ai-analysis", description: "AI 기반 맞춤형 리포트", icon: "🤖" },
         { name: "목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
       ]

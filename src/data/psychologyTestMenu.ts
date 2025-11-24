@@ -33,6 +33,13 @@ export const testSubMenuItems: TestCategory[] = [
           { name: "AI 프로파일링 검사", href: "/tests/ai-profiling", description: "AI 기반 종합 성격 프로파일링 검사", icon: "🤖" },
           { name: "통합 평가 검사", href: "/tests/integrated-assessment", description: "종합 심리 평가 검사", icon: "📊" }
         ]
+      },
+      {
+        name: "통합 심리검사",
+        icon: "🎓",
+        items: [
+          { name: "통합 심리검사", href: "/tests/integrated-assessment", description: "신입생 통합 심리검사", icon: "🎓" }
+        ]
       }
     ]
   },
