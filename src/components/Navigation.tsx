@@ -382,8 +382,7 @@ export default function Navigation() {
       items: [
         { name: "1:1 채팅", href: "/chat", description: "상담사와 실시간 채팅", icon: "💬" },
         { name: "상담 예약", href: "/counseling/appointments", description: "개인/가족/커플 상담 예약", icon: "📅" },
-        { name: "상담사 연결", href: "/mypage/connect-counselor", description: "상담사 인증코드 입력", icon: "🔗" },
-        { name: "상담사 지원", href: "/counselor-application", description: "상담사 지원 신청", icon: "👨‍⚕️" }
+        { name: "상담사 연결", href: "/mypage/connect-counselor", description: "상담사 인증코드 입력", icon: "🔗" }
       ]
     },
     {
@@ -405,6 +404,12 @@ export default function Navigation() {
 
   // 상담사 메뉴 데이터
   const counselorMenuItems = [
+    {
+      category: "계정 관리",
+      items: [
+        { name: "상담사 지원", href: "/counselor-application", description: "상담사 지원 신청", icon: "👨‍⚕️" }
+      ]
+    },
     {
       category: "내담자 관리",
       items: [
