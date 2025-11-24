@@ -106,8 +106,8 @@ export default function Navigation() {
     if (selectedAiAssistantMainCategory) {
       // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
       const timer = setTimeout(() => {
-        let maxButtonW = 0;
         let maxContentW = 0;
+        let maxButtonW = 0;
         
         // 버튼의 실제 내용(텍스트) 너비 계산
         contentRefs.current.forEach((ref) => {
@@ -119,10 +119,18 @@ export default function Navigation() {
           }
         });
         
-        // 버튼 전체 너비 계산 (내용 + 아이콘 + 화살표 + gap + padding)
+        // 버튼 전체 너비 계산 (내용 + 아이콘(32px) + 화살표(16px) + gap(16px * 2) + padding(16px * 2))
+        // 아이콘: text-2xl = 약 32px, 화살표: w-4 h-4 = 16px, gap-4 = 16px, px-4 = 16px
+        if (maxContentW > 0) {
+          setMaxContentWidth(maxContentW);
+          // 버튼 전체 너비 = 텍스트 너비 + 아이콘(32px) + gap(16px) + 화살표(16px) + gap(16px) + 좌우 패딩(32px)
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32; // 텍스트 + 아이콘 + gap + 화살표 + gap + padding
+          setMaxButtonWidth(calculatedButtonWidth);
+        }
+        
+        // 실제 렌더링된 버튼 너비도 확인하여 더 큰 값 사용
         buttonRefs.current.forEach((ref) => {
           if (ref) {
-            // 버튼의 실제 렌더링된 너비
             const width = ref.scrollWidth;
             if (width > maxButtonW) {
               maxButtonW = width;
@@ -130,13 +138,10 @@ export default function Navigation() {
           }
         });
         
-        if (maxContentW > 0) {
-          setMaxContentWidth(maxContentW);
-        }
-        if (maxButtonW > 0) {
+        if (maxButtonW > 0 && maxButtonW > (maxContentW + 32 + 16 + 16 + 16 + 32)) {
           setMaxButtonWidth(maxButtonW);
         }
-      }, 100);
+      }, 150);
       
       return () => clearTimeout(timer);
     } else {
@@ -1353,6 +1358,9 @@ export default function Navigation() {
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
+                                    style={{
+                                      width: maxContentWidth > 0 ? `${maxContentWidth + 32 + 16 + 16 + 16 + 32}px` : 'auto' // 텍스트 + 아이콘 + gap + 화살표 + gap + padding
+                                    }}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
                                       setSelectedAiAssistantSubcategory(subcategory.name);
