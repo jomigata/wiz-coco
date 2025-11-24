@@ -107,46 +107,30 @@ export default function Navigation() {
       // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
       const timer = setTimeout(() => {
         let maxContentW = 0;
-        let maxButtonW = 0;
         
-        // 1단계: 버튼의 실제 내용(텍스트) 너비 계산
+        // 1단계: 텍스트 영역의 실제 너비 측정 (width 제한 없이 자연스러운 너비 측정)
+        // 텍스트 영역은 아직 width가 설정되지 않은 상태(auto)이므로 실제 텍스트 너비를 측정할 수 있음
         contentRefs.current.forEach((ref) => {
           if (ref) {
-            // 텍스트 영역의 실제 너비 측정 (offsetWidth 사용하여 정확한 렌더링된 너비 측정)
-            const width = ref.offsetWidth || ref.scrollWidth;
+            // scrollWidth를 사용하여 텍스트의 실제 내용 너비 측정
+            const width = ref.scrollWidth;
             if (width > maxContentW) {
               maxContentW = width;
             }
           }
         });
         
-        // 2단계: 실제 렌더링된 버튼 너비 측정
-        buttonRefs.current.forEach((ref) => {
-          if (ref) {
-            // 버튼이 렌더링된 후 실제 너비 측정
-            const width = ref.offsetWidth;
-            if (width > maxButtonW) {
-              maxButtonW = width;
-            }
-          }
-        });
-        
-        // 3단계: 텍스트 너비와 실제 버튼 너비 중 더 큰 값 사용
+        // 2단계: 텍스트 너비를 기준으로 버튼 너비 정확히 계산
         if (maxContentW > 0) {
           setMaxContentWidth(maxContentW);
           
           // 버튼 전체 너비 계산: 텍스트 너비 + 아이콘(32px) + gap(16px) + 화살표(16px) + gap(16px) + 좌우 패딩(32px)
           // 아이콘: text-2xl ≈ 32px, 화살표: w-4 h-4 = 16px, gap-4 = 16px, px-4 = 16px (좌우 각각)
-          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32;
-          
-          // 실제 측정된 버튼 너비와 계산된 버튼 너비 중 더 큰 값 사용
-          const finalButtonWidth = Math.max(maxButtonW, calculatedButtonWidth);
-          setMaxButtonWidth(finalButtonWidth);
-        } else if (maxButtonW > 0) {
-          // 텍스트 너비를 측정할 수 없는 경우 실제 버튼 너비 사용
-          setMaxButtonWidth(maxButtonW);
+          // border-2 = 2px * 2 = 4px (좌우 각각)
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4; // 텍스트 + 아이콘 + gap + 화살표 + gap + padding + border
+          setMaxButtonWidth(calculatedButtonWidth);
         }
-      }, 300); // 렌더링 완료를 보장하기 위한 충분한 지연
+      }, 350); // 렌더링 완료를 보장하기 위한 충분한 지연
       
       return () => clearTimeout(timer);
     } else {
@@ -1337,7 +1321,7 @@ export default function Navigation() {
                           paddingRight: '16px', // 우측 패딩 (좌측과 동일하게 유지)
                           paddingTop: '16px',
                           paddingBottom: '16px',
-                          boxSizing: 'border-box' // 패딩을 포함한 너비 계산
+                          boxSizing: 'content-box' // 패딩을 포함하지 않은 너비 계산 (width에 패딩이 포함되지 않음)
                         }}
                       >
                         {selectedAiAssistantMainCategory ? (
@@ -1373,6 +1357,7 @@ export default function Navigation() {
                                       width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 가장 긴 텍스트를 기준으로 계산된 고정 너비
                                       minWidth: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 최소 너비 설정으로 일관성 유지
                                       maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'none', // 최대 너비 설정으로 버튼 크기 고정
+                                      flexShrink: 0, // flex 아이템이 축소되지 않도록 설정
                                       boxSizing: 'border-box' // 패딩과 보더를 포함한 너비 계산
                                     }}
                                     onMouseEnter={() => {
@@ -1395,9 +1380,10 @@ export default function Navigation() {
                                           contentRefs.current.set(`${selectedAiAssistantMainCategory}-${subcategory.name}`, el);
                                         }
                                       }}
-                                      className="flex flex-col gap-1"
+                                      className="flex flex-col gap-1 flex-1 min-w-0"
                                       style={{
-                                        width: maxContentWidth > 0 ? `${maxContentWidth}px` : 'auto'
+                                        width: maxContentWidth > 0 ? `${maxContentWidth}px` : 'auto',
+                                        maxWidth: maxContentWidth > 0 ? `${maxContentWidth}px` : 'none'
                                       }}
                                     >
                                       <div className="flex items-center gap-2">
