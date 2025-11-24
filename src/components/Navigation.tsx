@@ -695,6 +695,10 @@ export default function Navigation() {
                     activeItem === "/tests" || activeItem.startsWith("/tests/")
                       ? "text-white bg-blue-600"
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  } ${
+                    isPsychologyTestsOpen || activeMenu === 'psychology-tests'
+                      ? "border-2 border-white"
+                      : "border-2 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
                   onMouseEnter={() => setActiveMenu('psychology-tests')}
@@ -886,6 +890,10 @@ export default function Navigation() {
                     activeItem === "/counseling" || activeItem.startsWith("/counseling/")
                       ? "text-white bg-blue-600"
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  } ${
+                    isCounselingDropdownOpen || activeMenu === 'counseling'
+                      ? "border-2 border-white"
+                      : "border-2 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
                   onMouseEnter={() => setActiveMenu('counseling')}
@@ -979,6 +987,10 @@ export default function Navigation() {
                     activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
                       ? "text-white bg-blue-600"
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  } ${
+                    isAiMindAssistantOpen || activeMenu === 'ai-mind-assistant'
+                      ? "border-2 border-white"
+                      : "border-2 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                   onMouseEnter={() => {
@@ -1488,6 +1500,10 @@ export default function Navigation() {
                             activeItem === "/counselor" || activeItem.startsWith("/counselor/")
                               ? "text-white bg-blue-600"
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                          } ${
+                            isCounselorOpen || activeMenu === 'counselor'
+                              ? "border-2 border-white"
+                              : "border-2 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
                           onMouseEnter={() => setActiveMenu('counselor')}
@@ -1588,6 +1604,10 @@ export default function Navigation() {
                             activeItem === "/admin" || activeItem.startsWith("/admin/")
                               ? "text-white bg-blue-600"
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                          } ${
+                            isAdminOpen || activeMenu === 'admin'
+                              ? "border-2 border-white"
+                              : "border-2 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
                           onMouseEnter={() => setActiveMenu('admin')}
@@ -1689,6 +1709,10 @@ export default function Navigation() {
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/")
                             ? "text-white bg-blue-600"
                             : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                        } ${
+                          isDropdownOpen || activeMenu === 'user'
+                            ? "border-2 border-white"
+                            : "border-2 border-transparent hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
                         onMouseEnter={() => setActiveMenu('user')}
