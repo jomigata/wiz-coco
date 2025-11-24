@@ -25,8 +25,12 @@ export default function Navigation() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [maxButtonWidth, setMaxButtonWidth] = useState<number>(0);
   const [maxContentWidth, setMaxContentWidth] = useState<number>(0);
+  const [leftColumnWidth, setLeftColumnWidth] = useState<number>(0);
+  const [parentContainerWidth, setParentContainerWidth] = useState<number>(0);
   const buttonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const contentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const leftColumnRef = useRef<HTMLDivElement>(null);
+  const parentContainerRef = useRef<HTMLDivElement>(null);
   
   // 스크롤 상태 관리
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
@@ -101,7 +105,7 @@ export default function Navigation() {
     setIsTestInProgress(false);
   }, [pathname, isTestPage]);
 
-  // 중분류 버튼 중 가장 큰 버튼의 너비 계산
+  // 중분류 버튼 중 가장 큰 버튼의 너비 계산 및 부모 컨테이너 너비 계산
   useEffect(() => {
     if (selectedAiAssistantMainCategory && isAiMindAssistantOpen) {
       // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
@@ -130,12 +134,27 @@ export default function Navigation() {
           const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4; // 텍스트 + 아이콘 + gap + 화살표 + gap + padding + border
           setMaxButtonWidth(calculatedButtonWidth);
         }
+        
+        // 3단계: 왼쪽 컬럼 너비 측정 및 부모 컨테이너 너비 계산
+        if (leftColumnRef.current) {
+          const leftWidth = leftColumnRef.current.offsetWidth;
+          setLeftColumnWidth(leftWidth);
+          
+          // 4단계: 부모 컨테이너 너비 계산 (왼쪽 컬럼 + 오른쪽 컬럼)
+          const rightColumnWidth = maxContentW > 0 ? (maxContentW + 32 + 16 + 16 + 16 + 32 + 4 + 32) : 0; // 버튼 너비 + 좌우 패딩
+          const totalWidth = leftWidth + rightColumnWidth;
+          if (totalWidth > 0) {
+            setParentContainerWidth(totalWidth);
+          }
+        }
       }, 350); // 렌더링 완료를 보장하기 위한 충분한 지연
       
       return () => clearTimeout(timer);
     } else {
       setMaxButtonWidth(0);
       setMaxContentWidth(0);
+      setLeftColumnWidth(0);
+      setParentContainerWidth(0);
     }
   }, [selectedAiAssistantMainCategory, isAiMindAssistantOpen]);
 
@@ -979,8 +998,14 @@ export default function Navigation() {
                 {/* AI 마음 비서 메가 메뉴 - 중분류가 옆으로 펼쳐지는 구조 */}
                 {isAiMindAssistantOpen && (
                   <div
+                    ref={parentContainerRef}
                     data-dropdown-menu="ai-mind-assistant"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-[800px] min-w-[50rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    style={{
+                      width: parentContainerWidth > 0 ? `${parentContainerWidth}px` : 'auto',
+                      minWidth: 'fit-content',
+                      maxWidth: 'none'
+                    }}
                     onMouseEnter={() => {
                       setActiveMenu('ai-mind-assistant');
                       // 첫 번째 대분류 자동 선택
@@ -998,7 +1023,14 @@ export default function Navigation() {
                   >
                     <div className="relative flex h-[70vh]">
                       {/* 왼쪽: 그룹 및 대분류 */}
-                      <div className="w-2/5 p-4 border-r border-blue-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                      <div 
+                        ref={leftColumnRef}
+                        className="flex-shrink-0 p-4 border-r border-blue-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        style={{
+                          width: 'auto',
+                          minWidth: 'fit-content'
+                        }}
+                      >
                         <div 
                           ref={aiAssistantScroll.scrollRef}
                           className="space-y-2"
