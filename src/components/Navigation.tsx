@@ -935,7 +935,7 @@ export default function Navigation() {
                                 <Link
                                   key={item.name}
                                   href={item.href}
-                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
                                   onClick={() => setActiveMenu(null)}
                                 >
                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1550,7 +1550,7 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1652,7 +1652,7 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20`}
+                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1770,7 +1770,7 @@ export default function Navigation() {
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border border-transparent hover:border-white/20"
+                                    className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white"
                                     onClick={() => setActiveMenu(null)}
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
