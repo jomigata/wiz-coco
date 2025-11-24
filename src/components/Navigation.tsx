@@ -24,7 +24,9 @@ export default function Navigation() {
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [maxButtonWidth, setMaxButtonWidth] = useState<number>(0);
+  const [maxContentWidth, setMaxContentWidth] = useState<number>(0);
   const buttonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const contentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   // 스크롤 상태 관리
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
@@ -104,23 +106,42 @@ export default function Navigation() {
     if (selectedAiAssistantMainCategory) {
       // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
       const timer = setTimeout(() => {
-        let maxWidth = 0;
-        buttonRefs.current.forEach((ref) => {
+        let maxButtonW = 0;
+        let maxContentW = 0;
+        
+        // 버튼의 실제 내용(텍스트) 너비 계산
+        contentRefs.current.forEach((ref) => {
           if (ref) {
-            const width = ref.offsetWidth;
-            if (width > maxWidth) {
-              maxWidth = width;
+            const width = ref.scrollWidth; // 내용의 실제 너비
+            if (width > maxContentW) {
+              maxContentW = width;
             }
           }
         });
-        if (maxWidth > 0) {
-          setMaxButtonWidth(maxWidth);
+        
+        // 버튼 전체 너비 계산 (내용 + 아이콘 + 화살표 + gap + padding)
+        buttonRefs.current.forEach((ref) => {
+          if (ref) {
+            // 버튼의 실제 렌더링된 너비
+            const width = ref.scrollWidth;
+            if (width > maxButtonW) {
+              maxButtonW = width;
+            }
+          }
+        });
+        
+        if (maxContentW > 0) {
+          setMaxContentWidth(maxContentW);
+        }
+        if (maxButtonW > 0) {
+          setMaxButtonWidth(maxButtonW);
         }
       }, 100);
       
       return () => clearTimeout(timer);
     } else {
       setMaxButtonWidth(0);
+      setMaxContentWidth(0);
     }
   }, [selectedAiAssistantMainCategory]);
 
@@ -1296,13 +1317,19 @@ export default function Navigation() {
                       </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div className="w-3/5 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                      <div 
+                        className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        style={{
+                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto', // 버튼 너비 + 좌우 패딩(16px * 2)
+                          padding: '16px'
+                        }}
+                      >
                         {selectedAiAssistantMainCategory ? (
                           <div>
                             <div className="text-lg font-bold text-purple-300 mb-4">
                               {selectedAiAssistantMainCategory}
                             </div>
-                            <div className="space-y-1" style={{ width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto' }}>
+                            <div className="space-y-1">
                               {aiMindAssistantSubMenuItems
                                 .find(category => category.category === selectedAiAssistantMainCategory)
                                 ?.subcategories.map((subcategory, index) => (
@@ -1326,9 +1353,6 @@ export default function Navigation() {
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
-                                    style={{
-                                      width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto'
-                                    }}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
                                       setSelectedAiAssistantSubcategory(subcategory.name);
@@ -1343,7 +1367,17 @@ export default function Navigation() {
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                       {subcategory.icon}
                                     </div>
-                                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                    <div 
+                                      ref={(el) => {
+                                        if (el) {
+                                          contentRefs.current.set(`${selectedAiAssistantMainCategory}-${subcategory.name}`, el);
+                                        }
+                                      }}
+                                      className="flex flex-col gap-1"
+                                      style={{
+                                        width: maxContentWidth > 0 ? `${maxContentWidth}px` : 'auto'
+                                      }}
+                                    >
                                       <div className="flex items-center gap-2">
                                         <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
                                         {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
