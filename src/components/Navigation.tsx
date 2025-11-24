@@ -103,13 +103,15 @@ export default function Navigation() {
 
   // 중분류 버튼 중 가장 큰 버튼의 너비 계산
   useEffect(() => {
-    if (selectedAiAssistantMainCategory) {
+    if (selectedAiAssistantMainCategory && isAiMindAssistantOpen) {
+      let measureTimer: NodeJS.Timeout | null = null;
+      
       // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
       const timer = setTimeout(() => {
         let maxContentW = 0;
         let maxButtonW = 0;
         
-        // 버튼의 실제 내용(텍스트) 너비 계산
+        // 1단계: 버튼의 실제 내용(텍스트) 너비 계산
         contentRefs.current.forEach((ref) => {
           if (ref) {
             const width = ref.scrollWidth; // 내용의 실제 너비
@@ -119,8 +121,7 @@ export default function Navigation() {
           }
         });
         
-        // 버튼 전체 너비 계산 (내용 + 아이콘(32px) + 화살표(16px) + gap(16px * 2) + padding(16px * 2))
-        // 아이콘: text-2xl = 약 32px, 화살표: w-4 h-4 = 16px, gap-4 = 16px, px-4 = 16px
+        // 2단계: 텍스트 너비를 기준으로 버튼 너비 계산
         if (maxContentW > 0) {
           setMaxContentWidth(maxContentW);
           // 버튼 전체 너비 = 텍스트 너비 + 아이콘(32px) + gap(16px) + 화살표(16px) + gap(16px) + 좌우 패딩(32px)
@@ -128,27 +129,36 @@ export default function Navigation() {
           setMaxButtonWidth(calculatedButtonWidth);
         }
         
-        // 실제 렌더링된 버튼 너비도 확인하여 더 큰 값 사용
-        buttonRefs.current.forEach((ref) => {
-          if (ref) {
-            const width = ref.scrollWidth;
-            if (width > maxButtonW) {
-              maxButtonW = width;
+        // 3단계: 실제 렌더링된 버튼 너비 측정하여 더 정확한 값 사용
+        // 버튼이 고정 너비로 렌더링된 후 다시 측정
+        measureTimer = setTimeout(() => {
+          buttonRefs.current.forEach((ref) => {
+            if (ref) {
+              const width = ref.offsetWidth; // 실제 렌더링된 너비
+              if (width > maxButtonW) {
+                maxButtonW = width;
+              }
             }
+          });
+          
+          // 실제 측정된 버튼 너비가 계산된 값보다 크면 실제 값 사용
+          if (maxButtonW > 0) {
+            setMaxButtonWidth(maxButtonW);
           }
-        });
-        
-        if (maxButtonW > 0 && maxButtonW > (maxContentW + 32 + 16 + 16 + 16 + 32)) {
-          setMaxButtonWidth(maxButtonW);
-        }
-      }, 150);
+        }, 50);
+      }, 200); // 지연 시간을 조금 더 늘려 렌더링 완료 보장
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        if (measureTimer) {
+          clearTimeout(measureTimer);
+        }
+      };
     } else {
       setMaxButtonWidth(0);
       setMaxContentWidth(0);
     }
-  }, [selectedAiAssistantMainCategory]);
+  }, [selectedAiAssistantMainCategory, isAiMindAssistantOpen]);
 
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
@@ -1325,8 +1335,11 @@ export default function Navigation() {
                       <div 
                         className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         style={{
-                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto', // 버튼 너비 + 좌우 패딩(16px * 2)
-                          padding: '16px'
+                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto', // 버튼 너비 + 좌우 패딩(16px * 2) = 동일한 좌우 공백
+                          paddingLeft: '16px', // 좌측 패딩
+                          paddingRight: '16px', // 우측 패딩 (좌측과 동일)
+                          paddingTop: '16px',
+                          paddingBottom: '16px'
                         }}
                       >
                         {selectedAiAssistantMainCategory ? (
@@ -1359,7 +1372,7 @@ export default function Navigation() {
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
                                     style={{
-                                      width: maxContentWidth > 0 ? `${maxContentWidth + 32 + 16 + 16 + 16 + 32}px` : 'auto' // 텍스트 + 아이콘 + gap + 화살표 + gap + padding
+                                      width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : (maxContentWidth > 0 ? `${maxContentWidth + 32 + 16 + 16 + 16 + 32}px` : 'auto') // 실제 측정된 버튼 너비 또는 계산된 너비
                                     }}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
