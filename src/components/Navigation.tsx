@@ -786,13 +786,21 @@ export default function Navigation() {
                             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                               {testSubMenuItems
                                 .find(category => category.category === selectedMainCategory)
-                                ?.subcategories.map((subcategory) => (
-                                <div key={subcategory.name} className="relative">
+                                ?.subcategories.map((subcategory, index) => (
+                                <div 
+                                  key={subcategory.name} 
+                                  className="relative"
+                                  style={{
+                                    animation: 'fadeIn 0.3s ease-out',
+                                    animationDelay: `${index * 0.1}s`,
+                                    animationFillMode: 'both'
+                                  }}
+                                >
                                   <div
-                                    className={`group flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 border-2 cursor-pointer shadow-md hover:shadow-lg ${
+                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedSubcategory === subcategory.name 
-                                        ? 'bg-blue-600 text-white border-blue-400 shadow-lg' 
-                                        : 'bg-gradient-to-r from-blue-500/25 to-indigo-500/25 hover:bg-gradient-to-r hover:from-white/15 hover:to-white/8 border-blue-500/40 hover:border-white/30'
+                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
+                                        : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
@@ -828,12 +836,20 @@ export default function Navigation() {
                                       }
                                     }}
                                   >
-                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                       {subcategory.icon}
                                     </div>
-                                    <div className="flex-1 min-w-0">
+                                    <div className="flex flex-col gap-1 flex-1 min-w-0">
                                       <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
                                     </div>
+                                    <svg 
+                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
                                   </div>
                                   
                                   {/* 소분류 메뉴 */}
