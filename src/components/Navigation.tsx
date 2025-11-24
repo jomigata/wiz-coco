@@ -477,14 +477,14 @@ export default function Navigation() {
   // 구조: 그룹(나의마음/AI기록분석/AI상담사) > 대분류 > 중분류 > 소분류
   const aiMindAssistantSubMenuItems: TestCategory[] = [
     // <나의마음> 그룹
-    {
+    { 
       category: "일일 체크",
       icon: "📊",
       subcategories: [
         {
           name: "오늘의 컨디션 체크",
           icon: "📊",
-          items: [
+      items: [
             { name: "오늘의 컨디션 체크", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" }
           ]
         },
@@ -511,21 +511,21 @@ export default function Navigation() {
         }
       ]
     },
-    {
+    { 
       category: "마음 SOS",
       icon: "🚨",
       subcategories: [
         {
           name: "나의 긴급 마음진단",
           icon: "🚨",
-          items: [
+      items: [
             { name: "나의 긴급 마음진단", href: "/ai-mind-assistant/emergency-diagnosis", description: "1분 AI 솔루션", icon: "🚨", badge: "긴급" }
-          ]
-        },
-        {
+      ]
+    },
+    { 
           name: "나의 번아웃 체크",
           icon: "🔥",
-          items: [
+      items: [
             { name: "나의 번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" }
           ]
         }
@@ -691,14 +691,12 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/tests"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                     activeItem === "/tests" || activeItem.startsWith("/tests/")
-                      ? "text-white bg-blue-600"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                  } ${
-                    isPsychologyTestsOpen || activeMenu === 'psychology-tests'
-                      ? "border-2 border-white"
-                      : "border-2 border-transparent hover:border-white"
+                      ? "text-white bg-blue-600 border-white"
+                      : isPsychologyTestsOpen
+                      ? "text-gray-300 border-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
                   onMouseEnter={() => setActiveMenu('psychology-tests')}
@@ -886,14 +884,12 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/counseling"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                     activeItem === "/counseling" || activeItem.startsWith("/counseling/")
-                      ? "text-white bg-blue-600"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                  } ${
-                    isCounselingDropdownOpen || activeMenu === 'counseling'
-                      ? "border-2 border-white"
-                      : "border-2 border-transparent hover:border-white"
+                      ? "text-white bg-blue-600 border-white"
+                      : isCounselingDropdownOpen
+                      ? "text-gray-300 border-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
                   onMouseEnter={() => setActiveMenu('counseling')}
@@ -983,14 +979,12 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/ai-mind-assistant"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                     activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
-                      ? "text-white bg-blue-600"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                  } ${
-                    isAiMindAssistantOpen || activeMenu === 'ai-mind-assistant'
-                      ? "border-2 border-white"
-                      : "border-2 border-transparent hover:border-white"
+                      ? "text-white bg-blue-600 border-white"
+                      : isAiMindAssistantOpen
+                      ? "text-gray-300 border-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                   onMouseEnter={() => {
@@ -1059,18 +1053,18 @@ export default function Navigation() {
                           minWidth: 'fit-content'
                         }}
                       >
-                        <div 
-                          ref={aiAssistantScroll.scrollRef}
+                      <div 
+                        ref={aiAssistantScroll.scrollRef}
                           className="space-y-2"
-                          onMouseMove={aiAssistantScroll.handleMouseMove}
-                          onMouseLeave={aiAssistantScroll.handleMouseLeave}
-                        >
+                        onMouseMove={aiAssistantScroll.handleMouseMove}
+                        onMouseLeave={aiAssistantScroll.handleMouseLeave}
+                      >
                         {/* 나의마음 그룹 */}
                         <div className="mb-4 last:mb-0">
                           <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
                             나의 마음
-                          </div>
-                          <div className="space-y-1">
+                            </div>
+                            <div className="space-y-1">
                             {/* 일일 체크 */}
                             <div className="relative">
                               <div
@@ -1099,24 +1093,24 @@ export default function Navigation() {
                                     }
                                   }
                                 }}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                >
+                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                   📊
-                                </div>
-                                <div className="flex-1 min-w-0">
+                                  </div>
+                                  <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">일일 체크</div>
                                   <div className="text-sm text-blue-300 truncate">매일의 컨디션과 감정을 기록</div>
-                                </div>
-                                <svg 
+                                  </div>
+                                  <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
                             </div>
+                          </div>
                             {/* 마음 SOS */}
                             <div className="relative">
                               <div
@@ -1148,11 +1142,11 @@ export default function Navigation() {
                               >
                                 <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                   🚨
-                                </div>
+                      </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">마음 SOS</div>
                                   <div className="text-sm text-blue-300 truncate">긴급한 마음 상태 진단</div>
-                                </div>
+                    </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
@@ -1161,10 +1155,10 @@ export default function Navigation() {
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                              </div>
+                  </div>
                             </div>
                           </div>
-                        </div>
+              </div>
 
                         {/* AI기록분석 그룹 */}
                         <div className="mb-4 last:mb-0">
@@ -1173,7 +1167,7 @@ export default function Navigation() {
                           </div>
                           <div className="space-y-1">
                             {/* AI 리포트 */}
-                            <div className="relative">
+              <div className="relative">
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "AI 리포트" 
@@ -1215,7 +1209,7 @@ export default function Navigation() {
                                   viewBox="0 0 24 24"
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                  </svg>
                               </div>
                             </div>
                             {/* 검사 기록 */}
@@ -1294,7 +1288,7 @@ export default function Navigation() {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
                                       router.push(firstSubcategory.items[0].href);
-                                      setActiveMenu(null);
+                      setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("도와줘요 상담사님");
                                       setSelectedAiAssistantSubcategory(firstSubcategory.name);
@@ -1320,7 +1314,7 @@ export default function Navigation() {
                               </div>
                             </div>
                             {/* 셀프 치료 */}
-                            <div className="relative">
+                    <div className="relative">
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "셀프 치료" 
@@ -1350,7 +1344,7 @@ export default function Navigation() {
                               >
                                 <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                   🧘
-                                </div>
+                        </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">셀프 치료</div>
                                   <div className="text-sm text-blue-300 truncate">스스로 실천하는 치료 프로그램</div>
@@ -1430,10 +1424,10 @@ export default function Navigation() {
                                         setActiveMenu(null);
                                       }
                                     }}
-                                  >
+                                >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                       {subcategory.icon}
-                                    </div>
+                                  </div>
                                     <div 
                                       ref={(el) => {
                                         if (el) {
@@ -1446,40 +1440,40 @@ export default function Navigation() {
                                         maxWidth: maxContentWidth > 0 ? `${maxContentWidth}px` : 'none'
                                       }}
                                     >
-                                      <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2">
                                         <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
                                         {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
                                           <span className={`px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
                                             (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
                                             (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                            'bg-orange-500 text-white'
-                                          }`}>
+                                          'bg-orange-500 text-white'
+                                        }`}>
                                             {(subcategory.items[0] as any).badge}
-                                          </span>
-                                        )}
-                                      </div>
+                                        </span>
+                                      )}
+                                    </div>
                                       {subcategory.items && subcategory.items.length > 0 && (
                                         <div className="text-sm text-blue-300 whitespace-nowrap">{subcategory.items[0].description}</div>
                                       )}
-                                    </div>
-                                    <svg 
-                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
                                   </div>
-                                </div>
-                              ))}
+                                  <svg 
+                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
                             </div>
+                          </div>
+                        ))}
+                      </div>
                           </div>
                         ) : (
                           <div className="flex items-center justify-center h-full text-blue-300">
                             대분류를 선택해주세요
-                          </div>
-                        )}
+                        </div>
+                      )}
                       </div>
                     </div>
                   </div>
@@ -1496,14 +1490,12 @@ export default function Navigation() {
                       <div className="relative">
                         <Link
                           href="/counselor"
-                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                             activeItem === "/counselor" || activeItem.startsWith("/counselor/")
-                              ? "text-white bg-blue-600"
-                              : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                          } ${
-                            isCounselorOpen || activeMenu === 'counselor'
-                              ? "border-2 border-white"
-                              : "border-2 border-transparent hover:border-white"
+                              ? "text-white bg-blue-600 border-white"
+                              : isCounselorOpen
+                              ? "text-gray-300 border-white"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
                           onMouseEnter={() => setActiveMenu('counselor')}
@@ -1600,14 +1592,12 @@ export default function Navigation() {
                       <div className="relative">
                         <Link
                           href="/admin"
-                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                             activeItem === "/admin" || activeItem.startsWith("/admin/")
-                              ? "text-white bg-blue-600"
-                              : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                          } ${
-                            isAdminOpen || activeMenu === 'admin'
-                              ? "border-2 border-white"
-                              : "border-2 border-transparent hover:border-white"
+                              ? "text-white bg-blue-600 border-white"
+                              : isAdminOpen
+                              ? "text-gray-300 border-white"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
                           onMouseEnter={() => setActiveMenu('admin')}
@@ -1705,14 +1695,12 @@ export default function Navigation() {
                     <div className="relative">
                       <Link
                         href="/mypage"
-                        className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap ${
+                        className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/")
-                            ? "text-white bg-blue-600"
-                            : "text-gray-300 hover:text-white hover:bg-blue-800/50"
-                        } ${
-                          isDropdownOpen || activeMenu === 'user'
-                            ? "border-2 border-white"
-                            : "border-2 border-transparent hover:border-white"
+                            ? "text-white bg-blue-600 border-white"
+                            : isDropdownOpen
+                            ? "text-gray-300 border-white"
+                            : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
                         onMouseEnter={() => setActiveMenu('user')}
@@ -2067,10 +2055,10 @@ export default function Navigation() {
                 </div>
                 
                 {/* 나의마음 그룹 */}
-                <div className="space-y-2">
-                  <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
                     나의 마음
-                  </div>
+                </div>
                   {aiMindAssistantSubMenuItems.filter(c => c.category === "일일 체크" || c.category === "마음 SOS").map((mainCategory) => (
                     <div key={mainCategory.category} className="space-y-2 ml-4">
                       {/* 대분류 */}
@@ -2092,7 +2080,7 @@ export default function Navigation() {
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </div>
+                    </div>
                     
                       {/* 선택된 대분류의 중분류 */}
                       {selectedAiAssistantMainCategory === mainCategory.category && (
@@ -2129,47 +2117,47 @@ export default function Navigation() {
                               {selectedAiAssistantSubcategory === subcategory.name && (
                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                   {subcategory.items.map((item) => (
-                                    <Link
-                                      key={item.name}
-                                      href={item.href}
+                      <Link
+                        key={item.name}
+                        href={item.href}
                                       className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                                      onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                      <div className="flex items-center gap-2">
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
                                         <span className="text-xs">{item.icon}</span>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2">
                                             <div className="font-medium">{item.name}</div>
-                                            {'badge' in item && (item as any).badge && (
-                                              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                                (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                                'bg-orange-500 text-white'
-                                              }`}>
-                                                {(item as any).badge}
-                                              </span>
-                                            )}
-                                          </div>
+                          {'badge' in item && (item as any).badge && (
+                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                              (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
+                              (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                              'bg-orange-500 text-white'
+                            }`}>
+                              {(item as any).badge}
+                            </span>
+                          )}
+                        </div>
                                           <div className="text-xs text-gray-400">{item.description}</div>
                                         </div>
                                       </div>
-                                    </Link>
-                                  ))}
+                      </Link>
+                    ))}
                                 </div>
                               )}
                             </div>
                           ))}
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
 
                 {/* AI기록분석 그룹 */}
-                <div className="space-y-2">
-                  <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
                     AI 기록 분석
-                  </div>
+                </div>
                   {aiMindAssistantSubMenuItems.filter(c => c.category === "AI 리포트" || c.category === "검사 기록").map((mainCategory) => (
                     <div key={mainCategory.category} className="space-y-2 ml-4">
                       {/* 대분류 */}
@@ -2191,7 +2179,7 @@ export default function Navigation() {
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </div>
+                    </div>
                     
                       {/* 선택된 대분류의 중분류 */}
                       {selectedAiAssistantMainCategory === mainCategory.category && (
@@ -2228,13 +2216,13 @@ export default function Navigation() {
                               {selectedAiAssistantSubcategory === subcategory.name && (
                                 <div className="ml-4 space-y-1 animate-fadeIn-slow">
                                   {subcategory.items.map((item) => (
-                                    <Link
-                                      key={item.name}
-                                      href={item.href}
+                      <Link
+                        key={item.name}
+                        href={item.href}
                                       className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                                      onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                      <div className="flex items-center gap-2">
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
                                         <span className="text-xs">{item.icon}</span>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2">
@@ -2248,21 +2236,21 @@ export default function Navigation() {
                                                 {(item as any).badge}
                                               </span>
                                             )}
-                                          </div>
+                        </div>
                                           <div className="text-xs text-gray-400">{item.description}</div>
                                         </div>
                                       </div>
-                                    </Link>
-                                  ))}
+                      </Link>
+                    ))}
                                 </div>
                               )}
                             </div>
                           ))}
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
 
                 {/* AI상담사 그룹 */}
                 <div className="space-y-2">
