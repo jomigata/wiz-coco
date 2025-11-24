@@ -141,7 +141,7 @@ export default function Navigation() {
           setLeftColumnWidth(leftWidth);
           
           // 4단계: 부모 컨테이너 너비 계산 (왼쪽 컬럼 + 오른쪽 컬럼)
-          const rightColumnWidth = maxContentW > 0 ? (maxContentW + 32 + 16 + 16 + 16 + 32 + 4 + 32) : 0; // 버튼 너비 + 좌우 패딩
+          const rightColumnWidth = maxContentW > 0 ? (maxContentW + 32 + 16 + 16 + 16 + 32 + 4 + 28) : 0; // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(12px)
           const totalWidth = leftWidth + rightColumnWidth;
           if (totalWidth > 0) {
             setParentContainerWidth(totalWidth);
@@ -1077,7 +1077,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">일일 체크</div>
-                                  <div className="text-sm text-blue-300 truncate">4개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">매일의 컨디션과 감정을 기록</div>
                                 </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
@@ -1123,7 +1123,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">마음 SOS</div>
-                                  <div className="text-sm text-blue-300 truncate">2개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">긴급한 마음 상태 진단</div>
                                 </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
@@ -1178,7 +1178,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">AI 리포트</div>
-                                  <div className="text-sm text-blue-300 truncate">4개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">AI가 분석하는 종합 리포트</div>
                                 </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
@@ -1224,7 +1224,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">검사 기록</div>
-                                  <div className="text-sm text-blue-300 truncate">2개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">나의 심리검사 결과 모음</div>
                                 </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
@@ -1279,7 +1279,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">도와줘요 상담사님</div>
-                                  <div className="text-sm text-blue-300 truncate">3개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">전문 상담사와의 소통</div>
                                 </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
@@ -1325,7 +1325,7 @@ export default function Navigation() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-medium text-white truncate">셀프 치료</div>
-                                  <div className="text-sm text-blue-300 truncate">3개 중분류</div>
+                                  <div className="text-sm text-blue-300 truncate">스스로 실천하는 치료 프로그램</div>
                                 </div>
                                 <svg 
                                   className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
@@ -1346,11 +1346,11 @@ export default function Navigation() {
                       <div 
                         className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         style={{
-                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto', // 버튼 너비 + 좌우 패딩(16px * 2) = 동일한 좌우 공백
-                          minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto', // 최소 너비 설정으로 일관성 유지
-                          maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'none', // 최대 너비 설정으로 컨테이너 크기 고정
+                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 28}px` : 'auto', // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(12px) = 좌측보다 작은 우측 공백
+                          minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 28}px` : 'auto', // 최소 너비 설정으로 일관성 유지
+                          maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 28}px` : 'none', // 최대 너비 설정으로 컨테이너 크기 고정
                           paddingLeft: '16px', // 좌측 패딩
-                          paddingRight: '16px', // 우측 패딩 (좌측과 동일하게 유지)
+                          paddingRight: '12px', // 우측 패딩 (좌측보다 작게 설정)
                           paddingTop: '16px',
                           paddingBottom: '16px',
                           boxSizing: 'content-box' // 패딩을 포함하지 않은 너비 계산 (width에 패딩이 포함되지 않음)
