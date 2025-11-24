@@ -108,29 +108,27 @@ export default function Navigation() {
       const timer = setTimeout(() => {
         let maxContentW = 0;
         
-        // 1단계: 텍스트 영역의 실제 내용 너비 측정
-        // 텍스트 영역이 처음 렌더링될 때는 width가 auto이므로 실제 내용 너비를 측정할 수 있음
+        // 1단계: 버튼의 실제 내용(텍스트) 너비 계산
         contentRefs.current.forEach((ref) => {
           if (ref) {
-            // 텍스트 영역의 실제 내용 너비 측정
-            // scrollWidth는 내용의 실제 너비를 반환 (overflow 포함)
+            // 텍스트 영역의 실제 너비 측정 (스크롤 너비 사용)
             const width = ref.scrollWidth;
-            
             if (width > maxContentW) {
               maxContentW = width;
             }
           }
         });
         
-        // 2단계: 텍스트 너비를 기준으로 버튼 너비 계산
+        // 2단계: 텍스트 너비를 기준으로 버튼 너비를 정확히 계산하고 고정
         if (maxContentW > 0) {
           setMaxContentWidth(maxContentW);
+          
           // 버튼 전체 너비 = 텍스트 너비 + 아이콘(32px) + gap(16px) + 화살표(16px) + gap(16px) + 좌우 패딩(32px)
-          // 아이콘: text-2xl = 약 32px, 화살표: w-4 h-4 = 16px, gap-4 = 16px, px-4 = 16px
-          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32; // 텍스트 + 아이콘 + gap + 화살표 + gap + padding
+          // 아이콘: text-2xl ≈ 32px, 화살표: w-4 h-4 = 16px, gap-4 = 16px, px-4 = 16px (좌우 각각)
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32;
           setMaxButtonWidth(calculatedButtonWidth);
         }
-      }, 200); // 텍스트가 렌더링된 후 측정 (충분한 시간 확보)
+      }, 250); // 렌더링 완료를 보장하기 위한 충분한 지연
       
       return () => clearTimeout(timer);
     } else {
@@ -1314,12 +1312,12 @@ export default function Navigation() {
                       <div 
                         className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         style={{
-                          // 컨테이너 너비 = 버튼 너비 + 좌우 패딩(16px * 2) = 동일한 좌우 공백
-                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto',
+                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto', // 버튼 너비 + 좌우 패딩(16px * 2) = 동일한 좌우 공백
                           paddingLeft: '16px', // 좌측 패딩
-                          paddingRight: '16px', // 우측 패딩 (좌측과 동일)
+                          paddingRight: '16px', // 우측 패딩 (좌측과 동일하게 유지)
                           paddingTop: '16px',
-                          paddingBottom: '16px'
+                          paddingBottom: '16px',
+                          minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 32}px` : 'auto' // 최소 너비 설정으로 일관성 유지
                         }}
                       >
                         {selectedAiAssistantMainCategory ? (
@@ -1352,8 +1350,9 @@ export default function Navigation() {
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
                                     style={{
-                                      // 버튼 너비 = 텍스트 너비 + 아이콘 + gap + 화살표 + gap + 좌우 패딩
-                                      width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto'
+                                      width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 가장 긴 텍스트를 기준으로 계산된 고정 너비
+                                      minWidth: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 최소 너비 설정으로 일관성 유지
+                                      maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'none' // 최대 너비 설정으로 버튼 크기 고정
                                     }}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
