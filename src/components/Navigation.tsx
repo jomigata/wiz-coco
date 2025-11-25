@@ -933,13 +933,26 @@ export default function Navigation() {
                       </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div className="w-3/5 p-4">
+                      <div 
+                        className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        style={{
+                          width: psychologyButtonWidth > 0 ? `${psychologyButtonWidth + 32}px` : 'auto',
+                          minWidth: psychologyButtonWidth > 0 ? `${psychologyButtonWidth + 32}px` : 'auto',
+                          maxWidth: psychologyButtonWidth > 0 ? `${psychologyButtonWidth + 32}px` : 'none',
+                          paddingLeft: '16px',
+                          paddingRight: '16px',
+                          paddingTop: '16px',
+                          paddingBottom: '16px',
+                          boxSizing: 'content-box',
+                          maxHeight: '60vh'
+                        }}
+                      >
                         {selectedMainCategory ? (
                           <div>
                             <div className="text-lg font-bold text-blue-300 mb-4">
                               {selectedMainCategory}
                             </div>
-                            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                            <div className="space-y-2">
                               {testSubMenuItems
                                 .find(category => category.category === selectedMainCategory)
                                 ?.subcategories.map((subcategory, index) => (
