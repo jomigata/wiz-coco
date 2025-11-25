@@ -35,22 +35,22 @@ export default function Navigation() {
   // 각 메뉴별 동적 너비 계산을 위한 상태 및 refs
   const [counselingButtonWidth, setCounselingButtonWidth] = useState<number>(0);
   const [counselingContentWidth, setCounselingContentWidth] = useState<number>(0);
-  const counselingButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const counselingButtonRefs = useRef<Map<string, HTMLElement>>(new Map());
   const counselingContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   const [counselorButtonWidth, setCounselorButtonWidth] = useState<number>(0);
   const [counselorContentWidth, setCounselorContentWidth] = useState<number>(0);
-  const counselorButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const counselorButtonRefs = useRef<Map<string, HTMLElement>>(new Map());
   const counselorContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   const [adminButtonWidth, setAdminButtonWidth] = useState<number>(0);
   const [adminContentWidth, setAdminContentWidth] = useState<number>(0);
-  const adminButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const adminButtonRefs = useRef<Map<string, HTMLElement>>(new Map());
   const adminContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   const [mypageButtonWidth, setMypageButtonWidth] = useState<number>(0);
   const [mypageContentWidth, setMypageContentWidth] = useState<number>(0);
-  const mypageButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const mypageButtonRefs = useRef<Map<string, HTMLElement>>(new Map());
   const mypageContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   const [psychologyButtonWidth, setPsychologyButtonWidth] = useState<number>(0);
