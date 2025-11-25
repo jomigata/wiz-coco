@@ -747,8 +747,8 @@ export default function Navigation() {
                               key={mainCategory.category}
                               className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
                                 selectedMainCategory === mainCategory.category
-                                  ? 'bg-blue-600 text-white border-blue-400 shadow-lg'
-                                  : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border-blue-500/30 hover:border-blue-400 hover:shadow-md'
+                                  ? 'text-white border-blue-400 shadow-lg'
+                                  : 'text-blue-300 border-blue-500/30 hover:text-white hover:border-blue-400 hover:shadow-md'
                               }`}
                               onClick={() => {
                                 setSelectedMainCategory(mainCategory.category);
@@ -871,7 +871,7 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className="group flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
+                                          className="group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
@@ -943,7 +943,10 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="counseling"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onMouseEnter={() => setActiveMenu('counseling')}
+                    onMouseEnter={() => {
+                      setActiveMenu('counseling');
+                      // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                    }}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     <div className="relative">
@@ -963,7 +966,11 @@ export default function Navigation() {
                                 <Link
                                   key={item.name}
                                   href={item.href}
-                                  className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
+                                  className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
+                                    category === counselingMenuItems[0] && item === category.items[0]
+                                      ? 'border-white'
+                                      : 'border-transparent hover:border-white'
+                                  }`}
                                   onClick={() => setActiveMenu(null)}
                                 >
                                   <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -975,8 +982,8 @@ export default function Navigation() {
                                       {'badge' in item && (item as any).badge && (
                                         <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                                           (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
-                                          (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                          'bg-orange-500 text-white'
+                                            (item as any).badge === '신규' ? 'bg-green-500 text-white' :
+                                            'bg-orange-500 text-white'
                                         }`}>
                                           {(item as any).badge}
                                         </span>
@@ -1098,8 +1105,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "일일 체크" 
-                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                    ? 'border-2 border-blue-300/80' 
+                                    : 'border-2 border-transparent hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("일일 체크");
@@ -1144,8 +1151,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "마음 SOS" 
-                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                    ? 'border-2 border-blue-300/80' 
+                                    : 'border-2 border-transparent hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("마음 SOS");
@@ -1199,8 +1206,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "AI 리포트" 
-                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                    ? 'border-2 border-blue-300/80' 
+                                    : 'border-2 border-transparent hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("AI 리포트");
@@ -1245,8 +1252,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "검사 기록" 
-                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                    ? 'border-2 border-blue-300/80' 
+                                    : 'border-2 border-transparent hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("검사 기록");
@@ -1300,8 +1307,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "도와줘요 상담사님" 
-                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                    ? 'border-2 border-blue-300/80' 
+                                    : 'border-2 border-transparent hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("도와줘요 상담사님");
@@ -1346,8 +1353,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "셀프 치료" 
-                                    ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                    : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                    ? 'border-2 border-blue-300/80' 
+                                    : 'border-2 border-transparent hover:border-blue-300/60'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("셀프 치료");
@@ -1432,8 +1439,8 @@ export default function Navigation() {
                                     }}
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
-                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                        : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                        ? 'border-2 border-blue-300/80' 
+                                        : 'border-2 border-transparent hover:border-blue-300/60'
                                     }`}
                                     style={{
                                       width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 가장 긴 텍스트를 기준으로 계산된 고정 너비
@@ -1549,7 +1556,10 @@ export default function Navigation() {
                           <div
                             data-dropdown-menu="counselor"
                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                            onMouseEnter={() => setActiveMenu('counselor')}
+                            onMouseEnter={() => {
+                              setActiveMenu('counselor');
+                              // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                            }}
                             onMouseLeave={() => {
                               setActiveMenu(null);
                               handleMouseLeave('counselor');
@@ -1578,7 +1588,11 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
+                                          className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
+                                            category === counselorMenuItems[0] && item === category.items[0]
+                                              ? 'border-white'
+                                              : 'border-transparent hover:border-white'
+                                          }`}
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1651,7 +1665,10 @@ export default function Navigation() {
                           <div
                             data-dropdown-menu="admin"
                             className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                            onMouseEnter={() => setActiveMenu('admin')}
+                            onMouseEnter={() => {
+                              setActiveMenu('admin');
+                              // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                            }}
                             onMouseLeave={() => {
                               setActiveMenu(null);
                               handleMouseLeave('admin');
@@ -1680,7 +1697,11 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
+                                          className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
+                                            category === adminMenuItems[0] && item === category.items[0]
+                                              ? 'border-white'
+                                              : 'border-transparent hover:border-white'
+                                          }`}
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
@@ -1754,7 +1775,10 @@ export default function Navigation() {
                         <div
                           data-dropdown-menu="user"
                           className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                          onMouseEnter={() => setActiveMenu('user')}
+                          onMouseEnter={() => {
+                            setActiveMenu('user');
+                            // 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                          }}
                           onMouseLeave={() => {
                             setActiveMenu(null);
                             handleMouseLeave('user');
@@ -1794,11 +1818,15 @@ export default function Navigation() {
                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
                                   { name: "삭제된 코드", href: "/mypage/deleted-codes", description: "삭제된 테스트 코드 복구", icon: "📋" },
                                   { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️" }
-                                ].map((item) => (
+                                ].map((item, index) => (
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white"
+                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
+                                      index === 0
+                                        ? 'border-white'
+                                        : 'border-transparent hover:border-white'
+                                    }`}
                                     onClick={() => setActiveMenu(null)}
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
