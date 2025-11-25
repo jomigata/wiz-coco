@@ -32,6 +32,32 @@ export default function Navigation() {
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const parentContainerRef = useRef<HTMLDivElement>(null);
   
+  // 각 메뉴별 동적 너비 계산을 위한 상태 및 refs
+  const [counselingButtonWidth, setCounselingButtonWidth] = useState<number>(0);
+  const [counselingContentWidth, setCounselingContentWidth] = useState<number>(0);
+  const counselingButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const counselingContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  const [counselorButtonWidth, setCounselorButtonWidth] = useState<number>(0);
+  const [counselorContentWidth, setCounselorContentWidth] = useState<number>(0);
+  const counselorButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const counselorContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  const [adminButtonWidth, setAdminButtonWidth] = useState<number>(0);
+  const [adminContentWidth, setAdminContentWidth] = useState<number>(0);
+  const adminButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const adminContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  const [mypageButtonWidth, setMypageButtonWidth] = useState<number>(0);
+  const [mypageContentWidth, setMypageContentWidth] = useState<number>(0);
+  const mypageButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const mypageContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  const [psychologyButtonWidth, setPsychologyButtonWidth] = useState<number>(0);
+  const [psychologyContentWidth, setPsychologyContentWidth] = useState<number>(0);
+  const psychologyButtonRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const psychologyContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
   // 스크롤 상태 관리
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
   const [scrollIntervals, setScrollIntervals] = useState<{[key: string]: NodeJS.Timeout | null}>({});
@@ -157,6 +183,136 @@ export default function Navigation() {
       setParentContainerWidth(0);
     }
   }, [selectedAiAssistantMainCategory, isAiMindAssistantOpen]);
+
+  // 상담 프로그램 메뉴 동적 너비 계산
+  useEffect(() => {
+    if (isCounselingDropdownOpen) {
+      const timer = setTimeout(() => {
+        let maxContentW = 0;
+        counselingContentRefs.current.forEach((ref) => {
+          if (ref) {
+            const width = ref.scrollWidth;
+            if (width > maxContentW) {
+              maxContentW = width;
+            }
+          }
+        });
+        if (maxContentW > 0) {
+          setCounselingContentWidth(maxContentW);
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4;
+          setCounselingButtonWidth(calculatedButtonWidth);
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setCounselingButtonWidth(0);
+      setCounselingContentWidth(0);
+    }
+  }, [isCounselingDropdownOpen]);
+
+  // 상담사 메뉴 동적 너비 계산
+  useEffect(() => {
+    if (isCounselorOpen) {
+      const timer = setTimeout(() => {
+        let maxContentW = 0;
+        counselorContentRefs.current.forEach((ref) => {
+          if (ref) {
+            const width = ref.scrollWidth;
+            if (width > maxContentW) {
+              maxContentW = width;
+            }
+          }
+        });
+        if (maxContentW > 0) {
+          setCounselorContentWidth(maxContentW);
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4;
+          setCounselorButtonWidth(calculatedButtonWidth);
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setCounselorButtonWidth(0);
+      setCounselorContentWidth(0);
+    }
+  }, [isCounselorOpen]);
+
+  // 관리자 메뉴 동적 너비 계산
+  useEffect(() => {
+    if (isAdminOpen) {
+      const timer = setTimeout(() => {
+        let maxContentW = 0;
+        adminContentRefs.current.forEach((ref) => {
+          if (ref) {
+            const width = ref.scrollWidth;
+            if (width > maxContentW) {
+              maxContentW = width;
+            }
+          }
+        });
+        if (maxContentW > 0) {
+          setAdminContentWidth(maxContentW);
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4;
+          setAdminButtonWidth(calculatedButtonWidth);
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setAdminButtonWidth(0);
+      setAdminContentWidth(0);
+    }
+  }, [isAdminOpen]);
+
+  // 마이페이지 메뉴 동적 너비 계산
+  useEffect(() => {
+    if (isDropdownOpen) {
+      const timer = setTimeout(() => {
+        let maxContentW = 0;
+        mypageContentRefs.current.forEach((ref) => {
+          if (ref) {
+            const width = ref.scrollWidth;
+            if (width > maxContentW) {
+              maxContentW = width;
+            }
+          }
+        });
+        if (maxContentW > 0) {
+          setMypageContentWidth(maxContentW);
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4;
+          setMypageButtonWidth(calculatedButtonWidth);
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setMypageButtonWidth(0);
+      setMypageContentWidth(0);
+    }
+  }, [isDropdownOpen]);
+
+  // AI 심리검사 메뉴 동적 너비 계산
+  useEffect(() => {
+    if (isPsychologyTestsOpen && selectedMainCategory) {
+      const timer = setTimeout(() => {
+        let maxContentW = 0;
+        psychologyContentRefs.current.forEach((ref) => {
+          if (ref) {
+            const width = ref.scrollWidth;
+            if (width > maxContentW) {
+              maxContentW = width;
+            }
+          }
+        });
+        if (maxContentW > 0) {
+          setPsychologyContentWidth(maxContentW);
+          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4;
+          setPsychologyButtonWidth(calculatedButtonWidth);
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setPsychologyButtonWidth(0);
+      setPsychologyContentWidth(0);
+    }
+  }, [isPsychologyTestsOpen, selectedMainCategory]);
 
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
@@ -930,7 +1086,12 @@ export default function Navigation() {
                 {isCounselingDropdownOpen && (
                   <div
                     data-dropdown-menu="counseling"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    style={{
+                      width: counselingButtonWidth > 0 ? `${counselingButtonWidth + 48}px` : 'auto',
+                      minWidth: 'fit-content',
+                      maxWidth: 'none'
+                    }}
                     onMouseEnter={() => setActiveMenu('counseling')}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
@@ -951,17 +1112,40 @@ export default function Navigation() {
                                 <Link
                                   key={item.name}
                                   href={item.href}
+                                  ref={(el) => {
+                                    if (el) {
+                                      counselingButtonRefs.current.set(`${category.category}-${item.name}`, el);
+                                    }
+                                  }}
                                   className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
+                                  style={{
+                                    width: counselingButtonWidth > 0 ? `${counselingButtonWidth}px` : 'auto',
+                                    minWidth: counselingButtonWidth > 0 ? `${counselingButtonWidth}px` : 'auto',
+                                    maxWidth: counselingButtonWidth > 0 ? `${counselingButtonWidth}px` : 'none',
+                                    flexShrink: 0,
+                                    boxSizing: 'border-box'
+                                  }}
                                   onClick={() => setActiveMenu(null)}
                                 >
-                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                     {item.icon || '💭'}
                                   </div>
-                                  <div className="flex-1 min-w-0">
+                                  <div 
+                                    ref={(el) => {
+                                      if (el) {
+                                        counselingContentRefs.current.set(`${category.category}-${item.name}`, el);
+                                      }
+                                    }}
+                                    className="flex flex-col gap-1 flex-1 min-w-0"
+                                    style={{
+                                      width: counselingContentWidth > 0 ? `${counselingContentWidth}px` : 'auto',
+                                      maxWidth: counselingContentWidth > 0 ? `${counselingContentWidth}px` : 'none'
+                                    }}
+                                  >
                                     <div className="flex items-center gap-2">
-                                      <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                      <span className="text-base font-medium text-white whitespace-nowrap">{item.name}</span>
                                       {'badge' in item && (item as any).badge && (
-                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
                                           (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
                                           (item as any).badge === '신규' ? 'bg-green-500 text-white' :
                                           'bg-orange-500 text-white'
@@ -970,10 +1154,10 @@ export default function Navigation() {
                                         </span>
                                       )}
                                     </div>
-                                    <div className="text-sm text-blue-300 truncate">{item.description}</div>
+                                    <div className="text-sm text-blue-300 whitespace-nowrap">{item.description}</div>
                                   </div>
                                   <svg 
-                                    className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                    className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
                                     fill="none" 
                                     stroke="currentColor" 
                                     viewBox="0 0 24 24"
@@ -1536,7 +1720,12 @@ export default function Navigation() {
                         {isCounselorOpen && (
                           <div
                             data-dropdown-menu="counselor"
-                            className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            className="absolute left-0 mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            style={{
+                              width: counselorButtonWidth > 0 ? `${counselorButtonWidth + 48}px` : 'auto',
+                              minWidth: 'fit-content',
+                              maxWidth: 'none'
+                            }}
                             onMouseEnter={() => setActiveMenu('counselor')}
                             onMouseLeave={() => {
                               setActiveMenu(null);
@@ -1566,20 +1755,43 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
+                                          ref={(el) => {
+                                            if (el) {
+                                              counselorButtonRefs.current.set(`${category.category}-${item.name}`, el);
+                                            }
+                                          }}
                                           className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
+                                          style={{
+                                            width: counselorButtonWidth > 0 ? `${counselorButtonWidth}px` : 'auto',
+                                            minWidth: counselorButtonWidth > 0 ? `${counselorButtonWidth}px` : 'auto',
+                                            maxWidth: counselorButtonWidth > 0 ? `${counselorButtonWidth}px` : 'none',
+                                            flexShrink: 0,
+                                            boxSizing: 'border-box'
+                                          }}
                                           onClick={() => setActiveMenu(null)}
                                         >
-                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                             {item.icon || '👨‍⚕️'}
                                           </div>
-                                          <div className="flex-1 min-w-0">
+                                          <div 
+                                            ref={(el) => {
+                                              if (el) {
+                                                counselorContentRefs.current.set(`${category.category}-${item.name}`, el);
+                                              }
+                                            }}
+                                            className="flex flex-col gap-1 flex-1 min-w-0"
+                                            style={{
+                                              width: counselorContentWidth > 0 ? `${counselorContentWidth}px` : 'auto',
+                                              maxWidth: counselorContentWidth > 0 ? `${counselorContentWidth}px` : 'none'
+                                            }}
+                                          >
                                             <div className="flex items-center gap-2">
-                                              <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                              <span className="text-base font-medium text-white whitespace-nowrap">{item.name}</span>
                                             </div>
-                                            <div className="text-sm text-blue-300 truncate">{item.description}</div>
+                                            <div className="text-sm text-blue-300 whitespace-nowrap">{item.description}</div>
                                           </div>
                                           <svg 
-                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
                                             fill="none" 
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -1638,7 +1850,12 @@ export default function Navigation() {
                         {isAdminOpen && (
                           <div
                             data-dropdown-menu="admin"
-                            className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            className="absolute left-0 mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            style={{
+                              width: adminButtonWidth > 0 ? `${adminButtonWidth + 48}px` : 'auto',
+                              minWidth: 'fit-content',
+                              maxWidth: 'none'
+                            }}
                             onMouseEnter={() => setActiveMenu('admin')}
                             onMouseLeave={() => {
                               setActiveMenu(null);
@@ -1668,20 +1885,43 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
+                                          ref={(el) => {
+                                            if (el) {
+                                              adminButtonRefs.current.set(`${category.category}-${item.name}`, el);
+                                            }
+                                          }}
                                           className={`group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-300 border-2 border-transparent hover:border-white`}
+                                          style={{
+                                            width: adminButtonWidth > 0 ? `${adminButtonWidth}px` : 'auto',
+                                            minWidth: adminButtonWidth > 0 ? `${adminButtonWidth}px` : 'auto',
+                                            maxWidth: adminButtonWidth > 0 ? `${adminButtonWidth}px` : 'none',
+                                            flexShrink: 0,
+                                            boxSizing: 'border-box'
+                                          }}
                                           onClick={() => setActiveMenu(null)}
                                         >
-                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                             {item.icon || '🔧'}
                                           </div>
-                                          <div className="flex-1 min-w-0">
+                                          <div 
+                                            ref={(el) => {
+                                              if (el) {
+                                                adminContentRefs.current.set(`${category.category}-${item.name}`, el);
+                                              }
+                                            }}
+                                            className="flex flex-col gap-1 flex-1 min-w-0"
+                                            style={{
+                                              width: adminContentWidth > 0 ? `${adminContentWidth}px` : 'auto',
+                                              maxWidth: adminContentWidth > 0 ? `${adminContentWidth}px` : 'none'
+                                            }}
+                                          >
                                             <div className="flex items-center gap-2">
-                                              <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                              <span className="text-base font-medium text-white whitespace-nowrap">{item.name}</span>
                                             </div>
-                                            <div className="text-sm text-blue-300 truncate">{item.description}</div>
+                                            <div className="text-sm text-blue-300 whitespace-nowrap">{item.description}</div>
                                           </div>
                                           <svg 
-                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
                                             fill="none" 
                                             stroke="currentColor" 
                                             viewBox="0 0 24 24"
@@ -1741,7 +1981,12 @@ export default function Navigation() {
                       {isDropdownOpen && (
                         <div
                           data-dropdown-menu="user"
-                          className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                          className="absolute right-0 mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                          style={{
+                            width: mypageButtonWidth > 0 ? `${mypageButtonWidth + 48}px` : 'auto',
+                            minWidth: 'fit-content',
+                            maxWidth: 'none'
+                          }}
                           onMouseEnter={() => setActiveMenu('user')}
                           onMouseLeave={() => {
                             setActiveMenu(null);
