@@ -966,11 +966,23 @@ export default function Navigation() {
                                   }}
                                 >
                                   <div
+                                    ref={(el) => {
+                                      if (el) {
+                                        psychologyButtonRefs.current.set(`${selectedMainCategory}-${subcategory.name}`, el);
+                                      }
+                                    }}
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedSubcategory === subcategory.name 
                                         ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
                                         : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
                                     }`}
+                                    style={{
+                                      width: psychologyButtonWidth > 0 ? `${psychologyButtonWidth}px` : 'auto',
+                                      minWidth: psychologyButtonWidth > 0 ? `${psychologyButtonWidth}px` : 'auto',
+                                      maxWidth: psychologyButtonWidth > 0 ? `${psychologyButtonWidth}px` : 'none',
+                                      flexShrink: 0,
+                                      boxSizing: 'border-box'
+                                    }}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
                                       setSelectedSubcategory(subcategory.name);
@@ -1008,8 +1020,19 @@ export default function Navigation() {
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                                       {subcategory.icon}
                                     </div>
-                                    <div className="flex flex-col gap-1 flex-1 min-w-0">
-                                      <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
+                                    <div 
+                                      ref={(el) => {
+                                        if (el) {
+                                          psychologyContentRefs.current.set(`${selectedMainCategory}-${subcategory.name}`, el);
+                                        }
+                                      }}
+                                      className="flex flex-col gap-1 flex-1 min-w-0"
+                                      style={{
+                                        width: psychologyContentWidth > 0 ? `${psychologyContentWidth}px` : 'auto',
+                                        maxWidth: psychologyContentWidth > 0 ? `${psychologyContentWidth}px` : 'none'
+                                      }}
+                                    >
+                                      <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
                                     </div>
                                     <svg 
                                       className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
