@@ -18,8 +18,8 @@ export default function Navigation() {
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>("개인 심리 및 성장");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>("성격 및 기질 탐색");
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedAiAssistantMainCategory, setSelectedAiAssistantMainCategory] = useState<string | null>(null);
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -722,7 +722,19 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="psychology-tests"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onMouseEnter={() => setActiveMenu('psychology-tests')}
+                    onMouseEnter={() => {
+                      setActiveMenu('psychology-tests');
+                      // 첫 번째 대분류 자동 선택
+                      if (!selectedMainCategory) {
+                        const firstCategory = testSubMenuItems[0];
+                        if (firstCategory) {
+                          setSelectedMainCategory(firstCategory.category);
+                          if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
+                            setSelectedSubcategory(firstCategory.subcategories[0].name);
+                          }
+                        }
+                      }
+                    }}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     <div className="relative flex h-[70vh]">
@@ -799,8 +811,8 @@ export default function Navigation() {
                                   <div
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedSubcategory === subcategory.name 
-                                        ? 'bg-gradient-to-r from-white/10 to-white/5 border-2 border-blue-300/80' 
-                                        : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-transparent hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:border-blue-300/60'
+                                        ? 'border-2 border-blue-300/80' 
+                                        : 'border-2 border-transparent hover:border-blue-300/60'
                                     }`}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
