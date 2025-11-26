@@ -744,7 +744,7 @@ export default function Navigation() {
                             <div
                               key={mainCategory.category}
                               className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
-                                selectedMainCategory === mainCategory.category
+                                selectedMainCategory === mainCategory.category || (index === 0 && isPsychologyTestsOpen)
                                   ? 'text-white border-white shadow-lg'
                                   : 'text-blue-300 border-white/20 hover:text-white hover:border-white hover:shadow-md'
                               }`}
@@ -796,7 +796,12 @@ export default function Navigation() {
                             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                               {testSubMenuItems
                                 .find(category => category.category === selectedMainCategory)
-                                ?.subcategories.map((subcategory, index) => (
+                                ?.subcategories.map((subcategory, index) => {
+                                  const isFirstSubcategory = index === 0;
+                                  const isSelected = selectedSubcategory === subcategory.name;
+                                  const shouldShowWhiteBorder = isSelected || (isFirstSubcategory && isPsychologyTestsOpen && selectedMainCategory === testSubMenuItems[0]?.category);
+                                  
+                                  return (
                                 <div 
                                   key={subcategory.name} 
                                   className="relative"
@@ -808,7 +813,7 @@ export default function Navigation() {
                                 >
                                   <div
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                      selectedSubcategory === subcategory.name 
+                                      shouldShowWhiteBorder
                                         ? 'border-2 border-white' 
                                         : 'border-2 border-white/20 hover:border-white'
                                     }`}
@@ -863,13 +868,21 @@ export default function Navigation() {
                                   </div>
                                   
                                   {/* 소분류 메뉴 */}
-                                  {selectedSubcategory === subcategory.name && subcategory.items && (
+                                  {shouldShowWhiteBorder && subcategory.items && (
                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
-                                      {subcategory.items.map((item) => (
+                                      {subcategory.items.map((item, itemIndex) => {
+                                        const isFirstItem = itemIndex === 0;
+                                        const shouldShowItemWhiteBorder = isFirstItem && shouldShowWhiteBorder;
+                                        
+                                        return (
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className="group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 border-white/20 hover:border-white ml-8 shadow-sm hover:shadow-md"
+                                          className={`group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 ml-8 shadow-sm hover:shadow-md ${
+                                            shouldShowItemWhiteBorder
+                                              ? 'border-white'
+                                              : 'border-white/20 hover:border-white'
+                                          }`}
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
@@ -888,11 +901,13 @@ export default function Navigation() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                           </svg>
                                         </Link>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>
-                              ))}
+                              );
+                              })}
                             </div>
                           </div>
                         ) : (
