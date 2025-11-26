@@ -724,14 +724,12 @@ export default function Navigation() {
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => {
                       setActiveMenu('psychology-tests');
-                      // 첫 번째 대분류 자동 선택
-                      if (!selectedMainCategory) {
-                        const firstCategory = testSubMenuItems[0];
-                        if (firstCategory) {
-                          setSelectedMainCategory(firstCategory.category);
-                          if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
-                            setSelectedSubcategory(firstCategory.subcategories[0].name);
-                          }
+                      // 첫 번째 대분류 자동 선택 (항상 실행)
+                      const firstCategory = testSubMenuItems[0];
+                      if (firstCategory) {
+                        setSelectedMainCategory(firstCategory.category);
+                        if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
+                          setSelectedSubcategory(firstCategory.subcategories[0].name);
                         }
                       }
                     }}
@@ -747,8 +745,8 @@ export default function Navigation() {
                               key={mainCategory.category}
                               className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
                                 selectedMainCategory === mainCategory.category
-                                  ? 'text-white border-blue-400 shadow-lg'
-                                  : 'text-blue-300 border-blue-500/30 hover:text-white hover:border-blue-400 hover:shadow-md'
+                                  ? 'text-white border-white shadow-lg'
+                                  : 'text-blue-300 border-white/20 hover:text-white hover:border-white hover:shadow-md'
                               }`}
                               onClick={() => {
                                 setSelectedMainCategory(mainCategory.category);
@@ -811,8 +809,8 @@ export default function Navigation() {
                                   <div
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedSubcategory === subcategory.name 
-                                        ? 'border-2 border-blue-300/80' 
-                                        : 'border-2 border-transparent hover:border-blue-300/60'
+                                        ? 'border-2 border-white' 
+                                        : 'border-2 border-white/20 hover:border-white'
                                     }`}
                                     onMouseEnter={() => {
                                       setHoveredCategory(subcategory.name);
@@ -871,7 +869,7 @@ export default function Navigation() {
                                         <Link
                                           key={item.name}
                                           href={item.href}
-                                          className="group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-400 ml-8 shadow-sm hover:shadow-md"
+                                          className="group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 border-white/20 hover:border-white ml-8 shadow-sm hover:shadow-md"
                                           onClick={() => setActiveMenu(null)}
                                         >
                                           <div className="text-base group-hover:scale-110 transition-transform duration-300">
@@ -969,7 +967,7 @@ export default function Navigation() {
                                   className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
                                     category === counselingMenuItems[0] && item === category.items[0]
                                       ? 'border-white'
-                                      : 'border-transparent hover:border-white'
+                                      : 'border-white/20 hover:border-white'
                                   }`}
                                   onClick={() => setActiveMenu(null)}
                                 >
@@ -1105,8 +1103,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "일일 체크" 
-                                    ? 'border-2 border-blue-300/80' 
-                                    : 'border-2 border-transparent hover:border-blue-300/60'
+                                    ? 'border-2 border-white' 
+                                    : 'border-2 border-white/20 hover:border-white'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("일일 체크");
@@ -1151,8 +1149,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "마음 SOS" 
-                                    ? 'border-2 border-blue-300/80' 
-                                    : 'border-2 border-transparent hover:border-blue-300/60'
+                                    ? 'border-2 border-white' 
+                                    : 'border-2 border-white/20 hover:border-white'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("마음 SOS");
@@ -1206,8 +1204,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "AI 리포트" 
-                                    ? 'border-2 border-blue-300/80' 
-                                    : 'border-2 border-transparent hover:border-blue-300/60'
+                                    ? 'border-2 border-white' 
+                                    : 'border-2 border-white/20 hover:border-white'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("AI 리포트");
@@ -1252,8 +1250,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "검사 기록" 
-                                    ? 'border-2 border-blue-300/80' 
-                                    : 'border-2 border-transparent hover:border-blue-300/60'
+                                    ? 'border-2 border-white' 
+                                    : 'border-2 border-white/20 hover:border-white'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("검사 기록");
@@ -1307,8 +1305,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "도와줘요 상담사님" 
-                                    ? 'border-2 border-blue-300/80' 
-                                    : 'border-2 border-transparent hover:border-blue-300/60'
+                                    ? 'border-2 border-white' 
+                                    : 'border-2 border-white/20 hover:border-white'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("도와줘요 상담사님");
@@ -1353,8 +1351,8 @@ export default function Navigation() {
                               <div
                                 className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                   selectedAiAssistantMainCategory === "셀프 치료" 
-                                    ? 'border-2 border-blue-300/80' 
-                                    : 'border-2 border-transparent hover:border-blue-300/60'
+                                    ? 'border-2 border-white' 
+                                    : 'border-2 border-white/20 hover:border-white'
                                 }`}
                                 onMouseEnter={() => {
                                   setSelectedAiAssistantMainCategory("셀프 치료");
@@ -1439,8 +1437,8 @@ export default function Navigation() {
                                     }}
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
                                       selectedAiAssistantSubcategory === subcategory.name 
-                                        ? 'border-2 border-blue-300/80' 
-                                        : 'border-2 border-transparent hover:border-blue-300/60'
+                                        ? 'border-2 border-white' 
+                                        : 'border-2 border-white/20 hover:border-white'
                                     }`}
                                     style={{
                                       width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 가장 긴 텍스트를 기준으로 계산된 고정 너비
@@ -1591,7 +1589,7 @@ export default function Navigation() {
                                           className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
                                             category === counselorMenuItems[0] && item === category.items[0]
                                               ? 'border-white'
-                                              : 'border-transparent hover:border-white'
+                                              : 'border-white/20 hover:border-white'
                                           }`}
                                           onClick={() => setActiveMenu(null)}
                                         >
@@ -1700,7 +1698,7 @@ export default function Navigation() {
                                           className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
                                             category === adminMenuItems[0] && item === category.items[0]
                                               ? 'border-white'
-                                              : 'border-transparent hover:border-white'
+                                              : 'border-white/20 hover:border-white'
                                           }`}
                                           onClick={() => setActiveMenu(null)}
                                         >
@@ -1825,7 +1823,7 @@ export default function Navigation() {
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
                                       index === 0
                                         ? 'border-white'
-                                        : 'border-transparent hover:border-white'
+                                        : 'border-white/20 hover:border-white'
                                     }`}
                                     onClick={() => setActiveMenu(null)}
                                   >
