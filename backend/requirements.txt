@@ -1,0 +1,7 @@
+# WizCoCo Flask API - 상담사/내담자 API
+Flask>=3.0.0
+flask-cors>=4.0.0
+firebase-admin>=6.4.0
+bcrypt>=4.1.0
+python-dotenv>=1.0.0
+gunicorn>=21.0.0

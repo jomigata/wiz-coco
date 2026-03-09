@@ -1,18 +1,19 @@
 // Firebase Firestore 유틸리티
 // 데이터베이스 CRUD 작업 및 쿼리 기능 제공
+// 참여 코드 플랫폼 컬렉션: @/types/firestore (assessments, testResults)
 
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
   startAfter,
   writeBatch,
   runTransaction,
@@ -22,6 +23,11 @@ import {
   DocumentData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import {
+  FIRESTORE_COLLECTIONS,
+  type AssessmentDocument,
+  type TestResultDocument,
+} from '@/types/firestore';
 
 /**
  * 문서 ID로 단일 문서 조회
@@ -298,4 +304,52 @@ export const testResultUtils = {
     ]);
     return results.length > 0 ? results[0] : null;
   }
+};
+
+// ---------------------------------------------------------------------------
+// 참여 코드 플랫폼: assessments / testResults (타입·컬렉션은 @/types/firestore)
+// ---------------------------------------------------------------------------
+
+export { FIRESTORE_COLLECTIONS };
+
+/** assessments 컬렉션 조회 헬퍼 (상담사 인증 후 counselorId로 호출) */
+export const assessmentsFirestore = {
+  /** 단일 assessment 조회 */
+  async getById(assessmentId: string): Promise<AssessmentDocument | null> {
+    const raw = await getDocument(FIRESTORE_COLLECTIONS.ASSESSMENTS, assessmentId);
+    return raw as AssessmentDocument | null;
+  },
+  /** 상담사 소유 assessment 목록 (createdAt 내림차순) */
+  async listByCounselorId(counselorId: string): Promise<AssessmentDocument[]> {
+    const list = await queryDocuments(
+      FIRESTORE_COLLECTIONS.ASSESSMENTS,
+      [{ field: 'counselorId', operator: '==', value: counselorId }],
+      'createdAt',
+      'desc'
+    );
+    return list as AssessmentDocument[];
+  },
+};
+
+/** testResults 컬렉션 조회 헬퍼 (쓰기는 백엔드 API에서 처리) */
+export const testResultsFirestore = {
+  /** accessCode + clientEmail 로 해당 내담자 결과 목록 조회 */
+  async listByAccessCodeAndEmail(accessCode: string, clientEmail: string): Promise<TestResultDocument[]> {
+    const list = await queryDocuments(
+      FIRESTORE_COLLECTIONS.TEST_RESULTS,
+      [
+        { field: 'accessCode', operator: '==', value: accessCode },
+        { field: 'clientEmail', operator: '==', value: clientEmail },
+      ]
+    );
+    return list as TestResultDocument[];
+  },
+  /** assessmentId 로 해당 패키지의 모든 결과 조회 (진행 현황용) */
+  async listByAssessmentId(assessmentId: string): Promise<TestResultDocument[]> {
+    const list = await queryDocuments(
+      FIRESTORE_COLLECTIONS.TEST_RESULTS,
+      [{ field: 'assessmentId', operator: '==', value: assessmentId }]
+    );
+    return list as TestResultDocument[];
+  },
 }; 

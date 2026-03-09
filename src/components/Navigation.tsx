@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
-import { testSubMenuItems, TestCategory } from '@/data/psychologyTestMenu';
+import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 
@@ -52,6 +52,9 @@ export default function Navigation() {
   const isLoggedIn = !!user && !loading;
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
   const [isTestInProgress, setIsTestInProgress] = useState(false);
+
+  // 기존 완료 기능은 hidden으로 네비에서 숨김. NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 시 복원
+  const visibleTestMenuItems = getVisibleTestMenuItems();
 
   // 심리검사 페이지인지 확인 (모든 /tests/ 경로)
   const isTestPage = pathname?.startsWith('/tests/') || pathname === '/tests';
@@ -686,7 +689,18 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
             <div className="flex space-x-1">
-              
+              {/* 참여 코드 입력 (상담사 발급 코드로 검사 참여) */}
+              <Link
+                href="/join"
+                className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                  activeItem === "/join" || activeItem.startsWith("/join/")
+                    ? "text-white bg-blue-600 border-white"
+                    : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                }`}
+                onClick={(e) => handleNavLinkClick("/join", e)}
+              >
+                참여하기
+              </Link>
               {/* 심리검사 드롭다운 메뉴 */}
               <div className="relative">
                 <Link
@@ -724,8 +738,8 @@ export default function Navigation() {
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onMouseEnter={() => {
                       setActiveMenu('psychology-tests');
-                      // 첫 번째 대분류 자동 선택 (항상 실행)
-                      const firstCategory = testSubMenuItems[0];
+                      // 첫 번째 노출 대분류 자동 선택 (hidden 제외 후 첫 항목)
+                      const firstCategory = visibleTestMenuItems[0];
                       if (firstCategory) {
                         setSelectedMainCategory(firstCategory.category);
                         if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
@@ -740,7 +754,7 @@ export default function Navigation() {
                       <div className="w-2/5 p-4 border-r border-blue-500/30">
                         <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
                         <div className="space-y-2">
-                          {testSubMenuItems.map((mainCategory, index) => (
+                          {visibleTestMenuItems.map((mainCategory, index) => (
                             <div
                               key={mainCategory.category}
                               className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
@@ -794,12 +808,12 @@ export default function Navigation() {
                               {selectedMainCategory}
                             </div>
                             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                              {testSubMenuItems
+                              {visibleTestMenuItems
                                 .find(category => category.category === selectedMainCategory)
                                 ?.subcategories.map((subcategory, index) => {
                                   const isFirstSubcategory = index === 0;
                                   const isSelected = selectedSubcategory === subcategory.name;
-                                  const shouldShowWhiteBorder = isSelected || (isFirstSubcategory && isPsychologyTestsOpen && selectedMainCategory === testSubMenuItems[0]?.category);
+                                  const shouldShowWhiteBorder = isSelected || (isFirstSubcategory && isPsychologyTestsOpen && selectedMainCategory === visibleTestMenuItems[0]?.category);
                                   
                                   return (
                                 <div 
@@ -1966,6 +1980,15 @@ export default function Navigation() {
           <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
             <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
 
+              {/* 참여하기 */}
+              <Link
+                href="/join"
+                className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                참여하기
+              </Link>
+
               {/* 심리검사 */}
               <div className="space-y-3">
                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
@@ -1974,7 +1997,7 @@ export default function Navigation() {
                 
                 {/* 대분류 5개 */}
                 <div className="space-y-2">
-                  {testSubMenuItems.map((mainCategory, index) => (
+                  {visibleTestMenuItems.map((mainCategory, index) => (
                     <div key={mainCategory.category} className="space-y-2">
                       {/* 대분류 */}
                       <div 

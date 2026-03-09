@@ -13,6 +13,7 @@ const nextConfig = {
   // Firebase 프로덕션 환경을 위한 환경 변수
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://wiz-coco.web.app',
+    NEXT_PUBLIC_FLASK_API_URL: process.env.NEXT_PUBLIC_FLASK_API_URL || 'http://localhost:5000',
     SKIP_ENV_VALIDATION: 'true',
     SKIP_DB_INIT: process.env.SKIP_DB_INIT || 'true',
     DATABASE_URL: process.env.DATABASE_URL,

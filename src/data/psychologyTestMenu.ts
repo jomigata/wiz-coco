@@ -1,28 +1,47 @@
 // AI 심리검사 메뉴 데이터 - 11개 대분류 3단계 구조
+// hidden: true 인 항목/카테고리는 네비에서 숨김. NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 시 복원 가능.
 export interface TestMenuItem {
   name: string;
   href: string;
   description: string;
   icon: string;
   badge?: string;
+  /** true면 네비에서 숨김. 추후 "기존 검사" 메뉴로 복원 가능 */
+  hidden?: boolean;
 }
 
 export interface TestSubcategory {
   name: string;
   icon: string;
   items: TestMenuItem[];
+  /** true면 네비에서 숨김 */
+  hidden?: boolean;
 }
 
 export interface TestCategory {
   category: string;
   icon: string;
   subcategories: TestSubcategory[];
+  /** true면 기존 완료 검사(보관용). 네비 기본 숨김, 환경변수로 복원 */
+  hidden?: boolean;
+}
+
+/** 환경변수 NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 이면 기존(레거시) 검사 메뉴도 노출 (Next.js에서 빌드 시 인라인됨) */
+const showLegacyTests =
+  typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_SHOW_LEGACY_TESTS === 'true';
+
+/** 네비/사이드바에 표시할 메뉴만 반환. hidden 카테고리 제외 (레거시 노출 시에는 전체) */
+export function getVisibleTestMenuItems(): TestCategory[] {
+  if (showLegacyTests) return testSubMenuItems;
+  return testSubMenuItems.filter((c) => !c.hidden);
 }
 
 export const testSubMenuItems: TestCategory[] = [
   {
     category: "임시 검사",
     icon: "🔬",
+    hidden: true, // 기존 완료 기능 보관. 메뉴에서 숨김, 추후 복원 가능
     subcategories: [
       {
         name: "임시 검사",

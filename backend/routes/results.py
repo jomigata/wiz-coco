@@ -1,0 +1,188 @@
+# 결과 제출/조회/수정/삭제 (POST, GET, PUT, DELETE)
+from flask import Blueprint, request, jsonify, g
+from firebase_admin.firestore import SERVER_TIMESTAMP
+
+from firebase_init import get_firestore
+from auth_middleware import require_counselor
+from rate_limit import limit_access_code, limit_password_api
+from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
+from utils.password import generate_four_digit_password, hash_password, verify_password
+from utils.email_sender import send_result_email
+from utils.scoring import compute_result_data
+
+bp = Blueprint("results", __name__, url_prefix="/api/results")
+
+
+def _get_assessment_or_404(db, assessment_id, counselor_uid=None):
+    ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
+    doc = ref.get()
+    if not doc.exists:
+        return None, 404
+    d = doc.to_dict()
+    if counselor_uid is not None and d.get("counselorId") != counselor_uid:
+        return None, 404
+    return doc, None
+
+
+@bp.route("", methods=["POST"])
+@limit_access_code
+def submit_result():
+    """
+    내담자: accessCode, testId, clientEmail, responses 수신
+    -> 채점, 4자리 비밀번호 랜덤 생성 후 해싱 저장, 이메일 발송(비밀번호·결과 요약).
+    """
+    body = request.get_json() or {}
+    access_code = (body.get("accessCode") or "").strip().upper()
+    test_id = (body.get("testId") or "").strip()
+    client_email = (body.get("clientEmail") or "").strip().lower()
+    responses = body.get("responses")
+    if not access_code or len(access_code) != 6:
+        return jsonify({"error": "Bad Request", "message": "accessCode (6 digits) required"}), 400
+    if not test_id:
+        return jsonify({"error": "Bad Request", "message": "testId required"}), 400
+    if not client_email or "@" not in client_email:
+        return jsonify({"error": "Bad Request", "message": "valid clientEmail required"}), 400
+    if responses is None:
+        return jsonify({"error": "Bad Request", "message": "responses required"}), 400
+
+    db = get_firestore()
+    ass_refs = db.collection(ASSESSMENTS_COLLECTION).where("accessCode", "==", access_code).where("status", "==", "active").limit(1).get()
+    if not ass_refs:
+        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+    ass_doc = ass_refs[0]
+    assessment_id = ass_doc.id
+    ass_data = ass_doc.to_dict()
+    test_list = ass_data.get("testList") or []
+    test_name = next((t.get("name", t.get("testId", "")) for t in test_list if str(t.get("testId")) == test_id), test_id)
+
+    result_data = compute_result_data(test_id, responses if isinstance(responses, (dict, list)) else {})
+    password = generate_four_digit_password()
+    password_hash = hash_password(password)
+
+    data = {
+        "accessCode": access_code,
+        "assessmentId": assessment_id,
+        "testId": test_id,
+        "clientEmail": client_email,
+        "status": "completed",
+        "responses": responses,
+        "resultData": result_data,
+        "passwordHash": password_hash,
+        "completedAt": SERVER_TIMESTAMP,
+    }
+    ref = db.collection(TEST_RESULTS_COLLECTION).document()
+    ref.set(data)
+
+    send_result_email(client_email, password, test_name, result_data.get("summary", ""))
+
+    return jsonify({
+        "resultId": ref.id,
+        "message": "Result submitted. Check your email for the 4-digit password.",
+    }), 201
+
+
+@bp.route("", methods=["GET"])
+@limit_access_code
+def list_results():
+    """accessCode + clientEmail 쿼리로 해당 testResults 목록 반환."""
+    access_code = (request.args.get("accessCode") or "").strip().upper()
+    client_email = (request.args.get("clientEmail") or "").strip().lower()
+    if not access_code or len(access_code) != 6:
+        return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
+    if not client_email or "@" not in client_email:
+        return jsonify({"error": "Bad Request", "message": "clientEmail required"}), 400
+
+    db = get_firestore()
+    refs = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("accessCode", "==", access_code)
+        .where("clientEmail", "==", client_email)
+        .get()
+    )
+    items = []
+    for doc in refs:
+        d = doc.to_dict()
+        items.append({
+            "resultId": doc.id,
+            "testId": d.get("testId"),
+            "status": d.get("status"),
+            "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
+        })
+    return jsonify({"results": items})
+
+
+@bp.route("/<result_id>", methods=["GET"])
+@limit_password_api
+def get_result(result_id):
+    """비밀번호 확인 후 해당 결과 조회 (수정 폼용: testId, responses 반환)."""
+    password = (request.args.get("password") or "").strip()
+    if not password:
+        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+
+    db = get_firestore()
+    ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
+    doc = ref.get()
+    if not doc.exists:
+        return jsonify({"error": "Not Found", "message": "Result not found"}), 404
+    d = doc.to_dict()
+    if not verify_password(password, d.get("passwordHash", "")):
+        return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
+    return jsonify({
+        "resultId": doc.id,
+        "testId": d.get("testId"),
+        "responses": d.get("responses"),
+        "clientEmail": d.get("clientEmail"),
+    })
+
+
+@bp.route("/<result_id>", methods=["PUT"])
+@limit_password_api
+def update_result(result_id):
+    """password + responses 로 수정·재채점. 비밀번호 확인 필요."""
+    body = request.get_json() or {}
+    password = (body.get("password") or "").strip()
+    responses = body.get("responses")
+    if not password:
+        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+    if responses is None:
+        return jsonify({"error": "Bad Request", "message": "responses required"}), 400
+
+    db = get_firestore()
+    ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
+    doc = ref.get()
+    if not doc.exists:
+        return jsonify({"error": "Not Found", "message": "Result not found"}), 404
+    d = doc.to_dict()
+    if not verify_password(password, d.get("passwordHash", "")):
+        return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
+
+    result_data = compute_result_data(d.get("testId", ""), responses if isinstance(responses, (dict, list)) else {})
+    ref.update({
+        "responses": responses,
+        "resultData": result_data,
+        "status": "completed",
+        "completedAt": SERVER_TIMESTAMP,
+    })
+    return jsonify({"resultId": result_id, "message": "Updated"})
+
+
+@bp.route("/<result_id>", methods=["DELETE"])
+@limit_password_api
+def delete_result(result_id):
+    """password 확인 후 삭제."""
+    body = request.get_json() or {}
+    password = (body.get("password") or "").strip()
+    if not password:
+        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+
+    db = get_firestore()
+    ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
+    doc = ref.get()
+    if not doc.exists:
+        return jsonify({"error": "Not Found", "message": "Result not found"}), 404
+    d = doc.to_dict()
+    if not verify_password(password, d.get("passwordHash", "")):
+        return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
+
+    ref.delete()
+    return jsonify({"message": "Deleted"}), 200
