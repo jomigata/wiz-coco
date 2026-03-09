@@ -202,6 +202,10 @@ jobs:
         echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
+        # Flask API URL (Cloud Run 등) - 선택 사항
+        if [ -n "${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" ]; then
+          echo "NEXT_PUBLIC_FLASK_API_URL=${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" >> .env
+        fi
         
     - name: 🏗️ 프로젝트 빌드
       run: |
