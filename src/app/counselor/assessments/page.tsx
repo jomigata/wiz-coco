@@ -2,16 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 
 export default function AssessmentListPage() {
-  const searchParams = useSearchParams();
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const createdCode = searchParams?.get('code') || null;
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setCreatedCode(params.get('code'));
+    } catch {
+      setCreatedCode(null);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

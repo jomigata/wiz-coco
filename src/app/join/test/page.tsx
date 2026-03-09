@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { submitResult, updateResult } from '@/lib/assessmentApi';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
@@ -23,10 +23,8 @@ const SCALE_LABELS: Record<number, string> = {
 
 export default function TestRunnerPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const accessCode = useMemo(() => (searchParams?.get('accessCode') || '').trim(), [searchParams]);
-  const testId = useMemo(() => (searchParams?.get('testId') || '').trim(), [searchParams]);
+  const [accessCode, setAccessCode] = useState('');
+  const [testId, setTestId] = useState('');
 
   const [title, setTitle] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -42,6 +40,18 @@ export default function TestRunnerPage() {
   const code = (accessCode || '').trim().toUpperCase();
   const questions = genericJoinQuestions;
   const isEditMode = !!editResultId;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setAccessCode((params.get('accessCode') || '').trim());
+      setTestId((params.get('testId') || '').trim());
+    } catch {
+      setAccessCode('');
+      setTestId('');
+    }
+  }, []);
 
   useEffect(() => {
     let raw: string | null = null;

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { getPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
@@ -12,8 +12,7 @@ const JOIN_EMAIL_KEY = 'wizcoco_join_client_email';
 
 export default function ClientDashboardPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const accessCode = useMemo(() => (searchParams?.get('accessCode') || '').trim(), [searchParams]);
+  const [accessCode, setAccessCode] = useState('');
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [clientEmail, setClientEmail] = useState('');
@@ -22,6 +21,16 @@ export default function ClientDashboardPage() {
   const [emailInput, setEmailInput] = useState('');
 
   const code = (accessCode || '').trim().toUpperCase();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setAccessCode((params.get('accessCode') || '').trim());
+    } catch {
+      setAccessCode('');
+    }
+  }, []);
 
   const loadAssessment = useCallback(() => {
     if (code.length !== 6) {

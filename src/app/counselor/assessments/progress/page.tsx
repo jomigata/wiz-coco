@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import ProgressDashboard from '@/components/counselor/ProgressDashboard';
 import { getProgress, listAssessments } from '@/lib/assessmentApi';
 
 export default function ProgressDashboardPage() {
-  const searchParams = useSearchParams();
-  const assessmentId = useMemo(() => (searchParams?.get('assessmentId') || '').trim(), [searchParams]);
+  const [assessmentId, setAssessmentId] = useState('');
 
   const [accessCode, setAccessCode] = useState('');
   const [byClient, setByClient] = useState<
@@ -17,6 +15,16 @@ export default function ProgressDashboardPage() {
   const [title, setTitle] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setAssessmentId((params.get('assessmentId') || '').trim());
+    } catch {
+      setAssessmentId('');
+    }
+  }, []);
 
   useEffect(() => {
     if (!assessmentId) {
