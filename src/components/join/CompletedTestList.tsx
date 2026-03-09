@@ -103,7 +103,7 @@ export default function CompletedTestList({
         }
         setEditModal(null);
         setPassword('');
-        router.push(`/join/${stored.accessCode}/test/${encodeURIComponent(editModal.testId)}`);
+        router.push(`/join/test?accessCode=${encodeURIComponent(stored.accessCode)}&testId=${encodeURIComponent(editModal.testId)}`);
       })
       .catch((err) => setActionError(err instanceof Error ? err.message : '조회 실패'))
       .finally(() => setActionLoading(false));

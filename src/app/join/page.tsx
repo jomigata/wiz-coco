@@ -37,7 +37,7 @@ export default function AccessCodeInputPage() {
           })
         );
       }
-      router.push(`/join/${trimmed}`);
+      router.push(`/join/dashboard?accessCode=${encodeURIComponent(trimmed)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '참여 코드를 확인해 주세요.');
     } finally {

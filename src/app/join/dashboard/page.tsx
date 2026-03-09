@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { getPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
@@ -11,9 +11,10 @@ const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 const JOIN_EMAIL_KEY = 'wizcoco_join_client_email';
 
 export default function ClientDashboardPage() {
-  const params = useParams();
   const router = useRouter();
-  const accessCode = (params?.accessCode as string) || '';
+  const searchParams = useSearchParams();
+  const accessCode = useMemo(() => (searchParams?.get('accessCode') || '').trim(), [searchParams]);
+
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [clientEmail, setClientEmail] = useState('');
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,7 @@ export default function ClientDashboardPage() {
     getPublicAssessment(code)
       .then((data) => {
         setAssessment(data);
-        if (typeof window !== 'undefined') {
+        try {
           sessionStorage.setItem(
             JOIN_STORAGE_KEY,
             JSON.stringify({
@@ -44,6 +45,8 @@ export default function ClientDashboardPage() {
               testList: data.testList,
             })
           );
+        } catch {
+          // ignore
         }
       })
       .catch((err) => setError(err instanceof Error ? err.message : '불러오기 실패'))
@@ -56,7 +59,7 @@ export default function ClientDashboardPage() {
 
   useEffect(() => {
     try {
-      const saved = typeof window !== 'undefined' ? sessionStorage.getItem(JOIN_EMAIL_KEY) : null;
+      const saved = sessionStorage.getItem(JOIN_EMAIL_KEY);
       if (saved) {
         setEmailInput(saved);
         setClientEmail(saved);
@@ -68,12 +71,10 @@ export default function ClientDashboardPage() {
 
   const handleSetEmail = () => {
     const trimmed = (emailInput || '').trim().toLowerCase();
-    if (!trimmed || !trimmed.includes('@')) {
-      return;
-    }
+    if (!trimmed || !trimmed.includes('@')) return;
     setClientEmail(trimmed);
     try {
-      if (typeof window !== 'undefined') sessionStorage.setItem(JOIN_EMAIL_KEY, trimmed);
+      sessionStorage.setItem(JOIN_EMAIL_KEY, trimmed);
     } catch {
       // ignore
     }
@@ -123,7 +124,6 @@ export default function ClientDashboardPage() {
               <p className="text-slate-300 whitespace-pre-wrap mb-6">{assessment.welcomeMessage}</p>
             )}
 
-            {/* 이메일 입력 (완료 목록·검사 제출 시 사용) */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2">내 이메일</label>
               <div className="flex gap-2">
@@ -136,20 +136,13 @@ export default function ClientDashboardPage() {
                   onChange={(e) => setEmailInput(e.target.value)}
                   onBlur={handleSetEmail}
                 />
-                <button
-                  type="button"
-                  onClick={handleSetEmail}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                >
+                <button type="button" onClick={handleSetEmail} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
                   적용
                 </button>
               </div>
-              <p className="text-slate-500 text-xs mt-1">
-                검사 제출 및 완료 목록에 사용됩니다.
-              </p>
+              <p className="text-slate-500 text-xs mt-1">검사 제출 및 완료 목록에 사용됩니다.</p>
             </div>
 
-            {/* 수행할 검사 목록 */}
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
             {assessment.testList.length === 0 ? (
               <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>
@@ -158,7 +151,7 @@ export default function ClientDashboardPage() {
                 {assessment.testList.map((t) => (
                   <li key={t.testId}>
                     <Link
-                      href={`/join/${code}/test/${encodeURIComponent(t.testId)}`}
+                      href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
                       className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
                     >
                       <span className="font-medium">{t.name || t.testId}</span>
@@ -170,12 +163,9 @@ export default function ClientDashboardPage() {
             )}
           </div>
 
-          {/* 완료한 검사 목록 (이메일 적용 시) */}
-          <CompletedTestList
-            clientEmail={clientEmail}
-            onRefresh={loadAssessment}
-          />
+          <CompletedTestList clientEmail={clientEmail} onRefresh={loadAssessment} />
         </main>
+
         <p className="text-center mt-6">
           <Link href="/join" className="text-blue-400 hover:text-blue-300 text-sm">
             다른 참여 코드 입력
@@ -185,3 +175,4 @@ export default function ClientDashboardPage() {
     </div>
   );
 }
+

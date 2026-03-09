@@ -73,7 +73,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
                   <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/counselor/assessments/${a.id}/progress`}
+                      href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
                       className="text-blue-400 hover:text-blue-300 text-sm"
                     >
                       진행 현황

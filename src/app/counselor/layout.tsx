@@ -67,7 +67,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   const getActiveSection = (path: string): string => {
     if (path === '/counselor') return 'dashboard';
     if (path.startsWith('/counselor/assessments/new')) return 'assessments-new';
-    if (path.startsWith('/counselor/assessments/') && path.includes('/progress')) return 'assessments-list';
+    if (path.startsWith('/counselor/assessments/progress')) return 'assessments-list';
     if (path.startsWith('/counselor/assessments')) return 'assessments-list';
     if (path.startsWith('/counselor/clients')) return 'client-list';
     if (path.startsWith('/counselor/schedule')) return 'counseling-schedule';
@@ -85,7 +85,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   // 페이지 제목 결정 함수
   const getPageTitle = (path: string): string => {
     if (path.startsWith('/counselor/assessments/new')) return '참여 코드 패키지 만들기';
-    if (path.startsWith('/counselor/assessments/') && path.includes('/progress')) return '진행 현황';
+    if (path.startsWith('/counselor/assessments/progress')) return '진행 현황';
     if (path.startsWith('/counselor/assessments')) return '참여 코드 패키지';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
