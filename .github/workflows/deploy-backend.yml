@@ -5,13 +5,13 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
-env:
-  SERVICE_NAME: wizcoco-api
-  REGION: asia-northeast3
-
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: wizcoco-api
+      REGION: asia-northeast3
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
     steps:
       - name: 📥 Checkout
@@ -20,28 +20,41 @@ jobs:
       - name: 🔧 Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ env.PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
       - name: 🐳 Build and push image
         run: |
-          IMAGE="gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          gcloud builds submit --tag "$IMAGE" ./backend
+          if [ -z "${PROJECT_ID}" ]; then
+            echo "❌ GCP_PROJECT_ID secret가 설정되어 있지 않습니다."
+            exit 1
+          fi
+          IMAGE="gcr.io/${PROJECT_ID}/${SERVICE_NAME}:${GITHUB_SHA}"
+          gcloud builds submit --project "${PROJECT_ID}" --tag "$IMAGE" ./backend
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
       - name: 🚀 Deploy to Cloud Run
         run: |
+          if [ -z "${PROJECT_ID}" ]; then
+            echo "❌ GCP_PROJECT_ID secret가 설정되어 있지 않습니다."
+            exit 1
+          fi
           gcloud run deploy "${{ env.SERVICE_NAME }}" \
             --image "$IMAGE" \
             --region "${{ env.REGION }}" \
             --platform managed \
             --allow-unauthenticated \
-            --port 5000
+            --port 5000 \
+            --project "${PROJECT_ID}"
 
       - name: 🔗 Output service URL
         run: |
-          URL=$(gcloud run services describe "${{ env.SERVICE_NAME }}" --region "${{ env.REGION }}" --format 'value(status.url)')
+          if [ -z "${PROJECT_ID}" ]; then
+            echo "❌ GCP_PROJECT_ID secret가 설정되어 있지 않습니다."
+            exit 1
+          fi
+          URL=$(gcloud run services describe "${{ env.SERVICE_NAME }}" --region "${{ env.REGION }}" --project "${PROJECT_ID}" --format 'value(status.url)')
           echo "Cloud Run URL: $URL"
           echo "CLOUD_RUN_URL=$URL" >> $GITHUB_ENV
 
