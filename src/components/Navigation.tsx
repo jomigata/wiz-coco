@@ -423,6 +423,8 @@ export default function Navigation() {
     {
       category: "심리검사 관리",
       items: [
+        { name: "참여 코드 패키지", href: "/counselor/assessments", description: "6자리 참여 코드 생성·목록·진행현황", icon: "📦" },
+        { name: "새 참여 코드 만들기", href: "/counselor/assessments/new", description: "내담자 검사 패키지 생성 후 코드 발급", icon: "➕" },
         { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
         { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
         { name: "인증코드 관리", href: "/counselor/codes", description: "상담사 인증코드 관리", icon: "🔑" }
