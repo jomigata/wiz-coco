@@ -4,10 +4,19 @@
  */
 
 const getBaseUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_FLASK_API_URL || 'http://localhost:5000';
+  // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
+  if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
+    return process.env.NEXT_PUBLIC_FLASK_API_URL;
   }
-  return process.env.NEXT_PUBLIC_FLASK_API_URL || 'http://localhost:5000';
+
+  // 2순위: Firebase Hosting 등 정적 배포(브라우저)에서는 동일 오리진 사용
+  // (Hosting에서 /api/** 를 Flask/Cloud Run 등으로 리라이트한다고 가정)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    return window.location.origin;
+  }
+
+  // 개발 환경 기본값: 로컬 Flask
+  return 'http://localhost:5000';
 };
 
 /** 상담사 API 호출 시 Firebase ID 토큰 반환. 로그인 안 되어 있으면 null */
