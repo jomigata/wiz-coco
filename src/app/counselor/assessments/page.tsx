@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AssessmentList from '@/components/counselor/AssessmentList';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 
 export default function AssessmentListPage() {
+  const { user, loading: authLoading } = useFirebaseAuth();
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,7 +23,12 @@ export default function AssessmentListPage() {
     }
   }, []);
 
+  // Firebase Auth 준비된 후에만 API 호출 (관리자·상담사 모두 동일)
   useEffect(() => {
+    if (authLoading || !user) {
+      if (!authLoading && !user) setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -38,7 +45,7 @@ export default function AssessmentListPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authLoading, user]);
 
   return (
     <div className="space-y-6">
@@ -51,8 +58,13 @@ export default function AssessmentListPage() {
           새 패키지 만들기
         </Link>
       </div>
-      {loading ? (
+      {authLoading || loading ? (
         <p className="text-slate-400">불러오는 중…</p>
+      ) : !user ? (
+        <div className="rounded-lg bg-amber-900/20 border border-amber-600/50 p-4 text-amber-200">
+          <p>로그인이 필요합니다.</p>
+          <p className="text-sm mt-2">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
+        </div>
       ) : error ? (
         <div className="rounded-lg bg-red-900/20 border border-red-600/50 p-4 text-red-300">
           {error}

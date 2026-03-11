@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ProgressDashboard from '@/components/counselor/ProgressDashboard';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { getProgress, listAssessments } from '@/lib/assessmentApi';
 
 export default function ProgressDashboardPage() {
+  const { user, loading: authLoading } = useFirebaseAuth();
   const [assessmentId, setAssessmentId] = useState('');
 
   const [accessCode, setAccessCode] = useState('');
@@ -26,7 +28,12 @@ export default function ProgressDashboardPage() {
     }
   }, []);
 
+  // Firebase Auth 준비된 후에만 API 호출
   useEffect(() => {
+    if (authLoading || !user) {
+      if (!authLoading && !user) setLoading(false);
+      return;
+    }
     if (!assessmentId) {
       setLoading(false);
       setError('패키지 ID가 없습니다.');
@@ -53,7 +60,7 @@ export default function ProgressDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [assessmentId]);
+  }, [authLoading, user, assessmentId]);
 
   if (!assessmentId) {
     return (
@@ -74,8 +81,16 @@ export default function ProgressDashboardPage() {
         </Link>
       </div>
 
-      {loading ? (
+      {authLoading || loading ? (
         <p className="text-slate-400">불러오는 중…</p>
+      ) : !user ? (
+        <div className="rounded-lg bg-amber-900/20 border border-amber-600/50 p-4 text-amber-200">
+          <p>로그인이 필요합니다.</p>
+          <p className="text-sm mt-2">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
+          <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">
+            패키지 목록으로
+          </Link>
+        </div>
       ) : error ? (
         <div className="rounded-lg bg-red-900/20 border border-red-600/50 p-4 text-red-300">
           {error}

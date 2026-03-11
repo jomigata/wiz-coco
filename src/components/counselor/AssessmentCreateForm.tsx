@@ -2,17 +2,21 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { createAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 
 export default function AssessmentCreateForm() {
   const router = useRouter();
+  const { user, loading: authLoading } = useFirebaseAuth();
   const [title, setTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState<'개인' | '그룹'>('개인');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const canSubmit = Boolean(user) && !authLoading && !loading;
 
   const toggleTest = (testId: string) => {
     setSelectedTestIds((prev) => {
@@ -52,6 +56,14 @@ export default function AssessmentCreateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+      {authLoading && (
+        <p className="text-slate-400 text-sm">로그인 정보를 불러오는 중…</p>
+      )}
+      {!authLoading && !user && (
+        <div className="rounded-lg bg-amber-900/20 border border-amber-600/50 p-4 text-amber-200 text-sm">
+          로그인이 필요합니다. Firebase에 로그인한 상태에서 다시 시도해 주세요.
+        </div>
+      )}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-2">
           패키지 제목 <span className="text-red-400">*</span>
@@ -143,7 +155,7 @@ export default function AssessmentCreateForm() {
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={loading}
+          disabled={!canSubmit}
           className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? '생성 중…' : '패키지 생성'}
