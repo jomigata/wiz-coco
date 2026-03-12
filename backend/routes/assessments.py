@@ -106,6 +106,39 @@ def get_progress(assessment_id):
     return jsonify({"accessCode": access_code, "byClient": list(by_email.values())})
 
 
+@bp.route("/<assessment_id>/results/<result_id>", methods=["GET"])
+@require_counselor
+def get_assessment_result(assessment_id, result_id):
+    """상담사 전용: 해당 assessment 소유의 검사 결과 상세 조회 (비밀번호 불필요)."""
+    db = get_firestore()
+    ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
+    ass = ass_ref.get()
+    if not ass.exists or ass.to_dict().get("counselorId") != g.counselor_uid:
+        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+    result_ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
+    result_doc = result_ref.get()
+    if not result_doc.exists:
+        return jsonify({"error": "Not Found", "message": "Result not found"}), 404
+    d = result_doc.to_dict()
+    if d.get("assessmentId") != assessment_id:
+        return jsonify({"error": "Not Found", "message": "Result not found"}), 404
+    out = {
+        "resultId": result_doc.id,
+        "assessmentId": d.get("assessmentId"),
+        "accessCode": d.get("accessCode"),
+        "testId": d.get("testId"),
+        "clientEmail": d.get("clientEmail"),
+        "status": d.get("status"),
+        "responses": d.get("responses"),
+        "resultData": d.get("resultData"),
+        "completedAt": None,
+    }
+    if d.get("completedAt"):
+        ct = d["completedAt"]
+        out["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
+    return jsonify(out)
+
+
 @bp.route("/public/<access_code>", methods=["GET"])
 @limit_access_code
 def get_public(access_code):

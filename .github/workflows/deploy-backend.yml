@@ -12,6 +12,7 @@ jobs:
       SERVICE_NAME: wizcoco-api
       REGION: asia-northeast3
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
     steps:
       - name: 📥 Checkout
@@ -34,7 +35,10 @@ jobs:
             exit 1
           fi
           IMAGE="gcr.io/${PROJECT_ID}/${SERVICE_NAME}:${GITHUB_SHA}"
-          gcloud builds submit --project "${PROJECT_ID}" --tag "$IMAGE" ./backend
+          gcloud builds submit ./backend \
+            --project "${PROJECT_ID}" \
+            --config=backend/cloudbuild.yaml \
+            --substitutions=_IMAGE_TAG="${GITHUB_SHA}",_SERVICE_NAME="${SERVICE_NAME}"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
       - name: 🚀 Deploy to Cloud Run

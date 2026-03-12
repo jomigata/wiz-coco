@@ -226,3 +226,34 @@ export async function getProgress(
   }
   return data;
 }
+
+/** 상담사 전용: 검사 결과 상세 (비밀번호 불필요) */
+export interface CounselorResultDetail {
+  resultId: string;
+  assessmentId: string;
+  accessCode: string;
+  testId: string;
+  clientEmail: string;
+  status: string;
+  responses: Record<string, unknown> | unknown[];
+  resultData: Record<string, unknown> | null;
+  completedAt: string | null;
+}
+
+/** GET /api/assessments/:assessmentId/results/:resultId - 상담사: 결과 상세 조회 */
+export async function getCounselorResult(
+  assessmentId: string,
+  resultId: string
+): Promise<CounselorResultDetail> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/assessments/${encodeURIComponent(assessmentId)}/results/${encodeURIComponent(resultId)}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '결과 조회에 실패했습니다.');
+  }
+  return data;
+}

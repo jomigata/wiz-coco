@@ -101,7 +101,7 @@ export default function ProgressDashboardPage() {
           </div>
         </div>
       ) : (
-        <ProgressDashboard accessCode={accessCode} byClient={byClient} assessmentTitle={title} />
+        <ProgressDashboard assessmentId={assessmentId} accessCode={accessCode} byClient={byClient} assessmentTitle={title} />
       )}
     </div>
   );

@@ -1,0 +1,23 @@
+# Cloud Build: Flask API 이미지 빌드 후 GCR 푸시
+# options.logging: CLOUD_LOGGING_ONLY → 기본 로그 버킷 권한 없이 빌드 가능 (GitHub Actions SA)
+substitutions:
+  _SERVICE_NAME: 'wizcoco-api'
+  _IMAGE_TAG: 'latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:${_IMAGE_TAG}'
+      - '.'
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:${_IMAGE_TAG}'
+
+images:
+  - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:${_IMAGE_TAG}'

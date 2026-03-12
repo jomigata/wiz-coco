@@ -1,0 +1,27 @@
+---
+description: 에이전트 터미널 명령 Run 확인 없이 자동 실행하려면 Cursor 설정에서 Auto-Run을 변경한다.
+alwaysApply: false
+---
+
+# 에이전트 Run 자동 실행 (물음 없이 진행)
+
+에이전트가 제안한 터미널 명령(`cd`, `git status`, `git add`, `git commit` 등)에 대해 **Run 버튼 확인 없이 자동 실행**되게 하려면 Cursor 설정에서 Auto-Run 모드를 바꿔야 합니다.
+
+## 설정 방법 (Cursor UI)
+
+1. **Cursor 설정 열기**: `Ctrl + Shift + J` (Windows/Linux) 또는 `Cmd + Shift + J` (macOS)
+2. **Agents** → **Auto-Run** 이동
+3. **Auto-Run Mode** 드롭다운에서 선택:
+   - **Ask Every Time** – 매번 Run 확인 (기본값)
+   - **Use Allowlist** – Allowlist에 있는 명령만 자동 실행. 아래 **Command Allowlist**에 `cd`, `git`, `npm` 등 추가하면 해당 명령은 확인 없이 실행됨.
+   - **Run Everything** – 모든 도구/명령 자동 실행 (Run 확인 없음, 보안상 주의).
+
+## Run 확인 없이 쓰려면
+
+- **Use Allowlist** 선택 후 **Command Allowlist**에 예: `cd`, `git`, `git status`, `git add`, `git commit`, `npm`, `npx` 등 자주 쓰는 명령을 넣으면, 그 명령들은 Run 물음 없이 실행됩니다.
+- **Run Everything**을 선택하면 모든 명령이 Run 물음 없이 실행됩니다 (가장 간단하지만 위험한 명령도 묻지 않음).
+
+## 참고
+
+- **Run in Sandbox** 옵션은 Cursor 버전/OS(예: Windows에서 WSL2 미사용 시)에 따라 보이지 않을 수 있습니다. 보이지 않으면 위 **Use Allowlist** 또는 **Run Everything**을 사용하면 됩니다.
+- 이 옵션은 UI에서만 변경 가능합니다.
