@@ -112,7 +112,7 @@ function MbtiAgeResultContent() {
               href="/tests/mbti"
               className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
-              다시 검사하기
+              다시 검사 하기
             </Link>
             <div>
               <Link

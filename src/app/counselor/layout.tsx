@@ -34,7 +34,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     },
     {
       id: 'access-code-packages',
-      label: '참여 코드 패키지',
+      label: '검사 코드 패키지',
       icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
       subItems: [
         { id: 'assessments-list', label: '패키지 목록', href: '/counselor/assessments', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
@@ -84,9 +84,9 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
   // 페이지 제목 결정 함수
   const getPageTitle = (path: string): string => {
-    if (path.startsWith('/counselor/assessments/new')) return '참여 코드 패키지 만들기';
+    if (path.startsWith('/counselor/assessments/new')) return '검사 코드 패키지 만들기';
     if (path.startsWith('/counselor/assessments/progress')) return '진행 현황';
-    if (path.startsWith('/counselor/assessments')) return '참여 코드 패키지';
+    if (path.startsWith('/counselor/assessments')) return '검사 코드 패키지';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
       '/counselor/clients': '내담자 목록',

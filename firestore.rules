@@ -9,7 +9,7 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // 상담사 패키지(참여 코드) - assessments
+    // 상담사 패키지(검사 코드) - assessments
     // 상담사는 자신의 assessment만 읽기/쓰기. 공개 조회(accessCode)는 백엔드 API에서 처리.
     match /assessments/{assessmentId} {
       allow read, list: if request.auth != null && resource.data.counselorId == request.auth.uid;

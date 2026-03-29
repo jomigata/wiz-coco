@@ -29,7 +29,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
   if (assessments.length === 0 && !createdCode) {
     return (
       <div className="bg-slate-800/80 rounded-xl border border-slate-600 p-8 text-center">
-        <p className="text-slate-400 mb-4">등록된 참여 코드 패키지가 없습니다.</p>
+        <p className="text-slate-400 mb-4">등록된 검사 코드 패키지가 없습니다.</p>
         <Link
           href="/counselor/assessments/new"
           className="inline-block px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
@@ -44,7 +44,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
     <div className="space-y-4">
       {createdCode && (
         <div className="rounded-lg bg-green-900/30 border border-green-600/50 p-4 text-green-200 text-sm">
-          패키지가 생성되었습니다. 참여 코드: <strong className="font-mono tracking-widest">{createdCode}</strong>
+          패키지가 생성되었습니다. 검사 코드: <strong className="font-mono tracking-widest">{createdCode}</strong>
           — 내담자에게 이 코드를 전달하세요.
         </div>
       )}
@@ -54,7 +54,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
             <thead>
               <tr className="border-b border-slate-600 bg-slate-800">
                 <th className="px-4 py-3 text-slate-300 font-medium">제목</th>
-                <th className="px-4 py-3 text-slate-300 font-medium">참여 코드</th>
+                <th className="px-4 py-3 text-slate-300 font-medium">검사 코드</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">대상</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">검사 수</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">생성일</th>

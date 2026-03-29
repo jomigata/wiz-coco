@@ -34,7 +34,7 @@ export default function ClientDashboardPage() {
 
   const loadAssessment = useCallback(() => {
     if (code.length !== 6) {
-      setError('잘못된 참여 코드입니다.');
+      setError('잘못된 검사 코드입니다.');
       setLoading(false);
       return;
     }
@@ -112,7 +112,7 @@ export default function ClientDashboardPage() {
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{error || '패키지를 불러올 수 없습니다.'}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
-              참여 코드 다시 입력
+              검사 코드 다시 입력
             </Link>
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function ClientDashboardPage() {
 
         <p className="text-center mt-6">
           <Link href="/join" className="text-blue-400 hover:text-blue-300 text-sm">
-            다른 참여 코드 입력
+            다른 검사 코드 입력
           </Link>
         </p>
       </div>

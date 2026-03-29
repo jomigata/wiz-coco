@@ -11,7 +11,7 @@
 ## 프로덕션(Firebase Hosting 정적 배포)
 
 `firebase.json`에는 Cloud Run으로 가는 **외부 리라이트가 없습니다.**  
-따라서 상담사·참여 코드 API가 Cloud Run에서 돌아가면 **반드시** GitHub Actions 빌드 단계에서 `NEXT_PUBLIC_FLASK_API_URL`을 Cloud Run 서비스 URL(예: `https://wizcoco-api-xxxxx-an.a.run.app`)로 넣어야 합니다.
+따라서 상담사·검사 코드 API가 Cloud Run에서 돌아가면 **반드시** GitHub Actions 빌드 단계에서 `NEXT_PUBLIC_FLASK_API_URL`을 Cloud Run 서비스 URL(예: `https://wizcoco-api-xxxxx-an.a.run.app`)로 넣어야 합니다.
 
 - 워크플로: `.github/workflows/deploy.yml`의 “환경 변수 설정”에서 `secrets.NEXT_PUBLIC_FLASK_API_URL`이 있으면 `.env`에 기록 후 `npm run build`에 반영됩니다.
 - 로컬 빌드: `.env.production` 또는 환경 변수로 동일 키 설정.

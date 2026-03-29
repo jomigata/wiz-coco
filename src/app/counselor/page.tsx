@@ -54,8 +54,8 @@ export default function CounselorDashboard() {
       stats: { value: '12', label: '추천 대기', change: '+3' }
     },
     {
-      title: '참여 코드 패키지',
-      description: '6자리 참여 코드로 내담자 검사 패키지를 만들고 진행 현황을 보세요',
+      title: '검사 코드 패키지',
+      description: '6자리 검사 코드로 내담자 검사 패키지를 만들고 진행 현황을 보세요',
       href: '/counselor/assessments',
       icon: '📦',
       color: 'from-cyan-500 to-blue-500',

@@ -19,7 +19,7 @@ export default function AccessCodeInputPage() {
     setError('');
     const trimmed = (code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (trimmed.length !== 6) {
-      setError('참여 코드 6자리를 입력해 주세요.');
+      setError('검사 코드 6자리를 입력해 주세요.');
       return;
     }
     setLoading(true);
@@ -39,7 +39,7 @@ export default function AccessCodeInputPage() {
       }
       router.push(`/join/dashboard?accessCode=${encodeURIComponent(trimmed)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '참여 코드를 확인해 주세요.');
+      setError(err instanceof Error ? err.message : '검사 코드를 확인해 주세요.');
     } finally {
       setLoading(false);
     }
@@ -53,14 +53,14 @@ export default function AccessCodeInputPage() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
-            <h1 className="text-2xl font-bold text-white mb-2">참여 코드 입력</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 6자리 참여 코드를 입력하세요.
+              상담사에게 받은 6자리 검사 코드를 입력하세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
-                  참여 코드
+                  검사 코드
                 </label>
                 <input
                   id="accessCode"
@@ -85,7 +85,7 @@ export default function AccessCodeInputPage() {
                 disabled={loading || (code || '').trim().length !== 6}
                 className="w-full py-3 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? '확인 중…' : '검사하기'}
+                {loading ? '확인 중…' : '검사 하기'}
               </button>
             </form>
             <p className="mt-6 text-center">

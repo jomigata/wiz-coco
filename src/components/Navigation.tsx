@@ -423,8 +423,8 @@ export default function Navigation() {
     {
       category: "심리검사 관리",
       items: [
-        { name: "참여 코드 패키지", href: "/counselor/assessments", description: "6자리 참여 코드 생성·목록·진행현황", icon: "📦" },
-        { name: "새 참여 코드 만들기", href: "/counselor/assessments/new", description: "내담자 검사 패키지 생성 후 코드 발급", icon: "➕" },
+        { name: "검사 코드 패키지", href: "/counselor/assessments", description: "6자리 검사 코드 생성·목록·진행현황", icon: "📦" },
+        { name: "새 검사 코드 만들기", href: "/counselor/assessments/new", description: "내담자 검사 패키지 생성 후 코드 발급", icon: "➕" },
         { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
         { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
         { name: "인증코드 관리", href: "/counselor/codes", description: "상담사 인증코드 관리", icon: "🔑" }
@@ -691,7 +691,7 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
             <div className="flex space-x-1">
-              {/* 참여 코드 입력 (상담사 발급 코드로 검사 참여) */}
+              {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
               <Link
                 href="/join"
                 className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
@@ -701,7 +701,7 @@ export default function Navigation() {
                 }`}
                 onClick={(e) => handleNavLinkClick("/join", e)}
               >
-                검사하기
+                검사 하기
               </Link>
               {/* 심리검사 드롭다운 메뉴 */}
               <div className="relative">
@@ -1982,13 +1982,13 @@ export default function Navigation() {
           <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
             <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
 
-              {/* 검사하기 */}
+              {/* 검사 하기 */}
               <Link
                 href="/join"
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                검사하기
+                검사 하기
               </Link>
 
               {/* 심리검사 */}

@@ -1,6 +1,6 @@
 /**
  * Firestore 데이터 모델 타입 정의
- * 상담사 중심 참여 코드 플랫폼: assessments, testResults 컬렉션
+ * 상담사 중심 검사 코드 플랫폼: assessments, testResults 컬렉션
  */
 
 import type { Timestamp } from 'firebase/firestore';
@@ -22,7 +22,7 @@ export interface AssessmentTestItem {
  * 경로: /assessments/{assessmentId}
  */
 export interface Assessment {
-  /** 6자리 유일 참여 코드 */
+  /** 6자리 유일 검사 코드 */
   accessCode: string;
   /** 상담사 Firebase UID */
   counselorId: string;
@@ -60,7 +60,7 @@ export type TestResultStatus = 'in-progress' | 'completed';
  * 경로: /testResults/{resultId}
  */
 export interface TestResult {
-  /** 6자리 참여 코드 */
+  /** 6자리 검사 코드 */
   accessCode: string;
   /** assessment 문서 ID */
   assessmentId: string;

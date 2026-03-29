@@ -1,6 +1,6 @@
 // Firebase Firestore 유틸리티
 // 데이터베이스 CRUD 작업 및 쿼리 기능 제공
-// 참여 코드 플랫폼 컬렉션: @/types/firestore (assessments, testResults)
+// 검사 코드 플랫폼 컬렉션: @/types/firestore (assessments, testResults)
 
 import {
   collection,
@@ -307,7 +307,7 @@ export const testResultUtils = {
 };
 
 // ---------------------------------------------------------------------------
-// 참여 코드 플랫폼: assessments / testResults (타입·컬렉션은 @/types/firestore)
+// 검사 코드 플랫폼: assessments / testResults (타입·컬렉션은 @/types/firestore)
 // ---------------------------------------------------------------------------
 
 export { FIRESTORE_COLLECTIONS };

@@ -1,5 +1,5 @@
 /**
- * 참여 코드 플로우용 기본 문항 (testId별 문항이 없을 때 사용)
+ * 검사 코드 플로우용 기본 문항 (testId별 문항이 없을 때 사용)
  * 백엔드는 responses만 저장·채점하며, 검사별 확장 시 이 파일 또는 testId 매핑으로 교체 가능
  */
 export interface GenericQuestion {

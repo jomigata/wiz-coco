@@ -462,7 +462,7 @@ export default function MBTIResult({ results, onRetake }: Props) {
           onClick={onRetake}
           className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors shadow-md"
         >
-          다시 검사하기
+          다시 검사 하기
         </button>
       </div>
       

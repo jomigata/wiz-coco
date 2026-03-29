@@ -142,7 +142,7 @@ export default function AssessmentCreateForm() {
           ))}
         </div>
         <p className="text-slate-500 text-xs mt-1">
-          선택한 검사가 참여 코드 입력 후 내담자 대시보드에 표시됩니다.
+          선택한 검사가 검사 코드 입력 후 내담자 대시보드에 표시됩니다.
         </p>
       </div>
 

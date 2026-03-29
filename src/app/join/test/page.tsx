@@ -159,7 +159,7 @@ export default function TestRunnerPage() {
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">잘못된 접근입니다.</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
-              참여 코드 다시 입력
+              검사 코드 다시 입력
             </Link>
           </div>
         </div>

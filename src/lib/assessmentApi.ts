@@ -1,5 +1,5 @@
 /**
- * 참여 코드 플로우용 Flask 백엔드 API 클라이언트
+ * 검사 코드 플로우용 Flask 백엔드 API 클라이언트
  * NEXT_PUBLIC_FLASK_API_URL 미설정 시 개발용 localhost:5000 사용
  */
 
@@ -51,12 +51,12 @@ export interface TestResultItem {
 export async function getPublicAssessment(accessCode: string): Promise<PublicAssessment> {
   const code = (accessCode || '').trim().toUpperCase();
   if (code.length !== 6) {
-    throw new Error('참여 코드는 6자리입니다.');
+    throw new Error('검사 코드는 6자리입니다.');
   }
   const res = await fetch(`${getBaseUrl()}/api/assessments/public/${encodeURIComponent(code)}`);
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.message || '유효하지 않은 참여 코드입니다.');
+    throw new Error(data?.message || '유효하지 않은 검사 코드입니다.');
   }
   return res.json();
 }
@@ -108,7 +108,7 @@ export async function listResults(
   const code = (accessCode || '').trim().toUpperCase();
   const email = (clientEmail || '').trim().toLowerCase();
   if (code.length !== 6 || !email || !email.includes('@')) {
-    throw new Error('참여 코드와 이메일을 확인해 주세요.');
+    throw new Error('검사 코드와 이메일을 확인해 주세요.');
   }
   const params = new URLSearchParams({ accessCode: code, clientEmail: email });
   const res = await fetch(`${getBaseUrl()}/api/results?${params}`);

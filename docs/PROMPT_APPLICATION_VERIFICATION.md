@@ -8,7 +8,7 @@
 
 | 항목 | 적용 여부 | 비고 |
 |------|-----------|------|
-| 상담사 중심, 참여 코드(Access Code) 발급 | ✅ 적용 | `assessments` 컬렉션, 6자리 코드 생성 |
+| 상담사 중심, 검사 코드(Access Code) 발급 | ✅ 적용 | `assessments` 컬렉션, 6자리 코드 생성 |
 | 내담자 검사 수행 및 진행 현황 모니터링 | ✅ 적용 | `testResults`, 진행 현황 API/대시보드 |
 | 백엔드 Python + Flask | ✅ 적용 | `backend/` |
 | DB Firebase Firestore | ✅ 적용 | `firebase_init.py`, `config.py` |
@@ -58,7 +58,7 @@
 | 응답 assessmentId, accessCode | ✅ | 201 + JSON |
 | AssessmentCreateForm (제목, 대상, 안내, 검사 목록 체크) | ✅ | `src/components/counselor/AssessmentCreateForm.tsx` |
 
-#### b. 기능 2: 참여 코드별 진행 현황 모니터링
+#### b. 기능 2: 검사 코드별 진행 현황 모니터링
 
 | 요구 | 적용 | 비고 |
 |------|------|------|
@@ -72,7 +72,7 @@
 
 ### [내담자 기능]
 
-#### c. 기능 3: 참여 코드로 검사 시작하기
+#### c. 기능 3: 검사 코드로 검사 시작하기
 
 | 요구 | 적용 | 비고 |
 |------|------|------|
@@ -109,14 +109,14 @@
 |------|------|------|
 | 4자리 비밀번호 bcrypt 해싱 | ✅ | `backend/utils/password.py` (bcrypt) |
 | 이메일: 요약만 포함, 상세는 “상담사와 논의” 안내 | ✅ | `backend/utils/email_sender.py` 주석 및 본문 |
-| Rate limiting (참여 코드 입력) | ✅ | limit_access_code (RATE_LIMIT_ACCESS_CODE) |
+| Rate limiting (검사 코드 입력) | ✅ | limit_access_code (RATE_LIMIT_ACCESS_CODE) |
 | Rate limiting (비밀번호 확인 API) | ✅ | limit_password_api (PUT/DELETE/GET result) |
 
 ---
 
 ## 5. 요약
 
-- **대부분 적용됨**: 데이터 모델, 상담사 패키지 생성/목록/진행 현황, 내담자 참여 코드 입력·대시보드·검사 수행·이메일·완료 목록 수정/삭제, 보안(비밀번호 해싱·이메일 정책·Rate limiting) 모두 프롬프트와 일치하거나 호환됩니다.
+- **대부분 적용됨**: 데이터 모델, 상담사 패키지 생성/목록/진행 현황, 내담자 검사 코드 입력·대시보드·검사 수행·이메일·완료 목록 수정/삭제, 보안(비밀번호 해싱·이메일 정책·Rate limiting) 모두 프롬프트와 일치하거나 호환됩니다.
 - **부분 적용**: 상담사가 “완료된 검사 결과 본문”을 열람하는 전용 API는 없습니다. 현재는 진행 현황(완료/미완료 상태)만 제공되며, 결과 상세는 내담자용 비밀번호 API만 존재합니다. 필요 시 `GET /api/assessments/:assessmentId/results/:resultId`(상담사 인증) 같은 엔드포인트를 추가하면 됩니다.
 
 ---

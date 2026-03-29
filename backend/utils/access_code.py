@@ -1,4 +1,4 @@
-# 6자리 참여 코드 생성 (중복 방지)
+# 6자리 검사 코드 생성 (중복 방지)
 import random
 import string
 

@@ -4,7 +4,7 @@
 
 **프론트(Next) 연동:** [docs/FRONTEND_FLASK_INTEGRATION.md](../docs/FRONTEND_FLASK_INTEGRATION.md) — `NEXT_PUBLIC_FLASK_API_URL`, CORS, 프로덕션 시 Cloud Run URL 필수 여부를 정리했습니다.
 
---- 참여 코드(accessCode) 기반 검사 패키지 생성·진행 현황 조회, 결과 제출·조회·수정·삭제를 제공합니다.
+6자리 **검사 코드**(`accessCode`) 기반 검사 패키지 생성·진행 현황 조회, 결과 제출·조회·수정·삭제를 제공합니다.
 
 ## 요구 사항
 
@@ -33,7 +33,7 @@ python app.py
 |------|------|
 | `FIREBASE_CREDENTIALS_PATH` | Firebase 서비스 계정 JSON 파일 경로 (또는 `GOOGLE_APPLICATION_CREDENTIALS` 사용) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | 결과 제출 시 이메일 발송용 (비워두면 발송 생략) |
-| `RATE_LIMIT_ACCESS_CODE` | 참여 코드 API 분당 요청 제한 (기본 30, 0=비활성화) |
+| `RATE_LIMIT_ACCESS_CODE` | 검사 코드 API 분당 요청 제한 (기본 30, 0=비활성화) |
 | `RATE_LIMIT_PASSWORD_API` | 비밀번호 확인 API 분당 제한 (기본 20) |
 | `FLASK_ENV` | `development` / `production` |
 | `SECRET_KEY` | Flask 시크릿 키 |
@@ -43,9 +43,9 @@ python app.py
 
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
-- `POST /api/assessments` — 패키지 생성, 6자리 참여 코드 발급
+- `POST /api/assessments` — 패키지 생성, 6자리 검사 코드 발급
 - `GET /api/assessments` — 내 assessments 목록
-- `GET /api/assessments/<assessmentId>/progress` — 해당 참여 코드 진행 현황 (내담자별)
+- `GET /api/assessments/<assessmentId>/progress` — 해당 검사 코드 진행 현황 (내담자별)
 
 ### 내담자 (공개)
 
@@ -72,7 +72,7 @@ python app.py
 ## 보안
 
 - **비밀번호**: 4자리 숫자 비밀번호는 bcrypt로 해싱하여 Firestore의 `passwordHash`에만 저장합니다. 평문은 저장하지 않습니다.
-- **Rate Limiting**: 참여 코드 조회·결과 제출(`GET /api/assessments/public/<code>`, `POST/GET /api/results`)에는 `limit_access_code`, 비밀번호 확인(`GET/PUT/DELETE /api/results/<id>`)에는 `limit_password_api`가 적용됩니다. 분당 제한은 환경 변수로 조정 가능합니다.
+- **Rate Limiting**: 검사 코드 조회·결과 제출(`GET /api/assessments/public/<code>`, `POST/GET /api/results`)에는 `limit_access_code`, 비밀번호 확인(`GET/PUT/DELETE /api/results/<id>`)에는 `limit_password_api`가 적용됩니다. 분당 제한은 환경 변수로 조정 가능합니다.
 - **이메일 정책**: 결과 이메일에는 비밀번호·요약(summary)만 포함하며, 상세 결과는 이메일에 넣지 않고 "상세 결과는 상담사와 논의하세요" 안내만 포함합니다.
 
 ## 배포 (Cloud Run + GitHub Actions)

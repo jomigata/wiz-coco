@@ -1,4 +1,4 @@
-# 간단 Rate limiting (참여 코드 입력·비밀번호 API)
+# 간단 Rate limiting (검사 코드 입력·비밀번호 API)
 from collections import defaultdict
 from time import time
 from threading import Lock
@@ -30,7 +30,7 @@ def _client_key():
 
 
 def limit_access_code(f):
-    """참여 코드 관련 API (공개 코드 조회 등) 제한."""
+    """검사 코드 관련 API (공개 코드 조회 등) 제한."""
     @wraps(f)
     def decorated(*args, **kwargs):
         key = f"access_code:{_client_key()}"
