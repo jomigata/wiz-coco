@@ -54,16 +54,16 @@ export default function CounselorDashboard() {
       stats: { value: '12', label: '추천 대기', change: '+3' }
     },
     {
-      title: '검사 코드 패키지',
-      description: '6자리 검사 코드로 내담자 검사 패키지를 만들고 진행 현황을 보세요',
+      title: '검사코드 목록',
+      description: '6자리 검사코드로 내담자 검사를 구성하고 진행 현황을 확인하세요',
       href: '/counselor/assessments',
       icon: '📦',
       color: 'from-cyan-500 to-blue-500',
-      stats: { value: '패키지', label: '목록·진행현황', change: '바로가기' }
+      stats: { value: '검사코드', label: '목록·진행현황', change: '바로가기' }
     },
     {
-      title: '검사 코드 관리',
-      description: '검사 코드를 생성하고 관리하세요',
+      title: '검사코드 관리',
+      description: '검사 접두·코드를 생성하고 관리하세요',
       href: '/counselor/test-codes',
       icon: '🔑',
       color: 'from-yellow-500 to-orange-500',

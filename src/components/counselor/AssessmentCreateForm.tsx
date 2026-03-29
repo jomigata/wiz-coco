@@ -32,7 +32,7 @@ export default function AssessmentCreateForm() {
     setError('');
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError('패키지 제목을 입력해 주세요.');
+      setError('안내 제목을 입력해 주세요.');
       return;
     }
     const testList = counselorAssessmentTestOptions
@@ -48,7 +48,7 @@ export default function AssessmentCreateForm() {
       });
       router.push(`/counselor/assessments?created=${result.assessmentId}&code=${result.accessCode}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '패키지 생성에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '검사코드 만들기에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function AssessmentCreateForm() {
       )}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-2">
-          패키지 제목 <span className="text-red-400">*</span>
+          안내 제목 <span className="text-red-400">*</span>
         </label>
         <input
           id="title"
@@ -142,7 +142,7 @@ export default function AssessmentCreateForm() {
           ))}
         </div>
         <p className="text-slate-500 text-xs mt-1">
-          선택한 검사가 검사 코드 입력 후 내담자 대시보드에 표시됩니다.
+          선택한 검사가 검사코드 입력 후 내담자 대시보드에 표시됩니다.
         </p>
       </div>
 
@@ -158,7 +158,7 @@ export default function AssessmentCreateForm() {
           disabled={!canSubmit}
           className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? '생성 중…' : '패키지 생성'}
+          {loading ? '생성 중…' : '검사코드 만들기'}
         </button>
         <button
           type="button"

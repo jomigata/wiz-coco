@@ -27,7 +27,7 @@ def _serialize_doc(doc):
 @bp.route("", methods=["POST"])
 @require_counselor
 def create_assessment():
-    """상담사: 패키지 생성, accessCode 생성 후 저장, assessmentId·accessCode 반환."""
+    """상담사: 검사코드(세트) 생성, accessCode 생성 후 저장, assessmentId·accessCode 반환."""
     body = request.get_json() or {}
     title = (body.get("title") or "").strip()
     target_audience = body.get("targetAudience", "개인")

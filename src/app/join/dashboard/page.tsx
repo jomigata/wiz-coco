@@ -110,7 +110,7 @@ export default function ClientDashboardPage() {
         </div>
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
-            <p className="text-red-400 mb-4">{error || '패키지를 불러올 수 없습니다.'}</p>
+            <p className="text-red-400 mb-4">{error || '검사코드 정보를 불러올 수 없습니다.'}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
               검사 코드 다시 입력
             </Link>

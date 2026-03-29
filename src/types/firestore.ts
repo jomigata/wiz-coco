@@ -11,7 +11,7 @@ export type TargetAudience = '개인' | '그룹';
 /** assessment 상태 */
 export type AssessmentStatus = 'active' | 'archived';
 
-/** 검사 목록 항목 (패키지 내 개별 검사) */
+/** 검사 목록 항목 (검사코드 세트에 포함된 개별 검사) */
 export interface AssessmentTestItem {
   testId: string;
   name: string;
@@ -26,7 +26,7 @@ export interface Assessment {
   accessCode: string;
   /** 상담사 Firebase UID */
   counselorId: string;
-  /** 패키지 제목 */
+  /** 검사코드 세트 안내 제목 */
   title: string;
   /** 대상: 개인 | 그룹 */
   targetAudience: TargetAudience;

@@ -1,5 +1,5 @@
 /**
- * 상담사가 검사 코드 패키지에 넣을 수 있는 검사 목록
+ * 상담사가 검사코드 세트에 넣을 수 있는 검사 목록
  * psychologyTestMenu에서 href 기준 testId 추출 (중복 제거)
  */
 
@@ -34,5 +34,5 @@ for (const cat of testSubMenuItems) {
   }
 }
 
-/** 상담사 패키지 생성 시 선택 가능한 검사 목록 (testId, name) */
+/** 상담사 검사코드 생성 시 선택 가능한 검사 목록 (testId, name) */
 export const counselorAssessmentTestOptions: CounselorTestOption[] = list;

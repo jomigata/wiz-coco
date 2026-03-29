@@ -47,7 +47,7 @@
 
 ### [상담사 기능]
 
-#### a. 기능 1: 새 심리검사 패키지 생성
+#### a. 기능 1: 새 검사코드(세트) 생성
 
 | 요구 | 적용 | 비고 |
 |------|------|------|
@@ -62,7 +62,7 @@
 
 | 요구 | 적용 | 비고 |
 |------|------|------|
-| GET /api/assessments (상담사 패키지 목록) | ✅ | list_assessments, counselorId 필터 |
+| GET /api/assessments (상담사 검사코드 목록) | ✅ | list_assessments, counselorId 필터 |
 | GET /api/assessments/{id}/progress | ✅ | get_progress, testResults를 clientEmail 기준 그룹화 |
 | 상담사 설정 정보(제목, 안내 등) 표시 | ✅ | progress 페이지 + listAssessments로 title 등 사용 |
 | 내담자 목록(이메일 기준), 검사별 완료/미완료 | ✅ | byClient, results[].testId/status/completedAt |
@@ -116,7 +116,7 @@
 
 ## 5. 요약
 
-- **대부분 적용됨**: 데이터 모델, 상담사 패키지 생성/목록/진행 현황, 내담자 검사 코드 입력·대시보드·검사 수행·이메일·완료 목록 수정/삭제, 보안(비밀번호 해싱·이메일 정책·Rate limiting) 모두 프롬프트와 일치하거나 호환됩니다.
+- **대부분 적용됨**: 데이터 모델, 상담사 검사코드 생성/목록/진행 현황, 내담자 검사 코드 입력·대시보드·검사 수행·이메일·완료 목록 수정/삭제, 보안(비밀번호 해싱·이메일 정책·Rate limiting) 모두 프롬프트와 일치하거나 호환됩니다.
 - **부분 적용**: 상담사가 “완료된 검사 결과 본문”을 열람하는 전용 API는 없습니다. 현재는 진행 현황(완료/미완료 상태)만 제공되며, 결과 상세는 내담자용 비밀번호 API만 존재합니다. 필요 시 `GET /api/assessments/:assessmentId/results/:resultId`(상담사 인증) 같은 엔드포인트를 추가하면 됩니다.
 
 ---

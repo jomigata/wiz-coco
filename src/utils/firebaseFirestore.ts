@@ -344,7 +344,7 @@ export const testResultsFirestore = {
     );
     return list as TestResultDocument[];
   },
-  /** assessmentId 로 해당 패키지의 모든 결과 조회 (진행 현황용) */
+  /** assessmentId 로 해당 검사코드 세트의 모든 결과 조회 (진행 현황용) */
   async listByAssessmentId(assessmentId: string): Promise<TestResultDocument[]> {
     const list = await queryDocuments(
       FIRESTORE_COLLECTIONS.TEST_RESULTS,

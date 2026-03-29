@@ -4,7 +4,7 @@
 
 **프론트(Next) 연동:** [docs/FRONTEND_FLASK_INTEGRATION.md](../docs/FRONTEND_FLASK_INTEGRATION.md) — `NEXT_PUBLIC_FLASK_API_URL`, CORS, 프로덕션 시 Cloud Run URL 필수 여부를 정리했습니다.
 
-6자리 **검사 코드**(`accessCode`) 기반 검사 패키지 생성·진행 현황 조회, 결과 제출·조회·수정·삭제를 제공합니다.
+6자리 **검사코드**(`accessCode`) 기반 세트 생성·진행 현황 조회, 결과 제출·조회·수정·삭제를 제공합니다.
 
 ## 요구 사항
 
@@ -43,7 +43,7 @@ python app.py
 
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
-- `POST /api/assessments` — 패키지 생성, 6자리 검사 코드 발급
+- `POST /api/assessments` — 검사코드(세트) 생성, 6자리 코드 발급
 - `GET /api/assessments` — 내 assessments 목록
 - `GET /api/assessments/<assessmentId>/progress` — 해당 검사 코드 진행 현황 (내담자별)
 

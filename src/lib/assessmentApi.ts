@@ -47,7 +47,7 @@ export interface TestResultItem {
   completedAt: string | null;
 }
 
-/** GET /api/assessments/public/:accessCode - 코드 유효 시 패키지 정보 반환 */
+/** GET /api/assessments/public/:accessCode - 코드 유효 시 검사코드(세트) 정보 반환 */
 export async function getPublicAssessment(accessCode: string): Promise<PublicAssessment> {
   const code = (accessCode || '').trim().toUpperCase();
   if (code.length !== 6) {
@@ -168,7 +168,7 @@ export interface ProgressByClient {
   results: { resultId: string; testId: string; status: string; completedAt: string | null }[];
 }
 
-/** POST /api/assessments - 상담사: 패키지 생성 */
+/** POST /api/assessments - 상담사: 검사코드(세트) 생성 */
 export async function createAssessment(body: {
   title: string;
   targetAudience?: '개인' | '그룹';
@@ -192,12 +192,12 @@ export async function createAssessment(body: {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.message || data?.error || '패키지 생성에 실패했습니다.');
+    throw new Error(data?.message || data?.error || '검사코드 만들기에 실패했습니다.');
   }
   return data;
 }
 
-/** GET /api/assessments - 상담사: 내 패키지 목록 */
+/** GET /api/assessments - 상담사: 내 검사코드 목록 */
 export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
@@ -211,7 +211,7 @@ export async function listAssessments(): Promise<{ assessments: CounselorAssessm
   return data;
 }
 
-/** GET /api/assessments/:id/progress - 상담사: 해당 패키지 진행 현황 */
+/** GET /api/assessments/:id/progress - 상담사: 해당 검사코드 진행 현황 */
 export async function getProgress(
   assessmentId: string
 ): Promise<{ accessCode: string; byClient: ProgressByClient[] }> {

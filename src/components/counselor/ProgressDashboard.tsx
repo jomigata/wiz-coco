@@ -51,7 +51,7 @@ export default function ProgressDashboard({
           <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
         )}
         <div className="flex items-center gap-2">
-          <span className="text-slate-400">검사 코드:</span>
+          <span className="text-slate-400">검사코드:</span>
           <span className="font-mono text-cyan-400 tracking-widest">{accessCode}</span>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function ProgressDashboard({
       {byClient.length === 0 ? (
         <div className="bg-slate-800/80 rounded-xl border border-slate-600 p-8 text-center">
           <p className="text-slate-400">아직 제출된 결과가 없습니다.</p>
-          <p className="text-slate-500 text-sm mt-1">내담자가 검사 코드로 접속해 검사를 제출하면 여기에 표시됩니다.</p>
+          <p className="text-slate-500 text-sm mt-1">내담자가 검사코드로 접속해 검사를 제출하면 여기에 표시됩니다.</p>
         </div>
       ) : (
         <div className="space-y-4">

@@ -50,12 +50,12 @@ export default function AssessmentListPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-white">검사 코드 패키지</h1>
+        <h1 className="text-2xl font-bold text-white">검사코드 목록</h1>
         <Link
           href="/counselor/assessments/new"
           className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium"
         >
-          새 패키지 만들기
+          새 검사코드 만들기
         </Link>
       </div>
       {authLoading || loading ? (

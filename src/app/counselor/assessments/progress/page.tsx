@@ -36,7 +36,7 @@ export default function ProgressDashboardPage() {
     }
     if (!assessmentId) {
       setLoading(false);
-      setError('패키지 ID가 없습니다.');
+      setError('검사코드 식별 정보가 없습니다.');
       return;
     }
     let cancelled = false;
@@ -67,7 +67,7 @@ export default function ProgressDashboardPage() {
       <div className="space-y-4">
         <p className="text-red-400">잘못된 경로입니다.</p>
         <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
-          패키지 목록으로
+          검사코드 목록으로
         </Link>
       </div>
     );
@@ -88,7 +88,7 @@ export default function ProgressDashboardPage() {
           <p>로그인이 필요합니다.</p>
           <p className="text-sm mt-2">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
           <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">
-            패키지 목록으로
+            검사코드 목록으로
           </Link>
         </div>
       ) : error ? (
@@ -96,7 +96,7 @@ export default function ProgressDashboardPage() {
           {error}
           <div className="mt-2">
             <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm">
-              패키지 목록으로
+              검사코드 목록으로
             </Link>
           </div>
         </div>

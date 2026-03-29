@@ -34,11 +34,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     },
     {
       id: 'access-code-packages',
-      label: '검사 코드 패키지',
+      label: '검사코드 목록',
       icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
       subItems: [
-        { id: 'assessments-list', label: '패키지 목록', href: '/counselor/assessments', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
-        { id: 'assessments-new', label: '새 패키지 만들기', href: '/counselor/assessments/new', icon: 'M12 4v16m8-8H4' }
+        { id: 'assessments-list', label: '전체 목록', href: '/counselor/assessments', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+        { id: 'assessments-new', label: '새 검사코드 만들기', href: '/counselor/assessments/new', icon: 'M12 4v16m8-8H4' }
       ]
     },
     {
@@ -48,7 +48,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       subItems: [
         { id: 'test-results', label: '검사 결과 분석', href: '/counselor/test-results', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
         { id: 'test-recommendations', label: '검사 추천', href: '/counselor/test-recommendations', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-        { id: 'test-codes', label: '검사 코드 관리', href: '/counselor/test-codes', icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z' }
+        { id: 'test-codes', label: '검사코드 관리', href: '/counselor/test-codes', icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z' }
       ]
     },
     {
@@ -84,9 +84,9 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
   // 페이지 제목 결정 함수
   const getPageTitle = (path: string): string => {
-    if (path.startsWith('/counselor/assessments/new')) return '검사 코드 패키지 만들기';
+    if (path.startsWith('/counselor/assessments/new')) return '새 검사코드 만들기';
     if (path.startsWith('/counselor/assessments/progress')) return '진행 현황';
-    if (path.startsWith('/counselor/assessments')) return '검사 코드 패키지';
+    if (path.startsWith('/counselor/assessments')) return '검사코드 목록';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
       '/counselor/clients': '내담자 목록',
@@ -95,7 +95,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       '/counselor/treatment-plans': '치료 계획',
       '/counselor/test-results': '검사 결과 분석',
       '/counselor/test-recommendations': '검사 추천',
-      '/counselor/test-codes': '검사 코드 관리',
+      '/counselor/test-codes': '검사코드 관리',
       '/counselor/notes': '상담 노트',
       '/counselor/progress': '진행 상황',
       '/counselor/resources': '상담 자료'
