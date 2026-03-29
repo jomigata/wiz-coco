@@ -10,6 +10,11 @@
 - **[GitHub Actions (배포/성능 모니터링)](https://github.com/jomigata/wiz-coco/actions)**
 - **[Firebase Console (호스팅 관리)](https://console.firebase.google.com/project/wiz-coco/hosting)**
 
+### 📋 작업 계획·점검
+- **[작업 1~5 세부 계획 (WORK_PLAN_1-5)](docs/WORK_PLAN_1-5.md)**
+- **[코드·운영 점검 체크리스트](docs/CODE_REVIEW_CHECKLIST.md)**
+- **[프론트 ↔ Flask 연동](docs/FRONTEND_FLASK_INTEGRATION.md)** · **[자격 증명 취급](docs/SECURITY_CREDENTIALS.md)**
+
 ---
 
 ## 📋 프로젝트 개요

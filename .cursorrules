@@ -69,3 +69,11 @@ npm run deploy:fast
 - 완전 자동화 모드 유지
 - 에러 발생 시 자동 복구 시도
 - 배포 상태 자동 모니터링
+
+## 📤 **작업 완료 후 Git / GitHub (필수)**
+
+- 저장소 파일을 수정한 작업이 끝나면 **반드시** `git add` → `git commit` (메시지는 위 **영어-only** 규칙 준수) → **`git push origin HEAD`** 를 실행한다.
+- 사용자에게 “직접 푸시해 주세요”라고 넘기지 않는다. 푸시 실패 시 재시도·rebase 후 재푸시를 시도한다.
+- 로컬 `.git/hooks/post-commit`이 푸시를 담당할 수 있으나, 에이전트는 환경 차이를 고려해 **`git push origin HEAD`를 명시적으로 실행**한다.
+- 편의 스크립트: `npm run git:push` (`git push origin HEAD`와 동일 목적).
+- 저장소 루트 `githooks/post-commit`이 있다. 새 클론 후 커밋 시 자동 푸시를 쓰려면 한 번 실행: `git config core.hooksPath githooks` (Windows/Git Bash 동일).

@@ -167,7 +167,7 @@ export default function CounselingManagement() {
                       </button>
                       {session.status === '진행중' && (
                         <button className="text-green-400 hover:text-green-300 text-sm px-3 py-1 rounded border border-green-500/30">
-                          참여하기
+                          입장하기
                         </button>
                       )}
                     </div>

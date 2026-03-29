@@ -701,7 +701,7 @@ export default function Navigation() {
                 }`}
                 onClick={(e) => handleNavLinkClick("/join", e)}
               >
-                참여하기
+                검사하기
               </Link>
               {/* 심리검사 드롭다운 메뉴 */}
               <div className="relative">
@@ -1982,13 +1982,13 @@ export default function Navigation() {
           <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
             <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
 
-              {/* 참여하기 */}
+              {/* 검사하기 */}
               <Link
                 href="/join"
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                참여하기
+                검사하기
               </Link>
 
               {/* 심리검사 */}

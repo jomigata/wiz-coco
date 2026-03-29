@@ -1,0 +1,11 @@
+#!/bin/sh
+# Tracked copy: enable with  git config core.hooksPath githooks
+# Auto-push to GitHub (origin) after each commit
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ -n "$branch" ]; then
+  if git push origin "$branch"; then
+    echo "[post-commit] pushed to origin/$branch"
+  else
+    echo "[post-commit] git push failed — run: git push origin $branch" >&2
+  fi
+fi

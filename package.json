@@ -34,7 +34,8 @@
     "deploy:auto": "node scripts/auto-deploy.js",
     "deploy:auto:wait": "node scripts/auto-deploy.js --wait",
     "deploy:smart": "node scripts/auto-deploy.js --smart",
-    "deploy:fast": "node scripts/auto-deploy.js --fast"
+    "deploy:fast": "node scripts/auto-deploy.js --fast",
+    "git:push": "git push origin HEAD"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.804.0",

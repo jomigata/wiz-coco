@@ -6,10 +6,10 @@
     - [x] Confirm Firebase deployment status <!-- id: 5 -->
     - [x] **[NEW] System Restoration to `bff31eb`** <!-- id: 14 -->
 - [ ] **Team Review & Optimization** <!-- id: 6 -->
-    - [ ] Review current codebase against "Expert Team" standards <!-- id: 7 -->
+    - [ ] Review using [docs/CODE_REVIEW_CHECKLIST.md](docs/CODE_REVIEW_CHECKLIST.md) <!-- id: 7 -->
     - [ ] Identify areas for improvement (UI/UX, Psychology content) <!-- id: 8 -->
 - [ ] **Automated Deployment Setup** <!-- id: 9 -->
-    - [ ] Verify/Create automated push script <!-- id: 10 -->
-    - [ ] Ensure "One-Click" link generation for reports <!-- id: 11 -->
-- [ ] **Future Roadmap & Documentation** <!-- id: 12 -->
-    - [ ] Compile "Completed vs Future" task list with links <!-- id: 13 -->
+    - [x] Automated push script present (`scripts/auto-deploy.js`, `npm run deploy:auto`) <!-- id: 10 -->
+    - [x] One-Click links in [REPORTS.md](REPORTS.md); verify periodically <!-- id: 11 -->
+- [x] **Future Roadmap & Documentation** <!-- id: 12 -->
+    - [x] [docs/WORK_PLAN_1-5.md](docs/WORK_PLAN_1-5.md) — completed vs future + tasks 1–5 <!-- id: 13 -->

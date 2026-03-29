@@ -85,7 +85,7 @@ export default function AccessCodeInputPage() {
                 disabled={loading || (code || '').trim().length !== 6}
                 className="w-full py-3 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? '확인 중…' : '참여하기'}
+                {loading ? '확인 중…' : '검사하기'}
               </button>
             </form>
             <p className="mt-6 text-center">

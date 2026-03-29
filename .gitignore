@@ -105,7 +105,8 @@ backend/**/__pycache__/
 backend/.env
 backend/*.pyc
 
-# Service account keys (보안상 중요)
+# Service account keys (보안상 중요). Firebase_GitHub/*.json 등 포함.
+# Firebase_GitHub/README.md 는 커밋 가능(안내용).
 *.json
 !package.json
 !package-lock.json
