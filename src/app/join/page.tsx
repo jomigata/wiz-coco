@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { getPublicAssessment } from '@/lib/assessmentApi';
 import {
-  formatAccessCodeWhileTyping,
+  formatJoinAccessCodeWhileTyping,
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
@@ -59,9 +59,7 @@ export default function AccessCodeInputPage() {
         <main className="max-w-md mx-auto">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
-            <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 검사코드를 입력하세요. 알파벳과 숫자가 바뀌는 위치에 하이픈(-)이 자동으로 보이며, 실제 코드에는 하이픈이 들어가지 않습니다. 붙여 넣기·입력 시 하이픈 없이 넣어도 됩니다.
-            </p>
+            <p className="text-slate-300 text-sm mb-6">상담사에게 받은 검사코드를 입력해 주세요.</p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
@@ -71,12 +69,12 @@ export default function AccessCodeInputPage() {
                   id="accessCode"
                   type="text"
                   inputMode="text"
-                  maxLength={32}
+                  maxLength={40}
                   autoComplete="off"
                   className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="예: KAN-724"
                   value={code}
-                  onChange={(e) => setCode(formatAccessCodeWhileTyping(e.target.value))}
+                  onChange={(e) => setCode(formatJoinAccessCodeWhileTyping(e.target.value))}
                   disabled={loading}
                 />
               </div>
