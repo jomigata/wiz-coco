@@ -423,7 +423,12 @@ export default function Navigation() {
     {
       category: "심리검사 관리",
       items: [
-        { name: "검사코드 목록", href: "/counselor/assessments", description: "6자리 검사코드 생성·목록·진행현황", icon: "📦" },
+        {
+          name: "검사코드 목록",
+          href: "/counselor/assessments",
+          description: "검사코드 발급·목록·진행현황 (신규 CVC+숫자, 기존 6자리 호환)",
+          icon: "📦",
+        },
         { name: "새 검사코드 만들기", href: "/counselor/assessments/new", description: "내담자용 검사코드를 만들고 코드를 발급합니다", icon: "➕" },
         { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
         { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },

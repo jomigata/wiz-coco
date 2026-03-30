@@ -3,6 +3,8 @@
  * NEXT_PUBLIC_FLASK_API_URL 미설정 시 개발용 localhost:5000 사용
  */
 
+import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -49,9 +51,9 @@ export interface TestResultItem {
 
 /** GET /api/assessments/public/:accessCode - 코드 유효 시 검사코드(세트) 정보 반환 */
 export async function getPublicAssessment(accessCode: string): Promise<PublicAssessment> {
-  const code = (accessCode || '').trim().toUpperCase();
-  if (code.length !== 6) {
-    throw new Error('검사 코드는 6자리입니다.');
+  const code = normalizeAccessCodeInput(accessCode || '');
+  if (!isValidAccessCodeInput(code)) {
+    throw new Error('검사 코드 형식이 올바르지 않습니다. (예: KAN-724 또는 기존 6자리 코드)');
   }
   const res = await fetch(`${getBaseUrl()}/api/assessments/public/${encodeURIComponent(code)}`);
   if (!res.ok) {
@@ -72,7 +74,7 @@ export async function submitResult(body: {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      accessCode: (body.accessCode || '').trim().toUpperCase(),
+      accessCode: normalizeAccessCodeInput(body.accessCode || ''),
       testId: (body.testId || '').trim(),
       clientEmail: (body.clientEmail || '').trim().toLowerCase(),
       responses: body.responses,
@@ -105,9 +107,9 @@ export async function listResults(
   accessCode: string,
   clientEmail: string
 ): Promise<{ results: TestResultItem[] }> {
-  const code = (accessCode || '').trim().toUpperCase();
+  const code = normalizeAccessCodeInput(accessCode || '');
   const email = (clientEmail || '').trim().toLowerCase();
-  if (code.length !== 6 || !email || !email.includes('@')) {
+  if (!isValidAccessCodeInput(code) || !email || !email.includes('@')) {
     throw new Error('검사 코드와 이메일을 확인해 주세요.');
   }
   const params = new URLSearchParams({ accessCode: code, clientEmail: email });
@@ -163,6 +165,17 @@ export interface CounselorAssessment {
   status?: string;
   updatedAt?: string;
   archivedAt?: string;
+  /** 해당 검사코드에서 내담자 이메일별 완료된 검사 건수 */
+  completionByEmail?: Record<string, number>;
+  /** 해당 검사코드에서 완료된 검사 총건수 */
+  completedTestsTotal?: number;
+  /** 완료 이력이 있는 서로 다른 내담자 수 */
+  completedClientsCount?: number;
+}
+
+export interface EmailCompletionTotalRow {
+  clientEmail: string;
+  completedCount: number;
 }
 
 export interface ProgressByClient {
@@ -259,8 +272,11 @@ export async function deleteAssessment(assessmentId: string): Promise<void> {
   }
 }
 
-/** GET /api/assessments - 상담사: 내 검사코드 목록 */
-export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
+/** GET /api/assessments - 상담사: 내 검사코드 목록 (+ 이메일별 완료 합계) */
+export async function listAssessments(): Promise<{
+  assessments: CounselorAssessment[];
+  emailCompletionTotals?: EmailCompletionTotalRow[];
+}> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {

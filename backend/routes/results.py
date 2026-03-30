@@ -9,6 +9,7 @@ from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.password import generate_four_digit_password, hash_password, verify_password
 from utils.email_sender import send_result_email
 from utils.scoring import compute_result_data
+from utils.access_code import normalize_access_code, is_valid_access_code
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 
@@ -32,12 +33,12 @@ def submit_result():
     -> 채점, 4자리 비밀번호 랜덤 생성 후 해싱 저장, 이메일 발송(비밀번호·결과 요약).
     """
     body = request.get_json() or {}
-    access_code = (body.get("accessCode") or "").strip().upper()
+    access_code = normalize_access_code(body.get("accessCode") or "")
     test_id = (body.get("testId") or "").strip()
     client_email = (body.get("clientEmail") or "").strip().lower()
     responses = body.get("responses")
-    if not access_code or len(access_code) != 6:
-        return jsonify({"error": "Bad Request", "message": "accessCode (6 digits) required"}), 400
+    if not is_valid_access_code(access_code):
+        return jsonify({"error": "Bad Request", "message": "invalid accessCode format"}), 400
     if not test_id:
         return jsonify({"error": "Bad Request", "message": "testId required"}), 400
     if not client_email or "@" not in client_email:
@@ -85,9 +86,9 @@ def submit_result():
 @limit_access_code
 def list_results():
     """accessCode + clientEmail 쿼리로 해당 testResults 목록 반환."""
-    access_code = (request.args.get("accessCode") or "").strip().upper()
+    access_code = normalize_access_code(request.args.get("accessCode") or "")
     client_email = (request.args.get("clientEmail") or "").strip().lower()
-    if not access_code or len(access_code) != 6:
+    if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
     if not client_email or "@" not in client_email:
         return jsonify({"error": "Bad Request", "message": "clientEmail required"}), 400

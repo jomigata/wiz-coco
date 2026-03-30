@@ -6,7 +6,7 @@ from firebase_init import get_firestore
 from auth_middleware import require_counselor
 from rate_limit import limit_access_code
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
-from utils.access_code import generate_unique_access_code
+from utils.access_code import generate_unique_access_code, normalize_access_code, is_valid_access_code
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -62,10 +62,42 @@ def create_assessment():
     return jsonify({"assessmentId": ref.id, "accessCode": access_code}), 201
 
 
+def _is_completed_result(d):
+    return (d.get("status") or "completed") == "completed"
+
+
+def _aggregate_completions_by_email(db, assessment_ids):
+    """
+    testResults에서 assessmentId가 목록에 속하고 status=completed인 문서만 집계.
+    반환: (전체 이메일별 합계 dict, assessmentId -> {email: count})
+    """
+    totals = {}
+    per_assessment = {aid: {} for aid in assessment_ids}
+    if not assessment_ids:
+        return totals, per_assessment
+
+    coll = db.collection(TEST_RESULTS_COLLECTION)
+    chunk_size = 30  # Firestore IN 연산자 상한
+    for i in range(0, len(assessment_ids), chunk_size):
+        chunk = assessment_ids[i : i + chunk_size]
+        for doc in coll.where("assessmentId", "in", chunk).get():
+            d = doc.to_dict()
+            if not _is_completed_result(d):
+                continue
+            email = (d.get("clientEmail") or "").strip().lower()
+            aid = d.get("assessmentId")
+            if not email or not aid or aid not in per_assessment:
+                continue
+            totals[email] = totals.get(email, 0) + 1
+            m = per_assessment[aid]
+            m[email] = m.get(email, 0) + 1
+    return totals, per_assessment
+
+
 @bp.route("", methods=["GET"])
 @require_counselor
 def list_assessments():
-    """상담사: 로그인 상담사 소유 assessments 목록."""
+    """상담사: 로그인 상담사 소유 assessments 목록 + 내담자 이메일별 검사 완료 합계."""
     db = get_firestore()
     refs = db.collection(ASSESSMENTS_COLLECTION).where("counselorId", "==", g.counselor_uid).get()
     def _sort_key(doc):
@@ -81,7 +113,24 @@ def list_assessments():
     items = [_serialize_doc(d) for d in refs]
     # 목록에는 활성 검사코드만 (삭제=archived 는 제외, 구문서는 status 없으면 active 로 간주)
     items = [x for x in items if (x.get("status") or "active") == "active"]
-    return jsonify({"assessments": items})
+    ids = [x["id"] for x in items]
+    totals, per_assessment = _aggregate_completions_by_email(db, ids)
+    totals_rows = sorted(
+        ({"clientEmail": em, "completedCount": cnt} for em, cnt in totals.items()),
+        key=lambda r: (-r["completedCount"], r["clientEmail"]),
+    )
+    for x in items:
+        aid = x["id"]
+        by_em = per_assessment.get(aid, {})
+        x["completionByEmail"] = by_em
+        x["completedTestsTotal"] = sum(by_em.values())
+        x["completedClientsCount"] = len(by_em)
+    return jsonify(
+        {
+            "assessments": items,
+            "emailCompletionTotals": totals_rows,
+        }
+    )
 
 
 def _get_owned_assessment(db, assessment_id):
@@ -222,8 +271,8 @@ def get_assessment_result(assessment_id, result_id):
 @limit_access_code
 def get_public(access_code):
     """내담자(공개): 코드 유효 시 title, welcomeMessage, testList 반환; 없으면 404."""
-    code = (access_code or "").strip().upper()
-    if len(code) != 6:
+    code = normalize_access_code(access_code)
+    if not is_valid_access_code(code):
         return jsonify({"error": "Not Found", "message": "Invalid access code"}), 404
     db = get_firestore()
     refs = db.collection(ASSESSMENTS_COLLECTION).where("accessCode", "==", code).where("status", "==", "active").limit(1).get()

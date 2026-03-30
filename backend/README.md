@@ -4,7 +4,7 @@
 
 **프론트(Next) 연동:** [docs/FRONTEND_FLASK_INTEGRATION.md](../docs/FRONTEND_FLASK_INTEGRATION.md) — `NEXT_PUBLIC_FLASK_API_URL`, CORS, 프로덕션 시 Cloud Run URL 필수 여부를 정리했습니다.
 
-6자리 **검사코드**(`accessCode`) 기반 세트 생성·진행 현황 조회, 결과 제출·조회·수정·삭제를 제공합니다.
+**검사코드**(`accessCode`) 기반 세트 생성·진행 현황 조회, 결과 제출·조회·수정·삭제를 제공합니다. 신규 코드는 자음-모음-자음(CVC, L/I/O 제외) + 숫자(2~9만) **3자리부터** 발급하며, 전역 조합이 부족하면 **4·5… 자리**로 확장합니다. 기존 **영숫자 6자리** 코드는 그대로 유효합니다.
 
 ## 요구 사항
 
@@ -43,8 +43,8 @@ python app.py
 
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
-- `POST /api/assessments` — 검사코드(세트) 생성, 6자리 코드 발급
-- `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외)
+- `POST /api/assessments` — 검사코드(세트) 생성, 고유 `accessCode` 발급 (`system_meta/access_code_generation`로 숫자 자릿수 관리)
+- `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외). 각 항목에 `completionByEmail`, `completedTestsTotal`, `completedClientsCount` 포함, 응답에 `emailCompletionTotals`(전체 검사코드 통합·이메일별 완료 건수) 포함
 - `GET /api/assessments/<assessmentId>` — 단일 조회 (수정 폼용, 본인·활성만)
 - `PUT /api/assessments/<assessmentId>` — 수정 (`title`, `targetAudience`, `welcomeMessage`, `testList`; `accessCode` 불변)
 - `DELETE /api/assessments/<assessmentId>` — 비활성화 (`status=archived`, 신규 공개 조회 불가)

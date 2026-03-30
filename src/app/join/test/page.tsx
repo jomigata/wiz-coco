@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { submitResult, updateResult } from '@/lib/assessmentApi';
+import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
@@ -37,7 +38,7 @@ export default function TestRunnerPage() {
   const [editPasswordModal, setEditPasswordModal] = useState(false);
   const [editPassword, setEditPassword] = useState('');
 
-  const code = (accessCode || '').trim().toUpperCase();
+  const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
   const isEditMode = !!editResultId;
 
@@ -149,7 +150,7 @@ export default function TestRunnerPage() {
 
   const dashboardHref = `/join/dashboard?accessCode=${encodeURIComponent(code)}`;
 
-  if (!code || code.length !== 6 || !testId) {
+  if (!code || !isValidAccessCodeInput(code) || !testId) {
     return (
       <div className="min-h-screen bg-gray-900">
         <div className="fixed top-0 left-0 right-0 z-50">

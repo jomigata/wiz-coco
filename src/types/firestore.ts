@@ -22,7 +22,7 @@ export interface AssessmentTestItem {
  * 경로: /assessments/{assessmentId}
  */
 export interface Assessment {
-  /** 6자리 유일 검사 코드 */
+  /** 유일 검사코드 (신규: CVC+숫자 3자리~, 구형: 영숫자 6자리) */
   accessCode: string;
   /** 상담사 Firebase UID */
   counselorId: string;
@@ -64,7 +64,7 @@ export type TestResultStatus = 'in-progress' | 'completed';
  * 경로: /testResults/{resultId}
  */
 export interface TestResult {
-  /** 6자리 검사 코드 */
+  /** 검사코드 (assessments.accessCode와 동일 규칙) */
   accessCode: string;
   /** assessment 문서 ID */
   assessmentId: string;

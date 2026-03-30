@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { getPublicAssessment } from '@/lib/assessmentApi';
+import {
+  formatAccessCodeWhileTyping,
+  isValidAccessCodeInput,
+  normalizeAccessCodeInput,
+} from '@/lib/accessCodeFormat';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 
@@ -17,9 +22,9 @@ export default function AccessCodeInputPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const trimmed = (code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-    if (trimmed.length !== 6) {
-      setError('검사 코드 6자리를 입력해 주세요.');
+    const trimmed = normalizeAccessCodeInput(code);
+    if (!isValidAccessCodeInput(trimmed)) {
+      setError('검사 코드 형식을 확인해 주세요. (예: KAN-724 또는 기존 6자리 코드)');
       return;
     }
     setLoading(true);
@@ -55,7 +60,7 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 6자리 검사 코드를 입력하세요.
+              상담사에게 받은 검사코드를 입력하세요. 신규 코드는 영문 3자와 숫자(2~9, 3자리 이상) 사이에 하이픈(-)이 표시됩니다. 붙여 넣기 시 하이픈 없이 입력해도 됩니다. (기존 6자리 코드도 사용 가능)
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -66,12 +71,12 @@ export default function AccessCodeInputPage() {
                   id="accessCode"
                   type="text"
                   inputMode="text"
-                  maxLength={6}
+                  maxLength={32}
                   autoComplete="off"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-xl tracking-[0.4em] placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="XXXXXX"
+                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="예: KAN-724"
                   value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                  onChange={(e) => setCode(formatAccessCodeWhileTyping(e.target.value))}
                   disabled={loading}
                 />
               </div>
@@ -82,7 +87,7 @@ export default function AccessCodeInputPage() {
               )}
               <button
                 type="submit"
-                disabled={loading || (code || '').trim().length !== 6}
+                disabled={loading || !isValidAccessCodeInput(normalizeAccessCodeInput(code))}
                 className="w-full py-3 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? '확인 중…' : '검사 하기'}

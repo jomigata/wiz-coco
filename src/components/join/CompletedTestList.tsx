@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { listResults, getResult, deleteResult, TestResultItem } from '@/lib/assessmentApi';
+import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 const EDIT_RESULT_STORAGE_KEY = 'wizcoco_edit_result';
@@ -62,7 +63,7 @@ export default function CompletedTestList({
     }
     setLoading(true);
     setError('');
-    listResults(stored.accessCode, clientEmail)
+    listResults(normalizeAccessCodeInput(stored.accessCode), clientEmail)
       .then((data) => setResults(data.results || []))
       .catch((err) => setError(err instanceof Error ? err.message : '목록 조회 실패'))
       .finally(() => setLoading(false));
@@ -103,7 +104,9 @@ export default function CompletedTestList({
         }
         setEditModal(null);
         setPassword('');
-        router.push(`/join/test?accessCode=${encodeURIComponent(stored.accessCode)}&testId=${encodeURIComponent(editModal.testId)}`);
+        router.push(
+          `/join/test?accessCode=${encodeURIComponent(normalizeAccessCodeInput(stored.accessCode))}&testId=${encodeURIComponent(editModal.testId)}`
+        );
       })
       .catch((err) => setActionError(err instanceof Error ? err.message : '조회 실패'))
       .finally(() => setActionLoading(false));

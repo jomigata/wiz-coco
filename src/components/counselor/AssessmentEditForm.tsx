@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { getAssessment, updateAssessment, type CounselorAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 interface AssessmentEditFormProps {
   assessmentId: string;
@@ -123,7 +124,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="rounded-lg bg-slate-800/80 border border-slate-600 p-4 text-sm text-slate-300">
         <span className="text-slate-400">검사코드</span>{' '}
-        <span className="font-mono text-cyan-400 tracking-widest">{initial.accessCode}</span>
+        <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(initial.accessCode)}</span>
         <p className="text-slate-500 text-xs mt-2">검사코드는 발급 후 변경할 수 없습니다.</p>
       </div>
 

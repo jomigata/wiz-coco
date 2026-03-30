@@ -4,11 +4,16 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
+import {
+  listAssessments,
+  type CounselorAssessment,
+  type EmailCompletionTotalRow,
+} from '@/lib/assessmentApi';
 
 export default function AssessmentListPage() {
   const { user, loading: authLoading } = useFirebaseAuth();
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
+  const [emailCompletionTotals, setEmailCompletionTotals] = useState<EmailCompletionTotalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createdCode, setCreatedCode] = useState<string | null>(null);
@@ -34,7 +39,10 @@ export default function AssessmentListPage() {
     setError('');
     listAssessments()
       .then((data) => {
-        if (!cancelled) setAssessments(data.assessments || []);
+        if (!cancelled) {
+          setAssessments(data.assessments || []);
+          setEmailCompletionTotals(data.emailCompletionTotals || []);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : '목록 조회 실패');
@@ -71,7 +79,11 @@ export default function AssessmentListPage() {
           <p className="text-sm mt-2">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
         </div>
       ) : (
-        <AssessmentList assessments={assessments} createdCode={createdCode} />
+        <AssessmentList
+          assessments={assessments}
+          createdCode={createdCode}
+          emailCompletionTotals={emailCompletionTotals}
+        />
       )}
     </div>
   );

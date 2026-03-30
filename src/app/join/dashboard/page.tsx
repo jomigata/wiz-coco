@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { getPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
+import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 const JOIN_EMAIL_KEY = 'wizcoco_join_client_email';
@@ -20,7 +21,7 @@ export default function ClientDashboardPage() {
   const [error, setError] = useState('');
   const [emailInput, setEmailInput] = useState('');
 
-  const code = (accessCode || '').trim().toUpperCase();
+  const code = normalizeAccessCodeInput(accessCode);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -33,7 +34,7 @@ export default function ClientDashboardPage() {
   }, []);
 
   const loadAssessment = useCallback(() => {
-    if (code.length !== 6) {
+    if (!isValidAccessCodeInput(code)) {
       setError('잘못된 검사 코드입니다.');
       setLoading(false);
       return;

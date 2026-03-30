@@ -26,6 +26,11 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/assessments/$(resource.data.assessmentId)).data.counselorId == request.auth.uid;
       allow write: if false;
     }
+
+    // 서버(Admin SDK) 전용 메타 — 클라이언트 직접 접근 차단
+    match /system_meta/{docId} {
+      allow read, write: if false;
+    }
     
     // 다른 컬렉션에 대한 기본 규칙
     match /{document=**} {

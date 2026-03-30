@@ -55,7 +55,7 @@ export default function CounselorDashboard() {
     },
     {
       title: '검사코드 목록',
-      description: '6자리 검사코드로 내담자 검사를 구성하고 진행 현황을 확인하세요',
+      description: '검사코드로 내담자 검사를 구성하고 진행 현황을 확인하세요 (신규 CVC+숫자, 기존 6자리 호환)',
       href: '/counselor/assessments',
       icon: '📦',
       color: 'from-cyan-500 to-blue-500',

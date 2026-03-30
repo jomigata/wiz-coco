@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { getCounselorResult, type ProgressByClient, type CounselorResultDetail } from '@/lib/assessmentApi';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 interface ProgressDashboardProps {
   assessmentId: string;
@@ -52,7 +53,7 @@ export default function ProgressDashboard({
         )}
         <div className="flex items-center gap-2">
           <span className="text-slate-400">검사코드:</span>
-          <span className="font-mono text-cyan-400 tracking-widest">{accessCode}</span>
+          <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
         </div>
       </div>
 
@@ -68,9 +69,17 @@ export default function ProgressDashboard({
               key={client.clientEmail}
               className="bg-slate-800/80 rounded-xl border border-slate-600 overflow-hidden"
             >
-              <div className="px-4 py-3 bg-slate-700/50 border-b border-slate-600">
-                <span className="text-slate-400 text-sm">내담자</span>
-                <span className="ml-2 text-white font-medium">{client.clientEmail}</span>
+              <div className="px-4 py-3 bg-slate-700/50 border-b border-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div>
+                  <span className="text-slate-400 text-sm">내담자</span>
+                  <span className="ml-2 text-white font-medium">{client.clientEmail}</span>
+                </div>
+                <span className="text-slate-500 text-sm">
+                  검사 완료{' '}
+                  <span className="text-cyan-300 font-mono">
+                    {client.results.filter((r) => r.status === 'completed').length}건
+                  </span>
+                </span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
