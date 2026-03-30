@@ -138,54 +138,60 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
               </tr>
             </thead>
             <tbody>
-              {assessments.map((a) => (
-                <tr key={a.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                  <td className="px-4 py-3 text-white font-medium">{a.title || '-'}</td>
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-cyan-400 tracking-wider">
-                      {formatAccessCodeDisplay(a.accessCode)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-300">{a.targetAudience || '개인'}</td>
-                  <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>
-                  <td className="px-4 py-3 text-slate-300 text-sm font-mono" title={PROGRESS_TOOLTIP}>
-                    <span className="text-slate-400">(</span>
-                    <span className="text-orange-400 font-semibold tabular-nums">
-                      -{a.emailsNotCompletedAllTestsCount ?? 0}
-                    </span>
-                    <span className="text-slate-500">/</span>
-                    <span className="text-cyan-300 tabular-nums">{a.emailsCompletedAllTestsCount ?? 0}</span>
-                    <span className="text-slate-400">)</span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <Link
-                        href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
-                        className="text-blue-400 hover:text-blue-300 text-sm"
-                      >
-                        진행 현황
-                      </Link>
-                      <Link
-                        href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
-                        className="text-amber-400 hover:text-amber-300 text-sm"
-                      >
-                        수정
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDeleteError('');
-                          setDeleteTarget(a);
-                        }}
-                        className="text-red-400 hover:text-red-300 text-sm"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {assessments.map((a) => {
+                const incomplete = a.emailsNotCompletedAllTestsCount ?? 0;
+                const completeAll = a.emailsCompletedAllTestsCount ?? 0;
+                return (
+                  <tr key={a.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                    <td className="px-4 py-3 text-white font-medium">{a.title || '-'}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-cyan-400 tracking-wider">
+                        {formatAccessCodeDisplay(a.accessCode)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">{a.targetAudience || '개인'}</td>
+                    <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>
+                    <td className="px-4 py-3 text-slate-300 text-sm font-mono" title={PROGRESS_TOOLTIP}>
+                      <span className="text-slate-400">(</span>
+                      {incomplete === 0 ? (
+                        <span className="text-white tabular-nums">0</span>
+                      ) : (
+                        <span className="text-orange-400 font-semibold tabular-nums">-{incomplete}</span>
+                      )}
+                      <span className="text-slate-500">/</span>
+                      <span className="text-cyan-300 tabular-nums">{completeAll}</span>
+                      <span className="text-slate-400">)</span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <Link
+                          href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
+                          className="text-blue-400 hover:text-blue-300 text-sm"
+                        >
+                          진행 현황
+                        </Link>
+                        <Link
+                          href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
+                          className="text-amber-400 hover:text-amber-300 text-sm"
+                        >
+                          수정
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteError('');
+                            setDeleteTarget(a);
+                          }}
+                          className="text-red-400 hover:text-red-300 text-sm"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
