@@ -186,7 +186,9 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
-  /** 내담자 접속용 4자리 비밀번호가 설정되어 있는지(발급 당시에만 평문 확인 가능) */
+  /** 상담사 목록·수정 화면용 평문 4자리(신규 저장분). 없으면 미노출/구데이터 */
+  joinPin?: string;
+  /** joinPinHash 존재 여부(평문 없는 구데이터 구분용) */
   joinPinConfigured?: boolean;
 }
 

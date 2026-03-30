@@ -126,14 +126,19 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         <span className="text-slate-400">검사코드</span>{' '}
         <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(initial.accessCode)}</span>
         <p className="text-slate-500 text-xs mt-2">검사코드는 발급 후 변경할 수 없습니다.</p>
+        <div className="mt-3 pt-3 border-t border-slate-600">
+          <span className="text-slate-400">비밀번호</span>{' '}
+          {initial.joinPin ? (
+            <span className="font-mono tracking-widest text-cyan-300">{initial.joinPin}</span>
+          ) : initial.joinPinConfigured ? (
+            <span className="text-amber-400/90 text-sm">미노출(평문 미저장 구간에서 생성된 항목)</span>
+          ) : (
+            <span className="text-slate-500 text-sm">—</span>
+          )}
+        </div>
         <p className="text-slate-500 text-xs mt-2">
-          내담자 접속용 4자리 비밀번호는 검사코드와 함께 발급되며, 숫자는 발급 직후 목록 화면 상단 안내에서만 확인할 수 있습니다. 이후에는 &quot;설정됨&quot; 여부만 목록에서 구분됩니다.
+          비밀번호는 검사코드 목록에서도 동일하게 확인할 수 있습니다. 내담자에게 검사 시 함께 안내해 주세요.
         </p>
-        {initial.joinPinConfigured === false && (
-          <p className="text-amber-200/90 text-xs mt-2">
-            이 검사코드는 시스템에 내담자 비밀번호가 연결되어 있지 않습니다(이전에 생성된 항목). 신규 보안 정책을 적용하려면 새 검사코드를 발급해 주세요.
-          </p>
-        )}
       </div>
 
       <div>

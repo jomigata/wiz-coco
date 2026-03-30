@@ -121,12 +121,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
           </p>
           {createdInfo.joinPin != null && createdInfo.joinPin !== '' && (
             <p>
-              내담자 비밀번호(숫자 4자리):{' '}
+              비밀번호(숫자 4자리):{' '}
               <strong className="font-mono tracking-widest text-white">{createdInfo.joinPin}</strong>
             </p>
           )}
           <p className="text-green-300/90 text-xs">
-            위 정보를 내담자에게 안전한 경로로 전달해 주시기 바랍니다. 이 화면을 벗어나면 비밀번호 숫자는 다시 표시되지 않습니다.
+            위 정보를 내담자에게 안전한 경로로 전달해 주시기 바랍니다. 비밀번호는 검사코드 목록에서도 확인할 수 있습니다.
           </p>
         </div>
       )}
@@ -137,7 +137,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               <tr className="border-b border-slate-600 bg-slate-800">
                 <th className="px-4 py-3 text-slate-300 font-medium">제목</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">검사코드</th>
-                <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">내담자 비밀번호</th>
+                <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">비밀번호</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">대상</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">포함 검사</th>
                 <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
@@ -163,10 +163,14 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-300 text-sm">
-                      {a.joinPinConfigured ? (
-                        <span className="text-slate-400">설정됨</span>
+                      {a.joinPin ? (
+                        <span className="font-mono tabular-nums tracking-widest text-cyan-200">{a.joinPin}</span>
+                      ) : a.joinPinConfigured ? (
+                        <span className="text-amber-400/90" title="해시만 저장된 기존 항목입니다. 필요 시 새 검사코드를 발급하세요.">
+                          미노출
+                        </span>
                       ) : (
-                        <span className="text-amber-400/90">미설정</span>
+                        <span className="text-slate-500">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-300">{a.targetAudience || '개인'}</td>

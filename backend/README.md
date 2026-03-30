@@ -68,7 +68,7 @@ python app.py
 
 ## Firestore
 
-- `assessments`: accessCode, joinPinHash?, counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
+- `assessments`: accessCode, joinPinHash?, joinPin?(상담사 UI용 평문 4자리), counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
 - `testResults`: accessCode, assessmentId, testId, clientEmail, status, responses, resultData, passwordHash, completedAt
 
 규칙은 프로젝트 루트의 `firestore.rules` 참고. 쓰기는 백엔드(Admin SDK)에서 수행합니다.

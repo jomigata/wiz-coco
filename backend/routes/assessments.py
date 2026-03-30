@@ -64,6 +64,7 @@ def create_assessment():
     data = {
         "accessCode": access_code,
         "joinPinHash": hash_password(join_pin),
+        "joinPin": join_pin,
         "counselorId": g.counselor_uid,
         "title": title,
         "targetAudience": target_audience,
@@ -151,8 +152,8 @@ def list_assessments():
             emails_not_all = 0
         x["emailsNotCompletedAllTestsCount"] = emails_not_all
         x["emailsCompletedAllTestsCount"] = emails_all
-        h = x.pop("joinPinHash", None)
-        x["joinPinConfigured"] = bool(h)
+        had_hash = bool(x.pop("joinPinHash", None))
+        x["joinPinConfigured"] = had_hash or bool(x.get("joinPin"))
     return jsonify({"assessments": items})
 
 
@@ -179,8 +180,8 @@ def get_assessment(assessment_id):
     if not doc:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     out = _serialize_doc(doc)
-    h = out.pop("joinPinHash", None)
-    out["joinPinConfigured"] = bool(h)
+    had_hash = bool(out.pop("joinPinHash", None))
+    out["joinPinConfigured"] = had_hash or bool(out.get("joinPin"))
     return jsonify(out)
 
 
