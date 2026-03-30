@@ -28,19 +28,8 @@ function formatDate(iso: string | undefined): string {
   }
 }
 
-function progressSummaryTitle(a: CounselorAssessment): string {
-  const lines = [
-    '괄호 안 숫자: (포함 검사를 모두 완료한 이메일 수 / 1건 이상 완료한 이메일 수)',
-  ];
-  const byEmail = a.completionByEmail;
-  if (byEmail && Object.keys(byEmail).length > 0) {
-    lines.push('이메일별 완료 건수:');
-    lines.push(
-      ...Object.entries(byEmail).map(([em, n]) => `${em}: ${n}건`)
-    );
-  }
-  return lines.join('\n');
-}
+const PROGRESS_TOOLTIP =
+  '(-앞 숫자): 세트 검사를 모두 완료하지 않은 이메일 수 · (뒤 숫자): 세트 전부 완료한 이메일 수';
 
 export default function AssessmentList({ assessments, createdCode }: AssessmentListProps) {
   const router = useRouter();
@@ -141,7 +130,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
                 <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
                   진행 현황
                   <span className="block text-xs font-normal text-slate-500 normal-case mt-0.5">
-                    (전체완료 / 1건+)
+                    (-미전체완료 / 전체완료)
                   </span>
                 </th>
                 <th className="px-4 py-3 text-slate-300 font-medium">생성일</th>
@@ -159,16 +148,14 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
                   </td>
                   <td className="px-4 py-3 text-slate-300">{a.targetAudience || '개인'}</td>
                   <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>
-                  <td
-                    className="px-4 py-3 text-slate-300 text-sm"
-                    title={progressSummaryTitle(a)}
-                  >
-                    <span className="text-slate-500">완료 제출 </span>
-                    <span className="text-cyan-200 font-mono">{(a.completedTestsTotal ?? 0)}건</span>
-                    <span className="text-slate-500 mx-1.5">·</span>
-                    <span className="text-cyan-300 font-mono">
-                      ({a.emailsCompletedAllTestsCount ?? 0}/{a.emailsWithAnyCompletedTestCount ?? 0})
+                  <td className="px-4 py-3 text-slate-300 text-sm font-mono" title={PROGRESS_TOOLTIP}>
+                    <span className="text-slate-400">(</span>
+                    <span className="text-orange-400 font-semibold tabular-nums">
+                      -{a.emailsNotCompletedAllTestsCount ?? 0}
                     </span>
+                    <span className="text-slate-500">/</span>
+                    <span className="text-cyan-300 tabular-nums">{a.emailsCompletedAllTestsCount ?? 0}</span>
+                    <span className="text-slate-400">)</span>
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
                   <td className="px-4 py-3">

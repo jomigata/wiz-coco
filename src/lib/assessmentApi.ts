@@ -165,16 +165,10 @@ export interface CounselorAssessment {
   status?: string;
   updatedAt?: string;
   archivedAt?: string;
-  /** 해당 검사코드에서 내담자 이메일별 완료된 검사 건수 */
-  completionByEmail?: Record<string, number>;
-  /** 해당 검사코드에서 완료된 검사 총건수 */
-  completedTestsTotal?: number;
-  /** 완료 이력이 있는 서로 다른 내담자 수 */
-  completedClientsCount?: number;
-  /** 포함된 검사를 모두 완료 제출한 내담자(이메일) 수 */
+  /** 1건 이상 제출했으나 세트 전부를 완료하지 않은 서로 다른 이메일 수 */
+  emailsNotCompletedAllTestsCount?: number;
+  /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
-  /** 1건 이상 완료 제출한 서로 다른 내담자(이메일) 수 */
-  emailsWithAnyCompletedTestCount?: number;
 }
 
 export interface ProgressByClient {

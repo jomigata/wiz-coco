@@ -44,7 +44,7 @@ python app.py
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
 - `POST /api/assessments` — 검사코드(세트) 생성, 고유 `accessCode` 발급 (`system_meta/access_code_generation`로 숫자 자릿수 관리)
-- `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외). 각 항목에 `completionByEmail`, `completedTestsTotal`, `completedClientsCount`, `emailsCompletedAllTestsCount`(포함 검사 전부 완료한 이메일 수), `emailsWithAnyCompletedTestCount`(1건 이상 완료한 이메일 수) 포함
+- `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외). 각 항목에 `emailsNotCompletedAllTestsCount`(1건 이상 제출했으나 세트 미전체 완료 이메일 수), `emailsCompletedAllTestsCount`(세트 전부 완료 이메일 수) 포함
 - `GET /api/assessments/<assessmentId>` — 단일 조회 (수정 폼용, 본인·활성만)
 - `PUT /api/assessments/<assessmentId>` — 수정 (`title`, `targetAudience`, `welcomeMessage`, `testList`; `accessCode` 불변)
 - `DELETE /api/assessments/<assessmentId>` — 비활성화 (`status=archived`, 신규 공개 조회 불가)
