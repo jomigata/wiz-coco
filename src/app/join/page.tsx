@@ -36,7 +36,7 @@ export default function AccessCodeInputPage() {
       return;
     }
     if (!pinOk) {
-      setError('내담자 비밀번호는 숫자 4자리이거나, 구형 검사코드의 경우 비워 두실 수 있습니다.');
+      setError('내담자 비밀번호는 숫자 4자리로 입력해 주시기 바랍니다.');
       return;
     }
     setLoading(true);
@@ -73,7 +73,7 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 검사코드와 내담자 비밀번호(숫자 4자리)를 입력해 주세요. 구형 검사코드로 비밀번호가 없는 경우 비밀번호 칸은 비워 두세요.
+              상담사에게 받은 검사코드와 내담자 비밀번호(숫자 4자리)를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
