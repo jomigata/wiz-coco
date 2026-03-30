@@ -60,7 +60,7 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 검사코드를 입력하세요. 신규 코드는 영문 3자와 숫자(2~9, 3자리 이상) 사이에 하이픈(-)이 표시됩니다. 붙여 넣기 시 하이픈 없이 입력해도 됩니다. (기존 6자리 코드도 사용 가능)
+              상담사에게 받은 검사코드를 입력하세요. 알파벳과 숫자가 바뀌는 위치에 하이픈(-)이 자동으로 보이며, 실제 코드에는 하이픈이 들어가지 않습니다. 붙여 넣기·입력 시 하이픈 없이 넣어도 됩니다.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

@@ -154,7 +154,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
                     <td className="px-4 py-3 text-slate-300 text-sm font-mono" title={PROGRESS_TOOLTIP}>
                       <span className="text-slate-400">(</span>
                       {incomplete === 0 ? (
-                        <span className="text-white tabular-nums">0</span>
+                        <span className="text-white">-</span>
                       ) : (
                         <span className="text-orange-400 font-semibold tabular-nums">-{incomplete}</span>
                       )}
