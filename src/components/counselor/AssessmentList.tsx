@@ -166,8 +166,8 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       {a.joinPin ? (
                         <span className="font-mono tabular-nums tracking-widest text-cyan-200">{a.joinPin}</span>
                       ) : a.joinPinConfigured ? (
-                        <span className="text-amber-400/90" title="해시만 저장된 기존 항목입니다. 필요 시 새 검사코드를 발급하세요.">
-                          미노출
+                        <span className="text-amber-400/90" title="평문이 저장되지 않은 기존 항목입니다. 새 검사코드를 만들면 목록에서 비밀번호를 확인할 수 있습니다.">
+                          비노출
                         </span>
                       ) : (
                         <span className="text-slate-500">—</span>

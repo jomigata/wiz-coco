@@ -1,19 +1,53 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
-import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import {
+  isValidAccessCodeInput,
+  normalizeAccessCodeInput,
+  normalizeJoinPinDigits,
+} from '@/lib/accessCodeFormat';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 const JOIN_EMAIL_KEY = 'wizcoco_join_client_email';
 
-export default function ClientDashboardPage() {
-  const router = useRouter();
-  const [accessCode, setAccessCode] = useState('');
+function readJoinPinFromSession(accessCodeNorm: string): string {
+  try {
+    const raw = typeof window !== 'undefined' ? sessionStorage.getItem(JOIN_STORAGE_KEY) : null;
+    if (!raw) return '';
+    const p = JSON.parse(raw) as { accessCode?: unknown; joinPin?: unknown };
+    if (normalizeAccessCodeInput(String(p.accessCode ?? '')) !== accessCodeNorm) return '';
+    return normalizeJoinPinDigits(p.joinPin);
+  } catch {
+    return '';
+  }
+}
+
+function DashboardLoading() {
+  return (
+    <div className="min-h-screen bg-gray-900">
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navigation />
+      </div>
+      <div className="pt-24 flex justify-center">
+        <p className="text-slate-400">불러오는 중…</p>
+      </div>
+    </div>
+  );
+}
+
+function JoinDashboardContent() {
+  const searchParams = useSearchParams();
+  const accessCodeRaw = searchParams.get('accessCode') ?? '';
+
+  const code = useMemo(
+    () => normalizeAccessCodeInput((accessCodeRaw || '').trim()),
+    [accessCodeRaw]
+  );
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [clientEmail, setClientEmail] = useState('');
@@ -21,36 +55,14 @@ export default function ClientDashboardPage() {
   const [error, setError] = useState('');
   const [emailInput, setEmailInput] = useState('');
 
-  const code = normalizeAccessCodeInput(accessCode);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      setAccessCode((params.get('accessCode') || '').trim());
-    } catch {
-      setAccessCode('');
-    }
-  }, []);
-
   const loadAssessment = useCallback(() => {
     if (!isValidAccessCodeInput(code)) {
       setError('잘못된 검사 코드입니다.');
+      setAssessment(null);
       setLoading(false);
       return;
     }
-    let joinPin = '';
-    try {
-      const raw = typeof window !== 'undefined' ? sessionStorage.getItem(JOIN_STORAGE_KEY) : null;
-      if (raw) {
-        const p = JSON.parse(raw) as { accessCode?: string; joinPin?: string };
-        if (normalizeAccessCodeInput(p.accessCode || '') === code) {
-          joinPin = (p.joinPin || '').replace(/\D/g, '').slice(0, 4);
-        }
-      }
-    } catch {
-      // ignore
-    }
+    const joinPin = readJoinPinFromSession(code);
     setLoading(true);
     setError('');
     lookupPublicAssessment(code, joinPin)
@@ -72,7 +84,10 @@ export default function ClientDashboardPage() {
           // ignore
         }
       })
-      .catch((err) => setError(err instanceof Error ? err.message : '불러오기 실패'))
+      .catch((err) => {
+        setAssessment(null);
+        setError(err instanceof Error ? err.message : '불러오기 실패');
+      })
       .finally(() => setLoading(false));
   }, [code]);
 
@@ -104,19 +119,14 @@ export default function ClientDashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="pt-24 flex justify-center">
-          <p className="text-slate-400">불러오는 중…</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoading />;
   }
 
   if (error || !assessment) {
+    const pinHint =
+      error.includes('비밀번호') || error.includes('4자리')
+        ? ' 같은 브라우저에서 검사 코드·비밀번호를 입력한 뒤 이동했는지 확인하거나, 아래 링크에서 다시 입력해 주세요.'
+        : '';
     return (
       <div className="min-h-screen bg-gray-900">
         <div className="fixed top-0 left-0 right-0 z-50">
@@ -124,7 +134,10 @@ export default function ClientDashboardPage() {
         </div>
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
-            <p className="text-red-400 mb-4">{error || '검사코드 정보를 불러올 수 없습니다.'}</p>
+            <p className="text-red-400 mb-4">
+              {error || '검사코드 정보를 불러올 수 없습니다.'}
+              {pinHint && <span className="text-slate-400 text-sm block mt-2">{pinHint}</span>}
+            </p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
               검사 코드 다시 입력
             </Link>
@@ -159,7 +172,11 @@ export default function ClientDashboardPage() {
                   onChange={(e) => setEmailInput(e.target.value)}
                   onBlur={handleSetEmail}
                 />
-                <button type="button" onClick={handleSetEmail} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                <button
+                  type="button"
+                  onClick={handleSetEmail}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
                   적용
                 </button>
               </div>
@@ -199,3 +216,10 @@ export default function ClientDashboardPage() {
   );
 }
 
+export default function ClientDashboardPage() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <JoinDashboardContent />
+    </Suspense>
+  );
+}

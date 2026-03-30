@@ -131,7 +131,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           {initial.joinPin ? (
             <span className="font-mono tracking-widest text-cyan-300">{initial.joinPin}</span>
           ) : initial.joinPinConfigured ? (
-            <span className="text-amber-400/90 text-sm">미노출(평문 미저장 구간에서 생성된 항목)</span>
+            <span className="text-amber-400/90 text-sm">비노출(평문 미저장 구간에서 생성된 항목)</span>
           ) : (
             <span className="text-slate-500 text-sm">—</span>
           )}

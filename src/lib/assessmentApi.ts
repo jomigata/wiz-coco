@@ -3,7 +3,11 @@
  * NEXT_PUBLIC_FLASK_API_URL 미설정 시 개발용 localhost:5000 사용
  */
 
-import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import {
+  isValidAccessCodeInput,
+  normalizeAccessCodeInput,
+  normalizeJoinPinDigits,
+} from '@/lib/accessCodeFormat';
 
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
@@ -43,7 +47,7 @@ export interface PublicAssessment {
 }
 
 const MSG_LOOKUP_DEFAULT =
-  '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 내담자 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
+  '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
 
 export interface TestResultItem {
   resultId: string;
@@ -53,14 +57,14 @@ export interface TestResultItem {
 }
 
 /**
- * POST /api/assessments/public/lookup — 검사코드 + 내담자 4자리 비밀번호(신규 세트는 필수, 구문서 미설정 시 생략 가능)
+ * POST /api/assessments/public/lookup — 검사코드 + 4자리 비밀번호(신규 세트는 필수, 구문서 미설정 시 생략 가능)
  */
 export async function lookupPublicAssessment(
   accessCode: string,
   joinPin: string
 ): Promise<PublicAssessment> {
   const code = normalizeAccessCodeInput(accessCode || '');
-  const pin = (joinPin || '').replace(/\D/g, '').slice(0, 4);
+  const pin = normalizeJoinPinDigits(joinPin);
   if (!isValidAccessCodeInput(code)) {
     throw new Error('검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다.');
   }
@@ -186,7 +190,7 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
-  /** 상담사 목록·수정 화면용 평문 4자리(신규 저장분). 없으면 미노출/구데이터 */
+  /** 상담사 목록·수정 화면용 평문 4자리(신규 저장분). 없으면 비노출/구데이터 */
   joinPin?: string;
   /** joinPinHash 존재 여부(평문 없는 구데이터 구분용) */
   joinPinConfigured?: boolean;

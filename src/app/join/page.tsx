@@ -9,12 +9,13 @@ import {
   formatJoinAccessCodeWhileTyping,
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
+  normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 
 const MSG_LOOKUP_DEFAULT =
-  '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 내담자 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
+  '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
 
 export default function AccessCodeInputPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function AccessCodeInputPage() {
   const [loading, setLoading] = useState(false);
 
   const normalizedCode = normalizeAccessCodeInput(code);
-  const pinDigits = joinPin.replace(/\D/g, '').slice(0, 4);
+  const pinDigits = normalizeJoinPinDigits(joinPin);
   const pinOk = pinDigits.length === 0 || pinDigits.length === 4;
   const canSubmit = isValidAccessCodeInput(normalizedCode) && pinOk;
 
@@ -36,7 +37,7 @@ export default function AccessCodeInputPage() {
       return;
     }
     if (!pinOk) {
-      setError('내담자 비밀번호는 숫자 4자리로 입력해 주시기 바랍니다.');
+      setError('비밀번호는 숫자 4자리로 입력해 주시기 바랍니다.');
       return;
     }
     setLoading(true);
@@ -73,7 +74,7 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 검사코드와 내담자 비밀번호(숫자 4자리)를 입력해 주세요.
+              상담사에게 받은 검사코드와 비밀번호(숫자 4자리)를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -94,19 +95,25 @@ export default function AccessCodeInputPage() {
                 />
               </div>
               <div>
-                <label htmlFor="joinPin" className="block text-sm font-medium text-slate-300 mb-2">
-                  내담자 비밀번호 (숫자 4자리)
+                <label htmlFor="wizcoco-four-digit-pin" className="block text-sm font-medium text-slate-300 mb-2">
+                  비밀번호 (숫자 4자리)
                 </label>
                 <input
-                  id="joinPin"
+                  id="wizcoco-four-digit-pin"
                   type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={4}
-                  autoComplete="off"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-xl tracking-[0.5em] placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••"
+                  name="wizcoco-four-digit-pin"
+                  autoComplete="one-time-code"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-form-type="other"
+                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-xl tabular-nums tracking-widest placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{ WebkitTextSecurity: 'none' }}
+                  placeholder="예: 1234"
                   value={joinPin}
-                  onChange={(e) => setJoinPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onChange={(e) => setJoinPin(normalizeJoinPinDigits(e.target.value))}
                   disabled={loading}
                 />
               </div>

@@ -29,6 +29,23 @@ export function isValidAccessCodeInput(normalized: string): boolean {
 }
 
 /**
+ * 검사 참여 4자리 PIN: 전각 숫자·문자열/숫자 혼용 저장값까지 ASCII 숫자만 최대 4자리로 통일.
+ */
+export function normalizeJoinPinDigits(raw: unknown): string {
+  if (raw == null || raw === '') return '';
+  let out = '';
+  for (const ch of String(raw)) {
+    const cp = ch.codePointAt(0)!;
+    if (cp >= 0xff10 && cp <= 0xff19) {
+      out += String.fromCharCode(cp - 0xff10 + 0x30);
+      continue;
+    }
+    if (ch >= '0' && ch <= '9') out += ch;
+  }
+  return out.slice(0, 4);
+}
+
+/**
  * 연속 알파벳 / 연속 숫자 덩어리 사이에만 하이픈 삽입 (가독성).
  * 저장값은 하이픈 없이 A-Z0-9 만 사용한다고 가정합니다.
  */

@@ -12,15 +12,15 @@ from utils.password import generate_four_digit_password, hash_password, verify_p
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
 MSG_PUBLIC_NOT_FOUND = (
-    "요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 내담자 비밀번호를 다시 한 번 확인해 주시기 바랍니다."
+    "요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 비밀번호를 다시 한 번 확인해 주시기 바랍니다."
 )
 MSG_PUBLIC_PIN_WRONG = (
     "검사코드 또는 비밀번호가 일치하지 않습니다. 입력 정보를 다시 확인해 주시기 바랍니다."
 )
-MSG_PUBLIC_PIN_REQUIRED = "내담자 비밀번호 4자리를 입력해 주시기 바랍니다."
+MSG_PUBLIC_PIN_REQUIRED = "비밀번호 4자리를 입력해 주시기 바랍니다."
 MSG_ACCESS_CODE_FORMAT = "검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다."
 MSG_GET_REQUIRES_PIN = (
-    "해당 검사코드는 내담자 비밀번호 입력이 필요합니다. 검사 코드 입력 단계에서 비밀번호를 함께 입력해 주시기 바랍니다."
+    "해당 검사코드는 비밀번호 입력이 필요합니다. 검사 코드 입력 단계에서 비밀번호를 함께 입력해 주시기 바랍니다."
 )
 
 
