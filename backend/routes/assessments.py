@@ -69,12 +69,14 @@ def _is_completed_result(d):
 def _aggregate_completions_by_email(db, assessment_ids):
     """
     testResults에서 assessmentId가 목록에 속하고 status=completed인 문서만 집계.
-    반환: (전체 이메일별 합계 dict, assessmentId -> {email: count})
+    반환:
+      per_assessment_counts: assessmentId -> {email: 완료 건수}
+      per_assessment_testids: assessmentId -> {email: set(완료한 testId)}
     """
-    totals = {}
     per_assessment = {aid: {} for aid in assessment_ids}
+    per_testids = {aid: {} for aid in assessment_ids}
     if not assessment_ids:
-        return totals, per_assessment
+        return per_assessment, per_testids
 
     coll = db.collection(TEST_RESULTS_COLLECTION)
     chunk_size = 30  # Firestore IN 연산자 상한
@@ -88,16 +90,21 @@ def _aggregate_completions_by_email(db, assessment_ids):
             aid = d.get("assessmentId")
             if not email or not aid or aid not in per_assessment:
                 continue
-            totals[email] = totals.get(email, 0) + 1
             m = per_assessment[aid]
             m[email] = m.get(email, 0) + 1
-    return totals, per_assessment
+            tid = str(d.get("testId") or "").strip()
+            if tid:
+                tmap = per_testids[aid]
+                if email not in tmap:
+                    tmap[email] = set()
+                tmap[email].add(tid)
+    return per_assessment, per_testids
 
 
 @bp.route("", methods=["GET"])
 @require_counselor
 def list_assessments():
-    """상담사: 로그인 상담사 소유 assessments 목록 + 내담자 이메일별 검사 완료 합계."""
+    """상담사: 로그인 상담사 소유 assessments 목록 (행별 진행: 전체완료 이메일 수 / 1건 이상 완료 이메일 수)."""
     db = get_firestore()
     refs = db.collection(ASSESSMENTS_COLLECTION).where("counselorId", "==", g.counselor_uid).get()
     def _sort_key(doc):
@@ -114,23 +121,30 @@ def list_assessments():
     # 목록에는 활성 검사코드만 (삭제=archived 는 제외, 구문서는 status 없으면 active 로 간주)
     items = [x for x in items if (x.get("status") or "active") == "active"]
     ids = [x["id"] for x in items]
-    totals, per_assessment = _aggregate_completions_by_email(db, ids)
-    totals_rows = sorted(
-        ({"clientEmail": em, "completedCount": cnt} for em, cnt in totals.items()),
-        key=lambda r: (-r["completedCount"], r["clientEmail"]),
-    )
+    per_assessment, per_testids = _aggregate_completions_by_email(db, ids)
     for x in items:
         aid = x["id"]
         by_em = per_assessment.get(aid, {})
         x["completionByEmail"] = by_em
         x["completedTestsTotal"] = sum(by_em.values())
         x["completedClientsCount"] = len(by_em)
-    return jsonify(
-        {
-            "assessments": items,
-            "emailCompletionTotals": totals_rows,
+        required = {
+            str(t.get("testId") or "").strip()
+            for t in (x.get("testList") or [])
+            if t and str(t.get("testId") or "").strip()
         }
-    )
+        tmap = per_testids.get(aid, {})
+        emails_any = len(tmap)
+        emails_all = 0
+        if required:
+            for _email, tids in tmap.items():
+                if required <= tids:
+                    emails_all += 1
+        else:
+            emails_all = 0
+        x["emailsCompletedAllTestsCount"] = emails_all
+        x["emailsWithAnyCompletedTestCount"] = emails_any
+    return jsonify({"assessments": items})
 
 
 def _get_owned_assessment(db, assessment_id):

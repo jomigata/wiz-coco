@@ -171,11 +171,10 @@ export interface CounselorAssessment {
   completedTestsTotal?: number;
   /** 완료 이력이 있는 서로 다른 내담자 수 */
   completedClientsCount?: number;
-}
-
-export interface EmailCompletionTotalRow {
-  clientEmail: string;
-  completedCount: number;
+  /** 포함된 검사를 모두 완료 제출한 내담자(이메일) 수 */
+  emailsCompletedAllTestsCount?: number;
+  /** 1건 이상 완료 제출한 서로 다른 내담자(이메일) 수 */
+  emailsWithAnyCompletedTestCount?: number;
 }
 
 export interface ProgressByClient {
@@ -272,11 +271,8 @@ export async function deleteAssessment(assessmentId: string): Promise<void> {
   }
 }
 
-/** GET /api/assessments - 상담사: 내 검사코드 목록 (+ 이메일별 완료 합계) */
-export async function listAssessments(): Promise<{
-  assessments: CounselorAssessment[];
-  emailCompletionTotals?: EmailCompletionTotalRow[];
-}> {
+/** GET /api/assessments - 상담사: 내 검사코드 목록 */
+export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {

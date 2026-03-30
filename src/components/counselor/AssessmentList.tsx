@@ -3,15 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { CounselorAssessment, EmailCompletionTotalRow } from '@/lib/assessmentApi';
+import type { CounselorAssessment } from '@/lib/assessmentApi';
 import { deleteAssessment } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
   createdCode?: string | null;
-  /** 내담자(이메일)별 검사 완료 건수 합계 — 보유한 모든 검사코드 통합 */
-  emailCompletionTotals?: EmailCompletionTotalRow[];
 }
 
 function formatDate(iso: string | undefined): string {
@@ -30,18 +28,21 @@ function formatDate(iso: string | undefined): string {
   }
 }
 
-function completionByEmailTitle(byEmail: Record<string, number> | undefined): string | undefined {
-  if (!byEmail || Object.keys(byEmail).length === 0) return undefined;
-  return Object.entries(byEmail)
-    .map(([em, n]) => `${em}: ${n}건`)
-    .join('\n');
+function progressSummaryTitle(a: CounselorAssessment): string {
+  const lines = [
+    '괄호 안 숫자: (포함 검사를 모두 완료한 이메일 수 / 1건 이상 완료한 이메일 수)',
+  ];
+  const byEmail = a.completionByEmail;
+  if (byEmail && Object.keys(byEmail).length > 0) {
+    lines.push('이메일별 완료 건수:');
+    lines.push(
+      ...Object.entries(byEmail).map(([em, n]) => `${em}: ${n}건`)
+    );
+  }
+  return lines.join('\n');
 }
 
-export default function AssessmentList({
-  assessments,
-  createdCode,
-  emailCompletionTotals = [],
-}: AssessmentListProps) {
+export default function AssessmentList({ assessments, createdCode }: AssessmentListProps) {
   const router = useRouter();
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -128,36 +129,6 @@ export default function AssessmentList({
           — 내담자에게 이 코드를 전달하세요.
         </div>
       )}
-      {emailCompletionTotals.length > 0 && (
-        <div className="rounded-xl border border-slate-600 bg-slate-800/80 p-4">
-          <h2 className="text-sm font-semibold text-slate-200 mb-3">
-            내담자(이메일)별 검사 완료 합계
-          </h2>
-          <p className="text-xs text-slate-500 mb-2">
-            보유 중인 모든 검사코드에서 제출 완료된 검사 건수를 이메일 기준으로 합산했습니다.
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-600 text-slate-400">
-                  <th className="py-2 pr-4 font-medium">이메일</th>
-                  <th className="py-2 font-medium whitespace-nowrap">완료 합계</th>
-                </tr>
-              </thead>
-              <tbody>
-                {emailCompletionTotals.map((row) => (
-                  <tr key={row.clientEmail} className="border-b border-slate-700/80 last:border-0">
-                    <td className="py-2 pr-4 text-slate-200 break-all">{row.clientEmail}</td>
-                    <td className="py-2 text-cyan-300 font-mono whitespace-nowrap">
-                      {row.completedCount}건
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
       <div className="bg-slate-800/80 rounded-xl border border-slate-600 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -167,7 +138,12 @@ export default function AssessmentList({
                 <th className="px-4 py-3 text-slate-300 font-medium">검사코드</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">대상</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">포함 검사</th>
-                <th className="px-4 py-3 text-slate-300 font-medium">검사 완료(이메일별)</th>
+                <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
+                  진행 현황
+                  <span className="block text-xs font-normal text-slate-500 normal-case mt-0.5">
+                    (전체완료 / 1건+)
+                  </span>
+                </th>
                 <th className="px-4 py-3 text-slate-300 font-medium">생성일</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">관리</th>
               </tr>
@@ -185,13 +161,14 @@ export default function AssessmentList({
                   <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>
                   <td
                     className="px-4 py-3 text-slate-300 text-sm"
-                    title={completionByEmailTitle(a.completionByEmail)}
+                    title={progressSummaryTitle(a)}
                   >
-                    <span className="text-cyan-200 font-mono">
-                      {(a.completedTestsTotal ?? 0)}건
+                    <span className="text-slate-500">완료 제출 </span>
+                    <span className="text-cyan-200 font-mono">{(a.completedTestsTotal ?? 0)}건</span>
+                    <span className="text-slate-500 mx-1.5">·</span>
+                    <span className="text-cyan-300 font-mono">
+                      ({a.emailsCompletedAllTestsCount ?? 0}/{a.emailsWithAnyCompletedTestCount ?? 0})
                     </span>
-                    <span className="text-slate-500"> · </span>
-                    <span>{(a.completedClientsCount ?? 0)}명</span>
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
                   <td className="px-4 py-3">
