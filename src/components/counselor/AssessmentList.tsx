@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { CounselorAssessment } from '@/lib/assessmentApi';
+import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
-  createdCode?: string | null;
+  createdInfo?: CreatedAssessmentBannerInfo | null;
 }
 
 function formatDate(iso: string | undefined): string {
@@ -31,7 +31,7 @@ function formatDate(iso: string | undefined): string {
 const PROGRESS_TOOLTIP =
   '(-앞 숫자): 세트 검사를 모두 완료하지 않은 이메일 수 · (뒤 숫자): 세트 전부 완료한 이메일 수';
 
-export default function AssessmentList({ assessments, createdCode }: AssessmentListProps) {
+export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
   const router = useRouter();
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -52,7 +52,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
     }
   };
 
-  if (assessments.length === 0 && !createdCode) {
+  if (assessments.length === 0 && !createdInfo) {
     return (
       <div className="bg-slate-800/80 rounded-xl border border-slate-600 p-8 text-center">
         <p className="text-slate-400 mb-4">등록된 검사코드가 없습니다.</p>
@@ -111,11 +111,23 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
           </div>
         </div>
       )}
-      {createdCode && (
-        <div className="rounded-lg bg-green-900/30 border border-green-600/50 p-4 text-green-200 text-sm">
-          검사코드가 발급되었습니다. 코드:{' '}
-          <strong className="font-mono tracking-wider">{formatAccessCodeDisplay(createdCode)}</strong>
-          — 내담자에게 이 코드를 전달하세요.
+      {createdInfo && (
+        <div className="rounded-lg bg-green-900/30 border border-green-600/50 p-4 text-green-200 text-sm space-y-2">
+          <p>
+            검사코드가 발급되었습니다. 코드:{' '}
+            <strong className="font-mono tracking-wider">
+              {formatAccessCodeDisplay(createdInfo.accessCode)}
+            </strong>
+          </p>
+          {createdInfo.joinPin != null && createdInfo.joinPin !== '' && (
+            <p>
+              내담자 비밀번호(숫자 4자리):{' '}
+              <strong className="font-mono tracking-widest text-white">{createdInfo.joinPin}</strong>
+            </p>
+          )}
+          <p className="text-green-300/90 text-xs">
+            위 정보를 내담자에게 안전한 경로로 전달해 주시기 바랍니다. 이 화면을 벗어나면 비밀번호 숫자는 다시 표시되지 않습니다.
+          </p>
         </div>
       )}
       <div className="bg-slate-800/80 rounded-xl border border-slate-600 overflow-hidden">
@@ -125,6 +137,7 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
               <tr className="border-b border-slate-600 bg-slate-800">
                 <th className="px-4 py-3 text-slate-300 font-medium">제목</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">검사코드</th>
+                <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">내담자 비밀번호</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">대상</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">포함 검사</th>
                 <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
@@ -148,6 +161,13 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
                       <span className="font-mono text-cyan-400 tracking-wider">
                         {formatAccessCodeDisplay(a.accessCode)}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-300 text-sm">
+                      {a.joinPinConfigured ? (
+                        <span className="text-slate-400">설정됨</span>
+                      ) : (
+                        <span className="text-amber-400/90">미설정</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-300">{a.targetAudience || '개인'}</td>
                     <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>

@@ -24,6 +24,8 @@ export interface AssessmentTestItem {
 export interface Assessment {
   /** 유일 검사코드 (신규: CVC+숫자 3자리~, 구형: 영숫자 6자리) */
   accessCode: string;
+  /** 내담자 접속용 4자리 비밀번호 bcrypt 해시 (Flask에서만 쓰기; 구문서는 없을 수 있음) */
+  joinPinHash?: string;
   /** 상담사 Firebase UID */
   counselorId: string;
   /** 검사코드 세트 안내 제목 */

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
-import { getPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
@@ -39,9 +39,21 @@ export default function ClientDashboardPage() {
       setLoading(false);
       return;
     }
+    let joinPin = '';
+    try {
+      const raw = typeof window !== 'undefined' ? sessionStorage.getItem(JOIN_STORAGE_KEY) : null;
+      if (raw) {
+        const p = JSON.parse(raw) as { accessCode?: string; joinPin?: string };
+        if (normalizeAccessCodeInput(p.accessCode || '') === code) {
+          joinPin = (p.joinPin || '').replace(/\D/g, '').slice(0, 4);
+        }
+      }
+    } catch {
+      // ignore
+    }
     setLoading(true);
     setError('');
-    getPublicAssessment(code)
+    lookupPublicAssessment(code, joinPin)
       .then((data) => {
         setAssessment(data);
         try {
@@ -49,6 +61,7 @@ export default function ClientDashboardPage() {
             JOIN_STORAGE_KEY,
             JSON.stringify({
               accessCode: code,
+              joinPin,
               assessmentId: data.assessmentId,
               title: data.title,
               welcomeMessage: data.welcomeMessage,

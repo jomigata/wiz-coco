@@ -43,7 +43,7 @@ python app.py
 
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
-- `POST /api/assessments` — 검사코드(세트) 생성, 고유 `accessCode` 발급 (`system_meta/access_code_generation`로 숫자 자릿수 관리)
+- `POST /api/assessments` — 검사코드(세트) 생성, 고유 `accessCode` 및 내담자용 4자리 비밀번호(`joinPin`, 해시는 `joinPinHash`로 저장) 발급
 - `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외). 각 항목에 `emailsNotCompletedAllTestsCount`(1건 이상 제출했으나 세트 미전체 완료 이메일 수), `emailsCompletedAllTestsCount`(세트 전부 완료 이메일 수) 포함
 - `GET /api/assessments/<assessmentId>` — 단일 조회 (수정 폼용, 본인·활성만)
 - `PUT /api/assessments/<assessmentId>` — 수정 (`title`, `targetAudience`, `welcomeMessage`, `testList`; `accessCode` 불변)
@@ -52,7 +52,8 @@ python app.py
 
 ### 내담자 (공개)
 
-- `GET /api/assessments/public/<accessCode>` — 코드 유효 시 제목·안내 메시지·검사 목록
+- `POST /api/assessments/public/lookup` — 본문 `{ "accessCode", "joinPin" }` 검증 후 제목·안내·검사 목록 반환 (`joinPinHash` 없는 구문서는 `joinPin` 생략 가능)
+- `GET /api/assessments/public/<accessCode>` — `joinPinHash`가 없는 검사코드만 조회 가능(구 호환). 비밀번호가 설정된 세트는 403
 
 ### 결과
 
@@ -67,7 +68,7 @@ python app.py
 
 ## Firestore
 
-- `assessments`: accessCode, counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
+- `assessments`: accessCode, joinPinHash?, counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
 - `testResults`: accessCode, assessmentId, testId, clientEmail, status, responses, resultData, passwordHash, completedAt
 
 규칙은 프로젝트 루트의 `firestore.rules` 참고. 쓰기는 백엔드(Admin SDK)에서 수행합니다.

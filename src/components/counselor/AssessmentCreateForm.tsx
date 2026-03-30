@@ -46,7 +46,21 @@ export default function AssessmentCreateForm() {
         welcomeMessage: welcomeMessage.trim(),
         testList,
       });
-      router.push(`/counselor/assessments?created=${result.assessmentId}&code=${result.accessCode}`);
+      try {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            'wizcoco_created_assessment',
+            JSON.stringify({
+              assessmentId: result.assessmentId,
+              accessCode: result.accessCode,
+              joinPin: result.joinPin,
+            })
+          );
+        }
+      } catch {
+        // ignore
+      }
+      router.push(`/counselor/assessments?created=${result.assessmentId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '검사코드 만들기에 실패했습니다.');
     } finally {

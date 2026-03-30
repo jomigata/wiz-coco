@@ -42,6 +42,9 @@ export interface PublicAssessment {
   testList: { testId: string; name: string }[];
 }
 
+const MSG_LOOKUP_DEFAULT =
+  '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 내담자 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
+
 export interface TestResultItem {
   resultId: string;
   testId: string;
@@ -49,18 +52,32 @@ export interface TestResultItem {
   completedAt: string | null;
 }
 
-/** GET /api/assessments/public/:accessCode - 코드 유효 시 검사코드(세트) 정보 반환 */
-export async function getPublicAssessment(accessCode: string): Promise<PublicAssessment> {
+/**
+ * POST /api/assessments/public/lookup — 검사코드 + 내담자 4자리 비밀번호(신규 세트는 필수, 구문서 미설정 시 생략 가능)
+ */
+export async function lookupPublicAssessment(
+  accessCode: string,
+  joinPin: string
+): Promise<PublicAssessment> {
   const code = normalizeAccessCodeInput(accessCode || '');
+  const pin = (joinPin || '').replace(/\D/g, '').slice(0, 4);
   if (!isValidAccessCodeInput(code)) {
-    throw new Error('검사 코드 형식이 올바르지 않습니다. (예: KAN-724 또는 기존 6자리 코드)');
+    throw new Error('검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다.');
   }
-  const res = await fetch(`${getBaseUrl()}/api/assessments/public/${encodeURIComponent(code)}`);
+  const res = await fetch(`${getBaseUrl()}/api/assessments/public/lookup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessCode: code, joinPin: pin }),
+  });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data?.message || '유효하지 않은 검사 코드입니다.');
+    throw new Error(
+      typeof data?.message === 'string' && data.message.trim()
+        ? data.message
+        : MSG_LOOKUP_DEFAULT
+    );
   }
-  return res.json();
+  return data as PublicAssessment;
 }
 
 /** POST /api/results - 결과 제출 */
@@ -169,6 +186,14 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
+  /** 내담자 접속용 4자리 비밀번호가 설정되어 있는지(발급 당시에만 평문 확인 가능) */
+  joinPinConfigured?: boolean;
+}
+
+/** 검사코드 발급 직후 목록 상단 배너용(세션에서 전달) */
+export interface CreatedAssessmentBannerInfo {
+  accessCode: string;
+  joinPin?: string;
 }
 
 export interface ProgressByClient {
@@ -182,7 +207,7 @@ export async function createAssessment(body: {
   targetAudience?: '개인' | '그룹';
   welcomeMessage?: string;
   testList: { testId: string; name: string }[];
-}): Promise<{ assessmentId: string; accessCode: string }> {
+}): Promise<{ assessmentId: string; accessCode: string; joinPin: string }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {

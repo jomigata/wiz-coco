@@ -4,26 +4,44 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
+import {
+  listAssessments,
+  type CounselorAssessment,
+  type CreatedAssessmentBannerInfo,
+} from '@/lib/assessmentApi';
 
 export default function AssessmentListPage() {
   const { user, loading: authLoading } = useFirebaseAuth();
   const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const params = new URLSearchParams(window.location.search);
-      setCreatedCode(params.get('code'));
+      const createdId = params.get('created');
+      if (createdId) {
+        const raw = sessionStorage.getItem('wizcoco_created_assessment');
+        if (raw) {
+          const o = JSON.parse(raw) as { assessmentId?: string; accessCode?: string; joinPin?: string };
+          if (o.assessmentId === createdId && o.accessCode) {
+            setCreatedInfo({ accessCode: o.accessCode, joinPin: o.joinPin });
+            sessionStorage.removeItem('wizcoco_created_assessment');
+            return;
+          }
+        }
+      }
+      const legacyCode = params.get('code');
+      if (legacyCode) {
+        setCreatedInfo({ accessCode: legacyCode });
+      }
     } catch {
-      setCreatedCode(null);
+      setCreatedInfo(null);
     }
   }, []);
 
-  // Firebase Auth 준비된 후에만 API 호출 (관리자·상담사 모두 동일)
   useEffect(() => {
     if (authLoading || !user) {
       if (!authLoading && !user) setLoading(false);
@@ -71,7 +89,7 @@ export default function AssessmentListPage() {
           <p className="text-sm mt-2">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
         </div>
       ) : (
-        <AssessmentList assessments={assessments} createdCode={createdCode} />
+        <AssessmentList assessments={assessments} createdInfo={createdInfo} />
       )}
     </div>
   );
