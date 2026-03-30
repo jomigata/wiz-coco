@@ -109,8 +109,7 @@ export default function AccessCodeInputPage() {
                   spellCheck={false}
                   data-lpignore="true"
                   data-form-type="other"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-xl tabular-nums tracking-widest placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  style={{ WebkitTextSecurity: 'none' }}
+                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-xl tabular-nums tracking-widest placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [-webkit-text-security:none]"
                   placeholder="예: 1234"
                   value={joinPin}
                   onChange={(e) => setJoinPin(normalizeJoinPinDigits(e.target.value))}
