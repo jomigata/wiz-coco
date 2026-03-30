@@ -36,6 +36,10 @@ export interface Assessment {
   testList: AssessmentTestItem[];
   /** 생성 시각 */
   createdAt: Timestamp | { _seconds: number; _nanoseconds: number };
+  /** 마지막 수정 시각 (서버 기록) */
+  updatedAt?: Timestamp | { _seconds: number; _nanoseconds: number };
+  /** 보관(삭제) 시각 */
+  archivedAt?: Timestamp | { _seconds: number; _nanoseconds: number };
   /** 상태: active | archived */
   status: AssessmentStatus;
 }

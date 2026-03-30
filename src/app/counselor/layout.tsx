@@ -86,6 +86,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   const getPageTitle = (path: string): string => {
     if (path.startsWith('/counselor/assessments/new')) return '새 검사코드 만들기';
     if (path.startsWith('/counselor/assessments/progress')) return '진행 현황';
+    if (path.startsWith('/counselor/assessments/edit')) return '검사코드 수정';
     if (path.startsWith('/counselor/assessments')) return '검사코드 목록';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',

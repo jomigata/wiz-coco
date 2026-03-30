@@ -44,8 +44,11 @@ python app.py
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
 - `POST /api/assessments` — 검사코드(세트) 생성, 6자리 코드 발급
-- `GET /api/assessments` — 내 assessments 목록
-- `GET /api/assessments/<assessmentId>/progress` — 해당 검사 코드 진행 현황 (내담자별)
+- `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외)
+- `GET /api/assessments/<assessmentId>` — 단일 조회 (수정 폼용, 본인·활성만)
+- `PUT /api/assessments/<assessmentId>` — 수정 (`title`, `targetAudience`, `welcomeMessage`, `testList`; `accessCode` 불변)
+- `DELETE /api/assessments/<assessmentId>` — 비활성화 (`status=archived`, 신규 공개 조회 불가)
+- `GET /api/assessments/<assessmentId>/progress` — 해당 검사코드 진행 현황 (내담자별)
 
 ### 내담자 (공개)
 
@@ -64,7 +67,7 @@ python app.py
 
 ## Firestore
 
-- `assessments`: accessCode, counselorId, title, targetAudience, welcomeMessage, testList, createdAt, status
+- `assessments`: accessCode, counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
 - `testResults`: accessCode, assessmentId, testId, clientEmail, status, responses, resultData, passwordHash, completedAt
 
 규칙은 프로젝트 루트의 `firestore.rules` 참고. 쓰기는 백엔드(Admin SDK)에서 수행합니다.

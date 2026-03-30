@@ -160,7 +160,9 @@ export interface CounselorAssessment {
   welcomeMessage: string;
   testList: { testId: string; name: string }[];
   createdAt: string;
-  status: string;
+  status?: string;
+  updatedAt?: string;
+  archivedAt?: string;
 }
 
 export interface ProgressByClient {
@@ -195,6 +197,66 @@ export async function createAssessment(body: {
     throw new Error(data?.message || data?.error || '검사코드 만들기에 실패했습니다.');
   }
   return data;
+}
+
+/** GET /api/assessments/:id - 상담사: 단일 검사코드(세트) 조회 */
+export async function getAssessment(assessmentId: string): Promise<CounselorAssessment> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/assessments/${encodeURIComponent(assessmentId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '조회에 실패했습니다.');
+  }
+  return data as CounselorAssessment;
+}
+
+/** PUT /api/assessments/:id - 상담사: 검사코드 세트 수정 (코드 문자열 불변) */
+export async function updateAssessment(
+  assessmentId: string,
+  body: {
+    title: string;
+    targetAudience?: '개인' | '그룹';
+    welcomeMessage?: string;
+    testList: { testId: string; name: string }[];
+  }
+): Promise<{ assessmentId: string; message: string }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/assessments/${encodeURIComponent(assessmentId)}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      title: (body.title || '').trim(),
+      targetAudience: body.targetAudience || '개인',
+      welcomeMessage: (body.welcomeMessage || '').trim(),
+      testList: body.testList || [],
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '수정에 실패했습니다.');
+  }
+  return data;
+}
+
+/** DELETE /api/assessments/:id - 상담사: 검사코드 세트 비활성화(archived), 신규 접속 불가 */
+export async function deleteAssessment(assessmentId: string): Promise<void> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/assessments/${encodeURIComponent(assessmentId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '삭제에 실패했습니다.');
+  }
 }
 
 /** GET /api/assessments - 상담사: 내 검사코드 목록 */

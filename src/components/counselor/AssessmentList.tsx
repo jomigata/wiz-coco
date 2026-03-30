@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { CounselorAssessment } from '@/lib/assessmentApi';
+import { deleteAssessment } from '@/lib/assessmentApi';
 
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
@@ -26,6 +28,26 @@ function formatDate(iso: string | undefined): string {
 }
 
 export default function AssessmentList({ assessments, createdCode }: AssessmentListProps) {
+  const router = useRouter();
+  const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteError('');
+    setDeleteLoading(true);
+    try {
+      await deleteAssessment(deleteTarget.id);
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : '삭제에 실패했습니다.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   if (assessments.length === 0 && !createdCode) {
     return (
       <div className="bg-slate-800/80 rounded-xl border border-slate-600 p-8 text-center">
@@ -42,6 +64,48 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
 
   return (
     <div className="space-y-4">
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-assessment-title"
+        >
+          <div className="bg-slate-800 border border-slate-600 rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h2 id="delete-assessment-title" className="text-lg font-semibold text-white mb-2">
+              검사코드 삭제
+            </h2>
+            <p className="text-slate-300 text-sm mb-1">
+              <span className="font-mono text-cyan-400">{deleteTarget.accessCode}</span> — {deleteTarget.title}
+            </p>
+            <p className="text-slate-400 text-sm mb-4">
+              목록에서 제거되며, 내담자는 더 이상 이 코드로 새로 접속할 수 없습니다. 이미 제출된 결과는 상담사 화면에서 조회할 수 있습니다.
+            </p>
+            {deleteError && <p className="text-red-400 text-sm mb-3">{deleteError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteError('');
+                }}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-lg text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteLoading ? '처리 중…' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {createdCode && (
         <div className="rounded-lg bg-green-900/30 border border-green-600/50 p-4 text-green-200 text-sm">
           검사코드가 발급되었습니다. 코드: <strong className="font-mono tracking-widest">{createdCode}</strong>
@@ -72,12 +136,30 @@ export default function AssessmentList({ assessments, createdCode }: AssessmentL
                   <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>
                   <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
-                      className="text-blue-400 hover:text-blue-300 text-sm"
-                    >
-                      진행 현황
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <Link
+                        href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
+                        className="text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        진행 현황
+                      </Link>
+                      <Link
+                        href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
+                        className="text-amber-400 hover:text-amber-300 text-sm"
+                      >
+                        수정
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeleteError('');
+                          setDeleteTarget(a);
+                        }}
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

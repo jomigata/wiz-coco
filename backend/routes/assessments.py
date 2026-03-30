@@ -14,13 +14,14 @@ bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 def _serialize_doc(doc):
     d = doc.to_dict()
     d["id"] = doc.id
-    if "createdAt" in d and d["createdAt"]:
-        t = d["createdAt"]
-        if hasattr(t, "isoformat"):
-            d["createdAt"] = t.isoformat()
-        elif hasattr(t, "timestamp"):
-            from datetime import datetime
-            d["createdAt"] = datetime.utcfromtimestamp(t.timestamp()).isoformat() + "Z"
+    for key in ("createdAt", "updatedAt", "archivedAt"):
+        if key in d and d[key]:
+            t = d[key]
+            if hasattr(t, "isoformat"):
+                d[key] = t.isoformat()
+            elif hasattr(t, "timestamp"):
+                from datetime import datetime
+                d[key] = datetime.utcfromtimestamp(t.timestamp()).isoformat() + "Z"
     return d
 
 
@@ -78,7 +79,85 @@ def list_assessments():
         return 0
     refs = sorted(refs, key=_sort_key, reverse=True)
     items = [_serialize_doc(d) for d in refs]
+    # 목록에는 활성 검사코드만 (삭제=archived 는 제외, 구문서는 status 없으면 active 로 간주)
+    items = [x for x in items if (x.get("status") or "active") == "active"]
     return jsonify({"assessments": items})
+
+
+def _get_owned_assessment(db, assessment_id):
+    """상담사 소유 + 활성 문서만. 없으면 (None, None)."""
+    ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
+    doc = ref.get()
+    if not doc.exists:
+        return None, None
+    d = doc.to_dict()
+    if d.get("counselorId") != g.counselor_uid:
+        return None, None
+    if (d.get("status") or "active") != "active":
+        return None, None
+    return ref, doc
+
+
+@bp.route("/<assessment_id>", methods=["GET"])
+@require_counselor
+def get_assessment(assessment_id):
+    """상담사: 단일 검사코드(세트) 조회 (수정 폼용)."""
+    db = get_firestore()
+    ref, doc = _get_owned_assessment(db, assessment_id)
+    if not doc:
+        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+    return jsonify(_serialize_doc(doc))
+
+
+@bp.route("/<assessment_id>", methods=["PUT"])
+@require_counselor
+def update_assessment(assessment_id):
+    """상담사: 검사코드 세트 메타데이터 수정. accessCode·counselorId 는 변경 불가."""
+    body = request.get_json() or {}
+    title = (body.get("title") or "").strip()
+    target_audience = body.get("targetAudience", "개인")
+    if target_audience not in ("개인", "그룹"):
+        target_audience = "개인"
+    welcome_message = (body.get("welcomeMessage") or "").strip()
+    test_list = body.get("testList") or []
+    if not isinstance(test_list, list):
+        test_list = []
+    test_list = [
+        {"testId": str(t.get("testId", "")), "name": str(t.get("name", ""))}
+        for t in test_list
+        if t
+    ]
+    if not title:
+        return jsonify({"error": "Bad Request", "message": "title required"}), 400
+
+    db = get_firestore()
+    ref, doc = _get_owned_assessment(db, assessment_id)
+    if not doc:
+        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+
+    ref.update(
+        {
+            "title": title,
+            "targetAudience": target_audience,
+            "welcomeMessage": welcome_message,
+            "testList": test_list,
+            "updatedAt": SERVER_TIMESTAMP,
+        }
+    )
+    return jsonify({"assessmentId": assessment_id, "message": "updated"})
+
+
+@bp.route("/<assessment_id>", methods=["DELETE"])
+@require_counselor
+def delete_assessment(assessment_id):
+    """상담사: 검사코드 세트 비활성화(soft delete, status=archived). 내담자 신규 접속 불가."""
+    db = get_firestore()
+    ref, doc = _get_owned_assessment(db, assessment_id)
+    if not doc:
+        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+
+    ref.update({"status": "archived", "archivedAt": SERVER_TIMESTAMP})
+    return jsonify({"assessmentId": assessment_id, "message": "archived"})
 
 
 @bp.route("/<assessment_id>/progress", methods=["GET"])
