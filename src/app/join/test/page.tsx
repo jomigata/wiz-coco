@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -74,7 +74,7 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  useEffect(() => {
+  const readStoredEmail = useCallback(() => {
     try {
       const saved = sessionStorage.getItem(JOIN_EMAIL_KEY);
       if (saved) setClientEmail(saved);
@@ -82,6 +82,18 @@ export default function TestRunnerPage() {
       // ignore
     }
   }, []);
+
+  useEffect(() => {
+    readStoredEmail();
+  }, [readStoredEmail]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') readStoredEmail();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [readStoredEmail]);
 
   useEffect(() => {
     try {
@@ -102,8 +114,7 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  const [emailInput, setEmailInput] = useState('');
-  const effectiveEmail = (emailInput || clientEmail || '').trim().toLowerCase();
+  const effectiveEmail = (clientEmail || '').trim().toLowerCase();
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
@@ -212,19 +223,19 @@ export default function TestRunnerPage() {
               {isEditMode && <span className="text-blue-400 text-sm ml-2">(수정)</span>}
             </h1>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                이메일 <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="email"
-                autoComplete="email"
-                placeholder="example@email.com"
-                className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={emailInput || clientEmail}
-                onChange={(e) => setEmailInput(e.target.value)}
-              />
-            </div>
+            {effectiveEmail.includes('@') ? (
+              <p className="text-slate-400 text-sm mb-4">
+                제출 이메일: <span className="text-slate-200">{effectiveEmail}</span>
+                <span className="text-slate-500"> (대시보드 「내 이메일」 적용값)</span>
+              </p>
+            ) : (
+              <p className="text-amber-400/95 text-sm mb-4">
+                대시보드에서 「내 이메일」을 입력하고 적용한 뒤 다시 이 검사를 열어 주세요.{' '}
+                <Link href={dashboardHref} className="text-blue-400 hover:text-blue-300 underline">
+                  대시보드로 이동
+                </Link>
+              </p>
+            )}
 
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-6">
               <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }} />
