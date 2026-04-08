@@ -27,6 +27,24 @@ function readJoinPinFromSession(accessCodeNorm: string): string {
   }
 }
 
+/** /join → 대시보드 이동 시 PIN 전달용 (#p=1234). HTTP 요청 URL에 포함되지 않음. */
+function peekJoinPinFromHash(): string {
+  if (typeof window === 'undefined') return '';
+  const h = window.location.hash;
+  if (!h.startsWith('#p=')) return '';
+  return normalizeJoinPinDigits(decodeURIComponent(h.slice(3)));
+}
+
+function clearJoinPinHashFromUrl(): void {
+  if (typeof window === 'undefined') return;
+  if (!window.location.hash.startsWith('#p=')) return;
+  try {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  } catch {
+    // ignore
+  }
+}
+
 function DashboardLoading() {
   return (
     <div className="min-h-screen bg-gray-900">
@@ -62,11 +80,15 @@ function JoinDashboardContent() {
       setLoading(false);
       return;
     }
-    const joinPin = readJoinPinFromSession(code);
+    let joinPin = readJoinPinFromSession(code);
+    if (!joinPin) {
+      joinPin = peekJoinPinFromHash();
+    }
     setLoading(true);
     setError('');
     lookupPublicAssessment(code, joinPin)
       .then((data) => {
+        clearJoinPinHashFromUrl();
         setAssessment(data);
         try {
           sessionStorage.setItem(

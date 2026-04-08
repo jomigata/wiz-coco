@@ -56,7 +56,10 @@ export default function AccessCodeInputPage() {
           })
         );
       }
-      router.push(`/join/dashboard?accessCode=${encodeURIComponent(normalizedCode)}`);
+      // 해시는 HTTP 요청에 포함되지 않음. sessionStorage 실패·파티셔닝 시에도 대시보드에서 PIN 전달용.
+      router.push(
+        `/join/dashboard?accessCode=${encodeURIComponent(normalizedCode)}#p=${encodeURIComponent(pinDigits)}`
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : MSG_LOOKUP_DEFAULT);
     } finally {
