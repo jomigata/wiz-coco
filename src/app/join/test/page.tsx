@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { submitResult, updateResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
+import { JOIN_CLIENT_EMAIL_KEY, readJoinClientEmail } from '@/lib/joinClientEmailStorage';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
-const JOIN_EMAIL_KEY = 'wizcoco_join_client_email';
 const EDIT_RESULT_STORAGE_KEY = 'wizcoco_edit_result';
 
 const SCALE_LABELS: Record<number, string> = {
@@ -28,7 +28,8 @@ export default function TestRunnerPage() {
   const [testId, setTestId] = useState('');
 
   const [title, setTitle] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
+  const [hydrated, setHydrated] = useState(false);
+  const [storageTick, setStorageTick] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -42,15 +43,6 @@ export default function TestRunnerPage() {
   const questions = genericJoinQuestions;
   const isEditMode = !!editResultId;
 
-  const syncEmailFromSession = useCallback(() => {
-    try {
-      const s = sessionStorage.getItem(JOIN_EMAIL_KEY);
-      setClientEmail(s != null && s !== '' ? s.trim() : '');
-    } catch {
-      setClientEmail('');
-    }
-  }, []);
-
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -61,14 +53,8 @@ export default function TestRunnerPage() {
       setAccessCode('');
       setTestId('');
     }
-    syncEmailFromSession();
-  }, [syncEmailFromSession]);
-
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!accessCode && !testId) return;
-    syncEmailFromSession();
-  }, [accessCode, testId, syncEmailFromSession]);
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     let raw: string | null = null;
@@ -91,17 +77,22 @@ export default function TestRunnerPage() {
   }, [testId]);
 
   useEffect(() => {
+    const bump = () => setStorageTick((t) => t + 1);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === JOIN_CLIENT_EMAIL_KEY || e.key === null) bump();
+    };
     const onVisible = () => {
-      if (document.visibilityState === 'visible') syncEmailFromSession();
+      if (document.visibilityState === 'visible') bump();
     };
-    const onWinFocus = () => syncEmailFromSession();
+    window.addEventListener('storage', onStorage);
     document.addEventListener('visibilitychange', onVisible);
-    window.addEventListener('focus', onWinFocus);
+    window.addEventListener('focus', bump);
     return () => {
+      window.removeEventListener('storage', onStorage);
       document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('focus', onWinFocus);
+      window.removeEventListener('focus', bump);
     };
-  }, [syncEmailFromSession]);
+  }, []);
 
   useEffect(() => {
     try {
@@ -122,7 +113,11 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  const effectiveEmail = (clientEmail || '').trim().toLowerCase();
+  /** React state 대신 저장소를 직접 읽어 적용 직후에도 경고가 남는 문제 방지 */
+  const effectiveEmail = useMemo(
+    () => (hydrated ? readJoinClientEmail() : ''),
+    [hydrated, storageTick]
+  );
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];

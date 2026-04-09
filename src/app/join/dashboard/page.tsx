@@ -11,9 +11,9 @@ import {
   normalizeAccessCodeInput,
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
+import { readJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
-const JOIN_EMAIL_KEY = 'wizcoco_join_client_email';
 
 function readJoinPinFromSession(accessCodeNorm: string): string {
   try {
@@ -118,14 +118,10 @@ function JoinDashboardContent() {
   }, [loadAssessment]);
 
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(JOIN_EMAIL_KEY);
-      if (saved) {
-        setEmailInput(saved);
-        setClientEmail(saved);
-      }
-    } catch {
-      // ignore
+    const v = readJoinClientEmail();
+    if (v) {
+      setEmailInput(v);
+      setClientEmail(v);
     }
   }, []);
 
@@ -133,11 +129,7 @@ function JoinDashboardContent() {
     const trimmed = (emailInput || '').trim().toLowerCase();
     if (!trimmed || !trimmed.includes('@')) return;
     setClientEmail(trimmed);
-    try {
-      sessionStorage.setItem(JOIN_EMAIL_KEY, trimmed);
-    } catch {
-      // ignore
-    }
+    writeJoinClientEmail(trimmed);
   };
 
   /** 검사 링크 클릭 직전에 저장(적용·blur 없이 입력만 한 경우 대비) */
@@ -145,11 +137,7 @@ function JoinDashboardContent() {
     const trimmed = (emailInput || '').trim().toLowerCase();
     if (!trimmed.includes('@')) return;
     setClientEmail(trimmed);
-    try {
-      sessionStorage.setItem(JOIN_EMAIL_KEY, trimmed);
-    } catch {
-      // ignore
-    }
+    writeJoinClientEmail(trimmed);
   }, [emailInput]);
 
   if (loading) {
