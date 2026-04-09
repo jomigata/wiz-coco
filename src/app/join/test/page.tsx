@@ -38,6 +38,10 @@ export default function TestRunnerPage() {
   const [editResultId, setEditResultId] = useState<string | null>(null);
   const [editPasswordModal, setEditPasswordModal] = useState(false);
   const [editPassword, setEditPassword] = useState('');
+  const [submitDoneInfo, setSubmitDoneInfo] = useState<{
+    emailSent?: boolean;
+    plainPassword?: string;
+  } | null>(null);
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
@@ -137,7 +141,11 @@ export default function TestRunnerPage() {
     setError('');
     setSubmitting(true);
     try {
-      await submitResult({ accessCode: code, testId, clientEmail: effectiveEmail, responses });
+      const data = await submitResult({ accessCode: code, testId, clientEmail: effectiveEmail, responses });
+      setSubmitDoneInfo({
+        emailSent: data.emailSent,
+        plainPassword: typeof data.plainPassword === 'string' ? data.plainPassword : undefined,
+      });
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '제출에 실패했습니다.');
@@ -154,6 +162,7 @@ export default function TestRunnerPage() {
       await updateResult(editResultId, { password: editPassword, responses });
       setEditPasswordModal(false);
       setEditPassword('');
+      setSubmitDoneInfo(null);
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '수정 제출에 실패했습니다.');
@@ -191,11 +200,30 @@ export default function TestRunnerPage() {
         <div className="pt-24 pb-12 px-4">
           <div className="max-w-lg mx-auto text-center bg-slate-800/80 rounded-2xl border border-slate-600 p-8">
             <h2 className="text-xl font-bold text-white mb-2">{isEditMode ? '수정 완료' : '제출 완료'}</h2>
-            <p className="text-slate-300 mb-6">
-              {isEditMode
-                ? '결과가 수정되었습니다.'
-                : '결과와 4자리 비밀번호가 이메일로 발송됩니다. 비밀번호는 결과 수정·삭제 시 필요합니다.'}
-            </p>
+            {isEditMode ? (
+              <p className="text-slate-300 mb-6">결과가 수정되었습니다.</p>
+            ) : submitDoneInfo?.emailSent === false ? (
+              <div className="text-left mb-6 space-y-4">
+                <p className="text-amber-200 text-sm">
+                  서버에서 이메일을 보내지 못했습니다. (SMTP 미설정 또는 발송 오류) 운영 환경에서는 Cloud Run 등에{' '}
+                  <code className="text-slate-300">SMTP_HOST</code>, <code className="text-slate-300">SMTP_USER</code>,{' '}
+                  <code className="text-slate-300">SMTP_PASSWORD</code>, <code className="text-slate-300">MAIL_FROM</code>을
+                  설정해야 메일이 발송됩니다.
+                </p>
+                {submitDoneInfo.plainPassword ? (
+                  <div className="rounded-lg bg-slate-900/80 border border-amber-600/50 p-4">
+                    <p className="text-slate-400 text-sm mb-2">결과 수정·삭제에 필요한 4자리 비밀번호(이 화면에서만 표시됩니다)</p>
+                    <p className="font-mono text-3xl tracking-[0.4em] text-white text-center">{submitDoneInfo.plainPassword}</p>
+                    <p className="text-slate-500 text-xs mt-2">반드시 메모해 두세요.</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-slate-300 mb-6">
+                결과와 4자리 비밀번호가 입력하신 이메일로 발송됩니다. 메일이 오지 않으면 스팸함을 확인해 주세요. 비밀번호는 결과
+                수정·삭제 시 필요합니다.
+              </p>
+            )}
             <Link href={dashboardHref} className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
               대시보드로 돌아가기
             </Link>

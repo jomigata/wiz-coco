@@ -32,7 +32,7 @@ python app.py
 | 변수 | 설명 |
 |------|------|
 | `FIREBASE_CREDENTIALS_PATH` | Firebase 서비스 계정 JSON 파일 경로 (또는 `GOOGLE_APPLICATION_CREDENTIALS` 사용) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | 결과 제출 시 이메일 발송용 (비워두면 발송 생략) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | 결과 제출 시 이메일 발송용.**비워두거나 잘못되면 메일은 가지 않으며**, API는 `emailSent: false`와 화면용 `plainPassword`를 반환합니다. **Cloud Run 등 프로덕션에서는 반드시 시크릿/환경 변수로 SMTP를 넣어야** 실제 발송됩니다. |
 | `RATE_LIMIT_ACCESS_CODE` | 검사 코드 API 분당 요청 제한 (기본 30, 0=비활성화) |
 | `RATE_LIMIT_PASSWORD_API` | 비밀번호 확인 API 분당 제한 (기본 20) |
 | `FLASK_ENV` | `development` / `production` |

@@ -74,12 +74,20 @@ def submit_result():
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
     ref.set(data)
 
-    send_result_email(client_email, password, test_name, result_data.get("summary", ""))
+    email_sent = send_result_email(client_email, password, test_name, result_data.get("summary", ""))
 
-    return jsonify({
+    payload = {
         "resultId": ref.id,
-        "message": "Result submitted. Check your email for the 4-digit password.",
-    }), 201
+        "emailSent": email_sent,
+        "message": (
+            "Result submitted. Check your email for the 4-digit password."
+            if email_sent
+            else "Result submitted. Email was not sent (SMTP not configured or send failed); use plainPassword below once."
+        ),
+    }
+    if not email_sent:
+        payload["plainPassword"] = password
+    return jsonify(payload), 201
 
 
 @bp.route("", methods=["GET"])

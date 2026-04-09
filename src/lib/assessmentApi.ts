@@ -90,7 +90,13 @@ export async function submitResult(body: {
   testId: string;
   clientEmail: string;
   responses: Record<string, unknown> | unknown[];
-}): Promise<{ resultId: string; message: string }> {
+}): Promise<{
+  resultId: string;
+  message: string;
+  emailSent?: boolean;
+  /** 이메일 미발송 시에만 서버가 내려줌(결과 수정·삭제용 4자리). 화면에 한 번만 안내 */
+  plainPassword?: string;
+}> {
   const res = await fetch(`${getBaseUrl()}/api/results`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
