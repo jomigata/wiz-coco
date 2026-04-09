@@ -140,6 +140,18 @@ function JoinDashboardContent() {
     }
   };
 
+  /** 검사 링크 클릭 직전에 저장(적용·blur 없이 입력만 한 경우 대비) */
+  const persistEmailBeforeTestNavigation = useCallback(() => {
+    const trimmed = (emailInput || '').trim().toLowerCase();
+    if (!trimmed.includes('@')) return;
+    setClientEmail(trimmed);
+    try {
+      sessionStorage.setItem(JOIN_EMAIL_KEY, trimmed);
+    } catch {
+      // ignore
+    }
+  }, [emailInput]);
+
   if (loading) {
     return <DashboardLoading />;
   }
@@ -214,6 +226,7 @@ function JoinDashboardContent() {
                   <li key={t.testId}>
                     <Link
                       href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
+                      onClick={persistEmailBeforeTestNavigation}
                       className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
                     >
                       <span className="font-medium">{t.name || t.testId}</span>

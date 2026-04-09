@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -42,7 +42,16 @@ export default function TestRunnerPage() {
   const questions = genericJoinQuestions;
   const isEditMode = !!editResultId;
 
-  useEffect(() => {
+  const syncEmailFromSession = useCallback(() => {
+    try {
+      const s = sessionStorage.getItem(JOIN_EMAIL_KEY);
+      setClientEmail(s != null && s !== '' ? s.trim() : '');
+    } catch {
+      setClientEmail('');
+    }
+  }, []);
+
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const params = new URLSearchParams(window.location.search);
@@ -52,7 +61,14 @@ export default function TestRunnerPage() {
       setAccessCode('');
       setTestId('');
     }
-  }, []);
+    syncEmailFromSession();
+  }, [syncEmailFromSession]);
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!accessCode && !testId) return;
+    syncEmailFromSession();
+  }, [accessCode, testId, syncEmailFromSession]);
 
   useEffect(() => {
     let raw: string | null = null;
@@ -74,26 +90,18 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  const readStoredEmail = useCallback(() => {
-    try {
-      const saved = sessionStorage.getItem(JOIN_EMAIL_KEY);
-      if (saved) setClientEmail(saved);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    readStoredEmail();
-  }, [readStoredEmail]);
-
   useEffect(() => {
     const onVisible = () => {
-      if (document.visibilityState === 'visible') readStoredEmail();
+      if (document.visibilityState === 'visible') syncEmailFromSession();
     };
+    const onWinFocus = () => syncEmailFromSession();
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [readStoredEmail]);
+    window.addEventListener('focus', onWinFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onWinFocus);
+    };
+  }, [syncEmailFromSession]);
 
   useEffect(() => {
     try {
