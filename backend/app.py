@@ -16,6 +16,16 @@ def create_app():
     app.register_blueprint(assessments_bp)
     app.register_blueprint(results_bp)
 
+    @app.route("/", methods=["GET"])
+    def root():
+        # Cloud Run 기본 URL만 열면 404로 보이지 않도록 안내
+        return {
+            "service": "wizcoco-api",
+            "status": "ok",
+            "health": "/api/health",
+            "api": ["/api/assessments", "/api/results"],
+        }
+
     @app.route("/api/health", methods=["GET"])
     def health():
         return {"status": "ok", "service": "wizcoco-api"}
