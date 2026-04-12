@@ -11,7 +11,7 @@ import {
   normalizeAccessCodeInput,
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
-import { readJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
+import { readJoinClientEmail } from '@/lib/joinClientEmailStorage';
 import { JOIN_STORAGE_KEY, persistJoinPinBackup, readJoinPinForAccessCode } from '@/lib/joinAssessmentSession';
 
 /** /join → 대시보드 이동 시 PIN 전달용 (#p=1234). HTTP 요청 URL에 포함되지 않음. */
@@ -58,7 +58,6 @@ function JoinDashboardContent() {
   const [clientEmail, setClientEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [emailInput, setEmailInput] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
 
   const loadAssessment = useCallback(() => {
@@ -107,12 +106,12 @@ function JoinDashboardContent() {
   }, [loadAssessment]);
 
   useEffect(() => {
-    const v = readJoinClientEmail();
-    if (v) {
-      setEmailInput(v);
-      setClientEmail(v);
-    }
+    setClientEmail(readJoinClientEmail());
   }, []);
+
+  useEffect(() => {
+    if (assessment) setClientEmail(readJoinClientEmail());
+  }, [assessment]);
 
   useEffect(() => {
     if (!clientEmail.trim().toLowerCase().includes('@')) setJoinResults([]);
@@ -151,21 +150,6 @@ function JoinDashboardContent() {
     });
     return withIdx;
   }, [assessment, latestCompletedByTestId, joinResults]);
-
-  const handleSetEmail = () => {
-    const trimmed = (emailInput || '').trim().toLowerCase();
-    if (!trimmed || !trimmed.includes('@')) return;
-    setClientEmail(trimmed);
-    writeJoinClientEmail(trimmed);
-  };
-
-  /** 검사 링크 클릭 직전에 저장(적용·blur 없이 입력만 한 경우 대비) */
-  const persistEmailBeforeTestNavigation = useCallback(() => {
-    const trimmed = (emailInput || '').trim().toLowerCase();
-    if (!trimmed.includes('@')) return;
-    setClientEmail(trimmed);
-    writeJoinClientEmail(trimmed);
-  }, [emailInput]);
 
   if (loading) {
     return <DashboardLoading />;
@@ -210,32 +194,29 @@ function JoinDashboardContent() {
             )}
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">내 이메일</label>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  autoComplete="email"
-                  placeholder="example@email.com"
-                  className="flex-1 px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  onBlur={handleSetEmail}
-                />
-                <button
-                  type="button"
-                  onClick={handleSetEmail}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  적용
-                </button>
-              </div>
-              <p className="text-slate-500 text-xs mt-1">검사 제출 및 완료 목록에 사용됩니다.</p>
+              <div className="block text-sm font-medium text-slate-300 mb-2">나의 이메일</div>
+              {clientEmail.trim().toLowerCase().includes('@') ? (
+                <div className="rounded-lg bg-slate-700/50 border border-slate-600 px-3 py-2.5 text-white text-sm break-all">
+                  {clientEmail.trim().toLowerCase()}
+                </div>
+              ) : (
+                <p className="text-amber-200/90 text-sm rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
+                  저장된 이메일이 없습니다.{' '}
+                  <Link href="/join" className="text-blue-400 hover:text-blue-300 underline">
+                    검사 코드 입력
+                  </Link>
+                  에서 나의 이메일을 입력해 주세요.
+                </p>
+              )}
+              <p className="text-slate-500 text-xs mt-1">
+                검사 제출 및 완료 목록에 사용됩니다. 변경은 검사 코드 입력 페이지에서 할 수 있습니다.
+              </p>
             </div>
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
             {!clientEmail.trim().toLowerCase().includes('@') ? (
               <p className="text-amber-200/90 text-sm mb-2">
-                위에서 「내 이메일」을 입력·적용하면 완료 여부가 표시됩니다.
+                위에서 「나의 이메일」이 설정되어 있으면 완료 여부가 표시됩니다.
               </p>
             ) : null}
             {assessment.testList.length === 0 ? (
@@ -258,7 +239,6 @@ function JoinDashboardContent() {
                     <li key={t.testId}>
                       <Link
                         href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
-                        onClick={persistEmailBeforeTestNavigation}
                         className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">

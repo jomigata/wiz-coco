@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { lookupPublicAssessment } from '@/lib/assessmentApi';
+import { readJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
 import {
   formatJoinAccessCodeWhileTyping,
   isValidAccessCodeInput,
@@ -18,19 +19,31 @@ const MSG_LOOKUP_DEFAULT =
 
 export default function AccessCodeInputPage() {
   const router = useRouter();
+  const [clientEmail, setClientEmail] = useState('');
   const [code, setCode] = useState('');
   const [joinPin, setJoinPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const v = readJoinClientEmail();
+    if (v) setClientEmail(v);
+  }, []);
+
   const normalizedCode = normalizeAccessCodeInput(code);
   const pinDigits = normalizeJoinPinDigits(joinPin);
   const pinOk = pinDigits.length === 0 || pinDigits.length === 4;
-  const canSubmit = isValidAccessCodeInput(normalizedCode) && pinOk;
+  const emailTrimmed = (clientEmail || '').trim().toLowerCase();
+  const emailOk = emailTrimmed.includes('@');
+  const canSubmit = emailOk && isValidAccessCodeInput(normalizedCode) && pinOk;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!emailOk) {
+      setError('나의 이메일을 올바르게 입력해 주세요.');
+      return;
+    }
     if (!isValidAccessCodeInput(normalizedCode)) {
       setError('검사 코드 형식을 확인해 주시기 바랍니다.');
       return;
@@ -41,6 +54,7 @@ export default function AccessCodeInputPage() {
     }
     setLoading(true);
     try {
+      writeJoinClientEmail(emailTrimmed);
       const data = await lookupPublicAssessment(normalizedCode, pinDigits);
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(
@@ -77,9 +91,25 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              상담사에게 받은 검사코드와 비밀번호(숫자 4자리)를 입력해 주세요.
+              나의 이메일과 상담사에게 받은 검사코드·비밀번호(숫자 4자리)를 입력해 주세요. 이메일은 검사 제출 및 완료 목록에
+              사용됩니다.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="join-client-email" className="block text-sm font-medium text-slate-300 mb-2">
+                  나의 이메일
+                </label>
+                <input
+                  id="join-client-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="example@email.com"
+                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
                   검사 코드

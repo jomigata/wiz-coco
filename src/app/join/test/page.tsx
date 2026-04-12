@@ -268,18 +268,22 @@ export default function TestRunnerPage() {
 
             {effectiveEmail.includes('@') ? (
               <p className="text-slate-400 text-sm mb-4">
-                제출 이메일: <span className="text-slate-200">{effectiveEmail}</span>
-                <span className="text-slate-500"> (대시보드 「내 이메일」 적용값)</span>
+                제출 이메일: <span className="text-slate-200 font-medium">{effectiveEmail}</span>
+                <span className="text-slate-500"> (검사 코드 입력 시 저장된 나의 이메일)</span>
               </p>
             ) : (
               <p className="text-amber-400/95 text-sm mb-4">
-                대시보드에서 「내 이메일」을 입력하고 적용한 뒤 다시 이 검사를 열어 주세요.{' '}
+                검사 코드 입력 페이지에서 나의 이메일을 입력한 뒤 다시 이 검사를 열어 주세요.{' '}
+                <Link href="/join" className="text-blue-400 hover:text-blue-300 underline">
+                  검사 코드 입력
+                </Link>
+                {' · '}
                 <button
                   type="button"
                   onClick={() => navigateToJoinSelectionDashboard(code)}
                   className="text-blue-400 hover:text-blue-300 underline bg-transparent border-0 cursor-pointer p-0"
                 >
-                  검사 선택 현황으로 이동
+                  검사 선택 현황
                 </button>
               </p>
             )}
