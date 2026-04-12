@@ -402,8 +402,23 @@ export default function Navigation() {
     }
   ];
 
-  // 상담사 메뉴 데이터
+  // 상담사 메뉴 데이터 (심리검사 관리 그룹을 맨 위에 표시)
   const counselorMenuItems = [
+    {
+      category: "심리검사 관리",
+      items: [
+        {
+          name: "검사코드 목록",
+          href: "/counselor/assessments",
+          description: "검사코드 발급·목록·진행현황 (신규 CVC+숫자, 기존 6자리 호환)",
+          icon: "📦",
+        },
+        { name: "새 검사코드 만들기", href: "/counselor/assessments/new", description: "내담자용 검사코드를 만들고 코드를 발급합니다", icon: "➕" },
+        { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
+        { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
+        { name: "인증코드 관리", href: "/counselor/codes", description: "상담사 인증코드 관리", icon: "🔑" },
+      ],
+    },
     {
       category: "계정 관리",
       items: [
@@ -418,21 +433,6 @@ export default function Navigation() {
         { name: "검사 관리", href: "/counselor/test-management", description: "신입생 통합 검사 관리", icon: "🎓" },
         { name: "상담 일정", href: "/counselor/schedule", description: "상담 일정 관리", icon: "📅" },
         { name: "상담 기록", href: "/counselor/sessions", description: "상담 세션 기록", icon: "📝" }
-      ]
-    },
-    {
-      category: "심리검사 관리",
-      items: [
-        {
-          name: "검사코드 목록",
-          href: "/counselor/assessments",
-          description: "검사코드 발급·목록·진행현황 (신규 CVC+숫자, 기존 6자리 호환)",
-          icon: "📦",
-        },
-        { name: "새 검사코드 만들기", href: "/counselor/assessments/new", description: "내담자용 검사코드를 만들고 코드를 발급합니다", icon: "➕" },
-        { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
-        { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
-        { name: "인증코드 관리", href: "/counselor/codes", description: "상담사 인증코드 관리", icon: "🔑" }
       ]
     },
     {
