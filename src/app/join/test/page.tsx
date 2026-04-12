@@ -5,12 +5,33 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { submitResult, updateResult } from '@/lib/assessmentApi';
-import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import {
+  isValidAccessCodeInput,
+  normalizeAccessCodeInput,
+  normalizeJoinPinDigits,
+} from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_CLIENT_EMAIL_KEY, readJoinClientEmail } from '@/lib/joinClientEmailStorage';
 
 const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 const EDIT_RESULT_STORAGE_KEY = 'wizcoco_edit_result';
+
+/** 검사 선택 현황(`/join/dashboard`) — 세션의 PIN을 해시로 넘기면 대시보드에서 복구 가능 */
+function joinSelectionDashboardHref(accessCodeNorm: string): string {
+  const base = `/join/dashboard?accessCode=${encodeURIComponent(accessCodeNorm)}`;
+  if (typeof window === 'undefined') return base;
+  try {
+    const raw = sessionStorage.getItem(JOIN_STORAGE_KEY);
+    if (!raw) return base;
+    const parsed = JSON.parse(raw) as { accessCode?: unknown; joinPin?: unknown };
+    if (normalizeAccessCodeInput(String(parsed.accessCode ?? '')) !== accessCodeNorm) return base;
+    const pin = normalizeJoinPinDigits(parsed.joinPin);
+    if (pin.length === 4) return `${base}#p=${encodeURIComponent(pin)}`;
+  } catch {
+    /* ignore */
+  }
+  return base;
+}
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -171,8 +192,6 @@ export default function TestRunnerPage() {
     }
   };
 
-  const dashboardHref = `/join/dashboard?accessCode=${encodeURIComponent(code)}`;
-
   if (!code || !isValidAccessCodeInput(code) || !testId) {
     return (
       <div className="min-h-screen bg-gray-900">
@@ -233,7 +252,7 @@ export default function TestRunnerPage() {
             )}
             <button
               type="button"
-              onClick={() => router.push(dashboardHref)}
+              onClick={() => router.push(joinSelectionDashboardHref(code))}
               className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
             >
               닫기
@@ -256,13 +275,12 @@ export default function TestRunnerPage() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
           <div className="mb-4">
-            <button
-              type="button"
-              onClick={() => router.back()}
+            <Link
+              href={joinSelectionDashboardHref(code)}
               className="text-blue-400 hover:text-blue-300 text-sm"
             >
-              ← 이전
-            </button>
+              ← 검사 선택 현황
+            </Link>
           </div>
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">
@@ -278,8 +296,8 @@ export default function TestRunnerPage() {
             ) : (
               <p className="text-amber-400/95 text-sm mb-4">
                 대시보드에서 「내 이메일」을 입력하고 적용한 뒤 다시 이 검사를 열어 주세요.{' '}
-                <Link href={dashboardHref} className="text-blue-400 hover:text-blue-300 underline">
-                  대시보드로 이동
+                <Link href={joinSelectionDashboardHref(code)} className="text-blue-400 hover:text-blue-300 underline">
+                  검사 선택 현황으로 이동
                 </Link>
               </p>
             )}
