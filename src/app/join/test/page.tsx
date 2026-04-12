@@ -256,8 +256,12 @@ export default function TestRunnerPage() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
           <div className="mb-4">
-            <button type="button" onClick={() => router.push(dashboardHref)} className="text-blue-400 hover:text-blue-300 text-sm">
-              ← 대시보드
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="text-blue-400 hover:text-blue-300 text-sm"
+            >
+              ← 이전
             </button>
           </div>
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
