@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
-import { lookupPublicAssessment, PublicAssessment } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import {
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
@@ -72,6 +72,7 @@ function JoinDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [emailInput, setEmailInput] = useState('');
+  const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
 
   const loadAssessment = useCallback(() => {
     if (!isValidAccessCodeInput(code)) {
@@ -124,6 +125,44 @@ function JoinDashboardContent() {
       setClientEmail(v);
     }
   }, []);
+
+  useEffect(() => {
+    if (!clientEmail.trim().toLowerCase().includes('@')) setJoinResults([]);
+  }, [clientEmail]);
+
+  const latestCompletedByTestId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of joinResults) {
+      const tid = String(r.testId);
+      if (!r.completedAt) continue;
+      const prev = m.get(tid);
+      const t = new Date(r.completedAt).getTime();
+      if (!prev || t > new Date(prev).getTime()) m.set(tid, r.completedAt);
+    }
+    return m;
+  }, [joinResults]);
+
+  const sortedTestList = useMemo(() => {
+    if (!assessment?.testList.length) return [];
+    const withIdx = assessment.testList.map((t, i) => {
+      const tid = String(t.testId);
+      const isDone = joinResults.some((r) => String(r.testId) === tid);
+      return {
+        ...t,
+        _idx: i,
+        latestAt: latestCompletedByTestId.get(tid) ?? null,
+        isDone,
+      };
+    });
+    withIdx.sort((a, b) => {
+      if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
+      if (!a.isDone) return a._idx - b._idx;
+      const ta = a.latestAt ? new Date(a.latestAt).getTime() : 0;
+      const tb = b.latestAt ? new Date(b.latestAt).getTime() : 0;
+      return tb - ta;
+    });
+    return withIdx;
+  }, [assessment, latestCompletedByTestId, joinResults]);
 
   const handleSetEmail = () => {
     const trimmed = (emailInput || '').trim().toLowerCase();
@@ -206,27 +245,67 @@ function JoinDashboardContent() {
             </div>
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
+            {!clientEmail.trim().toLowerCase().includes('@') ? (
+              <p className="text-amber-200/90 text-sm mb-2">
+                위에서 「내 이메일」을 입력·적용하면 완료 여부가 표시됩니다.
+              </p>
+            ) : null}
             {assessment.testList.length === 0 ? (
               <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>
             ) : (
               <ul className="space-y-2">
-                {assessment.testList.map((t) => (
-                  <li key={t.testId}>
-                    <Link
-                      href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
-                      onClick={persistEmailBeforeTestNavigation}
-                      className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
-                    >
-                      <span className="font-medium">{t.name || t.testId}</span>
-                      <span className="text-slate-400 text-sm ml-2">시작하기 →</span>
-                    </Link>
-                  </li>
-                ))}
+                {sortedTestList.map((t) => {
+                  const done = t.isDone;
+                  const dateLabel =
+                    t.latestAt != null
+                      ? new Date(t.latestAt).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : null;
+                  return (
+                    <li key={t.testId}>
+                      <Link
+                        href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
+                        onClick={persistEmailBeforeTestNavigation}
+                        className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium">{t.name || t.testId}</span>
+                          <span className="text-slate-400 text-sm">시작하기 →</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          {done ? (
+                            <>
+                              <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
+                                검사 실시 완료
+                              </span>
+                              {dateLabel ? (
+                                <span className="text-slate-400">최근 제출: {dateLabel}</span>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
+                              미완료 · 제출 전
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
 
-          <CompletedTestList clientEmail={clientEmail} onRefresh={loadAssessment} />
+          <CompletedTestList
+            clientEmail={clientEmail}
+            onRefresh={loadAssessment}
+            onResultsChange={setJoinResults}
+          />
         </main>
 
         <p className="text-center mt-6">

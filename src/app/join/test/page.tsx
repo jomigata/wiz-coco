@@ -197,9 +197,16 @@ export default function TestRunnerPage() {
         <div className="fixed top-0 left-0 right-0 z-50">
           <Navigation />
         </div>
-        <div className="pt-24 pb-12 px-4">
-          <div className="max-w-lg mx-auto text-center bg-slate-800/80 rounded-2xl border border-slate-600 p-8">
-            <h2 className="text-xl font-bold text-white mb-2">{isEditMode ? '수정 완료' : '제출 완료'}</h2>
+        <div
+          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 pt-24"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="join-submit-done-title"
+        >
+          <div className="max-w-lg w-full text-center bg-slate-800/95 rounded-2xl border border-slate-600 p-8 shadow-xl">
+            <h2 id="join-submit-done-title" className="text-xl font-bold text-white mb-2">
+              {isEditMode ? '수정 완료' : '제출 완료'}
+            </h2>
             {isEditMode ? (
               <p className="text-slate-300 mb-6">결과가 수정되었습니다.</p>
             ) : submitDoneInfo?.emailSent === false ? (
@@ -224,9 +231,14 @@ export default function TestRunnerPage() {
                 수정·삭제 시 필요합니다.
               </p>
             )}
-            <Link href={dashboardHref} className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-              대시보드로 돌아가기
-            </Link>
+            <button
+              type="button"
+              onClick={() => router.push(dashboardHref)}
+              className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              닫기
+            </button>
+            <p className="text-slate-500 text-xs mt-4">검사 선택 화면(대시보드)으로 이동합니다.</p>
           </div>
         </div>
       </div>
