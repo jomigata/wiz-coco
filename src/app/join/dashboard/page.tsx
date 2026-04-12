@@ -12,20 +12,7 @@ import {
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
 import { readJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
-
-const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
-
-function readJoinPinFromSession(accessCodeNorm: string): string {
-  try {
-    const raw = typeof window !== 'undefined' ? sessionStorage.getItem(JOIN_STORAGE_KEY) : null;
-    if (!raw) return '';
-    const p = JSON.parse(raw) as { accessCode?: unknown; joinPin?: unknown };
-    if (normalizeAccessCodeInput(String(p.accessCode ?? '')) !== accessCodeNorm) return '';
-    return normalizeJoinPinDigits(p.joinPin);
-  } catch {
-    return '';
-  }
-}
+import { JOIN_STORAGE_KEY, persistJoinPinBackup, readJoinPinForAccessCode } from '@/lib/joinAssessmentSession';
 
 /** /join → 대시보드 이동 시 PIN 전달용 (#p=1234). HTTP 요청 URL에 포함되지 않음. */
 function peekJoinPinFromHash(): string {
@@ -81,7 +68,7 @@ function JoinDashboardContent() {
       setLoading(false);
       return;
     }
-    let joinPin = readJoinPinFromSession(code);
+    let joinPin = readJoinPinForAccessCode(code);
     if (!joinPin) {
       joinPin = peekJoinPinFromHash();
     }
@@ -103,6 +90,7 @@ function JoinDashboardContent() {
               testList: data.testList,
             })
           );
+          persistJoinPinBackup(code, joinPin);
         } catch {
           // ignore
         }

@@ -11,8 +11,7 @@ import {
   normalizeAccessCodeInput,
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
-
-const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
+import { JOIN_STORAGE_KEY, persistJoinPinBackup } from '@/lib/joinAssessmentSession';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
@@ -55,6 +54,7 @@ export default function AccessCodeInputPage() {
             testList: data.testList,
           })
         );
+        persistJoinPinBackup(normalizedCode, pinDigits);
       }
       // 해시는 HTTP 요청에 포함되지 않음. sessionStorage 실패·파티셔닝 시에도 대시보드에서 PIN 전달용.
       router.push(
