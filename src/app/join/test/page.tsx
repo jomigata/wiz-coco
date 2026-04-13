@@ -3,10 +3,15 @@
 import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { submitResult, updateResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
-import { JOIN_CLIENT_EMAIL_KEY, readJoinClientEmail } from '@/lib/joinClientEmailStorage';
+import {
+  getResolvedJoinClientEmail,
+  JOIN_CLIENT_EMAIL_KEY,
+  writeJoinClientEmail,
+} from '@/lib/joinClientEmailStorage';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
 
 const EDIT_RESULT_STORAGE_KEY = 'wizcoco_edit_result';
@@ -22,6 +27,7 @@ const SCALE_LABELS: Record<number, string> = {
 };
 
 export default function TestRunnerPage() {
+  const { user } = useFirebaseAuth();
   const [accessCode, setAccessCode] = useState('');
   const [testId, setTestId] = useState('');
 
@@ -57,6 +63,11 @@ export default function TestRunnerPage() {
     }
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    const acc = (user?.email || '').trim().toLowerCase();
+    if (acc.includes('@')) writeJoinClientEmail(acc);
+  }, [user?.email]);
 
   useEffect(() => {
     let raw: string | null = null;
@@ -115,10 +126,10 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  /** React state 대신 저장소를 직접 읽어 적용 직후에도 경고가 남는 문제 방지 */
+  /** 로그인 계정 이메일 우선, 없으면 검사 코드 입력 시 저장된 이메일 */
   const effectiveEmail = useMemo(
-    () => (hydrated ? readJoinClientEmail() : ''),
-    [hydrated, storageTick]
+    () => (hydrated ? getResolvedJoinClientEmail(user?.email) : ''),
+    [hydrated, storageTick, user?.email]
   );
 
   const handleAnswer = (value: number) => {
@@ -223,8 +234,8 @@ export default function TestRunnerPage() {
               </div>
             ) : (
               <p className="text-slate-300 mb-6">
-                결과와 4자리 비밀번호가 입력하신 이메일로 발송됩니다. 메일이 오지 않으면 스팸함을 확인해 주세요. 비밀번호는 결과
-                수정·삭제 시 필요합니다.
+                결과와 4자리 비밀번호가 회원 로그인 이메일(또는 지정하신 이메일)로 발송됩니다. 메일이 오지 않으면 스팸함을 확인해
+                주세요. 비밀번호는 결과 수정·삭제 시 필요합니다.
               </p>
             )}
             <button
@@ -268,12 +279,12 @@ export default function TestRunnerPage() {
 
             {effectiveEmail.includes('@') ? (
               <p className="text-slate-400 text-sm mb-4">
-                제출 이메일: <span className="text-slate-200 font-medium">{effectiveEmail}</span>
-                <span className="text-slate-500"> (검사 코드 입력 시 저장된 나의 이메일)</span>
+                제출·안내 이메일: <span className="text-slate-200 font-medium">{effectiveEmail}</span>
+                <span className="text-slate-500"> (회원 로그인 이메일 또는 검사 코드 입력 시 지정한 이메일)</span>
               </p>
             ) : (
               <p className="text-amber-400/95 text-sm mb-4">
-                검사 코드 입력 페이지에서 나의 이메일을 입력한 뒤 다시 이 검사를 열어 주세요.{' '}
+                로그인 이메일이 없고, 검사 코드 입력 페이지에서 안내 받을 이메일을 입력한 뒤 다시 이 검사를 열어 주세요.{' '}
                 <Link href="/join" className="text-blue-400 hover:text-blue-300 underline">
                   검사 코드 입력
                 </Link>

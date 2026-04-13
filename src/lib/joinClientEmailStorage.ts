@@ -19,6 +19,13 @@ export function readJoinClientEmail(): string {
   return '';
 }
 
+/** 로그인(Firebase) 이메일이 있으면 우선, 없으면 검사 참여용으로 저장된 이메일 */
+export function getResolvedJoinClientEmail(accountEmail?: string | null): string {
+  const a = (accountEmail ?? '').trim().toLowerCase();
+  if (a.includes('@')) return a;
+  return readJoinClientEmail();
+}
+
 export function writeJoinClientEmail(trimmedLowercase: string): void {
   if (typeof window === 'undefined') return;
   try {

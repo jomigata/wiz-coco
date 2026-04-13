@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { lookupPublicAssessment } from '@/lib/assessmentApi';
 import { readJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
 import {
@@ -19,21 +20,34 @@ const MSG_LOOKUP_DEFAULT =
 
 export default function AccessCodeInputPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useFirebaseAuth();
   const [clientEmail, setClientEmail] = useState('');
   const [code, setCode] = useState('');
   const [joinPin, setJoinPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const accountEmail = useMemo(
+    () => (user?.email || '').trim().toLowerCase(),
+    [user?.email]
+  );
+  const useAccountEmail = accountEmail.includes('@');
+
   useEffect(() => {
+    if (authLoading) return;
+    if (useAccountEmail) {
+      setClientEmail(accountEmail);
+      writeJoinClientEmail(accountEmail);
+      return;
+    }
     const v = readJoinClientEmail();
     if (v) setClientEmail(v);
-  }, []);
+  }, [authLoading, useAccountEmail, accountEmail]);
 
   const normalizedCode = normalizeAccessCodeInput(code);
   const pinDigits = normalizeJoinPinDigits(joinPin);
   const pinOk = pinDigits.length === 0 || pinDigits.length === 4;
-  const emailTrimmed = (clientEmail || '').trim().toLowerCase();
+  const emailTrimmed = useAccountEmail ? accountEmail : (clientEmail || '').trim().toLowerCase();
   const emailOk = emailTrimmed.includes('@');
   const canSubmit = emailOk && isValidAccessCodeInput(normalizedCode) && pinOk;
 
@@ -91,24 +105,58 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              나의 이메일과 상담사에게 받은 검사코드·비밀번호(숫자 4자리)를 입력해 주세요. 이메일은 검사 결과를 확인·수정할 때
-              필요한 <span className="text-slate-200">4자리 비밀번호</span>를 받는 주소입니다.
+              {useAccountEmail ? (
+                <>
+                  로그인한 회원 계정 이메일로 안내 메일이 발송됩니다. 상담사에게 받은 검사코드·비밀번호(숫자 4자리)를 입력해
+                  주세요. <span className="text-slate-200">4자리 비밀번호</span>는 검사 결과를 확인·수정할 때 필요합니다.
+                </>
+              ) : (
+                <>
+                  나의 이메일과 상담사에게 받은 검사코드·비밀번호(숫자 4자리)를 입력해 주세요. 이메일은 검사 결과를 확인·수정할 때
+                  필요한 <span className="text-slate-200">4자리 비밀번호</span>를 받는 주소입니다.
+                </>
+              )}
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="join-client-email" className="block text-sm font-medium text-slate-300 mb-2">
-                  나의 이메일
+                  나의 이메일 {useAccountEmail ? '(로그인 계정)' : ''}
                 </label>
-                <input
-                  id="join-client-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="example@email.com"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  disabled={loading}
-                />
+                {authLoading ? (
+                  <p className="text-slate-400 text-sm py-2">계정 정보를 확인하는 중입니다…</p>
+                ) : useAccountEmail ? (
+                  <>
+                    <div
+                      id="join-client-email"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-700/80 border border-slate-500 text-slate-100 text-sm break-all"
+                    >
+                      {accountEmail}
+                    </div>
+                    <p className="text-slate-500 text-xs mt-1.5">
+                      회원 로그인 이메일이 안내·결과 연락에 사용됩니다. 변경은 마이페이지 설정에서 계정을 확인해 주세요.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      id="join-client-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="example@email.com"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      disabled={loading}
+                    />
+                    <p className="text-amber-200/90 text-xs mt-1.5">
+                      현재 로그인 계정에 이메일이 없습니다. 안내를 받을 이메일을 직접 입력하거나,{' '}
+                      <Link href="/mypage/settings" className="text-blue-400 hover:text-blue-300 underline">
+                        마이페이지 설정
+                      </Link>
+                      에서 계정을 확인해 주세요.
+                    </p>
+                  </>
+                )}
               </div>
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">

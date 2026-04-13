@@ -4,6 +4,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import {
@@ -11,7 +12,7 @@ import {
   normalizeAccessCodeInput,
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
-import { readJoinClientEmail } from '@/lib/joinClientEmailStorage';
+import { getResolvedJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
 import { JOIN_STORAGE_KEY, persistJoinPinBackup, readJoinPinForAccessCode } from '@/lib/joinAssessmentSession';
 
 /** /join → 대시보드 이동 시 PIN 전달용 (#p=1234). HTTP 요청 URL에 포함되지 않음. */
@@ -46,6 +47,7 @@ function DashboardLoading() {
 }
 
 function JoinDashboardContent() {
+  const { user, loading: authLoading } = useFirebaseAuth();
   const searchParams = useSearchParams();
   const accessCodeRaw = searchParams.get('accessCode') ?? '';
 
@@ -106,12 +108,12 @@ function JoinDashboardContent() {
   }, [loadAssessment]);
 
   useEffect(() => {
-    setClientEmail(readJoinClientEmail());
-  }, []);
-
-  useEffect(() => {
-    if (assessment) setClientEmail(readJoinClientEmail());
-  }, [assessment]);
+    if (authLoading) return;
+    const resolved = getResolvedJoinClientEmail(user?.email);
+    setClientEmail(resolved);
+    const acc = (user?.email || '').trim().toLowerCase();
+    if (acc.includes('@')) writeJoinClientEmail(acc);
+  }, [authLoading, user?.email]);
 
   useEffect(() => {
     if (!clientEmail.trim().toLowerCase().includes('@')) setJoinResults([]);
@@ -201,15 +203,15 @@ function JoinDashboardContent() {
                 </div>
               ) : (
                 <p className="text-amber-200/90 text-sm rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
-                  저장된 이메일이 없습니다.{' '}
+                  로그인 이메일이 없거나 저장된 이메일이 없습니다.{' '}
                   <Link href="/join" className="text-blue-400 hover:text-blue-300 underline">
                     검사 코드 입력
                   </Link>
-                  에서 나의 이메일을 입력해 주세요.
+                  에서 확인하거나 마이페이지에서 계정 이메일을 확인해 주세요.
                 </p>
               )}
               <p className="text-slate-500 text-xs mt-1">
-                결과 비밀번호(4자리) 수신·완료 내역 확인에 사용됩니다. 변경은 검사 코드 입력 페이지에서 할 수 있습니다.
+                결과 비밀번호(4자리) 수신·완료 내역 확인에 사용됩니다. 로그인 계정 이메일이 있으면 해당 주소가 우선 적용됩니다.
               </p>
             </div>
 
