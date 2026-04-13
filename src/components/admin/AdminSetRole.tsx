@@ -1,23 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { initializeFirebase } from '@/lib/firebase';
+import type { AppRole } from '@/utils/roleUtils';
 
 interface AdminSetRoleProps {
-  defaultEmail?: string;
+  defaultUid?: string;
 }
 
-const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultEmail = '' }) => {
-  const [email, setEmail] = useState<string>(defaultEmail);
-  const [adminSecret, setAdminSecret] = useState<string>('');
+const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultUid = '' }) => {
+  const { user, loading: authLoading } = useFirebaseAuth();
+  const [uid, setUid] = useState<string>(defaultUid);
+  const [role, setRole] = useState<AppRole>('user');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [roleInfo, setRoleInfo] = useState<{ email: string; role: string; name: string } | null>(null);
+  const [roleInfo, setRoleInfo] = useState<{ uid: string; role: AppRole; email?: string | null } | null>(null);
+
+  const isAdmin = useMemo(() => (user?.role || 'user') === 'admin', [user?.role]);
 
   // 사용자 역할 조회
   const checkUserRole = async () => {
-    if (!email) {
-      setError('이메일을 입력해주세요.');
+    if (!uid.trim()) {
+      setError('사용자 UID를 입력해주세요.');
       return;
     }
 
@@ -27,23 +34,19 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultEmail = '' }) => {
     setRoleInfo(null);
 
     try {
-      const response = await fetch(`/api/admin/check-role?email=${encodeURIComponent(email)}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '역할 확인 중 오류가 발생했습니다.');
+      const { db } = initializeFirebase();
+      if (!db) throw new Error('Firestore가 초기화되지 않았습니다.');
+      const ref = doc(db, 'users', uid.trim());
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        setError('해당 UID의 사용자 문서가 없습니다. 사용자가 먼저 로그인해야 합니다.');
+        return;
       }
-
-      if (data.success && data.user) {
-        setRoleInfo({
-          email: data.user.email,
-          role: data.user.role,
-          name: data.user.name
-        });
-        setMessage(`${data.user.email} 사용자의 현재 역할: ${data.user.role}`);
-      } else {
-        setError('사용자 정보를 찾을 수 없습니다.');
-      }
+      const data = snap.data() as any;
+      const currentRole = (data?.role || 'user') as AppRole;
+      setRole(currentRole);
+      setRoleInfo({ uid: uid.trim(), role: currentRole, email: data?.email ?? null });
+      setMessage(`현재 역할: ${currentRole}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : '역할 확인 중 오류가 발생했습니다.');
     } finally {
@@ -51,50 +54,32 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultEmail = '' }) => {
     }
   };
 
-  // 관리자 권한 설정
-  const setAdminRole = async () => {
-    if (!email) {
-      setError('이메일을 입력해주세요.');
+  // 역할 설정
+  const setUserRole = async () => {
+    if (!uid.trim()) {
+      setError('사용자 UID를 입력해주세요.');
       return;
     }
-
-    if (!adminSecret) {
-      setError('관리자 비밀키를 입력해주세요.');
-      return;
-    }
-
     setIsLoading(true);
     setMessage(null);
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/set-admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const { db } = initializeFirebase();
+      if (!db) throw new Error('Firestore가 초기화되지 않았습니다.');
+      if (!isAdmin) throw new Error('관리자 권한이 필요합니다.');
+
+      const ref = doc(db, 'users', uid.trim());
+      await setDoc(
+        ref,
+        {
+          role,
+          updatedAt: serverTimestamp(),
         },
-        body: JSON.stringify({ email, adminSecret }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '관리자 설정 중 오류가 발생했습니다.');
-      }
-
-      if (data.success) {
-        setMessage(data.message);
-        // 성공 후 역할 정보 업데이트
-        if (data.user) {
-          setRoleInfo({
-            email: data.user.email,
-            role: data.user.role,
-            name: data.user.name
-          });
-        }
-      } else {
-        setError(data.error || '알 수 없는 오류가 발생했습니다.');
-      }
+        { merge: true }
+      );
+      setRoleInfo((prev) => ({ uid: uid.trim(), role, email: prev?.email ?? null }));
+      setMessage(`역할을 ${role}로 설정했습니다.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : '관리자 설정 중 오류가 발생했습니다.');
     } finally {
@@ -107,23 +92,39 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultEmail = '' }) => {
       <h2 className="text-2xl font-bold mb-6 text-gray-800">사용자 권한 관리</h2>
       
       <div className="mb-6">
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          사용자 이메일
+        <label htmlFor="uid" className="block text-sm font-medium text-gray-700 mb-1">
+          사용자 UID
         </label>
         <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="관리자로 설정할 이메일"
+          type="text"
+          id="uid"
+          value={uid}
+          onChange={(e) => setUid(e.target.value)}
+          placeholder="예: R3x... (Firebase uid)"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       
+      <div className="mb-6">
+        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+          역할
+        </label>
+        <select
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value as AppRole)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="user">user</option>
+          <option value="counselor">counselor</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 mb-6">
         <button
           onClick={checkUserRole}
-          disabled={isLoading}
+          disabled={isLoading || authLoading}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
         >
           {isLoading ? '확인 중...' : '역할 확인'}
@@ -145,44 +146,23 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultEmail = '' }) => {
       {roleInfo && (
         <div className="mb-6 p-4 bg-blue-50 rounded-md border border-blue-200">
           <h3 className="font-semibold text-blue-800 mb-2">사용자 정보</h3>
-          <p className="text-sm text-blue-700">이메일: {roleInfo.email}</p>
-          <p className="text-sm text-blue-700">이름: {roleInfo.name}</p>
+          <p className="text-sm text-blue-700">UID: {roleInfo.uid}</p>
+          {roleInfo.email ? <p className="text-sm text-blue-700">이메일: {roleInfo.email}</p> : null}
           <p className="text-sm text-blue-700">
             역할: <span className={`font-semibold ${roleInfo.role === 'admin' ? 'text-purple-700' : 'text-blue-700'}`}>
-              {roleInfo.role === 'admin' ? '관리자' : '일반 사용자'}
+              {roleInfo.role}
             </span>
           </p>
         </div>
       )}
       
-      {roleInfo && roleInfo.role !== 'admin' && (
-        <>
-          <div className="mb-6">
-            <label htmlFor="adminSecret" className="block text-sm font-medium text-gray-700 mb-1">
-              관리자 비밀키
-            </label>
-            <input
-              type="password"
-              id="adminSecret"
-              value={adminSecret}
-              onChange={(e) => setAdminSecret(e.target.value)}
-              placeholder="관리자 권한 설정에 필요한 비밀키"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              * 기본값은 'admin_secret_key_123'입니다.
-            </p>
-          </div>
-          
-          <button
-            onClick={setAdminRole}
-            disabled={isLoading || !adminSecret}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            {isLoading ? '처리 중...' : '관리자 권한 설정'}
-          </button>
-        </>
-      )}
+      <button
+        onClick={setUserRole}
+        disabled={isLoading || authLoading || !isAdmin}
+        className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+      >
+        {isLoading ? '처리 중...' : '역할 저장'}
+      </button>
       
       {message && (
         <div className="mt-4 p-3 bg-green-50 text-green-800 rounded-md border border-green-200">
@@ -195,6 +175,12 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultEmail = '' }) => {
           {error}
         </div>
       )}
+
+      {!authLoading && user && !isAdmin ? (
+        <div className="mt-4 p-3 bg-amber-50 text-amber-900 rounded-md border border-amber-200 text-sm">
+          이 기능은 관리자만 사용할 수 있습니다.
+        </div>
+      ) : null}
     </div>
   );
 };

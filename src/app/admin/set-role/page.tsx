@@ -8,9 +8,9 @@ import AdminSetRole from '@/components/admin/AdminSetRole';
 // 클라이언트 컴포넌트 내부에서 useSearchParams 사용
 function AdminSetRoleContent() {
   const searchParams = useSearchParams();
-  const email = searchParams?.get('email') || '';
+  const uid = searchParams?.get('uid') || '';
   
-  return <AdminSetRole defaultEmail={email} />;
+  return <AdminSetRole defaultUid={uid} />;
 }
 
 // 로딩 상태를 표시할 컴포넌트
