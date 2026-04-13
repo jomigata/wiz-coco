@@ -183,25 +183,6 @@ function JoinDashboardContent() {
               <p className="text-slate-300 whitespace-pre-wrap mb-6">{assessment.welcomeMessage}</p>
             )}
 
-            <div className="mb-6">
-              <div className="block text-sm font-medium text-slate-300 mb-2">로그인 계정</div>
-              {clientEmail.includes('@') ? (
-                <div className="rounded-lg bg-slate-700/50 border border-slate-600 px-3 py-2.5 text-white text-sm break-all">
-                  {clientEmail}
-                </div>
-              ) : (
-                <p className="text-amber-200/90 text-sm rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
-                  이메일이 있는 계정으로 로그인해야 검사 결과를 제출·조회할 수 있습니다.{' '}
-                  <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
-                    로그인
-                  </Link>
-                </p>
-              )}
-              <p className="text-slate-500 text-xs mt-1">
-                검사 제출 후 화면에 표시되는 4자리 비밀번호로 결과를 수정하거나 삭제할 수 있습니다.
-              </p>
-            </div>
-
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
             {!clientEmail.includes('@') ? (
               <p className="text-amber-200/90 text-sm mb-2">로그인 계정에 이메일이 있으면 아래에 완료 여부가 표시됩니다.</p>

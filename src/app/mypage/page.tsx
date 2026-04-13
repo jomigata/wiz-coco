@@ -1625,11 +1625,6 @@ function TestRecordsTabContent({
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [counselorViewRecord, setCounselorViewRecord] = useState<TestRecord | null>(null);
   const [counselorViewText, setCounselorViewText] = useState('');
-  const [counselorEditRecord, setCounselorEditRecord] = useState<TestRecord | null>(null);
-  const [counselorEditPin, setCounselorEditPin] = useState('');
-  const [counselorEditError, setCounselorEditError] = useState('');
-  const [counselorEditBusy, setCounselorEditBusy] = useState(false);
-  const [counselorDeletePin, setCounselorDeletePin] = useState('');
 
   const formatCodePinDisplay = (record: TestRecord) => {
     if (record.counselorCodePinDisplay) return record.counselorCodePinDisplay;
@@ -1786,59 +1781,6 @@ function TestRecordsTabContent({
     router.push(resultUrl);
   };
 
-  const runCounselorEdit = async () => {
-    if (!counselorEditRecord?.counselorResultId || !counselorEditRecord.counselorAccessCode) return;
-    if (counselorEditPin.length !== 4) return;
-    setCounselorEditBusy(true);
-    setCounselorEditError('');
-    try {
-      const { getResult } = await import('@/lib/assessmentApi');
-      const { JOIN_STORAGE_KEY } = await import('@/lib/joinAssessmentSession');
-      const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
-      const data = await getResult(counselorEditRecord.counselorResultId, counselorEditPin);
-      const code = normalizeAccessCodeInput(String(counselorEditRecord.counselorAccessCode || ''));
-      if (!code) {
-        setCounselorEditError('검사 코드가 없습니다.');
-        return;
-      }
-      const tid = String(data.testId || counselorEditRecord.counselorTestId || '');
-      const testList = [
-        {
-          testId: tid,
-          name: counselorEditRecord.testType?.replace(/^상담사 검사코드 · /, '') || tid,
-        },
-      ];
-      sessionStorage.setItem(
-        JOIN_STORAGE_KEY,
-        JSON.stringify({
-          accessCode: code,
-          joinPin: '',
-          assessmentId: '',
-          title: testList[0].name,
-          welcomeMessage: '',
-          testList,
-        })
-      );
-      sessionStorage.setItem(
-        'wizcoco_edit_result',
-        JSON.stringify({
-          resultId: data.resultId,
-          testId: data.testId,
-          responses: data.responses,
-        })
-      );
-      setCounselorEditRecord(null);
-      setCounselorEditPin('');
-      router.push(
-        `/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(tid)}`
-      );
-    } catch (e) {
-      setCounselorEditError(e instanceof Error ? e.message : '실패');
-    } finally {
-      setCounselorEditBusy(false);
-    }
-  };
-
   // 체크박스 선택/해제
   const toggleSelection = (code: string) => {
     setSelectedRecords(prev => 
@@ -1874,7 +1816,7 @@ function TestRecordsTabContent({
     const skipped = selectedRecords.length - localOnlyCodes.length;
     if (localOnlyCodes.length === 0) {
       alert(
-        '상담사 검사코드 기록은 일괄 삭제할 수 없습니다. 해당 행의 삭제 버튼과 제출 시 받은 4자리 비밀번호로 삭제해 주세요.'
+        '상담사 검사코드 기록은 일괄 삭제할 수 없습니다. 해당 행의 삭제 버튼으로 개별 삭제해 주세요.'
       );
       setShowBulkDeleteModal(false);
       return;
@@ -1954,7 +1896,6 @@ function TestRecordsTabContent({
   // 삭제 버튼 클릭 핸들러 (이벤트 전파 방지)
   const handleDeleteClick = (e: React.MouseEvent, record: TestRecord) => {
     e.stopPropagation(); // 테이블 행 클릭 이벤트 방지
-    setCounselorDeletePin('');
     setDeleteModalRecord(record);
     setShowDeleteModal(true);
   };
@@ -1970,16 +1911,11 @@ function TestRecordsTabContent({
       deleteModalRecord.recordSource === 'counselor-assessment' &&
       deleteModalRecord.counselorResultId
     ) {
-      if (counselorDeletePin.length !== 4) {
-        alert('제출 완료 시 안내된 숫자 4자리 비밀번호를 입력해 주세요.');
-        return;
-      }
       try {
         const { deleteResult } = await import('@/lib/assessmentApi');
-        await deleteResult(deleteModalRecord.counselorResultId, counselorDeletePin);
+        await deleteResult(deleteModalRecord.counselorResultId);
         setShowDeleteModal(false);
         setDeleteModalRecord(null);
-        setCounselorDeletePin('');
         window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
       } catch (err) {
         alert(err instanceof Error ? err.message : '삭제 실패');
@@ -2268,27 +2204,13 @@ function TestRecordsTabContent({
                       onClick={(e) => e.stopPropagation()}
                     >
                       {record.recordSource === 'counselor-assessment' ? (
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          <button
-                            type="button"
-                            className="px-2 py-1 text-xs font-medium bg-indigo-800/60 text-indigo-100 rounded hover:bg-indigo-700/80"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCounselorEditError('');
-                              setCounselorEditPin('');
-                              setCounselorEditRecord(record);
-                            }}
-                          >
-                            수정
-                          </button>
-                          <button
-                            type="button"
-                            className="px-2 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80"
-                            onClick={(e) => handleDeleteClick(e, record)}
-                          >
-                            삭제
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="px-2 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80"
+                          onClick={(e) => handleDeleteClick(e, record)}
+                        >
+                          삭제
+                        </button>
                       ) : (
                         <button
                           className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
@@ -2408,7 +2330,6 @@ function TestRecordsTabContent({
           onClick={() => {
             setShowDeleteModal(false);
             setDeleteModalRecord(null);
-            setCounselorDeletePin('');
           }}
         >
           <motion.div
@@ -2452,20 +2373,7 @@ function TestRecordsTabContent({
                 )}
               </div>
               {deleteModalRecord.recordSource === 'counselor-assessment' ? (
-                <div className="mt-4 space-y-2">
-                  <label className="block text-sm text-blue-200">결과 삭제용 숫자 4자리 비밀번호</label>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={4}
-                    autoComplete="off"
-                    value={counselorDeletePin}
-                    onChange={(e) => setCounselorDeletePin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/20 text-white"
-                    placeholder="4자리"
-                  />
-                  <p className="text-blue-400/80 text-xs">제출 완료 화면에서 안내된 비밀번호입니다.</p>
-                </div>
+                <p className="text-blue-300 text-sm mt-4">로그인한 계정으로 서버에 저장된 결과만 삭제됩니다.</p>
               ) : (
                 <p className="text-blue-300 text-sm mt-4">삭제된 검사기록은 삭제코드 에서 확인할수 있습니다.</p>
               )}
@@ -2476,7 +2384,6 @@ function TestRecordsTabContent({
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeleteModalRecord(null);
-                  setCounselorDeletePin('');
                 }}
                 className="px-4 py-2 bg-gray-600/60 text-gray-200 rounded-lg hover:bg-gray-600/80 transition-colors"
               >
@@ -2521,59 +2428,6 @@ function TestRecordsTabContent({
         document.body
       )}
 
-      {counselorEditRecord && typeof window !== 'undefined' && createPortal(
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => !counselorEditBusy && setCounselorEditRecord(null)}
-        >
-          <div
-            className="max-w-sm w-full rounded-xl border border-white/20 bg-slate-900 p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h4 className="text-lg font-semibold text-white mb-2">결과 수정</h4>
-            <p className="text-slate-300 text-sm mb-3">
-              제출 완료 시 안내된 숫자 4자리 비밀번호를 입력하면 검사 수정 화면으로 이동합니다.
-            </p>
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={4}
-              autoComplete="off"
-              placeholder="4자리"
-              className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white mb-2"
-              value={counselorEditPin}
-              onChange={(e) => setCounselorEditPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            />
-            {counselorEditError ? <p className="text-red-400 text-sm mb-2">{counselorEditError}</p> : null}
-            <div className="flex gap-2 justify-end mt-4">
-              <button
-                type="button"
-                disabled={counselorEditBusy}
-                onClick={() => {
-                  if (!counselorEditBusy) {
-                    setCounselorEditRecord(null);
-                    setCounselorEditPin('');
-                  }
-                }}
-                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-800"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                disabled={counselorEditBusy || counselorEditPin.length !== 4}
-                onClick={() => void runCounselorEdit()}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 hover:bg-blue-500"
-              >
-                {counselorEditBusy ? '처리 중…' : '수정 진행'}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </motion.div>
   );
 }

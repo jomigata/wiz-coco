@@ -1,12 +1,12 @@
 # 결과 제출/조회/수정/삭제 (POST, GET, PUT, DELETE)
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from firebase_init import get_firestore
 from auth_middleware import get_bearer_client_email
 from rate_limit import limit_access_code, limit_password_api
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
-from utils.password import generate_four_digit_password, hash_password, verify_password
+from utils.password import verify_password
 from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
 
@@ -24,12 +24,26 @@ def _get_assessment_or_404(db, assessment_id, counselor_uid=None):
     return doc, None
 
 
+def _token_owns_result(token_email: str | None, d: dict) -> bool:
+    if not token_email:
+        return False
+    return token_email == (d.get("clientEmail") or "").strip().lower()
+
+
+def _legacy_password_valid(d: dict, password: str) -> bool:
+    """구 데이터(passwordHash 있음)만 4자리 비밀번호로 허용."""
+    ph = d.get("passwordHash")
+    if not ph:
+        return False
+    return bool(password) and verify_password(password, ph)
+
+
 @bp.route("", methods=["POST"])
 @limit_access_code
 def submit_result():
     """
     내담자: Authorization(Firebase ID 토큰) 필수, accessCode, testId, responses.
-    clientEmail은 토큰의 email과 동일하게 저장. 채점 후 4자리 비밀번호 해시 저장, 평문은 응답에 1회만 포함(이메일 발송 없음).
+    clientEmail은 토큰 email과 동일하게 저장. 비밀번호 필드는 저장하지 않음(로그인으로만 수정·삭제).
     """
     body = request.get_json() or {}
     access_code = normalize_access_code(body.get("accessCode") or "")
@@ -56,13 +70,8 @@ def submit_result():
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     ass_doc = ass_refs[0]
     assessment_id = ass_doc.id
-    ass_data = ass_doc.to_dict()
-    test_list = ass_data.get("testList") or []
-    test_name = next((t.get("name", t.get("testId", "")) for t in test_list if str(t.get("testId")) == test_id), test_id)
 
     result_data = compute_result_data(test_id, responses if isinstance(responses, (dict, list)) else {})
-    password = generate_four_digit_password()
-    password_hash = hash_password(password)
 
     data = {
         "accessCode": access_code,
@@ -72,7 +81,6 @@ def submit_result():
         "status": "completed",
         "responses": responses,
         "resultData": result_data,
-        "passwordHash": password_hash,
         "completedAt": SERVER_TIMESTAMP,
     }
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
@@ -81,8 +89,7 @@ def submit_result():
     return jsonify(
         {
             "resultId": ref.id,
-            "message": "Result submitted. Save the 4-digit password shown below; it is required to edit or delete this result.",
-            "plainPassword": password,
+            "message": "Result submitted.",
         }
     ), 201
 
@@ -178,8 +185,8 @@ def list_my_results():
 @limit_password_api
 def get_result(result_id):
     """
-    (1) Bearer 토큰의 email이 결과의 clientEmail과 같으면: 요약 조회용으로 resultData·accessCode 포함 (비밀번호 불필요).
-    (2) 그 외: ?password= 4자리 확인 후 수정 폼용(testId, responses).
+    Bearer 이메일이 결과 소유자면 전체 조회.
+    그 외: 구 데이터만 ?password= 로 조회(레거시).
     """
     password = (request.args.get("password") or "").strip()
     token_email = get_bearer_client_email()
@@ -190,9 +197,8 @@ def get_result(result_id):
     if not doc.exists:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
-    doc_owner = (d.get("clientEmail") or "").strip().lower()
 
-    if token_email and doc_owner == token_email:
+    if _token_owns_result(token_email, d):
         return jsonify({
             "resultId": doc.id,
             "testId": d.get("testId"),
@@ -203,27 +209,31 @@ def get_result(result_id):
             "assessmentId": d.get("assessmentId"),
         })
 
+    if _legacy_password_valid(d, password):
+        return jsonify({
+            "resultId": doc.id,
+            "testId": d.get("testId"),
+            "responses": d.get("responses"),
+            "clientEmail": d.get("clientEmail"),
+        })
+
     if not password:
         return jsonify({"error": "Bad Request", "message": "password required"}), 400
-    if not verify_password(password, d.get("passwordHash", "")):
-        return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
-    return jsonify({
-        "resultId": doc.id,
-        "testId": d.get("testId"),
-        "responses": d.get("responses"),
-        "clientEmail": d.get("clientEmail"),
-    })
+    return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
 
 
 @bp.route("/<result_id>", methods=["PUT"])
 @limit_password_api
 def update_result(result_id):
-    """password + responses 로 수정·재채점. 비밀번호 확인 필요."""
+    """
+    소유자(Bearer 이메일 일치): password 없이 responses만으로 수정.
+    레거시(passwordHash 있음): password + responses.
+    """
     body = request.get_json() or {}
     password = (body.get("password") or "").strip()
     responses = body.get("responses")
-    if not password:
-        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+    token_email = get_bearer_client_email()
+
     if responses is None:
         return jsonify({"error": "Bad Request", "message": "responses required"}), 400
 
@@ -233,8 +243,15 @@ def update_result(result_id):
     if not doc.exists:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
-    if not verify_password(password, d.get("passwordHash", "")):
-        return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
+
+    if _token_owns_result(token_email, d):
+        pass
+    elif _legacy_password_valid(d, password):
+        pass
+    else:
+        if not _token_owns_result(token_email, d) and d.get("passwordHash") and not password:
+            return jsonify({"error": "Bad Request", "message": "password required"}), 400
+        return jsonify({"error": "Forbidden", "message": "Invalid password or not owner"}), 403
 
     result_data = compute_result_data(d.get("testId", ""), responses if isinstance(responses, (dict, list)) else {})
     ref.update({
@@ -249,11 +266,10 @@ def update_result(result_id):
 @bp.route("/<result_id>", methods=["DELETE"])
 @limit_password_api
 def delete_result(result_id):
-    """password 확인 후 삭제."""
-    body = request.get_json() or {}
+    """소유자(Bearer) 또는 레거시 password로 삭제."""
+    body = request.get_json() or {} if request.is_json else {}
     password = (body.get("password") or "").strip()
-    if not password:
-        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+    token_email = get_bearer_client_email()
 
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
@@ -261,8 +277,14 @@ def delete_result(result_id):
     if not doc.exists:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
-    if not verify_password(password, d.get("passwordHash", "")):
-        return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
 
-    ref.delete()
-    return jsonify({"message": "Deleted"}), 200
+    if _token_owns_result(token_email, d):
+        ref.delete()
+        return jsonify({"message": "Deleted"}), 200
+    if _legacy_password_valid(d, password):
+        ref.delete()
+        return jsonify({"message": "Deleted"}), 200
+
+    if d.get("passwordHash") and not password:
+        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+    return jsonify({"error": "Forbidden", "message": "Invalid password or not owner"}), 403

@@ -57,12 +57,12 @@ python app.py
 
 ### 결과
 
-- `POST /api/results` — **Authorization: Bearer \<Firebase ID 토큰\>** 필수. 본문 `{ accessCode, testId, responses }` → `clientEmail`은 토큰의 `email`과 동일하게 저장, 채점 후 4자리 비밀번호 해시 저장·응답에 `plainPassword` 1회 포함 (**이메일 발송 없음**)
+- `POST /api/results` — **Bearer** 필수. 본문 `{ accessCode, testId, responses }` → `clientEmail`은 토큰 이메일과 동일하게 저장. **신규 제출은 결과용 4자리 비밀번호를 저장·반환하지 않음** (로그인 소유자만 수정·삭제).
 - `GET /api/results?accessCode=` — **Bearer** 필수. 토큰 이메일과 일치하는 `testResults` 목록
 - `GET /api/results/mine` — **Bearer** 필수. 해당 이메일로 제출한 모든 `testResults`(검사코드 세트) 목록, `assessmentTitle` 포함
-- `GET /api/results/<resultId>` — **Bearer** 이메일이 결과의 `clientEmail`과 같으면 비밀번호 없이 `resultData`·`accessCode` 등 조회. 그 외에는 `?password=` 4자리 필요
-- `PUT /api/results/<resultId>` — 비밀번호 + responses 로 수정·재채점
-- `DELETE /api/results/<resultId>` — 비밀번호 확인 후 삭제
+- `GET /api/results/<resultId>` — **Bearer** 소유자(`clientEmail` 일치)면 비밀번호 없이 전체 조회. **구 데이터(`passwordHash` 있음)** 만 `?password=` 로 조회 가능(레거시).
+- `PUT /api/results/<resultId>` — 소유자는 **Bearer**만으로 `responses` 수정. 레거시 문서는 `password` + `responses`.
+- `DELETE /api/results/<resultId>` — 소유자는 **Bearer**만으로 삭제. 레거시는 body `password`.
 
 ### 기타
 
@@ -71,7 +71,7 @@ python app.py
 ## Firestore
 
 - `assessments`: accessCode, joinPinHash?, joinPin?(상담사 UI용 평문 4자리), counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
-- `testResults`: accessCode, assessmentId, testId, clientEmail, status, responses, resultData, passwordHash, completedAt
+- `testResults`: accessCode, assessmentId, testId, clientEmail, status, responses, resultData, completedAt — `passwordHash`는 구 제출분만 (신규는 미저장)
 
 규칙은 프로젝트 루트의 `firestore.rules` 참고. 쓰기는 백엔드(Admin SDK)에서 수행합니다.
 

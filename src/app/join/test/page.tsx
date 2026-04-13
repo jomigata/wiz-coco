@@ -2,14 +2,13 @@
 
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { submitResult, updateResult } from '@/lib/assessmentApi';
+import { submitResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-
-const EDIT_RESULT_STORAGE_KEY = 'wizcoco_edit_result';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -22,6 +21,7 @@ const SCALE_LABELS: Record<number, string> = {
 };
 
 export default function TestRunnerPage() {
+  const router = useRouter();
   const { user, loading: authLoading } = useFirebaseAuth();
   const [accessCode, setAccessCode] = useState('');
   const [testId, setTestId] = useState('');
@@ -33,14 +33,9 @@ export default function TestRunnerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
-  const [editResultId, setEditResultId] = useState<string | null>(null);
-  const [editPasswordModal, setEditPasswordModal] = useState(false);
-  const [editPassword, setEditPassword] = useState('');
-  const [submitDoneInfo, setSubmitDoneInfo] = useState<{ plainPassword?: string } | null>(null);
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
-  const isEditMode = !!editResultId;
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
@@ -75,25 +70,6 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(EDIT_RESULT_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { resultId: string; testId: string; responses?: Record<string, number> };
-      if (String(parsed.testId) !== String(testId)) return;
-      setEditResultId(parsed.resultId);
-      if (parsed.responses && typeof parsed.responses === 'object') {
-        const r = parsed.responses as Record<string, number>;
-        setResponses(r);
-        const lastIdx = questions.reduce((max, q, i) => (r[q.id] !== undefined ? i : max), 0);
-        setCurrentIndex(lastIdx);
-      }
-      sessionStorage.removeItem(EDIT_RESULT_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-  }, [testId]);
-
   const effectiveEmail = (user?.email || '').trim().toLowerCase();
 
   const handleAnswer = (value: number) => {
@@ -115,10 +91,7 @@ export default function TestRunnerPage() {
     setError('');
     setSubmitting(true);
     try {
-      const data = await submitResult({ accessCode: code, testId, responses });
-      setSubmitDoneInfo({
-        plainPassword: typeof data.plainPassword === 'string' ? data.plainPassword : undefined,
-      });
+      await submitResult({ accessCode: code, testId, responses });
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '제출에 실패했습니다.');
@@ -127,22 +100,13 @@ export default function TestRunnerPage() {
     }
   };
 
-  const handleSubmitEdit = async () => {
-    if (!editResultId || editPassword.length !== 4) return;
-    setError('');
-    setSubmitting(true);
-    try {
-      await updateResult(editResultId, { password: editPassword, responses });
-      setEditPasswordModal(false);
-      setEditPassword('');
-      setSubmitDoneInfo(null);
-      setDone(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '수정 제출에 실패했습니다.');
-    } finally {
-      setSubmitting(false);
-    }
+  const goToMyRecords = () => {
+    router.replace('/mypage?tab=records');
   };
+
+  if (!hydrated) {
+    return null;
+  }
 
   if (!code || !isValidAccessCodeInput(code) || !testId) {
     return (
@@ -176,34 +140,17 @@ export default function TestRunnerPage() {
         >
           <div className="max-w-lg w-full text-center bg-slate-800/95 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h2 id="join-submit-done-title" className="text-xl font-bold text-white mb-2">
-              {isEditMode ? '수정 완료' : '제출 완료'}
+              제출 완료
             </h2>
-            {isEditMode ? (
-              <p className="text-slate-300 mb-6">결과가 수정되었습니다.</p>
-            ) : (
-              <div className="text-left mb-6 space-y-4">
-                <p className="text-slate-300 text-sm">
-                  제출이 완료되었습니다. 아래 4자리 비밀번호는 결과를 수정하거나 삭제할 때 필요합니다. 이 창을 닫은 뒤에는 다시
-                  확인할 수 없으니 반드시 저장해 두세요.
-                </p>
-                {submitDoneInfo?.plainPassword ? (
-                  <div className="rounded-lg bg-slate-900/80 border border-blue-600/50 p-4">
-                    <p className="text-slate-400 text-sm mb-2">결과 수정·삭제용 비밀번호 (이 화면에서만 표시)</p>
-                    <p className="font-mono text-3xl tracking-[0.4em] text-white text-center">{submitDoneInfo.plainPassword}</p>
-                  </div>
-                ) : (
-                  <p className="text-amber-200 text-sm">비밀번호를 불러오지 못했습니다. 상담사에게 문의해 주세요.</p>
-                )}
-              </div>
-            )}
+            <p className="text-slate-300 mb-6">제출이 완료되었습니다.</p>
             <button
               type="button"
-              onClick={() => navigateToJoinSelectionDashboard(code)}
+              onClick={goToMyRecords}
               className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
             >
               닫기
             </button>
-            <p className="text-slate-500 text-xs mt-4">검사 선택 화면(대시보드)으로 이동합니다.</p>
+            <p className="text-slate-500 text-xs mt-4">마이페이지의 검사 기록으로 이동합니다.</p>
           </div>
         </div>
       </div>
@@ -230,19 +177,11 @@ export default function TestRunnerPage() {
             </button>
           </div>
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <h1 className="text-xl font-bold text-white mb-2">
-              {title}
-              {isEditMode && <span className="text-blue-400 text-sm ml-2">(수정)</span>}
-            </h1>
+            <h1 className="text-xl font-bold text-white mb-2">{title}</h1>
 
             {authLoading ? (
               <p className="text-slate-400 text-sm mb-4">로그인 확인 중…</p>
-            ) : effectiveEmail.includes('@') ? (
-              <p className="text-slate-400 text-sm mb-4">
-                제출 계정: <span className="text-slate-200 font-medium">{effectiveEmail}</span>
-                <span className="text-slate-500"> (로그인 이메일)</span>
-              </p>
-            ) : (
+            ) : !effectiveEmail.includes('@') ? (
               <p className="text-amber-400/95 text-sm mb-4">
                 이메일이 있는 계정으로 로그인한 뒤 다시 이 검사를 열어 주세요.{' '}
                 <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
@@ -257,7 +196,7 @@ export default function TestRunnerPage() {
                   검사 선택 현황
                 </button>
               </p>
-            )}
+            ) : null}
 
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-6">
               <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }} />
@@ -306,15 +245,11 @@ export default function TestRunnerPage() {
               {currentIndex === questions.length - 1 && Object.keys(responses).length === questions.length ? (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!canSubmit) return;
-                    if (isEditMode) return setEditPasswordModal(true);
-                    handleSubmitNew();
-                  }}
+                  onClick={handleSubmitNew}
                   disabled={authLoading || !effectiveEmail.includes('@') || submitting}
                   className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {submitting ? '제출 중…' : isEditMode ? '수정 제출' : '제출하기'}
+                  {submitting ? '제출 중…' : '제출하기'}
                 </button>
               ) : (
                 <button
@@ -328,41 +263,8 @@ export default function TestRunnerPage() {
               )}
             </div>
           </div>
-
-          {editPasswordModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !submitting && setEditPasswordModal(false)}>
-              <div className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <h4 className="text-lg font-semibold text-white mb-2">수정 제출</h4>
-                <p className="text-slate-300 text-sm mb-4">4자리 비밀번호를 입력하세요.</p>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  autoComplete="off"
-                  placeholder="4자리 비밀번호"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white mb-2"
-                  value={editPassword}
-                  onChange={(e) => setEditPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                />
-                <div className="flex gap-2 justify-end">
-                  <button type="button" onClick={() => !submitting && setEditPasswordModal(false)} className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-700">
-                    취소
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSubmitEdit}
-                    disabled={submitting || editPassword.length !== 4}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {submitting ? '처리 중…' : '수정 제출'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>
   );
 }
-

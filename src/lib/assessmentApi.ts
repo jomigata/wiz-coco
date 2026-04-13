@@ -92,8 +92,6 @@ export async function submitResult(body: {
 }): Promise<{
   resultId: string;
   message: string;
-  /** 결과 수정·삭제용 4자리. 응답에 1회만 포함 */
-  plainPassword?: string;
 }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
@@ -116,7 +114,7 @@ export async function submitResult(body: {
   return data;
 }
 
-/** GET /api/results/:resultId?password= - 비밀번호로 단일 결과 조회 (수정 폼용) */
+/** GET /api/results/:resultId?password= — 레거시( passwordHash 있는 문서) 조회용 */
 export async function getResult(
   resultId: string,
   password: string
@@ -204,14 +202,19 @@ export async function listResults(accessCode: string): Promise<{ results: TestRe
   return data;
 }
 
-/** PUT /api/results/:resultId - 비밀번호 + responses 로 수정/재채점 */
+/** PUT /api/results/:resultId — 로그인 소유자는 password 생략, 레거시 문서만 password */
 export async function updateResult(
   resultId: string,
-  body: { password: string; responses: Record<string, unknown> | unknown[] }
+  body: { password?: string; responses: Record<string, unknown> | unknown[] }
 ): Promise<{ resultId: string; message: string }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
@@ -221,12 +224,17 @@ export async function updateResult(
   return data;
 }
 
-/** DELETE /api/results/:resultId - 비밀번호 확인 후 삭제 */
-export async function deleteResult(resultId: string, password: string): Promise<void> {
+/** DELETE /api/results/:resultId — 로그인 소유자는 password 생략, 레거시만 password */
+export async function deleteResult(resultId: string, legacyPassword?: string): Promise<void> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(legacyPassword ? { password: legacyPassword } : {}),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
