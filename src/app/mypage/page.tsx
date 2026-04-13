@@ -1709,8 +1709,11 @@ function TestRecordsTabContent({
   };
 
   const getAccessCodeSetName = (record: TestRecord): string => {
-    // "검사코드명" 컬럼: 실제 검사코드를 하이픈 포함 형식으로 표시 (예: BUQ-854)
-    return formatCodePinDisplay(record);
+    // "검사코드" 컬럼: 하이픈 포함 코드 + (검사 선택 제목)
+    const code = formatCodePinDisplay(record);
+    const title = getDisplayTestName(record);
+    if (!code || code === '—') return '—';
+    return title ? `${code} (${title})` : code;
   };
 
   // 정렬 아이콘 컴포넌트 (시각적 개선)
@@ -2170,7 +2173,7 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('counselorCode')}
                   >
                     <div className="flex items-center justify-center">
-                      검사코드명
+                      검사코드
                       <SortIcon field="counselorCode" />
                     </div>
                   </th>
