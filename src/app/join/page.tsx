@@ -21,6 +21,7 @@ export default function AccessCodeInputPage() {
   const { user, loading: authLoading } = useFirebaseAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [formatError, setFormatError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const normalizedCode = normalizeAccessCodeInput(code);
@@ -33,6 +34,10 @@ export default function AccessCodeInputPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (code.trim() && !/^[A-Za-z]/.test(code.trim())) {
+      setError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN-724');
+      return;
+    }
     if (!hasEmail) {
       setError('검사 진행에는 이메일이 등록된 계정이 필요합니다. 구글·이메일 로그인으로 다시 시도해 주세요.');
       return;
@@ -102,10 +107,24 @@ export default function AccessCodeInputPage() {
                   className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
                   placeholder="예: KAN-724"
                   value={code}
-                  onChange={(e) => setCode(formatJoinAccessCodeWhileTyping(e.target.value))}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const trimmed = raw.trim();
+                    if (trimmed && !/^[A-Za-z]/.test(trimmed)) {
+                      setFormatError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN-724');
+                    } else {
+                      setFormatError('');
+                    }
+                    setCode(formatJoinAccessCodeWhileTyping(raw));
+                  }}
                   disabled={loading}
                 />
               </div>
+              {formatError && !error && (
+                <p className="text-amber-200/90 text-sm" role="status">
+                  {formatError}
+                </p>
+              )}
               {error && (
                 <p className="text-red-400 text-sm" role="alert">
                   {error}
