@@ -3,11 +3,10 @@ from flask import Blueprint, request, jsonify, g
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from firebase_init import get_firestore
-from auth_middleware import require_counselor
+from auth_middleware import get_bearer_client_email
 from rate_limit import limit_access_code, limit_password_api
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.password import generate_four_digit_password, hash_password, verify_password
-from utils.email_sender import send_result_email
 from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
 
@@ -29,20 +28,25 @@ def _get_assessment_or_404(db, assessment_id, counselor_uid=None):
 @limit_access_code
 def submit_result():
     """
-    내담자: accessCode, testId, clientEmail, responses 수신
-    -> 채점, 4자리 비밀번호 랜덤 생성 후 해싱 저장, 이메일 발송(비밀번호·결과 요약).
+    내담자: Authorization(Firebase ID 토큰) 필수, accessCode, testId, responses.
+    clientEmail은 토큰의 email과 동일하게 저장. 채점 후 4자리 비밀번호 해시 저장, 평문은 응답에 1회만 포함(이메일 발송 없음).
     """
     body = request.get_json() or {}
     access_code = normalize_access_code(body.get("accessCode") or "")
     test_id = (body.get("testId") or "").strip()
-    client_email = (body.get("clientEmail") or "").strip().lower()
+    client_email = get_bearer_client_email()
     responses = body.get("responses")
+    if not client_email:
+        return jsonify(
+            {
+                "error": "Unauthorized",
+                "message": "Firebase login with email is required to submit results.",
+            }
+        ), 401
     if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "invalid accessCode format"}), 400
     if not test_id:
         return jsonify({"error": "Bad Request", "message": "testId required"}), 400
-    if not client_email or "@" not in client_email:
-        return jsonify({"error": "Bad Request", "message": "valid clientEmail required"}), 400
     if responses is None:
         return jsonify({"error": "Bad Request", "message": "responses required"}), 400
 
@@ -74,32 +78,27 @@ def submit_result():
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
     ref.set(data)
 
-    email_sent = send_result_email(client_email, password, test_name, result_data.get("summary", ""))
-
-    payload = {
-        "resultId": ref.id,
-        "emailSent": email_sent,
-        "message": (
-            "Result submitted. Check your email for the 4-digit password."
-            if email_sent
-            else "Result submitted. Email was not sent (SMTP not configured or send failed); use plainPassword below once."
-        ),
-    }
-    if not email_sent:
-        payload["plainPassword"] = password
-    return jsonify(payload), 201
+    return jsonify(
+        {
+            "resultId": ref.id,
+            "message": "Result submitted. Save the 4-digit password shown below; it is required to edit or delete this result.",
+            "plainPassword": password,
+        }
+    ), 201
 
 
 @bp.route("", methods=["GET"])
 @limit_access_code
 def list_results():
-    """accessCode + clientEmail 쿼리로 해당 testResults 목록 반환."""
+    """accessCode + 로그인 사용자(토큰) 이메일로 해당 testResults 목록 반환."""
     access_code = normalize_access_code(request.args.get("accessCode") or "")
-    client_email = (request.args.get("clientEmail") or "").strip().lower()
+    client_email = get_bearer_client_email()
+    if not client_email:
+        return jsonify(
+            {"error": "Unauthorized", "message": "Firebase login with email is required to list results."}
+        ), 401
     if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
-    if not client_email or "@" not in client_email:
-        return jsonify({"error": "Bad Request", "message": "clientEmail required"}), 400
 
     db = get_firestore()
     refs = (

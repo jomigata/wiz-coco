@@ -126,7 +126,8 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             </p>
           )}
           <p className="text-green-300/90 text-xs">
-            위 정보를 내담자에게 안전한 경로로 전달해 주시기 바랍니다. 비밀번호는 검사코드 목록에서도 확인할 수 있습니다.
+            내담자는 사이트에 로그인한 뒤 「검사 하기」에서 코드와 비밀번호를 입력하면 됩니다. 검사 제출이 끝나면 화면에만
+            결과 수정용 4자리 비밀번호가 표시되며, 이메일로는 발송되지 않습니다.
           </p>
         </div>
       )}

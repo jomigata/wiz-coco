@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { submitResult, updateResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
-import {
-  getResolvedJoinClientEmail,
-  JOIN_CLIENT_EMAIL_KEY,
-  writeJoinClientEmail,
-} from '@/lib/joinClientEmailStorage';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 const EDIT_RESULT_STORAGE_KEY = 'wizcoco_edit_result';
 
@@ -27,13 +22,12 @@ const SCALE_LABELS: Record<number, string> = {
 };
 
 export default function TestRunnerPage() {
-  const { user } = useFirebaseAuth();
+  const { user, loading: authLoading } = useFirebaseAuth();
   const [accessCode, setAccessCode] = useState('');
   const [testId, setTestId] = useState('');
 
   const [title, setTitle] = useState('');
   const [hydrated, setHydrated] = useState(false);
-  const [storageTick, setStorageTick] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -42,10 +36,7 @@ export default function TestRunnerPage() {
   const [editResultId, setEditResultId] = useState<string | null>(null);
   const [editPasswordModal, setEditPasswordModal] = useState(false);
   const [editPassword, setEditPassword] = useState('');
-  const [submitDoneInfo, setSubmitDoneInfo] = useState<{
-    emailSent?: boolean;
-    plainPassword?: string;
-  } | null>(null);
+  const [submitDoneInfo, setSubmitDoneInfo] = useState<{ plainPassword?: string } | null>(null);
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
@@ -63,11 +54,6 @@ export default function TestRunnerPage() {
     }
     setHydrated(true);
   }, []);
-
-  useEffect(() => {
-    const acc = (user?.email || '').trim().toLowerCase();
-    if (acc.includes('@')) writeJoinClientEmail(acc);
-  }, [user?.email]);
 
   useEffect(() => {
     let raw: string | null = null;
@@ -90,24 +76,6 @@ export default function TestRunnerPage() {
   }, [testId]);
 
   useEffect(() => {
-    const bump = () => setStorageTick((t) => t + 1);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === JOIN_CLIENT_EMAIL_KEY || e.key === null) bump();
-    };
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') bump();
-    };
-    window.addEventListener('storage', onStorage);
-    document.addEventListener('visibilitychange', onVisible);
-    window.addEventListener('focus', bump);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('focus', bump);
-    };
-  }, []);
-
-  useEffect(() => {
     try {
       const raw = sessionStorage.getItem(EDIT_RESULT_STORAGE_KEY);
       if (!raw) return;
@@ -126,11 +94,7 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  /** 로그인 계정 이메일 우선, 없으면 검사 코드 입력 시 저장된 이메일 */
-  const effectiveEmail = useMemo(
-    () => (hydrated ? getResolvedJoinClientEmail(user?.email) : ''),
-    [hydrated, storageTick, user?.email]
-  );
+  const effectiveEmail = (user?.email || '').trim().toLowerCase();
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
@@ -143,16 +107,16 @@ export default function TestRunnerPage() {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
-  const canSubmit = effectiveEmail.includes('@') && Object.keys(responses).length === questions.length;
+  const canSubmit =
+    !authLoading && effectiveEmail.includes('@') && Object.keys(responses).length === questions.length;
 
   const handleSubmitNew = async () => {
     if (!canSubmit) return;
     setError('');
     setSubmitting(true);
     try {
-      const data = await submitResult({ accessCode: code, testId, clientEmail: effectiveEmail, responses });
+      const data = await submitResult({ accessCode: code, testId, responses });
       setSubmitDoneInfo({
-        emailSent: data.emailSent,
         plainPassword: typeof data.plainPassword === 'string' ? data.plainPassword : undefined,
       });
       setDone(true);
@@ -216,27 +180,21 @@ export default function TestRunnerPage() {
             </h2>
             {isEditMode ? (
               <p className="text-slate-300 mb-6">결과가 수정되었습니다.</p>
-            ) : submitDoneInfo?.emailSent === false ? (
-              <div className="text-left mb-6 space-y-4">
-                <p className="text-amber-200 text-sm">
-                  서버에서 이메일을 보내지 못했습니다. (SMTP 미설정 또는 발송 오류) 운영 환경에서는 Cloud Run 등에{' '}
-                  <code className="text-slate-300">SMTP_HOST</code>, <code className="text-slate-300">SMTP_USER</code>,{' '}
-                  <code className="text-slate-300">SMTP_PASSWORD</code>, <code className="text-slate-300">MAIL_FROM</code>을
-                  설정해야 메일이 발송됩니다.
-                </p>
-                {submitDoneInfo.plainPassword ? (
-                  <div className="rounded-lg bg-slate-900/80 border border-amber-600/50 p-4">
-                    <p className="text-slate-400 text-sm mb-2">결과 수정·삭제에 필요한 4자리 비밀번호(이 화면에서만 표시됩니다)</p>
-                    <p className="font-mono text-3xl tracking-[0.4em] text-white text-center">{submitDoneInfo.plainPassword}</p>
-                    <p className="text-slate-500 text-xs mt-2">반드시 메모해 두세요.</p>
-                  </div>
-                ) : null}
-              </div>
             ) : (
-              <p className="text-slate-300 mb-6">
-                결과와 4자리 비밀번호가 회원 로그인 이메일(또는 지정하신 이메일)로 발송됩니다. 메일이 오지 않으면 스팸함을 확인해
-                주세요. 비밀번호는 결과 수정·삭제 시 필요합니다.
-              </p>
+              <div className="text-left mb-6 space-y-4">
+                <p className="text-slate-300 text-sm">
+                  제출이 완료되었습니다. 아래 4자리 비밀번호는 결과를 수정하거나 삭제할 때 필요합니다. 이 창을 닫은 뒤에는 다시
+                  확인할 수 없으니 반드시 저장해 두세요.
+                </p>
+                {submitDoneInfo?.plainPassword ? (
+                  <div className="rounded-lg bg-slate-900/80 border border-blue-600/50 p-4">
+                    <p className="text-slate-400 text-sm mb-2">결과 수정·삭제용 비밀번호 (이 화면에서만 표시)</p>
+                    <p className="font-mono text-3xl tracking-[0.4em] text-white text-center">{submitDoneInfo.plainPassword}</p>
+                  </div>
+                ) : (
+                  <p className="text-amber-200 text-sm">비밀번호를 불러오지 못했습니다. 상담사에게 문의해 주세요.</p>
+                )}
+              </div>
             )}
             <button
               type="button"
@@ -277,16 +235,18 @@ export default function TestRunnerPage() {
               {isEditMode && <span className="text-blue-400 text-sm ml-2">(수정)</span>}
             </h1>
 
-            {effectiveEmail.includes('@') ? (
+            {authLoading ? (
+              <p className="text-slate-400 text-sm mb-4">로그인 확인 중…</p>
+            ) : effectiveEmail.includes('@') ? (
               <p className="text-slate-400 text-sm mb-4">
-                제출·안내 이메일: <span className="text-slate-200 font-medium">{effectiveEmail}</span>
-                <span className="text-slate-500"> (회원 로그인 이메일 또는 검사 코드 입력 시 지정한 이메일)</span>
+                제출 계정: <span className="text-slate-200 font-medium">{effectiveEmail}</span>
+                <span className="text-slate-500"> (로그인 이메일)</span>
               </p>
             ) : (
               <p className="text-amber-400/95 text-sm mb-4">
-                로그인 이메일이 없고, 검사 코드 입력 페이지에서 안내 받을 이메일을 입력한 뒤 다시 이 검사를 열어 주세요.{' '}
-                <Link href="/join" className="text-blue-400 hover:text-blue-300 underline">
-                  검사 코드 입력
+                이메일이 있는 계정으로 로그인한 뒤 다시 이 검사를 열어 주세요.{' '}
+                <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
+                  로그인
                 </Link>
                 {' · '}
                 <button
@@ -351,7 +311,7 @@ export default function TestRunnerPage() {
                     if (isEditMode) return setEditPasswordModal(true);
                     handleSubmitNew();
                   }}
-                  disabled={!effectiveEmail.includes('@') || submitting}
+                  disabled={authLoading || !effectiveEmail.includes('@') || submitting}
                   className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submitting ? '제출 중…' : isEditMode ? '수정 제출' : '제출하기'}

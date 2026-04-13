@@ -84,26 +84,28 @@ export async function lookupPublicAssessment(
   return data as PublicAssessment;
 }
 
-/** POST /api/results - 결과 제출 */
+/** POST /api/results - 결과 제출 (Firebase ID 토큰 필수, 내담자 이메일은 토큰과 동일하게 저장) */
 export async function submitResult(body: {
   accessCode: string;
   testId: string;
-  clientEmail: string;
   responses: Record<string, unknown> | unknown[];
 }): Promise<{
   resultId: string;
   message: string;
-  emailSent?: boolean;
-  /** 이메일 미발송 시에만 서버가 내려줌(결과 수정·삭제용 4자리). 화면에 한 번만 안내 */
+  /** 결과 수정·삭제용 4자리. 응답에 1회만 포함 */
   plainPassword?: string;
 }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/results`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       accessCode: normalizeAccessCodeInput(body.accessCode || ''),
       testId: (body.testId || '').trim(),
-      clientEmail: (body.clientEmail || '').trim().toLowerCase(),
       responses: body.responses,
     }),
   });
@@ -129,18 +131,18 @@ export async function getResult(
   return data;
 }
 
-/** GET /api/results?accessCode=&clientEmail= - 이메일별 완료 검사 목록 */
-export async function listResults(
-  accessCode: string,
-  clientEmail: string
-): Promise<{ results: TestResultItem[] }> {
+/** GET /api/results?accessCode= — 로그인 사용자(토큰 이메일) 기준 완료 검사 목록 */
+export async function listResults(accessCode: string): Promise<{ results: TestResultItem[] }> {
   const code = normalizeAccessCodeInput(accessCode || '');
-  const email = (clientEmail || '').trim().toLowerCase();
-  if (!isValidAccessCodeInput(code) || !email || !email.includes('@')) {
-    throw new Error('검사 코드와 이메일을 확인해 주세요.');
+  if (!isValidAccessCodeInput(code)) {
+    throw new Error('검사 코드를 확인해 주세요.');
   }
-  const params = new URLSearchParams({ accessCode: code, clientEmail: email });
-  const res = await fetch(`${getBaseUrl()}/api/results?${params}`);
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const params = new URLSearchParams({ accessCode: code });
+  const res = await fetch(`${getBaseUrl()}/api/results?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data?.message || '목록 조회에 실패했습니다.');

@@ -32,7 +32,7 @@ python app.py
 | 변수 | 설명 |
 |------|------|
 | `FIREBASE_CREDENTIALS_PATH` | Firebase 서비스 계정 JSON 파일 경로 (또는 `GOOGLE_APPLICATION_CREDENTIALS` 사용) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | 결과 제출 시 이메일 발송용.**비워두거나 잘못되면 메일은 가지 않으며**, API는 `emailSent: false`와 화면용 `plainPassword`를 반환합니다. **Cloud Run 등 프로덕션에서는 반드시 시크릿/환경 변수로 SMTP를 넣어야** 실제 발송됩니다. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | (선택) 향후 다른 알림용으로 예약. 검사 결과 비밀번호는 이메일로 발송하지 않습니다. |
 | `RATE_LIMIT_ACCESS_CODE` | 검사 코드 API 분당 요청 제한 (기본 30, 0=비활성화) |
 | `RATE_LIMIT_PASSWORD_API` | 비밀번호 확인 API 분당 제한 (기본 20) |
 | `FLASK_ENV` | `development` / `production` |
@@ -57,8 +57,8 @@ python app.py
 
 ### 결과
 
-- `POST /api/results` — 제출 (accessCode, testId, clientEmail, responses) → 채점, 4자리 비밀번호 생성·이메일 발송
-- `GET /api/results?accessCode=&clientEmail=` — 해당 코드·이메일의 결과 목록
+- `POST /api/results` — **Authorization: Bearer \<Firebase ID 토큰\>** 필수. 본문 `{ accessCode, testId, responses }` → `clientEmail`은 토큰의 `email`과 동일하게 저장, 채점 후 4자리 비밀번호 해시 저장·응답에 `plainPassword` 1회 포함 (**이메일 발송 없음**)
+- `GET /api/results?accessCode=` — **Bearer** 필수. 토큰 이메일과 일치하는 `testResults` 목록
 - `PUT /api/results/<resultId>` — 비밀번호 + responses 로 수정·재채점
 - `DELETE /api/results/<resultId>` — 비밀번호 확인 후 삭제
 
@@ -77,7 +77,7 @@ python app.py
 
 - **비밀번호**: 4자리 숫자 비밀번호는 bcrypt로 해싱하여 Firestore의 `passwordHash`에만 저장합니다. 평문은 저장하지 않습니다.
 - **Rate Limiting**: 검사 코드 조회·결과 제출(`GET /api/assessments/public/<code>`, `POST/GET /api/results`)에는 `limit_access_code`, 비밀번호 확인(`GET/PUT/DELETE /api/results/<id>`)에는 `limit_password_api`가 적용됩니다. 분당 제한은 환경 변수로 조정 가능합니다.
-- **이메일 정책**: 결과 이메일에는 비밀번호·요약(summary)만 포함하며, 상세 결과는 이메일에 넣지 않고 "상세 결과는 상담사와 논의하세요" 안내만 포함합니다.
+- **내담자 결과 API**: `POST/GET /api/results`는 Firebase ID 토큰(이메일 클레임 포함)이 있어야 하며, 제출·목록의 식별자는 토큰 이메일과 검사코드입니다.
 
 ## 배포 (Cloud Run + GitHub Actions)
 

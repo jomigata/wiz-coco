@@ -63,7 +63,7 @@ export default function CompletedTestList({
   }, []);
 
   useEffect(() => {
-    if (!stored?.accessCode || !clientEmail || !clientEmail.includes('@')) {
+    if (!stored?.accessCode) {
       setResults([]);
       onResultsChange?.([]);
       setLoading(false);
@@ -71,7 +71,7 @@ export default function CompletedTestList({
     }
     setLoading(true);
     setError('');
-    listResults(normalizeAccessCodeInput(stored.accessCode), clientEmail)
+    listResults(normalizeAccessCodeInput(stored.accessCode))
       .then((data) => {
         const list = data.results || [];
         setResults(list);
@@ -83,7 +83,7 @@ export default function CompletedTestList({
         onResultsChange?.([]);
       })
       .finally(() => setLoading(false));
-  }, [stored?.accessCode, clientEmail, onResultsChange]);
+  }, [stored?.accessCode, onResultsChange]);
 
   const sortedResults = useMemo(() => {
     const tl = stored?.testList || [];
@@ -166,7 +166,12 @@ export default function CompletedTestList({
   };
 
   if (!clientEmail?.trim() || !clientEmail.includes('@')) {
-    return null;
+    return (
+      <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
+        <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
+        <p className="text-slate-400 text-sm">이메일이 있는 계정으로 로그인하면 완료 내역을 불러옵니다.</p>
+      </div>
+    );
   }
 
   const testList = stored?.testList || [];

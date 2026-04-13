@@ -4,7 +4,6 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import {
@@ -12,7 +11,7 @@ import {
   normalizeAccessCodeInput,
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
-import { getResolvedJoinClientEmail, writeJoinClientEmail } from '@/lib/joinClientEmailStorage';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { JOIN_STORAGE_KEY, persistJoinPinBackup, readJoinPinForAccessCode } from '@/lib/joinAssessmentSession';
 
 /** /join → 대시보드 이동 시 PIN 전달용 (#p=1234). HTTP 요청 URL에 포함되지 않음. */
@@ -47,8 +46,8 @@ function DashboardLoading() {
 }
 
 function JoinDashboardContent() {
-  const { user, loading: authLoading } = useFirebaseAuth();
   const searchParams = useSearchParams();
+  const { user } = useFirebaseAuth();
   const accessCodeRaw = searchParams.get('accessCode') ?? '';
 
   const code = useMemo(
@@ -56,8 +55,9 @@ function JoinDashboardContent() {
     [accessCodeRaw]
   );
 
+  const clientEmail = useMemo(() => (user?.email || '').trim().toLowerCase(), [user?.email]);
+
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
-  const [clientEmail, setClientEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
@@ -106,18 +106,6 @@ function JoinDashboardContent() {
   useEffect(() => {
     loadAssessment();
   }, [loadAssessment]);
-
-  useEffect(() => {
-    if (authLoading) return;
-    const resolved = getResolvedJoinClientEmail(user?.email);
-    setClientEmail(resolved);
-    const acc = (user?.email || '').trim().toLowerCase();
-    if (acc.includes('@')) writeJoinClientEmail(acc);
-  }, [authLoading, user?.email]);
-
-  useEffect(() => {
-    if (!clientEmail.trim().toLowerCase().includes('@')) setJoinResults([]);
-  }, [clientEmail]);
 
   const latestCompletedByTestId = useMemo(() => {
     const m = new Map<string, string>();
@@ -196,30 +184,27 @@ function JoinDashboardContent() {
             )}
 
             <div className="mb-6">
-              <div className="block text-sm font-medium text-slate-300 mb-2">나의 이메일</div>
-              {clientEmail.trim().toLowerCase().includes('@') ? (
+              <div className="block text-sm font-medium text-slate-300 mb-2">로그인 계정</div>
+              {clientEmail.includes('@') ? (
                 <div className="rounded-lg bg-slate-700/50 border border-slate-600 px-3 py-2.5 text-white text-sm break-all">
-                  {clientEmail.trim().toLowerCase()}
+                  {clientEmail}
                 </div>
               ) : (
                 <p className="text-amber-200/90 text-sm rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
-                  로그인 이메일이 없거나 저장된 이메일이 없습니다.{' '}
-                  <Link href="/join" className="text-blue-400 hover:text-blue-300 underline">
-                    검사 코드 입력
+                  이메일이 있는 계정으로 로그인해야 검사 결과를 제출·조회할 수 있습니다.{' '}
+                  <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
+                    로그인
                   </Link>
-                  에서 확인하거나 마이페이지에서 계정 이메일을 확인해 주세요.
                 </p>
               )}
               <p className="text-slate-500 text-xs mt-1">
-                결과 비밀번호(4자리) 수신·완료 내역 확인에 사용됩니다. 로그인 계정 이메일이 있으면 해당 주소가 우선 적용됩니다.
+                검사 제출 후 화면에 표시되는 4자리 비밀번호로 결과를 수정하거나 삭제할 수 있습니다.
               </p>
             </div>
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
-            {!clientEmail.trim().toLowerCase().includes('@') ? (
-              <p className="text-amber-200/90 text-sm mb-2">
-                위에서 「나의 이메일」이 설정되어 있으면 완료 여부가 표시됩니다.
-              </p>
+            {!clientEmail.includes('@') ? (
+              <p className="text-amber-200/90 text-sm mb-2">로그인 계정에 이메일이 있으면 아래에 완료 여부가 표시됩니다.</p>
             ) : null}
             {assessment.testList.length === 0 ? (
               <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>

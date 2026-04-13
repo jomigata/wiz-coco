@@ -33,8 +33,18 @@ def get_firestore():
     return _db
 
 
+def verify_id_token_claims(token: str):
+    """Firebase ID 토큰 검증 후 전체 클레임 dict. 실패·빈 토큰 시 None."""
+    if not token or not str(token).strip():
+        return None
+    try:
+        get_firebase_app()
+        return auth.verify_id_token(token)
+    except Exception:
+        return None
+
+
 def verify_id_token(token: str):
-    """Firebase ID 토큰 검증 후 uid 반환. 실패 시 None 또는 예외."""
-    get_firebase_app()
-    decoded = auth.verify_id_token(token)
-    return decoded.get("uid")
+    """Firebase ID 토큰 검증 후 uid 반환. 실패 시 None."""
+    claims = verify_id_token_claims(token)
+    return claims.get("uid") if claims else None
