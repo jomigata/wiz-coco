@@ -71,8 +71,7 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              로그인한 계정으로 검사를 진행합니다. 상담사에게 받은 <span className="text-slate-200">검사 코드</span>를
-              입력해 주세요.
+              상담사에게 받은 <span className="text-slate-200">검사 코드</span>를 입력해 주세요.
             </p>
             {!authLoading && !accountEmail ? (
               <p className="text-amber-200/90 text-sm mb-6 rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
@@ -113,11 +112,17 @@ export default function AccessCodeInputPage() {
                 {loading ? '확인 중…' : '검사 하기'}
               </button>
             </form>
-            <p className="mt-6 text-center">
-              <Link href="/" className="text-blue-400 hover:text-blue-300 text-sm">
+            <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center items-stretch sm:items-center">
+              <Link
+                href="/login?redirect=/join"
+                className="text-center py-2.5 px-4 rounded-lg border border-slate-500 text-slate-200 hover:bg-slate-700/80 text-sm font-medium transition-colors"
+              >
+                로그인
+              </Link>
+              <Link href="/" className="text-center py-2.5 px-4 rounded-lg text-blue-400 hover:text-blue-300 text-sm">
                 홈으로
               </Link>
-            </p>
+            </div>
           </div>
         </main>
       </div>

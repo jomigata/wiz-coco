@@ -50,9 +50,6 @@ export default function Navigation() {
   const isAdminOpen = activeMenu === 'admin';
 
   const isLoggedIn = !!user && !loading;
-  /** 비로그인 시 검사 참여는 로그인 후 `/join`으로 복귀 */
-  const joinHref =
-    loading ? '/join' : user ? '/join' : `/login?redirect=${encodeURIComponent('/join')}`;
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
   const [isTestInProgress, setIsTestInProgress] = useState(false);
 
@@ -701,15 +698,13 @@ export default function Navigation() {
             <div className="flex space-x-1">
               {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
               <Link
-                href={joinHref}
+                href="/join"
                 className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
                   activeItem === "/join" || activeItem.startsWith("/join/")
                     ? "text-white bg-blue-600 border-white"
                     : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                 }`}
-                onClick={(e) =>
-                  handleNavLinkClick(joinHref.startsWith('/login') ? '/login' : '/join', e)
-                }
+                onClick={(e) => handleNavLinkClick('/join', e)}
               >
                 검사 하기
               </Link>
@@ -1994,7 +1989,7 @@ export default function Navigation() {
 
               {/* 검사 하기 */}
               <Link
-                href={joinHref}
+                href="/join"
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
