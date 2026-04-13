@@ -20,6 +20,7 @@ import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessC
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
+import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 
 
 
@@ -1608,6 +1609,14 @@ function TestRecordsTabContent({
   testRecords: TestRecord[];
 }) {
   const router = useRouter();
+
+  const counselorTestNameById = React.useMemo(() => {
+    const m = new Map<string, string>();
+    for (const opt of counselorAssessmentTestOptions) {
+      if (opt?.testId) m.set(String(opt.testId), String(opt.name || opt.testId));
+    }
+    return m;
+  }, []);
   
   // 컬럼 정렬 상태
   const [sortField, setSortField] = useState<SortField>('timestamp');
@@ -1672,6 +1681,31 @@ function TestRecordsTabContent({
 
   const handleAddTestClick = () => {
     router.push('/join');
+  };
+
+  const handleAddTestForRecord = (record: TestRecord) => {
+    const raw =
+      record.counselorAccessCode ||
+      record.counselorCodePinDisplay ||
+      record.counselorCode ||
+      record.code ||
+      '';
+    const normalized = normalizeAccessCodeInput(String(raw));
+    if (!normalized) {
+      router.push('/join');
+      return;
+    }
+    router.push(`/join/dashboard?accessCode=${encodeURIComponent(normalized)}`);
+  };
+
+  const getDisplayTestName = (record: TestRecord): string => {
+    if (record.recordSource === 'counselor-assessment') {
+      const tid = (record.counselorTestId || '').trim();
+      if (tid) return counselorTestNameById.get(tid) || tid;
+      const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '').trim();
+      return setTitle || '상담사 검사';
+    }
+    return (record.testType || 'N/A').toString();
   };
 
   // 정렬 아이콘 컴포넌트 (시각적 개선)
@@ -2167,7 +2201,7 @@ function TestRecordsTabContent({
                       className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
-                      {(record.testType || 'N/A') + ` (${formatCodePinDisplay(record)})`}
+                      {getDisplayTestName(record) + ` (${formatCodePinDisplay(record)})`}
                     </td>
                     <td 
                       className="px-6 py-4 whitespace-nowrap text-sm text-center"
@@ -2177,7 +2211,7 @@ function TestRecordsTabContent({
                         <button
                           type="button"
                           className="px-3 py-1 text-xs font-medium bg-emerald-700/60 text-emerald-100 rounded hover:bg-emerald-700/80 transition-colors"
-                          onClick={handleAddTestClick}
+                          onClick={() => handleAddTestForRecord(record)}
                         >
                           검사추가
                         </button>
