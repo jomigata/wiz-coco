@@ -1709,12 +1709,8 @@ function TestRecordsTabContent({
   };
 
   const getAccessCodeSetName = (record: TestRecord): string => {
-    // 상담사 검사코드 플로우: "상담사 검사코드 · {세트명}" 구조를 세트명으로 표시
-    const raw = (record.testType || '').toString();
-    const setName = raw.replace(/^상담사 검사코드 ·\s*/, '').trim();
-    if (record.recordSource === 'counselor-assessment') return setName || '상담사 검사코드';
-    // 개인 검사 기록은 코드 세트 개념이 없으므로 기본값
-    return '개인 검사';
+    // "검사코드명" 컬럼: 실제 검사코드를 하이픈 포함 형식으로 표시 (예: BUQ-854)
+    return formatCodePinDisplay(record);
   };
 
   // 정렬 아이콘 컴포넌트 (시각적 개선)
@@ -2227,7 +2223,7 @@ function TestRecordsTabContent({
                       className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
-                      {getDisplayTestName(record) + ` (${formatCodePinDisplay(record)})`}
+                      {getDisplayTestName(record)}
                     </td>
                     <td 
                       className="px-6 py-4 whitespace-nowrap text-sm text-center"
