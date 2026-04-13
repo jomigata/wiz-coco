@@ -70,22 +70,14 @@ export default function AccessCodeInputPage() {
         <main className="max-w-md mx-auto">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
-            <p className="text-slate-300 text-sm mb-3">
-              상담사에게 받은 <span className="text-slate-200">검사 코드</span>를 입력해 주세요.
-            </p>
-            <p className="text-slate-400 text-sm mb-6 rounded-lg border border-slate-600/80 bg-slate-900/50 px-3 py-2.5 leading-relaxed">
-              검사 대시보드로 이동해 검사를 진행·제출하려면{' '}
-              <span className="text-slate-200 font-medium">이메일이 있는 계정으로 로그인</span>한 뒤 「검사 하기」를 눌러
-              주세요. 아직 로그인하지 않았다면 아래에서 로그인할 수 있습니다.
-            </p>
-            {!authLoading && !accountEmail ? (
-              <p className="text-amber-200/90 text-sm mb-6 rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
-                지금은 미로그인 상태입니다. 위 안내대로 로그인한 뒤 다시 「검사 하기」를 눌러 주세요.{' '}
-                <Link href="/login?redirect=/join" className="text-blue-400 hover:text-blue-300 underline">
-                  로그인하기
-                </Link>
+            <div className="text-sm mb-6 space-y-1.5">
+              <p className="text-slate-300">
+                상담사에게 받은 <span className="text-slate-200">검사 코드</span>를 입력해 주세요.
               </p>
-            ) : null}
+              {!authLoading && !accountEmail ? (
+                <p className="text-slate-400">로그인 후 검사가 가능합니다.</p>
+              ) : null}
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
