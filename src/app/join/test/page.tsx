@@ -139,9 +139,9 @@ export default function TestRunnerPage() {
         >
           <div className="max-w-lg w-full text-center bg-slate-800/95 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h2 id="join-submit-done-title" className="text-xl font-bold text-white mb-2">
-              제출 완료
+              검사 완료
             </h2>
-            <p className="text-slate-300 mb-6">제출이 완료되었습니다.</p>
+            <p className="text-slate-300 mb-6">검사가 완료되었습니다.</p>
             <button
               type="button"
               onClick={goToMyRecords}
