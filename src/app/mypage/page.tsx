@@ -1708,46 +1708,20 @@ function TestRecordsTabContent({
     return (record.testType || 'N/A').toString();
   };
 
-  const getSelectedTestTitle = (record: TestRecord): string => {
-    // "포함할 검사 선택" 목록에 보이는 표기와 동일하게 맞춤
-    const tid = (record.counselorTestId || '').trim();
-    if (tid) return counselorTestNameById.get(tid) || tid;
-
-    const t = (record.testType || '').toString().toLowerCase();
-    if (!t) return '';
-
-    // 일반 심리 문항(검사코드용)
-    if (t.includes('일반') && t.includes('문항') && (t.includes('검사코드') || t.includes('코드'))) {
-      return '일반 심리 문항 (검사코드용)';
+  const getAccessCodeTitleLabel = (record: TestRecord): string => {
+    // 괄호 안: 상담사 검사코드 플로우는 "안내 제목(세트 제목)"을 표시
+    if (record.recordSource === 'counselor-assessment') {
+      const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '').trim();
+      return setTitle || '상담사 검사코드';
     }
-
-    // MBTI Pro 검사
-    if (t.includes('mbti') && (t.includes('pro') || t.includes('전문가'))) {
-      return 'MBTI Pro 검사';
-    }
-
-    // MBTI 검사
-    if (t.includes('mbti')) {
-      return 'MBTI 검사';
-    }
-
-    // AI 프로파일링 검사
-    if ((t.includes('ai') && t.includes('프로파일링')) || t.includes('ai-profiling')) {
-      return 'AI 프로파일링 검사';
-    }
-
-    // 통합 평가 검사
-    if (t.includes('통합') && t.includes('평가')) {
-      return '통합 평가 검사';
-    }
-
-    return (record.testType || '').toString();
+    // 개인 기록은 수행할 검사명 사용
+    return getDisplayTestName(record);
   };
 
   const getAccessCodeSetName = (record: TestRecord): string => {
-    // "검사코드" 컬럼: 하이픈 포함 코드 + (검사 선택 제목)
+    // "검사코드" 컬럼: 하이픈 포함 코드 + (안내 제목/검사명)
     const code = formatCodePinDisplay(record);
-    const title = getSelectedTestTitle(record);
+    const title = getAccessCodeTitleLabel(record);
     if (!code || code === '—') return '—';
     return title ? `${code} (${title})` : code;
   };
