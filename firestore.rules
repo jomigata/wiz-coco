@@ -46,6 +46,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // 상담사 지원 신청 - counselorApplications
+    // - 신청자: 본인 문서 생성/조회 가능 (상태는 pending으로만 생성)
+    // - admin: 전체 조회/승인/반려 및 메모 수정 가능
+    match /counselorApplications/{applicationId} {
+      function isAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
+      allow read, list: if request.auth != null
+        && (isAdmin() || resource.data.applicantUid == request.auth.uid);
+
+      allow create: if request.auth != null
+        && request.resource.data.applicantUid == request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      allow update, delete: if request.auth != null && isAdmin();
+    }
+
     // 서버(Admin SDK) 전용 메타 — 클라이언트 직접 접근 차단
     match /system_meta/{docId} {
       allow read, write: if false;

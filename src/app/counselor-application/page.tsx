@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { initializeFirebase } from '@/lib/firebase';
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
 
 export default function CounselorApplicationPage() {
   const { user, loading } = useFirebaseAuth();
@@ -13,6 +15,7 @@ export default function CounselorApplicationPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [hasExistingApplication, setHasExistingApplication] = useState(false);
+  const [existingStatus, setExistingStatus] = useState<string | null>(null);
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -37,22 +40,30 @@ export default function CounselorApplicationPage() {
   useEffect(() => {
     if (user && !loading) {
       checkExistingApplication();
+      // 기본값: Firebase 이메일이 있으면 미리 채움(없으면 사용자가 직접 입력)
+      if (user.email && !formData.personalInfo.email) {
+        setFormData((prev) => ({
+          ...prev,
+          personalInfo: { ...prev.personalInfo, email: user.email || '' },
+        }));
+      }
     }
   }, [user, loading]);
 
   const checkExistingApplication = async () => {
     try {
-      const response = await fetch(`/api/counselor-applications?applicantId=${user?.uid}`);
-      const result = await response.json();
-      
-      if (result.success && result.data.length > 0) {
-        const activeApplication = result.data.find((app: any) => 
-          ['pending', 'under_review', 'approved'].includes(app.status)
-        );
-        
-        if (activeApplication) {
-          setHasExistingApplication(true);
-        }
+      const { db } = initializeFirebase();
+      if (!db || !user?.uid) return;
+      const q = query(
+        collection(db, 'counselorApplications'),
+        where('applicantUid', '==', user.uid),
+        where('status', 'in', ['pending', 'under_review', 'approved'])
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        setHasExistingApplication(true);
+        const st = String((snap.docs[0].data() as any)?.status || '');
+        setExistingStatus(st || null);
       }
     } catch (err) {
       console.error('기존 지원 신청 확인 오류:', err);
@@ -124,42 +135,33 @@ export default function CounselorApplicationPage() {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/counselor-applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          applicantId: user.uid,
-          personalInfo: formData.personalInfo,
-          documents: formData.documents
-        }),
+      const { db } = initializeFirebase();
+      if (!db) throw new Error('Firestore가 초기화되지 않았습니다.');
+
+      // 중복 신청 방지(클라이언트 1차)
+      const q = query(
+        collection(db, 'counselorApplications'),
+        where('applicantUid', '==', user.uid),
+        where('status', 'in', ['pending', 'under_review', 'approved'])
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        setHasExistingApplication(true);
+        setError('이미 상담사 지원 신청이 진행 중입니다.');
+        return;
+      }
+
+      await addDoc(collection(db, 'counselorApplications'), {
+        applicantUid: user.uid,
+        status: 'pending',
+        submittedAt: serverTimestamp(),
+        personalInfo: formData.personalInfo,
+        documents: formData.documents,
       });
 
-      const result = await response.json();
-      
-      if (result.success) {
-        setSuccess('상담사 지원 신청이 제출되었습니다. 검토 후 결과를 알려드리겠습니다.');
-        setFormData({
-          personalInfo: {
-            name: '',
-            email: '',
-            phone: '',
-            specialization: [],
-            experience: 0,
-            education: '',
-            bio: ''
-          },
-          documents: {
-            resume: '',
-            license: '',
-            portfolio: [],
-            other: []
-          }
-        });
-      } else {
-        setError(result.error || '지원 신청 제출에 실패했습니다.');
-      }
+      setSuccess('상담사 지원 신청이 제출되었습니다. 관리자가 검토 후 승인/반려합니다.');
+      setHasExistingApplication(true);
+      setExistingStatus('pending');
     } catch (err) {
       console.error('상담사 지원 신청 오류:', err);
       setError('지원 신청 처리 중 오류가 발생했습니다.');
@@ -207,7 +209,8 @@ export default function CounselorApplicationPage() {
               </div>
               <h1 className="text-2xl font-bold text-yellow-400 mb-2">이미 지원 신청이 있습니다</h1>
               <p className="text-gray-300 mb-4">
-                상담사 지원 신청이 이미 진행 중입니다. 검토 후 결과를 알려드리겠습니다.
+                상담사 지원 신청이 이미 진행 중입니다.
+                {existingStatus ? ` (상태: ${existingStatus})` : ''}
               </p>
               <button
                 onClick={() => router.push('/mypage')}

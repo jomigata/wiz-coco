@@ -9,93 +9,53 @@ import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, Fa
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { shouldShowAdminMenu } from '@/utils/roleUtils';
 import RoleGuard from '@/components/RoleGuard';
+import { initializeFirebase } from '@/lib/firebase';
+import { collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 
 interface CounselorApplication {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  licenseNumber: string;
-  institution: string;
-  experience: number;
-  specialization: string[];
-  education: string;
   status: 'pending' | 'approved' | 'rejected';
   appliedDate: string;
-  documents: string[];
   notes: string;
   reviewNotes?: string;
+  applicantUid: string;
+  personalInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    specialization?: string[];
+    experience?: number;
+    education?: string;
+    bio?: string;
+  };
+  documents?: {
+    resume?: string;
+    license?: string;
+    portfolio?: string[];
+    other?: string[];
+  };
 }
 
-// 샘플 데이터
-const sampleApplications: CounselorApplication[] = [
-  {
-    id: '1',
-    name: '김상담',
-    email: 'counselor1@example.com',
-    phone: '010-1234-5678',
-    licenseNumber: 'PSY-2024-001',
-    institution: '한국심리상담협회',
-    experience: 5,
-    specialization: ['우울증', '불안장애', '관계상담'],
-    education: '서울대학교 심리학과 석사',
-    status: 'pending',
-    appliedDate: '2024-01-20',
-    documents: ['자격증.pdf', '경력증명서.pdf', '학위증명서.pdf'],
-    notes: '5년간의 상담 경험을 보유하고 있으며, 다양한 연령대의 내담자와 상담한 경험이 있습니다.'
-  },
-  {
-    id: '2',
-    name: '이치료',
-    email: 'counselor2@example.com',
-    phone: '010-2345-6789',
-    licenseNumber: 'PSY-2024-002',
-    institution: '한국상담심리학회',
-    experience: 3,
-    specialization: ['가족상담', '부부상담', '청소년상담'],
-    education: '연세대학교 상담심리학과 석사',
-    status: 'pending',
-    appliedDate: '2024-01-18',
-    documents: ['자격증.pdf', '경력증명서.pdf'],
-    notes: '가족상담 전문가로서 다양한 가족 문제 해결에 경험이 있습니다.'
-  },
-  {
-    id: '3',
-    name: '박심리',
-    email: 'counselor3@example.com',
-    phone: '010-3456-7890',
-    licenseNumber: 'PSY-2024-003',
-    institution: '한국임상심리학회',
-    experience: 8,
-    specialization: ['트라우마', 'PTSD', '인지행동치료'],
-    education: '고려대학교 임상심리학과 박사',
-    status: 'approved',
-    appliedDate: '2024-01-15',
-    documents: ['자격증.pdf', '경력증명서.pdf', '학위증명서.pdf', '추천서.pdf'],
-    notes: '트라우마 전문가로서 많은 임상 경험을 보유하고 있습니다.',
-    reviewNotes: '우수한 자격과 경험을 보유하고 있어 승인합니다.'
-  },
-  {
-    id: '4',
-    name: '최상담',
-    email: 'counselor4@example.com',
-    phone: '010-4567-8901',
-    licenseNumber: 'PSY-2024-004',
-    institution: '한국심리상담협회',
-    experience: 1,
-    specialization: ['일반상담'],
-    education: '이화여자대학교 심리학과 학사',
-    status: 'rejected',
-    appliedDate: '2024-01-10',
-    documents: ['자격증.pdf'],
-    notes: '신규 상담사로서 경험이 부족합니다.',
-    reviewNotes: '상담 경험이 부족하여 현재로서는 승인하기 어렵습니다. 추가 경험 후 재신청 바랍니다.'
-  }
-];
+function toDateString(value: any): string {
+  if (!value) return '';
+  const d =
+    typeof value?.toDate === 'function'
+      ? value.toDate()
+      : value instanceof Date
+        ? value
+        : typeof value === 'string'
+          ? new Date(value)
+          : null;
+  if (!d || Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+}
 
 function CounselorVerificationPageContent() {
   const searchParams = useSearchParams();
-  const [applications, setApplications] = useState<CounselorApplication[]>(sampleApplications);
+  const { user, loading } = useFirebaseAuth();
+  const [applications, setApplications] = useState<CounselorApplication[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [selectedApplication, setSelectedApplication] = useState<CounselorApplication | null>(null);
@@ -103,17 +63,8 @@ function CounselorVerificationPageContent() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingApplication, setEditingApplication] = useState<CounselorApplication | null>(null);
   const [newApplication, setNewApplication] = useState<Partial<CounselorApplication>>({
-    name: '',
-    email: '',
-    phone: '',
-    licenseNumber: '',
-    institution: '',
-    experience: 0,
-    specialization: [],
-    education: '',
     status: 'pending',
     appliedDate: new Date().toISOString().split('T')[0],
-    documents: [],
     notes: ''
   });
 
@@ -124,12 +75,51 @@ function CounselorVerificationPageContent() {
     }
   }, [searchParams]);
 
+  const loadApplications = async () => {
+    try {
+      setLoadError('');
+      const { db } = initializeFirebase();
+      if (!db) return;
+      setBusy(true);
+      const q = query(collection(db, 'counselorApplications'), orderBy('submittedAt', 'desc'), limit(200));
+      const snap = await getDocs(q);
+      const apps: CounselorApplication[] = snap.docs.map((d) => {
+        const data: any = d.data();
+        const personalInfo = (data?.personalInfo || {}) as any;
+        return {
+          id: d.id,
+          applicantUid: String(data?.applicantUid || ''),
+          status: (data?.status || 'pending') as CounselorApplication['status'],
+          appliedDate: toDateString(data?.submittedAt) || '',
+          notes: String(personalInfo?.bio || ''),
+          reviewNotes: typeof data?.reviewNotes === 'string' ? data.reviewNotes : undefined,
+          personalInfo,
+          documents: data?.documents || {},
+        };
+      });
+      setApplications(apps);
+    } catch (e) {
+      console.error('상담사 신청 목록 로딩 오류:', e);
+      setLoadError('상담사 신청 목록을 불러오지 못했습니다.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!loading && user) {
+      loadApplications();
+    }
+  }, [loading, user?.uid]);
+
   // 필터링
   const filteredApplications = applications
     .filter(app => {
-      const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          app.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          app.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      const q = searchQuery.toLowerCase();
+      const name = (app.personalInfo?.name || '').toLowerCase();
+      const email = (app.personalInfo?.email || '').toLowerCase();
+      const uid = (app.applicantUid || '').toLowerCase();
+      const matchesSearch = name.includes(q) || email.includes(q) || uid.includes(q);
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
@@ -161,16 +151,50 @@ function CounselorVerificationPageContent() {
     }
   };
 
-  const handleApprove = (id: string) => {
-    setApplications(prev => prev.map(app => 
-      app.id === id ? { ...app, status: 'approved' as const } : app
-    ));
+  const handleApprove = async (application: CounselorApplication) => {
+    try {
+      const { db } = initializeFirebase();
+      if (!db) return;
+      if (!application.applicantUid?.trim()) {
+        alert('신청자 UID가 없어 승인할 수 없습니다.');
+        return;
+      }
+      setBusy(true);
+      await updateDoc(doc(db, 'counselorApplications', application.id), {
+        status: 'approved',
+        reviewedAt: serverTimestamp(),
+        reviewerUid: user?.uid || null,
+      });
+      await updateDoc(doc(db, 'users', application.applicantUid), {
+        role: 'counselor',
+        roleUpdatedAt: serverTimestamp(),
+      });
+      await loadApplications();
+    } catch (e) {
+      console.error('승인 처리 오류:', e);
+      alert('승인 처리 중 오류가 발생했습니다.');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleReject = (id: string) => {
-    setApplications(prev => prev.map(app => 
-      app.id === id ? { ...app, status: 'rejected' as const } : app
-    ));
+  const handleReject = async (application: CounselorApplication) => {
+    try {
+      const { db } = initializeFirebase();
+      if (!db) return;
+      setBusy(true);
+      await updateDoc(doc(db, 'counselorApplications', application.id), {
+        status: 'rejected',
+        reviewedAt: serverTimestamp(),
+        reviewerUid: user?.uid || null,
+      });
+      await loadApplications();
+    } catch (e) {
+      console.error('반려 처리 오류:', e);
+      alert('반려 처리 중 오류가 발생했습니다.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const openModal = (application: CounselorApplication) => {
@@ -180,60 +204,15 @@ function CounselorVerificationPageContent() {
 
   const openAddModal = () => {
     setNewApplication({
-      name: '',
-      email: '',
-      phone: '',
-      licenseNumber: '',
-      institution: '',
-      experience: 0,
-      specialization: [],
-      education: '',
       status: 'pending',
       appliedDate: new Date().toISOString().split('T')[0],
-      documents: [],
       notes: ''
     });
     setShowAddModal(true);
   };
 
   const handleAddCounselor = () => {
-    if (!newApplication.name || !newApplication.email) {
-      alert('이름과 이메일은 필수 입력 항목입니다.');
-      return;
-    }
-
-    const counselor: CounselorApplication = {
-      id: Date.now().toString(),
-      name: newApplication.name!,
-      email: newApplication.email!,
-      phone: newApplication.phone || '',
-      licenseNumber: newApplication.licenseNumber || '',
-      institution: newApplication.institution || '',
-      experience: newApplication.experience || 0,
-      specialization: newApplication.specialization || [],
-      education: newApplication.education || '',
-      status: newApplication.status || 'pending',
-      appliedDate: newApplication.appliedDate || new Date().toISOString().split('T')[0],
-      documents: newApplication.documents || [],
-      notes: newApplication.notes || ''
-    };
-
-    setApplications(prev => [counselor, ...prev]);
-    setShowAddModal(false);
-    setNewApplication({
-      name: '',
-      email: '',
-      phone: '',
-      licenseNumber: '',
-      institution: '',
-      experience: 0,
-      specialization: [],
-      education: '',
-      status: 'pending',
-      appliedDate: new Date().toISOString().split('T')[0],
-      documents: [],
-      notes: ''
-    });
+    alert('현재는 “상담사 신청 → 관리자 승인” 프로세스로 운영됩니다. 신청은 사용자 페이지에서 진행해 주세요.');
   };
 
   const handleSpecializationChange = (value: string) => {
@@ -287,7 +266,8 @@ function CounselorVerificationPageContent() {
               </div>
               <button
                 onClick={openAddModal}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg disabled:opacity-50"
+                disabled={true}
               >
                 <FaPlus className="w-4 h-4" />
                 상담사 추가
@@ -295,6 +275,18 @@ function CounselorVerificationPageContent() {
             </div>
           </div>
         </motion.div>
+
+        {loadError && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+            <p className="text-red-200">{loadError}</p>
+          </div>
+        )}
+
+        {busy && (
+          <div className="mb-6 bg-white/10 border border-white/20 rounded-lg p-4">
+            <p className="text-white/80">처리 중...</p>
+          </div>
+        )}
 
         {/* 검색 및 필터 */}
         <motion.div
@@ -308,7 +300,7 @@ function CounselorVerificationPageContent() {
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-300 w-4 h-4" />
               <input
                 type="text"
-                placeholder="이름, 이메일, 자격증 번호로 검색..."
+                placeholder="이름, 이메일, UID로 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -347,12 +339,12 @@ function CounselorVerificationPageContent() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {application.name.charAt(0)}
+                    {(application.personalInfo?.name || '?').charAt(0)}
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white">{application.name}</h3>
-                    <p className="text-red-200 text-sm">{application.email}</p>
-                    <p className="text-red-300 text-xs">{application.licenseNumber}</p>
+                    <h3 className="text-xl font-semibold text-white">{application.personalInfo?.name || '(이름 없음)'}</h3>
+                    <p className="text-red-200 text-sm">{application.personalInfo?.email || '(이메일 없음)'}</p>
+                    <p className="text-red-300 text-xs">UID: {application.applicantUid || '(없음)'}</p>
                   </div>
                 </div>
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
@@ -363,17 +355,17 @@ function CounselorVerificationPageContent() {
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-red-200">
                   <FaGraduationCap className="w-4 h-4" />
-                  <span className="text-sm">{application.education}</span>
+                  <span className="text-sm">{application.personalInfo?.education || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-red-200">
                   <FaCertificate className="w-4 h-4" />
-                  <span className="text-sm">{application.institution}</span>
+                  <span className="text-sm">-</span>
                 </div>
                 <div className="text-sm text-red-200">
-                  경력: {application.experience}년
+                  경력: {application.personalInfo?.experience ?? 0}년
                 </div>
                 <div className="text-sm text-red-200">
-                  전문분야: {application.specialization.join(', ')}
+                  전문분야: {(application.personalInfo?.specialization || []).join(', ')}
                 </div>
                 <div className="text-sm text-red-200">
                   신청일: {new Date(application.appliedDate).toLocaleDateString('ko-KR')}
@@ -383,9 +375,13 @@ function CounselorVerificationPageContent() {
               <div className="mb-4">
                 <div className="text-sm text-red-300 mb-1">첨부 문서</div>
                 <div className="flex flex-wrap gap-1">
-                  {application.documents.map((doc, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-white/10 rounded text-xs text-red-200">
-                      {doc}
+                  {Object.entries(application.documents || {}).flatMap(([k, v]) => {
+                    if (!v) return [];
+                    if (Array.isArray(v)) return v.map((x, idx) => ({ key: `${k}-${idx}`, label: String(x) }));
+                    return [{ key: k, label: String(v) }];
+                  }).map(({ key, label }) => (
+                    <span key={key} className="px-2 py-1 bg-white/10 rounded text-xs text-red-200">
+                      {label}
                     </span>
                   ))}
                 </div>
@@ -414,14 +410,14 @@ function CounselorVerificationPageContent() {
                 {application.status === 'pending' && (
                   <>
                     <button
-                      onClick={() => handleApprove(application.id)}
+                      onClick={() => handleApprove(application)}
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                     >
                       <FaCheck className="w-4 h-4" />
                       승인
                     </button>
                     <button
-                      onClick={() => handleReject(application.id)}
+                      onClick={() => handleReject(application)}
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                     >
                       <FaTimes className="w-4 h-4" />
@@ -452,7 +448,7 @@ function CounselorVerificationPageContent() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">상담사 수동 추가</h3>
+                <h3 className="text-2xl font-bold text-white">안내</h3>
                 <button
                   onClick={() => setShowAddModal(false)}
                   className="text-red-300 hover:text-white transition-colors"
@@ -460,143 +456,23 @@ function CounselorVerificationPageContent() {
                   <FaTimes className="w-6 h-6" />
                 </button>
               </div>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-red-300 text-sm font-medium">이름 *</label>
-                    <input
-                      type="text"
-                      value={newApplication.name || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="상담사 이름"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-red-300 text-sm font-medium">이메일 *</label>
-                    <input
-                      type="email"
-                      value={newApplication.email || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="이메일 주소"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-red-300 text-sm font-medium">전화번호</label>
-                    <input
-                      type="tel"
-                      value={newApplication.phone || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="010-1234-5678"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-red-300 text-sm font-medium">자격증 번호</label>
-                    <input
-                      type="text"
-                      value={newApplication.licenseNumber || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, licenseNumber: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="PSY-2024-001"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-red-300 text-sm font-medium">소속 기관</label>
-                    <input
-                      type="text"
-                      value={newApplication.institution || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, institution: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="한국심리상담협회"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-red-300 text-sm font-medium">경력 (년)</label>
-                    <input
-                      type="number"
-                      value={newApplication.experience || 0}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, experience: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="5"
-                      min="0"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-red-300 text-sm font-medium">학력</label>
-                  <input
-                    type="text"
-                    value={newApplication.education || ''}
-                    onChange={(e) => setNewApplication(prev => ({ ...prev, education: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="서울대학교 심리학과 석사"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-red-300 text-sm font-medium">전문분야 (쉼표로 구분)</label>
-                  <input
-                    type="text"
-                    value={newApplication.specialization?.join(', ') || ''}
-                    onChange={(e) => handleSpecializationChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="우울증, 불안장애, 관계상담"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-red-300 text-sm font-medium">첨부 문서 (쉼표로 구분)</label>
-                  <input
-                    type="text"
-                    value={newApplication.documents?.join(', ') || ''}
-                    onChange={(e) => handleDocumentsChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="자격증.pdf, 경력증명서.pdf, 학위증명서.pdf"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-red-300 text-sm font-medium">메모</label>
-                  <textarea
-                    value={newApplication.notes || ''}
-                    onChange={(e) => setNewApplication(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="상담사에 대한 추가 정보나 메모"
-                    rows={3}
-                  />
-                </div>
 
-                <div>
-                  <label className="text-red-300 text-sm font-medium">상태</label>
-                  <select
-                    value={newApplication.status || 'pending'}
-                    onChange={(e) => setNewApplication(prev => ({ ...prev, status: e.target.value as 'pending' | 'approved' | 'rejected' }))}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                  >
-                    <option value="pending" className="bg-gray-800">검토 중</option>
-                    <option value="approved" className="bg-gray-800">승인됨</option>
-                    <option value="rejected" className="bg-gray-800">거부됨</option>
-                  </select>
-                </div>
+              <div className="text-white/80 space-y-3">
+                <p className="text-sm">
+                  상담사는 <span className="text-white font-semibold">사용자 “상담사 지원 신청”</span>을 통해 신청하고,
+                  관리자가 이 화면에서 <span className="text-white font-semibold">승인/반려</span>하는 프로세스로 운영됩니다.
+                </p>
+                <p className="text-sm">
+                  수동으로 상담사를 “추가”하는 기능은 운영 혼선을 막기 위해 비활성화되어 있습니다.
+                </p>
               </div>
-              
+
               <div className="flex gap-2 mt-6">
                 <button
-                  onClick={handleAddCounselor}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <FaSave className="w-4 h-4" />
-                  상담사 추가
-                </button>
-                <button
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  취소
+                  닫기
                 </button>
               </div>
             </div>
@@ -621,39 +497,39 @@ function CounselorVerificationPageContent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-red-300 text-sm">이름</label>
-                    <p className="text-white">{selectedApplication.name}</p>
+                    <p className="text-white">{selectedApplication.personalInfo?.name || '(이름 없음)'}</p>
                   </div>
                   <div>
                     <label className="text-red-300 text-sm">이메일</label>
-                    <p className="text-white">{selectedApplication.email}</p>
+                    <p className="text-white">{selectedApplication.personalInfo?.email || '(이메일 없음)'}</p>
                   </div>
                   <div>
                     <label className="text-red-300 text-sm">전화번호</label>
-                    <p className="text-white">{selectedApplication.phone}</p>
+                    <p className="text-white">{selectedApplication.personalInfo?.phone || '-'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">자격증 번호</label>
-                    <p className="text-white">{selectedApplication.licenseNumber}</p>
+                    <label className="text-red-300 text-sm">신청자 UID</label>
+                    <p className="text-white">{selectedApplication.applicantUid || '-'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">소속 기관</label>
-                    <p className="text-white">{selectedApplication.institution}</p>
+                    <label className="text-red-300 text-sm">신청일</label>
+                    <p className="text-white">{selectedApplication.appliedDate ? new Date(selectedApplication.appliedDate).toLocaleDateString('ko-KR') : '-'}</p>
                   </div>
                   <div>
                     <label className="text-red-300 text-sm">경력</label>
-                    <p className="text-white">{selectedApplication.experience}년</p>
+                    <p className="text-white">{selectedApplication.personalInfo?.experience ?? 0}년</p>
                   </div>
                 </div>
                 
                 <div>
                   <label className="text-red-300 text-sm">학력</label>
-                  <p className="text-white">{selectedApplication.education}</p>
+                  <p className="text-white">{selectedApplication.personalInfo?.education || '-'}</p>
                 </div>
                 
                 <div>
                   <label className="text-red-300 text-sm">전문분야</label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedApplication.specialization.map((spec, idx) => (
+                    {(selectedApplication.personalInfo?.specialization || []).map((spec, idx) => (
                       <span key={idx} className="px-2 py-1 bg-red-500/20 rounded text-sm text-red-200">
                         {spec}
                       </span>
@@ -664,9 +540,13 @@ function CounselorVerificationPageContent() {
                 <div>
                   <label className="text-red-300 text-sm">첨부 문서</label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedApplication.documents.map((doc, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-white/10 rounded text-sm text-red-200">
-                        {doc}
+                    {Object.entries(selectedApplication.documents || {}).flatMap(([k, v]) => {
+                      if (!v) return [];
+                      if (Array.isArray(v)) return v.map((x, idx) => ({ key: `${k}-${idx}`, label: String(x) }));
+                      return [{ key: k, label: String(v) }];
+                    }).map(({ key, label }) => (
+                      <span key={key} className="px-2 py-1 bg-white/10 rounded text-sm text-red-200">
+                        {label}
                       </span>
                     ))}
                   </div>
@@ -683,7 +563,7 @@ function CounselorVerificationPageContent() {
                   <>
                     <button
                       onClick={() => {
-                        handleApprove(selectedApplication.id);
+                        handleApprove(selectedApplication);
                         setShowModal(false);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -693,7 +573,7 @@ function CounselorVerificationPageContent() {
                     </button>
                     <button
                       onClick={() => {
-                        handleReject(selectedApplication.id);
+                        handleReject(selectedApplication);
                         setShowModal(false);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
