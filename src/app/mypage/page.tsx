@@ -18,6 +18,7 @@ import { doc, getDoc } from 'firebase/firestore';
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
+import CounselorAssessmentResultsPanel from './components/CounselorAssessmentResultsPanel';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 
 
@@ -1893,6 +1894,8 @@ function TestRecordsTabContent({
           완료한 심리 검사들의 결과와 기록을 확인할 수 있습니다.
         </p>
       </motion.div>
+
+      <CounselorAssessmentResultsPanel />
       
       {/* 검색 및 필터링 컨트롤 */}
       <motion.div 

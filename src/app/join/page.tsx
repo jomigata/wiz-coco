@@ -84,24 +84,16 @@ export default function AccessCodeInputPage() {
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
               로그인한 계정으로 검사를 진행합니다. 상담사에게 받은 <span className="text-slate-200">검사 코드</span>와{' '}
-              <span className="text-slate-200">비밀번호(숫자 4자리)</span>를 입력해 주세요. 완료된 결과는 이 계정으로
-              조회·관리할 수 있습니다.
+              <span className="text-slate-200">비밀번호(숫자 4자리)</span>를 입력해 주세요.
             </p>
-            {authLoading ? (
-              <p className="text-slate-400 text-sm mb-4">로그인 정보를 확인하는 중…</p>
-            ) : accountEmail ? (
-              <div className="rounded-lg bg-slate-700/50 border border-slate-600 px-3 py-2.5 mb-6">
-                <p className="text-xs text-slate-400 mb-0.5">로그인 계정</p>
-                <p className="text-white text-sm break-all">{accountEmail}</p>
-              </div>
-            ) : (
+            {!authLoading && !accountEmail ? (
               <p className="text-amber-200/90 text-sm mb-6 rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
                 검사 참여에는 이메일이 있는 로그인 계정이 필요합니다.{' '}
                 <Link href="/login?redirect=/join" className="text-blue-400 hover:text-blue-300 underline">
                   로그인
                 </Link>
               </p>
-            )}
+            ) : null}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">

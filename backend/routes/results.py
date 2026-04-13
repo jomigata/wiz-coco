@@ -119,13 +119,70 @@ def list_results():
     return jsonify({"results": items})
 
 
+@bp.route("/mine", methods=["GET"])
+@limit_access_code
+def list_my_results():
+    """로그인 사용자(토큰 email)의 검사코드 세트 제출 결과 전부 (accessCode 무관)."""
+    client_email = get_bearer_client_email()
+    if not client_email:
+        return jsonify(
+            {"error": "Unauthorized", "message": "Firebase login with email is required."}
+        ), 401
+
+    db = get_firestore()
+    refs = list(
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("clientEmail", "==", client_email)
+        .limit(200)
+        .stream()
+    )
+    assessment_cache: dict = {}
+
+    def _assessment_title(aid) -> str | None:
+        if not aid:
+            return None
+        if aid in assessment_cache:
+            return assessment_cache[aid]
+        ad = db.collection(ASSESSMENTS_COLLECTION).document(str(aid)).get()
+        t = (ad.to_dict() or {}).get("title") if ad.exists else None
+        assessment_cache[aid] = t
+        return t
+
+    items = []
+    for doc in refs:
+        d = doc.to_dict() or {}
+        aid = d.get("assessmentId")
+        ca = d.get("completedAt")
+        completed_iso = None
+        if ca is not None and hasattr(ca, "isoformat"):
+            completed_iso = ca.isoformat()
+        items.append({
+            "resultId": doc.id,
+            "accessCode": d.get("accessCode"),
+            "assessmentId": aid,
+            "assessmentTitle": _assessment_title(aid),
+            "testId": d.get("testId"),
+            "status": d.get("status"),
+            "completedAt": completed_iso,
+        })
+
+    def _sort_key(row):
+        t = row.get("completedAt") or ""
+        return t
+
+    items.sort(key=_sort_key, reverse=True)
+    return jsonify({"results": items})
+
+
 @bp.route("/<result_id>", methods=["GET"])
 @limit_password_api
 def get_result(result_id):
-    """비밀번호 확인 후 해당 결과 조회 (수정 폼용: testId, responses 반환)."""
+    """
+    (1) Bearer 토큰의 email이 결과의 clientEmail과 같으면: 요약 조회용으로 resultData·accessCode 포함 (비밀번호 불필요).
+    (2) 그 외: ?password= 4자리 확인 후 수정 폼용(testId, responses).
+    """
     password = (request.args.get("password") or "").strip()
-    if not password:
-        return jsonify({"error": "Bad Request", "message": "password required"}), 400
+    token_email = get_bearer_client_email()
 
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
@@ -133,6 +190,21 @@ def get_result(result_id):
     if not doc.exists:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
+    doc_owner = (d.get("clientEmail") or "").strip().lower()
+
+    if token_email and doc_owner == token_email:
+        return jsonify({
+            "resultId": doc.id,
+            "testId": d.get("testId"),
+            "responses": d.get("responses"),
+            "clientEmail": d.get("clientEmail"),
+            "resultData": d.get("resultData"),
+            "accessCode": d.get("accessCode"),
+            "assessmentId": d.get("assessmentId"),
+        })
+
+    if not password:
+        return jsonify({"error": "Bad Request", "message": "password required"}), 400
     if not verify_password(password, d.get("passwordHash", "")):
         return jsonify({"error": "Forbidden", "message": "Invalid password"}), 403
     return jsonify({

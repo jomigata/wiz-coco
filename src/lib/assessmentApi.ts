@@ -131,6 +131,60 @@ export async function getResult(
   return data;
 }
 
+/** 로그인 사용자 본인의 검사코드 세트 제출 결과 전체 (마이페이지용) */
+export interface MyAssessmentResultRow {
+  resultId: string;
+  accessCode: string;
+  assessmentId: string;
+  assessmentTitle?: string | null;
+  testId: string;
+  status?: string;
+  completedAt: string | null;
+}
+
+export async function listMyAssessmentResults(): Promise<{ results: MyAssessmentResultRow[] }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/results/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || '목록을 불러오지 못했습니다.');
+  }
+  return data as { results: MyAssessmentResultRow[] };
+}
+
+/** GET /api/results/:id + Bearer — 소유자만 비밀번호 없이 요약·응답 조회 */
+export async function getResultAsAuthenticatedOwner(resultId: string): Promise<{
+  resultId: string;
+  testId: string;
+  responses: unknown;
+  clientEmail: string;
+  resultData?: Record<string, unknown> | null;
+  accessCode?: string;
+  assessmentId?: string;
+}> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || '조회에 실패했습니다.');
+  }
+  return data as {
+    resultId: string;
+    testId: string;
+    responses: unknown;
+    clientEmail: string;
+    resultData?: Record<string, unknown> | null;
+    accessCode?: string;
+    assessmentId?: string;
+  };
+}
+
 /** GET /api/results?accessCode= — 로그인 사용자(토큰 이메일) 기준 완료 검사 목록 */
 export async function listResults(accessCode: string): Promise<{ results: TestResultItem[] }> {
   const code = normalizeAccessCodeInput(accessCode || '');

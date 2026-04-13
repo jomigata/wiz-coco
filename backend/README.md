@@ -59,6 +59,8 @@ python app.py
 
 - `POST /api/results` — **Authorization: Bearer \<Firebase ID 토큰\>** 필수. 본문 `{ accessCode, testId, responses }` → `clientEmail`은 토큰의 `email`과 동일하게 저장, 채점 후 4자리 비밀번호 해시 저장·응답에 `plainPassword` 1회 포함 (**이메일 발송 없음**)
 - `GET /api/results?accessCode=` — **Bearer** 필수. 토큰 이메일과 일치하는 `testResults` 목록
+- `GET /api/results/mine` — **Bearer** 필수. 해당 이메일로 제출한 모든 `testResults`(검사코드 세트) 목록, `assessmentTitle` 포함
+- `GET /api/results/<resultId>` — **Bearer** 이메일이 결과의 `clientEmail`과 같으면 비밀번호 없이 `resultData`·`accessCode` 등 조회. 그 외에는 `?password=` 4자리 필요
 - `PUT /api/results/<resultId>` — 비밀번호 + responses 로 수정·재채점
 - `DELETE /api/results/<resultId>` — 비밀번호 확인 후 삭제
 
