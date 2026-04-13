@@ -2,11 +2,30 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // 사용자 프로필 문서에 대한 규칙
+    // - 일반 사용자는 본인 문서 읽기 가능
+    // - 일반 사용자는 본인 문서 생성/수정 가능(단, role은 'user'로만 생성 가능, 수정 시 role 변경 불가)
+    // - admin은 모든 문서 읽기/쓰기 가능
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      function isAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+
+      // 최초 생성은 본인만 가능, role은 user만 허용
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.role == 'user';
+
+      // 본인 업데이트는 role 변경 금지
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role;
+
+      // admin은 어떤 문서든 수정 가능
+      allow update, delete: if isAdmin();
     }
 
     // 상담사 검사코드 세트 - assessments

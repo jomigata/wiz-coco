@@ -70,6 +70,19 @@ export const useFirebaseAuth = () => {
       // Firestore /users/{uid}에서 role 읽기 (없으면 기본 user로 생성)
       try {
         if (db) {
+          // 백엔드 부트스트랩(운영자/상담사 자동 승격) 트리거
+          // - 실패해도 무시(오프라인/배포 환경 차이)
+          // - 성공 시 onSnapshot으로 role이 즉시 반영됨
+          try {
+            const token = await firebaseUser.getIdToken();
+            void fetch('/api/auth/bootstrap-role', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+            });
+          } catch {
+            // ignore
+          }
+
           const ref = doc(db, 'users', firebaseUser.uid);
           const snap = await getDoc(ref);
           if (snap.exists()) {
