@@ -74,9 +74,7 @@ export default function AccessCodeInputPage() {
               <p className="text-slate-300">
                 상담사에게 받은 <span className="text-slate-200">검사 코드</span>를 입력해 주세요.
               </p>
-              {!authLoading && !accountEmail ? (
-                <p className="text-slate-400">로그인 후 검사가 가능합니다.</p>
-              ) : null}
+              <p className="text-slate-400">로그인 후 검사가 가능합니다.</p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
