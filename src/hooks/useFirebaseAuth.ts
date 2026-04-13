@@ -17,6 +17,12 @@ import { initializeFirebase } from '@/lib/firebase';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 
+const getFlaskApiBaseUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_FLASK_API_URL) return process.env.NEXT_PUBLIC_FLASK_API_URL;
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') return window.location.origin;
+  return 'http://localhost:5000';
+};
+
 export interface AuthUser {
   uid: string;
   email: string | null;
@@ -75,7 +81,8 @@ export const useFirebaseAuth = () => {
           // - 성공 시 onSnapshot으로 role이 즉시 반영됨
           try {
             const token = await firebaseUser.getIdToken();
-            void fetch('/api/auth/bootstrap-role', {
+            const baseUrl = getFlaskApiBaseUrl();
+            void fetch(`${baseUrl}/api/auth/bootstrap-role`, {
               method: 'POST',
               headers: { Authorization: `Bearer ${token}` },
             });
