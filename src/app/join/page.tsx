@@ -25,13 +25,16 @@ export default function AccessCodeInputPage() {
 
   const normalizedCode = normalizeAccessCodeInput(code);
   const accountEmail = (user?.email || '').trim().toLowerCase();
-  const canSubmit = isValidAccessCodeInput(normalizedCode) && !!accountEmail;
+  /** 마이페이지·네비와 동일: Firebase 세션만으로 로그인 판별(이메일 없는 소셜 계정 포함) */
+  const isLoggedIn = !authLoading && !!user;
+  const hasEmail = accountEmail.includes('@');
+  const canSubmit = isValidAccessCodeInput(normalizedCode) && hasEmail;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!accountEmail) {
-      setError('이메일이 있는 계정으로 로그인해 주세요. (구글·이메일 로그인)');
+    if (!hasEmail) {
+      setError('검사 진행에는 이메일이 등록된 계정이 필요합니다. 구글·이메일 로그인으로 다시 시도해 주세요.');
       return;
     }
     if (!isValidAccessCodeInput(normalizedCode)) {
@@ -74,10 +77,16 @@ export default function AccessCodeInputPage() {
               <p className="text-slate-300">
                 상담사에게 받은 <span className="text-slate-200">검사 코드</span>를 입력해 주세요.
               </p>
-              {!authLoading && !accountEmail ? (
+              {!isLoggedIn ? (
                 <p className="text-slate-400">로그인 후 검사가 가능합니다.</p>
               ) : null}
             </div>
+            {isLoggedIn && !hasEmail ? (
+              <p className="text-amber-200/90 text-sm mb-6 rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
+                현재 계정에 이메일 정보가 없어 검사를 진행할 수 없습니다. 이메일이 제공되는 방식(구글·이메일 로그인 등)으로
+                로그인해 주세요.
+              </p>
+            ) : null}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
@@ -89,7 +98,8 @@ export default function AccessCodeInputPage() {
                   inputMode="text"
                   maxLength={40}
                   autoComplete="off"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  spellCheck={false}
+                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
                   placeholder="예: KAN-724"
                   value={code}
                   onChange={(e) => setCode(formatJoinAccessCodeWhileTyping(e.target.value))}
@@ -110,7 +120,7 @@ export default function AccessCodeInputPage() {
               </button>
             </form>
             <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center items-stretch sm:items-center">
-              {!authLoading && !accountEmail ? (
+              {!isLoggedIn ? (
                 <Link
                   href="/login?redirect=/join"
                   className="text-center py-2.5 px-4 rounded-lg border border-slate-500 text-slate-200 hover:bg-slate-700/80 text-sm font-medium transition-colors"
