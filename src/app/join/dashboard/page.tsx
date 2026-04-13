@@ -6,31 +6,9 @@ import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
-import {
-  isValidAccessCodeInput,
-  normalizeAccessCodeInput,
-  normalizeJoinPinDigits,
-} from '@/lib/accessCodeFormat';
+import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { JOIN_STORAGE_KEY, persistJoinPinBackup, readJoinPinForAccessCode } from '@/lib/joinAssessmentSession';
-
-/** /join → 대시보드 이동 시 PIN 전달용 (#p=1234). HTTP 요청 URL에 포함되지 않음. */
-function peekJoinPinFromHash(): string {
-  if (typeof window === 'undefined') return '';
-  const h = window.location.hash;
-  if (!h.startsWith('#p=')) return '';
-  return normalizeJoinPinDigits(decodeURIComponent(h.slice(3)));
-}
-
-function clearJoinPinHashFromUrl(): void {
-  if (typeof window === 'undefined') return;
-  if (!window.location.hash.startsWith('#p=')) return;
-  try {
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
-  } catch {
-    // ignore
-  }
-}
+import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 
 function DashboardLoading() {
   return (
@@ -69,29 +47,22 @@ function JoinDashboardContent() {
       setLoading(false);
       return;
     }
-    let joinPin = readJoinPinForAccessCode(code);
-    if (!joinPin) {
-      joinPin = peekJoinPinFromHash();
-    }
     setLoading(true);
     setError('');
-    lookupPublicAssessment(code, joinPin)
+    lookupPublicAssessment(code)
       .then((data) => {
-        clearJoinPinHashFromUrl();
         setAssessment(data);
         try {
           sessionStorage.setItem(
             JOIN_STORAGE_KEY,
             JSON.stringify({
               accessCode: code,
-              joinPin,
               assessmentId: data.assessmentId,
               title: data.title,
               welcomeMessage: data.welcomeMessage,
               testList: data.testList,
             })
           );
-          persistJoinPinBackup(code, joinPin);
         } catch {
           // ignore
         }
@@ -146,10 +117,6 @@ function JoinDashboardContent() {
   }
 
   if (error || !assessment) {
-    const pinHint =
-      error.includes('비밀번호') || error.includes('4자리')
-        ? ' 같은 브라우저에서 검사 코드·비밀번호를 입력한 뒤 이동했는지 확인하거나, 아래 링크에서 다시 입력해 주세요.'
-        : '';
     return (
       <div className="min-h-screen bg-gray-900">
         <div className="fixed top-0 left-0 right-0 z-50">
@@ -157,10 +124,7 @@ function JoinDashboardContent() {
         </div>
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
-            <p className="text-red-400 mb-4">
-              {error || '검사코드 정보를 불러올 수 없습니다.'}
-              {pinHint && <span className="text-slate-400 text-sm block mt-2">{pinHint}</span>}
-            </p>
+            <p className="text-red-400 mb-4">{error || '검사코드 정보를 불러올 수 없습니다.'}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
               검사 코드 다시 입력
             </Link>

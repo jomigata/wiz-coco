@@ -25,9 +25,9 @@ export default function AssessmentListPage() {
       if (createdId) {
         const raw = sessionStorage.getItem('wizcoco_created_assessment');
         if (raw) {
-          const o = JSON.parse(raw) as { assessmentId?: string; accessCode?: string; joinPin?: string };
+          const o = JSON.parse(raw) as { assessmentId?: string; accessCode?: string };
           if (o.assessmentId === createdId && o.accessCode) {
-            setCreatedInfo({ accessCode: o.accessCode, joinPin: o.joinPin });
+            setCreatedInfo({ accessCode: o.accessCode });
             sessionStorage.removeItem('wizcoco_created_assessment');
             return;
           }

@@ -57,7 +57,7 @@ interface TestRecord {
   recordSource?: 'local' | 'counselor-assessment';
   counselorResultId?: string;
   counselorAccessCode?: string;
-  /** 목록 표시: 검사코드 / 접속 비밀번호(4자리, 로컬에 있으면) */
+  /** 목록 표시: 상담사 검사코드 플로우용 검사코드 문자열 */
   counselorCodePinDisplay?: string;
   counselorTestId?: string;
 }
@@ -514,13 +514,10 @@ function MyPageContent() {
       if (firebaseUser?.email?.includes('@')) {
         try {
           const { listMyAssessmentResults } = await import('@/lib/assessmentApi');
-          const { readJoinPinForAccessCode } = await import('@/lib/joinAssessmentSession');
           const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
           const { results } = await listMyAssessmentResults();
           for (const row of results || []) {
             const ac = normalizeAccessCodeInput(String(row.accessCode || ''));
-            const pin = readJoinPinForAccessCode(ac);
-            const pinPart = pin.length === 4 ? pin : '—';
             merged.push({
               code: `counselor-${row.resultId}`,
               testType: row.assessmentTitle
@@ -528,7 +525,7 @@ function MyPageContent() {
                 : '상담사 검사코드',
               timestamp: row.completedAt || new Date().toISOString(),
               status: 'completed',
-              counselorCodePinDisplay: `${ac || '—'} / ${pinPart}`,
+              counselorCodePinDisplay: ac || '—',
               recordSource: 'counselor-assessment',
               counselorResultId: row.resultId,
               counselorAccessCode: ac,
@@ -1628,8 +1625,7 @@ function TestRecordsTabContent({
 
   const formatCodePinDisplay = (record: TestRecord) => {
     if (record.counselorCodePinDisplay) return record.counselorCodePinDisplay;
-    const left = record.counselorCode || record.code || '—';
-    return `${left} / —`;
+    return record.counselorCode || record.code || '—';
   };
 
   const openCounselorView = async (record: TestRecord) => {
@@ -1645,7 +1641,7 @@ function TestRecordsTabContent({
       const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '') || '—';
       const lines = [
         `검사 세트: ${setTitle}`,
-        `코드번호/비밀번호: ${record.counselorCodePinDisplay || '—'}`,
+        `검사코드: ${record.counselorCodePinDisplay || '—'}`,
         `검사 ID: ${record.counselorTestId || data.testId || '—'}`,
         '',
         summary || '요약 정보가 없습니다.',
@@ -1735,8 +1731,8 @@ function TestRecordsTabContent({
         bValue = b.mbtiType || '';
         break;
       case 'counselorCode':
-        aValue = a.counselorCodePinDisplay || `${a.counselorCode || a.code || ''} /`;
-        bValue = b.counselorCodePinDisplay || `${b.counselorCode || b.code || ''} /`;
+        aValue = a.counselorCodePinDisplay || a.counselorCode || a.code || '';
+        bValue = b.counselorCodePinDisplay || b.counselorCode || b.code || '';
         break;
       default:
         aValue = a.timestamp || '';
@@ -2130,7 +2126,7 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('counselorCode')}
                   >
                     <div className="flex items-center justify-center">
-                      코드번호/비밀번호
+                      검사코드
                       <SortIcon field="counselorCode" />
                     </div>
                   </th>
@@ -2364,7 +2360,7 @@ function TestRecordsTabContent({
                 </div>
                 {(deleteModalRecord.counselorCodePinDisplay || deleteModalRecord.counselorCode) && (
                   <div className="flex justify-between gap-2">
-                    <span className="text-blue-300 shrink-0">코드번호/비밀번호:</span>
+                    <span className="text-blue-300 shrink-0">검사코드:</span>
                     <span className="text-blue-100 text-right break-all">
                       {deleteModalRecord.counselorCodePinDisplay ||
                         `${deleteModalRecord.counselorCode || '—'} / —`}

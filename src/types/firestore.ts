@@ -24,9 +24,9 @@ export interface AssessmentTestItem {
 export interface Assessment {
   /** 유일 검사코드 (신규: CVC+숫자 3자리~, 구형: 영숫자 6자리) */
   accessCode: string;
-  /** 내담자 접속용 4자리 비밀번호 bcrypt 해시 */
+  /** (구 데이터) 접속용 PIN bcrypt 해시 — 신규 세트에는 없음 */
   joinPinHash?: string;
-  /** 상담사 확인용 평문 4자리(저장 시; 공개 API에는 미포함) */
+  /** (구 데이터) 상담사 UI용 평문 PIN — 신규 세트에는 없음 */
   joinPin?: string;
   /** 상담사 Firebase UID */
   counselorId: string;

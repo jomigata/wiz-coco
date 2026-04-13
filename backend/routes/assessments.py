@@ -1,4 +1,4 @@
-# 상담사: POST/GET assessments, GET progress | 내담자: POST public lookup by accessCode+joinPin
+# 상담사: POST/GET assessments, GET progress | 내담자: POST public lookup by accessCode
 from flask import Blueprint, request, jsonify, g
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
@@ -7,21 +7,13 @@ from auth_middleware import require_counselor
 from rate_limit import limit_access_code
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.access_code import generate_unique_access_code, normalize_access_code, is_valid_access_code
-from utils.password import generate_four_digit_password, hash_password, verify_password
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
 MSG_PUBLIC_NOT_FOUND = (
-    "요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 비밀번호를 다시 한 번 확인해 주시기 바랍니다."
+    "요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다."
 )
-MSG_PUBLIC_PIN_WRONG = (
-    "검사코드 또는 비밀번호가 일치하지 않습니다. 입력 정보를 다시 확인해 주시기 바랍니다."
-)
-MSG_PUBLIC_PIN_REQUIRED = "비밀번호 4자리를 입력해 주시기 바랍니다."
 MSG_ACCESS_CODE_FORMAT = "검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다."
-MSG_GET_REQUIRES_PIN = (
-    "해당 검사코드는 비밀번호 입력이 필요합니다. 검사 코드 입력 단계에서 비밀번호를 함께 입력해 주시기 바랍니다."
-)
 
 
 def _serialize_doc(doc):
@@ -38,10 +30,17 @@ def _serialize_doc(doc):
     return d
 
 
+def _strip_join_secrets_for_counselor_api(d: dict) -> None:
+    """상담사 API 응답에서 접속 PIN 관련 필드 제거(신규 세트는 미발급)."""
+    d.pop("joinPinHash", None)
+    d.pop("joinPin", None)
+    d.pop("joinPinConfigured", None)
+
+
 @bp.route("", methods=["POST"])
 @require_counselor
 def create_assessment():
-    """상담사: 검사코드(세트) 생성, accessCode 생성 후 저장, assessmentId·accessCode 반환."""
+    """상담사: 검사코드(세트) 생성, accessCode만 발급·저장. 내담자 접속용 PIN은 사용하지 않음."""
     body = request.get_json() or {}
     title = (body.get("title") or "").strip()
     target_audience = body.get("targetAudience", "개인")
@@ -59,12 +58,9 @@ def create_assessment():
     if not title:
         return jsonify({"error": "Bad Request", "message": "title required"}), 400
     access_code = generate_unique_access_code()
-    join_pin = generate_four_digit_password()
     db = get_firestore()
     data = {
         "accessCode": access_code,
-        "joinPinHash": hash_password(join_pin),
-        "joinPin": join_pin,
         "counselorId": g.counselor_uid,
         "title": title,
         "targetAudience": target_audience,
@@ -75,7 +71,7 @@ def create_assessment():
     }
     ref = db.collection(ASSESSMENTS_COLLECTION).document()
     ref.set(data)
-    return jsonify({"assessmentId": ref.id, "accessCode": access_code, "joinPin": join_pin}), 201
+    return jsonify({"assessmentId": ref.id, "accessCode": access_code}), 201
 
 
 def _is_completed_result(d):
@@ -152,8 +148,7 @@ def list_assessments():
             emails_not_all = 0
         x["emailsNotCompletedAllTestsCount"] = emails_not_all
         x["emailsCompletedAllTestsCount"] = emails_all
-        had_hash = bool(x.pop("joinPinHash", None))
-        x["joinPinConfigured"] = had_hash or bool(x.get("joinPin"))
+        _strip_join_secrets_for_counselor_api(x)
     return jsonify({"assessments": items})
 
 
@@ -180,8 +175,7 @@ def get_assessment(assessment_id):
     if not doc:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     out = _serialize_doc(doc)
-    had_hash = bool(out.pop("joinPinHash", None))
-    out["joinPinConfigured"] = had_hash or bool(out.get("joinPin"))
+    _strip_join_secrets_for_counselor_api(out)
     return jsonify(out)
 
 
@@ -264,7 +258,7 @@ def get_progress(assessment_id):
 @bp.route("/<assessment_id>/results/<result_id>", methods=["GET"])
 @require_counselor
 def get_assessment_result(assessment_id, result_id):
-    """상담사 전용: 해당 assessment 소유의 검사 결과 상세 조회 (비밀번호 불필요)."""
+    """상담사 전용: 해당 assessment 소유의 검사 결과 상세 조회."""
     db = get_firestore()
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass = ass_ref.get()
@@ -306,10 +300,9 @@ def _public_json(doc, d):
 @bp.route("/public/lookup", methods=["POST"])
 @limit_access_code
 def post_public_lookup():
-    """내담자(공개): accessCode + joinPin(선택, 구문서는 미설정 시 생략) 검증 후 세트 정보 반환."""
+    """내담자(공개): 활성 검사코드(accessCode)만으로 세트 정보 반환. (구문서의 joinPinHash는 검증하지 않음)"""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or "")
-    pin_raw = (body.get("joinPin") or "").strip()
     if not is_valid_access_code(code):
         return jsonify({"error": "Bad Request", "message": MSG_ACCESS_CODE_FORMAT}), 400
     db = get_firestore()
@@ -324,19 +317,13 @@ def post_public_lookup():
         return jsonify({"error": "Not Found", "message": MSG_PUBLIC_NOT_FOUND}), 404
     doc = refs[0]
     d = doc.to_dict()
-    pin_hash = d.get("joinPinHash")
-    if pin_hash:
-        if len(pin_raw) != 4 or not pin_raw.isdigit():
-            return jsonify({"error": "Unauthorized", "message": MSG_PUBLIC_PIN_REQUIRED}), 401
-        if not verify_password(pin_raw, pin_hash):
-            return jsonify({"error": "Unauthorized", "message": MSG_PUBLIC_PIN_WRONG}), 401
     return jsonify(_public_json(doc, d))
 
 
 @bp.route("/public/<access_code>", methods=["GET"])
 @limit_access_code
 def get_public(access_code):
-    """구형 클라이언트 호환: joinPinHash 없는 검사코드만 조회 가능. 그 외 403."""
+    """구형 클라이언트 호환: 활성 검사코드로 공개 메타만 조회."""
     code = normalize_access_code(access_code)
     if not is_valid_access_code(code):
         return jsonify({"error": "Not Found", "message": MSG_PUBLIC_NOT_FOUND}), 404
@@ -352,6 +339,4 @@ def get_public(access_code):
         return jsonify({"error": "Not Found", "message": MSG_PUBLIC_NOT_FOUND}), 404
     doc = refs[0]
     d = doc.to_dict()
-    if d.get("joinPinHash"):
-        return jsonify({"error": "Forbidden", "message": MSG_GET_REQUIRES_PIN}), 403
     return jsonify(_public_json(doc, d))

@@ -126,19 +126,6 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         <span className="text-slate-400">검사코드</span>{' '}
         <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(initial.accessCode)}</span>
         <p className="text-slate-500 text-xs mt-2">검사코드는 발급 후 변경할 수 없습니다.</p>
-        <div className="mt-3 pt-3 border-t border-slate-600">
-          <span className="text-slate-400">비밀번호</span>{' '}
-          {initial.joinPin ? (
-            <span className="font-mono tracking-widest text-cyan-300">{initial.joinPin}</span>
-          ) : initial.joinPinConfigured ? (
-            <span className="text-amber-400/90 text-sm">비노출(평문 미저장 구간에서 생성된 항목)</span>
-          ) : (
-            <span className="text-slate-500 text-sm">—</span>
-          )}
-        </div>
-        <p className="text-slate-500 text-xs mt-2">
-          비밀번호는 검사코드 목록에서도 동일하게 확인할 수 있습니다. 내담자에게 검사 시 함께 안내해 주세요.
-        </p>
       </div>
 
       <div>

@@ -3,11 +3,7 @@
  * NEXT_PUBLIC_FLASK_API_URL 미설정 시 개발용 localhost:5000 사용
  */
 
-import {
-  isValidAccessCodeInput,
-  normalizeAccessCodeInput,
-  normalizeJoinPinDigits,
-} from '@/lib/accessCodeFormat';
+import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
@@ -47,7 +43,7 @@ export interface PublicAssessment {
 }
 
 const MSG_LOOKUP_DEFAULT =
-  '요청하신 검사코드가 확인되지 않았습니다. 검사코드 및 비밀번호를 다시 한 번 확인해 주시기 바랍니다.';
+  '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';
 
 export interface TestResultItem {
   resultId: string;
@@ -56,22 +52,16 @@ export interface TestResultItem {
   completedAt: string | null;
 }
 
-/**
- * POST /api/assessments/public/lookup — 검사코드 + 4자리 비밀번호(신규 세트는 필수, 구문서 미설정 시 생략 가능)
- */
-export async function lookupPublicAssessment(
-  accessCode: string,
-  joinPin: string
-): Promise<PublicAssessment> {
+/** POST /api/assessments/public/lookup — 활성 검사코드만으로 세트 정보 조회 */
+export async function lookupPublicAssessment(accessCode: string): Promise<PublicAssessment> {
   const code = normalizeAccessCodeInput(accessCode || '');
-  const pin = normalizeJoinPinDigits(joinPin);
   if (!isValidAccessCodeInput(code)) {
     throw new Error('검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다.');
   }
   const res = await fetch(`${getBaseUrl()}/api/assessments/public/lookup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessCode: code, joinPin: pin }),
+    body: JSON.stringify({ accessCode: code }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -153,7 +143,7 @@ export async function listMyAssessmentResults(): Promise<{ results: MyAssessment
   return data as { results: MyAssessmentResultRow[] };
 }
 
-/** GET /api/results/:id + Bearer — 소유자만 비밀번호 없이 요약·응답 조회 */
+/** GET /api/results/:id + Bearer — 소유자만 요약·응답 조회 */
 export async function getResultAsAuthenticatedOwner(resultId: string): Promise<{
   resultId: string;
   testId: string;
@@ -260,16 +250,11 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
-  /** 상담사 목록·수정 화면용 평문 4자리(신규 저장분). 없으면 비노출/구데이터 */
-  joinPin?: string;
-  /** joinPinHash 존재 여부(평문 없는 구데이터 구분용) */
-  joinPinConfigured?: boolean;
 }
 
 /** 검사코드 발급 직후 목록 상단 배너용(세션에서 전달) */
 export interface CreatedAssessmentBannerInfo {
   accessCode: string;
-  joinPin?: string;
 }
 
 export interface ProgressByClient {
@@ -283,7 +268,7 @@ export async function createAssessment(body: {
   targetAudience?: '개인' | '그룹';
   welcomeMessage?: string;
   testList: { testId: string; name: string }[];
-}): Promise<{ assessmentId: string; accessCode: string; joinPin: string }> {
+}): Promise<{ assessmentId: string; accessCode: string }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {
@@ -396,7 +381,7 @@ export async function getProgress(
   return data;
 }
 
-/** 상담사 전용: 검사 결과 상세 (비밀번호 불필요) */
+/** 상담사 전용: 검사 결과 상세 */
 export interface CounselorResultDetail {
   resultId: string;
   assessmentId: string;

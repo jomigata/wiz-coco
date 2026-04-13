@@ -32,7 +32,7 @@ python app.py
 | 변수 | 설명 |
 |------|------|
 | `FIREBASE_CREDENTIALS_PATH` | Firebase 서비스 계정 JSON 파일 경로 (또는 `GOOGLE_APPLICATION_CREDENTIALS` 사용) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | (선택) 향후 다른 알림용으로 예약. 검사 결과 비밀번호는 이메일로 발송하지 않습니다. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | (선택) 향후 다른 알림용으로 예약 |
 | `RATE_LIMIT_ACCESS_CODE` | 검사 코드 API 분당 요청 제한 (기본 30, 0=비활성화) |
 | `RATE_LIMIT_PASSWORD_API` | 비밀번호 확인 API 분당 제한 (기본 20) |
 | `FLASK_ENV` | `development` / `production` |
@@ -43,7 +43,7 @@ python app.py
 
 ### 상담사 (Authorization: Bearer \<Firebase ID Token\>)
 
-- `POST /api/assessments` — 검사코드(세트) 생성, 고유 `accessCode` 및 내담자용 4자리 비밀번호(`joinPin`, 해시는 `joinPinHash`로 저장) 발급
+- `POST /api/assessments` — 검사코드(세트) 생성, 고유 `accessCode`만 발급·저장 (내담자 접속용 PIN 미사용)
 - `GET /api/assessments` — 내 활성 검사코드 목록 (`archived` 제외). 각 항목에 `emailsNotCompletedAllTestsCount`(1건 이상 제출했으나 세트 미전체 완료 이메일 수), `emailsCompletedAllTestsCount`(세트 전부 완료 이메일 수) 포함
 - `GET /api/assessments/<assessmentId>` — 단일 조회 (수정 폼용, 본인·활성만)
 - `PUT /api/assessments/<assessmentId>` — 수정 (`title`, `targetAudience`, `welcomeMessage`, `testList`; `accessCode` 불변)
@@ -52,8 +52,8 @@ python app.py
 
 ### 내담자 (공개)
 
-- `POST /api/assessments/public/lookup` — 본문 `{ "accessCode", "joinPin" }` 검증 후 제목·안내·검사 목록 반환 (`joinPinHash` 없는 구문서는 `joinPin` 생략 가능)
-- `GET /api/assessments/public/<accessCode>` — `joinPinHash`가 없는 검사코드만 조회 가능(구 호환). 비밀번호가 설정된 세트는 403
+- `POST /api/assessments/public/lookup` — 본문 `{ "accessCode" }` 로 활성 세트 조회 (구문서에 `joinPinHash`가 있어도 검증하지 않음)
+- `GET /api/assessments/public/<accessCode>` — 활성 검사코드 공개 메타 조회 (구 호환)
 
 ### 결과
 
@@ -70,15 +70,15 @@ python app.py
 
 ## Firestore
 
-- `assessments`: accessCode, joinPinHash?, joinPin?(상담사 UI용 평문 4자리), counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`)
+- `assessments`: accessCode, counselorId, title, targetAudience, welcomeMessage, testList, createdAt, updatedAt?, archivedAt?, status (`active` \| `archived`) — 구 데이터에만 `joinPinHash` / `joinPin` 이 남을 수 있음(공개 조회에는 미사용)
 - `testResults`: accessCode, assessmentId, testId, clientEmail, status, responses, resultData, completedAt — `passwordHash`는 구 제출분만 (신규는 미저장)
 
 규칙은 프로젝트 루트의 `firestore.rules` 참고. 쓰기는 백엔드(Admin SDK)에서 수행합니다.
 
 ## 보안
 
-- **비밀번호**: 4자리 숫자 비밀번호는 bcrypt로 해싱하여 Firestore의 `passwordHash`에만 저장합니다. 평문은 저장하지 않습니다.
-- **Rate Limiting**: 검사 코드 조회·결과 제출(`GET /api/assessments/public/<code>`, `POST/GET /api/results`)에는 `limit_access_code`, 비밀번호 확인(`GET/PUT/DELETE /api/results/<id>`)에는 `limit_password_api`가 적용됩니다. 분당 제한은 환경 변수로 조정 가능합니다.
+- **레거시 결과 비밀번호**: 구 제출분에만 Firestore `passwordHash`가 있을 수 있으며 bcrypt로 검증합니다. 신규 제출·검사코드 세트에는 결과용·접속용 PIN을 저장하지 않습니다.
+- **Rate Limiting**: 검사 코드 조회·결과 제출 등에는 `limit_access_code`, 결과 단건 `GET/PUT/DELETE`에는 `limit_password_api`가 적용됩니다.
 - **내담자 결과 API**: `POST/GET /api/results`는 Firebase ID 토큰(이메일 클레임 포함)이 있어야 하며, 제출·목록의 식별자는 토큰 이메일과 검사코드입니다.
 
 ## 배포 (Cloud Run + GitHub Actions)

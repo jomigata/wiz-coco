@@ -275,7 +275,7 @@ export default function ProgressDashboard({
         </div>
       )}
 
-      {/* 결과 상세 모달 (상담사 전용, 비밀번호 불필요) */}
+      {/* 결과 상세 모달 (상담사 전용) */}
       {(detail !== null || detailLoading || detailError) && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"

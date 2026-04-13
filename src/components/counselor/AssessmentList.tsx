@@ -119,15 +119,8 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               {formatAccessCodeDisplay(createdInfo.accessCode)}
             </strong>
           </p>
-          {createdInfo.joinPin != null && createdInfo.joinPin !== '' && (
-            <p>
-              비밀번호(숫자 4자리):{' '}
-              <strong className="font-mono tracking-widest text-white">{createdInfo.joinPin}</strong>
-            </p>
-          )}
           <p className="text-green-300/90 text-xs">
-            내담자는 사이트에 로그인한 뒤 「검사 하기」에서 코드와 비밀번호를 입력하면 됩니다. 검사 제출이 끝나면 화면에만
-            결과 수정용 4자리 비밀번호가 표시되며, 이메일로는 발송되지 않습니다.
+            내담자는 사이트에 로그인한 뒤 「검사 하기」에서 위 코드만 입력하면 됩니다.
           </p>
         </div>
       )}
@@ -138,7 +131,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               <tr className="border-b border-slate-600 bg-slate-800">
                 <th className="px-4 py-3 text-slate-300 font-medium">제목</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">검사코드</th>
-                <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">비밀번호</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">대상</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">포함 검사</th>
                 <th className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
@@ -162,17 +154,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <span className="font-mono text-cyan-400 tracking-wider">
                         {formatAccessCodeDisplay(a.accessCode)}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-300 text-sm">
-                      {a.joinPin ? (
-                        <span className="font-mono tabular-nums tracking-widest text-cyan-200">{a.joinPin}</span>
-                      ) : a.joinPinConfigured ? (
-                        <span className="text-amber-400/90" title="평문이 저장되지 않은 기존 항목입니다. 새 검사코드를 만들면 목록에서 비밀번호를 확인할 수 있습니다.">
-                          비노출
-                        </span>
-                      ) : (
-                        <span className="text-slate-500">—</span>
-                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-300">{a.targetAudience || '개인'}</td>
                     <td className="px-4 py-3 text-slate-300">{(a.testList || []).length}개</td>
