@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from firebase_init import get_firestore
-from auth_middleware import get_bearer_client_email
+from auth_middleware import get_bearer_uid, get_bearer_email_optional
 from rate_limit import limit_access_code, limit_password_api
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.password import verify_password
@@ -24,10 +24,16 @@ def _get_assessment_or_404(db, assessment_id, counselor_uid=None):
     return doc, None
 
 
-def _token_owns_result(token_email: str | None, d: dict) -> bool:
-    if not token_email:
-        return False
-    return token_email == (d.get("clientEmail") or "").strip().lower()
+def _token_owns_result(token_uid: str | None, token_email: str | None, d: dict) -> bool:
+    """
+    신규: clientUid 기준 소유권 확인.
+    레거시: clientUid 없는 문서에 한해 clientEmail로 소유권 확인(이메일 클레임이 있을 때만).
+    """
+    if token_uid and token_uid == (d.get("clientUid") or "").strip():
+        return True
+    if not d.get("clientUid") and token_email:
+        return token_email == (d.get("clientEmail") or "").strip().lower()
+    return False
 
 
 def _legacy_password_valid(d: dict, password: str) -> bool:
@@ -43,18 +49,20 @@ def _legacy_password_valid(d: dict, password: str) -> bool:
 def submit_result():
     """
     내담자: Authorization(Firebase ID 토큰) 필수, accessCode, testId, responses.
-    clientEmail은 토큰 email과 동일하게 저장. 비밀번호 필드는 저장하지 않음(로그인으로만 수정·삭제).
+    소유권은 clientUid(토큰 uid) 기준으로 저장. email은 선택(있는 경우만 저장).
+    비밀번호 필드는 저장하지 않음(로그인으로만 수정·삭제).
     """
     body = request.get_json() or {}
     access_code = normalize_access_code(body.get("accessCode") or "")
     test_id = (body.get("testId") or "").strip()
-    client_email = get_bearer_client_email()
+    client_uid = get_bearer_uid()
+    client_email = get_bearer_email_optional()
     responses = body.get("responses")
-    if not client_email:
+    if not client_uid:
         return jsonify(
             {
                 "error": "Unauthorized",
-                "message": "Firebase login with email is required to submit results.",
+                "message": "Valid Firebase ID token required to submit results.",
             }
         ), 401
     if not is_valid_access_code(access_code):
@@ -77,7 +85,8 @@ def submit_result():
         "accessCode": access_code,
         "assessmentId": assessment_id,
         "testId": test_id,
-        "clientEmail": client_email,
+        "clientUid": client_uid,
+        **({"clientEmail": client_email} if client_email else {}),
         "status": "completed",
         "responses": responses,
         "resultData": result_data,
@@ -97,25 +106,37 @@ def submit_result():
 @bp.route("", methods=["GET"])
 @limit_access_code
 def list_results():
-    """accessCode + 로그인 사용자(토큰) 이메일로 해당 testResults 목록 반환."""
+    """accessCode + 로그인 사용자(토큰 uid)로 해당 testResults 목록 반환."""
     access_code = normalize_access_code(request.args.get("accessCode") or "")
-    client_email = get_bearer_client_email()
-    if not client_email:
+    client_uid = get_bearer_uid()
+    token_email = get_bearer_email_optional()
+    if not client_uid:
         return jsonify(
-            {"error": "Unauthorized", "message": "Firebase login with email is required to list results."}
+            {"error": "Unauthorized", "message": "Valid Firebase ID token required."}
         ), 401
     if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
 
     db = get_firestore()
-    refs = (
-        db.collection(TEST_RESULTS_COLLECTION)
-        .where("accessCode", "==", access_code)
-        .where("clientEmail", "==", client_email)
-        .get()
-    )
+    refs = db.collection(TEST_RESULTS_COLLECTION).where("accessCode", "==", access_code).where("clientUid", "==", client_uid).get()
+    # 레거시(예전 제출분): clientUid가 없고 clientEmail만 있는 경우를 위해 email 클레임이 있으면 추가 조회 후 병합
+    legacy_refs = []
+    if token_email:
+        legacy_refs = db.collection(TEST_RESULTS_COLLECTION).where("accessCode", "==", access_code).where("clientEmail", "==", token_email).get()
     items = []
-    for doc in refs:
+    seen = set()
+    for doc in (refs or []):
+        seen.add(doc.id)
+        d = doc.to_dict()
+        items.append({
+            "resultId": doc.id,
+            "testId": d.get("testId"),
+            "status": d.get("status"),
+            "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
+        })
+    for doc in (legacy_refs or []):
+        if doc.id in seen:
+            continue
         d = doc.to_dict()
         items.append({
             "resultId": doc.id,
@@ -129,20 +150,19 @@ def list_results():
 @bp.route("/mine", methods=["GET"])
 @limit_access_code
 def list_my_results():
-    """로그인 사용자(토큰 email)의 검사코드 세트 제출 결과 전부 (accessCode 무관)."""
-    client_email = get_bearer_client_email()
-    if not client_email:
+    """로그인 사용자(토큰 uid)의 검사코드 세트 제출 결과 전부 (accessCode 무관)."""
+    client_uid = get_bearer_uid()
+    token_email = get_bearer_email_optional()
+    if not client_uid:
         return jsonify(
-            {"error": "Unauthorized", "message": "Firebase login with email is required."}
+            {"error": "Unauthorized", "message": "Valid Firebase ID token required."}
         ), 401
 
     db = get_firestore()
-    refs = list(
-        db.collection(TEST_RESULTS_COLLECTION)
-        .where("clientEmail", "==", client_email)
-        .limit(200)
-        .stream()
-    )
+    refs = list(db.collection(TEST_RESULTS_COLLECTION).where("clientUid", "==", client_uid).limit(200).stream())
+    legacy_refs = []
+    if token_email:
+        legacy_refs = list(db.collection(TEST_RESULTS_COLLECTION).where("clientEmail", "==", token_email).limit(200).stream())
     assessment_cache: dict = {}
 
     def _assessment_title(aid) -> str | None:
@@ -156,7 +176,27 @@ def list_my_results():
         return t
 
     items = []
+    seen = set()
     for doc in refs:
+        seen.add(doc.id)
+        d = doc.to_dict() or {}
+        aid = d.get("assessmentId")
+        ca = d.get("completedAt")
+        completed_iso = None
+        if ca is not None and hasattr(ca, "isoformat"):
+            completed_iso = ca.isoformat()
+        items.append({
+            "resultId": doc.id,
+            "accessCode": d.get("accessCode"),
+            "assessmentId": aid,
+            "assessmentTitle": _assessment_title(aid),
+            "testId": d.get("testId"),
+            "status": d.get("status"),
+            "completedAt": completed_iso,
+        })
+    for doc in legacy_refs:
+        if doc.id in seen:
+            continue
         d = doc.to_dict() or {}
         aid = d.get("assessmentId")
         ca = d.get("completedAt")
@@ -185,11 +225,12 @@ def list_my_results():
 @limit_password_api
 def get_result(result_id):
     """
-    Bearer 이메일이 결과 소유자면 전체 조회.
+    Bearer uid가 결과 소유자면 전체 조회.
     그 외: 구 데이터만 ?password= 로 조회(레거시).
     """
     password = (request.args.get("password") or "").strip()
-    token_email = get_bearer_client_email()
+    token_uid = get_bearer_uid()
+    token_email = get_bearer_email_optional()
 
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
@@ -198,11 +239,12 @@ def get_result(result_id):
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
 
-    if _token_owns_result(token_email, d):
+    if _token_owns_result(token_uid, token_email, d):
         return jsonify({
             "resultId": doc.id,
             "testId": d.get("testId"),
             "responses": d.get("responses"),
+            "clientUid": d.get("clientUid"),
             "clientEmail": d.get("clientEmail"),
             "resultData": d.get("resultData"),
             "accessCode": d.get("accessCode"),
@@ -226,13 +268,14 @@ def get_result(result_id):
 @limit_password_api
 def update_result(result_id):
     """
-    소유자(Bearer 이메일 일치): password 없이 responses만으로 수정.
+    소유자(Bearer uid 일치): password 없이 responses만으로 수정.
     레거시(passwordHash 있음): password + responses.
     """
     body = request.get_json() or {}
     password = (body.get("password") or "").strip()
     responses = body.get("responses")
-    token_email = get_bearer_client_email()
+    token_uid = get_bearer_uid()
+    token_email = get_bearer_email_optional()
 
     if responses is None:
         return jsonify({"error": "Bad Request", "message": "responses required"}), 400
@@ -244,12 +287,12 @@ def update_result(result_id):
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
 
-    if _token_owns_result(token_email, d):
+    if _token_owns_result(token_uid, token_email, d):
         pass
     elif _legacy_password_valid(d, password):
         pass
     else:
-        if not _token_owns_result(token_email, d) and d.get("passwordHash") and not password:
+        if not _token_owns_result(token_uid, token_email, d) and d.get("passwordHash") and not password:
             return jsonify({"error": "Bad Request", "message": "password required"}), 400
         return jsonify({"error": "Forbidden", "message": "Invalid password or not owner"}), 403
 
@@ -269,7 +312,8 @@ def delete_result(result_id):
     """소유자(Bearer) 또는 레거시 password로 삭제."""
     body = request.get_json() or {} if request.is_json else {}
     password = (body.get("password") or "").strip()
-    token_email = get_bearer_client_email()
+    token_uid = get_bearer_uid()
+    token_email = get_bearer_email_optional()
 
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
@@ -278,7 +322,7 @@ def delete_result(result_id):
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
 
-    if _token_owns_result(token_email, d):
+    if _token_owns_result(token_uid, token_email, d):
         ref.delete()
         return jsonify({"message": "Deleted"}), 200
     if _legacy_password_valid(d, password):

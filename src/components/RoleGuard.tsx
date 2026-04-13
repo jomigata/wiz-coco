@@ -32,12 +32,12 @@ export default function RoleGuard({
       return;
     }
 
-    const userEmail = user.email || '';
+    const role = user.role || 'user';
     let hasAccess = false;
 
-    if (allowedRoles.includes('admin') && shouldShowAdminMenu(userEmail)) {
+    if (allowedRoles.includes('admin') && shouldShowAdminMenu(role)) {
       hasAccess = true;
-    } else if (allowedRoles.includes('counselor') && shouldShowCounselorMenu(userEmail)) {
+    } else if (allowedRoles.includes('counselor') && shouldShowCounselorMenu(role)) {
       hasAccess = true;
     }
 

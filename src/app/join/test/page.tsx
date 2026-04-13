@@ -70,7 +70,7 @@ export default function TestRunnerPage() {
     }
   }, [testId]);
 
-  const effectiveEmail = (user?.email || '').trim().toLowerCase();
+  const isLoggedIn = !authLoading && !!user;
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
@@ -83,8 +83,7 @@ export default function TestRunnerPage() {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
-  const canSubmit =
-    !authLoading && effectiveEmail.includes('@') && Object.keys(responses).length === questions.length;
+  const canSubmit = isLoggedIn && Object.keys(responses).length === questions.length;
 
   const handleSubmitNew = async () => {
     if (!canSubmit) return;
@@ -181,9 +180,9 @@ export default function TestRunnerPage() {
 
             {authLoading ? (
               <p className="text-slate-400 text-sm mb-4">로그인 확인 중…</p>
-            ) : !effectiveEmail.includes('@') ? (
+            ) : !isLoggedIn ? (
               <p className="text-amber-400/95 text-sm mb-4">
-                이메일이 있는 계정으로 로그인한 뒤 다시 이 검사를 열어 주세요.{' '}
+                로그인한 뒤 다시 이 검사를 열어 주세요.{' '}
                 <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
                   로그인
                 </Link>
@@ -246,7 +245,7 @@ export default function TestRunnerPage() {
                 <button
                   type="button"
                   onClick={handleSubmitNew}
-                  disabled={authLoading || !effectiveEmail.includes('@') || submitting}
+                  disabled={authLoading || !isLoggedIn || submitting}
                   className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submitting ? '제출 중…' : '제출하기'}

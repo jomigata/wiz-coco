@@ -12,7 +12,7 @@ interface StoredAssessment {
 }
 
 interface CompletedTestListProps {
-  clientEmail: string;
+  clientUid: string;
   onRefresh?: () => void;
   /** 대시보드「수행할 검사」정렬·상태용으로 완료 목록 동기화 */
   onResultsChange?: (items: TestResultItem[]) => void;
@@ -26,7 +26,7 @@ function getTestName(testId: string, testList: { testId: string; name: string }[
 type SortColumn = 'name' | 'date';
 
 export default function CompletedTestList({
-  clientEmail,
+  clientUid,
   onRefresh,
   onResultsChange,
 }: CompletedTestListProps) {
@@ -131,11 +131,11 @@ export default function CompletedTestList({
       .finally(() => setActionLoading(false));
   };
 
-  if (!clientEmail?.trim() || !clientEmail.includes('@')) {
+  if (!clientUid?.trim()) {
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
         <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
-        <p className="text-slate-400 text-sm">이메일이 있는 계정으로 로그인하면 완료 내역을 불러옵니다.</p>
+        <p className="text-slate-400 text-sm">로그인하면 완료 내역을 불러옵니다.</p>
       </div>
     );
   }

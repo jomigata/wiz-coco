@@ -166,6 +166,7 @@ export default function Navigation() {
     router.push('/mypage?tab=in-progress');
   };
   const userEmail = user?.email || "";
+  const userRole = user?.role || 'user';
   const userName = user?.displayName || "";
 
   // 스크롤 상태 감지 함수
@@ -1555,7 +1556,7 @@ export default function Navigation() {
                 {isLoggedIn ? (
                   <>
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
-                    {shouldShowCounselorMenu(userEmail) && (
+                    {shouldShowCounselorMenu(userRole) && (
                       <div className="relative">
                         <Link
                           href="/counselor"
@@ -1664,7 +1665,7 @@ export default function Navigation() {
                     )}
 
                     {/* 관리자 메뉴 - 관리자만 표시 */}
-                    {shouldShowAdminMenu(userEmail) && (
+                    {shouldShowAdminMenu(userRole) && (
                       <div className="relative">
                         <Link
                           href="/admin"

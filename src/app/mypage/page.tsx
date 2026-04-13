@@ -511,7 +511,7 @@ function MyPageContent() {
       const local = buildLocalTestRecords();
       const merged: TestRecord[] = [...local];
 
-      if (firebaseUser?.email?.includes('@')) {
+      if (firebaseUser) {
         try {
           const { listMyAssessmentResults } = await import('@/lib/assessmentApi');
           const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');

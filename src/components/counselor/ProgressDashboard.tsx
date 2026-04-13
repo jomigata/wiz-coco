@@ -53,7 +53,7 @@ export default function ProgressDashboard({
   byClient,
   assessmentTitle,
 }: ProgressDashboardProps) {
-  const [expandedEmails, setExpandedEmails] = useState<Set<string>>(() => new Set());
+  const [expandedClients, setExpandedClients] = useState<Set<string>>(() => new Set());
   const [sortCol, setSortCol] = useState<SortCol>('completedAt');
   const [sortDesc, setSortDesc] = useState(true);
 
@@ -101,11 +101,11 @@ export default function ProgressDashboard({
     });
   }, []);
 
-  const toggleClient = (email: string) => {
-    setExpandedEmails((prev) => {
+  const toggleClient = (clientKey: string) => {
+    setExpandedClients((prev) => {
       const next = new Set(prev);
-      if (next.has(email)) next.delete(email);
-      else next.add(email);
+      if (next.has(clientKey)) next.delete(clientKey);
+      else next.add(clientKey);
       return next;
     });
   };
@@ -145,19 +145,21 @@ export default function ProgressDashboard({
       ) : (
         <div className="space-y-4">
           {sortedClients.map((client) => {
-            const isOpen = expandedEmails.has(client.clientEmail);
+            const clientKey = client.clientUid;
+            const displayClient = client.clientEmail && client.clientEmail.includes('@') ? client.clientEmail : client.clientUid;
+            const isOpen = expandedClients.has(clientKey);
             const completed = client.results.filter((r) => r.status === 'completed').length;
             const inProgress = client.results.length - completed;
             const latest = latestCompletedLabel(client);
             const rows = sortRows(client.results);
             return (
               <div
-                key={client.clientEmail}
+                key={clientKey}
                 className="bg-slate-800/80 rounded-xl border border-slate-600 overflow-hidden"
               >
                 <button
                   type="button"
-                  onClick={() => toggleClient(client.clientEmail)}
+                  onClick={() => toggleClient(clientKey)}
                   className="w-full px-4 py-3 bg-slate-700/50 border-b border-slate-600 flex flex-wrap items-center justify-between gap-3 text-left hover:bg-slate-700/70 transition-colors"
                 >
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 flex-1">
@@ -166,7 +168,7 @@ export default function ProgressDashboard({
                     </span>
                     <div className="min-w-0">
                       <span className="text-slate-400 text-sm">내담자</span>
-                      <span className="ml-2 text-white font-medium break-all">{client.clientEmail}</span>
+                      <span className="ml-2 text-white font-medium break-all">{displayClient}</span>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-300">

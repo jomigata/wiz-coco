@@ -14,13 +14,15 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import type { AppRole } from '@/utils/roleUtils';
 
 export interface AuthUser {
   uid: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  role?: string;
+  role?: AppRole;
   metadata?: {
     creationTime?: string;
     lastSignInTime?: string;
@@ -33,7 +35,7 @@ export const useFirebaseAuth = () => {
 
   useEffect(() => {
     // Firebase 초기화
-    const { auth } = initializeFirebase();
+    const { auth, db } = initializeFirebase();
     
     if (!auth) {
       console.error('Firebase Auth가 초기화되지 않았습니다.');
@@ -41,23 +43,58 @@ export const useFirebaseAuth = () => {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-          role: 'user', // 기본 역할
-          metadata: {
-            creationTime: firebaseUser.metadata.creationTime,
-            lastSignInTime: firebaseUser.metadata.lastSignInTime
-          }
-        });
-      } else {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
         setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      const baseUser: AuthUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+        role: 'user',
+        metadata: {
+          creationTime: firebaseUser.metadata.creationTime,
+          lastSignInTime: firebaseUser.metadata.lastSignInTime,
+        },
+      };
+
+      // Firestore /users/{uid}에서 role 읽기 (없으면 기본 user로 생성)
+      try {
+        if (db) {
+          const ref = doc(db, 'users', firebaseUser.uid);
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            const data = snap.data() as any;
+            const role = (data?.role || 'user') as AppRole;
+            setUser({ ...baseUser, role });
+          } else {
+            await setDoc(
+              ref,
+              {
+                role: 'user',
+                email: firebaseUser.email || null,
+                displayName: firebaseUser.displayName || null,
+                photoURL: firebaseUser.photoURL || null,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              },
+              { merge: true }
+            );
+            setUser(baseUser);
+          }
+        } else {
+          setUser(baseUser);
+        }
+      } catch (e) {
+        console.warn('[useFirebaseAuth] role 로드 실패:', e);
+        setUser(baseUser);
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();

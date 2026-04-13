@@ -31,3 +31,4 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 # Firestore 컬렉션 이름 (프론트 타입과 동일)
 ASSESSMENTS_COLLECTION = "assessments"
 TEST_RESULTS_COLLECTION = "testResults"
+USERS_COLLECTION = "users"

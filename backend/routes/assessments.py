@@ -80,7 +80,7 @@ def _is_completed_result(d):
 
 def _aggregate_completed_testids_by_email(db, assessment_ids):
     """
-    완료된 testResults만: assessmentId -> {email: set(완료한 testId)}.
+    완료된 testResults만: assessmentId -> {clientUid: (email, set(완료한 testId))}.
     """
     per_testids = {aid: {} for aid in assessment_ids}
     if not assessment_ids:
@@ -94,16 +94,17 @@ def _aggregate_completed_testids_by_email(db, assessment_ids):
             d = doc.to_dict()
             if not _is_completed_result(d):
                 continue
+            uid = str(d.get("clientUid") or "").strip()
             email = (d.get("clientEmail") or "").strip().lower()
             aid = d.get("assessmentId")
-            if not email or not aid or aid not in per_testids:
+            if not uid or not aid or aid not in per_testids:
                 continue
             tid = str(d.get("testId") or "").strip()
             if tid:
                 tmap = per_testids[aid]
-                if email not in tmap:
-                    tmap[email] = set()
-                tmap[email].add(tid)
+                if uid not in tmap:
+                    tmap[uid] = {"clientUid": uid, "clientEmail": email or None, "testIds": set()}
+                tmap[uid]["testIds"].add(tid)
     return per_testids
 
 
@@ -139,7 +140,8 @@ def list_assessments():
         emails_any = len(tmap)
         emails_all = 0
         if required:
-            for _email, tids in tmap.items():
+            for _uid, row in tmap.items():
+                tids = row.get("testIds") or set()
                 if required <= tids:
                     emails_all += 1
             emails_not_all = emails_any - emails_all
@@ -233,7 +235,7 @@ def delete_assessment(assessment_id):
 @bp.route("/<assessment_id>/progress", methods=["GET"])
 @require_counselor
 def get_progress(assessment_id):
-    """상담사: 해당 assessment의 진행 현황 (testResults를 clientEmail 기준 그룹화)."""
+    """상담사: 해당 assessment의 진행 현황 (testResults를 clientUid 기준 그룹화)."""
     db = get_firestore()
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass = ass_ref.get()
@@ -241,18 +243,24 @@ def get_progress(assessment_id):
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     access_code = ass.to_dict().get("accessCode", "")
     results_refs = db.collection(TEST_RESULTS_COLLECTION).where("assessmentId", "==", assessment_id).get()
-    by_email = {}
+    by_client = {}
     for doc in results_refs:
         d = doc.to_dict()
-        email = d.get("clientEmail", "")
-        if email not in by_email:
-            by_email[email] = {"clientEmail": email, "results": []}
+        uid = str(d.get("clientUid") or "").strip()
+        email = (d.get("clientEmail") or "").strip().lower()
+        if not uid:
+            # 레거시 문서: uid가 없으면 email로 대체(가능한 경우만)
+            uid = f"legacy-email:{email}" if email else ""
+        if not uid:
+            continue
+        if uid not in by_client:
+            by_client[uid] = {"clientUid": uid, "clientEmail": email or None, "results": []}
         r = {"resultId": doc.id, "testId": d.get("testId"), "status": d.get("status"), "completedAt": None}
         if d.get("completedAt"):
             ct = d["completedAt"]
             r["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
-        by_email[email]["results"].append(r)
-    return jsonify({"accessCode": access_code, "byClient": list(by_email.values())})
+        by_client[uid]["results"].append(r)
+    return jsonify({"accessCode": access_code, "byClient": list(by_client.values())})
 
 
 @bp.route("/<assessment_id>/results/<result_id>", methods=["GET"])

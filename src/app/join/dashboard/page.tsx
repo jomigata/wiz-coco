@@ -33,7 +33,7 @@ function JoinDashboardContent() {
     [accessCodeRaw]
   );
 
-  const clientEmail = useMemo(() => (user?.email || '').trim().toLowerCase(), [user?.email]);
+  const clientUid = useMemo(() => (user?.uid || '').trim(), [user?.uid]);
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -201,11 +201,7 @@ function JoinDashboardContent() {
             )}
           </div>
 
-          <CompletedTestList
-            clientEmail={clientEmail}
-            onRefresh={loadAssessment}
-            onResultsChange={setJoinResults}
-          />
+          <CompletedTestList clientUid={clientUid} onRefresh={loadAssessment} onResultsChange={setJoinResults} />
         </main>
 
         <p className="text-center mt-6">

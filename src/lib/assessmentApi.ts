@@ -258,7 +258,8 @@ export interface CreatedAssessmentBannerInfo {
 }
 
 export interface ProgressByClient {
-  clientEmail: string;
+  clientUid: string;
+  clientEmail?: string | null;
   results: { resultId: string; testId: string; status: string; completedAt: string | null }[];
 }
 
