@@ -209,7 +209,7 @@ function JoinDashboardContent() {
                 </p>
               )}
               <p className="text-slate-500 text-xs mt-1">
-                검사 제출 및 완료 목록에 사용됩니다. 변경은 검사 코드 입력 페이지에서 할 수 있습니다.
+                결과 비밀번호(4자리) 수신·완료 내역 확인에 사용됩니다. 변경은 검사 코드 입력 페이지에서 할 수 있습니다.
               </p>
             </div>
 

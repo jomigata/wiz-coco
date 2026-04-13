@@ -91,8 +91,8 @@ export default function AccessCodeInputPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>
             <p className="text-slate-300 text-sm mb-6">
-              나의 이메일과 상담사에게 받은 검사코드·비밀번호(숫자 4자리)를 입력해 주세요. 이메일은 검사 제출 및 완료 목록에
-              사용됩니다.
+              나의 이메일과 상담사에게 받은 검사코드·비밀번호(숫자 4자리)를 입력해 주세요. 이메일은 검사 결과를 확인·수정할 때
+              필요한 <span className="text-slate-200">4자리 비밀번호</span>를 받는 주소입니다.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
