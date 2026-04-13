@@ -148,8 +148,8 @@ function JoinDashboardContent() {
             )}
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
-            {!clientEmail.includes('@') ? (
-              <p className="text-amber-200/90 text-sm mb-2">로그인 계정에 이메일이 있으면 아래에 완료 여부가 표시됩니다.</p>
+            {!clientUid ? (
+              <p className="text-amber-200/90 text-sm mb-2">로그인하면 아래에 완료 여부가 표시됩니다.</p>
             ) : null}
             {assessment.testList.length === 0 ? (
               <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>

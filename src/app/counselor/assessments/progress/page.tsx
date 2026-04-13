@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ProgressDashboard from '@/components/counselor/ProgressDashboard';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { getProgress, listAssessments } from '@/lib/assessmentApi';
+import type { ProgressByClient } from '@/lib/assessmentApi';
 
 export default function ProgressDashboardPage() {
   const { user, loading: authLoading } = useFirebaseAuth();
@@ -12,7 +13,7 @@ export default function ProgressDashboardPage() {
 
   const [accessCode, setAccessCode] = useState('');
   const [byClient, setByClient] = useState<
-    { clientEmail: string; results: { resultId: string; testId: string; status: string; completedAt: string | null }[] }[]
+    ProgressByClient[]
   >([]);
   const [title, setTitle] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
