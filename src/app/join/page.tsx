@@ -113,12 +113,14 @@ export default function AccessCodeInputPage() {
               </button>
             </form>
             <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center items-stretch sm:items-center">
-              <Link
-                href="/login?redirect=/join"
-                className="text-center py-2.5 px-4 rounded-lg border border-slate-500 text-slate-200 hover:bg-slate-700/80 text-sm font-medium transition-colors"
-              >
-                로그인
-              </Link>
+              {!authLoading && !accountEmail ? (
+                <Link
+                  href="/login?redirect=/join"
+                  className="text-center py-2.5 px-4 rounded-lg border border-slate-500 text-slate-200 hover:bg-slate-700/80 text-sm font-medium transition-colors"
+                >
+                  로그인
+                </Link>
+              ) : null}
               <Link href="/" className="text-center py-2.5 px-4 rounded-lg text-blue-400 hover:text-blue-300 text-sm">
                 홈으로
               </Link>
