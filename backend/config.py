@@ -32,3 +32,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ASSESSMENTS_COLLECTION = "assessments"
 TEST_RESULTS_COLLECTION = "testResults"
 USERS_COLLECTION = "users"
+
+# Role bootstrap (최초 운영자/상담사 계정)
+# Firestore users/{uid}.role 이 설정되지 않은 경우, 토큰의 email 클레임으로 1회 자동 승격합니다.
+# 쉼표 구분: "a@b.com,c@d.com"
+BOOTSTRAP_ADMIN_EMAILS = [x.strip().lower() for x in os.getenv("BOOTSTRAP_ADMIN_EMAILS", "").split(",") if x.strip()]
+BOOTSTRAP_COUNSELOR_EMAILS = [x.strip().lower() for x in os.getenv("BOOTSTRAP_COUNSELOR_EMAILS", "").split(",") if x.strip()]

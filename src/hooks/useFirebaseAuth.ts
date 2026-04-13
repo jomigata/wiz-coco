@@ -14,7 +14,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 
 export interface AuthUser {
@@ -43,10 +43,15 @@ export const useFirebaseAuth = () => {
       return;
     }
 
+    let unsubscribeUserDoc: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
         setLoading(false);
+        if (unsubscribeUserDoc) {
+          unsubscribeUserDoc();
+          unsubscribeUserDoc = null;
+        }
         return;
       }
 
@@ -86,6 +91,21 @@ export const useFirebaseAuth = () => {
             );
             setUser(baseUser);
           }
+
+          // role 변경을 실시간 반영 (관리자/상담사 승격 시 메뉴 즉시 갱신)
+          if (unsubscribeUserDoc) unsubscribeUserDoc();
+          unsubscribeUserDoc = onSnapshot(
+            ref,
+            (docSnap) => {
+              if (!docSnap.exists()) return;
+              const data = docSnap.data() as any;
+              const role = (data?.role || 'user') as AppRole;
+              setUser((prev) => (prev ? { ...prev, role } : { ...baseUser, role }));
+            },
+            () => {
+              // ignore realtime errors (offline 등)
+            }
+          );
         } else {
           setUser(baseUser);
         }
@@ -97,7 +117,10 @@ export const useFirebaseAuth = () => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubscribeUserDoc) unsubscribeUserDoc();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

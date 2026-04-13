@@ -5,7 +5,7 @@ from flask import request, jsonify
 
 from firebase_init import verify_id_token, verify_id_token_claims
 from firebase_init import get_firestore
-from config import USERS_COLLECTION
+from config import USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS, BOOTSTRAP_COUNSELOR_EMAILS
 
 
 def get_bearer_uid():
@@ -55,8 +55,24 @@ def require_counselor(f):
         # Firestore users/{uid}.role 확인 (admin/counselor만 허용)
         try:
             db = get_firestore()
-            doc = db.collection(USERS_COLLECTION).document(uid).get()
+            user_ref = db.collection(USERS_COLLECTION).document(uid)
+            doc = user_ref.get()
             role = (doc.to_dict() or {}).get("role") if doc.exists else None
+
+            # 부트스트랩: role이 없으면 email 클레임으로 1회 자동 승격
+            if role not in ("admin", "counselor"):
+                email = get_bearer_email_optional()
+                if email:
+                    email = email.strip().lower()
+                bootstrap_role = None
+                if email and email in BOOTSTRAP_ADMIN_EMAILS:
+                    bootstrap_role = "admin"
+                elif email and email in BOOTSTRAP_COUNSELOR_EMAILS:
+                    bootstrap_role = "counselor"
+
+                if bootstrap_role:
+                    user_ref.set({"role": bootstrap_role, "email": email}, merge=True)
+                    role = bootstrap_role
         except Exception:
             role = None
         if role not in ("admin", "counselor"):
