@@ -61,12 +61,6 @@ function CounselorVerificationPageContent() {
   const [selectedApplication, setSelectedApplication] = useState<CounselorApplication | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingApplication, setEditingApplication] = useState<CounselorApplication | null>(null);
-  const [newApplication, setNewApplication] = useState<Partial<CounselorApplication>>({
-    status: 'pending',
-    appliedDate: new Date().toISOString().split('T')[0],
-    notes: ''
-  });
 
   // URL 파라미터 확인하여 자동으로 추가 모달 열기
   useEffect(() => {
@@ -203,26 +197,7 @@ function CounselorVerificationPageContent() {
   };
 
   const openAddModal = () => {
-    setNewApplication({
-      status: 'pending',
-      appliedDate: new Date().toISOString().split('T')[0],
-      notes: ''
-    });
     setShowAddModal(true);
-  };
-
-  const handleAddCounselor = () => {
-    alert('현재는 “상담사 신청 → 관리자 승인” 프로세스로 운영됩니다. 신청은 사용자 페이지에서 진행해 주세요.');
-  };
-
-  const handleSpecializationChange = (value: string) => {
-    const specializations = value.split(',').map(s => s.trim()).filter(s => s);
-    setNewApplication(prev => ({ ...prev, specialization: specializations }));
-  };
-
-  const handleDocumentsChange = (value: string) => {
-    const documents = value.split(',').map(d => d.trim()).filter(d => d);
-    setNewApplication(prev => ({ ...prev, documents }));
   };
 
 
