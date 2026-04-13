@@ -64,6 +64,11 @@ export default function CompletedTestList({
       setLoading(false);
       return;
     }
+    // 로그인(UID) 준비 전에는 API 호출을 하지 않고, 로그인된 뒤에 다시 시도
+    if (!clientUid?.trim()) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     listResults(normalizeAccessCodeInput(stored.accessCode))
@@ -78,7 +83,7 @@ export default function CompletedTestList({
         onResultsChange?.([]);
       })
       .finally(() => setLoading(false));
-  }, [stored?.accessCode, onResultsChange]);
+  }, [stored?.accessCode, clientUid, onResultsChange]);
 
   const sortedResults = useMemo(() => {
     const tl = stored?.testList || [];

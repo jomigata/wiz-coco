@@ -1708,6 +1708,15 @@ function TestRecordsTabContent({
     return (record.testType || 'N/A').toString();
   };
 
+  const getAccessCodeSetName = (record: TestRecord): string => {
+    // 상담사 검사코드 플로우: "상담사 검사코드 · {세트명}" 구조를 세트명으로 표시
+    const raw = (record.testType || '').toString();
+    const setName = raw.replace(/^상담사 검사코드 ·\s*/, '').trim();
+    if (record.recordSource === 'counselor-assessment') return setName || '상담사 검사코드';
+    // 개인 검사 기록은 코드 세트 개념이 없으므로 기본값
+    return '개인 검사';
+  };
+
   // 정렬 아이콘 컴포넌트 (시각적 개선)
   const SortIcon = ({ field }: { field: SortField }) => {
     return (
@@ -2079,7 +2088,7 @@ function TestRecordsTabContent({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사명 또는 검사코드로 검색"
+              placeholder="검사코드명, 검사명 또는 검사코드로 검색"
               className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -2160,6 +2169,16 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('testType')}
                   >
                     <div className="flex items-center justify-center">
+                      검사코드명
+                      <SortIcon field="testType" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                    onClick={() => handleSort('testType')}
+                  >
+                    <div className="flex items-center justify-center">
                       검사명
                       <SortIcon field="testType" />
                     </div>
@@ -2195,6 +2214,13 @@ function TestRecordsTabContent({
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
+                    </td>
+                    <td 
+                      onClick={() => handleRecordClick(record)}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      title="클릭하여 검사 결과 보기"
+                    >
+                      {getAccessCodeSetName(record)}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
