@@ -2102,7 +2102,7 @@ function TestRecordsTabContent({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사일시, 검사코드, 검사명으로 찾을 수 있음"
+              placeholder="검사일시/검사코드/검사명 (부분 단어도 가능) 으로 검색"
               className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
