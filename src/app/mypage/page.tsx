@@ -1583,8 +1583,8 @@ const getResultPageUrl = (record: TestRecord): string => {
   return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
 };
 
-// 정렬 타입 정의
-type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'counselorCode';
+// 정렬 타입 정의 (검사 기록 목록에 노출되는 컬럼 기준)
+type SortField = 'testType' | 'timestamp';
 type SortDirection = 'asc' | 'desc';
 
 // 검사 기록 탭 컴포넌트
@@ -1662,6 +1662,10 @@ function TestRecordsTabContent({
       setSortField(field);
       setSortDirection(field === 'timestamp' ? 'desc' : 'asc');
     }
+  };
+
+  const handleAddTestClick = () => {
+    router.push('/join');
   };
 
   // 정렬 아이콘 컴포넌트 (시각적 개선)
@@ -2035,7 +2039,7 @@ function TestRecordsTabContent({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사 코드 또는 이름으로 검색"
+              placeholder="검사명 또는 검사코드로 검색"
               className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -2116,28 +2120,8 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('testType')}
                   >
                     <div className="flex items-center justify-center">
-                      검사 유형
+                      검사명
                       <SortIcon field="testType" />
-                    </div>
-                  </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('counselorCode')}
-                  >
-                    <div className="flex items-center justify-center">
-                      검사코드
-                      <SortIcon field="counselorCode" />
-                    </div>
-                  </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('code')}
-                  >
-                    <div className="flex items-center">
-                      검사결과 코드
-                      <SortIcon field="code" />
                     </div>
                   </th>
                   <th 
@@ -2177,44 +2161,28 @@ function TestRecordsTabContent({
                       className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
-                      {record.testType || 'N/A'}
-                    </td>
-                    <td 
-                      onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150 max-w-[200px] sm:max-w-xs truncate"
-                      title={formatCodePinDisplay(record)}
-                    >
-                      {formatCodePinDisplay(record)}
-                    </td>
-                    <td 
-                      onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
-                      title="클릭하여 검사 결과 보기"
-                    >
-                      {record.recordSource === 'counselor-assessment'
-                        ? record.counselorTestId || '—'
-                        : record.code || 'N/A'}
+                      {(record.testType || 'N/A') + ` (${formatCodePinDisplay(record)})`}
                     </td>
                     <td 
                       className="px-6 py-4 whitespace-nowrap text-sm text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {record.recordSource === 'counselor-assessment' ? (
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           type="button"
-                          className="px-2 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80"
-                          onClick={(e) => handleDeleteClick(e, record)}
+                          className="px-3 py-1 text-xs font-medium bg-emerald-700/60 text-emerald-100 rounded hover:bg-emerald-700/80 transition-colors"
+                          onClick={handleAddTestClick}
                         >
-                          삭제
+                          검사추가
                         </button>
-                      ) : (
                         <button
+                          type="button"
                           className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
                           onClick={(e) => handleDeleteClick(e, record)}
                         >
                           삭제
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
