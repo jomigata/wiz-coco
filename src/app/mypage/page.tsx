@@ -14,6 +14,7 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { useCounselorConnection } from '@/hooks/useCounselorConnection';
 import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
 import { doc, getDoc } from 'firebase/firestore';
+import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -1583,8 +1584,9 @@ const getResultPageUrl = (record: TestRecord): string => {
   return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
 };
 
-// 정렬 타입 정의 (검사 기록 목록에 노출되는 컬럼 기준)
-type SortField = 'testType' | 'timestamp';
+// 정렬 타입 정의
+// (테이블 컬럼은 최소화했지만, 기존 정렬/검색 로직에서 사용하는 필드들은 유지합니다.)
+type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'counselorCode';
 type SortDirection = 'asc' | 'desc';
 
 // 검사 기록 탭 컴포넌트
@@ -1624,8 +1626,12 @@ function TestRecordsTabContent({
   const [counselorViewText, setCounselorViewText] = useState('');
 
   const formatCodePinDisplay = (record: TestRecord) => {
-    if (record.counselorCodePinDisplay) return record.counselorCodePinDisplay;
-    return record.counselorCode || record.code || '—';
+    const raw = record.counselorCodePinDisplay || record.counselorCode || record.code || '—';
+    if (!raw || raw === '—') return '—';
+    const normalized = normalizeAccessCodeInput(String(raw));
+    // accessCode 규칙에 맞게 정규화가 안 되면(공백/특수문자만 등) 원문 유지
+    if (!normalized) return String(raw);
+    return formatAccessCodeDisplay(normalized);
   };
 
   const openCounselorView = async (record: TestRecord) => {
@@ -1641,7 +1647,7 @@ function TestRecordsTabContent({
       const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '') || '—';
       const lines = [
         `검사 세트: ${setTitle}`,
-        `검사코드: ${record.counselorCodePinDisplay || '—'}`,
+        `검사코드: ${formatCodePinDisplay(record)}`,
         `검사 ID: ${record.counselorTestId || data.testId || '—'}`,
         '',
         summary || '요약 정보가 없습니다.',
