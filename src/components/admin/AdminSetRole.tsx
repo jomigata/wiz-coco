@@ -132,7 +132,8 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultUid = '' }) => {
         
         <button
           onClick={() => {
-            setAdminSecret('');
+            setUid(defaultUid || '');
+            setRole('user');
             setRoleInfo(null);
             setMessage(null);
             setError(null);
