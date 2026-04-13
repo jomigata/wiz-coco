@@ -135,7 +135,7 @@ export default function CompletedTestList({
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
         <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
-        <p className="text-slate-400 text-sm">로그인하면 완료 내역을 불러옵니다.</p>
+        <p className="text-slate-400 text-sm">로그인 후 완료 내역이 표시됩니다.</p>
       </div>
     );
   }
