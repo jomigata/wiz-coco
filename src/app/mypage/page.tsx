@@ -18,7 +18,6 @@ import { doc, getDoc } from 'firebase/firestore';
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
-import CounselorAssessmentResultsPanel from './components/CounselorAssessmentResultsPanel';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 
 
@@ -54,6 +53,13 @@ interface TestRecord {
   userData?: any;
   status: string;
   counselorCode?: string;
+  /** 일반(localStorage) vs 상담사 검사코드(Flask testResults) */
+  recordSource?: 'local' | 'counselor-assessment';
+  counselorResultId?: string;
+  counselorAccessCode?: string;
+  /** 목록 표시: 검사코드 / 접속 비밀번호(4자리, 로컬에 있으면) */
+  counselorCodePinDisplay?: string;
+  counselorTestId?: string;
 }
 
 interface Stats {
@@ -188,20 +194,7 @@ function MyPageContent() {
     };
   }, []);
 
-  // 검사기록 업데이트 이벤트 리스너
-  useEffect(() => {
-    const handleTestRecordsUpdate = () => {
-      // 검사기록 재로드
-      const updatedRecords = loadLocalTestRecords();
-      setTestRecords(updatedRecords);
-    };
-
-    window.addEventListener('testRecordsUpdated', handleTestRecordsUpdate);
-    
-    return () => {
-      window.removeEventListener('testRecordsUpdated', handleTestRecordsUpdate);
-    };
-  }, []);
+  // 검사기록 업데이트 이벤트 리스너 (refreshTestRecords 정의 이후 effect에서 등록)
 
   // 검사기록 탭으로 돌아올 때 목록 업데이트
   useEffect(() => {
@@ -418,12 +411,9 @@ function MyPageContent() {
     return testType.charAt(0).toUpperCase() + testType.slice(1);
   };
 
-  // 로컬 테스트 기록 로드 (모든 검사 포함 + 표준화)
-  const loadLocalTestRecords = (): TestRecord[] => {
+  // 로컬 테스트 기록만 빌드 (상담사 API 제외)
+  const buildLocalTestRecords = React.useCallback((): TestRecord[] => {
     try {
-      setRecordsLoading(true);
-      setRecordsError(null);
-      
       const allRecords: TestRecord[] = [];
       
       // 1. 기본 test_records에서 로드 (개인용 MBTI, AI 프로파일링 등)
@@ -506,20 +496,75 @@ function MyPageContent() {
       return sorted;
     } catch (error) {
       console.error('로컬 테스트 기록 로드 오류:', error);
-      setRecordsError('검사 기록을 불러오지 못했습니다.');
       return [];
+    }
+  }, [user]);
+
+  const refreshTestRecords = React.useCallback(async () => {
+    if (!user) {
+      setTestRecords([]);
+      return;
+    }
+    setRecordsLoading(true);
+    setRecordsError(null);
+    try {
+      const local = buildLocalTestRecords();
+      const merged: TestRecord[] = [...local];
+
+      if (firebaseUser?.email?.includes('@')) {
+        try {
+          const { listMyAssessmentResults } = await import('@/lib/assessmentApi');
+          const { readJoinPinForAccessCode } = await import('@/lib/joinAssessmentSession');
+          const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
+          const { results } = await listMyAssessmentResults();
+          for (const row of results || []) {
+            const ac = normalizeAccessCodeInput(String(row.accessCode || ''));
+            const pin = readJoinPinForAccessCode(ac);
+            const pinPart = pin.length === 4 ? pin : '—';
+            merged.push({
+              code: `counselor-${row.resultId}`,
+              testType: row.assessmentTitle
+                ? `상담사 검사코드 · ${row.assessmentTitle}`
+                : '상담사 검사코드',
+              timestamp: row.completedAt || new Date().toISOString(),
+              status: 'completed',
+              counselorCodePinDisplay: `${ac || '—'} / ${pinPart}`,
+              recordSource: 'counselor-assessment',
+              counselorResultId: row.resultId,
+              counselorAccessCode: ac,
+              counselorTestId: String(row.testId || ''),
+            });
+          }
+        } catch (apiErr) {
+          console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', apiErr);
+        }
+      }
+
+      merged.sort((a, b) => {
+        const timeA = new Date(a.timestamp || 0).getTime();
+        const timeB = new Date(b.timestamp || 0).getTime();
+        return timeB - timeA;
+      });
+      setTestRecords(merged);
+    } catch (e) {
+      setRecordsError('검사 기록을 불러오지 못했습니다.');
+      setTestRecords(buildLocalTestRecords());
     } finally {
       setRecordsLoading(false);
     }
-  };
+  }, [user, firebaseUser?.email, buildLocalTestRecords]);
 
-  // 검사 기록 로드
   useEffect(() => {
-    if (user) {
-      const records = loadLocalTestRecords();
-      setTestRecords(records);
-    }
-  }, [user]);
+    void refreshTestRecords();
+  }, [refreshTestRecords]);
+
+  useEffect(() => {
+    const handleTestRecordsUpdate = () => {
+      void refreshTestRecords();
+    };
+    window.addEventListener('testRecordsUpdated', handleTestRecordsUpdate);
+    return () => window.removeEventListener('testRecordsUpdated', handleTestRecordsUpdate);
+  }, [refreshTestRecords]);
 
   // 통계 업데이트 (testRecords 변경 시)
   useEffect(() => {
@@ -538,7 +583,9 @@ function MyPageContent() {
     if (statsPeriod === 'month') start.setMonth(now.getMonth() - 1);
     if (statsPeriod === 'year') start.setFullYear(now.getFullYear() - 1);
 
-    const periodRecords = records.filter(r => new Date(r.timestamp || 0) >= start);
+    const periodRecords = records.filter(
+      (r) => new Date(r.timestamp || 0) >= start && r.recordSource !== 'counselor-assessment'
+    );
 
     const totalTests = periodRecords.length;
     const mbtiCount = periodRecords.filter(r => (r.testType || '').includes('MBTI')).length;
@@ -1486,6 +1533,9 @@ function MyPageContent() {
 
 // 검사 유형별 결과 페이지 경로 생성 함수
 const getResultPageUrl = (record: TestRecord): string => {
+  if (record.recordSource === 'counselor-assessment') {
+    return '/mypage?tab=records';
+  }
   const testType = (record.testType || '').toLowerCase();
   const code = record.code || '';
   const mbtiType = record.mbtiType || '';
@@ -1573,6 +1623,44 @@ function TestRecordsTabContent({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [counselorViewRecord, setCounselorViewRecord] = useState<TestRecord | null>(null);
+  const [counselorViewText, setCounselorViewText] = useState('');
+  const [counselorEditRecord, setCounselorEditRecord] = useState<TestRecord | null>(null);
+  const [counselorEditPin, setCounselorEditPin] = useState('');
+  const [counselorEditError, setCounselorEditError] = useState('');
+  const [counselorEditBusy, setCounselorEditBusy] = useState(false);
+  const [counselorDeletePin, setCounselorDeletePin] = useState('');
+
+  const formatCodePinDisplay = (record: TestRecord) => {
+    if (record.counselorCodePinDisplay) return record.counselorCodePinDisplay;
+    const left = record.counselorCode || record.code || '—';
+    return `${left} / —`;
+  };
+
+  const openCounselorView = async (record: TestRecord) => {
+    if (!record.counselorResultId) return;
+    setCounselorViewRecord(record);
+    setCounselorViewText('불러오는 중…');
+    try {
+      const { getResultAsAuthenticatedOwner } = await import('@/lib/assessmentApi');
+      const data = await getResultAsAuthenticatedOwner(record.counselorResultId);
+      const rd = data.resultData as Record<string, unknown> | null | undefined;
+      const summary =
+        rd && typeof rd === 'object' && 'summary' in rd ? String(rd.summary ?? '') : '';
+      const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '') || '—';
+      const lines = [
+        `검사 세트: ${setTitle}`,
+        `코드번호/비밀번호: ${record.counselorCodePinDisplay || '—'}`,
+        `검사 ID: ${record.counselorTestId || data.testId || '—'}`,
+        '',
+        summary || '요약 정보가 없습니다.',
+      ];
+      setCounselorViewText(lines.join('\n'));
+    } catch (e) {
+      setCounselorViewText(e instanceof Error ? e.message : '조회 실패');
+    }
+  };
+
   // 컬럼 헤더 클릭 핸들러
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -1600,9 +1688,12 @@ function TestRecordsTabContent({
     // 검색 필터
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         record.code?.toLowerCase().includes(query) ||
         record.counselorCode?.toLowerCase().includes(query) ||
+        record.counselorCodePinDisplay?.toLowerCase().includes(query) ||
+        record.counselorAccessCode?.toLowerCase().includes(query) ||
+        record.counselorTestId?.toLowerCase().includes(query) ||
         record.testType?.toLowerCase().includes(query) ||
         record.mbtiType?.toLowerCase().includes(query);
       if (!matchesSearch) return false;
@@ -1649,9 +1740,9 @@ function TestRecordsTabContent({
         bValue = b.mbtiType || '';
         break;
       case 'counselorCode':
-          aValue = a.counselorCode || '';
-          bValue = b.counselorCode || '';
-          break;
+        aValue = a.counselorCodePinDisplay || `${a.counselorCode || a.code || ''} /`;
+        bValue = b.counselorCodePinDisplay || `${b.counselorCode || b.code || ''} /`;
+        break;
       default:
         aValue = a.timestamp || '';
         bValue = b.timestamp || '';
@@ -1677,19 +1768,75 @@ function TestRecordsTabContent({
 
   // 검사 기록 클릭 핸들러
   const handleRecordClick = (record: TestRecord) => {
+    if (record.recordSource === 'counselor-assessment') {
+      void openCounselorView(record);
+      return;
+    }
     if (!record.code) {
       console.warn('검사 코드가 없어 결과 페이지로 이동할 수 없습니다:', record);
       return;
     }
-    
-    // 검사기록 목록에서 왔음을 표시 (돌아올 때 새로고침 없이 표시하기 위해)
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('returnToTestRecords', 'true');
     }
-    
+
     const resultUrl = getResultPageUrl(record);
     console.log('검사 결과 페이지로 이동:', resultUrl);
     router.push(resultUrl);
+  };
+
+  const runCounselorEdit = async () => {
+    if (!counselorEditRecord?.counselorResultId || !counselorEditRecord.counselorAccessCode) return;
+    if (counselorEditPin.length !== 4) return;
+    setCounselorEditBusy(true);
+    setCounselorEditError('');
+    try {
+      const { getResult } = await import('@/lib/assessmentApi');
+      const { JOIN_STORAGE_KEY } = await import('@/lib/joinAssessmentSession');
+      const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
+      const data = await getResult(counselorEditRecord.counselorResultId, counselorEditPin);
+      const code = normalizeAccessCodeInput(String(counselorEditRecord.counselorAccessCode || ''));
+      if (!code) {
+        setCounselorEditError('검사 코드가 없습니다.');
+        return;
+      }
+      const tid = String(data.testId || counselorEditRecord.counselorTestId || '');
+      const testList = [
+        {
+          testId: tid,
+          name: counselorEditRecord.testType?.replace(/^상담사 검사코드 · /, '') || tid,
+        },
+      ];
+      sessionStorage.setItem(
+        JOIN_STORAGE_KEY,
+        JSON.stringify({
+          accessCode: code,
+          joinPin: '',
+          assessmentId: '',
+          title: testList[0].name,
+          welcomeMessage: '',
+          testList,
+        })
+      );
+      sessionStorage.setItem(
+        'wizcoco_edit_result',
+        JSON.stringify({
+          resultId: data.resultId,
+          testId: data.testId,
+          responses: data.responses,
+        })
+      );
+      setCounselorEditRecord(null);
+      setCounselorEditPin('');
+      router.push(
+        `/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(tid)}`
+      );
+    } catch (e) {
+      setCounselorEditError(e instanceof Error ? e.message : '실패');
+    } finally {
+      setCounselorEditBusy(false);
+    }
   };
 
   // 체크박스 선택/해제
@@ -1723,10 +1870,25 @@ function TestRecordsTabContent({
   const handleBulkDeleteConfirm = () => {
     if (selectedRecords.length === 0) return;
 
+    const localOnlyCodes = selectedRecords.filter((c) => !c.startsWith('counselor-'));
+    const skipped = selectedRecords.length - localOnlyCodes.length;
+    if (localOnlyCodes.length === 0) {
+      alert(
+        '상담사 검사코드 기록은 일괄 삭제할 수 없습니다. 해당 행의 삭제 버튼과 제출 시 받은 4자리 비밀번호로 삭제해 주세요.'
+      );
+      setShowBulkDeleteModal(false);
+      return;
+    }
+    if (skipped > 0) {
+      alert(
+        `선택한 항목 중 상담사 검사코드 ${skipped}건은 제외하고, 일반 검사 ${localOnlyCodes.length}건만 삭제합니다.`
+      );
+    }
+
     try {
       if (typeof window !== 'undefined') {
         // 삭제할 레코드 정보 수집
-        const recordsToDelete = selectedRecords.map(code => {
+        const recordsToDelete = localOnlyCodes.map(code => {
           const record = testRecords.find(r => r.code === code);
           return record ? {
             ...record,
@@ -1748,7 +1910,7 @@ function TestRecordsTabContent({
 
         // test_records에서 삭제
         const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-        const filteredRecords = allRecords.filter((r: TestRecord) => !selectedRecords.includes(r.code));
+        const filteredRecords = allRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
         localStorage.setItem('test_records', JSON.stringify(filteredRecords));
 
         // 사용자별 기록에서도 삭제
@@ -1758,7 +1920,7 @@ function TestRecordsTabContent({
             const user = JSON.parse(userData);
             const userSpecificKey = `mbti-user-test-records-${user.email}`;
             const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
-            const filteredUserRecords = userRecords.filter((r: TestRecord) => !selectedRecords.includes(r.code));
+            const filteredUserRecords = userRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
             localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
           } catch (e) {
             console.error('사용자별 기록 삭제 오류:', e);
@@ -1767,11 +1929,11 @@ function TestRecordsTabContent({
 
         // 일반 사용자별 키에서도 삭제
         const generalRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
-        const filteredGeneralRecords = generalRecords.filter((r: TestRecord) => !selectedRecords.includes(r.code));
+        const filteredGeneralRecords = generalRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
         localStorage.setItem('mbti-user-test-records', JSON.stringify(filteredGeneralRecords));
 
         // test-result-{code} 키도 삭제
-        selectedRecords.forEach(code => {
+        localOnlyCodes.forEach(code => {
           localStorage.removeItem(`test-result-${code}`);
         });
 
@@ -1792,13 +1954,40 @@ function TestRecordsTabContent({
   // 삭제 버튼 클릭 핸들러 (이벤트 전파 방지)
   const handleDeleteClick = (e: React.MouseEvent, record: TestRecord) => {
     e.stopPropagation(); // 테이블 행 클릭 이벤트 방지
+    setCounselorDeletePin('');
     setDeleteModalRecord(record);
     setShowDeleteModal(true);
   };
 
   // 삭제 확인 핸들러
-  const handleDeleteConfirm = () => {
-    if (!deleteModalRecord || !deleteModalRecord.code) {
+  const handleDeleteConfirm = async () => {
+    if (!deleteModalRecord) {
+      setShowDeleteModal(false);
+      return;
+    }
+
+    if (
+      deleteModalRecord.recordSource === 'counselor-assessment' &&
+      deleteModalRecord.counselorResultId
+    ) {
+      if (counselorDeletePin.length !== 4) {
+        alert('제출 완료 시 안내된 숫자 4자리 비밀번호를 입력해 주세요.');
+        return;
+      }
+      try {
+        const { deleteResult } = await import('@/lib/assessmentApi');
+        await deleteResult(deleteModalRecord.counselorResultId, counselorDeletePin);
+        setShowDeleteModal(false);
+        setDeleteModalRecord(null);
+        setCounselorDeletePin('');
+        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '삭제 실패');
+      }
+      return;
+    }
+
+    if (!deleteModalRecord.code) {
       setShowDeleteModal(false);
       return;
     }
@@ -1895,8 +2084,6 @@ function TestRecordsTabContent({
         </p>
       </motion.div>
 
-      <CounselorAssessmentResultsPanel />
-      
       {/* 검색 및 필터링 컨트롤 */}
       <motion.div 
         className="mb-6 space-y-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
@@ -2007,7 +2194,7 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('counselorCode')}
                   >
                     <div className="flex items-center justify-center">
-                      검사코드
+                      코드번호/비밀번호
                       <SortIcon field="counselorCode" />
                     </div>
                   </th>
@@ -2025,7 +2212,7 @@ function TestRecordsTabContent({
                     scope="col" 
                     className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider"
                   >
-                    삭제
+                    작업
                   </th>
                 </tr>
               </thead>
@@ -2062,28 +2249,54 @@ function TestRecordsTabContent({
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
-                      title="클릭하여 검사 결과 보기"
+                      className="px-6 py-4 text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150 max-w-[200px] sm:max-w-xs truncate"
+                      title={formatCodePinDisplay(record)}
                     >
-                      {record.counselorCode || record.code || 'N/A'}
+                      {formatCodePinDisplay(record)}
                     </td>
                     <td 
                       onClick={() => handleRecordClick(record)}
                       className="px-6 py-4 whitespace-nowrap text-sm text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                       title="클릭하여 검사 결과 보기"
                     >
-                      {record.code || 'N/A'}
+                      {record.recordSource === 'counselor-assessment'
+                        ? record.counselorTestId || '—'
+                        : record.code || 'N/A'}
                     </td>
                     <td 
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150 cursor-pointer"
-                      onClick={(e) => handleDeleteClick(e, record)}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <button
-                        className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
-                        onClick={(e) => handleDeleteClick(e, record)}
-                      >
-                        삭제
-                      </button>
+                      {record.recordSource === 'counselor-assessment' ? (
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-xs font-medium bg-indigo-800/60 text-indigo-100 rounded hover:bg-indigo-700/80"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCounselorEditError('');
+                              setCounselorEditPin('');
+                              setCounselorEditRecord(record);
+                            }}
+                          >
+                            수정
+                          </button>
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80"
+                            onClick={(e) => handleDeleteClick(e, record)}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
+                          onClick={(e) => handleDeleteClick(e, record)}
+                        >
+                          삭제
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -2192,7 +2405,11 @@ function TestRecordsTabContent({
       {showDeleteModal && deleteModalRecord && typeof window !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" 
-          onClick={() => setShowDeleteModal(false)}
+          onClick={() => {
+            setShowDeleteModal(false);
+            setDeleteModalRecord(null);
+            setCounselorDeletePin('');
+          }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -2212,7 +2429,11 @@ function TestRecordsTabContent({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-300">검사결과 코드:</span>
-                  <span className="text-blue-100">{deleteModalRecord.code || 'N/A'}</span>
+                  <span className="text-blue-100">
+                    {deleteModalRecord.recordSource === 'counselor-assessment'
+                      ? deleteModalRecord.counselorTestId || '—'
+                      : deleteModalRecord.code || 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-300">검사 일시:</span>
@@ -2220,14 +2441,34 @@ function TestRecordsTabContent({
                     {deleteModalRecord.timestamp ? new Date(deleteModalRecord.timestamp).toLocaleString('ko-KR') : 'N/A'}
                   </span>
                 </div>
-                {deleteModalRecord.counselorCode && (
-                  <div className="flex justify-between">
-                    <span className="text-blue-300">검사코드:</span>
-                    <span className="text-blue-100">{deleteModalRecord.counselorCode}</span>
+                {(deleteModalRecord.counselorCodePinDisplay || deleteModalRecord.counselorCode) && (
+                  <div className="flex justify-between gap-2">
+                    <span className="text-blue-300 shrink-0">코드번호/비밀번호:</span>
+                    <span className="text-blue-100 text-right break-all">
+                      {deleteModalRecord.counselorCodePinDisplay ||
+                        `${deleteModalRecord.counselorCode || '—'} / —`}
+                    </span>
                   </div>
                 )}
               </div>
-              <p className="text-blue-300 text-sm mt-4">삭제된 검사기록은 삭제코드 에서 확인할수 있습니다.</p>
+              {deleteModalRecord.recordSource === 'counselor-assessment' ? (
+                <div className="mt-4 space-y-2">
+                  <label className="block text-sm text-blue-200">결과 삭제용 숫자 4자리 비밀번호</label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    autoComplete="off"
+                    value={counselorDeletePin}
+                    onChange={(e) => setCounselorDeletePin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/20 text-white"
+                    placeholder="4자리"
+                  />
+                  <p className="text-blue-400/80 text-xs">제출 완료 화면에서 안내된 비밀번호입니다.</p>
+                </div>
+              ) : (
+                <p className="text-blue-300 text-sm mt-4">삭제된 검사기록은 삭제코드 에서 확인할수 있습니다.</p>
+              )}
             </div>
 
             <div className="flex gap-3 justify-end">
@@ -2235,19 +2476,101 @@ function TestRecordsTabContent({
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeleteModalRecord(null);
+                  setCounselorDeletePin('');
                 }}
                 className="px-4 py-2 bg-gray-600/60 text-gray-200 rounded-lg hover:bg-gray-600/80 transition-colors"
               >
                 취소
               </button>
               <button
-                onClick={handleDeleteConfirm}
+                onClick={() => void handleDeleteConfirm()}
                 className="px-4 py-2 bg-red-600/60 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors"
               >
                 삭제하기
               </button>
             </div>
           </motion.div>
+        </div>,
+        document.body
+      )}
+
+      {counselorViewRecord && typeof window !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCounselorViewRecord(null)}
+        >
+          <div
+            className="max-w-lg w-full rounded-xl border border-white/20 bg-slate-900 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 요약</h4>
+            <pre className="text-sm text-slate-200 whitespace-pre-wrap break-words max-h-[60vh] overflow-y-auto bg-black/30 rounded-lg p-4 border border-white/10">
+              {counselorViewText}
+            </pre>
+            <button
+              type="button"
+              onClick={() => setCounselorViewRecord(null)}
+              className="mt-4 w-full py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500"
+            >
+              닫기
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {counselorEditRecord && typeof window !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => !counselorEditBusy && setCounselorEditRecord(null)}
+        >
+          <div
+            className="max-w-sm w-full rounded-xl border border-white/20 bg-slate-900 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-lg font-semibold text-white mb-2">결과 수정</h4>
+            <p className="text-slate-300 text-sm mb-3">
+              제출 완료 시 안내된 숫자 4자리 비밀번호를 입력하면 검사 수정 화면으로 이동합니다.
+            </p>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              autoComplete="off"
+              placeholder="4자리"
+              className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white mb-2"
+              value={counselorEditPin}
+              onChange={(e) => setCounselorEditPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            />
+            {counselorEditError ? <p className="text-red-400 text-sm mb-2">{counselorEditError}</p> : null}
+            <div className="flex gap-2 justify-end mt-4">
+              <button
+                type="button"
+                disabled={counselorEditBusy}
+                onClick={() => {
+                  if (!counselorEditBusy) {
+                    setCounselorEditRecord(null);
+                    setCounselorEditPin('');
+                  }
+                }}
+                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-800"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                disabled={counselorEditBusy || counselorEditPin.length !== 4}
+                onClick={() => void runCounselorEdit()}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white disabled:opacity-50 hover:bg-blue-500"
+              >
+                {counselorEditBusy ? '처리 중…' : '수정 진행'}
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}
