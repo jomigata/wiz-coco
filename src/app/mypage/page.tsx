@@ -1723,19 +1723,24 @@ function TestRecordsTabContent({
     );
   };
 
+  const getTimestampLabel = (record: TestRecord): string => {
+    const t = record.timestamp ? new Date(record.timestamp) : null;
+    if (!t || Number.isNaN(t.getTime())) return '';
+    return t.toLocaleString('ko-KR');
+  };
+
   // 검색, 필터링 및 정렬된 기록
   const filteredRecords = testRecords.filter(record => {
     // 검색 필터
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
+      const accessCodeText = formatCodePinDisplay(record).toLowerCase();
+      const testNameText = getDisplayTestName(record).toLowerCase();
+      const timestampText = getTimestampLabel(record).toLowerCase();
       const matchesSearch =
-        record.code?.toLowerCase().includes(query) ||
-        record.counselorCode?.toLowerCase().includes(query) ||
-        record.counselorCodePinDisplay?.toLowerCase().includes(query) ||
-        record.counselorAccessCode?.toLowerCase().includes(query) ||
-        record.counselorTestId?.toLowerCase().includes(query) ||
-        record.testType?.toLowerCase().includes(query) ||
-        record.mbtiType?.toLowerCase().includes(query);
+        accessCodeText.includes(query) ||
+        testNameText.includes(query) ||
+        timestampText.includes(query);
       if (!matchesSearch) return false;
     }
     
@@ -1768,8 +1773,8 @@ function TestRecordsTabContent({
         bValue = b.code || '';
         break;
       case 'testType':
-        aValue = a.testType || '';
-        bValue = b.testType || '';
+        aValue = getDisplayTestName(a);
+        bValue = getDisplayTestName(b);
         break;
       case 'timestamp':
         aValue = new Date(a.timestamp || 0).getTime();
@@ -1780,8 +1785,8 @@ function TestRecordsTabContent({
         bValue = b.mbtiType || '';
         break;
       case 'counselorCode':
-        aValue = a.counselorCodePinDisplay || a.counselorCode || a.code || '';
-        bValue = b.counselorCodePinDisplay || b.counselorCode || b.code || '';
+        aValue = formatCodePinDisplay(a);
+        bValue = formatCodePinDisplay(b);
         break;
       default:
         aValue = a.timestamp || '';
@@ -2162,11 +2167,11 @@ function TestRecordsTabContent({
                   <th 
                     scope="col" 
                     className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
-                    onClick={() => handleSort('testType')}
+                    onClick={() => handleSort('counselorCode')}
                   >
                     <div className="flex items-center justify-center">
                       검사코드명
-                      <SortIcon field="testType" />
+                      <SortIcon field="counselorCode" />
                     </div>
                   </th>
                   <th 
