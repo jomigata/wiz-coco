@@ -45,6 +45,10 @@ function isAllowedRedirectUri(uri: string): boolean {
   const defaults = [
     'https://wiz-coco.web.app/login/kakao-callback/',
     'https://wiz-coco.web.app/login/naver-callback/',
+    'https://wizcoco.com/login/kakao-callback/',
+    'https://wizcoco.com/login/naver-callback/',
+    'https://www.wizcoco.com/login/kakao-callback/',
+    'https://www.wizcoco.com/login/naver-callback/',
     'http://localhost:3000/login/kakao-callback/',
     'http://localhost:3000/login/naver-callback/',
     'http://127.0.0.1:3000/login/kakao-callback/',

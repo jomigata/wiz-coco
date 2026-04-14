@@ -36,6 +36,7 @@
 2. **사용 API**에서 **네이버 로그인** 선택.
 3. **로그인 오픈 API 서비스 환경**에서 **PC 웹** 선택 후 **서비스 URL**·**Callback URL** 입력:
    - Callback URL 예: `https://wiz-coco.web.app/login/naver-callback/`
+   - 자체 도메인 예: `https://wizcoco.com/login/naver-callback/` 및 **`https://www.wizcoco.com/login/naver-callback/`** (둘 다 등록 권장 — 실제 로그인 시 `window.location.origin`과 문자열이 완전히 같아야 함)
    - 로컬: `http://localhost:3000/login/naver-callback/`
 4. 등록 후 **Client ID**·**Client Secret** 확인.
    - Client ID → `NEXT_PUBLIC_NAVER_CLIENT_ID`
