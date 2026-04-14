@@ -1,9 +1,14 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { Request, Response } from 'express';
+import { socialOAuthExchange } from './oauthExchange';
 
-// Firebase Admin 초기화
-admin.initializeApp();
+// Firebase Admin 초기화 (oauthExchange에서 선초기화될 수 있음)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+export { socialOAuthExchange };
 
 // API Functions - 간단한 API 엔드포인트
 export const api = functions.https.onRequest(async (req: Request, res: Response) => {

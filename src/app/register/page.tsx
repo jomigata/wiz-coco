@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
-import { getSession, signIn } from 'next-auth/react';
+import { getSession } from 'next-auth/react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -188,30 +188,19 @@ const RegisterContent = () => {
           setRegisterError(result.error || 'Google 로그인 처리 중 오류가 발생했습니다.');
         }
       } else if (provider === 'naver') {
-        const result = await AccountIntegrationManager.signInWithNaver();
-        
+        const result = await AccountIntegrationManager.signInWithNaver('/mypage');
         if (result.success) {
-          console.log('[Register] Naver 소셜 로그인 성공');
-          
-          // 마이페이지로 리다이렉트
-          router.push('/mypage');
-        } else {
-          setRegisterError(result.error || 'Naver 로그인 처리 중 오류가 발생했습니다.');
+          return;
         }
+        setRegisterError(result.error || '네이버 로그인을 시작할 수 없습니다.');
       } else if (provider === 'kakao') {
-        const result = await AccountIntegrationManager.signInWithKakao();
-        
+        const result = await AccountIntegrationManager.signInWithKakao('/mypage');
         if (result.success) {
-          console.log('[Register] Kakao 소셜 로그인 성공');
-          
-          // 마이페이지로 리다이렉트
-          router.push('/mypage');
-        } else {
-          setRegisterError(result.error || 'Kakao 로그인 처리 중 오류가 발생했습니다.');
+          return;
         }
+        setRegisterError(result.error || '카카오 로그인을 시작할 수 없습니다.');
       } else {
-        // 기타 제공자는 NextAuth를 사용
-        await signIn(provider, { callbackUrl: '/mypage' });
+        setRegisterError('지원하지 않는 로그인 방식입니다.');
       }
     } catch (error: any) {
       console.error(`[Register] ${provider} 로그인 오류:`, error);

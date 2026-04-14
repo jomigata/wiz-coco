@@ -13,6 +13,10 @@
     ],
     "rewrites": [
       {
+        "source": "/api/social-oauth",
+        "function": "socialOAuthExchange"
+      },
+      {
         "source": "/tests/mbti",
         "destination": "/tests/mbti/index.html"
       },

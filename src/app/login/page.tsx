@@ -9,8 +9,6 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
-import { signIn } from 'next-auth/react';
-
 // 로딩 컴포넌트
 const LoadingLogin = () => (
   <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
@@ -217,62 +215,26 @@ const LoginContent = () => {
     }
   };
 
-  // Kakao 로그인 처리
+  // Kakao 로그인 처리 (OAuth 페이지로 이동 → 콜백에서 Custom Token 로그인)
   const handleKakaoLogin = async () => {
-    try {
-      setIsLoading(true);
-      setLoginError('');
-      setShowSnsLogin(false);
-      
-      console.log('[Login] Kakao 로그인 시도');
-      
-      const result = await AccountIntegrationManager.signInWithKakao();
-      
-      if (result.success) {
-        console.log('[Login] Kakao 로그인 성공');
-        
-        // 리다이렉트 처리
-        setTimeout(() => {
-          router.replace(redirectUrl);
-        }, 100);
-      } else {
-        setLoginError(result.error || 'Kakao 로그인 처리 중 오류가 발생했습니다.');
-      }
-      
-    } catch (error: any) {
-      console.error('[Login] Kakao 로그인 오류:', error);
-      setLoginError('Kakao 로그인 처리 중 오류가 발생했습니다.');
-    } finally {
+    setIsLoading(true);
+    setLoginError('');
+    setShowSnsLogin(false);
+    const result = await AccountIntegrationManager.signInWithKakao(redirectUrl);
+    if (!result.success) {
+      setLoginError(result.error || '카카오 로그인을 시작할 수 없습니다.');
       setIsLoading(false);
     }
   };
 
   // Naver 로그인 처리
   const handleNaverLogin = async () => {
-    try {
-      setIsLoading(true);
-      setLoginError('');
-      setShowSnsLogin(false);
-      
-      console.log('[Login] Naver 로그인 시도');
-      
-      const result = await AccountIntegrationManager.signInWithNaver();
-      
-      if (result.success) {
-        console.log('[Login] Naver 로그인 성공');
-        
-        // 리다이렉트 처리
-        setTimeout(() => {
-          router.replace(redirectUrl);
-        }, 100);
-      } else {
-        setLoginError(result.error || 'Naver 로그인 처리 중 오류가 발생했습니다.');
-      }
-      
-    } catch (error: any) {
-      console.error('[Login] Naver 로그인 오류:', error);
-      setLoginError('Naver 로그인 처리 중 오류가 발생했습니다.');
-    } finally {
+    setIsLoading(true);
+    setLoginError('');
+    setShowSnsLogin(false);
+    const result = await AccountIntegrationManager.signInWithNaver(redirectUrl);
+    if (!result.success) {
+      setLoginError(result.error || '네이버 로그인을 시작할 수 없습니다.');
       setIsLoading(false);
     }
   };

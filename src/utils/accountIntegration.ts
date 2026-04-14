@@ -1,15 +1,16 @@
 import { auth } from '@/lib/firebase';
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
   linkWithCredential,
   EmailAuthProvider,
   updateProfile,
-  sendEmailVerification
+  sendEmailVerification,
+  signInWithCustomToken,
 } from 'firebase/auth';
-import { signIn } from 'next-auth/react';
+import { initializeFirebase } from '@/lib/firebase';
 import { UserAccountManager } from './userAccountManager';
 
 // 로깅 헬퍼 함수
@@ -296,74 +297,175 @@ export class AccountIntegrationManager {
     }
   }
 
+  /** Firebase Functions 등으로 배포된 소셜 OAuth 교환 API 전체 URL */
+  static getSocialAuthEndpoint(): string {
+    const fromEnv = process.env.NEXT_PUBLIC_SOCIAL_AUTH_URL?.trim();
+    if (fromEnv) return fromEnv.replace(/\/$/, '');
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return `${window.location.origin}/api/social-oauth`;
+    }
+    return '';
+  }
+
   /**
-   * Naver 소셜 로그인 (NextAuth 사용)
+   * 카카오 OAuth 시작 (페이지 이동)
+   * @param returnPath 로그인 후 이동할 경로 (예: /mypage 또는 redirect 쿼리 값)
    */
-  static async signInWithNaver(): Promise<{
-    success: boolean;
-    user?: any;
-    error?: string;
-  }> {
+  static startKakaoOAuth(returnPath?: string): { ok: boolean; error?: string } {
+    if (typeof window === 'undefined') {
+      return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
+    }
+    const clientId = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY?.trim();
+    if (!clientId) {
+      return {
+        ok: false,
+        error:
+          '카카오 로그인이 설정되지 않았습니다. NEXT_PUBLIC_KAKAO_REST_API_KEY를 확인하세요.',
+      };
+    }
+    const redirectUri = `${window.location.origin}/login/kakao-callback/`;
+    const state = crypto.randomUUID();
+    sessionStorage.setItem('oauth_state', state);
+    if (returnPath) sessionStorage.setItem('oauth_return', returnPath);
+    sessionStorage.setItem('oauth_provider', 'kakao');
+    const scope = encodeURIComponent('account_email');
+    const url =
+      `https://kauth.kakao.com/oauth/authorize?client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code` +
+      `&state=${encodeURIComponent(state)}&scope=${scope}`;
+    window.location.href = url;
+    return { ok: true };
+  }
+
+  /**
+   * 네이버 OAuth 시작 (페이지 이동)
+   */
+  static startNaverOAuth(returnPath?: string): { ok: boolean; error?: string } {
+    if (typeof window === 'undefined') {
+      return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
+    }
+    const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID?.trim();
+    if (!clientId) {
+      return {
+        ok: false,
+        error:
+          '네이버 로그인이 설정되지 않았습니다. NEXT_PUBLIC_NAVER_CLIENT_ID를 확인하세요.',
+      };
+    }
+    const redirectUri = `${window.location.origin}/login/naver-callback/`;
+    const state = crypto.randomUUID();
+    sessionStorage.setItem('oauth_state', state);
+    if (returnPath) sessionStorage.setItem('oauth_return', returnPath);
+    sessionStorage.setItem('oauth_provider', 'naver');
+    const url =
+      `https://nid.naver.com/oauth2.0/authorize?response_type=code` +
+      `&client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&state=${encodeURIComponent(state)}`;
+    window.location.href = url;
+    return { ok: true };
+  }
+
+  /**
+   * OAuth 콜백에서 authorization_code → Custom Token 로그인
+   */
+  static async completeOAuthFromCallback(params: {
+    provider: 'kakao' | 'naver';
+    code: string;
+    state: string | null;
+    redirectUri: string;
+  }): Promise<{ success: boolean; error?: string }> {
     try {
-      const result = await signIn('naver', { 
-        callbackUrl: '/mypage',
-        redirect: false 
-      });
-      
-      if (result?.ok) {
-        console.log('[AccountIntegration] Naver 로그인 성공');
-        return {
-          success: true,
-          user: result
-        };
-      } else {
+      const stored = sessionStorage.getItem('oauth_state');
+      if (!params.state || params.state !== stored) {
         return {
           success: false,
-          error: 'Naver 로그인에 실패했습니다.'
+          error: '잘못된 로그인 요청입니다. 다시 시도해 주세요.',
         };
       }
-    } catch (error: any) {
-      console.error('[AccountIntegration] Naver 로그인 실패:', error);
+      sessionStorage.removeItem('oauth_state');
+
+      const endpoint = this.getSocialAuthEndpoint();
+      if (!endpoint) {
+        return {
+          success: false,
+          error: '소셜 로그인 API 주소가 설정되지 않았습니다. NEXT_PUBLIC_SOCIAL_AUTH_URL 또는 Hosting 리라이트를 확인하세요.',
+        };
+      }
+
+      const body: Record<string, string> = {
+        provider: params.provider,
+        code: params.code,
+        redirectUri: params.redirectUri,
+      };
+      if (params.provider === 'naver' && params.state) {
+        body.state = params.state;
+      }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        customToken?: string;
+      };
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.error || '로그인 처리에 실패했습니다.',
+        };
+      }
+      if (!data.customToken) {
+        return { success: false, error: '토큰이 반환되지 않았습니다.' };
+      }
+
+      const { auth: authed } = initializeFirebase();
+      if (!authed) {
+        return { success: false, error: 'Firebase 인증을 초기화할 수 없습니다.' };
+      }
+      await signInWithCustomToken(authed, data.customToken);
+      return { success: true };
+    } catch (error: unknown) {
+      console.error('[AccountIntegration] OAuth 콜백 실패:', error);
       return {
         success: false,
-        error: 'Naver 로그인 처리 중 오류가 발생했습니다.'
+        error: '로그인 처리 중 오류가 발생했습니다.',
       };
     }
   }
 
   /**
-   * Kakao 소셜 로그인 (NextAuth 사용)
+   * Naver 소셜 로그인 (OAuth 리다이렉트)
+   * @param returnPath 로그인 후 이동할 경로 (미지정 시 콜백에서 /mypage)
    */
-  static async signInWithKakao(): Promise<{
+  static async signInWithNaver(returnPath?: string): Promise<{
     success: boolean;
     user?: any;
     error?: string;
   }> {
-    try {
-      const result = await signIn('kakao', { 
-        callbackUrl: '/mypage',
-        redirect: false 
-      });
-      
-      if (result?.ok) {
-        console.log('[AccountIntegration] Kakao 로그인 성공');
-        return {
-          success: true,
-          user: result
-        };
-      } else {
-        return {
-          success: false,
-          error: 'Kakao 로그인에 실패했습니다.'
-        };
-      }
-    } catch (error: any) {
-      console.error('[AccountIntegration] Kakao 로그인 실패:', error);
-      return {
-        success: false,
-        error: 'Kakao 로그인 처리 중 오류가 발생했습니다.'
-      };
+    const r = this.startNaverOAuth(returnPath);
+    if (!r.ok) {
+      return { success: false, error: r.error };
     }
+    return { success: true };
+  }
+
+  /**
+   * Kakao 소셜 로그인 (OAuth 리다이렉트)
+   * @param returnPath 로그인 후 이동할 경로
+   */
+  static async signInWithKakao(returnPath?: string): Promise<{
+    success: boolean;
+    user?: any;
+    error?: string;
+  }> {
+    const r = this.startKakaoOAuth(returnPath);
+    if (!r.ok) {
+      return { success: false, error: r.error };
+    }
+    return { success: true };
   }
 
   /**
