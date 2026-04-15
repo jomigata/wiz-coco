@@ -24,7 +24,7 @@
    - 운영: `https://wiz-coco.web.app/login/kakao-callback/` (실제 서비스 URL로 변경)
    - 로컬: `http://localhost:3000/login/kakao-callback/`
 6. **보안** → **Client Secret** 코드 발급 후 복사 → Firebase Functions 환경에 `KAKAO_CLIENT_SECRET`으로만 설정 (소스·Git에 커밋 금지).
-7. **동의항목**: **카카오계정(이메일)** 등 필요 시 설정. 이메일을 받지 못하면 Functions에서 대체 이메일(`wizcoco+...@wiz-coco.web.app` 형태)로 계정을 만듭니다.
+7. **동의항목**: **카카오계정(이메일)** 등 필요 시 설정. 이메일을 받지 못하면 Functions에서 대체 이메일(`wizcoco+...@wizcoco.com` 형태, `OAUTH_SYNTHETIC_EMAIL_DOMAIN`으로 변경 가능)로 계정을 만듭니다.
 
 참고 문서: [카카오 로그인 REST API](https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api)
 
@@ -36,7 +36,7 @@
 2. **사용 API**에서 **네이버 로그인** 선택.
 3. **로그인 오픈 API 서비스 환경**에서 **PC 웹** 선택 후 **서비스 URL**·**Callback URL** 입력:
    - Callback URL 예: `https://wiz-coco.web.app/login/naver-callback/`
-   - 자체 도메인 예: `https://wizcoco.com/login/naver-callback/` 및 **`https://www.wizcoco.com/login/naver-callback/`** (둘 다 등록 권장 — 실제 로그인 시 `window.location.origin`과 문자열이 완전히 같아야 함)
+   - 자체 도메인 예: `https://wizcoco.com/login/naver-callback/` 및 **`https://www.wizcoco.com/login/naver-callback/`** (둘 다 등록 권장). 앱은 끝 `/` 포함으로 요청하며, Functions는 **끝 슬래시 유무와 관계없이** 허용 목록과 비교합니다. 네이버 콘솔에 적은 Callback 문자열과 **토큰 요청 시 `redirect_uri`는 반드시 동일**해야 합니다.
    - 로컬: `http://localhost:3000/login/naver-callback/`
 4. 등록 후 **Client ID**·**Client Secret** 확인.
    - Client ID → `NEXT_PUBLIC_NAVER_CLIENT_ID`
@@ -67,7 +67,7 @@
 - `NAVER_CLIENT_ID` / `config.naver.client_id`
 - `NAVER_CLIENT_SECRET` / `config.naver.client_secret`
 - (선택) `OAUTH_REDIRECT_URI_ALLOWLIST` — 쉼표로 구분한 추가 Redirect URI 허용 목록
-- (선택) `OAUTH_SYNTHETIC_EMAIL_DOMAIN` — 이메일 미제공 시 합성 이메일 도메인 (기본 `wiz-coco.web.app`)
+- (선택) `OAUTH_SYNTHETIC_EMAIL_DOMAIN` — 이메일 미제공 시 합성 이메일 도메인 (기본 `wizcoco.com`)
 
 ---
 

@@ -36,6 +36,11 @@ function getConfig() {
   };
 }
 
+/** 네이버/카카오 콘솔과 앱의 redirect_uri 끝 슬래시 불일치 허용 */
+function normalizeRedirectUri(u: string): string {
+  return u.trim().replace(/\/+$/, '');
+}
+
 function isAllowedRedirectUri(uri: string): boolean {
   const envList = process.env.OAUTH_REDIRECT_URI_ALLOWLIST || '';
   const fromEnv = envList
@@ -54,8 +59,9 @@ function isAllowedRedirectUri(uri: string): boolean {
     'http://127.0.0.1:3000/login/kakao-callback/',
     'http://127.0.0.1:3000/login/naver-callback/',
   ];
-  const allowed = [...fromEnv, ...defaults];
-  return allowed.some((prefix) => uri === prefix || uri.startsWith(prefix));
+  const allowed = [...fromEnv, ...defaults].map(normalizeRedirectUri);
+  const norm = normalizeRedirectUri(uri);
+  return allowed.includes(norm);
 }
 
 async function kakaoExchange(
@@ -151,7 +157,7 @@ async function getOrCreateUid(
 ): Promise<string> {
   const uid = `${provider}_${providerUid}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 120);
   const syntheticDomain =
-    process.env.OAUTH_SYNTHETIC_EMAIL_DOMAIN || 'wiz-coco.web.app';
+    process.env.OAUTH_SYNTHETIC_EMAIL_DOMAIN || 'wizcoco.com';
   const safeEmail =
     email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
       ? email
