@@ -9,6 +9,7 @@ import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils'
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
+import WizcocoLogo from '@/components/WizcocoLogo';
 
 export default function Navigation() {
   const router = useRouter();
@@ -684,13 +685,20 @@ export default function Navigation() {
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
         <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          {/* 브랜드 텍스트 */}
-          <Link href="/" className="flex flex-col items-center group mr-8" onClick={(e) => handleNavLinkClick("/", e)}>
-            <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
-              AI 심리검사
-            </span>
-            <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
-              Psychological Care
+          {/* 브랜드 */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 group mr-8"
+            onClick={(e) => handleNavLinkClick("/", e)}
+          >
+            <WizcocoLogo className="w-9 h-9 rounded bg-white/90 p-1" alt="Wizcoco 로고" />
+            <span className="flex flex-col items-start">
+              <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
+                Wizcoco
+              </span>
+              <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
+                Psychological Care
+              </span>
             </span>
           </Link>
 
