@@ -30,8 +30,8 @@ export default function RootLayout({
         <footer className="border-t border-white bg-indigo-900">
           <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="inline-flex shrink-0 rounded-xl bg-white/90 p-1">
-                <WizcocoLogo className="block h-12 w-12 shrink-0 object-contain" alt="Wizcoco 로고" />
+              <span className="inline-flex shrink-0 rounded-xl bg-white/90 w-14 h-14 overflow-hidden">
+                <WizcocoLogo className="block w-full h-full object-contain" alt="Wizcoco 로고" />
               </span>
               <div className="text-sm text-emerald-200/90">
                 <div className="font-medium text-emerald-100">Wizcoco</div>
