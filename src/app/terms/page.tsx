@@ -59,7 +59,7 @@ export default function TermsPage() {
             <section className="space-y-2">
               <h2 className="text-emerald-100 font-medium">6. 문의</h2>
               <p className="text-emerald-200/85">
-                이메일: <span className="text-emerald-100">support@wizcoco.com</span> (예시)
+                이메일: <span className="text-emerald-100">support@wizcoco.com</span>
               </p>
               <p className="text-xs text-emerald-500/90">
                 실제 운영 이메일/연락처로 교체해 주세요.
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
             <section className="space-y-2">
               <h2 className="text-emerald-100 font-medium">7. 시행일</h2>
-              <p className="text-emerald-200/85">본 약관은 2026-04-15부터 적용됩니다.</p>
+              <p className="text-emerald-200/85">본 약관은 2026-01-01부터 적용됩니다.</p>
             </section>
           </div>
 

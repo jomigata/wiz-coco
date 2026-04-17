@@ -691,7 +691,7 @@ export default function Navigation() {
             className="flex items-center gap-3 group mr-8"
             onClick={(e) => handleNavLinkClick("/", e)}
           >
-            <WizcocoLogo className="w-9 h-9 rounded bg-white/90 p-1" alt="Wizcoco 로고" />
+            <WizcocoLogo className="h-12 w-auto" alt="Wizcoco 로고" />
             <span className="flex flex-col items-start">
               <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
                 Wizcoco

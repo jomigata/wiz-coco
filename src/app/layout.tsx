@@ -27,10 +27,10 @@ export default function RootLayout({
         <BrowserCleanupProvider />
         <ClientLayoutHandler />
         {children}
-        <footer className="border-t border-emerald-900/40 bg-emerald-950/60">
+        <footer className="border-t border-white bg-indigo-900">
           <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <WizcocoLogo className="w-9 h-9 rounded bg-white/90 p-1" alt="Wizcoco 로고" />
+              <WizcocoLogo className="h-12 w-auto" alt="Wizcoco 로고" />
               <div className="text-sm text-emerald-200/90">
                 <div className="font-medium text-emerald-100">Wizcoco</div>
                 <div className="text-xs text-emerald-500/90">Psychological Care</div>
