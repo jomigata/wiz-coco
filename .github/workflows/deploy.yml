@@ -202,6 +202,16 @@ jobs:
         echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
+        # 소셜 로그인(카카오/네이버) - 선택 사항 (설정 시 버튼 활성화/오류 방지)
+        if [ -n "${{ secrets.NEXT_PUBLIC_KAKAO_REST_API_KEY }}" ]; then
+          echo "NEXT_PUBLIC_KAKAO_REST_API_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_REST_API_KEY }}" >> .env
+        fi
+        if [ -n "${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_ID }}" ]; then
+          echo "NEXT_PUBLIC_NAVER_CLIENT_ID=${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_ID }}" >> .env
+        fi
+        if [ -n "${{ secrets.NEXT_PUBLIC_SOCIAL_AUTH_URL }}" ]; then
+          echo "NEXT_PUBLIC_SOCIAL_AUTH_URL=${{ secrets.NEXT_PUBLIC_SOCIAL_AUTH_URL }}" >> .env
+        fi
         # Flask API URL (Cloud Run 등) - 선택 사항
         if [ -n "${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" ]; then
           echo "NEXT_PUBLIC_FLASK_API_URL=${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" >> .env
@@ -246,6 +256,13 @@ jobs:
           "NEXT_PUBLIC_FIREBASE_APP_ID"
         )
         
+        # 선택 환경 변수(소셜 로그인 등) 검증 (누락이어도 실패시키지 않음)
+        optional_vars=(
+          "NEXT_PUBLIC_KAKAO_REST_API_KEY"
+          "NEXT_PUBLIC_NAVER_CLIENT_ID"
+          "NEXT_PUBLIC_SOCIAL_AUTH_URL"
+        )
+        
         missing_vars=()
         
         for var in "${required_vars[@]}"; do
@@ -275,6 +292,29 @@ jobs:
           if [ -z "$secret_value" ]; then
             echo "❌ $var이 설정되지 않았습니다."
             missing_vars+=("$var")
+          else
+            echo "✅ $var 설정됨 (길이: ${#secret_value}자)"
+          fi
+        done
+        
+        echo ""
+        echo "📋 선택 환경변수 확인(소셜 로그인):"
+        for var in "${optional_vars[@]}"; do
+          secret_value=""
+          case $var in
+            "NEXT_PUBLIC_KAKAO_REST_API_KEY")
+              secret_value="${{ secrets.NEXT_PUBLIC_KAKAO_REST_API_KEY }}"
+              ;;
+            "NEXT_PUBLIC_NAVER_CLIENT_ID")
+              secret_value="${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_ID }}"
+              ;;
+            "NEXT_PUBLIC_SOCIAL_AUTH_URL")
+              secret_value="${{ secrets.NEXT_PUBLIC_SOCIAL_AUTH_URL }}"
+              ;;
+          esac
+          
+          if [ -z "$secret_value" ]; then
+            echo "⚠️  $var: 미설정(선택사항)"
           else
             echo "✅ $var 설정됨 (길이: ${#secret_value}자)"
           fi

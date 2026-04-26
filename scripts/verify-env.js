@@ -25,7 +25,10 @@ const requiredEnvVars = [
 const optionalEnvVars = [
   'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID',
   'NEXTAUTH_SECRET',
-  'NEXTAUTH_URL'
+  'NEXTAUTH_URL',
+  'NEXT_PUBLIC_KAKAO_REST_API_KEY',
+  'NEXT_PUBLIC_NAVER_CLIENT_ID',
+  'NEXT_PUBLIC_SOCIAL_AUTH_URL'
 ];
 
 // .env 파일들 확인
