@@ -400,10 +400,10 @@ jobs:
       run: |
         echo "🔐 Functions 설정(config) 주입..."
         echo "=================================="
-        
-        # firebase functions:config:set 은 레거시 명령으로 분류되어 일부 런타임에서 차단됩니다.
-        # CI에서는 아래 플래그로 임시 허용합니다.
-        export FIREBASE_CLI_EXPERIMENTS=enableLegacyRuntimeConfigCommands
+        # firebase functions:config:set 은 레거시 명령으로 분류되어 차단될 수 있습니다.
+        # CI에서는 Firebase CLI 실험 플래그를 활성화해 임시 허용합니다.
+        firebase experiments:enable legacyRuntimeConfigCommands \
+          --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }} || true
         
         # 카카오/네이버 토큰 교환에 필요한 서버 시크릿(Functions 전용)
         # functions/oauthExchange.ts 는 functions.config().kakao/naver 도 읽습니다.
