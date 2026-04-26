@@ -229,8 +229,17 @@ jobs:
           echo "❌ .env 파일이 없습니다."
         fi
         echo "=================================="
-        npm run build
+        # 빌드 로그를 남겨 실패 원인 진단을 쉽게 함
+        npm run build 2>&1 | tee build.log
         echo "✅ 빌드 완료!"
+    
+    - name: 📎 빌드 로그 업로드
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
+        if-no-files-found: ignore
       
     - name: 🔧 Firebase CLI 설치
       run: npm install -g firebase-tools
