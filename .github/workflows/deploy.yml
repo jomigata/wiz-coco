@@ -396,6 +396,31 @@ jobs:
         
         echo "=================================="
         
+    - name: 🔐 Functions 설정 주입 (카카오/네이버)
+      run: |
+        echo "🔐 Functions 설정(config) 주입..."
+        echo "=================================="
+        
+        # 카카오/네이버 토큰 교환에 필요한 서버 시크릿(Functions 전용)
+        # functions/oauthExchange.ts 는 functions.config().kakao/naver 도 읽습니다.
+        if [ -n "${{ secrets.KAKAO_CLIENT_ID }}" ] && [ -n "${{ secrets.KAKAO_CLIENT_SECRET }}" ]; then
+          firebase functions:config:set kakao.client_id="${{ secrets.KAKAO_CLIENT_ID }}" kakao.client_secret="${{ secrets.KAKAO_CLIENT_SECRET }}" \
+            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+          echo "✅ Kakao functions config set"
+        else
+          echo "⚠️  KAKAO_CLIENT_ID / KAKAO_CLIENT_SECRET 미설정(카카오 로그인 서버 교환이 실패할 수 있음)"
+        fi
+        
+        if [ -n "${{ secrets.NAVER_CLIENT_ID }}" ] && [ -n "${{ secrets.NAVER_CLIENT_SECRET }}" ]; then
+          firebase functions:config:set naver.client_id="${{ secrets.NAVER_CLIENT_ID }}" naver.client_secret="${{ secrets.NAVER_CLIENT_SECRET }}" \
+            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+          echo "✅ Naver functions config set"
+        else
+          echo "⚠️  NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 미설정(네이버 로그인 서버 교환이 실패할 수 있음)"
+        fi
+        
+        echo "=================================="
+
     - name: 🚀 Firebase Hosting + Functions 배포
       run: |
         echo "🚀 Firebase Hosting + Functions 배포 시작..."
