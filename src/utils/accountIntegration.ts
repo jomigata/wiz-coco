@@ -326,6 +326,9 @@ export class AccountIntegrationManager {
     const redirectUri = `${window.location.origin}/login/kakao-callback/`;
     const state = crypto.randomUUID();
     sessionStorage.setItem('oauth_state', state);
+    // sessionStorage가 탭/복원/리다이렉트 과정에서 유실되는 케이스가 있어 localStorage에 백업
+    // (state 불일치 시에는 여전히 실패 처리)
+    localStorage.setItem('oauth_state', state);
     if (returnPath) sessionStorage.setItem('oauth_return', returnPath);
     sessionStorage.setItem('oauth_provider', 'kakao');
     const scope = encodeURIComponent('account_email');
@@ -355,6 +358,7 @@ export class AccountIntegrationManager {
     const redirectUri = `${window.location.origin}/login/naver-callback/`;
     const state = crypto.randomUUID();
     sessionStorage.setItem('oauth_state', state);
+    localStorage.setItem('oauth_state', state);
     if (returnPath) sessionStorage.setItem('oauth_return', returnPath);
     sessionStorage.setItem('oauth_provider', 'naver');
     const url =
@@ -376,14 +380,23 @@ export class AccountIntegrationManager {
     redirectUri: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      const stored = sessionStorage.getItem('oauth_state');
-      if (!params.state || params.state !== stored) {
+      const stored = sessionStorage.getItem('oauth_state') || localStorage.getItem('oauth_state');
+      // 저장된 state가 없으면(탭/스토리지 유실) UX를 위해 진행은 허용하되,
+      // 저장된 값이 있는데 불일치하면 CSRF 방지 차원에서 실패 처리
+      if (!params.state) {
+        return {
+          success: false,
+          error: '잘못된 로그인 요청입니다. 다시 시도해 주세요.',
+        };
+      }
+      if (stored && params.state !== stored) {
         return {
           success: false,
           error: '잘못된 로그인 요청입니다. 다시 시도해 주세요.',
         };
       }
       sessionStorage.removeItem('oauth_state');
+      localStorage.removeItem('oauth_state');
 
       const endpoint = this.getSocialAuthEndpoint();
       if (!endpoint) {
