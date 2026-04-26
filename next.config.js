@@ -109,9 +109,8 @@ const nextConfig = {
   
   // 빌드 최적화
   swcMinify: true,
-  
-  // 정적 내보내기 최적화 - out 폴더로 변경
-  distDir: 'out',
+  // NOTE: output:'export'는 결과물을 `out/`에 생성하지만,
+  // distDir은 Next 내부 빌드 디렉터리(.next)를 의미하므로 변경하지 않습니다.
   
   // 환경 변수 검증 비활성화 (CI/CD 환경에서)
   skipTrailingSlashRedirect: true,
