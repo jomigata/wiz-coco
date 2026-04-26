@@ -406,6 +406,20 @@ const LoginContent = () => {
 
             <div className="grid grid-cols-2 gap-2">
               <motion.button
+                onClick={handleNaverLogin}
+                className="flex justify-center items-center px-2 py-2.5 border border-[#03C75A] bg-[#03C75A] text-white rounded-lg hover:bg-[#02b351] transition-colors text-sm disabled:opacity-60"
+                whileTap={{ scale: 0.99 }}
+                disabled={isLoading}
+                aria-label="네이버로 로그인"
+              >
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
+                    <path fill="currentColor" d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
+                  </svg>
+                  <span className="font-medium">네이버</span>
+                </div>
+              </motion.button>
+              <motion.button
                 onClick={handleGoogleLogin}
                 className="flex justify-center items-center px-2 py-2.5 border border-white/10 bg-white/95 text-gray-800 rounded-lg hover:bg-white transition-colors text-sm disabled:opacity-60"
                 whileTap={{ scale: 0.99 }}
@@ -420,20 +434,6 @@ const LoginContent = () => {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                   <span className="font-medium">Google</span>
-                </div>
-              </motion.button>
-              <motion.button
-                onClick={handleNaverLogin}
-                className="flex justify-center items-center px-2 py-2.5 border border-[#03C75A] bg-[#03C75A] text-white rounded-lg hover:bg-[#02b351] transition-colors text-sm disabled:opacity-60"
-                whileTap={{ scale: 0.99 }}
-                disabled={isLoading}
-                aria-label="네이버로 로그인"
-              >
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
-                    <path fill="currentColor" d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
-                  </svg>
-                  <span className="font-medium">네이버</span>
                 </div>
               </motion.button>
             </div>
