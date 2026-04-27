@@ -250,18 +250,22 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       const userRef = doc(db, 'users', userId);
       console.log('Firestore 문서 참조 생성:', userRef.path);
 
+      // 이메일/직업은 비워두면 기존 값 유지(삭제 방지)
+      const safeEmail = (formData.email || '').trim();
+      const safeOccupation = (formData.occupation || '').trim();
+
       const writeData = {
         displayName: formData.displayName,
-        email: formData.email,
+        ...(safeEmail ? { email: safeEmail } : {}),
         phoneNumber: formData.phoneNumber,
         birthDate: formData.birthDate,
         gender: formData.gender,
-        occupation: formData.occupation,
+        ...(safeOccupation ? { occupation: safeOccupation } : {}),
         updatedAt: serverTimestamp(),
         uid: userId,
         lastModified: new Date().toISOString(),
         authProvider: firebaseUser.providerData[0]?.providerId || 'unknown',
-      } as const;
+      };
 
       console.log('저장할 데이터:', writeData);
 
