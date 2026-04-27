@@ -25,10 +25,8 @@ export default function AccessCodeInputPage() {
   const [loading, setLoading] = useState(false);
 
   const normalizedCode = normalizeAccessCodeInput(code);
-  const accountEmail = (user?.email || '').trim().toLowerCase();
   /** 마이페이지·네비와 동일: Firebase 세션만으로 로그인 판별(이메일 없는 소셜 계정 포함) */
   const isLoggedIn = !authLoading && !!user;
-  const hasEmail = accountEmail.includes('@');
   const canSubmit = isValidAccessCodeInput(normalizedCode) && isLoggedIn;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,12 +84,6 @@ export default function AccessCodeInputPage() {
                 <p className="text-slate-400">로그인 후 검사가 가능합니다.</p>
               ) : null}
             </div>
-            {isLoggedIn && !hasEmail ? (
-              <p className="text-amber-200/90 text-sm mb-6 rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
-                현재 로그인 계정에 이메일 정보가 없습니다. 검사는 그대로 진행할 수 있고,
-                추후 결과 안내/연락이 필요하다면 마이페이지에서 이메일을 입력해 주세요.
-              </p>
-            ) : null}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
