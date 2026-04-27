@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
+import { saveUserTestResultToFirestore } from '@/utils/testResultsStore';
 
 const mbtiTypes = [
   'ISTJ', 'ISFJ', 'INFJ', 'INTJ',
@@ -79,6 +80,19 @@ export default function InsideMbtiPage() {
       // 저장
       localStorage.setItem('test_records', JSON.stringify(records));
       localStorage.setItem(`test-result-${testCode}`, JSON.stringify(testData));
+    }
+
+    // 로그인 사용자면 Firestore(testResults)에 추가 저장 (UID 기준 조회용)
+    try {
+      void saveUserTestResultToFirestore({
+        code: testCode,
+        testType: 'Inside MBTI 검사',
+        userData: testData.userData,
+        resultData: testData.form,
+        status: 'completed',
+      });
+    } catch (e) {
+      console.warn('[InsideMbti] Firestore(testResults) 저장 실패(무시):', e);
     }
 
     // 결과 페이지로 이동

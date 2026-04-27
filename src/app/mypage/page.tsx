@@ -551,6 +551,33 @@ function MyPageContent() {
       const merged: TestRecord[] = [...local];
 
       if (firebaseUser) {
+        // 0) 로그인 사용자 결과: Firestore 전역 testResults(uid 기준) 병합
+        try {
+          const { queryDocuments } = await import('@/utils/firebaseFirestore');
+          const rows = await queryDocuments(
+            'testResults',
+            [{ field: 'uid', operator: '==', value: firebaseUser.uid }],
+            'createdAt',
+            'desc',
+            100
+          );
+          for (const row of rows || []) {
+            merged.push({
+              code: `fs-${String((row as any).id || '')}`,
+              testType: String((row as any).testType || (row as any).testId || '검사 결과'),
+              timestamp:
+                (row as any).createdAt?.toDate?.()?.toISOString?.() ||
+                ((row as any).createdAt?.seconds
+                  ? new Date(Number((row as any).createdAt.seconds) * 1000).toISOString()
+                  : new Date().toISOString()),
+              status: String((row as any).status || 'completed'),
+              recordSource: 'local', // UI 필터에서 counselor-assessment만 제외하고 나머지는 포함
+            } as any);
+          }
+        } catch (fireErr) {
+          console.warn('[MyPage] Firestore testResults(uid) 병합 실패:', fireErr);
+        }
+
         try {
           const { listMyAssessmentResults } = await import('@/lib/assessmentApi');
           const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');

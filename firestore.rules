@@ -37,13 +37,47 @@ service cloud.firestore {
     }
 
     // 검사 결과 - testResults
-    // 상담사는 자신의 assessment에 속한 결과만 읽기. 생성/수정/삭제는 백엔드(Flask) Admin SDK로만 처리.
+    // 1) 로그인 사용자(내담자)는 본인(uid) 결과를 읽고/생성 가능 (이메일 없이 앱/웹 내 조회 목적)
+    // 2) 상담사는 assessment 기반 결과를 읽을 수 있음(기존 호환)
     match /testResults/{resultId} {
-      allow read, list: if request.auth != null
-        && resource.data.keys().hasAny(['assessmentId'])
-        && exists(/databases/$(database)/documents/assessments/$(resource.data.assessmentId))
-        && get(/databases/$(database)/documents/assessments/$(resource.data.assessmentId)).data.counselorId == request.auth.uid;
-      allow write: if false;
+      function isAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
+      function isOwner() {
+        return request.auth != null
+          && resource.data.keys().hasAny(['uid'])
+          && resource.data.uid == request.auth.uid;
+      }
+
+      function isOwnerCreate() {
+        return request.auth != null
+          && request.resource.data.keys().hasAny(['uid'])
+          && request.resource.data.uid == request.auth.uid;
+      }
+
+      function isCounselorByAssessment() {
+        return request.auth != null
+          && resource.data.keys().hasAny(['assessmentId'])
+          && exists(/databases/$(database)/documents/assessments/$(resource.data.assessmentId))
+          && get(/databases/$(database)/documents/assessments/$(resource.data.assessmentId)).data.counselorId == request.auth.uid;
+      }
+
+      // 읽기: 본인(uid) 또는 assessment 소유 상담사 또는 admin
+      allow read, list: if request.auth != null && (isOwner() || isCounselorByAssessment() || isAdmin());
+
+      // 생성: 본인(uid)만 허용 (서버에서 생성하는 assessment 기반 결과는 Admin SDK로 우회)
+      allow create: if isOwnerCreate();
+
+      // 업데이트: 본인(uid)만, uid 변경 금지
+      allow update: if request.auth != null
+        && resource.data.keys().hasAny(['uid'])
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid;
+
+      allow delete: if isAdmin();
     }
 
     // 상담사 지원 신청 - counselorApplications

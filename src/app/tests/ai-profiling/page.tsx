@@ -374,6 +374,20 @@ function AIProfilingPageContent() {
           // 저장
           localStorage.setItem('test_records', JSON.stringify(records));
           localStorage.setItem(`test-result-${generatedCode}`, JSON.stringify(testData));
+
+          // 로그인 사용자면 Firestore(testResults)에 추가 저장 (이메일 없이 UID 기준 조회용)
+          try {
+            const { saveUserTestResultToFirestore } = await import('@/utils/testResultsStore');
+            void saveUserTestResultToFirestore({
+              code: generatedCode,
+              testType: 'AI 프로파일링 검사',
+              userData: testData.userData,
+              resultData: profile,
+              status: 'completed',
+            });
+          } catch (e) {
+            console.warn('[AiProfiling] Firestore(testResults) 저장 실패(무시):', e);
+          }
           
           // Firebase 저장 성공 여부를 기록
           if (firebaseSaveSuccess) {

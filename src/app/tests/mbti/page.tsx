@@ -647,6 +647,21 @@ function MbtiTestPageContent() {
           // 저장
           localStorage.setItem('test_records', JSON.stringify(records));
           localStorage.setItem(`test-result-${testCode}`, JSON.stringify(testData));
+
+          // 로그인 사용자면 Firestore(testResults)에 추가 저장 (이메일 없이 UID 기준 조회용)
+          try {
+            const { saveUserTestResultToFirestore } = await import('@/utils/testResultsStore');
+            void saveUserTestResultToFirestore({
+              code: testCode,
+              testType: '개인용 MBTI 검사',
+              counselorCode,
+              userData: testData.userData,
+              resultData: results,
+              status: 'completed',
+            });
+          } catch (e) {
+            console.warn('[MbtiTestPage] Firestore(testResults) 저장 실패(무시):', e);
+          }
           
           // 2. mbti-user-test-records에 저장 (중복 체크)
           const mbtiRecordsStr = localStorage.getItem('mbti-user-test-records') || '[]';
