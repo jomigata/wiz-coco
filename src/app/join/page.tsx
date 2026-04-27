@@ -29,7 +29,7 @@ export default function AccessCodeInputPage() {
   /** 마이페이지·네비와 동일: Firebase 세션만으로 로그인 판별(이메일 없는 소셜 계정 포함) */
   const isLoggedIn = !authLoading && !!user;
   const hasEmail = accountEmail.includes('@');
-  const canSubmit = isValidAccessCodeInput(normalizedCode) && hasEmail;
+  const canSubmit = isValidAccessCodeInput(normalizedCode) && isLoggedIn;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +38,8 @@ export default function AccessCodeInputPage() {
       setError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN-724');
       return;
     }
-    if (!hasEmail) {
-      setError('검사 진행에는 이메일이 등록된 계정이 필요합니다. 구글·이메일 로그인으로 다시 시도해 주세요.');
+    if (!isLoggedIn) {
+      setError('로그인 후 검사가 가능합니다.');
       return;
     }
     if (!isValidAccessCodeInput(normalizedCode)) {
@@ -88,8 +88,8 @@ export default function AccessCodeInputPage() {
             </div>
             {isLoggedIn && !hasEmail ? (
               <p className="text-amber-200/90 text-sm mb-6 rounded-lg border border-amber-700/40 bg-amber-950/20 px-3 py-2">
-                현재 계정에 이메일 정보가 없어 검사를 진행할 수 없습니다. 이메일이 제공되는 방식(구글·이메일 로그인 등)으로
-                로그인해 주세요.
+                현재 로그인 계정에 이메일 정보가 없습니다. 검사는 그대로 진행할 수 있고,
+                추후 결과 안내/연락이 필요하다면 마이페이지에서 이메일을 입력해 주세요.
               </p>
             ) : null}
             <form onSubmit={handleSubmit} className="space-y-4">
