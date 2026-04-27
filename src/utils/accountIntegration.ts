@@ -335,7 +335,8 @@ export class AccountIntegrationManager {
     const url =
       `https://kauth.kakao.com/oauth/authorize?client_id=${encodeURIComponent(clientId)}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code` +
-      `&state=${encodeURIComponent(state)}&scope=${scope}`;
+      // 강제 로그인: 카카오 브라우저 세션이 남아있어도 로그인 화면을 다시 표시
+      `&state=${encodeURIComponent(state)}&scope=${scope}&prompt=login`;
     window.location.href = url;
     return { ok: true };
   }
