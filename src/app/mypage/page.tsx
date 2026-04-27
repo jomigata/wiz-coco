@@ -74,6 +74,29 @@ interface Stats {
   favoriteType: string | null;
 }
 
+function normalizeDateValue(v: unknown): string {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  // Firestore Timestamp (v9) has toDate()
+  if (typeof v === 'object' && v !== null && 'toDate' in v && typeof (v as any).toDate === 'function') {
+    const d = (v as any).toDate();
+    return d instanceof Date ? d.toISOString() : '';
+  }
+  // Firestore Timestamp shape
+  if (typeof v === 'object' && v !== null && 'seconds' in v) {
+    const seconds = Number((v as any).seconds);
+    if (!Number.isFinite(seconds)) return '';
+    return new Date(seconds * 1000).toISOString();
+  }
+  return '';
+}
+
+function formatKoreanDate(v: unknown): string {
+  const s = normalizeDateValue(v) || (typeof v === 'string' ? v : '');
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? '정보 없음' : d.toLocaleDateString('ko-KR');
+}
+
 // 로딩 컴포넌트
 const LoadingMyPage = () => (
   <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
@@ -256,8 +279,14 @@ function MyPageContent() {
                 occupation: userDetailData.occupation || '',
                 interests: userDetailData.interests || [],
                 bio: userDetailData.bio || '',
-                createdAt: userDetailData.createdAt || firebaseUser.metadata?.creationTime || '',
-                lastLoginAt: userDetailData.lastLoginAt || firebaseUser.metadata?.lastSignInTime || ''
+                createdAt:
+                  normalizeDateValue(userDetailData.createdAt) ||
+                  firebaseUser.metadata?.creationTime ||
+                  '',
+                lastLoginAt:
+                  normalizeDateValue(userDetailData.lastLoginAt) ||
+                  firebaseUser.metadata?.lastSignInTime ||
+                  '',
               });
             }
           } catch (firestoreError) {
@@ -775,13 +804,13 @@ function MyPageContent() {
                       <div className="flex justify-between">
                         <span className="text-blue-200">가입일</span>
                         <span className="text-blue-100">
-                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ko-KR') : '정보 없음'}
+                          {formatKoreanDate(user.createdAt)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-200">마지막 로그인</span>
                         <span className="text-blue-100">
-                          {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('ko-KR') : '정보 없음'}
+                          {formatKoreanDate(user.lastLoginAt)}
                         </span>
                       </div>
                     </div>
