@@ -31,6 +31,19 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     occupation: ''
   });
 
+  const OCCUPATION_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: 'student', label: '학생' },
+    { value: 'office', label: '사무/관리직' },
+    { value: 'education', label: '교육/연구직' },
+    { value: 'healthcare', label: '의료/보건직' },
+    { value: 'service_sales', label: '서비스/영업직' },
+    { value: 'it', label: 'IT/개발직' },
+    { value: 'creative', label: '예술/디자인/콘텐츠' },
+    { value: 'public', label: '공공/군경/공무' },
+    { value: 'self_employed', label: '자영업/프리랜서' },
+    { value: 'job_seeking', label: '구직/휴직/기타' },
+  ];
+
 
 
   // 날짜 선택기 상태
@@ -81,7 +94,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             
             setFormData({
               displayName: authUser.displayName || userData.displayName || '',
-              email: authUser.email || '',
+              email: userData.email || authUser.email || '',
               phoneNumber: userData.phoneNumber || '',
               birthDate: birthDate,
               gender: userData.gender || '',
@@ -105,7 +118,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
           // 오류 발생 시 기본값 설정
           setFormData({
             displayName: authUser.displayName || '',
-            email: authUser.email || '',
+            email: '',
             phoneNumber: '',
             birthDate: '',
             gender: '',
@@ -500,10 +513,13 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       type="email"
                       name="email"
                       value={formData.email}
-                      disabled
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-gray-400 cursor-not-allowed"
-                      placeholder="이메일 (수정 불가)"
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      placeholder="이메일을 입력하세요 (선택)"
                     />
+                    <p className="mt-2 text-xs text-white/60">
+                      로그인 계정의 이메일과 별개로, 연락/결과 안내용 이메일을 저장합니다.
+                    </p>
                   </div>
                 </div>
 
@@ -775,14 +791,23 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                   
                   <div>
                     <label className="block text-sm font-medium text-emerald-300 mb-2">직업</label>
-                    <input
-                      type="text"
+                    <select
                       name="occupation"
                       value={formData.occupation}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
-                      placeholder="직업을 입력하세요"
-                    />
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      style={{ color: 'white' }}
+                    >
+                      <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>선택하세요</option>
+                      {OCCUPATION_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value} style={{ backgroundColor: '#1e293b', color: 'white' }}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-2 text-xs text-white/60">
+                      직업군은 스트레스/생활패턴 등 검사 해석에 참고될 수 있어요.
+                    </p>
                   </div>
                 </div>
               </div>
