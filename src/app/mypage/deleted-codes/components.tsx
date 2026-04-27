@@ -68,7 +68,11 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           allRecords.push(...globalRecords);
         }
         if (firebaseUser?.email) {
-          const userRecords = JSON.parse(localStorage.getItem(`mbti-user-test-records-${firebaseUser.email}`) || '[]');
+          const uidKey = firebaseUser?.uid ? `mbti-user-test-records-${firebaseUser.uid}` : '';
+          const emailKey = firebaseUser?.email ? `mbti-user-test-records-${firebaseUser.email}` : '';
+          const userRecords =
+            JSON.parse(localStorage.getItem(uidKey) || 'null') ||
+            JSON.parse(localStorage.getItem(emailKey) || '[]');
           if (Array.isArray(userRecords)) {
             allRecords.push(...userRecords);
           }

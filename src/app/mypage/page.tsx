@@ -474,6 +474,8 @@ function MyPageContent() {
   const buildLocalTestRecords = React.useCallback((): TestRecord[] => {
     try {
       const allRecords: TestRecord[] = [];
+      const userKeySuffix = (user?.id || '').trim();
+      const userEmailSuffix = (user?.email || '').trim();
       
       // 1. 기본 test_records에서 로드 (개인용 MBTI, AI 프로파일링 등)
       const basicRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
@@ -493,24 +495,29 @@ function MyPageContent() {
       }
       
       // 2. 사용자별 MBTI 기록에서 로드 (전문가용 MBTI)
-      if (user?.email) {
-        const userSpecificKey = `mbti-user-test-records-${user.email}`;
+      const userSpecificKeys = [
+        userKeySuffix ? `mbti-user-test-records-${userKeySuffix}` : '',
+        // 하위호환: 예전 email 기반 키
+        userEmailSuffix ? `mbti-user-test-records-${userEmailSuffix}` : '',
+      ].filter(Boolean) as string[];
+
+      for (const userSpecificKey of userSpecificKeys) {
         const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
         console.log(`[MyPage] 사용자별 기록 키: ${userSpecificKey}`);
         console.log(`[MyPage] 사용자별 기록 수: ${Array.isArray(userRecords) ? userRecords.length : 0}`);
-        
+
         if (Array.isArray(userRecords)) {
           userRecords.forEach(record => {
             console.log(`[MyPage] 사용자별 기록:`, record);
             const normalizedRecord = normalizeTestRecord(record);
             normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
-            
+
             // 상담코드 추출
             const clientInfo = record.userData?.clientInfo || record.clientInfo;
             if (clientInfo && clientInfo.counselorCode) {
               normalizedRecord.counselorCode = clientInfo.counselorCode;
             }
-            
+
             allRecords.push(normalizedRecord);
           });
         }
@@ -544,7 +551,7 @@ function MyPageContent() {
       // 기본 데이터가 있는 것만 필터링
       const validRecords = uniqueRecords.filter(r => r.code && r.testType);
 
-      console.log(`[MyPage] 사용자 ${user?.email}의 모든 검사 기록 ${validRecords.length}개를 로드했습니다.`);
+      console.log(`[MyPage] 사용자 ${user?.id || user?.email || 'guest'}의 모든 검사 기록 ${validRecords.length}개를 로드했습니다.`);
       console.log(`[MyPage] 최종 기록 목록:`, validRecords);
 
       const sorted = validRecords.sort((a: any, b: any) => {
@@ -2006,11 +2013,17 @@ function TestRecordsTabContent({
         const userData = localStorage.getItem('user');
         if (userData) {
           try {
-            const user = JSON.parse(userData);
-            const userSpecificKey = `mbti-user-test-records-${user.email}`;
-            const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
-            const filteredUserRecords = userRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
-            localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
+            const u = JSON.parse(userData);
+            const suffixes = [
+              (u?.id || u?.uid || '').toString().trim(),
+              (u?.email || '').toString().trim(),
+            ].filter(Boolean) as string[];
+            for (const suffix of suffixes) {
+              const userSpecificKey = `mbti-user-test-records-${suffix}`;
+              const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
+              const filteredUserRecords = userRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
+              localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
+            }
           } catch (e) {
             console.error('사용자별 기록 삭제 오류:', e);
           }
@@ -2104,11 +2117,17 @@ function TestRecordsTabContent({
         const userData = localStorage.getItem('user');
         if (userData) {
           try {
-            const user = JSON.parse(userData);
-            const userSpecificKey = `mbti-user-test-records-${user.email}`;
-            const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
-            const filteredUserRecords = userRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
-            localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
+            const u = JSON.parse(userData);
+            const suffixes = [
+              (u?.id || u?.uid || '').toString().trim(),
+              (u?.email || '').toString().trim(),
+            ].filter(Boolean) as string[];
+            for (const suffix of suffixes) {
+              const userSpecificKey = `mbti-user-test-records-${suffix}`;
+              const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
+              const filteredUserRecords = userRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
+              localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
+            }
           } catch (e) {
             console.error('사용자별 기록 삭제 오류:', e);
           }
