@@ -97,6 +97,14 @@ function formatKoreanDate(v: unknown): string {
   return Number.isNaN(d.getTime()) ? '정보 없음' : d.toLocaleDateString('ko-KR');
 }
 
+function formatKoreanDateTime(v: unknown): string {
+  const s = normalizeDateValue(v) || (typeof v === 'string' ? v : '');
+  const d = new Date(s);
+  return Number.isNaN(d.getTime())
+    ? '정보 없음'
+    : d.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 // 로딩 컴포넌트
 const LoadingMyPage = () => (
   <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
@@ -810,7 +818,7 @@ function MyPageContent() {
                       <div className="flex justify-between">
                         <span className="text-blue-200">마지막 로그인</span>
                         <span className="text-blue-100">
-                          {formatKoreanDate(user.lastLoginAt)}
+                          {formatKoreanDateTime(user.lastLoginAt)}
                         </span>
                       </div>
                     </div>
