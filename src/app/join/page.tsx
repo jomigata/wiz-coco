@@ -29,6 +29,9 @@ export default function AccessCodeInputPage() {
   const isLoggedIn = !authLoading && !!user;
   const canSubmit = isValidAccessCodeInput(normalizedCode) && isLoggedIn;
 
+  const buildSha = (process.env.NEXT_PUBLIC_BUILD_SHA || '').slice(0, 7);
+  const buildRunId = process.env.NEXT_PUBLIC_BUILD_RUN_ID || '';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -143,6 +146,11 @@ export default function AccessCodeInputPage() {
                 홈으로
               </Link>
             </div>
+            {(buildSha || buildRunId) && (
+              <p className="mt-4 text-center text-xs text-slate-500">
+                build {buildSha || 'unknown'}{buildRunId ? ` · run ${buildRunId}` : ''}
+              </p>
+            )}
           </div>
         </main>
       </div>

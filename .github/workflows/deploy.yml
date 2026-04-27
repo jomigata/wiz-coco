@@ -194,6 +194,9 @@ jobs:
         echo "NEXT_TELEMETRY_DISABLED=1" >> .env
         echo "CI=true" >> .env
         echo "GITHUB_ACTIONS=true" >> .env
+        # 빌드 식별자(캐시/배포 확인용)
+        echo "NEXT_PUBLIC_BUILD_SHA=${{ github.sha }}" >> .env
+        echo "NEXT_PUBLIC_BUILD_RUN_ID=${{ github.run_id }}" >> .env
         # Firebase 환경 변수 설정
         echo "NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" >> .env
