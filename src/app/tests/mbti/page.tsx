@@ -654,7 +654,7 @@ function MbtiTestPageContent() {
             void saveUserTestResultToFirestore({
               code: testCode,
               testType: '개인용 MBTI 검사',
-              counselorCode,
+              counselorCode: counselorCode ?? undefined,
               userData: testData.userData,
               resultData: results,
               status: 'completed',

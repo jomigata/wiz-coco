@@ -65,8 +65,14 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/assessments/$(resource.data.assessmentId)).data.counselorId == request.auth.uid;
       }
 
+      function isCounselorDirect() {
+        return request.auth != null
+          && resource.data.keys().hasAny(['counselorId'])
+          && resource.data.counselorId == request.auth.uid;
+      }
+
       // 읽기: 본인(uid) 또는 assessment 소유 상담사 또는 admin
-      allow read, list: if request.auth != null && (isOwner() || isCounselorByAssessment() || isAdmin());
+      allow read, list: if request.auth != null && (isOwner() || isCounselorByAssessment() || isCounselorDirect() || isAdmin());
 
       // 생성: 본인(uid)만 허용 (서버에서 생성하는 assessment 기반 결과는 Admin SDK로 우회)
       allow create: if isOwnerCreate();

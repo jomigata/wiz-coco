@@ -33,11 +33,31 @@ export async function saveUserTestResultToFirestore(input: Omit<StoredTestResult
   const u = auth?.currentUser;
   if (!db || !u?.uid) return { ok: false as const, skipped: true as const };
 
+  // 상담사 연결이 있으면 counselorId/counselorCode를 자동으로 붙인다.
+  // (내담자 본인 uid로 저장되며, 상담사는 counselorId로 목록 조회)
+  let counselorId: string | undefined = input.counselorId;
+  let counselorCode: string | undefined = input.counselorCode;
+  if (!counselorId) {
+    try {
+      const res = await fetch(`/api/verify-counselor-code?clientId=${encodeURIComponent(u.uid)}`);
+      const json = (await res.json().catch(() => null)) as any;
+      const conn = json?.success ? json?.data : null;
+      if (conn?.isConnected && conn?.counselorId && conn?.sharedData?.testResults !== false) {
+        counselorId = String(conn.counselorId);
+        if (conn.counselorCode) counselorCode = String(conn.counselorCode);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const payload: StoredTestResult & { createdAt: any; updatedAt: any } = {
     uid: u.uid,
     email: u.email,
     status: 'completed',
     ...input,
+    counselorId,
+    counselorCode,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
