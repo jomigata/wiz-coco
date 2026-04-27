@@ -74,6 +74,25 @@ interface Stats {
   favoriteType: string | null;
 }
 
+const OCCUPATION_LABELS: Record<string, string> = {
+  student: '학생',
+  office: '사무/관리직',
+  education: '교육/연구직',
+  healthcare: '의료/보건직',
+  service_sales: '서비스/영업직',
+  it: 'IT/개발직',
+  creative: '예술/디자인/콘텐츠',
+  public: '공공/군경/공무',
+  self_employed: '자영업/프리랜서',
+  job_seeking: '구직/휴직/기타',
+};
+
+function formatOccupation(v: unknown): string {
+  const key = typeof v === 'string' ? v.trim() : '';
+  if (!key) return '정보 없음';
+  return OCCUPATION_LABELS[key] || key;
+}
+
 function normalizeDateValue(v: unknown): string {
   if (!v) return '';
   if (typeof v === 'string') return v;
@@ -281,6 +300,7 @@ function MyPageContent() {
             if (userDoc.exists()) {
               const userDetailData = userDoc.data();
               Object.assign(userData, {
+                email: userDetailData.email || userData.email || '',
                 phoneNumber: userDetailData.phoneNumber || '',
                 birthDate: userDetailData.birthDate || '',
                 gender: userDetailData.gender || '',
@@ -834,7 +854,7 @@ function MyPageContent() {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-blue-200">이메일</span>
-                        <span className="text-blue-100">{user.email}</span>
+                        <span className="text-blue-100">{user.email || '정보 없음'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-200">가입일</span>
@@ -889,7 +909,7 @@ function MyPageContent() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-200">직업</span>
-                        <span className="text-blue-100">{user.occupation || '정보 없음'}</span>
+                        <span className="text-blue-100">{formatOccupation(user.occupation)}</span>
                       </div>
                     </div>
                   </div>
