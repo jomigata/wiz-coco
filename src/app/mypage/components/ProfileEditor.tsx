@@ -25,11 +25,19 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
   // 폼 상태
   const [formData, setFormData] = useState({
     displayName: '',
+    reportDisplayName: '',
     email: '',
     phoneNumber: '',
     birthDate: '',
     gender: '',
     occupation: '',
+    practiceType: 'solo',
+    teamSharingEnabled: false,
+    specialties: '',
+    clientFocus: '',
+    reportSignature: '',
+    shareOrganizationInReport: true,
+    shareContactInReport: true,
     organizationName: '',
     organizationManager: '',
     organizationTel: '',
@@ -102,11 +110,21 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             
             setFormData({
               displayName: authUser.displayName || userData.displayName || '',
+              reportDisplayName: userData.reportDisplayName || '',
               email: userData.email || authUser.email || '',
               phoneNumber: userData.phoneNumber || '',
               birthDate: birthDate,
               gender: userData.gender || '',
               occupation: userData.occupation || '',
+              practiceType: userData.practiceType || 'solo',
+              teamSharingEnabled: Boolean(userData.teamSharingEnabled),
+              specialties: userData.specialties || '',
+              clientFocus: userData.clientFocus || '',
+              reportSignature: userData.reportSignature || '',
+              shareOrganizationInReport:
+                userData.shareOrganizationInReport === undefined ? true : Boolean(userData.shareOrganizationInReport),
+              shareContactInReport:
+                userData.shareContactInReport === undefined ? true : Boolean(userData.shareContactInReport),
               organizationName: userData.organizationName || userData.companyName || '',
               organizationManager: userData.organizationManager || userData.managerName || '',
               organizationTel: userData.organizationTel || userData.tel || '',
@@ -120,11 +138,19 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             // Firestore에 데이터가 없으면 기본값 설정
             setFormData({
               displayName: authUser.displayName || '',
+              reportDisplayName: '',
               email: authUser.email || '',
               phoneNumber: '',
               birthDate: '',
               gender: '',
               occupation: '',
+              practiceType: 'solo',
+              teamSharingEnabled: false,
+              specialties: '',
+              clientFocus: '',
+              reportSignature: '',
+              shareOrganizationInReport: true,
+              shareContactInReport: true,
               organizationName: '',
               organizationManager: '',
               organizationTel: '',
@@ -140,11 +166,19 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
           // 오류 발생 시 기본값 설정
           setFormData({
             displayName: authUser.displayName || '',
+            reportDisplayName: '',
             email: '',
             phoneNumber: '',
             birthDate: '',
             gender: '',
             occupation: '',
+            practiceType: 'solo',
+            teamSharingEnabled: false,
+            specialties: '',
+            clientFocus: '',
+            reportSignature: '',
+            shareOrganizationInReport: true,
+            shareContactInReport: true,
             organizationName: '',
             organizationManager: '',
             organizationTel: '',
@@ -171,6 +205,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
     }));
   };
 
@@ -282,6 +324,10 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       // 이메일/직업은 비워두면 기존 값 유지(삭제 방지)
       const safeEmail = (formData.email || '').trim();
       const safeOccupation = (formData.occupation || '').trim();
+      const safeReportDisplayName = (formData.reportDisplayName || '').trim();
+      const safeSpecialties = (formData.specialties || '').trim();
+      const safeClientFocus = (formData.clientFocus || '').trim();
+      const safeReportSignature = (formData.reportSignature || '').trim();
       const safeOrgName = (formData.organizationName || '').trim();
       const safeOrgManager = (formData.organizationManager || '').trim();
       const safeOrgTel = (formData.organizationTel || '').trim();
@@ -292,11 +338,19 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
       const writeData = {
         displayName: formData.displayName,
+        reportDisplayName: safeReportDisplayName,
         ...(safeEmail ? { email: safeEmail } : {}),
         phoneNumber: formData.phoneNumber,
         birthDate: formData.birthDate,
         gender: formData.gender,
         ...(safeOccupation ? { occupation: safeOccupation } : {}),
+        practiceType: formData.practiceType,
+        teamSharingEnabled: Boolean(formData.teamSharingEnabled),
+        specialties: safeSpecialties,
+        clientFocus: safeClientFocus,
+        reportSignature: safeReportSignature,
+        shareOrganizationInReport: Boolean(formData.shareOrganizationInReport),
+        shareContactInReport: Boolean(formData.shareContactInReport),
         organizationName: safeOrgName,
         organizationManager: safeOrgManager,
         organizationTel: safeOrgTel,
@@ -555,6 +609,23 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                   </div>
                   
                   <div>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">리포트 표기명</label>
+                    <input
+                      type="text"
+                      name="reportDisplayName"
+                      value={formData.reportDisplayName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      placeholder="예: 이나리 상담사 / 에필테크 상담센터"
+                    />
+                    <p className="mt-2 text-xs text-white/60">
+                      소비자용 리포트와 안내 화면에 노출할 이름입니다. 비워두면 이름을 사용합니다.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <label className="block text-sm font-medium text-emerald-300 mb-2">이메일(개인)</label>
                     <input
                       type="email"
@@ -568,9 +639,6 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       로그인 계정의 이메일과 별개로, 연락/결과 안내용 이메일을 저장합니다.
                     </p>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-emerald-300 mb-2">전화번호</label>
                     <input
@@ -582,7 +650,9 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       placeholder="전화번호를 입력하세요"
                     />
                   </div>
-                  
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                      <div className="relative">
                      <label className="block text-sm font-medium text-emerald-300 mb-2">생년월일</label>
                      <div 
@@ -860,7 +930,36 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
                 {isCounselor(authUser?.role) && (
                   <div className="space-y-4 pt-2">
-                    <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">회사/기관 정보</h3>
+                    <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">상담/운영 정보</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">운영 형태</label>
+                        <select
+                          name="practiceType"
+                          value={formData.practiceType}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          style={{ color: 'white' }}
+                        >
+                          <option value="solo" style={{ backgroundColor: '#1e293b', color: 'white' }}>1인 상담/센터 운영</option>
+                          <option value="organization" style={{ backgroundColor: '#1e293b', color: 'white' }}>조직/기업 운영</option>
+                        </select>
+                      </div>
+                      <label className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white">
+                        <input
+                          type="checkbox"
+                          name="teamSharingEnabled"
+                          checked={formData.teamSharingEnabled}
+                          onChange={handleCheckboxChange}
+                          className="rounded text-emerald-500"
+                        />
+                        <span>
+                          <span className="block font-medium">팀 정보 공유 사용</span>
+                          <span className="block text-xs text-white/60">상담사/사원과 운영 정보를 공유하는 조직형 운영에 적합합니다.</span>
+                        </span>
+                      </label>
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -883,6 +982,31 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="담당자명을 입력하세요"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">전문 영역</label>
+                        <textarea
+                          name="specialties"
+                          value={formData.specialties}
+                          onChange={handleInputChange}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                          placeholder="예: 청소년 상담, 직무스트레스, 조직 적응, 심리검사 해석"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">주요 대상/활용 분야</label>
+                        <textarea
+                          name="clientFocus"
+                          value={formData.clientFocus}
+                          onChange={handleInputChange}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                          placeholder="예: 임직원 심리검사, 내담자 치료 보조, 부모 상담, 그룹 프로그램"
                         />
                       </div>
                     </div>
@@ -939,14 +1063,60 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
                     <div>
                       <label className="block text-sm font-medium text-emerald-300 mb-2">주소</label>
-                      <input
-                        type="text"
+                      <textarea
                         name="organizationAddress"
                         value={formData.organizationAddress}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
                         placeholder="회사/기관 주소를 입력하세요"
                       />
+                    </div>
+
+                    <div className="space-y-4 pt-2">
+                      <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">리포트/공유 설정</h3>
+
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">리포트 서명</label>
+                        <textarea
+                          name="reportSignature"
+                          value={formData.reportSignature}
+                          onChange={handleInputChange}
+                          rows={4}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                          placeholder="예: 이나리 상담사 | 에필테크 상담센터 | 필요 시 추가 상담 가능합니다."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white">
+                          <input
+                            type="checkbox"
+                            name="shareOrganizationInReport"
+                            checked={formData.shareOrganizationInReport}
+                            onChange={handleCheckboxChange}
+                            className="rounded text-emerald-500"
+                          />
+                          <span>
+                            <span className="block font-medium">회사/기관 정보 리포트 노출</span>
+                            <span className="block text-xs text-white/60">소비자용 결과 리포트에 기관 정보를 함께 표시합니다.</span>
+                          </span>
+                        </label>
+
+                        <label className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white">
+                          <input
+                            type="checkbox"
+                            name="shareContactInReport"
+                            checked={formData.shareContactInReport}
+                            onChange={handleCheckboxChange}
+                            className="rounded text-emerald-500"
+                          />
+                          <span>
+                            <span className="block font-medium">연락처 리포트 노출</span>
+                            <span className="block text-xs text-white/60">전화번호/이메일 등 연락 수단을 리포트에 함께 제공합니다.</span>
+                          </span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}

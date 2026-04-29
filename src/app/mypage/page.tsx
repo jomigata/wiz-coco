@@ -53,6 +53,14 @@ interface User {
   organizationFax?: string;
   organizationEmail?: string;
   organizationAddress?: string;
+  reportDisplayName?: string;
+  practiceType?: 'solo' | 'organization';
+  teamSharingEnabled?: boolean;
+  specialties?: string;
+  clientFocus?: string;
+  reportSignature?: string;
+  shareOrganizationInReport?: boolean;
+  shareContactInReport?: boolean;
 }
 
 interface TestRecord {
@@ -100,6 +108,27 @@ function formatOccupation(v: unknown): string {
   const key = typeof v === 'string' ? v.trim() : '';
   if (!key) return '정보 없음';
   return OCCUPATION_LABELS[key] || key;
+}
+
+function formatRoleLabel(role?: string): string {
+  if (role === 'admin') return '관리자';
+  if (role === 'counselor') return '상담사';
+  return '내담자';
+}
+
+function formatPracticeType(v?: string): string {
+  if (v === 'organization') return '조직/기업 운영';
+  if (v === 'solo') return '1인 상담/센터 운영';
+  return '미설정';
+}
+
+function formatBooleanLabel(v?: boolean, yes = '예', no = '아니오'): string {
+  return v ? yes : no;
+}
+
+function formatMultilineText(v?: string, empty = '정보 없음'): string {
+  const s = (v || '').trim();
+  return s || empty;
 }
 
 function normalizeDateValue(v: unknown): string {
@@ -314,6 +343,14 @@ function MyPageContent() {
                 birthDate: userDetailData.birthDate || '',
                 gender: userDetailData.gender || '',
                 occupation: userDetailData.occupation || '',
+                reportDisplayName: userDetailData.reportDisplayName || '',
+                practiceType: userDetailData.practiceType || 'solo',
+                teamSharingEnabled: Boolean(userDetailData.teamSharingEnabled),
+                specialties: userDetailData.specialties || '',
+                clientFocus: userDetailData.clientFocus || '',
+                reportSignature: userDetailData.reportSignature || '',
+                shareOrganizationInReport: Boolean(userDetailData.shareOrganizationInReport),
+                shareContactInReport: Boolean(userDetailData.shareContactInReport),
                 interests: userDetailData.interests || [],
                 bio: userDetailData.bio || '',
                 organizationName: userDetailData.organizationName || userDetailData.companyName || '',
@@ -867,7 +904,7 @@ function MyPageContent() {
                   </p>
                 </motion.div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   {/* 계정 정보 그룹 */}
                   <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                     <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
@@ -894,12 +931,12 @@ function MyPageContent() {
                     </div>
                   </div>
 
-                  {/* 개인 정보 그룹 */}
+                  {/* 프로필 요약 */}
                   <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 relative">
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-blue-100 flex items-center">
                         <UserIcon className="w-5 h-5 mr-2 text-purple-400" />
-                        개인 정보
+                        프로필 요약
                       </h3>
                       <button
                         onClick={() => setShowProfileEditor(true)}
@@ -910,6 +947,46 @@ function MyPageContent() {
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between">
+                        <span className="text-blue-200">회원 유형</span>
+                        <span className="text-blue-100">{formatRoleLabel(user.role)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-200">리포트 표기명</span>
+                        <span className="text-blue-100">{user.reportDisplayName || user.name || '정보 없음'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-200">운영 형태</span>
+                        <span className="text-blue-100">
+                          {isCounselor(firebaseUser?.role || user.role) ? formatPracticeType(user.practiceType) : '개인 이용자'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-200">팀 정보 공유</span>
+                        <span className="text-blue-100">
+                          {isCounselor(firebaseUser?.role || user.role)
+                            ? formatBooleanLabel(user.teamSharingEnabled, '공유 가능', '개별 운영')
+                            : '해당 없음'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-200">리포트 연락처 노출</span>
+                        <span className="text-blue-100">
+                          {isCounselor(firebaseUser?.role || user.role)
+                            ? formatBooleanLabel(user.shareContactInReport, '노출', '비노출')
+                            : '기본'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 개인 정보 그룹 */}
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+                    <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
+                      <HeartIcon className="w-5 h-5 mr-2 text-purple-400" />
+                      개인 기본 정보
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
                         <span className="text-blue-200">이름</span>
                         <span className="text-blue-100">{user.name || '정보 없음'}</span>
                       </div>
@@ -918,20 +995,24 @@ function MyPageContent() {
                         <span className="text-blue-100">{user.phoneNumber || '정보 없음'}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span className="text-blue-200">이메일(개인)</span>
+                        <span className="text-blue-100">{user.email || '정보 없음'}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-blue-200">생년월일</span>
                         <span className="text-blue-100">{user.birthDate || '정보 없음'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-200">성별</span>
                         <span className="text-blue-100">
-                          {user.gender === 'male' ? '남성' : 
-                           user.gender === 'female' ? '여성' : 
-                           user.gender === 'other' ? '기타' : 
+                          {user.gender === 'male' ? '남성' :
+                           user.gender === 'female' ? '여성' :
+                           user.gender === 'other' ? '기타' :
                            '정보 없음'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-blue-200">직업</span>
+                        <span className="text-blue-200">직업/배경</span>
                         <span className="text-blue-100">{formatOccupation(user.occupation)}</span>
                       </div>
                     </div>
@@ -939,11 +1020,12 @@ function MyPageContent() {
 
                   {/* 회사/기관 정보 그룹 (상담사/관리자만 표시) */}
                   {isCounselor(firebaseUser?.role || user.role) && (
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 md:col-span-2">
+                    <>
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                       <div className="flex justify-between items-start mb-4">
                         <h3 className="text-lg font-semibold text-blue-100 flex items-center">
                           <FaBuilding className="w-5 h-5 mr-2 text-purple-400" />
-                          회사/기관 정보
+                          상담/운영 정보
                         </h3>
                         <button
                           onClick={() => setShowProfileEditor(true)}
@@ -953,6 +1035,10 @@ function MyPageContent() {
                         </button>
                       </div>
                       <div className="space-y-3">
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">운영 형태</span>
+                          <span className="text-blue-100 text-right break-all">{formatPracticeType(user.practiceType)}</span>
+                        </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-blue-200 shrink-0">회사/기관명</span>
                           <span className="text-blue-100 text-right break-all">
@@ -997,6 +1083,52 @@ function MyPageContent() {
                         </div>
                       </div>
                     </div>
+
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+                      <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
+                        <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-purple-400" />
+                        리포트/공유 설정
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">리포트 표기명</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.reportDisplayName?.trim() ? user.reportDisplayName : (user.name || '정보 없음')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">전문 영역</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {formatMultilineText(user.specialties)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">주요 대상/활용</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {formatMultilineText(user.clientFocus)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">기관 정보 리포트 노출</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {formatBooleanLabel(user.shareOrganizationInReport, '노출', '비노출')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">연락처 리포트 노출</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {formatBooleanLabel(user.shareContactInReport, '노출', '비노출')}
+                          </span>
+                        </div>
+                        <div className="pt-2 border-t border-white/10">
+                          <div className="text-blue-200 mb-2">리포트 서명</div>
+                          <div className="text-blue-100 whitespace-pre-wrap leading-relaxed">
+                            {formatMultilineText(user.reportSignature, '설정된 서명이 없습니다.')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    </>
                   )}
                 </div>
               </motion.div>
