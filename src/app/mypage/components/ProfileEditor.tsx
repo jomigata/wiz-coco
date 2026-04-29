@@ -555,7 +555,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-emerald-300 mb-2">이메일</label>
+                    <label className="block text-sm font-medium text-emerald-300 mb-2">이메일(개인)</label>
                     <input
                       type="email"
                       name="email"
@@ -925,7 +925,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-emerald-300 mb-2">이메일</label>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">이메일(회사/기관)</label>
                         <input
                           type="email"
                           name="organizationEmail"
