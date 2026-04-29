@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import Link from 'next/link';
-import { FaUser, FaClipboard, FaBrain, FaClock, FaKey, FaHeart, FaComment } from 'react-icons/fa';
+import { FaUser, FaClipboard, FaBrain, FaClock, FaKey, FaHeart, FaComment, FaBuilding } from 'react-icons/fa';
 import { getItem, setItem, getAuthState, setAuthState } from '@/utils/localStorageManager';
 import { setupSyncMonitor, onSyncStatusChange, SyncStatus } from '@/utils/syncService';
 import dynamic from 'next/dynamic';
@@ -15,6 +15,7 @@ import { useCounselorConnection } from '@/hooks/useCounselorConnection';
 import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
 import { doc, getDoc } from 'firebase/firestore';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { isCounselor } from '@/utils/roleUtils';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -44,6 +45,10 @@ interface User {
   occupation?: string;
   interests?: string[];
   bio?: string;
+  // 상담사/관리자 전용: 회사/기관 정보 (users/{uid} 문서 기반, 없으면 미표시/정보 없음)
+  organizationName?: string;
+  organizationDepartment?: string;
+  organizationPosition?: string;
 }
 
 interface TestRecord {
@@ -307,6 +312,9 @@ function MyPageContent() {
                 occupation: userDetailData.occupation || '',
                 interests: userDetailData.interests || [],
                 bio: userDetailData.bio || '',
+                organizationName: userDetailData.organizationName || userDetailData.companyName || '',
+                organizationDepartment: userDetailData.organizationDepartment || userDetailData.department || '',
+                organizationPosition: userDetailData.organizationPosition || userDetailData.position || '',
                 createdAt:
                   normalizeDateValue(userDetailData.createdAt) ||
                   firebaseUser.metadata?.creationTime ||
@@ -920,6 +928,39 @@ function MyPageContent() {
                       </div>
                     </div>
                   </div>
+
+                  {/* 회사/기관 정보 그룹 (상담사/관리자만 표시) */}
+                  {isCounselor(firebaseUser?.role || user.role) && (
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 md:col-span-2">
+                      <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
+                        <FaBuilding className="w-5 h-5 mr-2 text-purple-400" />
+                        회사/기관 정보
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">회사/기관명</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationName?.trim() ? user.organizationName : '정보 없음'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">부서</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationDepartment?.trim() ? user.organizationDepartment : '정보 없음'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">직책</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationPosition?.trim() ? user.organizationPosition : '정보 없음'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-xs text-blue-300/80">
+                        상담사/관리자 계정에만 표시됩니다. (프로필 문서에 값이 없으면 “정보 없음”으로 표시)
+                      </p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
