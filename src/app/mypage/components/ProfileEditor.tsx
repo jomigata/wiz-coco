@@ -7,6 +7,7 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { updateProfile, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
+import { isCounselor } from '@/utils/roleUtils';
 
 interface ProfileEditorProps {
   onClose: () => void;
@@ -28,7 +29,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
     phoneNumber: '',
     birthDate: '',
     gender: '',
-    occupation: ''
+    occupation: '',
+    organizationName: '',
+    organizationManager: '',
+    organizationTel: '',
+    organizationMobile: '',
+    organizationFax: '',
+    organizationEmail: '',
+    organizationAddress: '',
   });
 
   const OCCUPATION_OPTIONS: Array<{ value: string; label: string }> = [
@@ -98,7 +106,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               phoneNumber: userData.phoneNumber || '',
               birthDate: birthDate,
               gender: userData.gender || '',
-              occupation: userData.occupation || ''
+              occupation: userData.occupation || '',
+              organizationName: userData.organizationName || userData.companyName || '',
+              organizationManager: userData.organizationManager || userData.managerName || '',
+              organizationTel: userData.organizationTel || userData.tel || '',
+              organizationMobile: userData.organizationMobile || userData.mobile || '',
+              organizationFax: userData.organizationFax || userData.fax || '',
+              organizationEmail: userData.organizationEmail || '',
+              organizationAddress: userData.organizationAddress || userData.address || '',
             });
             console.log('사용자 데이터 로드 완료:', { displayName: authUser.displayName, birthDate });
           } else {
@@ -109,7 +124,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
               phoneNumber: '',
               birthDate: '',
               gender: '',
-              occupation: ''
+              occupation: '',
+              organizationName: '',
+              organizationManager: '',
+              organizationTel: '',
+              organizationMobile: '',
+              organizationFax: '',
+              organizationEmail: '',
+              organizationAddress: '',
             });
             console.log('새 사용자 기본값 설정 완료');
           }
@@ -122,7 +144,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             phoneNumber: '',
             birthDate: '',
             gender: '',
-            occupation: ''
+            occupation: '',
+            organizationName: '',
+            organizationManager: '',
+            organizationTel: '',
+            organizationMobile: '',
+            organizationFax: '',
+            organizationEmail: '',
+            organizationAddress: '',
           });
         } finally {
           setIsDataLoading(false); // 데이터 로딩 완료
@@ -253,6 +282,13 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
       // 이메일/직업은 비워두면 기존 값 유지(삭제 방지)
       const safeEmail = (formData.email || '').trim();
       const safeOccupation = (formData.occupation || '').trim();
+      const safeOrgName = (formData.organizationName || '').trim();
+      const safeOrgManager = (formData.organizationManager || '').trim();
+      const safeOrgTel = (formData.organizationTel || '').trim();
+      const safeOrgMobile = (formData.organizationMobile || '').trim();
+      const safeOrgFax = (formData.organizationFax || '').trim();
+      const safeOrgEmail = (formData.organizationEmail || '').trim();
+      const safeOrgAddress = (formData.organizationAddress || '').trim();
 
       const writeData = {
         displayName: formData.displayName,
@@ -261,6 +297,13 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
         birthDate: formData.birthDate,
         gender: formData.gender,
         ...(safeOccupation ? { occupation: safeOccupation } : {}),
+        organizationName: safeOrgName,
+        organizationManager: safeOrgManager,
+        organizationTel: safeOrgTel,
+        organizationMobile: safeOrgMobile,
+        organizationFax: safeOrgFax,
+        organizationEmail: safeOrgEmail,
+        organizationAddress: safeOrgAddress,
         updatedAt: serverTimestamp(),
         uid: userId,
         lastModified: new Date().toISOString(),
@@ -814,6 +857,99 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                     </p>
                   </div>
                 </div>
+
+                {isCounselor(authUser?.role) && (
+                  <div className="space-y-4 pt-2">
+                    <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">회사/기관 정보</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">회사/기관명</label>
+                        <input
+                          type="text"
+                          name="organizationName"
+                          value={formData.organizationName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          placeholder="회사 또는 기관명을 입력하세요"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">담당자</label>
+                        <input
+                          type="text"
+                          name="organizationManager"
+                          value={formData.organizationManager}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          placeholder="담당자명을 입력하세요"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">전화번호</label>
+                        <input
+                          type="tel"
+                          name="organizationTel"
+                          value={formData.organizationTel}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          placeholder="대표 전화번호를 입력하세요"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">핸드폰번호</label>
+                        <input
+                          type="tel"
+                          name="organizationMobile"
+                          value={formData.organizationMobile}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          placeholder="담당자 핸드폰번호를 입력하세요"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">팩스번호</label>
+                        <input
+                          type="text"
+                          name="organizationFax"
+                          value={formData.organizationFax}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          placeholder="팩스번호를 입력하세요"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-emerald-300 mb-2">이메일</label>
+                        <input
+                          type="email"
+                          name="organizationEmail"
+                          value={formData.organizationEmail}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          placeholder="기관 이메일을 입력하세요"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-emerald-300 mb-2">주소</label>
+                      <input
+                        type="text"
+                        name="organizationAddress"
+                        value={formData.organizationAddress}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                        placeholder="회사/기관 주소를 입력하세요"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
 

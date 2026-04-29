@@ -45,10 +45,14 @@ interface User {
   occupation?: string;
   interests?: string[];
   bio?: string;
-  // 상담사/관리자 전용: 회사/기관 정보 (users/{uid} 문서 기반, 없으면 미표시/정보 없음)
+  // 상담사/관리자 전용: 회사/기관 정보
   organizationName?: string;
-  organizationDepartment?: string;
-  organizationPosition?: string;
+  organizationManager?: string;
+  organizationTel?: string;
+  organizationMobile?: string;
+  organizationFax?: string;
+  organizationEmail?: string;
+  organizationAddress?: string;
 }
 
 interface TestRecord {
@@ -313,8 +317,12 @@ function MyPageContent() {
                 interests: userDetailData.interests || [],
                 bio: userDetailData.bio || '',
                 organizationName: userDetailData.organizationName || userDetailData.companyName || '',
-                organizationDepartment: userDetailData.organizationDepartment || userDetailData.department || '',
-                organizationPosition: userDetailData.organizationPosition || userDetailData.position || '',
+                organizationManager: userDetailData.organizationManager || userDetailData.managerName || '',
+                organizationTel: userDetailData.organizationTel || userDetailData.tel || '',
+                organizationMobile: userDetailData.organizationMobile || userDetailData.mobile || '',
+                organizationFax: userDetailData.organizationFax || userDetailData.fax || '',
+                organizationEmail: userDetailData.organizationEmail || '',
+                organizationAddress: userDetailData.organizationAddress || userDetailData.address || '',
                 createdAt:
                   normalizeDateValue(userDetailData.createdAt) ||
                   firebaseUser.metadata?.creationTime ||
@@ -944,15 +952,39 @@ function MyPageContent() {
                           </span>
                         </div>
                         <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">부서</span>
+                          <span className="text-blue-200 shrink-0">담당자</span>
                           <span className="text-blue-100 text-right break-all">
-                            {user.organizationDepartment?.trim() ? user.organizationDepartment : '정보 없음'}
+                            {user.organizationManager?.trim() ? user.organizationManager : '정보 없음'}
                           </span>
                         </div>
                         <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">직책</span>
+                          <span className="text-blue-200 shrink-0">전화번호</span>
                           <span className="text-blue-100 text-right break-all">
-                            {user.organizationPosition?.trim() ? user.organizationPosition : '정보 없음'}
+                            {user.organizationTel?.trim() ? user.organizationTel : '정보 없음'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">핸드폰번호</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationMobile?.trim() ? user.organizationMobile : '정보 없음'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">팩스번호</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationFax?.trim() ? user.organizationFax : '정보 없음'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">이메일</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationEmail?.trim() ? user.organizationEmail : '정보 없음'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-blue-200 shrink-0">주소</span>
+                          <span className="text-blue-100 text-right break-all">
+                            {user.organizationAddress?.trim() ? user.organizationAddress : '정보 없음'}
                           </span>
                         </div>
                       </div>
