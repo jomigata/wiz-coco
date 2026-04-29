@@ -940,10 +940,18 @@ function MyPageContent() {
                   {/* 회사/기관 정보 그룹 (상담사/관리자만 표시) */}
                   {isCounselor(firebaseUser?.role || user.role) && (
                     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 md:col-span-2">
-                      <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                        <FaBuilding className="w-5 h-5 mr-2 text-purple-400" />
-                        회사/기관 정보
-                      </h3>
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-lg font-semibold text-blue-100 flex items-center">
+                          <FaBuilding className="w-5 h-5 mr-2 text-purple-400" />
+                          회사/기관 정보
+                        </h3>
+                        <button
+                          onClick={() => setShowProfileEditor(true)}
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm"
+                        >
+                          개인정보 수정
+                        </button>
+                      </div>
                       <div className="space-y-3">
                         <div className="flex justify-between gap-4">
                           <span className="text-blue-200 shrink-0">회사/기관명</span>
@@ -988,9 +996,6 @@ function MyPageContent() {
                           </span>
                         </div>
                       </div>
-                      <p className="mt-3 text-xs text-blue-300/80">
-                        상담사/관리자 계정에만 표시됩니다. (프로필 문서에 값이 없으면 “정보 없음”으로 표시)
-                      </p>
                     </div>
                   )}
                 </div>
