@@ -1,6 +1,7 @@
 # 상담사: POST/GET assessments, GET progress | 내담자: POST public lookup by accessCode
 from flask import Blueprint, request, jsonify, g
 from firebase_admin.firestore import SERVER_TIMESTAMP
+from datetime import datetime, timezone
 
 from firebase_init import get_firestore
 from auth_middleware import require_counselor
@@ -14,6 +15,29 @@ MSG_PUBLIC_NOT_FOUND = (
     "요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다."
 )
 MSG_ACCESS_CODE_FORMAT = "검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다."
+MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+
+
+def _normalize_usage_end_date(raw):
+    s = str(raw or "").strip()
+    if not s:
+        return ""
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date().isoformat()
+    except Exception:
+        return None
+
+
+def _is_assessment_expired(d: dict) -> bool:
+    usage_end = str(d.get("usageEndDate") or "").strip()
+    if not usage_end:
+        return False
+    try:
+        end_date = datetime.strptime(usage_end, "%Y-%m-%d").date()
+    except Exception:
+        return False
+    today_utc = datetime.now(timezone.utc).date()
+    return today_utc > end_date
 
 
 def _serialize_doc(doc):
@@ -47,6 +71,7 @@ def create_assessment():
     if target_audience not in ("개인", "그룹"):
         target_audience = "개인"
     welcome_message = (body.get("welcomeMessage") or "").strip()
+    usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
     test_list = body.get("testList") or []
     if not isinstance(test_list, list):
         test_list = []
@@ -57,6 +82,8 @@ def create_assessment():
     ]
     if not title:
         return jsonify({"error": "Bad Request", "message": "title required"}), 400
+    if usage_end_date is None:
+        return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
     access_code = generate_unique_access_code()
     db = get_firestore()
     data = {
@@ -65,6 +92,7 @@ def create_assessment():
         "title": title,
         "targetAudience": target_audience,
         "welcomeMessage": welcome_message,
+        "usageEndDate": usage_end_date or "",
         "testList": test_list,
         "createdAt": SERVER_TIMESTAMP,
         "status": "active",
@@ -191,6 +219,7 @@ def update_assessment(assessment_id):
     if target_audience not in ("개인", "그룹"):
         target_audience = "개인"
     welcome_message = (body.get("welcomeMessage") or "").strip()
+    usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
     test_list = body.get("testList") or []
     if not isinstance(test_list, list):
         test_list = []
@@ -201,6 +230,8 @@ def update_assessment(assessment_id):
     ]
     if not title:
         return jsonify({"error": "Bad Request", "message": "title required"}), 400
+    if usage_end_date is None:
+        return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
 
     db = get_firestore()
     ref, doc = _get_owned_assessment(db, assessment_id)
@@ -212,6 +243,7 @@ def update_assessment(assessment_id):
             "title": title,
             "targetAudience": target_audience,
             "welcomeMessage": welcome_message,
+            "usageEndDate": usage_end_date or "",
             "testList": test_list,
             "updatedAt": SERVER_TIMESTAMP,
         }
@@ -301,6 +333,7 @@ def _public_json(doc, d):
         "assessmentId": doc.id,
         "title": d.get("title", ""),
         "welcomeMessage": d.get("welcomeMessage", ""),
+        "usageEndDate": d.get("usageEndDate", ""),
         "testList": d.get("testList", []),
     }
 
@@ -325,6 +358,8 @@ def post_public_lookup():
         return jsonify({"error": "Not Found", "message": MSG_PUBLIC_NOT_FOUND}), 404
     doc = refs[0]
     d = doc.to_dict()
+    if _is_assessment_expired(d):
+        return jsonify({"error": "Gone", "message": MSG_ACCESS_CODE_EXPIRED}), 410
     return jsonify(_public_json(doc, d))
 
 
@@ -347,4 +382,6 @@ def get_public(access_code):
         return jsonify({"error": "Not Found", "message": MSG_PUBLIC_NOT_FOUND}), 404
     doc = refs[0]
     d = doc.to_dict()
+    if _is_assessment_expired(d):
+        return jsonify({"error": "Gone", "message": MSG_ACCESS_CODE_EXPIRED}), 410
     return jsonify(_public_json(doc, d))

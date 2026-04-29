@@ -4,7 +4,7 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { submitResult } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, submitResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
@@ -33,6 +33,8 @@ export default function TestRunnerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [accessCheckLoading, setAccessCheckLoading] = useState(true);
+  const [accessCheckError, setAccessCheckError] = useState('');
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
@@ -69,6 +71,26 @@ export default function TestRunnerPage() {
       setTitle(testId);
     }
   }, [testId]);
+
+  useEffect(() => {
+    const run = async () => {
+      if (!code || !isValidAccessCodeInput(code)) {
+        setAccessCheckError('잘못된 검사코드입니다.');
+        setAccessCheckLoading(false);
+        return;
+      }
+      setAccessCheckLoading(true);
+      setAccessCheckError('');
+      try {
+        await lookupPublicAssessment(code);
+      } catch (err) {
+        setAccessCheckError(err instanceof Error ? err.message : '검사코드를 사용할 수 없습니다.');
+      } finally {
+        setAccessCheckLoading(false);
+      }
+    };
+    void run();
+  }, [code]);
 
   const isLoggedIn = !authLoading && !!user;
 
@@ -116,6 +138,39 @@ export default function TestRunnerPage() {
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">잘못된 접근입니다.</p>
+            <Link href="/join" className="text-blue-400 hover:text-blue-300">
+              검사 코드 다시 입력
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessCheckLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Navigation />
+        </div>
+        <div className="pt-24 px-4">
+          <div className="max-w-lg mx-auto text-center">
+            <p className="text-slate-300">검사코드 사용 가능 여부를 확인 중입니다…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessCheckError) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Navigation />
+        </div>
+        <div className="pt-24 px-4">
+          <div className="max-w-lg mx-auto text-center">
+            <p className="text-red-400 mb-4">{accessCheckError}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
               검사 코드 다시 입력
             </Link>

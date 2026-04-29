@@ -28,6 +28,18 @@ function formatDate(iso: string | undefined): string {
   }
 }
 
+function formatUsageEndDate(iso: string | undefined): string {
+  const s = (iso || '').trim();
+  if (!s) return '무기한';
+  try {
+    const d = new Date(`${s}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('ko-KR');
+  } catch {
+    return s;
+  }
+}
+
 const PROGRESS_TOOLTIP =
   '(-앞 숫자): 세트 검사를 모두 완료하지 않은 이메일 수 · (뒤 숫자): 세트 전부 완료한 이메일 수';
 
@@ -139,6 +151,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     (-미전체완료 / 전체완료)
                   </span>
                 </th>
+                <th className="px-4 py-3 text-slate-300 font-medium">사용최종일</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">생성일</th>
                 <th className="px-4 py-3 text-slate-300 font-medium">관리</th>
               </tr>
@@ -168,6 +181,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <span className="text-cyan-300 tabular-nums">{completeAll}</span>
                       <span className="text-slate-400">)</span>
                     </td>
+                    <td className="px-4 py-3 text-slate-300 text-sm">{formatUsageEndDate(a.usageEndDate)}</td>
                     <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(a.createdAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

@@ -21,6 +21,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   const [title, setTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState<'개인' | '그룹'>('개인');
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [usageEndDate, setUsageEndDate] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +41,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         setTitle(data.title || '');
         setTargetAudience((data.targetAudience === '그룹' ? '그룹' : '개인') as '개인' | '그룹');
         setWelcomeMessage(data.welcomeMessage || '');
+        setUsageEndDate((data.usageEndDate || '').trim());
         const ids = new Set((data.testList || []).map((t) => t.testId).filter(Boolean));
         setSelectedTestIds(ids);
       })
@@ -82,6 +84,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         title: trimmedTitle,
         targetAudience,
         welcomeMessage: welcomeMessage.trim(),
+        usageEndDate: usageEndDate.trim(),
         testList,
       });
       router.push('/counselor/assessments');
@@ -170,6 +173,21 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
             <span className="text-white">그룹</span>
           </label>
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-300 mb-2">
+          검사코드 사용최종일 (선택)
+        </label>
+        <input
+          id="usageEndDate"
+          type="date"
+          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={usageEndDate}
+          onChange={(e) => setUsageEndDate(e.target.value)}
+          disabled={loading}
+        />
+        <p className="text-slate-500 text-xs mt-1">비워두면 무기한 사용 가능합니다.</p>
       </div>
 
       <div>

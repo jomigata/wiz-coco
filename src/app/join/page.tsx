@@ -58,6 +58,7 @@ export default function AccessCodeInputPage() {
             assessmentId: data.assessmentId,
             title: data.title,
             welcomeMessage: data.welcomeMessage,
+              usageEndDate: data.usageEndDate || '',
             testList: data.testList,
           })
         );

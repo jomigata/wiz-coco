@@ -1,6 +1,7 @@
 # 결과 제출/조회/수정/삭제 (POST, GET, PUT, DELETE)
 from flask import Blueprint, request, jsonify
 from firebase_admin.firestore import SERVER_TIMESTAMP
+from datetime import datetime, timezone
 
 from firebase_init import get_firestore
 from auth_middleware import get_bearer_uid, get_bearer_email_optional
@@ -11,6 +12,19 @@ from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
+MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+
+
+def _is_assessment_expired(d: dict) -> bool:
+    usage_end = str(d.get("usageEndDate") or "").strip()
+    if not usage_end:
+        return False
+    try:
+        end_date = datetime.strptime(usage_end, "%Y-%m-%d").date()
+    except Exception:
+        return False
+    today_utc = datetime.now(timezone.utc).date()
+    return today_utc > end_date
 
 
 def _get_assessment_or_404(db, assessment_id, counselor_uid=None):
@@ -77,6 +91,9 @@ def submit_result():
     if not ass_refs:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     ass_doc = ass_refs[0]
+    ass_data = ass_doc.to_dict() or {}
+    if _is_assessment_expired(ass_data):
+        return jsonify({"error": "Gone", "message": MSG_ACCESS_CODE_EXPIRED}), 410
     assessment_id = ass_doc.id
 
     result_data = compute_result_data(test_id, responses if isinstance(responses, (dict, list)) else {})

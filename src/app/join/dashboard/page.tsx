@@ -23,6 +23,18 @@ function DashboardLoading() {
   );
 }
 
+function formatUsageEndDateLabel(raw?: string): string {
+  const s = (raw || '').trim();
+  if (!s) return '무기한';
+  try {
+    const d = new Date(`${s}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('ko-KR');
+  } catch {
+    return s;
+  }
+}
+
 function JoinDashboardContent() {
   const searchParams = useSearchParams();
   const { user } = useFirebaseAuth();
@@ -60,6 +72,7 @@ function JoinDashboardContent() {
               assessmentId: data.assessmentId,
               title: data.title,
               welcomeMessage: data.welcomeMessage,
+              usageEndDate: data.usageEndDate || '',
               testList: data.testList,
             })
           );
@@ -147,6 +160,14 @@ function JoinDashboardContent() {
               <span className="text-slate-400">검사코드</span>
               <span className="mx-2 text-slate-600">|</span>
               <span className="font-mono text-cyan-300 tracking-wider">{formatAccessCodeDisplay(code)}</span>
+            </div>
+            <div className="text-sm text-slate-300 mb-4">
+              <span className="text-slate-400">사용최종일</span>
+              <span className="mx-2 text-slate-600">|</span>
+              <span className="text-cyan-200">{formatUsageEndDateLabel(assessment.usageEndDate)}</span>
+              {!assessment.usageEndDate ? (
+                <span className="ml-2 text-slate-500">(비워두면 무기한 사용)</span>
+              ) : null}
             </div>
             {assessment.welcomeMessage && (
               <p className="text-slate-300 whitespace-pre-wrap mb-6">{assessment.welcomeMessage}</p>

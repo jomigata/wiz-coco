@@ -39,6 +39,7 @@ export interface PublicAssessment {
   assessmentId: string;
   title: string;
   welcomeMessage: string;
+  usageEndDate?: string;
   testList: { testId: string; name: string }[];
 }
 
@@ -241,6 +242,7 @@ export interface CounselorAssessment {
   title: string;
   targetAudience: string;
   welcomeMessage: string;
+  usageEndDate?: string;
   testList: { testId: string; name: string }[];
   createdAt: string;
   status?: string;
@@ -268,6 +270,7 @@ export async function createAssessment(body: {
   title: string;
   targetAudience?: '개인' | '그룹';
   welcomeMessage?: string;
+  usageEndDate?: string;
   testList: { testId: string; name: string }[];
 }): Promise<{ assessmentId: string; accessCode: string }> {
   const token = await getCounselorToken();
@@ -282,6 +285,7 @@ export async function createAssessment(body: {
       title: (body.title || '').trim(),
       targetAudience: body.targetAudience || '개인',
       welcomeMessage: (body.welcomeMessage || '').trim(),
+      usageEndDate: (body.usageEndDate || '').trim(),
       testList: body.testList || [],
     }),
   });
@@ -313,6 +317,7 @@ export async function updateAssessment(
     title: string;
     targetAudience?: '개인' | '그룹';
     welcomeMessage?: string;
+    usageEndDate?: string;
     testList: { testId: string; name: string }[];
   }
 ): Promise<{ assessmentId: string; message: string }> {
@@ -328,6 +333,7 @@ export async function updateAssessment(
       title: (body.title || '').trim(),
       targetAudience: body.targetAudience || '개인',
       welcomeMessage: (body.welcomeMessage || '').trim(),
+      usageEndDate: (body.usageEndDate || '').trim(),
       testList: body.testList || [],
     }),
   });
