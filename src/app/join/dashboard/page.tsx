@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
-import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 
@@ -143,6 +143,11 @@ function JoinDashboardContent() {
         <main className="max-w-2xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{assessment.title}</h1>
+            <div className="text-sm text-slate-300 mb-4">
+              <span className="text-slate-400">검사코드</span>
+              <span className="mx-2 text-slate-600">|</span>
+              <span className="font-mono text-cyan-300 tracking-wider">{formatAccessCodeDisplay(code)}</span>
+            </div>
             {assessment.welcomeMessage && (
               <p className="text-slate-300 whitespace-pre-wrap mb-6">{assessment.welcomeMessage}</p>
             )}
