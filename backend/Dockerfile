@@ -21,5 +21,7 @@ COPY . .
 
 EXPOSE 5000
 
-CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 3 app:app
+# Cloud Run은 컨테이너당 동시 요청을 자체 관리하므로 worker 1개로 충분
+# (scale-out은 Cloud Run 인스턴스 증가로 처리)
+CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 1 --threads 8 --timeout 60 app:app
 

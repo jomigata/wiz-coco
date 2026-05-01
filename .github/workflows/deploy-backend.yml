@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
+# 연속 push 시 이전 실행 취소 → Cloud Build 분 낭비 방지
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
@@ -77,6 +82,12 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 5000 \
+            --min-instances=0 \
+            --max-instances=3 \
+            --memory=512Mi \
+            --cpu=1 \
+            --concurrency=80 \
+            --cpu-throttling \
             --project "${PROJECT_ID}"
 
       - name: 🔗 Output service URL

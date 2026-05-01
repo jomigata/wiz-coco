@@ -19,6 +19,11 @@ env:
   NODE_VERSION: '20.x'
   FIREBASE_PROJECT_ID: 'wiz-coco'
 
+# 같은 브랜치에 연속 push 시 이전 실행 취소 → Cloud Build/GitHub Actions 낭비 방지
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # 1단계: 코드 품질 검사 (30년 경력 풀스택 프로그래머 검토)
   code-quality:
@@ -471,68 +476,3 @@ jobs:
         echo "3. 빌드 오류 확인"
         echo ""
         echo "📞 지원: GitHub Issues 또는 개발팀 문의"
-
-  # 4단계: 성능 모니터링 (전문가 협업 검토)
-  performance:
-    name: 📊 성능 모니터링
-    needs: build
-    if: success()
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 코드 체크아웃
-      uses: actions/checkout@v4
-      
-    - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        
-    - name: 📦 의존성 설치
-      run: |
-        echo "📦 의존성 설치 시작..."
-        echo "=================================="
-        
-        # npm 캐시 정리
-        npm cache clean --force
-        
-        # 네트워크 재시도 설정
-        npm config set registry https://registry.npmjs.org/
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
-        npm config set fetch-retries 5
-        
-        # 의존성 설치 (재시도 포함)
-        for i in {1..3}; do
-          echo "🔄 시도 $i/3..."
-          if npm ci --legacy-peer-deps --no-audit --no-fund; then
-            echo "✅ 의존성 설치 성공!"
-            break
-          else
-            echo "❌ 시도 $i 실패, 재시도 중..."
-            if [ $i -eq 3 ]; then
-              echo "❌ 모든 시도 실패"
-              exit 1
-            fi
-            sleep 10
-          fi
-        done
-        
-        echo "=================================="
-      
-    - name: 📊 성능 분석
-      run: |
-        echo "📊 성능 분석 결과:"
-        echo "- 메인 페이지 로딩 시간: < 2초"
-        echo "- 번들 크기: 최적화됨"
-        echo "- 이미지 최적화: 완료"
-        echo "- 캐싱 전략: 구현됨"
-        
-    - name: 🔍 접근성 검사
-      run: |
-        echo "🔍 접근성 검사 결과:"
-        echo "- WCAG 2.1 준수: 기본 준수"
-        echo "- 키보드 네비게이션: 지원"
-        echo "- 스크린 리더 호환: 지원"
-        echo "- 색상 대비: 적절함" 

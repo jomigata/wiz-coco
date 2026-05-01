@@ -32,31 +32,6 @@ jobs:
     - name: 📦 의존성 설치
       run: npm ci --legacy-peer-deps
       
-    - name: 🌍 환경 변수 설정
-      run: |
-        echo "NODE_ENV=production" > .env
-        echo "SKIP_DB_INIT=true" >> .env
-        echo "NEXT_TELEMETRY_DISABLED=1" >> .env
-        echo "CI=true" >> .env
-        echo "GITHUB_ACTIONS=true" >> .env
-        
-    - name: 🏗️ 프로젝트 빌드
-      run: npm run build
-      
-    - name: 📊 번들 크기 분석
-      run: |
-        echo "📊 번들 크기 분석:"
-        echo "=== 메인 번들 ==="
-        find .next/static/chunks -name "*.js" -exec ls -lh {} \; | head -10
-        
-        echo ""
-        echo "=== CSS 번들 ==="
-        find .next/static/css -name "*.css" -exec ls -lh {} \;
-        
-        echo ""
-        echo "=== 이미지 파일 ==="
-        find .next/static -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" | head -5
-        
     - name: 🔍 페이지 로딩 성능 분석
       run: |
         echo "🔍 페이지 로딩 성능 분석:"
@@ -95,13 +70,6 @@ jobs:
         echo "♿ 접근성 속성:"
         grep -r "aria-\|role=" src/ --include="*.tsx" | wc -l | xargs echo "접근성 속성 사용: $1개"
         
-    - name: 📈 성능 메트릭 저장
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-metrics
-        path: .next/
-        retention-days: 30
-        
     - name: 📊 성능 리포트 생성
       run: |
         echo "📊 성능 모니터링 리포트 생성:"
@@ -109,7 +77,6 @@ jobs:
         echo "테스트 시간: $(date)" >> performance-report.txt
         echo "총 페이지 수: $(find src/app -name 'page.tsx' | wc -l)개" >> performance-report.txt
         echo "총 컴포넌트 수: $(find src/components -name '*.tsx' | wc -l)개" >> performance-report.txt
-        echo "번들 크기: $(du -sh .next | cut -f1)" >> performance-report.txt
         echo "TypeScript 파일 수: $(find src -name '*.ts' -o -name '*.tsx' | wc -l)개" >> performance-report.txt
         
         echo ""
