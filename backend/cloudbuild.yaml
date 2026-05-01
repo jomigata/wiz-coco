@@ -1,5 +1,6 @@
 # Cloud Build: Flask API 이미지 빌드 후 GCR 푸시
 # options.logging: CLOUD_LOGGING_ONLY → 기본 로그 버킷 권한 없이 빌드 가능 (GitHub Actions SA)
+# 태그 전략: SHA 태그(추적용) + latest 태그(최신 식별용) 동시 생성
 substitutions:
   _SERVICE_NAME: 'wizcoco-api'
   _IMAGE_TAG: 'latest'
@@ -13,11 +14,15 @@ steps:
       - 'build'
       - '-t'
       - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:${_IMAGE_TAG}'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:latest'
       - '.'
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:${_IMAGE_TAG}'
+      - '--all-tags'
+      - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}'
 
 images:
   - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:${_IMAGE_TAG}'
+  - 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}:latest'
