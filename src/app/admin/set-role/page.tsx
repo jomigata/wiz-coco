@@ -21,7 +21,7 @@ function AdminSetRoleLoading() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+      <div className="text-center bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-700">
         <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-xl text-blue-200">로딩 중입니다...</p>
       </div>
@@ -60,7 +60,7 @@ export default function SetRolePage() {
         </Suspense>
         
         <motion.div 
-          className="mt-8 bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+          className="mt-8 bg-slate-900 rounded-xl p-6 shadow-lg border border-slate-700"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}

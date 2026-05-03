@@ -10,7 +10,7 @@ export default function PsychologicalTests() {
           <h1 className="text-3xl font-bold text-white mb-2">심리검사 관리</h1>
           <p className="text-gray-300">검사 생성, 배포, 결과를 분석하세요</p>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+        <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
           <p className="text-gray-400 text-center py-12">심리검사 관리 페이지 (구현 예정)</p>
         </div>
       </div>

@@ -227,7 +227,7 @@ export default function TestCodesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+            <div className="text-center bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-700">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-xl text-blue-200">데이터를 불러오는 중입니다...</p>
             </div>
@@ -278,7 +278,7 @@ export default function TestCodesPage() {
             
             {/* 현재 선택된 년월의 통계 */}
             {selectedYearMonth && codeData[selectedYearMonth] && (
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg shadow mb-6 border border-white/10">
+              <div className="bg-slate-900 p-4 rounded-lg shadow mb-6 border border-slate-700">
                 <div className="flex flex-wrap justify-between items-center">
                   <div>
                     <h2 className="text-lg font-semibold text-white">{selectedYearMonth} 기간 통계</h2>
@@ -292,7 +292,7 @@ export default function TestCodesPage() {
             )}
             
             {/* 레코드 목록 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg shadow overflow-hidden border border-white/10">
+            <div className="bg-slate-900 rounded-lg shadow overflow-hidden border border-slate-700">
               {renderRecords()}
             </div>
           </>

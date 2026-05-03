@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
         {/* 전체 현황 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">총 사용자</p>
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">활성 상담사</p>
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">진행 중인 상담</p>
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">완료된 상담</p>
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
               <Link
                 key={index}
                 href={item.href}
-                className="group bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                className="group bg-slate-900 rounded-xl p-6 border border-slate-700 hover:bg-slate-800 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
               >
                 <div className="text-center">
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-r ${item.color} flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300`}>
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
 
         {/* 최근 활동 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <h3 className="text-xl font-semibold text-white mb-4">최근 활동</h3>
             <div className="space-y-4">
               {recentActivities.map((activity, index) => (
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <h3 className="text-xl font-semibold text-white mb-4">시스템 상태</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">

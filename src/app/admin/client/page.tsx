@@ -243,7 +243,7 @@ export default function AdminClientPage() {
         </div>
 
         {/* 사용자 테이블 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/10 mb-6">
+        <div className="bg-slate-900 rounded-xl p-6 shadow-lg border border-slate-700 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-white">사용자 목록</h2>
             <p className="text-blue-200 text-sm">총 {totalUsers}명의 사용자</p>

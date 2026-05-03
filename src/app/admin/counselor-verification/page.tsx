@@ -265,7 +265,7 @@ function CounselorVerificationPageContent() {
 
         {/* 검색 및 필터 */}
         <motion.div
-          className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+          className="mb-6 bg-slate-900 rounded-xl p-6 shadow-lg border border-slate-700"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -306,7 +306,7 @@ function CounselorVerificationPageContent() {
           {filteredApplications.map((application, index) => (
             <motion.div
               key={application.id}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:border-white/40 transition-all duration-300"
+              className="bg-slate-900 rounded-xl p-6 shadow-lg border border-slate-700 hover:border-slate-500 transition-all duration-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index, duration: 0.5 }}

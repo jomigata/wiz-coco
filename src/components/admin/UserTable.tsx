@@ -32,7 +32,7 @@ const UserTable: React.FC<UserTableProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm p-8 rounded-lg text-center">
+      <div className="bg-slate-900 p-8 rounded-lg text-center border border-slate-700">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
           <p className="mt-4 text-blue-200">사용자 정보를 불러오는 중...</p>
@@ -43,7 +43,7 @@ const UserTable: React.FC<UserTableProps> = ({
   
   if (!users || users.length === 0) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm p-8 rounded-lg text-center">
+      <div className="bg-slate-900 p-8 rounded-lg text-center border border-slate-700">
         <p className="text-blue-200">등록된 사용자가 없습니다.</p>
       </div>
     );
@@ -51,7 +51,7 @@ const UserTable: React.FC<UserTableProps> = ({
 
   return (
     <div className="overflow-x-auto rounded-lg shadow">
-      <table className="min-w-full bg-white/10 backdrop-blur-sm">
+      <table className="min-w-full bg-slate-900 border border-slate-700">
         <thead>
           <tr className="border-b border-white/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase tracking-wider">

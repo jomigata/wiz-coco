@@ -32,7 +32,7 @@ export default function UserManagement() {
 
         {/* 통계 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">총 사용자</p>
@@ -44,7 +44,7 @@ export default function UserManagement() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">상담사</p>
@@ -56,7 +56,7 @@ export default function UserManagement() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">내담자</p>
@@ -68,7 +68,7 @@ export default function UserManagement() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">활성 사용자</p>
@@ -82,7 +82,7 @@ export default function UserManagement() {
         </div>
 
         {/* 탭 메뉴 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 mb-6">
+        <div className="bg-slate-900 rounded-lg p-6 border border-slate-700 mb-6">
           <div className="flex space-x-1 bg-gray-800/50 rounded-lg p-1">
             {[
               { id: 'all', label: '전체 사용자', count: users.length },
@@ -106,7 +106,7 @@ export default function UserManagement() {
         </div>
 
         {/* 사용자 목록 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+        <div className="bg-slate-900 rounded-lg border border-slate-700">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">사용자 목록</h3>

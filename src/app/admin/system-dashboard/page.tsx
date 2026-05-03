@@ -14,7 +14,7 @@ export default function SystemDashboard() {
 
         {/* 주요 지표 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">총 사용자</p>
@@ -27,7 +27,7 @@ export default function SystemDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">활성 상담사</p>
@@ -40,7 +40,7 @@ export default function SystemDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">진행 중인 상담</p>
@@ -53,7 +53,7 @@ export default function SystemDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">완료된 상담</p>
@@ -69,14 +69,14 @@ export default function SystemDashboard() {
 
         {/* 차트 및 그래프 영역 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <h3 className="text-xl font-semibold text-white mb-4">사용자 증가 추이</h3>
             <div className="h-64 bg-gray-800/50 rounded-lg flex items-center justify-center">
               <p className="text-gray-400">차트 영역 (Chart.js 또는 Recharts 구현 예정)</p>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <h3 className="text-xl font-semibold text-white mb-4">상담 유형별 분포</h3>
             <div className="h-64 bg-gray-800/50 rounded-lg flex items-center justify-center">
               <p className="text-gray-400">파이 차트 영역 (Chart.js 또는 Recharts 구현 예정)</p>
@@ -85,7 +85,7 @@ export default function SystemDashboard() {
         </div>
 
         {/* 최근 활동 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+        <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
           <h3 className="text-xl font-semibold text-white mb-4">최근 활동</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-4 p-4 bg-gray-800/50 rounded-lg">

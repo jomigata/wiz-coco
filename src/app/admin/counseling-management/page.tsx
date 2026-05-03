@@ -32,7 +32,7 @@ export default function CounselingManagement() {
 
         {/* 통계 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">총 상담 세션</p>
@@ -44,7 +44,7 @@ export default function CounselingManagement() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">진행 중</p>
@@ -56,7 +56,7 @@ export default function CounselingManagement() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">예정</p>
@@ -68,7 +68,7 @@ export default function CounselingManagement() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">완료</p>
@@ -82,7 +82,7 @@ export default function CounselingManagement() {
         </div>
 
         {/* 탭 메뉴 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 mb-6">
+        <div className="bg-slate-900 rounded-lg p-6 border border-slate-700 mb-6">
           <div className="flex space-x-1 bg-gray-800/50 rounded-lg p-1">
             {[
               { id: 'all', label: '전체 상담', count: counselingSessions.length },
@@ -106,7 +106,7 @@ export default function CounselingManagement() {
         </div>
 
         {/* 상담 세션 목록 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+        <div className="bg-slate-900 rounded-lg border border-slate-700">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">상담 세션 목록</h3>

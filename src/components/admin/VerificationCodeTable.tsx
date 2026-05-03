@@ -23,7 +23,7 @@ const VerificationCodeTable: React.FC<VerificationCodeTableProps> = ({
 }) => {
   if (!codes || codes.length === 0) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm p-8 rounded-lg text-center">
+      <div className="bg-slate-900 p-8 rounded-lg text-center border border-slate-700">
         <p className="text-blue-200">등록된 인증 코드가 없습니다.</p>
       </div>
     );
@@ -31,7 +31,7 @@ const VerificationCodeTable: React.FC<VerificationCodeTableProps> = ({
 
   return (
     <div className="overflow-x-auto rounded-lg shadow">
-      <table className="min-w-full bg-white/10 backdrop-blur-sm">
+      <table className="min-w-full bg-slate-900 border border-slate-700">
         <thead>
           <tr className="border-b border-white/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase tracking-wider">

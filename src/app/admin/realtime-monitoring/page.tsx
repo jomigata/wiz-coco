@@ -29,7 +29,7 @@ export default function RealtimeMonitoring() {
 
         {/* 실시간 지표 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">현재 활성 사용자</p>
@@ -42,7 +42,7 @@ export default function RealtimeMonitoring() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">진행 중인 상담</p>
@@ -55,7 +55,7 @@ export default function RealtimeMonitoring() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">시스템 부하</p>
@@ -71,7 +71,7 @@ export default function RealtimeMonitoring() {
 
         {/* 활성 사용자 목록 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <h3 className="text-xl font-semibold text-white mb-4">현재 온라인 사용자</h3>
             <div className="space-y-3">
               {[
@@ -101,7 +101,7 @@ export default function RealtimeMonitoring() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <h3 className="text-xl font-semibold text-white mb-4">진행 중인 상담 세션</h3>
             <div className="space-y-3">
               {[
@@ -126,7 +126,7 @@ export default function RealtimeMonitoring() {
         </div>
 
         {/* 시스템 상태 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+        <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
           <h3 className="text-xl font-semibold text-white mb-4">시스템 상태</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-gray-800/50 rounded-lg">
