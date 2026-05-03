@@ -727,212 +727,129 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
 
   // 로딩 상태 체크
   if (firebaseLoading || isLoading) {
-    return (
-      <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>
-        {!isEmbedded && (
-          <>
-            <Navigation />
-            <div className="h-20"></div>
-          </>
-        )}
-        <div className="container mx-auto px-4 py-6 relative z-10">
-          <div className="flex items-center justify-center">
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
-              <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
-            </div>
+    if (isEmbedded) {
+      return (
+        <div className="flex w-full items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
+            <p className="text-sm text-slate-400">불러오는 중…</p>
           </div>
         </div>
-      </main>
+      );
+    }
+    return (
+      <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Navigation />
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col pt-16">
+          <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
+            <div className="relative z-10 flex w-full min-w-0 flex-1 flex-col items-center justify-center px-3 py-8 sm:px-4">
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
+                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
+                <p className="text-sm text-slate-400">불러오는 중…</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
     );
   }
 
   // 인증 체크
   if (!user) {
-    return (
-      <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>
-        {!isEmbedded && (
-          <>
-            <Navigation />
-            <div className="h-20"></div>
-          </>
-        )}
-        <div className="container mx-auto px-4 py-6 relative z-10">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
-            <p className="text-blue-200 mb-4">삭제된 코드에 접근하려면 로그인이 필요합니다</p>
-            <Link 
-              href="/login" 
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              로그인하기
-            </Link>
-          </div>
+    if (isEmbedded) {
+      return (
+        <div className="w-full rounded-lg border border-white/10 bg-white/[0.06] p-6 text-center text-slate-300">
+          <p className="mb-4 text-sm">로그인이 필요합니다.</p>
+          <Link href="/login" className="text-sky-400 hover:text-sky-300 underline">
+            로그인하기
+          </Link>
         </div>
-      </main>
+      );
+    }
+    return (
+      <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Navigation />
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col pt-16">
+          <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
+            <div className="relative z-10 flex w-full min-w-0 flex-1 flex-col px-3 py-6 sm:px-4">
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] p-6 text-center backdrop-blur-sm">
+                <p className="mb-4 text-slate-300">삭제된 코드에 접근하려면 로그인이 필요합니다</p>
+                <Link
+                  href="/login"
+                  className="inline-flex rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
+                >
+                  로그인하기
+                </Link>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <main className={`relative ${!isEmbedded ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12' : ''}`}>
-      {!isEmbedded && (
-        <>
-          <Navigation />
-          <div className="h-20"></div>
-          
-          {/* Background pattern */}
-          <div className="absolute inset-0 z-0 opacity-10">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-                  <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="100" height="100" fill="url(#grid)" />
-            </svg>
-          </div>
-          
-          {/* Gradient orbs */}
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-        </>
-      )}
-      
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        {/* 마이페이지 타이틀 */}
-        {!isEmbedded && (
-          <motion.div 
-            className="mb-8 relative"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-            <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
-              마이페이지
-            </h1>
-            <motion.div 
-              className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"
-              initial={{ width: 0 }}
-              animate={{ width: 128 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            ></motion.div>
-          </motion.div>
-        )}
-        
-        {/* 탭 메뉴 추가 */}
-        {!isEmbedded && (
-          <motion.div 
-            className="flex border-b border-white/20 mb-6"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <Link
-              href="/mypage?tab=profile"
-              className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
-            >
-              기본 정보
-            </Link>
-            <Link
-              href="/mypage?tab=records"
-              className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
-            >
-              검사 기록 ({testRecordsCount})
-            </Link>
-            <Link
-              href="/mypage?tab=in-progress"
-              className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
-            >
-              진행중인 검사 ({inProgressCount})
-            </Link>
-            <Link
-              href="/mypage?tab=stats"
-              className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
-            >
-              통계 보기
-            </Link>
-            <Link
-              href="/mypage/deleted-codes"
-              className="px-4 py-2 font-medium text-blue-200 border-b-2 border-blue-200"
-            >
-              삭제코드 ({deletedCodesCount})
-            </Link>
-          </motion.div>
-        )}
-        
-        {/* 삭제된 코드 섹션 제목 */}
-        <motion.div
-          className="mb-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <h2 className="text-2xl font-bold text-blue-100">삭제된 코드 관리</h2>
-          <p className="mt-2 text-blue-200 max-w-2xl">
-            이전에 삭제한 검사 코드 기록을 확인하고, 필요한 기록은 복원하거나 영구적으로 삭제할 수 있습니다.
-          </p>
-        </motion.div>
-        
-        {/* 검색 및 필터링 컨트롤 */}
-        <motion.div 
-          className="mb-6 flex flex-col md:flex-row gap-4 items-center bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="검사 코드 또는 이름으로 검색"
-              className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="flex-shrink-0">
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="newest" className="bg-blue-800 text-white">최근 삭제순</option>
-              <option value="oldest" className="bg-blue-800 text-white">오래된 삭제순</option>
-              <option value="codeAsc" className="bg-blue-800 text-white">코드 오름차순</option>
-              <option value="codeDesc" className="bg-blue-800 text-white">코드 내림차순</option>
-            </select>
-          </div>
-        </motion.div>
-        
-        {isLoading ? (
-          <motion.div 
-            className="flex items-center justify-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
-              <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-blue-200">삭제된 기록을 불러오는 중입니다...</p>
-            </div>
-          </motion.div>
-        ) : (
+  const tabLinkBase =
+    'px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors text-slate-400 hover:text-slate-200';
+  const tabLinkActive =
+    'px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors text-white bg-white/10 border border-b-0 border-white/15';
+
+  const listPanel = (
           <motion.div
-            className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-            initial={{ opacity: 0, y: 20 }}
+            className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4"
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ duration: 0.35 }}
+          >
+            <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <h2 className="text-xl font-semibold text-slate-100 sm:shrink-0">
+                삭제코드{' '}
+                <span className="font-normal text-slate-500">({filteredRecords.length})</span>
+              </h2>
+              <div className="relative min-w-0 flex-1">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+                  <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="검사 코드 · 유형 · 이름 검색"
+                  className="w-full rounded-md border border-white/10 bg-white/[0.06] py-2 pl-9 pr-3 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+                />
+              </div>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="shrink-0 rounded-md border border-white/10 bg-slate-900/80 px-2 py-2 text-lg text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+              >
+                <option value="newest" className="bg-slate-900 text-white">최근 삭제순</option>
+                <option value="oldest" className="bg-slate-900 text-white">오래된 삭제순</option>
+                <option value="codeAsc" className="bg-slate-900 text-white">코드 오름차순</option>
+                <option value="codeDesc" className="bg-slate-900 text-white">코드 내림차순</option>
+              </select>
+            </div>
+            <p className="mb-3 text-base text-slate-400">
+              삭제한 검사 기록을 확인하고 복원하거나 영구 삭제할 수 있습니다.
+            </p>
+
+          <motion.div
+            className="flex min-h-0 flex-1 flex-col"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, duration: 0.35 }}
           >
             {selectedRecords.length > 0 && (
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <p className="text-blue-200">선택된 항목: {selectedRecords.length}개</p>
+                  <p className="text-slate-300">선택된 항목: {selectedRecords.length}개</p>
                   <button
                     onClick={() => setShowRestoreConfirm(true)}
                     className="px-4 py-2 bg-green-600/60 hover:bg-green-600/80 text-white rounded-lg transition-colors flex items-center"
@@ -959,85 +876,85 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             
             {filteredRecords.length > 0 ? (
               <>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-white/20">
-                    <thead className="bg-white/5">
+                <div className="max-h-[min(70vh,720px)] overflow-auto rounded-md border border-white/10">
+                  <table className="min-w-full divide-y divide-white/10">
+                    <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-sm font-medium text-slate-400 tracking-wider">
                           <input
                             type="checkbox"
                             id="select-all-header"
                             checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
                             onChange={toggleAllSelection}
-                            className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-sky-500 border-white/30 rounded focus:ring-sky-500/60"
                           />
                         </th>
                       <th 
                         scope="col" 
-                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        className="px-6 py-3 text-center text-sm font-medium text-slate-400 tracking-wider cursor-pointer hover:text-slate-100 select-none"
                         onClick={() => handleSort('timestamp')}
                       >
                         <div className="flex items-center justify-center gap-1">
                           검사 일시
-                          <span className={`text-xs ${sortField === 'timestamp' ? 'text-red-500' : 'text-blue-300'}`}>
-                            <span className={sortField === 'timestamp' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
-                            <span className={sortField === 'timestamp' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          <span className={`text-xs ${sortField === 'timestamp' ? 'text-red-500' : 'text-slate-400'}`}>
+                            <span className={sortField === 'timestamp' && sortDirection === 'asc' ? 'text-red-500' : 'text-slate-500'}>▲</span>
+                            <span className={sortField === 'timestamp' && sortDirection === 'desc' ? 'text-red-500' : 'text-slate-500'}>▼</span>
                           </span>
                         </div>
                       </th>
                       <th 
                         scope="col" 
-                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        className="px-6 py-3 text-center text-sm font-medium text-slate-400 tracking-wider cursor-pointer hover:text-slate-100 select-none"
                         onClick={() => handleSort('testType')}
                       >
                         <div className="flex items-center justify-center gap-1">
                           검사 유형
-                          <span className={`text-xs ${sortField === 'testType' ? 'text-red-500' : 'text-blue-300'}`}>
-                            <span className={sortField === 'testType' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
-                            <span className={sortField === 'testType' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          <span className={`text-xs ${sortField === 'testType' ? 'text-red-500' : 'text-slate-400'}`}>
+                            <span className={sortField === 'testType' && sortDirection === 'asc' ? 'text-red-500' : 'text-slate-500'}>▲</span>
+                            <span className={sortField === 'testType' && sortDirection === 'desc' ? 'text-red-500' : 'text-slate-500'}>▼</span>
                           </span>
                         </div>
                       </th>
                       <th 
                         scope="col" 
-                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        className="px-6 py-3 text-center text-sm font-medium text-slate-400 tracking-wider cursor-pointer hover:text-slate-100 select-none"
                         onClick={() => handleSort('code')}
                       >
                         <div className="flex items-center justify-center gap-1">
                           검사코드
-                          <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
-                            <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
-                            <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-slate-400'}`}>
+                            <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-slate-500'}>▲</span>
+                            <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-slate-500'}>▼</span>
                           </span>
                         </div>
                       </th>
                       <th 
                         scope="col" 
-                        className="px-6 py-3 text-left text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        className="px-6 py-3 text-left text-sm font-medium text-slate-400 tracking-wider cursor-pointer hover:text-slate-100 select-none"
                         onClick={() => handleSort('code')}
                       >
                         <div className="flex items-center gap-1">
                           검사결과 코드
-                          <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
-                            <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
-                            <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-slate-400'}`}>
+                            <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-slate-500'}>▲</span>
+                            <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-slate-500'}>▼</span>
                           </span>
                         </div>
                       </th>
                       <th 
                         scope="col" 
-                        className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 select-none"
+                        className="px-6 py-3 text-center text-sm font-medium text-slate-400 tracking-wider cursor-pointer hover:text-slate-100 select-none"
                         onClick={() => handleSort('deletedAt')}
                       >
                         <div className="flex items-center justify-center gap-1">
                           삭제 일시
-                          <span className={`text-xs ${sortField === 'deletedAt' ? 'text-red-500' : 'text-blue-300'}`}>
-                            <span className={sortField === 'deletedAt' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
-                            <span className={sortField === 'deletedAt' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
+                          <span className={`text-xs ${sortField === 'deletedAt' ? 'text-red-500' : 'text-slate-400'}`}>
+                            <span className={sortField === 'deletedAt' && sortDirection === 'asc' ? 'text-red-500' : 'text-slate-500'}>▲</span>
+                            <span className={sortField === 'deletedAt' && sortDirection === 'desc' ? 'text-red-500' : 'text-slate-500'}>▼</span>
                           </span>
                         </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-center text-sm font-medium text-slate-400 tracking-wider">
                         복구
                       </th>
                     </tr>
@@ -1058,27 +975,27 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                             type="checkbox"
                             checked={selectedRecords.includes(record.code)}
                             onChange={() => toggleSelection(record.code)}
-                            className="w-4 h-4 text-blue-600 border-white/30 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-sky-500 border-white/30 rounded focus:ring-sky-500/60"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {formatDate(record.timestamp)}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {record.testType}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {(() => {
@@ -1102,7 +1019,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {formatDate(record.deletedAt)}
@@ -1130,14 +1047,14 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                 {/* 페이지네이션 */}
                 {filteredRecords.length > itemsPerPage && (
                 <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-blue-200">
+                  <div className="text-sm text-slate-300">
                     총 {filteredRecords.length}개 중 {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredRecords.length)}개 표시
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-3 py-1 text-sm bg-white/10 text-slate-200 rounded hover:bg-white/[0.14] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       이전
                     </button>
@@ -1160,8 +1077,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           onClick={() => setCurrentPage(pageNum)}
                           className={`px-3 py-1 text-sm rounded transition-colors ${
                             currentPage === pageNum
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-blue-600/60 text-blue-200 hover:bg-blue-600/80'
+                              ? 'bg-sky-600 text-white'
+                              : 'bg-white/10 text-slate-200 hover:bg-white/[0.14]'
                           }`}
                         >
                           {pageNum}
@@ -1171,7 +1088,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                     <button
                       onClick={() => setCurrentPage(Math.min(Math.ceil(filteredRecords.length / itemsPerPage), currentPage + 1))}
                       disabled={currentPage >= Math.ceil(filteredRecords.length / itemsPerPage)}
-                      className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-3 py-1 text-sm bg-white/10 text-slate-200 rounded hover:bg-white/[0.14] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       다음
                     </button>
@@ -1182,7 +1099,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             ) : (
               <div className="text-center py-12">
                 <svg
-                  className="mx-auto h-12 w-12 text-blue-400/40"
+                  className="mx-auto h-12 w-12 text-slate-500/40"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -1195,30 +1112,32 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                   />
                 </svg>
                 <h3 className="mt-2 text-lg font-medium text-white">삭제된 코드가 없습니다</h3>
-                <p className="mt-1 text-blue-200">아직 삭제된 검사 기록이 없거나 검색 조건에 맞는 항목이 없습니다.</p>
+                <p className="mt-1 text-slate-300">아직 삭제된 검사 기록이 없거나 검색 조건에 맞는 항목이 없습니다.</p>
               </div>
             )}
           </motion.div>
-        )}
-      </div>
-      
+          </motion.div>
+  );
+
+  const modalSection = (
+    <>
       {/* 복원 확인 모달 */}
       {showRestoreConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
           <motion.div 
-            className="bg-blue-900/80 backdrop-blur-sm rounded-xl p-6 max-w-md w-full mx-4 border border-white/20"
+            className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-6 max-w-md w-full border border-white/15"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
             <h3 className="text-xl font-bold text-white mb-4">복원 확인</h3>
-            <p className="text-blue-200 mb-6">
+            <p className="text-slate-300 mb-6">
               선택한 {selectedRecords.length}개의 검사 기록을 복원하시겠습니까? 복원된 기록은 검사 기록 목록에서 다시 확인할 수 있습니다.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowRestoreConfirm(false)}
-                className="px-4 py-2 bg-blue-800/50 text-white rounded hover:bg-blue-700/50 transition-colors"
+                className="px-4 py-2 bg-white/10 text-white rounded hover:bg-white/15 transition-colors"
                 disabled={isProcessing}
               >
                 취소
@@ -1247,7 +1166,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       {showSingleRestoreConfirm && singleRestoreRecord && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowSingleRestoreConfirm(false)}>
           <motion.div 
-            className="bg-indigo-950 rounded-xl p-6 max-w-md w-full mx-4 border border-indigo-700 shadow-lg"
+            className="rounded-xl border border-white/15 bg-slate-900/95 p-6 shadow-lg backdrop-blur-sm max-w-md w-full"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -1255,24 +1174,24 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-white mb-4">복원 확인</h3>
-            <p className="text-blue-200 mb-4">
+            <p className="text-slate-300 mb-4">
               다음 검사 기록을 복원하시겠습니까?
             </p>
             <div className="bg-white/5 rounded-lg p-4 space-y-2 mb-6">
               <div className="flex justify-between">
-                <span className="text-blue-300">검사 유형:</span>
-                <span className="text-blue-100">{singleRestoreRecord.testType || 'N/A'}</span>
+                <span className="text-slate-400">검사 유형:</span>
+                <span className="text-slate-100">{singleRestoreRecord.testType || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-300">검사결과 코드:</span>
-                <span className="text-blue-100">{singleRestoreRecord.code || 'N/A'}</span>
+                <span className="text-slate-400">검사결과 코드:</span>
+                <span className="text-slate-100">{singleRestoreRecord.code || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-300">검사 일시:</span>
-                <span className="text-blue-100">{singleRestoreRecord.timestamp ? formatDate(singleRestoreRecord.timestamp) : 'N/A'}</span>
+                <span className="text-slate-400">검사 일시:</span>
+                <span className="text-slate-100">{singleRestoreRecord.timestamp ? formatDate(singleRestoreRecord.timestamp) : 'N/A'}</span>
               </div>
             </div>
-            <p className="text-blue-300 text-sm mb-6">
+            <p className="text-slate-400 text-sm mb-6">
               복원된 기록은 검사 기록 목록에서 다시 확인할 수 있습니다.
             </p>
             <div className="flex justify-end space-x-3">
@@ -1308,15 +1227,15 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       
       {/* 영구 삭제 확인 모달 */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
           <motion.div 
-            className="bg-blue-900/80 backdrop-blur-sm rounded-xl p-6 max-w-md w-full mx-4 border border-white/20"
+            className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-6 max-w-md w-full border border-white/15"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
             <h3 className="text-xl font-bold text-white mb-4">영구 삭제 확인</h3>
-            <p className="text-blue-200 mb-2">
+            <p className="text-slate-300 mb-2">
               선택한 {selectedRecords.length}개의 검사 기록을 영구적으로 삭제하시겠습니까?
             </p>
             <p className="text-red-300 mb-6 font-medium">
@@ -1325,7 +1244,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-blue-800/50 text-white rounded hover:bg-blue-700/50 transition-colors"
+                className="px-4 py-2 bg-white/10 text-white rounded hover:bg-white/15 transition-colors"
                 disabled={isProcessing}
               >
                 취소
@@ -1349,6 +1268,64 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           </motion.div>
         </div>
       )}
-    </main>
+    </>
+  );
+
+  if (isEmbedded) {
+    return (
+      <>
+        <div className="w-full min-w-0 text-white">{listPanel}</div>
+        {modalSection}
+      </>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
+      <div className="fixed left-0 right-0 top-0 z-50">
+        <Navigation />
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col pt-16">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
+          <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col px-3 py-3 sm:px-4">
+            <motion.div
+              className="mb-2 shrink-0"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+            >
+              <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                마이페이지
+              </h1>
+            </motion.div>
+            <motion.div
+              className="mb-2 flex shrink-0 flex-wrap gap-x-1 gap-y-0 border-b border-white/10"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.35 }}
+            >
+              <Link href="/mypage?tab=profile" className={tabLinkBase}>
+                기본 정보
+              </Link>
+              <Link href="/mypage?tab=records" className={tabLinkBase}>
+                검사 기록 ({testRecordsCount})
+              </Link>
+              <Link href="/mypage?tab=in-progress" className={tabLinkBase}>
+                진행중인 검사 ({inProgressCount})
+              </Link>
+              <Link href="/mypage?tab=stats" className={tabLinkBase}>
+                통계 보기
+              </Link>
+              <Link href="/mypage/deleted-codes" className={tabLinkActive}>
+                삭제코드 ({deletedCodesCount})
+              </Link>
+            </motion.div>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">{listPanel}</div>
+          </div>
+        </main>
+      </div>
+      {modalSection}
+    </div>
   );
 } 
