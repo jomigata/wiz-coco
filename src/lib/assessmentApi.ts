@@ -126,6 +126,8 @@ export interface MyAssessmentResultRow {
   accessCode: string;
   assessmentId: string;
   assessmentTitle?: string | null;
+  /** 검사코드 사용최종일 YYYY-MM-DD, 미설정 시 무기한 */
+  usageEndDate?: string | null;
   testId: string;
   status?: string;
   completedAt: string | null;

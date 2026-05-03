@@ -80,6 +80,8 @@ interface TestRecord {
   /** 목록 표시: 상담사 검사코드 플로우용 검사코드 문자열 */
   counselorCodePinDisplay?: string;
   counselorTestId?: string;
+  /** 상담사 검사코드 세트의 사용최종일(YYYY-MM-DD) */
+  usageEndDate?: string;
 }
 
 interface Stats {
@@ -165,37 +167,15 @@ function formatKoreanDateTime(v: unknown): string {
 
 // 로딩 컴포넌트
 const LoadingMyPage = () => (
-  <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+  <main className="relative min-h-[100dvh] overflow-hidden bg-[#0b1120] pt-16">
     <Navigation />
-    <div className="h-20"></div>
-    
-    {/* Background pattern */}
-    <div className="absolute inset-0 z-0 opacity-10">
-      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <defs>
-          <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-            <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100" height="100" fill="url(#grid)" />
-      </svg>
-    </div>
-    
-    <div className="container mx-auto px-4 py-6 relative z-10">
-      {/* 마이페이지 타이틀 */}
-      <div className="mb-8 relative">
-        <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-        <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
-          마이페이지
-        </h1>
-        <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-      </div>
-      
-      <div className="flex items-center justify-center">
-        <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
-          <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
+    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
+    <div className="relative z-10 mx-auto flex max-w-7xl flex-col px-4 py-8">
+      <h1 className="mb-8 text-xl font-semibold tracking-tight text-white">마이페이지</h1>
+      <div className="flex flex-1 items-center justify-center py-16">
+        <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
+          <p className="text-sm text-slate-400">불러오는 중…</p>
         </div>
       </div>
     </div>
@@ -677,6 +657,10 @@ function MyPageContent() {
               counselorResultId: row.resultId,
               counselorAccessCode: ac,
               counselorTestId: String(row.testId || ''),
+              usageEndDate:
+                typeof row.usageEndDate === 'string' && row.usageEndDate.trim()
+                  ? row.usageEndDate.trim()
+                  : undefined,
             });
           }
         } catch (apiErr) {
@@ -765,44 +749,28 @@ function MyPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* 상단 네비게이션 */}
+    <div className="min-h-[100dvh] bg-[#0b1120] flex flex-col">
       <div className="fixed top-0 left-0 right-0 z-50">
         <Navigation />
       </div>
-      
-      {/* 메인 콘텐츠 영역 */}
-      <div className="pt-16">
-        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      
-      {/* Background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        {/* 마이페이지 타이틀 */}
-        <motion.div 
-          className="mb-8 relative"
-          initial={{ opacity: 0, y: -20 }}
+
+      <div className="pt-16 flex-1 flex flex-col min-h-0">
+        <main className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white relative overflow-hidden">
+
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-5 py-3 flex flex-col flex-1 min-h-0 max-w-7xl">
+        <motion.div
+          className="mb-2 shrink-0"
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.35 }}
         >
-          <div className="absolute -left-4 -top-8 w-20 h-20 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-purple-300 inline-block drop-shadow-lg">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
             마이페이지
           </h1>
-          <motion.div 
-            className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"
-            initial={{ width: 0 }}
-            animate={{ width: 128 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          ></motion.div>
         </motion.div>
-        
+
         {/* 상담사 연결 상태 표시 */}
         {!firebaseLoading && !isLoading && (
           <CounselorConnectionStatus 
@@ -831,76 +799,86 @@ function MyPageContent() {
           </div>
         ) : (
           <>
-            <motion.div 
-              className="flex border-b border-white/20 mb-6"
-              initial={{ opacity: 0, y: 10 }}
+            <motion.div
+              className="flex flex-wrap gap-x-1 gap-y-0 border-b border-white/10 mb-2 shrink-0"
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              transition={{ delay: 0.1, duration: 0.35 }}
             >
               <button
+                type="button"
                 onClick={() => changeTab('profile')}
-                className={`px-4 py-2 font-medium ${
+                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'profile'
-                    ? 'text-blue-200 border-b-2 border-blue-200'
-                    : 'text-blue-300 hover:text-blue-200'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 기본 정보
               </button>
               <button
+                type="button"
                 onClick={() => changeTab('records')}
-                className={`px-4 py-2 font-medium ${
+                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'records'
-                    ? 'text-blue-200 border-b-2 border-blue-200'
-                    : 'text-blue-300 hover:text-blue-200'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 검사 기록 ({testRecords.length})
               </button>
               <button
+                type="button"
                 onClick={() => changeTab('in-progress')}
-                className={`px-4 py-2 font-medium ${
+                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'in-progress'
-                    ? 'text-blue-200 border-b-2 border-blue-200'
-                    : 'text-blue-300 hover:text-blue-200'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 진행중인 검사 ({inProgressTests.length})
               </button>
               <button
+                type="button"
                 onClick={() => changeTab('stats')}
-                className={`px-4 py-2 font-medium ${
+                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'stats'
-                    ? 'text-blue-200 border-b-2 border-blue-200'
-                    : 'text-blue-300 hover:text-blue-200'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 통계 보기
               </button>
               <Link
                 href="/mypage/deleted-codes"
-                className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
+                className="px-3 py-1.5 text-sm font-medium rounded-t-md text-slate-400 hover:text-slate-200 transition-colors"
               >
                 삭제코드 ({deletedCodesCount})
               </Link>
             </motion.div>
 
+            <div
+              className={`flex-1 flex flex-col min-h-0 ${
+                activeTab === 'records' ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'
+              }`}
+            >
+
             {activeTab === 'profile' && (
               <motion.div
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-                initial={{ opacity: 0, y: 20 }}
+                className="bg-white/[0.06] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                transition={{ delay: 0.05, duration: 0.35 }}
               >
                 <motion.div
-                  className="mb-6"
-                  initial={{ opacity: 0, y: 10 }}
+                  className="mb-3"
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
+                  transition={{ delay: 0.05, duration: 0.35 }}
                 >
-                  <h2 className="text-2xl font-bold text-blue-100">기본 정보</h2>
-                  <p className="mt-2 text-blue-200 max-w-2xl">
-                    각 블록의 <span className="text-purple-300 font-medium">수정</span> 버튼을 눌러 해당 정보를 바로 수정하세요.
+                  <h2 className="text-lg font-semibold text-slate-100">기본 정보</h2>
+                  <p className="mt-1 text-xs text-slate-400 max-w-2xl">
+                    각 블록의 <span className="text-violet-300/90 font-medium">수정</span>으로 정보를 바로 편집할 수 있습니다.
                   </p>
                 </motion.div>
                 <InlineProfileBlocks
@@ -912,15 +890,17 @@ function MyPageContent() {
             )}
 
             {activeTab === 'records' && (
-              <TestRecordsTabContent
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                filterType={filterType}
-                setFilterType={setFilterType}
-                sortOrder={sortOrder}
-                setSortOrder={setSortOrder}
-                testRecords={testRecords}
-              />
+              <div className="flex min-h-0 flex-1 flex-col">
+                <TestRecordsTabContent
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  filterType={filterType}
+                  setFilterType={setFilterType}
+                  sortOrder={sortOrder}
+                  setSortOrder={setSortOrder}
+                  testRecords={testRecords}
+                />
+              </div>
             )}
 
             {activeTab === 'in-progress' && (
@@ -1519,6 +1499,7 @@ function MyPageContent() {
             {activeTab === 'deleted' && (
               <DeletedCodesContent isEmbedded={true} />
             )}
+            </div>
           </>
         )}
 
@@ -1702,7 +1683,7 @@ function TestRecordsTabContent({
   
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 100;
   
   // 삭제 모달 상태
   const [deleteModalRecord, setDeleteModalRecord] = useState<TestRecord | null>(null);
@@ -1802,6 +1783,14 @@ function TestRecordsTabContent({
     const title = getAccessCodeTitleLabel(record);
     if (!code || code === '—') return '—';
     return title ? `${code} (${title})` : code;
+  };
+
+  const getUsageEndLabel = (record: TestRecord): string => {
+    if (record.recordSource !== 'counselor-assessment') return '—';
+    const raw = (record.usageEndDate || '').trim();
+    if (!raw) return '무기한';
+    const d = new Date(`${raw}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? raw : d.toLocaleDateString('ko-KR');
   };
 
   // 정렬 아이콘 컴포넌트 (시각적 개선)
@@ -2155,199 +2144,186 @@ function TestRecordsTabContent({
 
   return (
     <motion.div
-      className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-      initial={{ opacity: 0, y: 20 }}
+      className="flex flex-col flex-1 min-h-0 bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
+      transition={{ duration: 0.35 }}
     >
-      {/* 검사 기록 섹션 제목 */}
-      <motion.div
-        className="mb-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-      >
-        <h2 className="text-2xl font-bold text-blue-100">검사 기록 ({filteredRecords.length})</h2>
-        <p className="mt-2 text-blue-200 max-w-2xl">
-          완료한 심리 검사들의 결과와 기록을 확인할 수 있습니다.
-        </p>
-      </motion.div>
-
-      {/* 검색 및 필터링 컨트롤 */}
-      <motion.div 
-        className="mb-6 space-y-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        {/* 첫 번째 행: 텍스트 검색 */}
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사일시 / 검사코드 / 검사명 으로 검색 (일부 단어도 가능)"
-              className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-blue-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+      <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <h2 className="text-sm font-semibold text-slate-100 sm:w-auto">
+          검사 기록{' '}
+          <span className="font-normal text-slate-500">({filteredRecords.length})</span>
+        </h2>
+        <div className="relative min-w-0 flex-1">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+            <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
           </div>
-          
-          <div className="flex gap-2 flex-shrink-0">
-            <select 
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
-              className="px-4 py-2 border-none bg-blue-800/80 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all" className="bg-blue-800 text-white">전체</option>
-              <option value="mbti-personal" className="bg-blue-800 text-white">개인용 MBTI</option>
-              <option value="mbti-professional" className="bg-blue-800 text-white">전문가용 MBTI</option>
-              <option value="ai-profiling" className="bg-blue-800 text-white">AI 프로파일링</option>
-              <option value="integrated" className="bg-blue-800 text-white">통합 평가</option>
-              <option value="ego" className="bg-blue-800 text-white">에고그램</option>
-              <option value="enneagram" className="bg-blue-800 text-white">에니어그램</option>
-            </select>
-          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="일시 · 코드 · 검사명 검색"
+            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+          />
         </div>
-      </motion.div>
-      
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as any)}
+            className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+          >
+            <option value="all" className="bg-slate-900 text-white">
+              전체
+            </option>
+            <option value="mbti-personal" className="bg-slate-900 text-white">
+              개인용 MBTI
+            </option>
+            <option value="mbti-professional" className="bg-slate-900 text-white">
+              전문가용 MBTI
+            </option>
+            <option value="ai-profiling" className="bg-slate-900 text-white">
+              AI 프로파일링
+            </option>
+            <option value="integrated" className="bg-slate-900 text-white">
+              통합 평가
+            </option>
+            <option value="ego" className="bg-slate-900 text-white">
+              에고그램
+            </option>
+            <option value="enneagram" className="bg-slate-900 text-white">
+              에니어그램
+            </option>
+          </select>
+          <button
+            type="button"
+            onClick={handleBulkDeleteClick}
+            disabled={selectedRecords.length === 0}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
+              selectedRecords.length > 0
+                ? 'bg-rose-600/90 text-white hover:bg-rose-600'
+                : 'bg-white/10 text-slate-400'
+            }`}
+          >
+            선택 삭제 ({selectedRecords.length})
+          </button>
+        </div>
+      </div>
+
       {/* 검사 기록 테이블 */}
       {filteredRecords.length === 0 ? (
-        <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
-          <FaClipboard className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
-          <p className="text-blue-300 text-lg mb-2">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
+          <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
+          <p className="text-sm text-slate-300">
             {testRecords.length === 0 ? '완료한 검사가 없습니다' : '검색 결과가 없습니다'}
           </p>
-          <p className="text-blue-400/70 text-sm">
-            {testRecords.length === 0 ? '새로운 검사를 시작해보세요!' : '다른 검색어를 시도해보세요'}
+          <p className="mt-1 text-xs text-slate-500">
+            {testRecords.length === 0 ? '검사 시작 후 이곳에 기록이 쌓입니다.' : '검색어를 바꿔 보세요.'}
           </p>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleBulkDeleteClick}
-                  disabled={selectedRecords.length === 0}
-                  className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    selectedRecords.length > 0
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-pink-400/50 text-pink-100 hover:bg-pink-400/60'
-                  }`}
-                >
-                  선택 삭제 ({selectedRecords.length})
-                </button>
-              </div>
-            </div>
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
+            <table className="min-w-full divide-y divide-white/10 text-xs">
+              <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-center">
-                    <div className="flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
-                        onChange={toggleAllSelection}
-                        className="w-4 h-4 text-pink-400 border-2 border-pink-300/80 rounded focus:ring-pink-400 cursor-pointer"
-                      />
-                    </div>
+                  <th scope="col" className="w-10 px-2 py-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
+                      onChange={toggleAllSelection}
+                      className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
+                    />
                   </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                  <th
+                    scope="col"
+                    className="cursor-pointer px-2 py-2 text-left font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('timestamp')}
                   >
-                    <div className="flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1">
                       검사 일시
                       <SortIcon field="timestamp" />
-                    </div>
+                    </span>
                   </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                  <th
+                    scope="col"
+                    className="cursor-pointer px-2 py-2 text-left font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('counselorCode')}
                   >
-                    <div className="flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1">
                       검사코드
                       <SortIcon field="counselorCode" />
-                    </div>
+                    </span>
                   </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider cursor-pointer hover:text-blue-200 transition-colors select-none"
+                  <th
+                    scope="col"
+                    className="cursor-pointer px-2 py-2 text-left font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('testType')}
                   >
-                    <div className="flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1">
                       검사명
                       <SortIcon field="testType" />
-                    </div>
+                    </span>
                   </th>
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-center text-sm font-medium text-blue-300 tracking-wider"
-                  >
+                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left font-medium text-slate-400">
+                    코드 사용최종일
+                  </th>
+                  <th scope="col" className="px-2 py-2 text-center font-medium text-slate-400">
                     작업
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-white/[0.06]">
                 {paginatedRecords.map((record, index) => (
-                  <tr 
-                    key={record.code || index} 
-                    className="group"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center justify-center">
+                  <tr key={record.code || index} className="group hover:bg-white/[0.04]">
+                    <td className="whitespace-nowrap px-2 py-1.5">
+                      <div className="flex justify-center">
                         <input
                           type="checkbox"
                           checked={selectedRecords.includes(record.code || '')}
                           onChange={() => toggleSelection(record.code || '')}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-4 h-4 text-pink-400 border border-white/30 rounded focus:ring-pink-400 cursor-pointer"
+                          className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
                         />
                       </div>
                     </td>
-                    <td 
+                    <td
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="cursor-pointer whitespace-nowrap px-2 py-1.5 text-left text-slate-200 transition-colors"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
-                    <td 
+                    <td
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-left text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="max-w-[11rem] cursor-pointer truncate px-2 py-1.5 text-left text-slate-200 transition-colors sm:max-w-xs"
                       title="클릭하여 검사 결과 보기"
                     >
                       {getAccessCodeSetName(record)}
                     </td>
-                    <td 
+                    <td
                       onClick={() => handleRecordClick(record)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-left text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                      className="max-w-[9rem] cursor-pointer truncate px-2 py-1.5 text-left text-slate-200 transition-colors sm:max-w-md"
                       title="클릭하여 검사 결과 보기"
                     >
                       {getDisplayTestName(record)}
                     </td>
-                    <td 
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-400">
+                      {getUsageEndLabel(record)}
+                    </td>
+                    <td className="whitespace-nowrap px-2 py-1.5 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
-                          className="px-3 py-1 text-xs font-medium bg-emerald-700/60 text-emerald-100 rounded hover:bg-emerald-700/80 transition-colors"
+                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-[11px] font-medium text-emerald-100 hover:bg-emerald-700/60"
                           onClick={() => handleAddTestForRecord(record)}
                         >
                           검사추가
                         </button>
                         <button
                           type="button"
-                          className="px-3 py-1 text-xs font-medium bg-blue-800/60 text-blue-200 rounded hover:bg-blue-700/80 hover:text-blue-100 transition-colors"
+                          className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-medium text-slate-300 hover:bg-white/15"
                           onClick={(e) => handleDeleteClick(e, record)}
                         >
                           삭제
@@ -2359,56 +2335,27 @@ function TestRecordsTabContent({
               </tbody>
             </table>
           </div>
-          
-          {/* 페이지네이션 */}
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-blue-200">
-              총 {filteredRecords.length}개의 검사 기록 ({currentPage}/{totalPages} 페이지)
-            </div>
-            
+
+          <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+            <span>
+              총 {filteredRecords.length}건
+              {totalPages > 1 ? ` · ${currentPage}/${totalPages}페이지` : ''}
+            </span>
             {totalPages > 1 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-1">
                 <button
+                  type="button"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="rounded border border-white/10 px-2 py-0.5 text-slate-300 hover:bg-white/10 disabled:opacity-40"
                 >
                   이전
                 </button>
-                
-                <div className="flex space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 text-sm rounded transition-colors ${
-                          currentPage === pageNum
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-blue-600/60 text-blue-200 hover:bg-blue-600/80'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-                
                 <button
+                  type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm bg-blue-600/60 text-blue-200 rounded hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="rounded border border-white/10 px-2 py-0.5 text-slate-300 hover:bg-white/10 disabled:opacity-40"
                 >
                   다음
                 </button>
@@ -2579,15 +2526,13 @@ function CounselorConnectionStatus({
   if (loading) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        className="mb-2 shrink-0"
       >
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-          <div className="flex items-center">
-            <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-3"></div>
-            <p className="text-gray-300">상담사 연결 상태를 확인하는 중...</p>
-          </div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 flex items-center gap-2">
+          <div className="h-4 w-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin shrink-0" />
+          <p className="text-xs text-slate-400">상담사 연결 상태 확인 중…</p>
         </div>
       </motion.div>
     );
@@ -2596,32 +2541,30 @@ function CounselorConnectionStatus({
   if (connection.isConnected) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        className="mb-2 shrink-0"
       >
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-emerald-400 font-semibold">상담사와 연결됨</h3>
-                <p className="text-emerald-300 text-sm">
-                  {connection.counselorInfo?.name || '상담사'}와 연결되어 있습니다
-                </p>
-              </div>
+        <div className="rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-emerald-500/90 flex items-center justify-center shrink-0">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <button
-              onClick={onRefetch}
-              className="text-emerald-400 hover:text-emerald-300 text-sm underline"
-            >
-              새로고침
-            </button>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-emerald-200/95 truncate">
+                상담사 연결됨 · {connection.counselorInfo?.name || '상담사'}
+              </p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onRefetch}
+            className="text-[11px] text-emerald-300/90 hover:text-emerald-200 shrink-0"
+          >
+            새로고침
+          </button>
         </div>
       </motion.div>
     );
@@ -2629,32 +2572,27 @@ function CounselorConnectionStatus({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6"
+      className="mb-2 shrink-0"
     >
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-blue-400 font-semibold">상담사와 연결하기</h3>
-              <p className="text-blue-300 text-sm">
-                상담사 인증코드를 입력하여 연결하세요
-              </p>
-            </div>
+      <div className="rounded-lg border border-sky-500/20 bg-sky-950/25 px-3 py-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-full bg-sky-600/90 flex items-center justify-center shrink-0">
+            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
           </div>
-          <Link
-            href="/mypage/connect-counselor"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            연결하기
-          </Link>
+          <p className="text-xs text-slate-300 min-w-0">
+            상담사와 연결하면 기록 연동이 쉬워집니다.
+          </p>
         </div>
+        <Link
+          href="/mypage/connect-counselor"
+          className="shrink-0 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 transition-colors"
+        >
+          연결
+        </Link>
       </div>
     </motion.div>
   );

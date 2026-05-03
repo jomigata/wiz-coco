@@ -182,15 +182,19 @@ def list_my_results():
         legacy_refs = list(db.collection(TEST_RESULTS_COLLECTION).where("clientEmail", "==", token_email).limit(200).stream())
     assessment_cache: dict = {}
 
-    def _assessment_title(aid) -> str | None:
+    def _assessment_snapshot(aid):
+        """캐시된 검사 세트 제목 및 사용최종일(마이페이지 목록 표시용)."""
         if not aid:
-            return None
+            return None, None
         if aid in assessment_cache:
             return assessment_cache[aid]
         ad = db.collection(ASSESSMENTS_COLLECTION).document(str(aid)).get()
-        t = (ad.to_dict() or {}).get("title") if ad.exists else None
-        assessment_cache[aid] = t
-        return t
+        data = ad.to_dict() or {} if ad.exists else {}
+        title = data.get("title")
+        usage_raw = str(data.get("usageEndDate") or "").strip()
+        usage_end = usage_raw or None
+        assessment_cache[aid] = (title, usage_end)
+        return assessment_cache[aid]
 
     items = []
     seen = set()
@@ -202,11 +206,13 @@ def list_my_results():
         completed_iso = None
         if ca is not None and hasattr(ca, "isoformat"):
             completed_iso = ca.isoformat()
+        atitle, usage_end = _assessment_snapshot(aid)
         items.append({
             "resultId": doc.id,
             "accessCode": d.get("accessCode"),
             "assessmentId": aid,
-            "assessmentTitle": _assessment_title(aid),
+            "assessmentTitle": atitle,
+            "usageEndDate": usage_end,
             "testId": d.get("testId"),
             "status": d.get("status"),
             "completedAt": completed_iso,
@@ -220,11 +226,13 @@ def list_my_results():
         completed_iso = None
         if ca is not None and hasattr(ca, "isoformat"):
             completed_iso = ca.isoformat()
+        atitle, usage_end = _assessment_snapshot(aid)
         items.append({
             "resultId": doc.id,
             "accessCode": d.get("accessCode"),
             "assessmentId": aid,
-            "assessmentTitle": _assessment_title(aid),
+            "assessmentTitle": atitle,
+            "usageEndDate": usage_end,
             "testId": d.get("testId"),
             "status": d.get("status"),
             "completedAt": completed_iso,
