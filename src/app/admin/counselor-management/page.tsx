@@ -498,8 +498,8 @@ function CounselorManagementPageContent() {
 
         {/* 상담사 추가 모달 */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-white">상담사 수동 추가</h3>
                 <button
@@ -513,62 +513,62 @@ function CounselorManagementPageContent() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-red-300 text-sm font-medium">이름 *</label>
+                    <label className="text-slate-300 text-sm font-medium">이름 *</label>
                     <input
                       type="text"
                       value={newApplication.name || ''}
                       onChange={(e) => setNewApplication(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="상담사 이름"
                     />
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm font-medium">이메일 *</label>
+                    <label className="text-slate-300 text-sm font-medium">이메일 *</label>
                     <input
                       type="email"
                       value={newApplication.email || ''}
                       onChange={(e) => setNewApplication(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="이메일 주소"
                     />
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm font-medium">전화번호</label>
+                    <label className="text-slate-300 text-sm font-medium">전화번호</label>
                     <input
                       type="tel"
                       value={newApplication.phone || ''}
                       onChange={(e) => setNewApplication(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="010-1234-5678"
                     />
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm font-medium">자격증 번호</label>
+                    <label className="text-slate-300 text-sm font-medium">자격증 번호</label>
                     <input
                       type="text"
                       value={newApplication.licenseNumber || ''}
                       onChange={(e) => setNewApplication(prev => ({ ...prev, licenseNumber: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="PSY-2024-001"
                     />
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm font-medium">소속 기관</label>
+                    <label className="text-slate-300 text-sm font-medium">소속 기관</label>
                     <input
                       type="text"
                       value={newApplication.institution || ''}
                       onChange={(e) => setNewApplication(prev => ({ ...prev, institution: e.target.value }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="한국심리상담협회"
                     />
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm font-medium">경력 (년)</label>
+                    <label className="text-slate-300 text-sm font-medium">경력 (년)</label>
                     <input
                       type="number"
                       value={newApplication.experience || 0}
                       onChange={(e) => setNewApplication(prev => ({ ...prev, experience: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="5"
                       min="0"
                     />
@@ -576,55 +576,55 @@ function CounselorManagementPageContent() {
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm font-medium">학력</label>
+                  <label className="text-slate-300 text-sm font-medium">학력</label>
                   <input
                     type="text"
                     value={newApplication.education || ''}
                     onChange={(e) => setNewApplication(prev => ({ ...prev, education: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="서울대학교 심리학과 석사"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm font-medium">전문분야 (쉼표로 구분)</label>
+                  <label className="text-slate-300 text-sm font-medium">전문분야 (쉼표로 구분)</label>
                   <input
                     type="text"
                     value={newApplication.specialization?.join(', ') || ''}
                     onChange={(e) => handleSpecializationChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="우울증, 불안장애, 관계상담"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm font-medium">첨부 문서 (쉼표로 구분)</label>
+                  <label className="text-slate-300 text-sm font-medium">첨부 문서 (쉼표로 구분)</label>
                   <input
                     type="text"
                     value={newApplication.documents?.join(', ') || ''}
                     onChange={(e) => handleDocumentsChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="자격증.pdf, 경력증명서.pdf, 학위증명서.pdf"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm font-medium">메모</label>
+                  <label className="text-slate-300 text-sm font-medium">메모</label>
                   <textarea
                     value={newApplication.notes || ''}
                     onChange={(e) => setNewApplication(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="상담사에 대한 추가 정보나 메모"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <label className="text-red-300 text-sm font-medium">상태</label>
+                  <label className="text-slate-300 text-sm font-medium">상태</label>
                   <select
                     value={newApplication.status || 'pending'}
                     onChange={(e) => setNewApplication(prev => ({ ...prev, status: e.target.value as 'pending' | 'approved' | 'rejected' }))}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="pending" className="bg-gray-800">검토 중</option>
                     <option value="approved" className="bg-gray-800">승인됨</option>
@@ -654,8 +654,8 @@ function CounselorManagementPageContent() {
 
         {/* 상세보기 모달 */}
         {showModal && selectedApplication && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-white">상담사 인증 상세 정보</h3>
                 <button
@@ -669,41 +669,41 @@ function CounselorManagementPageContent() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-red-300 text-sm">이름</label>
+                    <label className="text-slate-300 text-sm">이름</label>
                     <p className="text-white">{selectedApplication.name}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">이메일</label>
+                    <label className="text-slate-300 text-sm">이메일</label>
                     <p className="text-white">{selectedApplication.email}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">전화번호</label>
+                    <label className="text-slate-300 text-sm">전화번호</label>
                     <p className="text-white">{selectedApplication.phone}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">자격증 번호</label>
+                    <label className="text-slate-300 text-sm">자격증 번호</label>
                     <p className="text-white">{selectedApplication.licenseNumber}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">소속 기관</label>
+                    <label className="text-slate-300 text-sm">소속 기관</label>
                     <p className="text-white">{selectedApplication.institution}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">경력</label>
+                    <label className="text-slate-300 text-sm">경력</label>
                     <p className="text-white">{selectedApplication.experience}년</p>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">학력</label>
+                  <label className="text-slate-300 text-sm">학력</label>
                   <p className="text-white">{selectedApplication.education}</p>
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">전문분야</label>
+                  <label className="text-slate-300 text-sm">전문분야</label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {selectedApplication.specialization.map((spec, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-red-500/20 rounded text-sm text-red-200">
+                      <span key={idx} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
                         {spec}
                       </span>
                     ))}
@@ -711,10 +711,10 @@ function CounselorManagementPageContent() {
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">첨부 문서</label>
+                  <label className="text-slate-300 text-sm">첨부 문서</label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {selectedApplication.documents.map((doc, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-white/10 rounded text-sm text-red-200">
+                      <span key={idx} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
                         {doc}
                       </span>
                     ))}
@@ -722,7 +722,7 @@ function CounselorManagementPageContent() {
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">신청자 메모</label>
+                  <label className="text-slate-300 text-sm">신청자 메모</label>
                   <p className="text-white mt-1">{selectedApplication.notes}</p>
                 </div>
               </div>

@@ -420,8 +420,8 @@ function CounselorVerificationPageContent() {
 
         {/* 상담사 추가 모달 */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-white">안내</h3>
                 <button
@@ -432,7 +432,7 @@ function CounselorVerificationPageContent() {
                 </button>
               </div>
 
-              <div className="text-white/80 space-y-3">
+              <div className="text-slate-200 space-y-3">
                 <p className="text-sm">
                   상담사는 <span className="text-white font-semibold">사용자 “상담사 지원 신청”</span>을 통해 신청하고,
                   관리자가 이 화면에서 <span className="text-white font-semibold">승인/반려</span>하는 프로세스로 운영됩니다.
@@ -456,8 +456,8 @@ function CounselorVerificationPageContent() {
 
         {/* 상세보기 모달 */}
         {showModal && selectedApplication && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-white">상담사 인증 상세 정보</h3>
                 <button
@@ -471,41 +471,41 @@ function CounselorVerificationPageContent() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-red-300 text-sm">이름</label>
+                    <label className="text-slate-300 text-sm">이름</label>
                     <p className="text-white">{selectedApplication.personalInfo?.name || '(이름 없음)'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">이메일</label>
+                    <label className="text-slate-300 text-sm">이메일</label>
                     <p className="text-white">{selectedApplication.personalInfo?.email || '(이메일 없음)'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">전화번호</label>
+                    <label className="text-slate-300 text-sm">전화번호</label>
                     <p className="text-white">{selectedApplication.personalInfo?.phone || '-'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">신청자 UID</label>
+                    <label className="text-slate-300 text-sm">신청자 UID</label>
                     <p className="text-white">{selectedApplication.applicantUid || '-'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">신청일</label>
+                    <label className="text-slate-300 text-sm">신청일</label>
                     <p className="text-white">{selectedApplication.appliedDate ? new Date(selectedApplication.appliedDate).toLocaleDateString('ko-KR') : '-'}</p>
                   </div>
                   <div>
-                    <label className="text-red-300 text-sm">경력</label>
+                    <label className="text-slate-300 text-sm">경력</label>
                     <p className="text-white">{selectedApplication.personalInfo?.experience ?? 0}년</p>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">학력</label>
+                  <label className="text-slate-300 text-sm">학력</label>
                   <p className="text-white">{selectedApplication.personalInfo?.education || '-'}</p>
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">전문분야</label>
+                  <label className="text-slate-300 text-sm">전문분야</label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {(selectedApplication.personalInfo?.specialization || []).map((spec, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-red-500/20 rounded text-sm text-red-200">
+                      <span key={idx} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
                         {spec}
                       </span>
                     ))}
@@ -513,14 +513,14 @@ function CounselorVerificationPageContent() {
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">첨부 문서</label>
+                  <label className="text-slate-300 text-sm">첨부 문서</label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {Object.entries(selectedApplication.documents || {}).flatMap(([k, v]) => {
                       if (!v) return [];
                       if (Array.isArray(v)) return v.map((x, idx) => ({ key: `${k}-${idx}`, label: String(x) }));
                       return [{ key: k, label: String(v) }];
                     }).map(({ key, label }) => (
-                      <span key={key} className="px-2 py-1 bg-white/10 rounded text-sm text-red-200">
+                      <span key={key} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
                         {label}
                       </span>
                     ))}
@@ -528,7 +528,7 @@ function CounselorVerificationPageContent() {
                 </div>
                 
                 <div>
-                  <label className="text-red-300 text-sm">신청자 메모</label>
+                  <label className="text-slate-300 text-sm">신청자 메모</label>
                   <p className="text-white mt-1">{selectedApplication.notes}</p>
                 </div>
               </div>
