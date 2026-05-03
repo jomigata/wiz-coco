@@ -20,6 +20,7 @@ import { isCounselor } from '@/utils/roleUtils';
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
+import InlineProfileBlocks from './components/InlineProfileBlocks';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 
@@ -891,246 +892,22 @@ function MyPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                {/* 기본 정보 섹션 제목 */}
                 <motion.div
-                  className="mb-4"
+                  className="mb-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                 >
                   <h2 className="text-2xl font-bold text-blue-100">기본 정보</h2>
                   <p className="mt-2 text-blue-200 max-w-2xl">
-                    계정 정보와 개인 정보를 확인하고 관리할 수 있습니다.
+                    각 블록의 <span className="text-purple-300 font-medium">수정</span> 버튼을 눌러 해당 정보를 바로 수정하세요.
                   </p>
                 </motion.div>
-                
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  {/* 계정 정보 그룹 */}
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                      <KeyIcon className="w-5 h-5 mr-2 text-purple-400" />
-                      계정 정보
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">이메일</span>
-                        <span className="text-blue-100">{user.email || '정보 없음'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">가입일</span>
-                        <span className="text-blue-100">
-                          {formatKoreanDate(user.createdAt)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">마지막 로그인</span>
-                        <span className="text-blue-100">
-                          {formatKoreanDateTime(user.lastLoginAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 프로필 요약 */}
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 relative">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-blue-100 flex items-center">
-                        <UserIcon className="w-5 h-5 mr-2 text-purple-400" />
-                        프로필 요약
-                      </h3>
-                      <button
-                        onClick={() => setShowProfileEditor(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm"
-                      >
-                        정보 수정
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">회원 유형</span>
-                        <span className="text-blue-100">{formatRoleLabel(user.role)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">리포트 표기명</span>
-                        <span className="text-blue-100">{user.reportDisplayName || user.name || '정보 없음'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">운영 형태</span>
-                        <span className="text-blue-100">
-                          {isCounselor(firebaseUser?.role || user.role) ? formatPracticeType(user.practiceType) : '개인 이용자'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">팀 정보 공유</span>
-                        <span className="text-blue-100">
-                          {isCounselor(firebaseUser?.role || user.role)
-                            ? formatBooleanLabel(user.teamSharingEnabled, '공유 가능', '개별 운영')
-                            : '해당 없음'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">리포트 연락처 노출</span>
-                        <span className="text-blue-100">
-                          {isCounselor(firebaseUser?.role || user.role)
-                            ? formatBooleanLabel(user.shareContactInReport, '노출', '비노출')
-                            : '기본'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 개인 정보 그룹 */}
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                      <HeartIcon className="w-5 h-5 mr-2 text-purple-400" />
-                      개인 기본 정보
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">이름</span>
-                        <span className="text-blue-100">{user.name || '정보 없음'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">전화번호</span>
-                        <span className="text-blue-100">{user.phoneNumber || '정보 없음'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">이메일(개인)</span>
-                        <span className="text-blue-100">{user.email || '정보 없음'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">생년월일</span>
-                        <span className="text-blue-100">{user.birthDate || '정보 없음'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">성별</span>
-                        <span className="text-blue-100">
-                          {user.gender === 'male' ? '남성' :
-                           user.gender === 'female' ? '여성' :
-                           user.gender === 'other' ? '기타' :
-                           '정보 없음'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-200">직업/배경</span>
-                        <span className="text-blue-100">{formatOccupation(user.occupation)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 회사/기관 정보 그룹 (상담사/관리자만 표시) */}
-                  {isCounselor(firebaseUser?.role || user.role) && (
-                    <>
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-lg font-semibold text-blue-100 flex items-center">
-                          <FaBuilding className="w-5 h-5 mr-2 text-purple-400" />
-                          상담/운영 정보
-                        </h3>
-                        <button
-                          onClick={() => setShowProfileEditor(true)}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm"
-                        >
-                          정보 수정
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">운영 형태</span>
-                          <span className="text-blue-100 text-right break-all">{formatPracticeType(user.practiceType)}</span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">회사/기관명</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationName?.trim() ? user.organizationName : '정보 없음'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">담당자</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationManager?.trim() ? user.organizationManager : '정보 없음'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">전화번호</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationTel?.trim() ? user.organizationTel : '정보 없음'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">핸드폰번호</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationMobile?.trim() ? user.organizationMobile : '정보 없음'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">팩스번호</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationFax?.trim() ? user.organizationFax : '정보 없음'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">이메일</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationEmail?.trim() ? user.organizationEmail : '정보 없음'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">주소</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.organizationAddress?.trim() ? user.organizationAddress : '정보 없음'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                      <h3 className="text-lg font-semibold text-blue-100 mb-4 flex items-center">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-purple-400" />
-                        리포트/공유 설정
-                      </h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">리포트 표기명</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {user.reportDisplayName?.trim() ? user.reportDisplayName : (user.name || '정보 없음')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">전문 영역</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {formatMultilineText(user.specialties)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">주요 대상/활용</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {formatMultilineText(user.clientFocus)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">기관 정보 리포트 노출</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {formatBooleanLabel(user.shareOrganizationInReport, '노출', '비노출')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-blue-200 shrink-0">연락처 리포트 노출</span>
-                          <span className="text-blue-100 text-right break-all">
-                            {formatBooleanLabel(user.shareContactInReport, '노출', '비노출')}
-                          </span>
-                        </div>
-                        <div className="pt-2 border-t border-white/10">
-                          <div className="text-blue-200 mb-2">리포트 서명</div>
-                          <div className="text-blue-100 whitespace-pre-wrap leading-relaxed">
-                            {formatMultilineText(user.reportSignature, '설정된 서명이 없습니다.')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    </>
-                  )}
-                </div>
+                <InlineProfileBlocks
+                  user={user}
+                  firebaseUserRole={firebaseUser?.role}
+                  onUpdate={() => window.location.reload()}
+                />
               </motion.div>
             )}
 
