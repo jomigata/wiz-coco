@@ -120,43 +120,39 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
       {/* 상단 네비게이션 */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <div className="fixed left-0 right-0 top-0 z-50">
         <Navigation />
       </div>
-      
-      {/* 메인 콘텐츠 영역 - 전체 화면 최적화 */}
-      <div className="pt-16">
-        {/* 상단 헤더 */}
-        <header className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">{pageTitle}</h1>
-                <p className="text-purple-100 text-sm mt-1">전문 상담 관리 시스템</p>
-              </div>
+
+      <div className="flex min-h-0 flex-1 flex-col pt-16">
+        {/* 페이지 상단 — 마이페이지 본문과 유사한 슬레이트 톤 */}
+        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 px-3 py-2.5 backdrop-blur-sm sm:px-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
+                {pageTitle}
+              </h1>
+              <p className="mt-0.5 text-xs text-slate-500">콘텐츠 상담 관리 시스템</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-purple-100">상담사</p>
-                <p className="text-white font-medium">김상담</p>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <div className="hidden text-right sm:block">
+                <p className="text-[10px] uppercase tracking-wide text-slate-500">상담사</p>
+                <p className="text-sm font-medium text-slate-200">김상담</p>
               </div>
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">김</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] sm:h-9 sm:w-9">
+                <span className="text-xs font-semibold text-slate-100 sm:text-sm">김</span>
               </div>
             </div>
           </div>
         </header>
 
-        {/* 메인 콘텐츠 */}
-        <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-          {children}
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]" />
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
+            {children}
+          </div>
         </main>
       </div>
     </div>
