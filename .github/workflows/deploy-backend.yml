@@ -34,22 +34,31 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: 🗄️ Verify Artifact Registry repository exists (Seoul)
+      - name: 🗄️ Ensure Artifact Registry repository exists (Seoul)
         run: |
           if [ -z "${PROJECT_ID}" ]; then
             echo "❌ GCP_PROJECT_ID secret가 설정되어 있지 않습니다."
             exit 1
           fi
-          if ! gcloud artifacts repositories describe "${AR_REPO}" \
+          if gcloud artifacts repositories describe "${AR_REPO}" \
             --location="${REGION}" \
             --project="${PROJECT_ID}" \
             --format="value(name)" >/dev/null 2>&1; then
-            echo "❌ Artifact Registry 저장소를 찾을 수 없습니다: ${AR_REPO} (${REGION})"
-            echo "   먼저 GCP에서 저장소를 1회 생성해 주세요."
-            echo "   예시: gcloud artifacts repositories create ${AR_REPO} --repository-format=docker --location=${REGION} --project=${PROJECT_ID}"
-            exit 1
+            echo "✅ Artifact Registry 저장소 이미 존재: ${AR_REPO} (${REGION})"
+          else
+            echo "ℹ️ Artifact Registry 저장소가 없어 생성 시도: ${AR_REPO} (${REGION})"
+            if ! gcloud artifacts repositories create "${AR_REPO}" \
+              --repository-format=docker \
+              --location="${REGION}" \
+              --project="${PROJECT_ID}" \
+              --description="WizCoCo API container images (Seoul)"; then
+              echo "❌ 저장소 생성 실패: 권한 또는 프로젝트 설정을 확인하세요."
+              echo "   필요한 권한 예시: roles/artifactregistry.admin"
+              echo "   수동 생성 예시: gcloud artifacts repositories create ${AR_REPO} --repository-format=docker --location=${REGION} --project=${PROJECT_ID}"
+              exit 1
+            fi
+            echo "✅ Artifact Registry 저장소 생성 완료: ${AR_REPO} (${REGION})"
           fi
-          echo "✅ Artifact Registry 저장소 확인 완료: ${AR_REPO} (${REGION})"
 
       - name: 🐳 Build and push image (Asia-Northeast3)
         run: |
