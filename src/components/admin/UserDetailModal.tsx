@@ -40,14 +40,14 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
   if (!user || !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950"
         onClick={onClose}
       ></div>
-      <div className="relative bg-gradient-to-br from-gray-800 to-blue-900 rounded-xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden border border-white/10">
+      <div className="relative bg-slate-900 rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden border border-slate-700">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-blue-800 to-indigo-900 px-6 py-4 flex justify-between items-center">
+        <div className="bg-slate-800 px-6 py-4 flex justify-between items-center border-b border-slate-700">
           <h2 className="text-xl font-bold text-white flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +67,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
           </h2>
           <button
             onClick={onClose}
-            className="text-white hover:text-blue-200 focus:outline-none"
+            className="text-white hover:text-slate-300 focus:outline-none"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -89,29 +89,29 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
         {/* 콘텐츠 */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           {/* 사용자 기본 정보 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-medium text-white mb-4 border-b border-white/20 pb-2">
+          <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
+            <h3 className="text-lg font-medium text-white mb-4 border-b border-slate-700 pb-2">
               기본 정보
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-blue-200 text-sm">이름</p>
+                <p className="text-slate-300 text-sm">이름</p>
                 <p className="text-white">{user.name}</p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm">이메일</p>
+                <p className="text-slate-300 text-sm">이메일</p>
                 <p className="text-white">{user.email}</p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm">MBTI</p>
+                <p className="text-slate-300 text-sm">MBTI</p>
                 <p className="text-white">{user.mbti || '미설정'}</p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm">가입일</p>
+                <p className="text-slate-300 text-sm">가입일</p>
                 <p className="text-white">{formatDate(user.createdAt)}</p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm">마지막 로그인</p>
+                <p className="text-slate-300 text-sm">마지막 로그인</p>
                 <p className="text-white">
                   {user.lastLoginAt ? formatDate(user.lastLoginAt) : '로그인 기록 없음'}
                 </p>
@@ -120,21 +120,21 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
           </div>
 
           {/* MBTI 테스트 결과 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-medium text-white mb-4 border-b border-white/20 pb-2">
+          <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
+            <h3 className="text-lg font-medium text-white mb-4 border-b border-slate-700 pb-2">
               MBTI 검사 기록
             </h3>
             {user.mbtiTests && user.mbtiTests.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="text-left text-blue-200 text-sm">
+                    <tr className="text-left text-slate-300 text-sm">
                       <th className="pb-2">검사 유형</th>
                       <th className="pb-2">MBTI 결과</th>
                       <th className="pb-2">검사일</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody className="divide-y divide-slate-700">
                     {user.mbtiTests.map((test) => (
                       <tr key={test.id} className="text-white">
                         <td className="py-2">{test.testType}</td>
@@ -150,27 +150,27 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
                 </table>
               </div>
             ) : (
-              <p className="text-blue-200">MBTI 검사 기록이 없습니다.</p>
+              <p className="text-slate-300">MBTI 검사 기록이 없습니다.</p>
             )}
           </div>
 
           {/* 전체 테스트 결과 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-            <h3 className="text-lg font-medium text-white mb-4 border-b border-white/20 pb-2">
+          <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+            <h3 className="text-lg font-medium text-white mb-4 border-b border-slate-700 pb-2">
               검사 결과
             </h3>
             {user.testResults && user.testResults.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="text-left text-blue-200 text-sm">
+                    <tr className="text-left text-slate-300 text-sm">
                       <th className="pb-2">검사 코드</th>
                       <th className="pb-2">검사 유형</th>
                       <th className="pb-2">MBTI 결과</th>
                       <th className="pb-2">검사일</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody className="divide-y divide-slate-700">
                     {user.testResults.map((result) => (
                       <tr key={result.id} className="text-white">
                         <td className="py-2">{result.code}</td>
@@ -191,13 +191,13 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
                 </table>
               </div>
             ) : (
-              <p className="text-blue-200">검사 결과가 없습니다.</p>
+              <p className="text-slate-300">검사 결과가 없습니다.</p>
             )}
           </div>
         </div>
 
         {/* 푸터 */}
-        <div className="bg-white/5 px-6 py-4 flex justify-end">
+        <div className="bg-slate-800/70 px-6 py-4 flex justify-end border-t border-slate-700">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"

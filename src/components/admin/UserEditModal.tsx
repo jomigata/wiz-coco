@@ -101,14 +101,14 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
   if (!user || !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950"
         onClick={onClose}
       ></div>
-      <div className="relative bg-gradient-to-br from-gray-800 to-blue-900 rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden border border-white/10">
+      <div className="relative bg-slate-900 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-700">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-blue-800 to-indigo-900 px-6 py-4 flex justify-between items-center">
+        <div className="bg-slate-800 px-6 py-4 flex justify-between items-center border-b border-slate-700">
           <h2 className="text-xl font-bold text-white flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +128,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
           </h2>
           <button
             onClick={onClose}
-            className="text-white hover:text-blue-200 focus:outline-none"
+            className="text-white hover:text-slate-300 focus:outline-none"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -151,7 +151,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-blue-200 mb-1">
+              <label htmlFor="name" className="block text-slate-300 mb-1">
                 이름
               </label>
               <input
@@ -160,8 +160,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-white/10 text-white rounded-lg border ${
-                  errors.name ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-2 bg-slate-800 text-white rounded-lg border ${
+                  errors.name ? 'border-red-500' : 'border-slate-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
               {errors.name && (
@@ -170,7 +170,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-blue-200 mb-1">
+              <label htmlFor="email" className="block text-slate-300 mb-1">
                 이메일
               </label>
               <input
@@ -179,8 +179,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-white/10 text-white rounded-lg border ${
-                  errors.email ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-2 bg-slate-800 text-white rounded-lg border ${
+                  errors.email ? 'border-red-500' : 'border-slate-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
               {errors.email && (
@@ -189,7 +189,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
             </div>
 
             <div>
-              <label htmlFor="mbti" className="block text-blue-200 mb-1">
+              <label htmlFor="mbti" className="block text-slate-300 mb-1">
                 MBTI
               </label>
               <select
@@ -197,11 +197,11 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
                 name="mbti"
                 value={formData.mbti || ''}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-slate-800 text-white rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">선택 안함</option>
+                <option value="" className="bg-slate-900 text-white">선택 안함</option>
                 {MBTI_TYPES.map((type) => (
-                  <option key={type} value={type}>
+                  <option key={type} value={type} className="bg-slate-900 text-white">
                     {type}
                   </option>
                 ))}
@@ -213,7 +213,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, isOpen, onClose, on
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-600"
             >
               취소
             </button>

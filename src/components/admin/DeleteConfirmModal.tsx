@@ -18,14 +18,14 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950"
         onClick={onClose}
       ></div>
-      <div className="relative bg-gradient-to-br from-gray-800 to-red-900 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-white/10">
+      <div className="relative bg-slate-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-red-800 to-red-900 px-6 py-4 flex justify-between items-center">
+        <div className="bg-slate-800 px-6 py-4 flex justify-between items-center border-b border-slate-700">
           <h2 className="text-xl font-bold text-white flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="text-white hover:text-red-200 focus:outline-none"
+            className="text-white hover:text-slate-300 focus:outline-none"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -88,29 +88,29 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <p className="text-white text-center font-medium text-lg mb-2">
             정말 삭제하시겠습니까?
           </p>
-          <p className="text-red-200 text-center mb-4">
+          <p className="text-slate-300 text-center mb-4">
             {message}
           </p>
 
-          <div className="bg-red-800/30 rounded-lg p-3 border border-red-500/30 mb-4">
-            <p className="text-red-200 text-sm">
+          <div className="bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4">
+            <p className="text-slate-300 text-sm">
               삭제 시 다음 데이터가 함께 삭제됩니다:
             </p>
-            <ul className="text-red-100 text-sm mt-2 space-y-1 ml-4">
+            <ul className="text-slate-100 text-sm mt-2 space-y-1 ml-4">
               <li className="flex items-start">
-                <svg className="w-4 h-4 text-red-300 mr-1 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-slate-300 mr-1 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 사용자 계정 정보
               </li>
               <li className="flex items-start">
-                <svg className="w-4 h-4 text-red-300 mr-1 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-slate-300 mr-1 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 MBTI 검사 결과
               </li>
               <li className="flex items-start">
-                <svg className="w-4 h-4 text-red-300 mr-1 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-slate-300 mr-1 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 모든 검사 데이터 및 결과
@@ -120,10 +120,10 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         </div>
 
         {/* 푸터 */}
-        <div className="bg-white/5 px-6 py-4 flex justify-end space-x-3">
+        <div className="bg-slate-800/70 px-6 py-4 flex justify-end space-x-3 border-t border-slate-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-600"
           >
             취소
           </button>
