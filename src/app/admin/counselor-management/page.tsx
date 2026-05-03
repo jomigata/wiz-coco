@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FaUserCheck, FaSearch, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
+import { FaUserCheck, FaSearch, FaCheck, FaTimes, FaEye, FaFileAlt, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
 import RoleGuard from '@/components/RoleGuard';
 
 interface CounselorApplication {
@@ -113,6 +113,7 @@ function CounselorManagementPageContent() {
     documents: [],
     notes: ''
   });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // URL 파라미터 확인하여 자동으로 추가 모달 열기
   useEffect(() => {
@@ -121,27 +122,40 @@ function CounselorManagementPageContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [searchQuery, statusFilter, activeTab]);
+
   // 필터링
   const filteredApplications = applications
-    .filter(app => {
-      const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          app.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          app.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    .filter((app) => {
+      const q = searchQuery.toLowerCase().trim();
+      const blob = [
+        app.name,
+        app.email,
+        app.licenseNumber,
+        app.institution,
+        app.education,
+        app.specialization.join(' '),
+      ]
+        .join(' ')
+        .toLowerCase();
+      const matchesSearch = !q || blob.includes(q);
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
 
-  const getStatusColor = (status: CounselorApplication['status']) => {
+  const getStatusBadgeClass = (status: CounselorApplication['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-500 text-white';
+        return 'border border-amber-500/30 bg-amber-500/10 text-amber-100';
       case 'approved':
-        return 'bg-green-500 text-white';
+        return 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-100';
       case 'rejected':
-        return 'bg-red-500 text-white';
+        return 'border border-rose-500/30 bg-rose-500/10 text-rose-100';
       default:
-        return 'bg-gray-500 text-white';
+        return 'border border-white/15 bg-white/5 text-slate-300';
     }
   };
 
@@ -243,211 +257,286 @@ function CounselorManagementPageContent() {
     setNewApplication(prev => ({ ...prev, documents }));
   };
 
-
   const pendingCount = applications.filter((app) => app.status === 'pending').length;
+  const approvedForProfile = applications.filter((a) => a.status === 'approved').length;
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAllFiltered = () => {
+    if (selectedIds.length === filteredApplications.length && filteredApplications.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredApplications.map((a) => a.id));
+    }
+  };
+
+  const selectedPendingCount = selectedIds.filter((id) => {
+    const row = applications.find((a) => a.id === id);
+    return row?.status === 'pending';
+  }).length;
+
+  const handleBulkApprove = () => {
+    const ids = selectedIds.filter((id) => applications.find((a) => a.id === id)?.status === 'pending');
+    if (ids.length === 0) return;
+    setApplications((prev) =>
+      prev.map((app) => (ids.includes(app.id) ? { ...app, status: 'approved' as const } : app)),
+    );
+    setSelectedIds([]);
+  };
+
+  const handleBulkReject = () => {
+    const ids = selectedIds.filter((id) => applications.find((a) => a.id === id)?.status === 'pending');
+    if (ids.length === 0) return;
+    setApplications((prev) =>
+      prev.map((app) => (ids.includes(app.id) ? { ...app, status: 'rejected' as const } : app)),
+    );
+    setSelectedIds([]);
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 text-slate-100">
       <motion.div
-        className="flex shrink-0 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between"
-        initial={{ opacity: 0, y: -6 }}
+        className="mb-1 shrink-0 rounded-lg border border-sky-500/20 bg-sky-950/25 px-3 py-2"
+        initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.25 }}
       >
-        <div className="flex flex-wrap items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] p-0.5">
-          <button
-            type="button"
-            onClick={() => setActiveTab('verification')}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
-              activeTab === 'verification'
-                ? 'bg-sky-600/90 text-white shadow-sm'
-                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-            }`}
-          >
-            <FaUserCheck className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            인증 관리
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('profiles')}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
-              activeTab === 'profiles'
-                ? 'bg-sky-600/90 text-white shadow-sm'
-                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-            }`}
-          >
-            <FaEdit className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            프로필
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('activity')}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
-              activeTab === 'activity'
-                ? 'bg-sky-600/90 text-white shadow-sm'
-                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-            }`}
-          >
-            <FaFileAlt className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            활동
-          </button>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] text-slate-500">
-            대기 <span className="font-semibold text-amber-200/95">{pendingCount}</span>
-          </span>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[11px] leading-snug text-slate-300 sm:text-xs">
+            검토 대기 <span className="font-semibold text-amber-200/95">{pendingCount}</span>건 · 자격·학력 서류를
+            확인한 뒤 승인 또는 거부를 선택하세요.
+          </p>
           <button
             type="button"
             onClick={openAddModal}
-            className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600/90 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 sm:text-sm"
+            className="shrink-0 self-start rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 sm:self-auto"
           >
-            <FaPlus className="h-3.5 w-3.5" />
-            추가
+            상담사 추가
           </button>
         </div>
       </motion.div>
 
+      <motion.div
+        className="mb-2 flex shrink-0 flex-wrap gap-x-1 gap-y-0 border-b border-white/10"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <button
+          type="button"
+          onClick={() => setActiveTab('verification')}
+          className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === 'verification'
+              ? 'border border-b-0 border-white/15 bg-white/10 text-white'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          인증 관리 ({applications.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('profiles')}
+          className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === 'profiles'
+              ? 'border border-b-0 border-white/15 bg-white/10 text-white'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          프로필 ({approvedForProfile})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('activity')}
+          className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === 'activity'
+              ? 'border border-b-0 border-white/15 bg-white/10 text-white'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          활동 현황
+        </button>
+      </motion.div>
+
       {activeTab === 'verification' && (
-        <>
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <motion.div
+          className="flex min-h-0 flex-1 flex-col bg-white/[0.06] p-3 sm:p-4 rounded-lg border border-white/10"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <h2 className="text-sm font-semibold text-slate-100 sm:shrink-0">
+              인증 신청{' '}
+              <span className="font-normal text-slate-500">({filteredApplications.length})</span>
+            </h2>
             <div className="relative min-w-0 flex-1">
               <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
-                placeholder="이름 · 이메일 · 자격증 번호"
+                placeholder="이름 · 이메일 · 자격증 · 소속 · 학력 · 분야 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:text-sm"
               />
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
-              className="w-full shrink-0 rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:w-36 sm:text-sm"
-            >
-              <option value="all" className="bg-slate-900">
-                전체 상태
-              </option>
-              <option value="pending" className="bg-slate-900">
-                검토 중
-              </option>
-              <option value="approved" className="bg-slate-900">
-                승인됨
-              </option>
-              <option value="rejected" className="bg-slate-900">
-                거부됨
-              </option>
-            </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
+                className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:text-sm"
+              >
+                <option value="all" className="bg-slate-900">전체</option>
+                <option value="pending" className="bg-slate-900">검토 중</option>
+                <option value="approved" className="bg-slate-900">승인됨</option>
+                <option value="rejected" className="bg-slate-900">거부됨</option>
+              </select>
+              <button
+                type="button"
+                onClick={handleBulkApprove}
+                disabled={selectedPendingCount === 0}
+                className="rounded-md border border-emerald-500/30 bg-emerald-800/40 px-2.5 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                선택 승인 ({selectedPendingCount})
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkReject}
+                disabled={selectedPendingCount === 0}
+                className="rounded-md border border-rose-500/30 bg-rose-900/40 px-2.5 py-1.5 text-xs font-medium text-rose-100 hover:bg-rose-800/50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                선택 거부 ({selectedPendingCount})
+              </button>
+            </div>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-white/10">
             {filteredApplications.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] py-10 text-center">
+              <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
                 <FaUserCheck className="mb-2 h-10 w-10 text-slate-600" />
-                <p className="text-sm text-slate-300">조건에 맞는 인증 신청이 없습니다.</p>
+                <p className="text-sm text-slate-400">조건에 맞는 인증 신청이 없습니다.</p>
               </div>
             ) : (
-              <div className="min-h-0 flex-1 overflow-auto pr-0.5">
-                <div className="grid grid-cols-1 gap-2 xl:grid-cols-2 2xl:grid-cols-3">
-                  {filteredApplications.map((application, index) => (
-                    <motion.div
-                      key={application.id}
-                      className="rounded-lg border border-white/10 bg-white/[0.05] p-3 transition-colors hover:border-white/20"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(0.04 * index, 0.24), duration: 0.25 }}
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-600 to-indigo-700 text-sm font-semibold text-white">
-                            {application.name.charAt(0)}
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="truncate text-sm font-semibold text-white">{application.name}</h3>
-                            <p className="truncate text-[11px] text-slate-400">{application.email}</p>
-                            <p className="truncate font-mono text-[10px] text-slate-500">{application.licenseNumber}</p>
-                          </div>
-                        </div>
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${getStatusColor(application.status)}`}
-                        >
-                          {getStatusText(application.status)}
-                        </span>
-                      </div>
-
-                      <div className="mb-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-400">
-                        <div className="col-span-2 flex min-w-0 items-start gap-1">
-                          <FaGraduationCap className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
-                          <span className="line-clamp-2">{application.education}</span>
-                        </div>
-                        <div className="col-span-2 flex min-w-0 items-start gap-1">
-                          <FaCertificate className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
-                          <span className="line-clamp-1">{application.institution}</span>
-                        </div>
-                        <span>경력 {application.experience}년</span>
-                        <span className="text-right">
+              <div className="min-h-0 flex-1 overflow-auto">
+                <table className="min-w-full divide-y divide-white/10 text-xs">
+                  <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+                    <tr>
+                      <th scope="col" className="w-10 px-2 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={
+                            filteredApplications.length > 0 &&
+                            selectedIds.length === filteredApplications.length
+                          }
+                          onChange={toggleSelectAllFiltered}
+                          className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-sky-400 focus:ring-sky-400/50"
+                        />
+                      </th>
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-left font-medium text-slate-400">
+                        신청일
+                      </th>
+                      <th scope="col" className="px-2 py-2 text-left font-medium text-slate-400">
+                        이름
+                      </th>
+                      <th scope="col" className="min-w-[8rem] px-2 py-2 text-left font-medium text-slate-400">
+                        이메일
+                      </th>
+                      <th scope="col" className="min-w-[6rem] px-2 py-2 text-left font-medium text-slate-400">
+                        자격증 번호
+                      </th>
+                      <th scope="col" className="hidden min-w-[6rem] px-2 py-2 text-left font-medium text-slate-400 lg:table-cell">
+                        소속
+                      </th>
+                      <th scope="col" className="hidden min-w-[7rem] px-2 py-2 text-left font-medium text-slate-400 xl:table-cell">
+                        학력
+                      </th>
+                      <th scope="col" className="hidden px-2 py-2 text-left font-medium text-slate-400 md:table-cell">
+                        전문분야
+                      </th>
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center font-medium text-slate-400">
+                        상태
+                      </th>
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center font-medium text-slate-400">
+                        작업
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.06]">
+                    {filteredApplications.map((application) => (
+                      <tr key={application.id} className="hover:bg-white/[0.04]">
+                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(application.id)}
+                            onChange={() => toggleSelectRow(application.id)}
+                            className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-sky-400 focus:ring-sky-400/50"
+                          />
+                        </td>
+                        <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-300">
                           {new Date(application.appliedDate).toLocaleDateString('ko-KR')}
-                        </span>
-                        <div className="col-span-2 line-clamp-1 text-slate-500">
-                          분야: {application.specialization.join(', ')}
-                        </div>
-                      </div>
-
-                      <div className="mb-2 flex flex-wrap gap-1">
-                        {application.documents.slice(0, 4).map((doc, idx) => (
-                          <span
-                            key={idx}
-                            className="max-w-[7rem] truncate rounded border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-slate-300"
-                          >
-                            {doc}
+                        </td>
+                        <td className="max-w-[6rem] truncate px-2 py-1.5 text-left font-medium text-white">
+                          {application.name}
+                        </td>
+                        <td className="max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-300" title={application.email}>
+                          {application.email}
+                        </td>
+                        <td className="max-w-[8rem] truncate px-2 py-1.5 text-left font-mono text-[11px] text-slate-400" title={application.licenseNumber}>
+                          {application.licenseNumber}
+                        </td>
+                        <td className="hidden max-w-[8rem] truncate px-2 py-1.5 text-left text-slate-400 lg:table-cell" title={application.institution}>
+                          {application.institution}
+                        </td>
+                        <td className="hidden max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-400 xl:table-cell" title={application.education}>
+                          {application.education}
+                        </td>
+                        <td className="hidden max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-500 md:table-cell" title={application.specialization.join(', ')}>
+                          {application.specialization.join(', ')}
+                        </td>
+                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${getStatusBadgeClass(application.status)}`}>
+                            {getStatusText(application.status)}
                           </span>
-                        ))}
-                        {application.documents.length > 4 ? (
-                          <span className="text-[10px] text-slate-500">+{application.documents.length - 4}</span>
-                        ) : null}
-                      </div>
-
-                      <p className="mb-2 line-clamp-1 text-[11px] text-slate-500" title={application.notes}>
-                        메모: {application.notes}
-                      </p>
-
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openModal(application)}
-                          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-sky-700/70 py-1.5 text-[11px] font-medium text-white hover:bg-sky-600/80"
-                        >
-                          <FaEye className="h-3 w-3" />
-                          상세
-                        </button>
-                        {application.status === 'pending' && (
-                          <>
+                        </td>
+                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
+                          <div className="flex flex-wrap items-center justify-center gap-1">
                             <button
                               type="button"
-                              onClick={() => handleApprove(application.id)}
-                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-700/80 py-1.5 text-[11px] font-medium text-white hover:bg-emerald-600/90"
+                              onClick={() => openModal(application)}
+                              className="rounded bg-sky-800/50 px-2 py-0.5 text-[11px] font-medium text-sky-100 hover:bg-sky-700/60"
                             >
-                              <FaCheck className="h-3 w-3" />
-                              승인
+                              상세
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => handleReject(application.id)}
-                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-rose-800/80 py-1.5 text-[11px] font-medium text-white hover:bg-rose-700/90"
-                            >
-                              <FaTimes className="h-3 w-3" />
-                              거부
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                            {application.status === 'pending' && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleApprove(application.id)}
+                                  className="rounded bg-emerald-800/50 px-2 py-0.5 text-[11px] font-medium text-emerald-100 hover:bg-emerald-700/60"
+                                >
+                                  승인
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleReject(application.id)}
+                                  className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-medium text-slate-300 hover:bg-white/15"
+                                >
+                                  거부
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
-        </>
+          <div className="mt-2 shrink-0 text-[11px] text-slate-500">총 {filteredApplications.length}건</div>
+        </motion.div>
       )}
 
         {/* 상담사 추가 모달 */}
@@ -723,48 +812,64 @@ function CounselorManagementPageContent() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]"
+            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 sm:p-4"
           >
-            <div className="border-b border-white/10 px-3 py-2">
-              <h3 className="text-sm font-semibold text-white">승인된 상담사 프로필</h3>
-              <p className="text-[11px] text-slate-500">카드에서 바로 편집을 시작할 수 있습니다.</p>
+            <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-100">
+                승인 프로필{' '}
+                <span className="font-normal text-slate-500">({approvedForProfile})</span>
+              </h2>
             </div>
-            <div className="min-h-0 flex-1 overflow-auto p-2 sm:p-3">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {applications
-                  .filter((app) => app.status === 'approved')
-                  .map((counselor) => (
-                    <div
-                      key={counselor.id}
-                      className="rounded-lg border border-white/10 bg-slate-900/40 p-3"
-                    >
-                      <div className="mb-2 flex items-center gap-2">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-600 to-indigo-700 text-sm font-bold text-white">
-                          {counselor.name[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="truncate text-sm font-semibold text-white">{counselor.name}</h4>
-                          <p className="truncate text-[11px] text-slate-400">{counselor.email}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-1 text-[11px] text-slate-400">
-                        <p className="line-clamp-2">
-                          <span className="text-slate-500">분야</span> {counselor.specialization.join(', ')}
-                        </p>
-                        <p>
-                          <span className="text-slate-500">경력</span> {counselor.experience}년 · {counselor.institution}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="mt-2 w-full rounded-md bg-sky-700/70 py-1.5 text-[11px] font-medium text-white hover:bg-sky-600/80"
-                      >
-                        편집
-                      </button>
-                    </div>
-                  ))}
-              </div>
+            <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
+              {approvedForProfile === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-slate-400">
+                  승인된 상담사가 없습니다.
+                </div>
+              ) : (
+                <div className="max-h-[min(60vh,32rem)] overflow-auto lg:max-h-none">
+                  <table className="min-w-full divide-y divide-white/10 text-xs">
+                    <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+                      <tr>
+                        <th className="px-2 py-2 text-left font-medium text-slate-400">이름</th>
+                        <th className="min-w-[8rem] px-2 py-2 text-left font-medium text-slate-400">이메일</th>
+                        <th className="hidden px-2 py-2 text-left font-medium text-slate-400 sm:table-cell">소속</th>
+                        <th className="hidden px-2 py-2 text-left font-medium text-slate-400 md:table-cell">전문분야</th>
+                        <th className="whitespace-nowrap px-2 py-2 text-left font-medium text-slate-400">경력</th>
+                        <th className="px-2 py-2 text-center font-medium text-slate-400">작업</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.06]">
+                      {applications
+                        .filter((app) => app.status === 'approved')
+                        .map((c) => (
+                          <tr key={c.id} className="hover:bg-white/[0.04]">
+                            <td className="max-w-[6rem] truncate px-2 py-1.5 text-left font-medium text-white">{c.name}</td>
+                            <td className="max-w-[12rem] truncate px-2 py-1.5 text-left text-slate-300" title={c.email}>
+                              {c.email}
+                            </td>
+                            <td className="hidden max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-400 sm:table-cell" title={c.institution}>
+                              {c.institution}
+                            </td>
+                            <td className="hidden max-w-[12rem] truncate px-2 py-1.5 text-left text-slate-500 md:table-cell" title={c.specialization.join(', ')}>
+                              {c.specialization.join(', ')}
+                            </td>
+                            <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-400">{c.experience}년</td>
+                            <td className="px-2 py-1.5 text-center">
+                              <button
+                                type="button"
+                                className="rounded bg-sky-800/50 px-2 py-0.5 text-[11px] font-medium text-sky-100 hover:bg-sky-700/60"
+                              >
+                                편집
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
+            <div className="mt-2 text-[11px] text-slate-500">총 {approvedForProfile}명</div>
           </motion.div>
         )}
 
@@ -774,9 +879,9 @@ function CounselorManagementPageContent() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]"
+            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 sm:p-4"
           >
-            <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-white/10 p-2 sm:grid-cols-4">
+            <div className="mb-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-md border border-emerald-500/20 bg-emerald-950/30 px-2 py-2 text-center">
                 <div className="text-lg font-bold text-emerald-300">
                   {applications.filter((app) => app.status === 'approved').length}
@@ -797,24 +902,31 @@ function CounselorManagementPageContent() {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto p-2 sm:p-3">
-              <h4 className="mb-2 text-xs font-semibold text-slate-300">최근 활동</h4>
-              <div className="space-y-1.5">
-                {[
-                  ['김상담', '새 상담 세션 완료', '2시간 전'],
-                  ['이치료', '치료 계획 업데이트', '4시간 전'],
-                  ['박심리', '내담자 평가 완료', '6시간 전'],
-                ].map(([name, action, time], i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-2 rounded-md border border-white/10 bg-slate-900/40 px-2 py-1.5 text-[11px]"
-                  >
-                    <span className="truncate text-slate-200">
-                      {name} — {action}
-                    </span>
-                    <span className="shrink-0 text-slate-500">{time}</span>
-                  </div>
-                ))}
+            <h2 className="mb-2 text-sm font-semibold text-slate-100">최근 활동</h2>
+            <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
+              <div className="max-h-[min(50vh,24rem)] overflow-auto lg:max-h-none">
+                <table className="min-w-full divide-y divide-white/10 text-xs">
+                  <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+                    <tr>
+                      <th className="px-2 py-2 text-left font-medium text-slate-400">상담사</th>
+                      <th className="min-w-[10rem] px-2 py-2 text-left font-medium text-slate-400">내용</th>
+                      <th className="whitespace-nowrap px-2 py-2 text-right font-medium text-slate-400">시각</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.06]">
+                    {[
+                      ['김상담', '새 상담 세션 완료', '2시간 전'],
+                      ['이치료', '치료 계획 업데이트', '4시간 전'],
+                      ['박심리', '내담자 평가 완료', '6시간 전'],
+                    ].map(([name, action, time], i) => (
+                      <tr key={i} className="hover:bg-white/[0.04]">
+                        <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-200">{name}</td>
+                        <td className="px-2 py-1.5 text-left text-slate-400">{action}</td>
+                        <td className="whitespace-nowrap px-2 py-1.5 text-right text-slate-500">{time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </motion.div>
