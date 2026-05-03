@@ -107,42 +107,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* 상단 네비게이션 */}
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
       <div className="fixed top-0 left-0 right-0 z-50">
         <Navigation />
       </div>
-      
-      {/* 메인 콘텐츠 영역 - 전체 화면 최적화 */}
-      <div className="pt-16">
-        {/* 상단 헤더 */}
-        <header className="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-4 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+      <div className="flex min-h-0 flex-1 flex-col pt-16">
+        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 px-4 py-2 backdrop-blur-sm sm:px-5">
+          <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-sky-500/25 bg-sky-500/10">
+                <svg className="h-4 w-4 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">{currentPageTitle || '관리자 대시보드'}</h1>
-                <p className="text-red-100 text-sm mt-1">전문 상담 관리 시스템</p>
-              </div>
+              <h1 className="truncate text-base font-semibold tracking-tight text-white sm:text-lg">
+                {currentPageTitle || '관리자 대시보드'}
+              </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-red-100">관리자</p>
-                <p className="text-white font-medium">김관리</p>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <div className="hidden text-right text-[11px] leading-tight text-slate-400 sm:block">
+                <span className="text-slate-500">관리자</span>
+                <span className="ml-1.5 font-medium text-slate-200">김관리</span>
               </div>
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">김</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-slate-200">
+                김
               </div>
             </div>
           </div>
         </header>
 
-        {/* 메인 콘텐츠 */}
-        <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <main className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col overflow-y-auto overflow-x-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 px-3 py-3 sm:px-4 sm:py-3">
           {children}
         </main>
       </div>

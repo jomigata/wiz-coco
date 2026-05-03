@@ -1,13 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import Link from 'next/link';
-import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { shouldShowAdminMenu } from '@/utils/roleUtils';
+import { FaUserCheck, FaSearch, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
 import RoleGuard from '@/components/RoleGuard';
 
 interface CounselorApplication {
@@ -248,257 +244,215 @@ function CounselorManagementPageContent() {
   };
 
 
+  const pendingCount = applications.filter((app) => app.status === 'pending').length;
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      <Navigation />
-      <div className="h-20"></div>
-      
-      {/* Background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        {/* 페이지 헤더 */}
-        <motion.div 
-          className="mb-8 relative"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-300 via-blue-200 to-purple-300 inline-block drop-shadow-lg">
-                상담사 관리
-              </h1>
-              <motion.div 
-                className="h-1.5 w-32 bg-gradient-to-r from-red-500 via-blue-500 to-purple-500 rounded-full mt-2 shadow-lg"
-                initial={{ width: 0 }}
-                animate={{ width: 128 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              ></motion.div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-white">
-                  {applications.filter(app => app.status === 'pending').length}
-                </div>
-                <div className="text-sm text-red-200">검토 대기 중</div>
-              </div>
-              <button
-                onClick={openAddModal}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
-              >
-                <FaPlus className="w-4 h-4" />
-                상담사 추가
-              </button>
-            </div>
-          </div>
-        </motion.div>
+    <div className="flex min-h-0 flex-1 flex-col gap-2 text-slate-100">
+      <motion.div
+        className="flex shrink-0 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between"
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex flex-wrap items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] p-0.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab('verification')}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              activeTab === 'verification'
+                ? 'bg-sky-600/90 text-white shadow-sm'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            }`}
+          >
+            <FaUserCheck className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            인증 관리
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('profiles')}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              activeTab === 'profiles'
+                ? 'bg-sky-600/90 text-white shadow-sm'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            }`}
+          >
+            <FaEdit className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            프로필
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('activity')}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              activeTab === 'activity'
+                ? 'bg-sky-600/90 text-white shadow-sm'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            }`}
+          >
+            <FaFileAlt className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            활동
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-slate-500">
+            대기 <span className="font-semibold text-amber-200/95">{pendingCount}</span>
+          </span>
+          <button
+            type="button"
+            onClick={openAddModal}
+            className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600/90 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 sm:text-sm"
+          >
+            <FaPlus className="h-3.5 w-3.5" />
+            추가
+          </button>
+        </div>
+      </motion.div>
 
-        {/* 탭 네비게이션 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="mb-8"
-        >
-          <div className="flex space-x-1 bg-gray-800/50 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50">
-            <button
-              onClick={() => setActiveTab('verification')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-                activeTab === 'verification'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              <FaUserCheck className="w-5 h-5" />
-              상담사 인증 관리
-            </button>
-            <button
-              onClick={() => setActiveTab('profiles')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-                activeTab === 'profiles'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              <FaEdit className="w-5 h-5" />
-              프로필 관리
-            </button>
-            <button
-              onClick={() => setActiveTab('activity')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-                activeTab === 'activity'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              <FaFileAlt className="w-5 h-5" />
-              활동 현황
-            </button>
-          </div>
-        </motion.div>
-
-        {/* 탭별 콘텐츠 */}
-        {activeTab === 'verification' && (
-          <>
-            {/* 인증 관리 탭 */}
-            {/* 검색 및 필터 */}
-            <motion.div
-          className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-300 w-4 h-4" />
+      {activeTab === 'verification' && (
+        <>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
+              <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
-                placeholder="이름, 이메일, 자격증 번호로 검색..."
+                placeholder="이름 · 이메일 · 자격증 번호"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:text-sm"
               />
             </div>
-            <div className="flex gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                <option value="all" className="bg-gray-800">전체 상태</option>
-                <option value="pending" className="bg-gray-800">검토 중</option>
-                <option value="approved" className="bg-gray-800">승인됨</option>
-                <option value="rejected" className="bg-gray-800">거부됨</option>
-              </select>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* 상담사 인증 신청 목록 */}
-        <motion.div
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          {filteredApplications.map((application, index) => (
-            <motion.div
-              key={application.id}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:border-white/40 transition-all duration-300"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index, duration: 0.5 }}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
+              className="w-full shrink-0 rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:w-36 sm:text-sm"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {application.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">{application.name}</h3>
-                    <p className="text-red-200 text-sm">{application.email}</p>
-                    <p className="text-red-300 text-xs">{application.licenseNumber}</p>
-                  </div>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
-                  {getStatusText(application.status)}
-                </span>
-              </div>
+              <option value="all" className="bg-slate-900">
+                전체 상태
+              </option>
+              <option value="pending" className="bg-slate-900">
+                검토 중
+              </option>
+              <option value="approved" className="bg-slate-900">
+                승인됨
+              </option>
+              <option value="rejected" className="bg-slate-900">
+                거부됨
+              </option>
+            </select>
+          </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-red-200">
-                  <FaGraduationCap className="w-4 h-4" />
-                  <span className="text-sm">{application.education}</span>
-                </div>
-                <div className="flex items-center gap-2 text-red-200">
-                  <FaCertificate className="w-4 h-4" />
-                  <span className="text-sm">{application.institution}</span>
-                </div>
-                <div className="text-sm text-red-200">
-                  경력: {application.experience}년
-                </div>
-                <div className="text-sm text-red-200">
-                  전문분야: {application.specialization.join(', ')}
-                </div>
-                <div className="text-sm text-red-200">
-                  신청일: {new Date(application.appliedDate).toLocaleDateString('ko-KR')}
-                </div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            {filteredApplications.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] py-10 text-center">
+                <FaUserCheck className="mb-2 h-10 w-10 text-slate-600" />
+                <p className="text-sm text-slate-300">조건에 맞는 인증 신청이 없습니다.</p>
               </div>
+            ) : (
+              <div className="min-h-0 flex-1 overflow-auto pr-0.5">
+                <div className="grid grid-cols-1 gap-2 xl:grid-cols-2 2xl:grid-cols-3">
+                  {filteredApplications.map((application, index) => (
+                    <motion.div
+                      key={application.id}
+                      className="rounded-lg border border-white/10 bg-white/[0.05] p-3 transition-colors hover:border-white/20"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(0.04 * index, 0.24), duration: 0.25 }}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-600 to-indigo-700 text-sm font-semibold text-white">
+                            {application.name.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="truncate text-sm font-semibold text-white">{application.name}</h3>
+                            <p className="truncate text-[11px] text-slate-400">{application.email}</p>
+                            <p className="truncate font-mono text-[10px] text-slate-500">{application.licenseNumber}</p>
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${getStatusColor(application.status)}`}
+                        >
+                          {getStatusText(application.status)}
+                        </span>
+                      </div>
 
-              <div className="mb-4">
-                <div className="text-sm text-red-300 mb-1">첨부 문서</div>
-                <div className="flex flex-wrap gap-1">
-                  {application.documents.map((doc, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-white/10 rounded text-xs text-red-200">
-                      {doc}
-                    </span>
+                      <div className="mb-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-400">
+                        <div className="col-span-2 flex min-w-0 items-start gap-1">
+                          <FaGraduationCap className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
+                          <span className="line-clamp-2">{application.education}</span>
+                        </div>
+                        <div className="col-span-2 flex min-w-0 items-start gap-1">
+                          <FaCertificate className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
+                          <span className="line-clamp-1">{application.institution}</span>
+                        </div>
+                        <span>경력 {application.experience}년</span>
+                        <span className="text-right">
+                          {new Date(application.appliedDate).toLocaleDateString('ko-KR')}
+                        </span>
+                        <div className="col-span-2 line-clamp-1 text-slate-500">
+                          분야: {application.specialization.join(', ')}
+                        </div>
+                      </div>
+
+                      <div className="mb-2 flex flex-wrap gap-1">
+                        {application.documents.slice(0, 4).map((doc, idx) => (
+                          <span
+                            key={idx}
+                            className="max-w-[7rem] truncate rounded border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-slate-300"
+                          >
+                            {doc}
+                          </span>
+                        ))}
+                        {application.documents.length > 4 ? (
+                          <span className="text-[10px] text-slate-500">+{application.documents.length - 4}</span>
+                        ) : null}
+                      </div>
+
+                      <p className="mb-2 line-clamp-1 text-[11px] text-slate-500" title={application.notes}>
+                        메모: {application.notes}
+                      </p>
+
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openModal(application)}
+                          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-sky-700/70 py-1.5 text-[11px] font-medium text-white hover:bg-sky-600/80"
+                        >
+                          <FaEye className="h-3 w-3" />
+                          상세
+                        </button>
+                        {application.status === 'pending' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleApprove(application.id)}
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-700/80 py-1.5 text-[11px] font-medium text-white hover:bg-emerald-600/90"
+                            >
+                              <FaCheck className="h-3 w-3" />
+                              승인
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReject(application.id)}
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-rose-800/80 py-1.5 text-[11px] font-medium text-white hover:bg-rose-700/90"
+                            >
+                              <FaTimes className="h-3 w-3" />
+                              거부
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
-
-              <div className="mb-4">
-                <div className="text-sm text-red-300 mb-1">신청자 메모</div>
-                <p className="text-sm text-red-200 line-clamp-2">{application.notes}</p>
-              </div>
-
-              {application.reviewNotes && (
-                <div className="mb-4">
-                  <div className="text-sm text-red-300 mb-1">검토 메모</div>
-                  <p className="text-sm text-red-200 line-clamp-2">{application.reviewNotes}</p>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => openModal(application)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <FaEye className="w-4 h-4" />
-                  상세보기
-                </button>
-                {application.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(application.id)}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                    >
-                      <FaCheck className="w-4 h-4" />
-                      승인
-                    </button>
-                    <button
-                      onClick={() => handleReject(application.id)}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                    >
-                      <FaTimes className="w-4 h-4" />
-                      거부
-                    </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {filteredApplications.length === 0 && (
-          <motion.div
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
-            <FaUserCheck className="w-16 h-16 text-red-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">인증 신청이 없습니다</h3>
-            <p className="text-red-200 mb-4">검색 조건에 맞는 상담사 인증 신청이 없습니다.</p>
-          </motion.div>
-        )}
+            )}
+          </div>
+        </>
+      )}
 
         {/* 상담사 추가 모달 */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
             <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-white">상담사 수동 추가</h3>
@@ -654,7 +608,7 @@ function CounselorManagementPageContent() {
 
         {/* 상세보기 모달 */}
         {showModal && selectedApplication && (
-          <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
             <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-white">상담사 인증 상세 정보</h3>
@@ -759,51 +713,53 @@ function CounselorManagementPageContent() {
                   닫기
                 </button>
               </div>
-            </div>
           </div>
-        )}
-        </>
+        </div>
         )}
 
         {/* 프로필 관리 탭 */}
         {activeTab === 'profiles' && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20"
+            transition={{ duration: 0.25 }}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]"
           >
-            <div className="text-center">
-              <FaEdit className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">상담사 프로필 관리</h3>
-              <p className="text-gray-300 mb-6">승인된 상담사들의 프로필 정보를 관리하고 업데이트할 수 있습니다.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="border-b border-white/10 px-3 py-2">
+              <h3 className="text-sm font-semibold text-white">승인된 상담사 프로필</h3>
+              <p className="text-[11px] text-slate-500">카드에서 바로 편집을 시작할 수 있습니다.</p>
+            </div>
+            <div className="min-h-0 flex-1 overflow-auto p-2 sm:p-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {applications
-                  .filter(app => app.status === 'approved')
+                  .filter((app) => app.status === 'approved')
                   .map((counselor) => (
-                    <div key={counselor.id} className="bg-gray-800/50 rounded-lg p-6 border border-gray-700/50">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold">{counselor.name[0]}</span>
+                    <div
+                      key={counselor.id}
+                      className="rounded-lg border border-white/10 bg-slate-900/40 p-3"
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-600 to-indigo-700 text-sm font-bold text-white">
+                          {counselor.name[0]}
                         </div>
-                        <div>
-                          <h4 className="text-white font-semibold">{counselor.name}</h4>
-                          <p className="text-gray-400 text-sm">{counselor.email}</p>
+                        <div className="min-w-0">
+                          <h4 className="truncate text-sm font-semibold text-white">{counselor.name}</h4>
+                          <p className="truncate text-[11px] text-slate-400">{counselor.email}</p>
                         </div>
                       </div>
-                      <div className="space-y-2 text-sm">
-                        <p className="text-gray-300">
-                          <span className="text-blue-400">전문분야:</span> {counselor.specialization.join(', ')}
+                      <div className="space-y-1 text-[11px] text-slate-400">
+                        <p className="line-clamp-2">
+                          <span className="text-slate-500">분야</span> {counselor.specialization.join(', ')}
                         </p>
-                        <p className="text-gray-300">
-                          <span className="text-blue-400">경력:</span> {counselor.experience}년
-                        </p>
-                        <p className="text-gray-300">
-                          <span className="text-blue-400">소속:</span> {counselor.institution}
+                        <p>
+                          <span className="text-slate-500">경력</span> {counselor.experience}년 · {counselor.institution}
                         </p>
                       </div>
-                      <button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors duration-200">
-                        프로필 편집
+                      <button
+                        type="button"
+                        className="mt-2 w-full rounded-md bg-sky-700/70 py-1.5 text-[11px] font-medium text-white hover:bg-sky-600/80"
+                      >
+                        편집
                       </button>
                     </div>
                   ))}
@@ -815,72 +771,64 @@ function CounselorManagementPageContent() {
         {/* 활동 현황 탭 */}
         {activeTab === 'activity' && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20"
+            transition={{ duration: 0.25 }}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]"
           >
-            <div className="text-center">
-              <FaFileAlt className="w-16 h-16 text-green-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">상담사 활동 현황</h3>
-              <p className="text-gray-300 mb-6">상담사들의 상담 활동, 성과 지표, 피드백 등을 확인할 수 있습니다.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-green-500/20 rounded-lg p-6 border border-green-500/30">
-                  <div className="text-3xl font-bold text-green-400">
-                    {applications.filter(app => app.status === 'approved').length}
-                  </div>
-                  <div className="text-green-300 text-sm mt-1">활성 상담사</div>
+            <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-white/10 p-2 sm:grid-cols-4">
+              <div className="rounded-md border border-emerald-500/20 bg-emerald-950/30 px-2 py-2 text-center">
+                <div className="text-lg font-bold text-emerald-300">
+                  {applications.filter((app) => app.status === 'approved').length}
                 </div>
-                <div className="bg-blue-500/20 rounded-lg p-6 border border-blue-500/30">
-                  <div className="text-3xl font-bold text-blue-400">248</div>
-                  <div className="text-blue-300 text-sm mt-1">이번 달 상담 세션</div>
-                </div>
-                <div className="bg-purple-500/20 rounded-lg p-6 border border-purple-500/30">
-                  <div className="text-3xl font-bold text-purple-400">4.8</div>
-                  <div className="text-purple-300 text-sm mt-1">평균 만족도</div>
-                </div>
-                <div className="bg-yellow-500/20 rounded-lg p-6 border border-yellow-500/30">
-                  <div className="text-3xl font-bold text-yellow-400">156</div>
-                  <div className="text-yellow-300 text-sm mt-1">완료된 치료</div>
-                </div>
+                <div className="text-[10px] text-emerald-400/80">활성 상담사</div>
               </div>
+              <div className="rounded-md border border-sky-500/20 bg-sky-950/30 px-2 py-2 text-center">
+                <div className="text-lg font-bold text-sky-300">248</div>
+                <div className="text-[10px] text-sky-400/80">월간 세션</div>
+              </div>
+              <div className="rounded-md border border-violet-500/20 bg-violet-950/30 px-2 py-2 text-center">
+                <div className="text-lg font-bold text-violet-300">4.8</div>
+                <div className="text-[10px] text-violet-400/80">만족도</div>
+              </div>
+              <div className="rounded-md border border-amber-500/20 bg-amber-950/30 px-2 py-2 text-center">
+                <div className="text-lg font-bold text-amber-300">156</div>
+                <div className="text-[10px] text-amber-400/80">완료 치료</div>
+              </div>
+            </div>
 
-              <div className="text-left">
-                <h4 className="text-xl font-semibold text-white mb-4">최근 활동 로그</h4>
-                <div className="space-y-3">
-                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-white">김상담 - 새로운 상담 세션 완료</span>
-                      <span className="text-gray-400 text-sm">2시간 전</span>
-                    </div>
+            <div className="min-h-0 flex-1 overflow-auto p-2 sm:p-3">
+              <h4 className="mb-2 text-xs font-semibold text-slate-300">최근 활동</h4>
+              <div className="space-y-1.5">
+                {[
+                  ['김상담', '새 상담 세션 완료', '2시간 전'],
+                  ['이치료', '치료 계획 업데이트', '4시간 전'],
+                  ['박심리', '내담자 평가 완료', '6시간 전'],
+                ].map(([name, action, time], i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-2 rounded-md border border-white/10 bg-slate-900/40 px-2 py-1.5 text-[11px]"
+                  >
+                    <span className="truncate text-slate-200">
+                      {name} — {action}
+                    </span>
+                    <span className="shrink-0 text-slate-500">{time}</span>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-white">이치료 - 치료 계획 업데이트</span>
-                      <span className="text-gray-400 text-sm">4시간 전</span>
-                    </div>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-white">박심리 - 내담자 평가 완료</span>
-                      <span className="text-gray-400 text-sm">6시간 전</span>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </motion.div>
         )}
-      </div>
-    </main>
+    </div>
   );
 }
 
 export default function CounselorManagementPage() {
   return (
     <RoleGuard allowedRoles={['admin']}>
-      <CounselorManagementPageContent />
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <CounselorManagementPageContent />
+      </div>
     </RoleGuard>
   );
 }
