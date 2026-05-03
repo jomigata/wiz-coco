@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import {
@@ -66,24 +65,7 @@ export default function AssessmentListPage() {
   }, [authLoading, user]);
 
   return (
-    <div className="space-y-6">
-      {/* 페이지 헤더 */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">검사코드 목록</h1>
-          <p className="text-slate-400 text-sm mt-1">내담자 검사 진행 현황을 한눈에 확인하세요</p>
-        </div>
-        <Link
-          href="/counselor/assessments/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-900/30"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          새 검사코드 만들기
-        </Link>
-      </div>
-
+    <div className="flex min-h-0 flex-1 flex-col">
       {authLoading || loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-4 text-slate-400">

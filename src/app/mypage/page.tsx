@@ -1796,7 +1796,7 @@ function TestRecordsTabContent({
   // 정렬 아이콘 컴포넌트 (시각적 개선)
   const SortIcon = ({ field }: { field: SortField }) => {
     return (
-      <span className={`text-xs ${sortField === field ? 'text-red-500' : 'text-blue-300'}`}>
+      <span className={`text-lg ${sortField === field ? 'text-red-500' : 'text-blue-300'}`}>
         <span className={sortField === field && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
         <span className={sortField === field && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>
       </span>
@@ -2150,13 +2150,13 @@ function TestRecordsTabContent({
       transition={{ duration: 0.35 }}
     >
       <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <h2 className="text-sm font-semibold text-slate-100 sm:w-auto">
+        <h2 className="text-xl font-semibold text-slate-100 sm:w-auto">
           검사 기록{' '}
           <span className="font-normal text-slate-500">({filteredRecords.length})</span>
         </h2>
         <div className="relative min-w-0 flex-1">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-            <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
             </svg>
           </div>
@@ -2165,14 +2165,14 @@ function TestRecordsTabContent({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="일시 · 코드 · 검사명 검색"
-            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-2 pl-9 pr-3 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-2 text-lg text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           >
             <option value="all" className="bg-slate-900 text-white">
               전체
@@ -2200,7 +2200,7 @@ function TestRecordsTabContent({
             type="button"
             onClick={handleBulkDeleteClick}
             disabled={selectedRecords.length === 0}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
+            className={`rounded-md px-3 py-2 text-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
               selectedRecords.length > 0
                 ? 'bg-rose-600/90 text-white hover:bg-rose-600'
                 : 'bg-white/10 text-slate-400'
@@ -2214,31 +2214,31 @@ function TestRecordsTabContent({
       {/* 검사 기록 테이블 */}
       {filteredRecords.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
-          <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
-          <p className="text-sm text-slate-300">
+          <FaClipboard className="mb-2 h-12 w-12 text-slate-600" />
+          <p className="text-xl text-slate-300">
             {testRecords.length === 0 ? '완료한 검사가 없습니다' : '검색 결과가 없습니다'}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-lg text-slate-500">
             {testRecords.length === 0 ? '검사 시작 후 이곳에 기록이 쌓입니다.' : '검색어를 바꿔 보세요.'}
           </p>
         </div>
       ) : (
         <>
           <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
-            <table className="min-w-full divide-y divide-white/10 text-xs">
+            <table className="min-w-full divide-y divide-white/10 text-lg">
               <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                 <tr>
-                  <th scope="col" className="w-10 px-2 py-2 text-center">
+                  <th scope="col" className="w-12 px-2 py-2.5 text-center">
                     <input
                       type="checkbox"
                       checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
                       onChange={toggleAllSelection}
-                      className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
+                      className="h-4 w-4 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
                     />
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-2 py-2 text-left font-medium text-slate-400 hover:text-slate-200"
+                    className="cursor-pointer px-2 py-2.5 text-left font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('timestamp')}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -2248,7 +2248,7 @@ function TestRecordsTabContent({
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-2 py-2 text-left font-medium text-slate-400 hover:text-slate-200"
+                    className="cursor-pointer px-2 py-2.5 text-left font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('counselorCode')}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -2258,7 +2258,7 @@ function TestRecordsTabContent({
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-2 py-2 text-left font-medium text-slate-400 hover:text-slate-200"
+                    className="cursor-pointer px-2 py-2.5 text-left font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('testType')}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -2266,10 +2266,10 @@ function TestRecordsTabContent({
                       <SortIcon field="testType" />
                     </span>
                   </th>
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left font-medium text-slate-400">
+                  <th scope="col" className="whitespace-nowrap px-2 py-2.5 text-left font-medium text-slate-400">
                     코드 사용최종일
                   </th>
-                  <th scope="col" className="px-2 py-2 text-center font-medium text-slate-400">
+                  <th scope="col" className="px-2 py-2.5 text-center font-medium text-slate-400">
                     작업
                   </th>
                 </tr>
@@ -2277,53 +2277,53 @@ function TestRecordsTabContent({
               <tbody className="divide-y divide-white/[0.06]">
                 {paginatedRecords.map((record, index) => (
                   <tr key={record.code || index} className="group hover:bg-white/[0.04]">
-                    <td className="whitespace-nowrap px-2 py-1.5">
+                    <td className="whitespace-nowrap px-2 py-2.5">
                       <div className="flex justify-center">
                         <input
                           type="checkbox"
                           checked={selectedRecords.includes(record.code || '')}
                           onChange={() => toggleSelection(record.code || '')}
                           onClick={(e) => e.stopPropagation()}
-                          className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
+                          className="h-4 w-4 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
                         />
                       </div>
                     </td>
                     <td
                       onClick={() => handleRecordClick(record)}
-                      className="cursor-pointer whitespace-nowrap px-2 py-1.5 text-left text-slate-200 transition-colors"
+                      className="cursor-pointer whitespace-nowrap px-2 py-2.5 text-left text-slate-200 transition-colors"
                       title="클릭하여 검사 결과 보기"
                     >
                       {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
                     </td>
                     <td
                       onClick={() => handleRecordClick(record)}
-                      className="max-w-[11rem] cursor-pointer truncate px-2 py-1.5 text-left text-slate-200 transition-colors sm:max-w-xs"
+                      className="max-w-[11rem] cursor-pointer truncate px-2 py-2.5 text-left text-slate-200 transition-colors sm:max-w-xs"
                       title="클릭하여 검사 결과 보기"
                     >
                       {getAccessCodeSetName(record)}
                     </td>
                     <td
                       onClick={() => handleRecordClick(record)}
-                      className="max-w-[9rem] cursor-pointer truncate px-2 py-1.5 text-left text-slate-200 transition-colors sm:max-w-md"
+                      className="max-w-[9rem] cursor-pointer truncate px-2 py-2.5 text-left text-slate-200 transition-colors sm:max-w-md"
                       title="클릭하여 검사 결과 보기"
                     >
                       {getDisplayTestName(record)}
                     </td>
-                    <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-400">
+                    <td className="whitespace-nowrap px-2 py-2.5 text-left text-slate-400">
                       {getUsageEndLabel(record)}
                     </td>
-                    <td className="whitespace-nowrap px-2 py-1.5 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1">
+                    <td className="whitespace-nowrap px-2 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
-                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-[11px] font-medium text-emerald-100 hover:bg-emerald-700/60"
+                          className="rounded bg-emerald-800/50 px-2.5 py-1 text-base font-medium text-emerald-100 hover:bg-emerald-700/60"
                           onClick={() => handleAddTestForRecord(record)}
                         >
                           검사추가
                         </button>
                         <button
                           type="button"
-                          className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-medium text-slate-300 hover:bg-white/15"
+                          className="rounded bg-white/10 px-2.5 py-1 text-base font-medium text-slate-300 hover:bg-white/15"
                           onClick={(e) => handleDeleteClick(e, record)}
                         >
                           삭제
@@ -2336,7 +2336,7 @@ function TestRecordsTabContent({
             </table>
           </div>
 
-          <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+          <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-2 text-base text-slate-500">
             <span>
               총 {filteredRecords.length}건
               {totalPages > 1 ? ` · ${currentPage}/${totalPages}페이지` : ''}
@@ -2347,7 +2347,7 @@ function TestRecordsTabContent({
                   type="button"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="rounded border border-white/10 px-2 py-0.5 text-slate-300 hover:bg-white/10 disabled:opacity-40"
+                  className="rounded border border-white/10 px-2.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-40"
                 >
                   이전
                 </button>
@@ -2355,7 +2355,7 @@ function TestRecordsTabContent({
                   type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded border border-white/10 px-2 py-0.5 text-slate-300 hover:bg-white/10 disabled:opacity-40"
+                  className="rounded border border-white/10 px-2.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-40"
                 >
                   다음
                 </button>

@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -15,17 +17,10 @@ interface AssessmentListProps {
 function formatDate(iso: string | undefined): string {
   if (!iso) return '-';
   try {
-    const d = new Date(iso);
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(iso).toLocaleString('ko-KR', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
     });
-  } catch {
-    return String(iso);
-  }
+  } catch { return String(iso); }
 }
 
 function formatUsageEndDate(iso: string | undefined): string {
@@ -35,20 +30,13 @@ function formatUsageEndDate(iso: string | undefined): string {
     const d = new Date(`${s}T00:00:00`);
     if (Number.isNaN(d.getTime())) return s;
     return d.toLocaleDateString('ko-KR');
-  } catch {
-    return s;
-  }
+  } catch { return s; }
 }
 
 function isExpired(iso: string | undefined): boolean {
   const s = (iso || '').trim();
   if (!s) return false;
-  try {
-    const d = new Date(`${s}T23:59:59`);
-    return d < new Date();
-  } catch {
-    return false;
-  }
+  try { return new Date(`${s}T23:59:59`) < new Date(); } catch { return false; }
 }
 
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
@@ -56,6 +44,23 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const totalParticipants = assessments.reduce(
+    (sum, a) => sum + (a.emailsCompletedAllTestsCount ?? 0) + (a.emailsNotCompletedAllTestsCount ?? 0), 0,
+  );
+  const totalCompleted = assessments.reduce((sum, a) => sum + (a.emailsCompletedAllTestsCount ?? 0), 0);
+
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return assessments;
+    return assessments.filter(
+      (a) =>
+        (a.title || '').toLowerCase().includes(q) ||
+        (a.accessCode || '').toLowerCase().includes(q) ||
+        (a.targetAudience || '').toLowerCase().includes(q),
+    );
+  }, [assessments, searchQuery]);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -67,251 +72,211 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       router.refresh();
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : '삭제에 실패했습니다.');
-    } finally {
-      setDeleteLoading(false);
-    }
+    } finally { setDeleteLoading(false); }
   };
 
-  const totalParticipants = assessments.reduce(
-    (sum, a) => sum + (a.emailsCompletedAllTestsCount ?? 0) + (a.emailsNotCompletedAllTestsCount ?? 0),
-    0,
-  );
-  const totalCompleted = assessments.reduce(
-    (sum, a) => sum + (a.emailsCompletedAllTestsCount ?? 0),
-    0,
-  );
-
-  if (assessments.length === 0 && !createdInfo) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center mb-6">
-          <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        </div>
-        <p className="text-slate-200 text-lg font-semibold mb-2">등록된 검사코드가 없습니다</p>
-        <p className="text-slate-500 text-sm mb-8">첫 번째 검사코드를 만들어 내담자에게 배포하세요.</p>
-        <Link
-          href="/counselor/assessments/new"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-900/40"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          첫 검사코드 만들기
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-5">
-      {/* 삭제 확인 모달 */}
+    <motion.div
+      className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4 text-lg"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
+      {/* 삭제 모달 */}
       {deleteTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-assessment-title"
-        >
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-white/10 rounded-xl max-w-md w-full p-6 shadow-2xl text-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
-              <h2 id="delete-assessment-title" className="text-lg font-semibold text-white">검사코드 삭제</h2>
+              <h2 className="text-xl font-semibold text-white">검사코드 삭제</h2>
             </div>
-            <div className="bg-slate-800 rounded-xl p-4 mb-4">
+            <div className="bg-white/[0.06] rounded-xl p-4 mb-4 border border-white/10">
               <p className="text-cyan-400 font-mono font-bold tracking-wider">{formatAccessCodeDisplay(deleteTarget.accessCode)}</p>
-              <p className="text-slate-300 text-sm mt-1">{deleteTarget.title}</p>
+              <p className="text-slate-300 mt-1">{deleteTarget.title}</p>
             </div>
-            <p className="text-slate-400 text-sm mb-5 leading-relaxed">
+            <p className="text-slate-400 mb-5 leading-relaxed">
               목록에서 제거되며, 내담자는 더 이상 이 코드로 새로 접속할 수 없습니다. 이미 제출된 결과는 상담사 화면에서 계속 조회할 수 있습니다.
             </p>
-            {deleteError && <p className="text-red-400 text-sm mb-4">{deleteError}</p>}
+            {deleteError && <p className="text-red-400 mb-4">{deleteError}</p>}
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => { setDeleteTarget(null); setDeleteError(''); }}
                 disabled={deleteLoading}
-                className="px-4 py-2 rounded-lg text-slate-300 bg-slate-800 border border-slate-600 hover:bg-slate-700 disabled:opacity-50 text-sm transition-colors"
-              >
-                취소
-              </button>
+                className="px-4 py-2 rounded-lg text-slate-300 bg-slate-800 border border-white/10 hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              >취소</button>
               <button
                 type="button"
                 onClick={confirmDelete}
                 disabled={deleteLoading}
-                className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-500 disabled:opacity-50 text-sm font-medium transition-colors"
-              >
-                {deleteLoading ? '처리 중…' : '삭제 확인'}
-              </button>
+                className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-500 disabled:opacity-50 font-medium transition-colors"
+              >{deleteLoading ? '처리 중…' : '삭제 확인'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 신규 발급 배너 */}
       {createdInfo && (
-        <div className="rounded-xl bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border border-emerald-500/30 p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-emerald-200 font-medium text-sm">검사코드가 발급되었습니다</p>
-              <p className="text-emerald-300 font-mono font-bold tracking-widest text-lg mt-1">
-                {formatAccessCodeDisplay(createdInfo.accessCode)}
-              </p>
-              <p className="text-emerald-400/70 text-xs mt-1">
-                내담자는 사이트에 로그인한 뒤 「검사 하기」에서 위 코드를 입력하면 됩니다.
-              </p>
-            </div>
-          </div>
+        <div className="mb-2 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3 py-2">
+          <p className="text-emerald-200 font-medium">검사코드가 발급되었습니다</p>
+          <p className="text-emerald-300 font-mono font-bold tracking-widest mt-1">
+            {formatAccessCodeDisplay(createdInfo.accessCode)}
+          </p>
+          <p className="text-emerald-400/80 mt-1 text-base">
+            내담자는 사이트에 로그인한 뒤 「검사 하기」에서 위 코드를 입력하면 됩니다.
+          </p>
         </div>
       )}
 
-      {/* 요약 통계 */}
-      {assessments.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-white tabular-nums">{assessments.length}</p>
-            <p className="text-slate-400 text-xs mt-1">전체 검사코드</p>
+      {/* 툴바 — 마이페이지 검사 기록 탭과 동일 패턴 */}
+      <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <h2 className="text-xl font-semibold text-slate-100 sm:w-auto">
+          검사코드 목록{' '}
+          <span className="font-normal text-slate-500">({filtered.length})</span>
+        </h2>
+        <div className="relative min-w-0 flex-1">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+            <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-cyan-400 tabular-nums">{totalParticipants}</p>
-            <p className="text-slate-400 text-xs mt-1">전체 응시자</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-emerald-400 tabular-nums">{totalCompleted}</p>
-            <p className="text-slate-400 text-xs mt-1">전체 완료</p>
-          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="검사명 · 코드 · 유형 검색"
+            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-2 pl-9 pr-3 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+          />
         </div>
-      )}
-
-      {/* 검사코드 카드 목록 */}
-      <div className="space-y-3">
-        {assessments.map((a) => {
-          const incomplete = a.emailsNotCompletedAllTestsCount ?? 0;
-          const complete = a.emailsCompletedAllTestsCount ?? 0;
-          const total = incomplete + complete;
-          const progressPct = total > 0 ? Math.round((complete / total) * 100) : 0;
-          const expired = isExpired(a.usageEndDate);
-          const isGroup = (a.targetAudience || '개인') !== '개인';
-
-          return (
-            <div
-              key={a.id}
-              className="group bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-5 hover:bg-white/[0.07] hover:border-white/20 transition-all duration-200"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                {/* 왼쪽: 주요 정보 */}
-                <div className="flex-1 min-w-0">
-                  {/* 제목 + 뱃지 */}
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="text-white font-semibold text-base">{a.title || '-'}</h3>
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-xs font-medium border ${
-                        isGroup
-                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                          : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                      }`}
-                    >
-                      {a.targetAudience || '개인'}
-                    </span>
-                    {expired && (
-                      <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
-                        만료
-                      </span>
-                    )}
-                  </div>
-
-                  {/* 메타 정보 */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-4">
-                    <span className="font-mono text-cyan-400 font-bold tracking-wider">
-                      {formatAccessCodeDisplay(a.accessCode)}
-                    </span>
-                    <span className="flex items-center gap-1 text-slate-400">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      검사 {(a.testList || []).length}개
-                    </span>
-                    <span className="flex items-center gap-1 text-slate-400">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {formatUsageEndDate(a.usageEndDate)}
-                    </span>
-                    <span className="text-slate-600 text-xs">생성 {formatDate(a.createdAt)}</span>
-                  </div>
-
-                  {/* 진행 현황 바 */}
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="text-slate-400 font-medium">진행 현황</span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-orange-400 font-mono font-semibold tabular-nums" title="미완료">
-                          -{incomplete}
-                        </span>
-                        <span className="text-slate-600">/</span>
-                        <span className="text-emerald-400 font-mono font-semibold tabular-nums" title="완료">
-                          {complete}
-                        </span>
-                        {total > 0 && (
-                          <span className="text-slate-500 ml-1">({progressPct}% 완료)</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-slate-700/80 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 오른쪽: 액션 버튼 */}
-                <div className="flex sm:flex-col gap-2 flex-shrink-0">
-                  <Link
-                    href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 hover:border-blue-400/50 text-xs font-medium transition-colors whitespace-nowrap"
-                  >
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    진행 현황
-                  </Link>
-                  <Link
-                    href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-amber-600/20 border border-amber-500/30 text-amber-300 hover:bg-amber-600/30 hover:border-amber-400/50 text-xs font-medium transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    수정
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => { setDeleteError(''); setDeleteTarget(a); }}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600/20 hover:border-red-500/40 text-xs font-medium transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    삭제
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        <Link
+          href="/counselor/assessments/new"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-sky-600/90 px-3 py-2 text-lg font-medium text-white hover:bg-sky-500 transition-colors sm:self-auto"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          새 검사코드 만들기
+        </Link>
       </div>
-    </div>
+
+      <p className="mb-2 text-base text-slate-400">
+        전체 <span className="font-semibold text-white">{assessments.length}</span>개 · 응시자{' '}
+        <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
+        <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
+      </p>
+
+      {filtered.length === 0 ? (
+        <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
+          <FaClipboard className="mb-2 h-12 w-12 text-slate-600" />
+          <p className="text-xl text-slate-300">
+            {assessments.length === 0 ? '등록된 검사코드가 없습니다' : '검색 결과가 없습니다'}
+          </p>
+          <p className="mt-1 text-lg text-slate-500">
+            {assessments.length === 0 ? '첫 검사코드를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
+          </p>
+          {assessments.length === 0 && (
+            <Link
+              href="/counselor/assessments/new"
+              className="mt-6 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-4 py-2 text-lg font-medium text-white hover:bg-sky-500 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              첫 검사코드 만들기
+            </Link>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
+            <table className="min-w-full divide-y divide-white/10 text-lg">
+              <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+                <tr>
+                  <th scope="col" className="whitespace-nowrap px-2 py-2.5 text-left font-medium text-slate-400">생성 일시</th>
+                  <th scope="col" className="px-2 py-2.5 text-left font-medium text-slate-400">검사코드</th>
+                  <th scope="col" className="px-2 py-2.5 text-left font-medium text-slate-400">검사명</th>
+                  <th scope="col" className="whitespace-nowrap px-2 py-2.5 text-left font-medium text-slate-400">코드 사용최종일</th>
+                  <th scope="col" className="whitespace-nowrap px-2 py-2.5 text-center font-medium text-slate-400">진행</th>
+                  <th scope="col" className="px-2 py-2.5 text-center font-medium text-slate-400">작업</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.06]">
+                {filtered.map((a) => {
+                  const incomplete = a.emailsNotCompletedAllTestsCount ?? 0;
+                  const complete = a.emailsCompletedAllTestsCount ?? 0;
+                  const total = incomplete + complete;
+                  const progressPct = total > 0 ? Math.round((complete / total) * 100) : 0;
+                  const expired = isExpired(a.usageEndDate);
+                  const isGroup = (a.targetAudience || '개인') !== '개인';
+
+                  return (
+                    <tr key={a.id} className="group hover:bg-white/[0.04]">
+                      <td className="whitespace-nowrap px-2 py-2.5 text-left text-slate-200">
+                        {formatDate(a.createdAt)}
+                      </td>
+                      <td className="max-w-[10rem] truncate px-2 py-2.5 text-left font-mono font-bold text-cyan-400 tracking-wider">
+                        {formatAccessCodeDisplay(a.accessCode)}
+                      </td>
+                      <td className="max-w-[14rem] truncate px-2 py-2.5 text-left text-slate-200">
+                        <span className="font-medium text-white">{a.title || '-'}</span>
+                        <span className={`ml-2 inline-block rounded-full px-2 py-0.5 align-middle text-base font-medium border ${
+                          isGroup
+                            ? 'border-purple-500/30 bg-purple-500/15 text-purple-300'
+                            : 'border-blue-500/30 bg-blue-500/15 text-blue-300'
+                        }`}>
+                          {a.targetAudience || '개인'}
+                        </span>
+                        {expired && (
+                          <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-2 py-0.5 align-middle text-base font-medium text-red-300">
+                            만료
+                          </span>
+                        )}
+                      </td>
+                      <td className={`whitespace-nowrap px-2 py-2.5 text-left ${expired ? 'text-red-400' : 'text-slate-400'}`}>
+                        {formatUsageEndDate(a.usageEndDate)}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center text-slate-300">
+                        <span className="text-orange-400 font-semibold">-{incomplete}</span>
+                        <span className="text-slate-600"> / </span>
+                        <span className="text-emerald-400 font-semibold">{complete}</span>
+                        {total > 0 && <span className="ml-1 text-slate-500">({progressPct}%)</span>}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Link
+                            href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
+                            className="rounded bg-sky-800/50 px-2.5 py-1 text-base font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
+                          >
+                            진행 현황
+                          </Link>
+                          <Link
+                            href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
+                            className="rounded bg-emerald-800/50 px-2.5 py-1 text-base font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
+                          >
+                            수정
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => { setDeleteError(''); setDeleteTarget(a); }}
+                            className="rounded bg-white/10 px-2.5 py-1 text-base font-medium text-slate-300 hover:bg-white/15 transition-colors"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-2 shrink-0 text-base text-slate-500">총 {filtered.length}건</div>
+        </>
+      )}
+    </motion.div>
   );
 }
