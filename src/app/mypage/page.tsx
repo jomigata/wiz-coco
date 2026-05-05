@@ -669,14 +669,69 @@ function MyPageContent() {
         } catch (apiErr) {
           console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', apiErr);
         }
+
+        // 2) (상담사 계정) 본인이 생성한 검사코드 세트도 목록에 표시 (미검사 포함)
+        // - 완료 결과(listMyAssessmentResults)는 "결과" 단위라 미검사 세트는 노출되지 않음
+        // - 상담사가 본인 코드로 직접 검사하려는 경우가 많아 세트 목록을 병합하여 "미검사"로 노출
+        try {
+          const { listAssessments } = await import('@/lib/assessmentApi');
+          const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
+          const { assessments } = await listAssessments();
+          for (const a of assessments || []) {
+            const ac = normalizeAccessCodeInput(String((a as any).accessCode || ''));
+            if (!ac) continue;
+            merged.push({
+              code: `counselor-set-${String((a as any).id || ac)}`,
+              testType: (a as any).title ? `상담사 검사코드 · ${(a as any).title}` : '상담사 검사코드',
+              timestamp: String((a as any).createdAt || new Date().toISOString()),
+              status: String((a as any).status || 'not_started'),
+              counselorCodePinDisplay: ac,
+              recordSource: 'counselor-assessment',
+              counselorAccessCode: ac,
+              usageEndDate:
+                typeof (a as any).usageEndDate === 'string' && String((a as any).usageEndDate).trim()
+                  ? String((a as any).usageEndDate).trim()
+                  : undefined,
+            } as any);
+          }
+        } catch (apiErr) {
+          // 상담사 권한이 없거나 서버 미구현일 수 있음 → 조용히 무시
+          console.warn('[MyPage] 상담사 검사코드(세트) 목록 병합 실패:', apiErr);
+        }
       }
 
-      merged.sort((a, b) => {
+      // counselor-assessment는 accessCode 기준으로 중복 제거(세트 + 결과가 함께 들어올 수 있음)
+      const seenByAccessCode = new Map<string, TestRecord>();
+      const out: TestRecord[] = [];
+      for (const r of merged) {
+        if (r.recordSource === 'counselor-assessment') {
+          const key = (r.counselorAccessCode || r.counselorCodePinDisplay || '').trim();
+          if (!key) {
+            out.push(r);
+            continue;
+          }
+          const prev = seenByAccessCode.get(key);
+          // completed(결과 단위) 우선 노출
+          const pick = !prev
+            ? r
+            : prev.status === 'completed'
+              ? prev
+              : r.status === 'completed'
+                ? r
+                : prev;
+          seenByAccessCode.set(key, pick);
+        } else {
+          out.push(r);
+        }
+      }
+      out.push(...Array.from(seenByAccessCode.values()));
+
+      out.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
         return timeB - timeA;
       });
-      setTestRecords(merged);
+      setTestRecords(out);
     } catch (e) {
       setRecordsError('검사 기록을 불러오지 못했습니다.');
       setTestRecords(buildLocalTestRecords());
@@ -2352,13 +2407,15 @@ function TestRecordsTabContent({
                     <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
                         {record.status === 'completed' ? (
-                          <span
-                            className="inline-flex items-center gap-0.5 rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100"
-                            title="검사가 완료된 기록입니다"
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-0.5 rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
+                            title="클릭하여 검사 선택 화면으로 이동"
+                            onClick={() => handleAddTestForRecord(record)}
                           >
                             ✓ 검사완료
-                          </span>
-                        ) : (
+                          </button>
+                        ) : record.status === 'in_progress' ? (
                           <button
                             type="button"
                             className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
@@ -2366,6 +2423,15 @@ function TestRecordsTabContent({
                             onClick={() => handleAddTestForRecord(record)}
                           >
                             ⚠ 미완료
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
+                            title="클릭하여 검사 선택 화면으로 이동"
+                            onClick={() => handleAddTestForRecord(record)}
+                          >
+                            ➕ 미검사
                           </button>
                         )}
                         <button
