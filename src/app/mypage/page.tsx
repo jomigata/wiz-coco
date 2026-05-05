@@ -826,7 +826,13 @@ function MyPageContent() {
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                검사 기록 ({testRecords.length})
+                검사 기록 ({testRecords.length}
+                {testRecords.filter(r => r.status !== 'completed').length > 0 && (
+                  <span className="ml-1 rounded-full bg-amber-600/70 px-1.5 py-0.5 text-[10px] font-bold text-amber-50">
+                    미완료 {testRecords.filter(r => r.status !== 'completed').length}
+                  </span>
+                )}
+                )
               </button>
               <button
                 type="button"
@@ -1849,11 +1855,13 @@ function TestRecordsTabContent({
     }
     
     // 타입 필터
-    if (filterType !== 'all') {
+    if (filterType === 'incomplete') {
+      // 미완료 기록만 표시
+      if (record.status === 'completed') return false;
+    } else if (filterType !== 'all') {
       const testType = record.testType?.toLowerCase() || '';
       if (filterType === 'mbti-personal' && !testType.includes('개인용')) return false;
       if (filterType === 'mbti-professional') {
-        // 전문가용 MBTI 검사: '전문가용', 'mbti pro', 'mbti_pro', 'professional' 등을 포함하는지 확인
         const isProfessional = testType.includes('전문가용') || 
                                testType.includes('mbti pro') || 
                                testType.includes('mbti_pro') || 
@@ -2201,6 +2209,9 @@ function TestRecordsTabContent({
             <option value="all" className="bg-slate-900 text-white">
               전체
             </option>
+            <option value="incomplete" className="bg-slate-900 text-white">
+              ⚠ 미완료만
+            </option>
             <option value="mbti-personal" className="bg-slate-900 text-white">
               개인용 MBTI
             </option>
@@ -2294,7 +2305,7 @@ function TestRecordsTabContent({
                     코드 사용최종일
                   </th>
                   <th scope="col" className="px-2 py-2 text-center text-xs font-medium text-slate-400">
-                    작업
+                    완료여부
                   </th>
                 </tr>
               </thead>
@@ -2338,13 +2349,23 @@ function TestRecordsTabContent({
                     </td>
                     <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
-                          onClick={() => handleAddTestForRecord(record)}
-                        >
-                          검사추가
-                        </button>
+                        {record.status === 'completed' ? (
+                          <span
+                            className="inline-flex items-center gap-0.5 rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100"
+                            title="검사가 완료된 기록입니다"
+                          >
+                            ✓ 검사완료
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
+                            title="클릭하여 미완료 검사 이어하기"
+                            onClick={() => handleAddTestForRecord(record)}
+                          >
+                            ⚠ 미완료
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
