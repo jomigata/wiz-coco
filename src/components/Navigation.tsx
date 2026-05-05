@@ -717,8 +717,8 @@ export default function Navigation() {
               {/* 심리검사 드롭다운 메뉴 */}
               <div
                 className="relative"
-                onMouseEnter={() => setActiveMenu('psychology-tests')}
-                onMouseLeave={() => setActiveMenu(null)}
+                onPointerEnter={() => setActiveMenu('psychology-tests')}
+                onPointerLeave={() => setActiveMenu(null)}
               >
                 <Link
                   href="/tests"
@@ -751,6 +751,8 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="psychology-tests"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    onPointerEnter={() => setActiveMenu('psychology-tests')}
+                    onPointerLeave={() => setActiveMenu(null)}
                     onMouseEnter={() => {
                       setActiveMenu('psychology-tests');
                       // 첫 번째 노출 대분류 자동 선택 (hidden 제외 후 첫 항목)
@@ -953,8 +955,8 @@ export default function Navigation() {
               {/* 상담 프로그램 드롭다운 메뉴 */}
               <div
                 className="relative"
-                onMouseEnter={() => setActiveMenu('counseling')}
-                onMouseLeave={() => setActiveMenu(null)}
+                onPointerEnter={() => setActiveMenu('counseling')}
+                onPointerLeave={() => setActiveMenu(null)}
               >
                 <Link
                   href="/counseling"
@@ -987,6 +989,8 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="counseling"
                     className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    onPointerEnter={() => setActiveMenu('counseling')}
+                    onPointerLeave={() => setActiveMenu(null)}
                     onMouseEnter={() => {
                       setActiveMenu('counseling');
                       // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
@@ -1057,8 +1061,8 @@ export default function Navigation() {
               {/* AI 마음 비서 드롭다운 메뉴 */}
               <div
                 className="relative"
-                onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
-                onMouseLeave={() => setActiveMenu(null)}
+                onPointerEnter={() => setActiveMenu('ai-mind-assistant')}
+                onPointerLeave={() => setActiveMenu(null)}
               >
                 <Link
                   href="/ai-mind-assistant"
@@ -1109,6 +1113,8 @@ export default function Navigation() {
                       minWidth: 'fit-content',
                       maxWidth: 'none'
                     }}
+                    onPointerEnter={() => setActiveMenu('ai-mind-assistant')}
+                    onPointerLeave={() => setActiveMenu(null)}
                     onMouseEnter={() => {
                       setActiveMenu('ai-mind-assistant');
                       // 첫 번째 대분류 자동 선택
