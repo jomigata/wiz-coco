@@ -677,34 +677,34 @@ export default function Navigation() {
           animation: fadeIn 1.2s ease-out;
         }
       `}</style>
-      <nav className="fixed top-0 inset-x-0 z-50 bg-indigo-900 border-b border-white h-16 shadow-sm">
-        <div className="container max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 shadow-md backdrop-blur-sm">
+        <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-3 sm:gap-4">
           {/* 브랜드 */}
           <Link
             href="/"
-            className="flex items-center gap-3 group mr-8"
+            className="flex items-center gap-3 group shrink-0 min-w-0"
             onClick={(e) => handleNavLinkClick("/", e)}
           >
-            <span className="inline-flex shrink-0 rounded-xl bg-white/90 w-14 h-14 overflow-hidden">
+            <span className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white/90 w-12 h-12 sm:w-14 sm:h-14 overflow-hidden ring-1 ring-white/20">
               <WizcocoLogo className="block w-full h-full object-contain" alt="Wizcoco 로고" />
             </span>
-            <span className="flex flex-col items-start">
-              <span className="font-bold text-2xl tracking-tight text-white transition-colors duration-300 leading-tight group-hover:text-blue-300 whitespace-nowrap">
+            <span className="flex flex-col items-start justify-center min-h-[2.75rem] sm:min-h-[3.25rem]">
+              <span className="font-semibold text-xl sm:text-2xl tracking-tight text-white transition-colors duration-300 leading-none group-hover:text-sky-200 whitespace-nowrap">
                 Wizcoco
               </span>
-              <span className="text-xs text-blue-200 font-medium whitespace-nowrap group-hover:text-blue-100">
+              <span className="mt-0.5 text-[11px] sm:text-xs text-indigo-200/90 font-medium tracking-wide whitespace-nowrap group-hover:text-indigo-100">
                 Psychological Care
               </span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2">
-            <div className="flex space-x-1">
+          <div className="hidden md:flex flex-1 min-w-0 items-center justify-end min-h-0">
+            <div className="flex items-center flex-nowrap gap-1 lg:gap-1.5 min-w-0 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
               <Link
                 href="/join"
-                className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                   activeItem === "/join" || activeItem.startsWith("/join/")
                     ? "text-white bg-blue-600 border-white"
                     : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
@@ -717,7 +717,7 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/tests"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                  className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                     activeItem === "/tests" || activeItem.startsWith("/tests/")
                       ? "text-white bg-blue-600 border-white"
                       : isPsychologyTestsOpen
@@ -733,7 +733,7 @@ export default function Navigation() {
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isPsychologyTestsOpen ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isPsychologyTestsOpen ? "rotate-180" : ""}`}
                   >
                     <path
                       fillRule="evenodd"
@@ -951,7 +951,7 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/counseling"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                  className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                     activeItem === "/counseling" || activeItem.startsWith("/counseling/")
                       ? "text-white bg-blue-600 border-white"
                       : isCounselingDropdownOpen
@@ -967,7 +967,7 @@ export default function Navigation() {
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselingDropdownOpen ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isCounselingDropdownOpen ? "rotate-180" : ""}`}
                   >
                     <path
                       fillRule="evenodd"
@@ -1053,7 +1053,7 @@ export default function Navigation() {
               <div className="relative">
                 <Link
                   href="/ai-mind-assistant"
-                  className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                  className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                     activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
                       ? "text-white bg-blue-600 border-white"
                       : isAiMindAssistantOpen
@@ -1081,7 +1081,7 @@ export default function Navigation() {
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAiMindAssistantOpen ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isAiMindAssistantOpen ? "rotate-180" : ""}`}
                   >
                     <path
                       fillRule="evenodd"
@@ -1553,23 +1553,28 @@ export default function Navigation() {
                   </div>
                 )}
               </div>
+            </div>
 
-
+            {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 */}
+            <div className="flex items-center flex-nowrap gap-2 lg:gap-3 shrink-0 border-l border-white/10 pl-3 lg:pl-4 ml-1">
               {/* 멤버십 링크 */}
               <Link
                 href="/membership"
-                className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                className={`h-10 px-3 lg:px-3.5 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                   activeItem === "/membership"
-                    ? "text-white bg-yellow-600 border-white"
-                    : "text-yellow-300 hover:text-white hover:bg-yellow-700/50 border-transparent hover:border-white"
+                    ? "text-white bg-amber-500/90 border-white shadow-sm"
+                    : "text-amber-100/95 hover:text-white hover:bg-white/10 border-transparent hover:border-white/30"
                 }`}
                 onClick={(e) => handleNavLinkClick("/membership", e)}
               >
-                ⭐ 멤버십
+                <span className="text-base leading-none" aria-hidden>
+                  ⭐
+                </span>
+                멤버십
               </Link>
 
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 shrink-0">
                 {isLoggedIn ? (
                   <>
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
@@ -1577,7 +1582,7 @@ export default function Navigation() {
                       <div className="relative">
                         <Link
                           href="/counselor"
-                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                          className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                             activeItem === "/counselor" || activeItem.startsWith("/counselor/")
                               ? "text-white bg-blue-600 border-white"
                               : isCounselorOpen
@@ -1593,7 +1598,7 @@ export default function Navigation() {
                             xmlns="http://www.w3.org/2000/svg" 
                             viewBox="0 0 20 20"
                             fill="currentColor"
-                            className={`w-4 h-4 ml-1 transition-transform duration-200 ${isCounselorOpen ? "rotate-180" : ""}`}
+                            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isCounselorOpen ? "rotate-180" : ""}`}
                           >
                             <path
                               fillRule="evenodd"
@@ -1686,7 +1691,7 @@ export default function Navigation() {
                       <div className="relative">
                         <Link
                           href="/admin"
-                          className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                          className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                             activeItem === "/admin" || activeItem.startsWith("/admin/")
                               ? "text-white bg-blue-600 border-white"
                               : isAdminOpen
@@ -1702,7 +1707,7 @@ export default function Navigation() {
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 20 20"
                             fill="currentColor"
-                            className={`w-4 h-4 ml-1 transition-transform duration-200 ${isAdminOpen ? "rotate-180" : ""}`}
+                            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isAdminOpen ? "rotate-180" : ""}`}
                           >
                             <path
                               fillRule="evenodd"
@@ -1796,7 +1801,7 @@ export default function Navigation() {
                     <div className="relative">
                       <Link
                         href="/mypage"
-                        className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                        className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/")
                             ? "text-white bg-blue-600 border-white"
                             : isDropdownOpen
@@ -1812,7 +1817,7 @@ export default function Navigation() {
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"
                           fill="currentColor"
-                          className={`w-4 h-4 ml-1 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                          className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                         >
                           <path
                             fillRule="evenodd"
@@ -1942,54 +1947,62 @@ export default function Navigation() {
                     {/* 로그인/회원가입 버튼 */}
                     <Link
                       href="/login"
-                      className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 text-gray-300 hover:text-white hover:bg-blue-800/50"
+                      className="inline-flex h-10 min-w-[5.5rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-semibold tracking-wide text-slate-100 shadow-sm transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white whitespace-nowrap"
                       onClick={(e) => handleAuthLinkClick("/login", e)}
                     >
-                      🔑 로그인
+                      <span className="text-base leading-none opacity-90" aria-hidden>
+                        🔑
+                      </span>
+                      <span>로그인</span>
                     </Link>
                     <Link
                       href="/register"
-                      className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700"
+                      className="inline-flex h-10 min-w-[5.5rem] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-4 text-sm font-semibold tracking-wide text-white shadow-md shadow-indigo-950/40 transition-all duration-300 hover:from-sky-400 hover:to-blue-500 whitespace-nowrap border border-white/10"
                       onClick={(e) => handleAuthLinkClick("/register", e)}
                     >
-                      ✨ 회원가입
+                      <span className="text-base leading-none" aria-hidden>
+                        ✨
+                      </span>
+                      <span>회원가입</span>
                     </Link>
                   </>
                 )}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 모바일 메뉴 버튼 */}
-        <div className="md:hidden">
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 text-gray-300 hover:text-white hover:bg-blue-800/50 rounded-lg transition-all duration-300"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* 모바일 햄버거 — 브랜드와 같은 행 정렬 */}
+          <div className="flex md:hidden shrink-0 items-center">
+            <button
+              type="button"
+              aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-100 hover:bg-white/10 hover:text-white transition-all duration-300"
             >
-              {isMobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {isMobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
       </nav>
 
