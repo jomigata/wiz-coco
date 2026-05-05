@@ -422,12 +422,6 @@ export default function Navigation() {
       ],
     },
     {
-      category: "계정 관리",
-      items: [
-        { name: "상담사 지원", href: "/counselor-application", description: "상담사 지원 신청", icon: "👨‍⚕️" }
-      ]
-    },
-    {
       category: "내담자 관리",
       items: [
         { name: "내담자 목록", href: "/counselor/clients", description: "담당 내담자 관리", icon: "👥" },
@@ -1561,6 +1555,19 @@ export default function Navigation() {
               </div>
 
 
+              {/* 멤버십 링크 */}
+              <Link
+                href="/membership"
+                className={`px-4 py-2.5 rounded-lg font-medium text-base transition-all duration-300 flex items-center whitespace-nowrap border-2 ${
+                  activeItem === "/membership"
+                    ? "text-white bg-yellow-600 border-white"
+                    : "text-yellow-300 hover:text-white hover:bg-yellow-700/50 border-transparent hover:border-white"
+                }`}
+                onClick={(e) => handleNavLinkClick("/membership", e)}
+              >
+                ⭐ 멤버십
+              </Link>
+
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex items-center space-x-2">
                 {isLoggedIn ? (
@@ -1860,6 +1867,7 @@ export default function Navigation() {
                                 {[
                                   { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인", icon: "📊" },
                                   { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
+                                  { name: "멤버십 관리", href: "/mypage?tab=membership", description: "구독 플랜 및 결제 관리", icon: "⭐" },
                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
                                   { name: "삭제된 코드", href: "/mypage/deleted-codes", description: "삭제된 테스트 코드 복구", icon: "📋" },
                                   { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️" }
@@ -2463,6 +2471,17 @@ export default function Navigation() {
               </div>
 
 
+              {/* 멤버십 링크 (모바일) */}
+              <div className="space-y-2 pt-4 border-t border-white/20">
+                <Link
+                  href="/membership"
+                  className="block px-4 py-2 text-base text-yellow-300 hover:text-white hover:bg-yellow-700/30 rounded-lg transition-all duration-300 font-semibold"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  ⭐ 멤버십 플랜
+                </Link>
+              </div>
+
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
                 <div className="space-y-2 pt-4 border-t border-white/20">
@@ -2482,6 +2501,13 @@ export default function Navigation() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     👤 기본 정보
+                  </Link>
+                  <Link
+                    href="/mypage?tab=membership"
+                    className="block px-4 py-2 text-sm text-yellow-300 hover:text-white hover:bg-yellow-700/30 rounded-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    ⭐ 멤버십 관리
                   </Link>
                   <Link
                     href="/mypage/counseling"

@@ -20,6 +20,7 @@ import { isCounselor } from '@/utils/roleUtils';
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
+import MembershipTab from './components/MembershipTab';
 import InlineProfileBlocks from './components/InlineProfileBlocks';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
@@ -849,6 +850,17 @@ function MyPageContent() {
               >
                 통계 보기
               </button>
+              <button
+                type="button"
+                onClick={() => changeTab('membership')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
+                  activeTab === 'membership'
+                    ? 'text-yellow-300 bg-yellow-900/20 border border-b-0 border-yellow-500/30'
+                    : 'text-yellow-400/70 hover:text-yellow-300'
+                }`}
+              >
+                ⭐ 멤버십
+              </button>
               <Link
                 href="/mypage/deleted-codes"
                 className="px-3 py-1.5 text-sm font-medium rounded-t-md text-slate-400 hover:text-slate-200 transition-colors"
@@ -1498,6 +1510,18 @@ function MyPageContent() {
 
             {activeTab === 'deleted' && (
               <DeletedCodesContent isEmbedded={true} />
+            )}
+
+            {activeTab === 'membership' && firebaseUser?.uid && (
+              <motion.div
+                className="bg-white/[0.04] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05, duration: 0.35 }}
+              >
+                <h2 className="text-lg font-semibold text-slate-100 mb-4">⭐ 멤버십 관리</h2>
+                <MembershipTab userId={firebaseUser.uid} />
+              </motion.div>
             )}
             </div>
           </>

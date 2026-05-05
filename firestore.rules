@@ -106,6 +106,40 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && isAdmin();
     }
 
+    // 멤버십 구독 - subscriptions
+    // - 본인만 자신의 구독 문서 읽기/쓰기 가능
+    // - admin은 전체 읽기/쓰기 가능
+    match /subscriptions/{userId} {
+      function isAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId;
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == resource.data.uid;
+      allow write: if isAdmin();
+    }
+
+    // 결제 이력 - paymentHistory
+    // - 본인만 자신의 결제 이력 읽기 가능, 쓰기는 서버(Admin SDK)만
+    match /paymentHistory/{recordId} {
+      function isAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
     // 서버(Admin SDK) 전용 메타 — 클라이언트 직접 접근 차단
     match /system_meta/{docId} {
       allow read, write: if false;
