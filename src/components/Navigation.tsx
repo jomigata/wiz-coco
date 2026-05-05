@@ -678,7 +678,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 shadow-md backdrop-blur-sm">
-        <div className="container max-w-[1400px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-3 sm:gap-4">
+        <div className="container max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-3 sm:gap-4">
           {/* 브랜드 */}
           <Link
             href="/"
@@ -699,9 +699,9 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation — 형제 그룹 사이 gap 필수(없으면 멤버십·AI비서 등이 붙어 겹침) */}
-          <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-4 lg:gap-6 xl:gap-8">
+          <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-4 lg:gap-6 xl:gap-8 overflow-visible">
             {/* overflow-x-auto 는 세로로 펼치는 드롭다운을 잘라 비회원 등에서 서브메뉴가 안 보일 수 있음 → visible 유지 */}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-visible lg:gap-2">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-y-visible overflow-x-auto pr-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:gap-2">
               {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
               <Link
                 href="/join"
@@ -1557,22 +1557,24 @@ export default function Navigation() {
             </div>
 
             {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 */}
-            <div className="ml-1 flex shrink-0 flex-nowrap items-center gap-2.5 border-l border-white/15 pl-4 lg:gap-3 lg:pl-6">
-              {/* 멤버십 링크 */}
-              <Link
-                href="/membership"
-                className={`mr-0.5 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border-2 px-3.5 text-sm font-semibold tracking-tight transition-all duration-300 lg:px-4 lg:text-[15px] ${
-                  activeItem === "/membership"
-                    ? "text-white bg-amber-500/90 border-white shadow-sm"
-                    : "text-amber-100/95 hover:text-white hover:bg-white/10 border-transparent hover:border-white/30"
-                }`}
-                onClick={(e) => handleNavLinkClick("/membership", e)}
-              >
-                <span className="text-base leading-none" aria-hidden>
-                  ⭐
-                </span>
-                멤버십
-              </Link>
+            <div className="ml-1 flex shrink-0 flex-nowrap items-center gap-2.5 border-l border-white/15 pl-4 lg:gap-3 lg:pl-6 overflow-visible">
+              {/* 비로그인 시에만 상단 멤버십 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
+              {!isLoggedIn && (
+                <Link
+                  href="/membership"
+                  className={`mr-0.5 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border-2 px-3.5 text-sm font-semibold tracking-tight transition-all duration-300 lg:px-4 lg:text-[15px] ${
+                    activeItem === "/membership"
+                      ? "text-white bg-amber-500/90 border-white shadow-sm"
+                      : "text-amber-100/95 hover:text-white hover:bg-white/10 border-transparent hover:border-white/30"
+                  }`}
+                  onClick={(e) => handleNavLinkClick("/membership", e)}
+                >
+                  <span className="text-base leading-none" aria-hidden>
+                    ⭐
+                  </span>
+                  멤버십
+                </Link>
+              )}
 
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
@@ -2485,16 +2487,18 @@ export default function Navigation() {
               </div>
 
 
-              {/* 멤버십 링크 (모바일) */}
-              <div className="space-y-2 pt-4 border-t border-white/20">
-                <Link
-                  href="/membership"
-                  className="block px-4 py-2 text-base text-yellow-300 hover:text-white hover:bg-yellow-700/30 rounded-lg transition-all duration-300 font-semibold"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  ⭐ 멤버십 플랜
-                </Link>
-              </div>
+              {/* 멤버십 링크 (모바일) - 비로그인 시에만 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
+              {!isLoggedIn && (
+                <div className="space-y-2 pt-4 border-t border-white/20">
+                  <Link
+                    href="/membership"
+                    className="block px-4 py-2 text-base text-yellow-300 hover:text-white hover:bg-yellow-700/30 rounded-lg transition-all duration-300 font-semibold"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    ⭐ 멤버십 플랜
+                  </Link>
+                </div>
+              )}
 
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
