@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { removeItem } from '@/utils/localStorageManager';
@@ -32,6 +32,9 @@ export default function Navigation() {
   const contentRefs = useRef<Map<string, HTMLElement>>(new Map());
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const parentContainerRef = useRef<HTMLDivElement>(null);
+  // 드롭다운 닫기 지연 타이머 (grace period: 150ms)
+  // onPointerLeave 즉시 닫으면 메뉴 이동/아래서 접근 시 깜빡임 발생
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // 스크롤 상태 관리
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
@@ -49,6 +52,21 @@ export default function Navigation() {
   const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
   const isCounselorOpen = activeMenu === 'counselor';
   const isAdminOpen = activeMenu === 'admin';
+
+  const openMenu = useCallback((menuId: string) => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setActiveMenu(menuId);
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    closeTimerRef.current = setTimeout(() => {
+      setActiveMenu(null);
+      closeTimerRef.current = null;
+    }, 150);
+  }, []);
 
   const isLoggedIn = !!user && !loading;
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
@@ -720,8 +738,8 @@ export default function Navigation() {
               {/* 심리검사 드롭다운 메뉴 */}
               <div
                 className="relative"
-                onPointerEnter={() => setActiveMenu('psychology-tests')}
-                onPointerLeave={() => setActiveMenu(null)}
+                onPointerEnter={() => openMenu('psychology-tests')}
+                onPointerLeave={scheduleClose}
               >
                 <Link
                   href="/tests"
@@ -754,10 +772,10 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="psychology-tests"
                     className="absolute left-0 top-full mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onPointerEnter={() => setActiveMenu('psychology-tests')}
-                    onPointerLeave={() => setActiveMenu(null)}
+                    onPointerEnter={() => openMenu('psychology-tests')}
+                    onPointerLeave={scheduleClose}
                     onMouseEnter={() => {
-                      setActiveMenu('psychology-tests');
+                      openMenu('psychology-tests');
                       // 첫 번째 노출 대분류 자동 선택 (hidden 제외 후 첫 항목)
                       const firstCategory = visibleTestMenuItems[0];
                       if (firstCategory) {
@@ -767,7 +785,7 @@ export default function Navigation() {
                         }
                       }
                     }}
-                    onMouseLeave={() => setActiveMenu(null)}
+                    onMouseLeave={scheduleClose}
                   >
                     <div className="relative flex h-[70vh]">
                       {/* 왼쪽: 대분류 5개 */}
@@ -958,8 +976,8 @@ export default function Navigation() {
               {/* 상담 프로그램 드롭다운 메뉴 */}
               <div
                 className="relative"
-                onPointerEnter={() => setActiveMenu('counseling')}
-                onPointerLeave={() => setActiveMenu(null)}
+                onPointerEnter={() => openMenu('counseling')}
+                onPointerLeave={scheduleClose}
               >
                 <Link
                   href="/counseling"
@@ -992,13 +1010,12 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="counseling"
                     className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onPointerEnter={() => setActiveMenu('counseling')}
-                    onPointerLeave={() => setActiveMenu(null)}
+                    onPointerEnter={() => openMenu('counseling')}
+                    onPointerLeave={scheduleClose}
                     onMouseEnter={() => {
-                      setActiveMenu('counseling');
-                      // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                      openMenu('counseling');
                     }}
-                    onMouseLeave={() => setActiveMenu(null)}
+                    onMouseLeave={scheduleClose}
                   >
                     <div className="relative">
                       <div 
@@ -1064,8 +1081,8 @@ export default function Navigation() {
               {/* AI 마음 비서 드롭다운 메뉴 */}
               <div
                 className="relative"
-                onPointerEnter={() => setActiveMenu('ai-mind-assistant')}
-                onPointerLeave={() => setActiveMenu(null)}
+                onPointerEnter={() => openMenu('ai-mind-assistant')}
+                onPointerLeave={scheduleClose}
               >
                 <Link
                   href="/ai-mind-assistant"
@@ -1116,10 +1133,10 @@ export default function Navigation() {
                       minWidth: 'fit-content',
                       maxWidth: 'none'
                     }}
-                    onPointerEnter={() => setActiveMenu('ai-mind-assistant')}
-                    onPointerLeave={() => setActiveMenu(null)}
+                    onPointerEnter={() => openMenu('ai-mind-assistant')}
+                    onPointerLeave={scheduleClose}
                     onMouseEnter={() => {
-                      setActiveMenu('ai-mind-assistant');
+                      openMenu('ai-mind-assistant');
                       // 첫 번째 대분류 자동 선택
                       if (!selectedAiAssistantMainCategory) {
                         const firstCategory = aiMindAssistantSubMenuItems[0];
@@ -1131,7 +1148,7 @@ export default function Navigation() {
                         }
                       }
                     }}
-                    onMouseLeave={() => setActiveMenu(null)}
+                    onMouseLeave={scheduleClose}
                   >
                     <div className="relative flex h-[70vh]">
                       {/* 왼쪽: 그룹 및 대분류 */}
@@ -1608,8 +1625,8 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
-                          onMouseEnter={() => setActiveMenu('counselor')}
-                          onMouseLeave={() => setActiveMenu(null)}
+                          onMouseEnter={() => openMenu('counselor')}
+                          onMouseLeave={scheduleClose}
                         >
                           👨‍⚕️ 상담사
                           <svg
@@ -1632,11 +1649,10 @@ export default function Navigation() {
                             data-dropdown-menu="counselor"
                             className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => {
-                              setActiveMenu('counselor');
-                              // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                              openMenu('counselor');
                             }}
                             onMouseLeave={() => {
-                              setActiveMenu(null);
+                              scheduleClose();
                               handleMouseLeave('counselor');
                             }}
                             onMouseMove={(e) => handleMouseMove('counselor', e)}
@@ -1717,8 +1733,8 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
-                          onMouseEnter={() => setActiveMenu('admin')}
-                          onMouseLeave={() => setActiveMenu(null)}
+                          onMouseEnter={() => openMenu('admin')}
+                          onMouseLeave={scheduleClose}
                         >
                           🔧 관리자
                           <svg
@@ -1741,11 +1757,10 @@ export default function Navigation() {
                             data-dropdown-menu="admin"
                             className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => {
-                              setActiveMenu('admin');
-                              // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                              openMenu('admin');
                             }}
                             onMouseLeave={() => {
-                              setActiveMenu(null);
+                              scheduleClose();
                               handleMouseLeave('admin');
                             }}
                             onMouseMove={(e) => handleMouseMove('admin', e)}
@@ -1827,8 +1842,8 @@ export default function Navigation() {
                             : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
-                        onMouseEnter={() => setActiveMenu('user')}
-                        onMouseLeave={() => setActiveMenu(null)}
+                        onMouseEnter={() => openMenu('user')}
+                        onMouseLeave={scheduleClose}
                       >
                         👤 마이페이지
                         <svg
@@ -1851,11 +1866,10 @@ export default function Navigation() {
                           data-dropdown-menu="user"
                           className="absolute right-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                           onMouseEnter={() => {
-                            setActiveMenu('user');
-                            // 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
+                            openMenu('user');
                           }}
                           onMouseLeave={() => {
-                            setActiveMenu(null);
+                            scheduleClose();
                             handleMouseLeave('user');
                           }}
                           onMouseMove={(e) => handleMouseMove('user', e)}
