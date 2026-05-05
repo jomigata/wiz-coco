@@ -13,6 +13,8 @@ import {
   Subscription,
   AddonFeatureId,
   SubscriptionAddon,
+  USER_MEMBERSHIP_FIELD,
+  USERS_COLLECTION,
   MEMBERSHIP_COLLECTIONS,
 } from '@/types/membership';
 
@@ -77,30 +79,122 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
   /** true: Firestore에 읽기/쓰기가 되지 않아 메모리상 기본값만 표시 중 (권한 미배포·네트워크 등) */
   const [usingLocalFallback, setUsingLocalFallback] = useState(false);
 
+  /** users/{uid}.membership 에 구독 객체 저장 (기존 Firestore users 규칙으로 동작) */
+  async function mergeMembershipToUser(uid: string, sub: Subscription) {
+    const userRef = doc(db, USERS_COLLECTION, uid);
+    await setDoc(
+      userRef,
+      { [USER_MEMBERSHIP_FIELD]: sub, updatedAt: serverTimestamp() },
+      { merge: true }
+    );
+    const snap = await getDoc(userRef);
+    const raw = snap.data()?.[USER_MEMBERSHIP_FIELD] as Subscription | undefined;
+    if (raw) {
+      setSubscription({ ...raw, uid });
+      setSelectedAddons(new Set(raw.addons?.map((a) => a.featureId) ?? []));
+      setUsingLocalFallback(false);
+    }
+  }
+
+  /** 최초 진입 시 Explorer 기본값을 users 문서에 기록 */
+  async function ensureDefaultMembership(uid: string) {
+    const userRef = doc(db, USERS_COLLECTION, uid);
+    const defaultSub = {
+      uid,
+      tier: 'explorer' as const,
+      memberClass: 'associate' as const,
+      billingCycle: 'monthly' as const,
+      status: 'active' as const,
+      basePrice: 0,
+      effectiveMonthlyPrice: 0,
+      addons: [] as SubscriptionAddon[],
+      addonTotal: 0,
+      totalMonthlyAmount: 0,
+      nextBillingDate: null,
+      startedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      credits: {
+        total: 5,
+        used: 0,
+        resetAt: serverTimestamp(),
+      },
+      counselorSeats: 1,
+      storageUsedMb: 0,
+      activeClientsCount: 0,
+    };
+
+    const before = await getDoc(userRef);
+    if (!before.exists()) {
+      await setDoc(userRef, {
+        role: 'user',
+        [USER_MEMBERSHIP_FIELD]: defaultSub,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      });
+    } else {
+      await setDoc(
+        userRef,
+        { [USER_MEMBERSHIP_FIELD]: defaultSub, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    }
+
+    const after = await getDoc(userRef);
+    const m = after.data()?.[USER_MEMBERSHIP_FIELD] as Subscription | undefined;
+    if (m) {
+      setSubscription({ ...m, uid });
+      setSelectedAddons(new Set(m.addons?.map((a) => a.featureId) ?? []));
+      setUsingLocalFallback(false);
+    }
+  }
+
   const loadSubscription = useCallback(async () => {
     setErrorMessage('');
     setUsingLocalFallback(false);
     setLoading(true);
     try {
-      const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        setSubscription(snap.data() as Subscription);
-        const addonIds = new Set((snap.data() as Subscription).addons?.map((a) => a.featureId) ?? []);
-        setSelectedAddons(addonIds as Set<AddonFeatureId>);
-        setUsingLocalFallback(false);
-        return;
+      const userRef = doc(db, USERS_COLLECTION, userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const m = userSnap.data()?.[USER_MEMBERSHIP_FIELD] as Subscription | undefined;
+        if (m != null && typeof m === 'object' && 'tier' in m) {
+          setSubscription({ ...m, uid: userId });
+          setSelectedAddons(new Set(m.addons?.map((a) => a.featureId) ?? []));
+          setUsingLocalFallback(false);
+          return;
+        }
       }
+
+      // 구버전: subscriptions 컬렉션만 쓰던 데이터가 있으면 users 로 한 번 옮김 (권한 있을 때만)
       try {
-        await createDefaultSubscriptionForUser(userId);
+        const legacyRef = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
+        const legacySnap = await getDoc(legacyRef);
+        if (legacySnap.exists()) {
+          const sub = { ...(legacySnap.data() as Subscription), uid: userId };
+          await setDoc(
+            userRef,
+            { [USER_MEMBERSHIP_FIELD]: sub, updatedAt: serverTimestamp() },
+            { merge: true }
+          );
+          setSubscription(sub);
+          setSelectedAddons(new Set(sub.addons?.map((a) => a.featureId) ?? []));
+          setUsingLocalFallback(false);
+          return;
+        }
+      } catch {
+        // 권한 없음 등 — 무시
+      }
+
+      try {
+        await ensureDefaultMembership(userId);
       } catch (createErr) {
-        console.error('[MembershipTab] 기본 구독 문서 생성 실패 (Firestore 규칙 미배포·권한·네트워크 가능):', createErr);
+        console.error('[MembershipTab] users.membership 기본값 저장 실패:', createErr);
         setSubscription(buildLocalExplorerSubscription(userId));
         setSelectedAddons(new Set());
         setUsingLocalFallback(true);
       }
     } catch (err) {
-      console.error('[MembershipTab] 멤버십 문서 조회 실패:', err);
+      console.error('[MembershipTab] 멤버십 로드 실패:', err);
       setSubscription(buildLocalExplorerSubscription(userId));
       setSelectedAddons(new Set());
       setUsingLocalFallback(true);
@@ -126,83 +220,63 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
     }
   }, [searchParams]);
 
-  async function createDefaultSubscriptionForUser(uid: string) {
-    const defaultSub = {
-      uid,
-      tier: 'explorer' as const,
-      memberClass: 'associate' as const,
-      billingCycle: 'monthly' as const,
-      status: 'active' as const,
-      basePrice: 0,
-      effectiveMonthlyPrice: 0,
-      addons: [],
-      addonTotal: 0,
-      totalMonthlyAmount: 0,
-      nextBillingDate: null,
-      startedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      credits: {
-        total: 5,
-        used: 0,
-        resetAt: serverTimestamp(),
-      },
-      counselorSeats: 1,
-      storageUsedMb: 0,
-      activeClientsCount: 0,
-    };
-    const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, uid);
-    await setDoc(ref, defaultSub);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      setSubscription(snap.data() as Subscription);
-      setUsingLocalFallback(false);
-    }
-  }
-
   async function handlePlanChange() {
     if (!pendingPlan) return;
     setSaving(true);
     setErrorMessage('');
     try {
+      const base = subscription ?? buildLocalExplorerSubscription(userId);
       const plan = MEMBERSHIP_PLANS.find((p) => p.id === pendingPlan)!;
       const basePrice = plan.monthlyPrice;
       const effectiveMonthlyPrice = selectedCycle === 'yearly' ? plan.yearlyMonthlyPrice : plan.monthlyPrice;
 
-      // 현재 addon 중 새 플랜에서 사용 불가한 것 제거
       const availableAddons = ADDON_CATALOG.filter((a) => a.availableFor.includes(pendingPlan));
       const availableAddonIds = new Set(availableAddons.map((a) => a.id));
-      const newAddons = (subscription?.addons ?? []).filter((a) => availableAddonIds.has(a.featureId));
+      const newAddons = base.addons.filter((a) => availableAddonIds.has(a.featureId));
       const addonTotal = newAddons.reduce((sum, a) => {
         const catalog = ADDON_CATALOG.find((c) => c.id === a.featureId);
         return sum + (catalog?.price ?? 0) * a.quantity;
       }, 0);
 
-      const nextBilling = new Date();
-      nextBilling.setMonth(nextBilling.getMonth() + 1);
+      const nextBillingDate =
+        pendingPlan === 'explorer'
+          ? null
+          : Timestamp.fromDate(
+              (() => {
+                const d = new Date();
+                d.setMonth(d.getMonth() + 1);
+                return d;
+              })()
+            );
 
-      const updateData: Record<string, unknown> = {
+      let credits: Subscription['credits'] | undefined;
+      if (pendingPlan === 'explorer') {
+        credits = { total: 5, used: 0, resetAt: serverTimestamp() } as Subscription['credits'];
+      } else if (pendingPlan === 'professional') {
+        credits = { total: 50, used: 0, resetAt: serverTimestamp() } as Subscription['credits'];
+      } else {
+        credits = undefined;
+      }
+
+      const fullSub = {
+        ...base,
+        uid: userId,
         tier: pendingPlan,
         memberClass: plan.memberClass,
         billingCycle: selectedCycle,
-        status: 'active',
+        status: 'active' as const,
         basePrice,
         effectiveMonthlyPrice,
         addons: newAddons,
         addonTotal,
         totalMonthlyAmount: effectiveMonthlyPrice + addonTotal,
-        nextBillingDate: pendingPlan === 'explorer' ? null : nextBilling,
+        nextBillingDate,
         updatedAt: serverTimestamp(),
-        ...(pendingPlan === 'explorer'
-          ? { credits: { total: 5, used: 0, resetAt: serverTimestamp() } }
-          : pendingPlan === 'professional'
-          ? { credits: { total: 50, used: 0, resetAt: serverTimestamp() } }
-          : {}),
-      };
+        startedAt: base.startedAt,
+        credits,
+      } as Subscription;
 
-      const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
-      await setDoc(ref, updateData, { merge: true });
-      const snap = await getDoc(ref);
-      if (snap.exists()) setSubscription(snap.data() as Subscription);
+      await mergeMembershipToUser(userId, fullSub);
       setSelectedAddons(new Set(newAddons.map((a) => a.featureId)));
       setShowPlanSelector(false);
       setPendingPlan(null);
@@ -219,13 +293,18 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
     if (!subscription) return;
     setSaving(true);
     setErrorMessage('');
+    const wasSelected = selectedAddons.has(featureId);
     try {
       const catalog = ADDON_CATALOG.find((a) => a.id === featureId)!;
       let newAddons: SubscriptionAddon[];
 
-      if (selectedAddons.has(featureId)) {
+      if (wasSelected) {
         newAddons = subscription.addons.filter((a) => a.featureId !== featureId);
-        setSelectedAddons((prev) => { const s = new Set(prev); s.delete(featureId); return s; });
+        setSelectedAddons((prev) => {
+          const s = new Set(prev);
+          s.delete(featureId);
+          return s;
+        });
       } else {
         const newAddon = {
           featureId,
@@ -235,7 +314,11 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
           addedAt: serverTimestamp(),
         } as unknown as SubscriptionAddon;
         newAddons = [...subscription.addons, newAddon];
-        setSelectedAddons((prev) => { const s = new Set(prev); s.add(featureId); return s; });
+        setSelectedAddons((prev) => {
+          const s = new Set(prev);
+          s.add(featureId);
+          return s;
+        });
       }
 
       const addonTotal = newAddons.reduce((sum, a) => {
@@ -243,18 +326,16 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
         return sum + (c?.price ?? 0) * a.quantity;
       }, 0);
 
-      const updateData = {
+      const fullSub = {
+        ...subscription,
         addons: newAddons,
         addonTotal,
         totalMonthlyAmount: subscription.effectiveMonthlyPrice + addonTotal,
         updatedAt: serverTimestamp(),
-      };
+      } as Subscription;
 
-      const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
-      await setDoc(ref, updateData, { merge: true });
-      const snap = await getDoc(ref);
-      if (snap.exists()) setSubscription(snap.data() as Subscription);
-      setSuccessMessage(selectedAddons.has(featureId) ? `${catalog.name} 해제되었습니다.` : `${catalog.name} 추가되었습니다.`);
+      await mergeMembershipToUser(userId, fullSub);
+      setSuccessMessage(wasSelected ? `${catalog.name} 해제되었습니다.` : `${catalog.name} 추가되었습니다.`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch {
       setErrorMessage('Add-on 변경에 실패했습니다.');
@@ -294,8 +375,7 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
       {usingLocalFallback && (
         <div className="px-4 py-3 rounded-xl bg-amber-900/35 border border-amber-500/50 text-amber-100 text-sm space-y-2">
           <p>
-            서버에 멤버십 정보를 저장하거나 불러오지 못했습니다. 지금은 기본 플랜(준회원·Explorer)으로 표시합니다.
-            플랜 변경은 서버 저장이 될 때까지 반영되지 않을 수 있습니다.
+            일시적으로 계정 정보와 동기화하지 못했습니다. 화면에는 기본(준회원·Explorer)만 표시됩니다.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -306,7 +386,7 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
               다시 시도
             </button>
             <span className="text-xs text-amber-200/80">
-              원인: 네트워크 또는 Firestore 보안 규칙이 배포되지 않은 경우가 많습니다. 반복되면 관리자에게 문의해 주세요.
+              네트워크를 확인하거나 잠시 후 다시 시도해 주세요. 계속되면 관리자에게 문의해 주세요.
             </span>
           </div>
         </div>

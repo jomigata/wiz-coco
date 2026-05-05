@@ -153,9 +153,15 @@ export interface AddonCatalogItem {
 
 /** 컬렉션 이름 상수 */
 export const MEMBERSHIP_COLLECTIONS = {
+  /** @deprecated 클라이언트는 users 문서의 membership 필드를 사용. 서버/결제 연동용으로 이름만 유지 */
   SUBSCRIPTIONS: 'subscriptions',
   PAYMENT_HISTORY: 'paymentHistory',
 } as const;
+
+/** Firestore `users/{uid}` 문서에 저장되는 멤버십 필드명 (기존 users 쓰기 규칙으로 동기화 가능) */
+export const USER_MEMBERSHIP_FIELD = 'membership' as const;
+
+export const USERS_COLLECTION = 'users' as const;
 
 /** 플랜별 기능 제한 상수 */
 export const PLAN_LIMITS = {
