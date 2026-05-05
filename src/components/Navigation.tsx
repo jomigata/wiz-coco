@@ -678,7 +678,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 shadow-md backdrop-blur-sm">
-        <div className="container max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-3 sm:gap-4">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3">
           {/* 브랜드 */}
           <Link
             href="/"
@@ -698,10 +698,13 @@ export default function Navigation() {
             </span>
           </Link>
 
-          {/* Desktop Navigation — 형제 그룹 사이 gap 필수(없으면 멤버십·AI비서 등이 붙어 겹침) */}
-          <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-4 lg:gap-6 xl:gap-8 overflow-visible">
-            {/* overflow-x-auto 는 세로로 펼치는 드롭다운을 잘라 비회원 등에서 서브메뉴가 안 보일 수 있음 → visible 유지 */}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-y-visible overflow-x-auto pr-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:gap-2">
+          {/* Desktop Navigation
+               ★ overflow-x-auto/hidden 을 이 계층 어디에도 쓰면 안 됨 ★
+               CSS 명세: 한 축이 auto/scroll/hidden 이면 다른 축의 visible 이 auto 로 강제됨
+               → absolute 드롭다운이 clip 되어 호버 메뉴가 보이지 않는 현상 발생
+               해결: 모든 래퍼에 overflow: visible(기본값) 유지 */}
+          <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-3 xl:gap-5">
+            <div className="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-0.5 sm:gap-1 lg:gap-1.5">
               {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
               <Link
                 href="/join"
@@ -750,7 +753,7 @@ export default function Navigation() {
                 {isPsychologyTestsOpen && (
                   <div
                     data-dropdown-menu="psychology-tests"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 top-full mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onPointerEnter={() => setActiveMenu('psychology-tests')}
                     onPointerLeave={() => setActiveMenu(null)}
                     onMouseEnter={() => {
@@ -988,7 +991,7 @@ export default function Navigation() {
                 {isCounselingDropdownOpen && (
                   <div
                     data-dropdown-menu="counseling"
-                    className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     onPointerEnter={() => setActiveMenu('counseling')}
                     onPointerLeave={() => setActiveMenu(null)}
                     onMouseEnter={() => {
@@ -1107,7 +1110,7 @@ export default function Navigation() {
                   <div
                     ref={parentContainerRef}
                     data-dropdown-menu="ai-mind-assistant"
-                    className="absolute left-0 mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className="absolute left-0 top-full mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                     style={{
                       width: parentContainerWidth > 0 ? `${parentContainerWidth}px` : 'auto',
                       minWidth: 'fit-content',
@@ -1569,7 +1572,7 @@ export default function Navigation() {
             </div>
 
             {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 */}
-            <div className="ml-1 flex shrink-0 flex-nowrap items-center gap-2.5 border-l border-white/15 pl-4 lg:gap-3 lg:pl-6 overflow-visible">
+            <div className="ml-1 flex shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 lg:gap-2.5 lg:pl-5">
               {/* 비로그인 시에만 상단 멤버십 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
               {!isLoggedIn && (
                 <Link
@@ -1627,7 +1630,7 @@ export default function Navigation() {
                         {isCounselorOpen && (
                           <div
                             data-dropdown-menu="counselor"
-                            className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => {
                               setActiveMenu('counselor');
                               // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
@@ -1736,7 +1739,7 @@ export default function Navigation() {
                         {isAdminOpen && (
                           <div
                             data-dropdown-menu="admin"
-                            className="absolute left-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                            className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                             onMouseEnter={() => {
                               setActiveMenu('admin');
                               // 첫 번째 카테고리의 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
@@ -1846,7 +1849,7 @@ export default function Navigation() {
                       {isDropdownOpen && (
                         <div
                           data-dropdown-menu="user"
-                          className="absolute right-0 mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                          className="absolute right-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
                           onMouseEnter={() => {
                             setActiveMenu('user');
                             // 첫 번째 아이템이 자동으로 선택되도록 (이미 렌더링되므로 별도 상태 불필요)
