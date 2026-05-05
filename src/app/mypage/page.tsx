@@ -700,38 +700,14 @@ function MyPageContent() {
         }
       }
 
-      // counselor-assessment는 accessCode 기준으로 중복 제거(세트 + 결과가 함께 들어올 수 있음)
-      const seenByAccessCode = new Map<string, TestRecord>();
-      const out: TestRecord[] = [];
-      for (const r of merged) {
-        if (r.recordSource === 'counselor-assessment') {
-          const key = (r.counselorAccessCode || r.counselorCodePinDisplay || '').trim();
-          if (!key) {
-            out.push(r);
-            continue;
-          }
-          const prev = seenByAccessCode.get(key);
-          // completed(결과 단위) 우선 노출
-          const pick = !prev
-            ? r
-            : prev.status === 'completed'
-              ? prev
-              : r.status === 'completed'
-                ? r
-                : prev;
-          seenByAccessCode.set(key, pick);
-        } else {
-          out.push(r);
-        }
-      }
-      out.push(...Array.from(seenByAccessCode.values()));
-
-      out.sort((a, b) => {
+      // 검사기록에서는 "검사완료 + 미검사"를 함께 보여주기 위해
+      // counselor-assessment도 중복 제거하지 않고 그대로 유지
+      merged.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
         return timeB - timeA;
       });
-      setTestRecords(out);
+      setTestRecords(merged);
     } catch (e) {
       setRecordsError('검사 기록을 불러오지 못했습니다.');
       setTestRecords(buildLocalTestRecords());
