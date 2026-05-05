@@ -1747,6 +1747,14 @@ function TestRecordsTabContent({
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 100;
+
+  // 상담사 검사코드(accessCode) 그룹 펼침 상태
+  const [expandedAccessCodes, setExpandedAccessCodes] = useState<Record<string, boolean>>({});
+  const toggleAccessCodeGroup = React.useCallback((accessCode: string) => {
+    const key = (accessCode || '').trim();
+    if (!key) return;
+    setExpandedAccessCodes((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
   
   // 삭제 모달 상태
   const [deleteModalRecord, setDeleteModalRecord] = useState<TestRecord | null>(null);
@@ -1945,11 +1953,89 @@ function TestRecordsTabContent({
     }
   });
 
-  // 페이지네이션 적용
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  type DisplayRow =
+    | { kind: 'record'; record: TestRecord }
+    | { kind: 'accessCodeGroup'; accessCode: string; title: string; usageEndLabel: string; summary: { completed: number; inProgress: number; notStarted: number }; children: TestRecord[] };
+
+  const getAccessCodeKey = (r: TestRecord): string => {
+    return (r.counselorAccessCode || r.counselorCodePinDisplay || '').trim();
+  };
+
+  const getAccessCodeGroupTitle = (accessCode: string, children: TestRecord[]): string => {
+    // children 중 가장 "구체적인" 제목 우선
+    const titles = children
+      .map((c) => (c.testType || '').replace(/^상담사 검사코드 · /, '').trim())
+      .filter(Boolean);
+    const t = titles.find((x) => x && x !== '상담사 검사코드') || titles[0] || '상담사 검사코드';
+    return t;
+  };
+
+  const getUsageEndLabelForGroup = (children: TestRecord[]): string => {
+    const raw = (children.find((c) => c.usageEndDate)?.usageEndDate || '').trim();
+    if (!raw) return '무기한';
+    const d = new Date(`${raw}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? raw : d.toLocaleDateString('ko-KR');
+  };
+
+  const groupedDisplayRows: DisplayRow[] = React.useMemo(() => {
+    const rows: DisplayRow[] = [];
+    const groupMap = new Map<string, TestRecord[]>();
+    const groupOrder: string[] = [];
+
+    for (const r of filteredRecords) {
+      if (r.recordSource === 'counselor-assessment') {
+        const key = getAccessCodeKey(r);
+        if (!key) {
+          rows.push({ kind: 'record', record: r });
+          continue;
+        }
+        if (!groupMap.has(key)) {
+          groupMap.set(key, []);
+          groupOrder.push(key);
+        }
+        groupMap.get(key)!.push(r);
+      } else {
+        rows.push({ kind: 'record', record: r });
+      }
+    }
+
+    // 그룹을 원래 등장 순서대로 rows에 삽입 (정렬은 filteredRecords가 이미 수행)
+    for (const key of groupOrder) {
+      const children = (groupMap.get(key) || []).slice();
+      // 그룹 내부 정렬: completed -> in_progress -> not_started, 그리고 시간 최신순
+      const weight = (s: string) => (s === 'completed' ? 0 : s === 'in_progress' ? 1 : 2);
+      children.sort((a, b) => {
+        const w = weight(String(a.status)) - weight(String(b.status));
+        if (w !== 0) return w;
+        const ta = new Date(a.timestamp || 0).getTime();
+        const tb = new Date(b.timestamp || 0).getTime();
+        return tb - ta;
+      });
+
+      const summary = {
+        completed: children.filter((c) => c.status === 'completed').length,
+        inProgress: children.filter((c) => c.status === 'in_progress').length,
+        notStarted: children.filter((c) => c.status !== 'completed' && c.status !== 'in_progress').length,
+      };
+
+      rows.push({
+        kind: 'accessCodeGroup',
+        accessCode: key,
+        title: getAccessCodeGroupTitle(key, children),
+        usageEndLabel: getUsageEndLabelForGroup(children),
+        summary,
+        children,
+      });
+    }
+
+    return rows;
+  }, [filteredRecords]);
+
+  // 페이지네이션 적용 (그룹 행 1개 = 1개로 카운트)
+  const totalPages = Math.ceil(groupedDisplayRows.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+  const paginatedRows = groupedDisplayRows.slice(startIndex, endIndex);
 
   // 페이지 변경 시 첫 페이지로 리셋
   React.useEffect(() => {
@@ -1987,10 +2073,15 @@ function TestRecordsTabContent({
 
   // 전체 선택/해제
   const toggleAllSelection = () => {
-    if (selectedRecords.length === paginatedRecords.length) {
+    // 그룹 행은 체크 대상에서 제외(상담사 검사코드 일괄삭제 불가)
+    const selectable = paginatedRows
+      .filter((r) => r.kind === 'record')
+      .map((r) => (r as any).record.code)
+      .filter(Boolean) as string[];
+    if (selectedRecords.length === selectable.length) {
       setSelectedRecords([]);
     } else {
-      setSelectedRecords(paginatedRecords.map(r => r.code).filter(Boolean) as string[]);
+      setSelectedRecords(selectable);
     }
   };
 
@@ -2299,7 +2390,10 @@ function TestRecordsTabContent({
                   <th scope="col" className="w-12 px-2 py-2 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedRecords.length === paginatedRecords.length && paginatedRecords.length > 0}
+                      checked={
+                        paginatedRows.filter((r) => r.kind === 'record').length > 0 &&
+                        selectedRecords.length === paginatedRows.filter((r) => r.kind === 'record').length
+                      }
                       onChange={toggleAllSelection}
                       className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
                     />
@@ -2343,84 +2437,202 @@ function TestRecordsTabContent({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
-                {paginatedRecords.map((record, index) => (
-                  <tr key={record.code || index} className="group hover:bg-white/[0.04]">
-                    <td className="whitespace-nowrap px-2 py-2">
-                      <div className="flex justify-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedRecords.includes(record.code || '')}
-                          onChange={() => toggleSelection(record.code || '')}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
-                        />
-                      </div>
-                    </td>
-                    <td
-                      onClick={() => handleRecordClick(record)}
-                      className="cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 transition-colors"
-                      title="클릭하여 검사 결과 보기"
-                    >
-                      {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
-                    </td>
-                    <td
-                      onClick={() => handleRecordClick(record)}
-                      className="max-w-[11rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 transition-colors sm:max-w-xs"
-                      title="클릭하여 검사 결과 보기"
-                    >
-                      {getAccessCodeSetName(record)}
-                    </td>
-                    <td
-                      onClick={() => handleRecordClick(record)}
-                      className="max-w-[9rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 transition-colors sm:max-w-md"
-                      title="클릭하여 검사 결과 보기"
-                    >
-                      {getDisplayTestName(record)}
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-400">
-                      {getUsageEndLabel(record)}
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1.5">
-                        {record.status === 'completed' ? (
+                {paginatedRows.map((row, index) => {
+                  if (row.kind === 'accessCodeGroup') {
+                    const isOpen = !!expandedAccessCodes[row.accessCode];
+                    return (
+                      <React.Fragment key={`group-${row.accessCode}`}>
+                        <tr className="bg-white/[0.03] hover:bg-white/[0.05]">
+                          <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-500">
+                            —
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => toggleAccessCodeGroup(row.accessCode)}
+                              className="inline-flex items-center gap-2 rounded px-2 py-1 text-left hover:bg-white/10"
+                              title={isOpen ? '접기' : '펼치기'}
+                            >
+                              <span className="text-slate-400">{isOpen ? '▼' : '▶'}</span>
+                              <span className="font-medium text-slate-100">{row.title}</span>
+                              <span className="ml-1 rounded bg-white/10 px-2 py-0.5 text-xs text-slate-300">
+                                {row.accessCode}
+                              </span>
+                            </button>
+                          </td>
+                          <td className="max-w-[11rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:max-w-xs">
+                            상담사 검사코드 세트
+                          </td>
+                          <td className="max-w-[9rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:max-w-md">
+                            완료 {row.summary.completed} · 미완료 {row.summary.inProgress} · 미검사 {row.summary.notStarted}
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-400">
+                            {row.usageEndLabel}
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2 text-center" />
+                        </tr>
+
+                        {isOpen &&
+                          row.children.map((record, childIdx) => (
+                            <tr
+                              key={`${record.code}-${childIdx}`}
+                              className="group hover:bg-white/[0.04]"
+                            >
+                              <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-600">
+                                ·
+                              </td>
+                              <td
+                                onClick={() => handleRecordClick(record)}
+                                className="cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 transition-colors"
+                                title="클릭하여 상세 보기"
+                              >
+                                {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
+                              </td>
+                              <td
+                                onClick={() => handleRecordClick(record)}
+                                className="max-w-[11rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 transition-colors sm:max-w-xs"
+                                title="클릭하여 상세 보기"
+                              >
+                                {getAccessCodeSetName(record)}
+                              </td>
+                              <td
+                                onClick={() => handleRecordClick(record)}
+                                className="max-w-[9rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 transition-colors sm:max-w-md"
+                                title="클릭하여 상세 보기"
+                              >
+                                {getDisplayTestName(record)}
+                              </td>
+                              <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-400">
+                                {getUsageEndLabel(record)}
+                              </td>
+                              <td
+                                className="whitespace-nowrap px-2 py-2 text-center"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="flex items-center justify-center gap-1.5">
+                                  {record.status === 'completed' ? (
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center gap-0.5 rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
+                                      title="클릭하여 검사 선택 화면으로 이동"
+                                      onClick={() => handleAddTestForRecord(record)}
+                                    >
+                                      ✓ 검사완료
+                                    </button>
+                                  ) : record.status === 'in_progress' ? (
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
+                                      title="클릭하여 미완료 검사 이어하기"
+                                      onClick={() => handleAddTestForRecord(record)}
+                                    >
+                                      ⚠ 미완료
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
+                                      title="클릭하여 검사 선택 화면으로 이동"
+                                      onClick={() => handleAddTestForRecord(record)}
+                                    >
+                                      ➕ 미검사
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
+                                    onClick={(e) => handleDeleteClick(e, record)}
+                                  >
+                                    삭제
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                      </React.Fragment>
+                    );
+                  }
+
+                  const record = row.record;
+                  return (
+                    <tr key={record.code || index} className="group hover:bg-white/[0.04]">
+                      <td className="whitespace-nowrap px-2 py-2">
+                        <div className="flex justify-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedRecords.includes(record.code || '')}
+                            onChange={() => toggleSelection(record.code || '')}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-rose-400 focus:ring-rose-400/50"
+                          />
+                        </div>
+                      </td>
+                      <td
+                        onClick={() => handleRecordClick(record)}
+                        className="cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 transition-colors"
+                        title="클릭하여 검사 결과 보기"
+                      >
+                        {record.timestamp ? new Date(record.timestamp).toLocaleString('ko-KR') : 'N/A'}
+                      </td>
+                      <td
+                        onClick={() => handleRecordClick(record)}
+                        className="max-w-[11rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 transition-colors sm:max-w-xs"
+                        title="클릭하여 검사 결과 보기"
+                      >
+                        {getAccessCodeSetName(record)}
+                      </td>
+                      <td
+                        onClick={() => handleRecordClick(record)}
+                        className="max-w-[9rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 transition-colors sm:max-w-md"
+                        title="클릭하여 검사 결과 보기"
+                      >
+                        {getDisplayTestName(record)}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-400">
+                        {getUsageEndLabel(record)}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {record.status === 'completed' ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-0.5 rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
+                              title="클릭하여 검사 선택 화면으로 이동"
+                              onClick={() => handleAddTestForRecord(record)}
+                            >
+                              ✓ 검사완료
+                            </button>
+                          ) : record.status === 'in_progress' ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
+                              title="클릭하여 미완료 검사 이어하기"
+                              onClick={() => handleAddTestForRecord(record)}
+                            >
+                              ⚠ 미완료
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
+                              title="클릭하여 검사 선택 화면으로 이동"
+                              onClick={() => handleAddTestForRecord(record)}
+                            >
+                              ➕ 미검사
+                            </button>
+                          )}
                           <button
                             type="button"
-                            className="inline-flex items-center gap-0.5 rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
-                            title="클릭하여 검사 선택 화면으로 이동"
-                            onClick={() => handleAddTestForRecord(record)}
+                            className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
+                            onClick={(e) => handleDeleteClick(e, record)}
                           >
-                            ✓ 검사완료
+                            삭제
                           </button>
-                        ) : record.status === 'in_progress' ? (
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
-                            title="클릭하여 미완료 검사 이어하기"
-                            onClick={() => handleAddTestForRecord(record)}
-                          >
-                            ⚠ 미완료
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
-                            title="클릭하여 검사 선택 화면으로 이동"
-                            onClick={() => handleAddTestForRecord(record)}
-                          >
-                            ➕ 미검사
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
-                          onClick={(e) => handleDeleteClick(e, record)}
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
