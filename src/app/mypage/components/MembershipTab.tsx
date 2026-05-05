@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import {
   MEMBERSHIP_PLANS,
   ADDON_CATALOG,
@@ -39,9 +38,32 @@ function tierIcon(tier: MembershipTier): string {
   return '🏥';
 }
 
+/** Firestore 연결 실패 시 UI만이라도 맞추기 위한 로컬 기본 구독 (Explorer 준회원) */
+function buildLocalExplorerSubscription(uid: string): Subscription {
+  const now = Timestamp.now();
+  return {
+    uid,
+    tier: 'explorer',
+    memberClass: 'associate',
+    billingCycle: 'monthly',
+    status: 'active',
+    basePrice: 0,
+    effectiveMonthlyPrice: 0,
+    addons: [],
+    addonTotal: 0,
+    totalMonthlyAmount: 0,
+    nextBillingDate: null,
+    startedAt: now,
+    updatedAt: now,
+    credits: { total: 5, used: 0, resetAt: now },
+    counselorSeats: 1,
+    storageUsedMb: 0,
+    activeClientsCount: 0,
+  };
+}
+
 export default function MembershipTab({ userId }: MembershipTabProps) {
   const searchParams = useSearchParams();
-  const { user } = useFirebaseAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,10 +74,44 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
   const [selectedAddons, setSelectedAddons] = useState<Set<AddonFeatureId>>(new Set());
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  /** true: Firestore에 읽기/쓰기가 되지 않아 메모리상 기본값만 표시 중 (권한 미배포·네트워크 등) */
+  const [usingLocalFallback, setUsingLocalFallback] = useState(false);
+
+  const loadSubscription = useCallback(async () => {
+    setErrorMessage('');
+    setUsingLocalFallback(false);
+    setLoading(true);
+    try {
+      const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        setSubscription(snap.data() as Subscription);
+        const addonIds = new Set((snap.data() as Subscription).addons?.map((a) => a.featureId) ?? []);
+        setSelectedAddons(addonIds as Set<AddonFeatureId>);
+        setUsingLocalFallback(false);
+        return;
+      }
+      try {
+        await createDefaultSubscriptionForUser(userId);
+      } catch (createErr) {
+        console.error('[MembershipTab] 기본 구독 문서 생성 실패 (Firestore 규칙 미배포·권한·네트워크 가능):', createErr);
+        setSubscription(buildLocalExplorerSubscription(userId));
+        setSelectedAddons(new Set());
+        setUsingLocalFallback(true);
+      }
+    } catch (err) {
+      console.error('[MembershipTab] 멤버십 문서 조회 실패:', err);
+      setSubscription(buildLocalExplorerSubscription(userId));
+      setSelectedAddons(new Set());
+      setUsingLocalFallback(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    loadSubscription();
-  }, [userId]);
+    void loadSubscription();
+  }, [loadSubscription]);
 
   // URL 파라미터로 플랜 사전 선택
   useEffect(() => {
@@ -70,28 +126,9 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
     }
   }, [searchParams]);
 
-  async function loadSubscription() {
-    try {
-      const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        setSubscription(snap.data() as Subscription);
-        const addonIds = new Set((snap.data() as Subscription).addons?.map((a) => a.featureId) ?? []);
-        setSelectedAddons(addonIds as Set<AddonFeatureId>);
-      } else {
-        // 기본 Explorer(준회원) 구독 생성
-        await createDefaultSubscription();
-      }
-    } catch {
-      setErrorMessage('멤버십 정보를 불러오는 데 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function createDefaultSubscription() {
+  async function createDefaultSubscriptionForUser(uid: string) {
     const defaultSub = {
-      uid: userId,
+      uid,
       tier: 'explorer' as const,
       memberClass: 'associate' as const,
       billingCycle: 'monthly' as const,
@@ -113,10 +150,13 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
       storageUsedMb: 0,
       activeClientsCount: 0,
     };
-    const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, userId);
+    const ref = doc(db, MEMBERSHIP_COLLECTIONS.SUBSCRIPTIONS, uid);
     await setDoc(ref, defaultSub);
     const snap = await getDoc(ref);
-    if (snap.exists()) setSubscription(snap.data() as Subscription);
+    if (snap.exists()) {
+      setSubscription(snap.data() as Subscription);
+      setUsingLocalFallback(false);
+    }
   }
 
   async function handlePlanChange() {
@@ -248,6 +288,27 @@ export default function MembershipTab({ userId }: MembershipTabProps) {
       {errorMessage && (
         <div className="px-4 py-3 rounded-xl bg-red-900/40 border border-red-500/50 text-red-300 text-sm">
           ⚠ {errorMessage}
+        </div>
+      )}
+
+      {usingLocalFallback && (
+        <div className="px-4 py-3 rounded-xl bg-amber-900/35 border border-amber-500/50 text-amber-100 text-sm space-y-2">
+          <p>
+            서버에 멤버십 정보를 저장하거나 불러오지 못했습니다. 지금은 기본 플랜(준회원·Explorer)으로 표시합니다.
+            플랜 변경은 서버 저장이 될 때까지 반영되지 않을 수 있습니다.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void loadSubscription()}
+              className="rounded-lg bg-amber-600/80 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-500 transition-colors"
+            >
+              다시 시도
+            </button>
+            <span className="text-xs text-amber-200/80">
+              원인: 네트워크 또는 Firestore 보안 규칙이 배포되지 않은 경우가 많습니다. 반복되면 관리자에게 문의해 주세요.
+            </span>
+          </div>
         </div>
       )}
 
