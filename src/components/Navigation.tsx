@@ -715,7 +715,11 @@ export default function Navigation() {
                 검사 하기
               </Link>
               {/* 심리검사 드롭다운 메뉴 */}
-              <div className="relative">
+              <div
+                className="relative"
+                onMouseEnter={() => setActiveMenu('psychology-tests')}
+                onMouseLeave={() => setActiveMenu(null)}
+              >
                 <Link
                   href="/tests"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -726,8 +730,6 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
-                  onMouseEnter={() => setActiveMenu('psychology-tests')}
-                  onMouseLeave={() => setActiveMenu(null)}
                 >
                   🧠 AI 심리검사
                   <svg
@@ -949,7 +951,11 @@ export default function Navigation() {
               </div>
 
               {/* 상담 프로그램 드롭다운 메뉴 */}
-              <div className="relative">
+              <div
+                className="relative"
+                onMouseEnter={() => setActiveMenu('counseling')}
+                onMouseLeave={() => setActiveMenu(null)}
+              >
                 <Link
                   href="/counseling"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -960,8 +966,6 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
-                  onMouseEnter={() => setActiveMenu('counseling')}
-                  onMouseLeave={() => setActiveMenu(null)}
                 >
                   💬 상담 프로그램
                   <svg
@@ -1051,7 +1055,11 @@ export default function Navigation() {
               </div>
 
               {/* AI 마음 비서 드롭다운 메뉴 */}
-              <div className="relative">
+              <div
+                className="relative"
+                onMouseEnter={() => setActiveMenu('ai-mind-assistant')}
+                onMouseLeave={() => setActiveMenu(null)}
+              >
                 <Link
                   href="/ai-mind-assistant"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -1063,7 +1071,6 @@ export default function Navigation() {
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                   onMouseEnter={() => {
-                    setActiveMenu('ai-mind-assistant');
                     // 첫 번째 대분류 자동 선택
                     if (!selectedAiAssistantMainCategory) {
                       const firstCategory = aiMindAssistantSubMenuItems[0];
@@ -1075,7 +1082,6 @@ export default function Navigation() {
                       }
                     }
                   }}
-                  onMouseLeave={() => setActiveMenu(null)}
                 >
                   🤖 나의 AI 비서
                   <svg
