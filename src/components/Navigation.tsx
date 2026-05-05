@@ -736,11 +736,7 @@ export default function Navigation() {
                 검사 하기
               </Link>
               {/* 심리검사 드롭다운 메뉴 */}
-              <div
-                className="relative"
-                onPointerEnter={() => openMenu('psychology-tests')}
-                onPointerLeave={scheduleClose}
-              >
+              <div className="relative">
                 <Link
                   href="/tests"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -751,6 +747,8 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
+                  onMouseEnter={() => openMenu('psychology-tests')}
+                  onMouseLeave={scheduleClose}
                 >
                   🧠 AI 심리검사
                   <svg
@@ -772,11 +770,8 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="psychology-tests"
                     className="absolute left-0 top-full mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onPointerEnter={() => openMenu('psychology-tests')}
-                    onPointerLeave={scheduleClose}
                     onMouseEnter={() => {
                       openMenu('psychology-tests');
-                      // 첫 번째 노출 대분류 자동 선택 (hidden 제외 후 첫 항목)
                       const firstCategory = visibleTestMenuItems[0];
                       if (firstCategory) {
                         setSelectedMainCategory(firstCategory.category);
@@ -974,11 +969,7 @@ export default function Navigation() {
               </div>
 
               {/* 상담 프로그램 드롭다운 메뉴 */}
-              <div
-                className="relative"
-                onPointerEnter={() => openMenu('counseling')}
-                onPointerLeave={scheduleClose}
-              >
+              <div className="relative">
                 <Link
                   href="/counseling"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -989,6 +980,8 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
+                  onMouseEnter={() => openMenu('counseling')}
+                  onMouseLeave={scheduleClose}
                 >
                   💬 상담 프로그램
                   <svg
@@ -1010,11 +1003,7 @@ export default function Navigation() {
                   <div
                     data-dropdown-menu="counseling"
                     className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onPointerEnter={() => openMenu('counseling')}
-                    onPointerLeave={scheduleClose}
-                    onMouseEnter={() => {
-                      openMenu('counseling');
-                    }}
+                    onMouseEnter={() => openMenu('counseling')}
                     onMouseLeave={scheduleClose}
                   >
                     <div className="relative">
@@ -1079,11 +1068,7 @@ export default function Navigation() {
               </div>
 
               {/* AI 마음 비서 드롭다운 메뉴 */}
-              <div
-                className="relative"
-                onPointerEnter={() => openMenu('ai-mind-assistant')}
-                onPointerLeave={scheduleClose}
-              >
+              <div className="relative">
                 <Link
                   href="/ai-mind-assistant"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -1095,7 +1080,7 @@ export default function Navigation() {
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                   onMouseEnter={() => {
-                    // 첫 번째 대분류 자동 선택
+                    openMenu('ai-mind-assistant');
                     if (!selectedAiAssistantMainCategory) {
                       const firstCategory = aiMindAssistantSubMenuItems[0];
                       if (firstCategory) {
@@ -1106,6 +1091,7 @@ export default function Navigation() {
                       }
                     }
                   }}
+                  onMouseLeave={scheduleClose}
                 >
                   🤖 나의 AI 비서
                   <svg
@@ -1133,11 +1119,8 @@ export default function Navigation() {
                       minWidth: 'fit-content',
                       maxWidth: 'none'
                     }}
-                    onPointerEnter={() => openMenu('ai-mind-assistant')}
-                    onPointerLeave={scheduleClose}
                     onMouseEnter={() => {
                       openMenu('ai-mind-assistant');
-                      // 첫 번째 대분류 자동 선택
                       if (!selectedAiAssistantMainCategory) {
                         const firstCategory = aiMindAssistantSubMenuItems[0];
                         if (firstCategory) {
