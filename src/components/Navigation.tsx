@@ -698,10 +698,10 @@ export default function Navigation() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex flex-1 min-w-0 items-center justify-end min-h-0">
+          {/* Desktop Navigation — 형제 그룹 사이 gap 필수(없으면 멤버십·AI비서 등이 붙어 겹침) */}
+          <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-4 lg:gap-6 xl:gap-8">
             {/* overflow-x-auto 는 세로로 펼치는 드롭다운을 잘라 비회원 등에서 서브메뉴가 안 보일 수 있음 → visible 유지 */}
-            <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 lg:gap-1.5 overflow-visible">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-visible lg:gap-2">
               {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
               <Link
                 href="/join"
@@ -1557,11 +1557,11 @@ export default function Navigation() {
             </div>
 
             {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 */}
-            <div className="flex items-center flex-nowrap gap-2 lg:gap-3 shrink-0 border-l border-white/10 pl-3 lg:pl-4 ml-1">
+            <div className="ml-1 flex shrink-0 flex-nowrap items-center gap-2.5 border-l border-white/15 pl-4 lg:gap-3 lg:pl-6">
               {/* 멤버십 링크 */}
               <Link
                 href="/membership"
-                className={`h-10 px-3 lg:px-3.5 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
+                className={`mr-0.5 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border-2 px-3.5 text-sm font-semibold tracking-tight transition-all duration-300 lg:px-4 lg:text-[15px] ${
                   activeItem === "/membership"
                     ? "text-white bg-amber-500/90 border-white shadow-sm"
                     : "text-amber-100/95 hover:text-white hover:bg-white/10 border-transparent hover:border-white/30"
@@ -1575,7 +1575,7 @@ export default function Navigation() {
               </Link>
 
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
                 {isLoggedIn ? (
                   <>
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
