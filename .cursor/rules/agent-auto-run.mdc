@@ -1,28 +1,35 @@
 ---
-description: 에이전트 터미널 명령 Run 확인 없이 자동 실행하려면 Cursor 설정에서 Auto-Run을 변경한다.
-alwaysApply: false
+description: Git/GitHub 등 터미널 Auto-Run과 에이전트가 Run 버튼 클릭을 유도하지 않도록 안내한다.
+alwaysApply: true
 ---
 
-# 에이전트 Run 자동 실행 (물음 없이 진행)
+# 에이전트 Run / Git·GitHub 터미널
 
-에이전트가 제안한 터미널 명령(`cd`, `git status`, `git add`, `git commit` 등)에 대해 **Run 버튼 확인 없이 자동 실행**되게 하려면 Cursor 설정에서 Auto-Run 모드를 바꿔야 합니다.
+## 에이전트 동작 (채팅 문구)
 
-## 설정 방법 (Cursor UI)
+- `git`, `gh`, GitHub·저장소 관련 터미널 명령을 실행한 뒤 **사용자에게 Run 버튼을 누르거나 터미널 승인을 요청하는 표현을 쓰지 않는다** (예: "Run을 눌러주세요", "승인해 주세요", "실행 버튼을 클릭").
+- 명령이 실제로 자동 실행되는지는 **사용자 Cursor의 Auto-Run 설정·allowlist**에 따른다. 작업 설명에 승인 유도 문구를 반복하지 않는다.
 
-1. **Cursor 설정 열기**: `Ctrl + Shift + J` (Windows/Linux) 또는 `Cmd + Shift + J` (macOS)
-2. **Agents** → **Auto-Run** 이동
-3. **Auto-Run Mode** 드롭다운에서 선택:
-   - **Ask Every Time** – 매번 Run 확인 (기본값)
-   - **Use Allowlist** – Allowlist에 있는 명령만 자동 실행. 아래 **Command Allowlist**에 `cd`, `git`, `npm` 등 추가하면 해당 명령은 확인 없이 실행됨.
-   - **Run Everything** – 모든 도구/명령 자동 실행 (Run 확인 없음, 보안상 주의).
+## 사용자 쪽 설정 (Run 확인 없이 git/gh 실행)
 
-## Run 확인 없이 쓰려면
+에이전트가 제안한 터미널 명령(`git status`, `git push`, `gh pr` 등)에 대해 **Run 확인 없이** 진행하려면 다음이 필요합니다.
 
-- **가장 확실한 방법**: **Run Everything**. 채팅에 뜨는 터미널 블록의 **Run** 버튼 없이 진행되는 경우가 많습니다 (위험한 명령도 묻지 않음).
-- **Use Allowlist**를 쓰는 경우: 전역 파일 `~/.cursor/permissions.json`의 `terminalAllowlist` / `mcpAllowlist`가 IDE Allowlist를 **통째로 덮어씁니다**(공식 동작). 이 저장소에서는 이미 전역 allowlist를 두었을 수 있으니, 모드만 **Use Allowlist**면 됩니다.
-- **중요**: 공식 문서 기준으로 `permissions.json`은 **Ask Every Time** 모드에서는 적용되지 않습니다. 즉 **Auto-Run 모드를 Run Everything 또는 Use Allowlist로 바꾸는 단계가 필수**입니다.
+### 1) Cursor UI (필수)
+
+1. **Cursor 설정**: `Ctrl + Shift + J` (Windows/Linux) 또는 `Cmd + Shift + J` (macOS)
+2. **Agents** → **Auto-Run**
+3. 모드를 **Ask Every Time이 아닌** 값으로 설정:
+   - **Run Everything** — 모든 명령 자동 실행 (가장 단순, 보안상 주의)
+   - 또는 **Auto-Run in Sandbox** / **Use Allowlist**(표시되는 이름은 버전에 따라 다를 수 있음)
+
+공식 문서: **`permissions.json`의 terminal allowlist는 "Ask Every Time" 모드에서는 적용되지 않습니다.** Sandbox 또는 Run Everything 계열로 바꿔야 합니다.
+
+### 2) 전역 `~/.cursor/permissions.json` (선택·권장)
+
+- `terminalAllowlist`에 `git`, `gh` 등을 두면 allowlist 모드에서 해당 접두 명령이 자동 실행 후보가 됩니다.
+- 파일이 allowlist를 정의하면 IDE 내 Allowlist 편집이 그 파일로 대체됩니다.
 
 ## 참고
 
-- **Run in Sandbox** 옵션은 Cursor 버전/OS(예: Windows에서 WSL2 미사용 시)에 따라 보이지 않을 수 있습니다. 보이지 않으면 위 **Use Allowlist** 또는 **Run Everything**을 사용하면 됩니다.
-- Auto-Run 모드 자체는 보통 **Cursor Settings UI**에서 설정합니다. VS Code `settings.json`만으로 동일 동작을 보장하는 공식 키는 문서에 명시되어 있지 않습니다.
+- Auto-Run 모드 전환은 보통 **Cursor Settings UI**에서 합니다. VS Code `settings.json`만으로 동일 동작을 보장하는 공식 키는 문서에 명시되어 있지 않습니다.
+- Windows 전역 파일 경로 예: `%USERPROFILE%\.cursor\permissions.json`
