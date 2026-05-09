@@ -190,8 +190,8 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
           <div className="pt-16">
             {/* 페이지 헤더 - mbti_pro 및 mbti 페이지에서는 숨김 */}
             {!pathname.includes('/mbti_pro') && !pathname.includes('/mbti') && (
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700/50 px-8 py-6">
-                <div className="flex items-center justify-between">
+              <div className="border-b border-slate-700/50 bg-gradient-to-r from-slate-900 to-slate-800 py-6">
+                <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between px-4 sm:px-6">
                   <div>
                     <h2 className="text-2xl font-bold text-white">{pageTitle}</h2>
                     <p className="text-slate-400 mt-1">AI 기반 심리분석 솔루션으로 내담자를 지원하세요</p>
@@ -206,8 +206,10 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
             )}
 
             {/* 콘텐츠 영역 */}
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-              {children}
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+              <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6">
+                {children}
+              </div>
             </div>
           </div>
         </>

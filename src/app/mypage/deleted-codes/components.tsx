@@ -745,7 +745,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         <div className="flex min-h-0 flex-1 flex-col pt-16">
           <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
-            <div className="relative z-10 flex w-full min-w-0 flex-1 flex-col items-center justify-center px-3 py-8 sm:px-4">
+            <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6">
               <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
                 <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
                 <p className="text-sm text-slate-400">불러오는 중…</p>
@@ -777,7 +777,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         <div className="flex min-h-0 flex-1 flex-col pt-16">
           <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
-            <div className="relative z-10 flex w-full min-w-0 flex-1 flex-col px-3 py-6 sm:px-4">
+            <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-1 flex-col px-4 py-6 sm:px-6">
               <div className="rounded-lg border border-white/10 bg-white/[0.06] p-6 text-center backdrop-blur-sm">
                 <p className="mb-4 text-slate-300">삭제된 코드에 접근하려면 로그인이 필요합니다</p>
                 <Link
@@ -1288,7 +1288,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       <div className="flex min-h-0 flex-1 flex-col pt-16">
         <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
-          <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col px-3 py-3 sm:px-4">
+          <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1800px] min-w-0 flex-1 flex-col px-4 py-3 sm:px-6">
             <motion.div
               className="mb-2 shrink-0"
               initial={{ opacity: 0, y: -8 }}

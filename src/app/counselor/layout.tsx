@@ -128,8 +128,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
       <div className="flex min-h-0 flex-1 flex-col pt-16">
         {/* 페이지 상단 — 마이페이지 본문과 유사한 슬레이트 톤 */}
-        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 px-3 py-2.5 backdrop-blur-sm sm:px-4">
-          <div className="flex items-center justify-between gap-3">
+        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2.5 backdrop-blur-sm">
+          <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
                 {pageTitle}
@@ -150,7 +150,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
         <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]" />
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
+          <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 flex-col px-4 py-3 sm:px-6 sm:py-4">
             {children}
           </div>
         </main>

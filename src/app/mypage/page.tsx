@@ -171,7 +171,7 @@ const LoadingMyPage = () => (
   <main className="relative h-[100dvh] overflow-y-auto bg-[#0b1120] pt-16">
     <Navigation />
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
-    <div className="relative z-10 flex w-full min-w-0 flex-col px-3 py-8 sm:px-4">
+    <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-col px-4 py-8 sm:px-6">
       <h1 className="mb-8 text-xl font-semibold tracking-tight text-white">마이페이지</h1>
       <div className="flex flex-1 items-center justify-center py-16">
         <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
@@ -811,7 +811,7 @@ function MyPageContent() {
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
 
-      <div className="relative z-10 flex w-full min-w-0 min-h-0 flex-1 flex-col px-3 py-3 sm:px-4">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 min-h-0 flex-1 flex-col px-4 py-3 sm:px-6">
         <motion.div
           className="mb-2 shrink-0"
           initial={{ opacity: 0, y: -8 }}
