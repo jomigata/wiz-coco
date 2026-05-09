@@ -18,10 +18,11 @@ alwaysApply: false
 
 ## Run 확인 없이 쓰려면
 
-- **Use Allowlist** 선택 후 **Command Allowlist**에 예: `cd`, `git`, `git status`, `git add`, `git commit`, `npm`, `npx` 등 자주 쓰는 명령을 넣으면, 그 명령들은 Run 물음 없이 실행됩니다.
-- **Run Everything**을 선택하면 모든 명령이 Run 물음 없이 실행됩니다 (가장 간단하지만 위험한 명령도 묻지 않음).
+- **가장 확실한 방법**: **Run Everything**. 채팅에 뜨는 터미널 블록의 **Run** 버튼 없이 진행되는 경우가 많습니다 (위험한 명령도 묻지 않음).
+- **Use Allowlist**를 쓰는 경우: 전역 파일 `~/.cursor/permissions.json`의 `terminalAllowlist` / `mcpAllowlist`가 IDE Allowlist를 **통째로 덮어씁니다**(공식 동작). 이 저장소에서는 이미 전역 allowlist를 두었을 수 있으니, 모드만 **Use Allowlist**면 됩니다.
+- **중요**: 공식 문서 기준으로 `permissions.json`은 **Ask Every Time** 모드에서는 적용되지 않습니다. 즉 **Auto-Run 모드를 Run Everything 또는 Use Allowlist로 바꾸는 단계가 필수**입니다.
 
 ## 참고
 
 - **Run in Sandbox** 옵션은 Cursor 버전/OS(예: Windows에서 WSL2 미사용 시)에 따라 보이지 않을 수 있습니다. 보이지 않으면 위 **Use Allowlist** 또는 **Run Everything**을 사용하면 됩니다.
-- 이 옵션은 UI에서만 변경 가능합니다.
+- Auto-Run 모드 자체는 보통 **Cursor Settings UI**에서 설정합니다. VS Code `settings.json`만으로 동일 동작을 보장하는 공식 키는 문서에 명시되어 있지 않습니다.
