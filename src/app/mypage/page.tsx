@@ -183,6 +183,19 @@ const LoadingMyPage = () => (
   </main>
 );
 
+/** 검사 기록·통계 등 동기화 완료 전 빈 화면 깜빡임 방지용 */
+function MyPageTabLoading() {
+  return (
+    <div className="flex min-h-[min(60vh,420px)] flex-1 flex-col items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-6 py-16">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
+      <p className="mt-4 text-sm font-medium text-slate-300">연결 중입니다…</p>
+      <p className="mt-1 max-w-sm text-center text-xs text-slate-500">
+        자료를 모두 불러온 뒤 표시합니다. 잠시만 기다려 주세요.
+      </p>
+    </div>
+  );
+}
+
 // 클라이언트 컴포넌트 (useSearchParams 사용)
 function MyPageContent() {
   const router = useRouter();
@@ -294,7 +307,7 @@ function MyPageContent() {
   });
   // 통계 기간 필터: week | month | year
   const [statsPeriod, setStatsPeriod] = useState<'week' | 'month' | 'year'>('month');
-  const [recordsLoading, setRecordsLoading] = useState<boolean>(false);
+  const [recordsLoading, setRecordsLoading] = useState<boolean>(true);
   const [recordsError, setRecordsError] = useState<string | null>(null);
 
   // 로그인 상태 확인
@@ -606,6 +619,7 @@ function MyPageContent() {
   const refreshTestRecords = React.useCallback(async () => {
     if (!user) {
       setTestRecords([]);
+      setRecordsLoading(false);
       return;
     }
     setRecordsLoading(true);
@@ -714,7 +728,7 @@ function MyPageContent() {
     } finally {
       setRecordsLoading(false);
     }
-  }, [user, firebaseUser?.email, buildLocalTestRecords]);
+  }, [user, firebaseUser?.uid, buildLocalTestRecords]);
 
   useEffect(() => {
     void refreshTestRecords();
@@ -735,6 +749,10 @@ function MyPageContent() {
       setStats(newStats);
     }
   }, [testRecords]);
+
+  /** 검사 기록·상담사 연결 확인이 끝나기 전에는 빈 목록/통계 UI를 보이지 않음 */
+  const myPageSyncPending =
+    Boolean(user) && (recordsLoading || (Boolean(firebaseUser) && counselorLoading));
 
   // 통계 계산 함수
   const calculateStats = (records: TestRecord[]): Stats => {
@@ -911,6 +929,11 @@ function MyPageContent() {
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
 
             {activeTab === 'profile' && (
+              myPageSyncPending ? (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <MyPageTabLoading />
+                </div>
+              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-4 sm:p-5"
                 initial={{ opacity: 0, y: 12 }}
@@ -934,6 +957,7 @@ function MyPageContent() {
                   onUpdate={() => window.location.reload()}
                 />
               </motion.div>
+              )
             )}
 
             {activeTab === 'records' && (
@@ -946,11 +970,17 @@ function MyPageContent() {
                   sortOrder={sortOrder}
                   setSortOrder={setSortOrder}
                   testRecords={testRecords}
+                  isPending={myPageSyncPending}
                 />
               </div>
             )}
 
             {activeTab === 'in-progress' && (
+              myPageSyncPending ? (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <MyPageTabLoading />
+                </div>
+              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
                 initial={{ opacity: 0, y: 20 }}
@@ -1158,6 +1188,7 @@ function MyPageContent() {
                   </>
                 )}
               </motion.div>
+              )
             )}
 
             {/* 이어하기 확인 모달 */}
@@ -1314,6 +1345,11 @@ function MyPageContent() {
             )}
 
             {activeTab === 'stats' && (
+              myPageSyncPending ? (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <MyPageTabLoading />
+                </div>
+              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
                 initial={{ opacity: 0, y: 20 }}
@@ -1541,6 +1577,7 @@ function MyPageContent() {
                   </div>
                 )}
               </motion.div>
+              )
             )}
 
             {activeTab === 'deleted' && (
@@ -1548,6 +1585,11 @@ function MyPageContent() {
             )}
 
             {activeTab === 'membership' && firebaseUser?.uid && (
+              myPageSyncPending ? (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <MyPageTabLoading />
+                </div>
+              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/[0.04] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
                 initial={{ opacity: 0, y: 12 }}
@@ -1557,6 +1599,7 @@ function MyPageContent() {
                 <h2 className="text-lg font-semibold text-slate-100 mb-4">⭐ 멤버십 관리</h2>
                 <MembershipTab userId={firebaseUser.uid} />
               </motion.div>
+              )
             )}
             </div>
           </>
@@ -1716,7 +1759,8 @@ function TestRecordsTabContent({
   setFilterType,
   sortOrder,
   setSortOrder,
-  testRecords
+  testRecords,
+  isPending = false,
 }: {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -1725,6 +1769,8 @@ function TestRecordsTabContent({
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   testRecords: TestRecord[];
+  /** 검사 기록·연결 동기화 전에는 빈 목록 UI 대신 로딩 표시 */
+  isPending?: boolean;
 }) {
   const router = useRouter();
 
@@ -2037,6 +2083,14 @@ function TestRecordsTabContent({
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterType, sortField, sortDirection]);
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <MyPageTabLoading />
+      </div>
+    );
+  }
 
   // 검사 기록 클릭 핸들러
   const handleRecordClick = (record: TestRecord) => {
