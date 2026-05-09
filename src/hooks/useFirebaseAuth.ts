@@ -7,7 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User,
+  User as FirebaseSdkUser,
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
@@ -36,6 +36,22 @@ export interface AuthUser {
   };
 }
 
+/** 로그인 직후 리다이렉트 시 각 페이지의 훅이 아직 동기화되기 전에 세션을 알 수 있도록 세션 캐시를 채웁니다. */
+export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): void {
+  const baseUser: AuthUser = {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    displayName: firebaseUser.displayName,
+    photoURL: firebaseUser.photoURL,
+    role: 'user',
+    metadata: {
+      creationTime: firebaseUser.metadata.creationTime,
+      lastSignInTime: firebaseUser.metadata.lastSignInTime,
+    },
+  };
+  writeSWRCache('swr:firebaseAuthUser', baseUser, { scope: 'session' });
+}
+
 export const useFirebaseAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +78,13 @@ export const useFirebaseAuth = () => {
     }
 
     let unsubscribeUserDoc: (() => void) | null = null;
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeAuth: (() => void) | null = null;
+    let cancelled = false;
+
+    void auth.authStateReady().then(() => {
+      if (cancelled) return;
+
+      unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
         setLoading(false);
@@ -157,10 +179,12 @@ export const useFirebaseAuth = () => {
       } finally {
         setLoading(false);
       }
+      });
     });
 
     return () => {
-      unsubscribe();
+      cancelled = true;
+      unsubscribeAuth?.();
       if (unsubscribeUserDoc) unsubscribeUserDoc();
     };
   }, []);

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -104,7 +104,11 @@ const LoginContent = () => {
           method: result.method,
           user: result.user
         });
-        
+
+        if (result.user) {
+          primeFirebaseAuthSessionCache(result.user);
+        }
+
         // 리다이렉트 처리
         setTimeout(() => {
           router.replace(redirectUrl);
@@ -191,7 +195,9 @@ const LoginContent = () => {
           email: result.user.email,
           displayName: result.user.displayName
         });
-        
+
+        primeFirebaseAuthSessionCache(result.user);
+
         // 리다이렉트 처리
         setTimeout(() => {
           router.replace(redirectUrl);

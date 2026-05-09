@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import { initializeFirebase } from '@/lib/firebase';
+import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 
 function NaverCallbackInner() {
   const searchParams = useSearchParams();
@@ -54,6 +56,10 @@ function NaverCallbackInner() {
       const ret = sessionStorage.getItem('oauth_return') || '/mypage';
       sessionStorage.removeItem('oauth_return');
       sessionStorage.removeItem('oauth_provider');
+      const { auth: authed } = initializeFirebase();
+      if (authed?.currentUser) {
+        primeFirebaseAuthSessionCache(authed.currentUser);
+      }
       router.replace(ret);
     })();
   }, [router, searchParams]);

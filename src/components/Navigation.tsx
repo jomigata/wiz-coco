@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { initializeFirebase } from '@/lib/firebase';
 import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
@@ -68,7 +69,9 @@ export default function Navigation() {
     }, 150);
   }, []);
 
-  const isLoggedIn = !!user && !loading;
+  const { auth: firebaseAuth } = initializeFirebase();
+  const sessionFirebaseUser = firebaseAuth?.currentUser ?? null;
+  const isLoggedIn = Boolean(sessionFirebaseUser) || Boolean(user);
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
   const [isTestInProgress, setIsTestInProgress] = useState(false);
 
@@ -184,9 +187,9 @@ export default function Navigation() {
   const handleInProgressTestsClick = () => {
     router.push('/mypage?tab=in-progress');
   };
-  const userEmail = user?.email || "";
+  const userEmail = user?.email || sessionFirebaseUser?.email || '';
   const userRole = user?.role || 'user';
-  const userName = user?.displayName || "";
+  const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
 
   // 스크롤 상태 감지 함수
   const checkScrollState = (menuId: string, scrollElement: HTMLElement) => {

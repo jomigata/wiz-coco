@@ -9,6 +9,7 @@ import { getSession } from 'next-auth/react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -131,6 +132,7 @@ const RegisterContent = () => {
             
             if (verifyResult.success) {
               console.log('[Register] 상담사 연결 성공:', verifyResult.data);
+              primeFirebaseAuthSessionCache(result.user);
               // 상담사 연결 성공 시 마이페이지로 리다이렉트
               router.push('/mypage?connected=true');
               return;
@@ -181,7 +183,9 @@ const RegisterContent = () => {
             email: result.user.email,
             displayName: result.user.displayName
           });
-          
+
+          primeFirebaseAuthSessionCache(result.user);
+
           // 마이페이지로 리다이렉트
           router.push('/mypage');
         } else {

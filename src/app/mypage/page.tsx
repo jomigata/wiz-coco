@@ -12,7 +12,7 @@ import { setupSyncMonitor, onSyncStatusChange, SyncStatus } from '@/utils/syncSe
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { useCounselorConnection } from '@/hooks/useCounselorConnection';
-import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
+import { auth, db, initializeFirebase } from '@/lib/firebase'; // Firebase 인증 토큰 가져오기 위해 추가
 import { doc, getDoc } from 'firebase/firestore';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { isCounselor } from '@/utils/roleUtils';
@@ -303,6 +303,11 @@ function MyPageContent() {
     const checkAuthAndLoadUser = async () => {
       try {
         if (firebaseLoading) {
+          return;
+        }
+
+        const { auth: authed } = initializeFirebase();
+        if (!firebaseUser && authed?.currentUser) {
           return;
         }
 
