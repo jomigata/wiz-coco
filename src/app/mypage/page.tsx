@@ -789,11 +789,11 @@ function MyPageContent() {
       </div>
 
       <div className="pt-16 flex-1 flex flex-col min-h-0">
-        <main className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white relative overflow-y-auto overscroll-contain">
+        <main className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white relative overflow-hidden">
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
 
-      <div className="relative z-10 flex w-full min-w-0 flex-col px-3 py-3 sm:px-4">
+      <div className="relative z-10 flex w-full min-w-0 min-h-0 flex-1 flex-col px-3 py-3 sm:px-4">
         <motion.div
           className="mb-2 shrink-0"
           initial={{ opacity: 0, y: -8 }}
@@ -908,11 +908,11 @@ function MyPageContent() {
               </Link>
             </motion.div>
 
-            <div className="flex flex-col">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
 
             {activeTab === 'profile' && (
               <motion.div
-                className="bg-white/[0.06] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
+                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/[0.06] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05, duration: 0.35 }}
@@ -952,7 +952,7 @@ function MyPageContent() {
 
             {activeTab === 'in-progress' && (
               <motion.div
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -1315,7 +1315,7 @@ function MyPageContent() {
 
             {activeTab === 'stats' && (
               <motion.div
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -1549,7 +1549,7 @@ function MyPageContent() {
 
             {activeTab === 'membership' && firebaseUser?.uid && (
               <motion.div
-                className="bg-white/[0.04] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
+                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/[0.04] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05, duration: 0.35 }}
