@@ -13,20 +13,34 @@ export default function RouteTransitionShell({ children }: { children: React.Rea
   const routeKey = `${pathname}?${searchParams?.toString?.() ?? ''}`;
 
   const prevKeyRef = useRef<string | null>(null);
+  const prevPathnameRef = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (prevKeyRef.current === null) {
       prevKeyRef.current = routeKey;
+      prevPathnameRef.current = pathname;
       return;
     }
-    if (prevKeyRef.current !== routeKey) {
-      prevKeyRef.current = routeKey;
-      setBusy(true);
-      const id = window.setTimeout(() => setBusy(false), 320);
-      return () => window.clearTimeout(id);
+    if (prevKeyRef.current === routeKey) {
+      return;
     }
-  }, [routeKey]);
+
+    const samePathOnlyQueryChanged =
+      prevPathnameRef.current !== null && prevPathnameRef.current === pathname;
+
+    prevKeyRef.current = routeKey;
+    prevPathnameRef.current = pathname;
+
+    // 같은 페이지에서 검색쿼리·탭 등만 바뀐 경우 전역 전환 오버레이 생략 (마이페이지 탭 등)
+    if (samePathOnlyQueryChanged) {
+      return;
+    }
+
+    setBusy(true);
+    const id = window.setTimeout(() => setBusy(false), 280);
+    return () => window.clearTimeout(id);
+  }, [pathname, routeKey]);
 
   return (
     <div className="relative min-h-0 flex-1">

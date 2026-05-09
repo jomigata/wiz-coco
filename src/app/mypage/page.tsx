@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -446,12 +446,15 @@ function MyPageContent() {
     return '/tests';
   };
 
-  // 탭 변경 함수
+  // 탭 변경 함수 (라우터 갱신은 낮은 우선순위로 처리해 탭 전환 반응성 유지)
   const changeTab = (tabName: string) => {
     setActiveTab(tabName);
-    const params = new URLSearchParams(searchParams);
-    params.set('tab', tabName);
-    router.replace(`/mypage?${params.toString()}`, { scroll: false });
+    const qs = searchParams.toString();
+    startTransition(() => {
+      const params = new URLSearchParams(qs);
+      params.set('tab', tabName);
+      router.replace(`/mypage?${params.toString()}`, { scroll: false });
+    });
   };
 
   // 레코드 정규화: status, testType, timestamp, score
@@ -623,99 +626,100 @@ function MyPageContent() {
       const merged: TestRecord[] = [...local];
 
       if (firebaseUser) {
-        // 0) 로그인 사용자 결과: Firestore 전역 testResults(uid 기준) 병합
-        try {
-          const { queryDocuments } = await import('@/utils/firebaseFirestore');
-          const rows = await queryDocuments(
+        const [{ queryDocuments }, { normalizeAccessCodeInput }, assessmentApi] = await Promise.all([
+          import('@/utils/firebaseFirestore'),
+          import('@/lib/accessCodeFormat'),
+          import('@/lib/assessmentApi'),
+        ]);
+
+        const [rows, bundle] = await Promise.all([
+          queryDocuments(
             'testResults',
             [{ field: 'uid', operator: '==', value: firebaseUser.uid }],
             'createdAt',
             'desc',
             100
-          );
-          for (const row of rows || []) {
-            merged.push({
-              code: `fs-${String((row as any).id || '')}`,
-              testType: String((row as any).testType || (row as any).testId || '검사 결과'),
-              timestamp:
-                (row as any).createdAt?.toDate?.()?.toISOString?.() ||
-                ((row as any).createdAt?.seconds
-                  ? new Date(Number((row as any).createdAt.seconds) * 1000).toISOString()
-                  : new Date().toISOString()),
-              status: String((row as any).status || 'completed'),
-              recordSource: 'local', // UI 필터에서 counselor-assessment만 제외하고 나머지는 포함
-            } as any);
-          }
-        } catch (fireErr) {
-          console.warn('[MyPage] Firestore testResults(uid) 병합 실패:', fireErr);
+          ).catch((e) => {
+            console.warn('[MyPage] Firestore testResults(uid) 병합 실패:', e);
+            return [] as any[];
+          }),
+          Promise.all([
+            assessmentApi.listMyAssessmentResults().catch((e) => {
+              console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', e);
+              return { results: [] as any[] };
+            }),
+            assessmentApi.listAssessments().catch((e) => {
+              console.warn('[MyPage] 상담사 검사코드(세트) 목록 병합 실패:', e);
+              return { assessments: [] as any[] };
+            }),
+          ]).then(([r, a]) => ({
+            results: r.results || [],
+            assessments: a.assessments || [],
+          })),
+        ]);
+
+        for (const row of rows || []) {
+          merged.push({
+            code: `fs-${String((row as any).id || '')}`,
+            testType: String((row as any).testType || (row as any).testId || '검사 결과'),
+            timestamp:
+              (row as any).createdAt?.toDate?.()?.toISOString?.() ||
+              ((row as any).createdAt?.seconds
+                ? new Date(Number((row as any).createdAt.seconds) * 1000).toISOString()
+                : new Date().toISOString()),
+            status: String((row as any).status || 'completed'),
+            recordSource: 'local',
+          } as any);
         }
 
-        try {
-          const { listMyAssessmentResults } = await import('@/lib/assessmentApi');
-          const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
-          const { results } = await listMyAssessmentResults();
-          for (const row of results || []) {
-            const ac = normalizeAccessCodeInput(String(row.accessCode || ''));
-            merged.push({
-              code: `counselor-${row.resultId}`,
-              testType: row.assessmentTitle
-                ? `상담사 검사코드 · ${row.assessmentTitle}`
-                : '상담사 검사코드',
-              timestamp: row.completedAt || new Date().toISOString(),
-              status: 'completed',
-              counselorCodePinDisplay: ac || '—',
-              recordSource: 'counselor-assessment',
-              counselorResultId: row.resultId,
-              counselorAccessCode: ac,
-              counselorTestId: String(row.testId || ''),
-              usageEndDate:
-                typeof row.usageEndDate === 'string' && row.usageEndDate.trim()
-                  ? row.usageEndDate.trim()
-                  : undefined,
-            });
-          }
-        } catch (apiErr) {
-          console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', apiErr);
+        for (const row of bundle.results || []) {
+          const ac = normalizeAccessCodeInput(String(row.accessCode || ''));
+          merged.push({
+            code: `counselor-${row.resultId}`,
+            testType: row.assessmentTitle
+              ? `상담사 검사코드 · ${row.assessmentTitle}`
+              : '상담사 검사코드',
+            timestamp: row.completedAt || new Date().toISOString(),
+            status: 'completed',
+            counselorCodePinDisplay: ac || '—',
+            recordSource: 'counselor-assessment',
+            counselorResultId: row.resultId,
+            counselorAccessCode: ac,
+            counselorTestId: String(row.testId || ''),
+            usageEndDate:
+              typeof row.usageEndDate === 'string' && row.usageEndDate.trim()
+                ? row.usageEndDate.trim()
+                : undefined,
+          });
         }
 
-        // 2) (상담사 계정) 본인이 생성한 검사코드 세트도 목록에 표시 (미검사 포함)
-        // - 완료 결과(listMyAssessmentResults)는 "결과" 단위라 미검사 세트는 노출되지 않음
-        // - 상담사가 본인 코드로 직접 검사하려는 경우가 많아 세트 목록을 병합하여 "미검사"로 노출
-        try {
-          const { listAssessments } = await import('@/lib/assessmentApi');
-          const { normalizeAccessCodeInput } = await import('@/lib/accessCodeFormat');
-          const { assessments } = await listAssessments();
-          for (const a of assessments || []) {
-            const ac = normalizeAccessCodeInput(String((a as any).accessCode || ''));
-            if (!ac) continue;
-            merged.push({
-              code: `counselor-set-${String((a as any).id || ac)}`,
-              testType: (a as any).title ? `상담사 검사코드 · ${(a as any).title}` : '상담사 검사코드',
-              timestamp: String((a as any).createdAt || new Date().toISOString()),
-              status: String((a as any).status || 'not_started'),
-              counselorCodePinDisplay: ac,
-              recordSource: 'counselor-assessment',
-              counselorAccessCode: ac,
-              usageEndDate:
-                typeof (a as any).usageEndDate === 'string' && String((a as any).usageEndDate).trim()
-                  ? String((a as any).usageEndDate).trim()
-                  : undefined,
-            } as any);
-          }
-        } catch (apiErr) {
-          // 상담사 권한이 없거나 서버 미구현일 수 있음 → 조용히 무시
-          console.warn('[MyPage] 상담사 검사코드(세트) 목록 병합 실패:', apiErr);
+        for (const a of bundle.assessments || []) {
+          const ac = normalizeAccessCodeInput(String((a as any).accessCode || ''));
+          if (!ac) continue;
+          merged.push({
+            code: `counselor-set-${String((a as any).id || ac)}`,
+            testType: (a as any).title ? `상담사 검사코드 · ${(a as any).title}` : '상담사 검사코드',
+            timestamp: String((a as any).createdAt || new Date().toISOString()),
+            status: String((a as any).status || 'not_started'),
+            counselorCodePinDisplay: ac,
+            recordSource: 'counselor-assessment',
+            counselorAccessCode: ac,
+            usageEndDate:
+              typeof (a as any).usageEndDate === 'string' && String((a as any).usageEndDate).trim()
+                ? String((a as any).usageEndDate).trim()
+                : undefined,
+          } as any);
         }
       }
 
-      // 검사기록에서는 "검사완료 + 미검사"를 함께 보여주기 위해
-      // counselor-assessment도 중복 제거하지 않고 그대로 유지
       merged.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
         return timeB - timeA;
       });
-      setTestRecords(merged);
+      startTransition(() => {
+        setTestRecords(merged);
+      });
     } catch (e) {
       setRecordsError('검사 기록을 불러오지 못했습니다.');
       setTestRecords(buildLocalTestRecords());
@@ -744,8 +748,9 @@ function MyPageContent() {
     }
   }, [testRecords]);
 
-  /** 검사 기록 원격 병합 중에만 목록·통계 패널에 블러 오버레이 (프로필 등 다른 탭은 즉시 표시) */
-  const recordsSyncPending = Boolean(user) && recordsLoading;
+  /** 검사 기록 병합 또는 Firebase 사용자의 상담사 연결 조회 중 — 해당 탭에 블러 오버레이 */
+  const recordsSyncPending =
+    Boolean(user) && (recordsLoading || (Boolean(firebaseUser) && counselorLoading));
 
   // 통계 계산 함수
   const calculateStats = (records: TestRecord[]): Stats => {
@@ -923,7 +928,7 @@ function MyPageContent() {
 
             {activeTab === 'profile' && (
               <motion.div
-                className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-4 sm:p-5"
+                className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm sm:p-5"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05, duration: 0.35 }}
@@ -944,6 +949,7 @@ function MyPageContent() {
                   firebaseUserRole={firebaseUser?.role}
                   onUpdate={() => window.location.reload()}
                 />
+                <SubtleLoadingOverlay show={recordsSyncPending} />
               </motion.div>
             )}
 
@@ -964,7 +970,7 @@ function MyPageContent() {
 
             {activeTab === 'in-progress' && (
               <motion.div
-                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-sm"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -1169,6 +1175,7 @@ function MyPageContent() {
                     </div>
                   </>
                 )}
+                <SubtleLoadingOverlay show={recordsSyncPending} />
               </motion.div>
             )}
 
@@ -1562,13 +1569,14 @@ function MyPageContent() {
 
             {activeTab === 'membership' && firebaseUser?.uid && (
               <motion.div
-                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/[0.04] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
+                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-lg border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm sm:p-5"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05, duration: 0.35 }}
               >
                 <h2 className="text-lg font-semibold text-slate-100 mb-4">⭐ 멤버십 관리</h2>
                 <MembershipTab userId={firebaseUser.uid} />
+                <SubtleLoadingOverlay show={recordsSyncPending} />
               </motion.div>
             )}
             </div>
