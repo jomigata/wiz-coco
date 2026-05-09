@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useFirebaseAuth } from './useFirebaseAuth';
+import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 export interface CounselorConnection {
   isConnected: boolean;
@@ -25,6 +26,8 @@ export const useCounselorConnection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
+  const cacheKey = user?.uid ? `swr:counselor-connection:${user.uid}` : '';
+
   const checkConnection = async () => {
     if (!user?.uid) {
       setLoading(false);
@@ -32,7 +35,16 @@ export const useCounselorConnection = () => {
     }
 
     try {
-      setLoading(true);
+      // 1) 캐시가 있으면 즉시 보여주고, 네트워크는 백그라운드로
+      const cached = cacheKey
+        ? readSWRCache<CounselorConnection>(cacheKey, { scope: 'session', maxAgeMs: 5 * 60 * 1000 })
+        : { data: null, isFresh: false, savedAt: null };
+      if (cached.data) {
+        setConnection(cached.data);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setError('');
 
       const response = await fetch(`/api/verify-counselor-code?clientId=${user.uid}`);
@@ -48,9 +60,11 @@ export const useCounselorConnection = () => {
       
       if (result.success) {
         setConnection(result.data);
+        if (cacheKey) writeSWRCache(cacheKey, result.data, { scope: 'session' });
       } else {
         setError(result.error || '연결 상태 확인에 실패했습니다.');
         setConnection({ isConnected: false });
+        if (cacheKey) writeSWRCache(cacheKey, { isConnected: false }, { scope: 'session' });
       }
     } catch (err) {
       console.error('상담사 연결 상태 확인 오류:', err);
@@ -62,7 +76,18 @@ export const useCounselorConnection = () => {
   };
 
   useEffect(() => {
-    checkConnection();
+    // 탭/페이지 진입 즉시 캐시 반영 → 1초 뒤에 재검증(서버 응답 갱신)
+    if (cacheKey) {
+      const cached = readSWRCache<CounselorConnection>(cacheKey, { scope: 'session', maxAgeMs: 30 * 60 * 1000 });
+      if (cached.data) {
+        setConnection(cached.data);
+        setLoading(false);
+      }
+    }
+    const t = setTimeout(() => {
+      void checkConnection();
+    }, 1200);
+    return () => clearTimeout(t);
   }, [user?.uid]);
 
   return {

@@ -16,6 +16,7 @@ import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오�
 import { doc, getDoc } from 'firebase/firestore';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { isCounselor } from '@/utils/roleUtils';
+import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -622,7 +623,15 @@ function MyPageContent() {
       setRecordsLoading(false);
       return;
     }
-    setRecordsLoading(true);
+    const cacheKey = `swr:mypage:testRecords:${String(user.id || user.email || 'guest')}`;
+    const cached = readSWRCache<TestRecord[]>(cacheKey, { scope: 'session', maxAgeMs: 30 * 60 * 1000 });
+    const hasCached = Array.isArray(cached.data) && cached.data.length > 0;
+    if (hasCached) {
+      setTestRecords(cached.data as TestRecord[]);
+      setRecordsLoading(false);
+    } else {
+      setRecordsLoading(true);
+    }
     setRecordsError(null);
     try {
       const local = buildLocalTestRecords();
@@ -722,6 +731,7 @@ function MyPageContent() {
         return timeB - timeA;
       });
       setTestRecords(merged);
+      writeSWRCache(cacheKey, merged, { scope: 'session' });
     } catch (e) {
       setRecordsError('검사 기록을 불러오지 못했습니다.');
       setTestRecords(buildLocalTestRecords());
@@ -731,7 +741,11 @@ function MyPageContent() {
   }, [user, firebaseUser?.uid, buildLocalTestRecords]);
 
   useEffect(() => {
-    void refreshTestRecords();
+    // 탭 진입/새로고침 시: 캐시를 즉시 보여준 뒤 1.2초 후 재검증
+    const t = setTimeout(() => {
+      void refreshTestRecords();
+    }, 1200);
+    return () => clearTimeout(t);
   }, [refreshTestRecords]);
 
   useEffect(() => {
