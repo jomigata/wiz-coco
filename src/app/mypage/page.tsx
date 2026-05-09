@@ -16,13 +16,13 @@ import { auth, db } from '@/lib/firebase'; // Firebase 인증 토큰 가져오�
 import { doc, getDoc } from 'firebase/firestore';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { isCounselor } from '@/utils/roleUtils';
-import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
 import MembershipTab from './components/MembershipTab';
 import InlineProfileBlocks from './components/InlineProfileBlocks';
+import SubtleLoadingOverlay from '@/components/SubtleLoadingOverlay';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 
@@ -183,19 +183,6 @@ const LoadingMyPage = () => (
     </div>
   </main>
 );
-
-/** 검사 기록·통계 등 동기화 완료 전 빈 화면 깜빡임 방지용 */
-function MyPageTabLoading() {
-  return (
-    <div className="flex min-h-[min(60vh,420px)] flex-1 flex-col items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-6 py-16">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
-      <p className="mt-4 text-sm font-medium text-slate-300">연결 중입니다…</p>
-      <p className="mt-1 max-w-sm text-center text-xs text-slate-500">
-        자료를 모두 불러온 뒤 표시합니다. 잠시만 기다려 주세요.
-      </p>
-    </div>
-  );
-}
 
 // 클라이언트 컴포넌트 (useSearchParams 사용)
 function MyPageContent() {
@@ -459,7 +446,7 @@ function MyPageContent() {
     setActiveTab(tabName);
     const params = new URLSearchParams(searchParams);
     params.set('tab', tabName);
-    router.push(`/mypage?${params.toString()}`);
+    router.replace(`/mypage?${params.toString()}`, { scroll: false });
   };
 
   // 레코드 정규화: status, testType, timestamp, score
@@ -623,18 +610,11 @@ function MyPageContent() {
       setRecordsLoading(false);
       return;
     }
-    const cacheKey = `swr:mypage:testRecords:${String(user.id || user.email || 'guest')}`;
-    const cached = readSWRCache<TestRecord[]>(cacheKey, { scope: 'session', maxAgeMs: 30 * 60 * 1000 });
-    const hasCached = Array.isArray(cached.data) && cached.data.length > 0;
-    if (hasCached) {
-      setTestRecords(cached.data as TestRecord[]);
-      setRecordsLoading(false);
-    } else {
-      setRecordsLoading(true);
-    }
+    setRecordsLoading(true);
     setRecordsError(null);
     try {
       const local = buildLocalTestRecords();
+      setTestRecords(local);
       const merged: TestRecord[] = [...local];
 
       if (firebaseUser) {
@@ -731,7 +711,6 @@ function MyPageContent() {
         return timeB - timeA;
       });
       setTestRecords(merged);
-      writeSWRCache(cacheKey, merged, { scope: 'session' });
     } catch (e) {
       setRecordsError('검사 기록을 불러오지 못했습니다.');
       setTestRecords(buildLocalTestRecords());
@@ -741,11 +720,7 @@ function MyPageContent() {
   }, [user, firebaseUser?.uid, buildLocalTestRecords]);
 
   useEffect(() => {
-    // 탭 진입/새로고침 시: 캐시를 즉시 보여준 뒤 1.2초 후 재검증
-    const t = setTimeout(() => {
-      void refreshTestRecords();
-    }, 1200);
-    return () => clearTimeout(t);
+    void refreshTestRecords();
   }, [refreshTestRecords]);
 
   useEffect(() => {
@@ -764,9 +739,8 @@ function MyPageContent() {
     }
   }, [testRecords]);
 
-  /** 검사 기록·상담사 연결 확인이 끝나기 전에는 빈 목록/통계 UI를 보이지 않음 */
-  const myPageSyncPending =
-    Boolean(user) && (recordsLoading || (Boolean(firebaseUser) && counselorLoading));
+  /** 검사 기록 원격 병합 중에만 목록·통계 패널에 블러 오버레이 (프로필 등 다른 탭은 즉시 표시) */
+  const recordsSyncPending = Boolean(user) && recordsLoading;
 
   // 통계 계산 함수
   const calculateStats = (records: TestRecord[]): Stats => {
@@ -943,11 +917,6 @@ function MyPageContent() {
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
 
             {activeTab === 'profile' && (
-              myPageSyncPending ? (
-                <div className="flex min-h-0 flex-1 flex-col">
-                  <MyPageTabLoading />
-                </div>
-              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-4 sm:p-5"
                 initial={{ opacity: 0, y: 12 }}
@@ -971,7 +940,6 @@ function MyPageContent() {
                   onUpdate={() => window.location.reload()}
                 />
               </motion.div>
-              )
             )}
 
             {activeTab === 'records' && (
@@ -984,17 +952,12 @@ function MyPageContent() {
                   sortOrder={sortOrder}
                   setSortOrder={setSortOrder}
                   testRecords={testRecords}
-                  isPending={myPageSyncPending}
+                  isPending={recordsSyncPending}
                 />
               </div>
             )}
 
             {activeTab === 'in-progress' && (
-              myPageSyncPending ? (
-                <div className="flex min-h-0 flex-1 flex-col">
-                  <MyPageTabLoading />
-                </div>
-              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
                 initial={{ opacity: 0, y: 20 }}
@@ -1202,7 +1165,6 @@ function MyPageContent() {
                   </>
                 )}
               </motion.div>
-              )
             )}
 
             {/* 이어하기 확인 모달 */}
@@ -1359,13 +1321,8 @@ function MyPageContent() {
             )}
 
             {activeTab === 'stats' && (
-              myPageSyncPending ? (
-                <div className="flex min-h-0 flex-1 flex-col">
-                  <MyPageTabLoading />
-                </div>
-              ) : (
               <motion.div
-                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20"
+                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-sm"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -1590,8 +1547,8 @@ function MyPageContent() {
                     <p className="text-blue-400/70 text-sm">검사를 완료하면 통계 정보가 표시됩니다</p>
                   </div>
                 )}
+                <SubtleLoadingOverlay show={recordsSyncPending} />
               </motion.div>
-              )
             )}
 
             {activeTab === 'deleted' && (
@@ -1599,11 +1556,6 @@ function MyPageContent() {
             )}
 
             {activeTab === 'membership' && firebaseUser?.uid && (
-              myPageSyncPending ? (
-                <div className="flex min-h-0 flex-1 flex-col">
-                  <MyPageTabLoading />
-                </div>
-              ) : (
               <motion.div
                 className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/[0.04] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
                 initial={{ opacity: 0, y: 12 }}
@@ -1613,7 +1565,6 @@ function MyPageContent() {
                 <h2 className="text-lg font-semibold text-slate-100 mb-4">⭐ 멤버십 관리</h2>
                 <MembershipTab userId={firebaseUser.uid} />
               </motion.div>
-              )
             )}
             </div>
           </>
@@ -1783,7 +1734,7 @@ function TestRecordsTabContent({
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   testRecords: TestRecord[];
-  /** 검사 기록·연결 동기화 전에는 빈 목록 UI 대신 로딩 표시 */
+  /** 원격 병합 중: 목록은 유지하고 블러 오버레이 */
   isPending?: boolean;
 }) {
   const router = useRouter();
@@ -2098,14 +2049,6 @@ function TestRecordsTabContent({
     setCurrentPage(1);
   }, [searchQuery, filterType, sortField, sortDirection]);
 
-  if (isPending) {
-    return (
-      <div className="flex min-h-0 flex-1 flex-col">
-        <MyPageTabLoading />
-      </div>
-    );
-  }
-
   // 검사 기록 클릭 핸들러
   const handleRecordClick = (record: TestRecord) => {
     if (record.recordSource === 'counselor-assessment') {
@@ -2364,7 +2307,7 @@ function TestRecordsTabContent({
 
   return (
     <motion.div
-      className="flex flex-col flex-1 min-h-0 bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4"
+      className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -2874,6 +2817,7 @@ function TestRecordsTabContent({
         document.body
       )}
 
+      <SubtleLoadingOverlay show={isPending} />
     </motion.div>
   );
 }
