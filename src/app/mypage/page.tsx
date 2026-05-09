@@ -168,7 +168,7 @@ function formatKoreanDateTime(v: unknown): string {
 
 // 로딩 컴포넌트
 const LoadingMyPage = () => (
-  <main className="relative min-h-[100dvh] overflow-y-auto bg-[#0b1120] pt-16">
+  <main className="relative h-[100dvh] overflow-y-auto bg-[#0b1120] pt-16">
     <Navigation />
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
     <div className="relative z-10 flex w-full min-w-0 flex-col px-3 py-8 sm:px-4">
@@ -783,7 +783,7 @@ function MyPageContent() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#0b1120] flex flex-col">
+    <div className="h-[100dvh] bg-[#0b1120] flex flex-col">
       <div className="fixed top-0 left-0 right-0 z-50">
         <Navigation />
       </div>
