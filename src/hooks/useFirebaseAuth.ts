@@ -16,6 +16,7 @@ import {
 import { initializeFirebase } from '@/lib/firebase';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
+import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 const getFlaskApiBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) return process.env.NEXT_PUBLIC_FLASK_API_URL;
@@ -40,6 +41,17 @@ export const useFirebaseAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 0) 즉시 캐시 사용자 표시 (로딩 화면 대체)
+    // - 페이지 이동/탭 전환 시 "불러오는 중..." 화면을 최대한 피하기 위해
+    const cached = readSWRCache<AuthUser>('swr:firebaseAuthUser', {
+      scope: 'session',
+      maxAgeMs: 30 * 60 * 1000, // 30분
+    });
+    if (cached.data) {
+      setUser(cached.data);
+      setLoading(false);
+    }
+
     // Firebase 초기화
     const { auth, db } = initializeFirebase();
     
@@ -54,6 +66,7 @@ export const useFirebaseAuth = () => {
       if (!firebaseUser) {
         setUser(null);
         setLoading(false);
+        writeSWRCache('swr:firebaseAuthUser', null, { scope: 'session' });
         if (unsubscribeUserDoc) {
           unsubscribeUserDoc();
           unsubscribeUserDoc = null;
@@ -95,7 +108,9 @@ export const useFirebaseAuth = () => {
           if (snap.exists()) {
             const data = snap.data() as any;
             const role = (data?.role || 'user') as AppRole;
-            setUser({ ...baseUser, role });
+            const nextUser = { ...baseUser, role };
+            setUser(nextUser);
+            writeSWRCache('swr:firebaseAuthUser', nextUser, { scope: 'session' });
           } else {
             await setDoc(
               ref,
@@ -110,6 +125,7 @@ export const useFirebaseAuth = () => {
               { merge: true }
             );
             setUser(baseUser);
+            writeSWRCache('swr:firebaseAuthUser', baseUser, { scope: 'session' });
           }
 
           // role 변경을 실시간 반영 (관리자/상담사 승격 시 메뉴 즉시 갱신)
@@ -120,7 +136,11 @@ export const useFirebaseAuth = () => {
               if (!docSnap.exists()) return;
               const data = docSnap.data() as any;
               const role = (data?.role || 'user') as AppRole;
-              setUser((prev) => (prev ? { ...prev, role } : { ...baseUser, role }));
+              setUser((prev) => {
+                const nextUser = prev ? { ...prev, role } : { ...baseUser, role };
+                writeSWRCache('swr:firebaseAuthUser', nextUser, { scope: 'session' });
+                return nextUser;
+              });
             },
             () => {
               // ignore realtime errors (offline 등)
@@ -128,10 +148,12 @@ export const useFirebaseAuth = () => {
           );
         } else {
           setUser(baseUser);
+          writeSWRCache('swr:firebaseAuthUser', baseUser, { scope: 'session' });
         }
       } catch (e) {
         console.warn('[useFirebaseAuth] role 로드 실패:', e);
         setUser(baseUser);
+        writeSWRCache('swr:firebaseAuthUser', baseUser, { scope: 'session' });
       } finally {
         setLoading(false);
       }

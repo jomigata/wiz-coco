@@ -1,6 +1,6 @@
 export type CacheEnvelope<T> = {
   savedAt: number;
-  data: T;
+  data: T | null;
 };
 
 function nowMs() {
@@ -42,7 +42,7 @@ export function readSWRCache<T>(
   return { data: env.data ?? null, savedAt: env.savedAt, isFresh };
 }
 
-export function writeSWRCache<T>(key: string, data: T, opts?: { scope?: 'session' | 'local' }) {
+export function writeSWRCache<T>(key: string, data: T | null, opts?: { scope?: 'session' | 'local' }) {
   const scope = opts?.scope ?? 'session';
   const storage = getStorage(scope);
   if (!storage) return;
