@@ -121,12 +121,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h1 className="truncate text-base font-semibold tracking-tight text-white sm:text-lg">
+              <h1 className="truncate text-xl font-semibold tracking-tight text-white sm:text-2xl">
                 {currentPageTitle || '관리자 대시보드'}
               </h1>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <div className="hidden text-right text-[11px] leading-tight text-slate-400 sm:block">
+              <div className="hidden text-right text-xs leading-tight text-slate-400 sm:block">
                 <span className="text-slate-500">관리자</span>
                 <span className="ml-1.5 font-medium text-slate-200">김관리</span>
               </div>

@@ -304,7 +304,7 @@ function CounselorManagementPageContent() {
         transition={{ duration: 0.25 }}
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[11px] leading-snug text-slate-300 sm:text-xs">
+          <p className="text-xs leading-snug text-slate-300">
             검토 대기 <span className="font-semibold text-amber-200/95">{pendingCount}</span>건 · 자격·학력 서류를
             확인한 뒤 승인 또는 거부를 선택하세요.
           </p>
@@ -361,31 +361,31 @@ function CounselorManagementPageContent() {
 
       {activeTab === 'verification' && (
         <motion.div
-          className="flex min-h-0 flex-1 flex-col bg-white/[0.06] p-3 sm:p-4 rounded-lg border border-white/10"
+          className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <h2 className="text-sm font-semibold text-slate-100 sm:shrink-0">
+            <h2 className="text-lg font-semibold text-slate-100 sm:w-auto sm:shrink-0">
               인증 신청{' '}
               <span className="font-normal text-slate-500">({filteredApplications.length})</span>
             </h2>
             <div className="relative min-w-0 flex-1">
-              <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+              <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 placeholder="이름 · 이메일 · 자격증 · 소속 · 학력 · 분야 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:text-sm"
+                className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
-                className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/50 sm:text-sm"
+                className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
               >
                 <option value="all" className="bg-slate-900">전체</option>
                 <option value="pending" className="bg-slate-900">검토 중</option>
@@ -396,7 +396,7 @@ function CounselorManagementPageContent() {
                 type="button"
                 onClick={handleBulkApprove}
                 disabled={selectedPendingCount === 0}
-                className="rounded-md border border-emerald-500/30 bg-emerald-800/40 px-2.5 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-md border border-emerald-500/30 bg-emerald-800/40 px-2.5 py-1.5 text-sm font-medium text-emerald-100 hover:bg-emerald-700/50 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 선택 승인 ({selectedPendingCount})
               </button>
@@ -404,7 +404,7 @@ function CounselorManagementPageContent() {
                 type="button"
                 onClick={handleBulkReject}
                 disabled={selectedPendingCount === 0}
-                className="rounded-md border border-rose-500/30 bg-rose-900/40 px-2.5 py-1.5 text-xs font-medium text-rose-100 hover:bg-rose-800/50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-md border border-rose-500/30 bg-rose-900/40 px-2.5 py-1.5 text-sm font-medium text-rose-100 hover:bg-rose-800/50 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 선택 거부 ({selectedPendingCount})
               </button>
@@ -415,11 +415,11 @@ function CounselorManagementPageContent() {
             {filteredApplications.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
                 <FaUserCheck className="mb-2 h-10 w-10 text-slate-600" />
-                <p className="text-sm text-slate-400">조건에 맞는 인증 신청이 없습니다.</p>
+                <p className="text-base text-slate-300">조건에 맞는 인증 신청이 없습니다.</p>
               </div>
             ) : (
               <div className="min-h-0 flex-1 overflow-auto">
-                <table className="min-w-full divide-y divide-white/10 text-xs">
+                <table className="min-w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                     <tr>
                       <th scope="col" className="w-10 px-2 py-2 text-center">
@@ -433,31 +433,31 @@ function CounselorManagementPageContent() {
                           className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-sky-400 focus:ring-sky-400/50"
                         />
                       </th>
-                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-left font-medium text-slate-400">
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">
                         신청일
                       </th>
-                      <th scope="col" className="px-2 py-2 text-left font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">
                         이름
                       </th>
-                      <th scope="col" className="min-w-[8rem] px-2 py-2 text-left font-medium text-slate-400">
+                      <th scope="col" className="min-w-[8rem] px-2 py-2 text-left text-xs font-medium text-slate-400">
                         이메일
                       </th>
-                      <th scope="col" className="min-w-[6rem] px-2 py-2 text-left font-medium text-slate-400">
+                      <th scope="col" className="min-w-[6rem] px-2 py-2 text-left text-xs font-medium text-slate-400">
                         자격증 번호
                       </th>
-                      <th scope="col" className="hidden min-w-[6rem] px-2 py-2 text-left font-medium text-slate-400 lg:table-cell">
+                      <th scope="col" className="hidden min-w-[6rem] px-2 py-2 text-left text-xs font-medium text-slate-400 lg:table-cell">
                         소속
                       </th>
-                      <th scope="col" className="hidden min-w-[7rem] px-2 py-2 text-left font-medium text-slate-400 xl:table-cell">
+                      <th scope="col" className="hidden min-w-[7rem] px-2 py-2 text-left text-xs font-medium text-slate-400 xl:table-cell">
                         학력
                       </th>
-                      <th scope="col" className="hidden px-2 py-2 text-left font-medium text-slate-400 md:table-cell">
+                      <th scope="col" className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 md:table-cell">
                         전문분야
                       </th>
-                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center font-medium text-slate-400">
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                         상태
                       </th>
-                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center font-medium text-slate-400">
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                         작업
                       </th>
                     </tr>
@@ -473,38 +473,38 @@ function CounselorManagementPageContent() {
                             className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-sky-400 focus:ring-sky-400/50"
                           />
                         </td>
-                        <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-300">
+                        <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
                           {new Date(application.appliedDate).toLocaleDateString('ko-KR')}
                         </td>
-                        <td className="max-w-[6rem] truncate px-2 py-1.5 text-left font-medium text-white">
+                        <td className="max-w-[6rem] truncate px-2 py-2 text-left text-sm font-medium text-white">
                           {application.name}
                         </td>
-                        <td className="max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-300" title={application.email}>
+                        <td className="max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={application.email}>
                           {application.email}
                         </td>
-                        <td className="max-w-[8rem] truncate px-2 py-1.5 text-left font-mono text-[11px] text-slate-400" title={application.licenseNumber}>
+                        <td className="max-w-[8rem] truncate px-2 py-2 text-left font-mono text-sm text-slate-400" title={application.licenseNumber}>
                           {application.licenseNumber}
                         </td>
-                        <td className="hidden max-w-[8rem] truncate px-2 py-1.5 text-left text-slate-400 lg:table-cell" title={application.institution}>
+                        <td className="hidden max-w-[8rem] truncate px-2 py-2 text-left text-sm text-slate-300 lg:table-cell" title={application.institution}>
                           {application.institution}
                         </td>
-                        <td className="hidden max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-400 xl:table-cell" title={application.education}>
+                        <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 xl:table-cell" title={application.education}>
                           {application.education}
                         </td>
-                        <td className="hidden max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-500 md:table-cell" title={application.specialization.join(', ')}>
+                        <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 md:table-cell" title={application.specialization.join(', ')}>
                           {application.specialization.join(', ')}
                         </td>
-                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${getStatusBadgeClass(application.status)}`}>
+                        <td className="whitespace-nowrap px-2 py-2 text-center">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(application.status)}`}>
                             {getStatusText(application.status)}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
+                        <td className="whitespace-nowrap px-2 py-2 text-center">
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             <button
                               type="button"
                               onClick={() => openModal(application)}
-                              className="rounded bg-sky-800/50 px-2 py-0.5 text-[11px] font-medium text-sky-100 hover:bg-sky-700/60"
+                              className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
                             >
                               상세
                             </button>
@@ -513,14 +513,14 @@ function CounselorManagementPageContent() {
                                 <button
                                   type="button"
                                   onClick={() => handleApprove(application.id)}
-                                  className="rounded bg-emerald-800/50 px-2 py-0.5 text-[11px] font-medium text-emerald-100 hover:bg-emerald-700/60"
+                                  className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
                                 >
                                   승인
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleReject(application.id)}
-                                  className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-medium text-slate-300 hover:bg-white/15"
+                                  className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
                                 >
                                   거부
                                 </button>
@@ -535,7 +535,7 @@ function CounselorManagementPageContent() {
               </div>
             )}
           </div>
-          <div className="mt-2 shrink-0 text-[11px] text-slate-500">총 {filteredApplications.length}건</div>
+          <div className="mt-2 shrink-0 text-xs text-slate-500">총 {filteredApplications.length}건</div>
         </motion.div>
       )}
 
@@ -544,7 +544,7 @@ function CounselorManagementPageContent() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
             <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">상담사 수동 추가</h3>
+                <h3 className="text-xl font-semibold text-white">상담사 수동 추가</h3>
                 <button
                   onClick={() => setShowAddModal(false)}
                   className="text-red-300 hover:text-white transition-colors"
@@ -700,7 +700,7 @@ function CounselorManagementPageContent() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
             <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-white">상담사 인증 상세 정보</h3>
+                <h3 className="text-xl font-semibold text-white">상담사 인증 상세 정보</h3>
                 <button
                   onClick={() => setShowModal(false)}
                   className="text-red-300 hover:text-white transition-colors"
@@ -812,30 +812,30 @@ function CounselorManagementPageContent() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 sm:p-4"
+            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
           >
             <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-100">
+              <h2 className="text-lg font-semibold text-slate-100">
                 승인 프로필{' '}
                 <span className="font-normal text-slate-500">({approvedForProfile})</span>
               </h2>
             </div>
             <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
               {approvedForProfile === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-slate-400">
+                <div className="flex flex-col items-center justify-center py-12 text-center text-base text-slate-300">
                   승인된 상담사가 없습니다.
                 </div>
               ) : (
                 <div className="max-h-[min(60vh,32rem)] overflow-auto lg:max-h-none">
-                  <table className="min-w-full divide-y divide-white/10 text-xs">
+                  <table className="min-w-full divide-y divide-white/10 text-sm">
                     <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                       <tr>
-                        <th className="px-2 py-2 text-left font-medium text-slate-400">이름</th>
-                        <th className="min-w-[8rem] px-2 py-2 text-left font-medium text-slate-400">이메일</th>
-                        <th className="hidden px-2 py-2 text-left font-medium text-slate-400 sm:table-cell">소속</th>
-                        <th className="hidden px-2 py-2 text-left font-medium text-slate-400 md:table-cell">전문분야</th>
-                        <th className="whitespace-nowrap px-2 py-2 text-left font-medium text-slate-400">경력</th>
-                        <th className="px-2 py-2 text-center font-medium text-slate-400">작업</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-slate-400">이름</th>
+                        <th className="min-w-[8rem] px-2 py-2 text-left text-xs font-medium text-slate-400">이메일</th>
+                        <th className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 sm:table-cell">소속</th>
+                        <th className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 md:table-cell">전문분야</th>
+                        <th className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">경력</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-slate-400">작업</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.06]">
@@ -843,21 +843,21 @@ function CounselorManagementPageContent() {
                         .filter((app) => app.status === 'approved')
                         .map((c) => (
                           <tr key={c.id} className="hover:bg-white/[0.04]">
-                            <td className="max-w-[6rem] truncate px-2 py-1.5 text-left font-medium text-white">{c.name}</td>
-                            <td className="max-w-[12rem] truncate px-2 py-1.5 text-left text-slate-300" title={c.email}>
+                            <td className="max-w-[6rem] truncate px-2 py-2 text-left text-sm font-medium text-white">{c.name}</td>
+                            <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={c.email}>
                               {c.email}
                             </td>
-                            <td className="hidden max-w-[10rem] truncate px-2 py-1.5 text-left text-slate-400 sm:table-cell" title={c.institution}>
+                            <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:table-cell" title={c.institution}>
                               {c.institution}
                             </td>
-                            <td className="hidden max-w-[12rem] truncate px-2 py-1.5 text-left text-slate-500 md:table-cell" title={c.specialization.join(', ')}>
+                            <td className="hidden max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-300 md:table-cell" title={c.specialization.join(', ')}>
                               {c.specialization.join(', ')}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-400">{c.experience}년</td>
-                            <td className="px-2 py-1.5 text-center">
+                            <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-400">{c.experience}년</td>
+                            <td className="px-2 py-2 text-center">
                               <button
                                 type="button"
-                                className="rounded bg-sky-800/50 px-2 py-0.5 text-[11px] font-medium text-sky-100 hover:bg-sky-700/60"
+                                className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
                               >
                                 편집
                               </button>
@@ -869,7 +869,7 @@ function CounselorManagementPageContent() {
                 </div>
               )}
             </div>
-            <div className="mt-2 text-[11px] text-slate-500">총 {approvedForProfile}명</div>
+            <div className="mt-2 text-xs text-slate-500">총 {approvedForProfile}명</div>
           </motion.div>
         )}
 
@@ -879,38 +879,38 @@ function CounselorManagementPageContent() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 sm:p-4"
+            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
           >
             <div className="mb-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-md border border-emerald-500/20 bg-emerald-950/30 px-2 py-2 text-center">
                 <div className="text-lg font-bold text-emerald-300">
                   {applications.filter((app) => app.status === 'approved').length}
                 </div>
-                <div className="text-[10px] text-emerald-400/80">활성 상담사</div>
+                <div className="text-xs text-emerald-400/80">활성 상담사</div>
               </div>
               <div className="rounded-md border border-sky-500/20 bg-sky-950/30 px-2 py-2 text-center">
                 <div className="text-lg font-bold text-sky-300">248</div>
-                <div className="text-[10px] text-sky-400/80">월간 세션</div>
+                <div className="text-xs text-sky-400/80">월간 세션</div>
               </div>
               <div className="rounded-md border border-violet-500/20 bg-violet-950/30 px-2 py-2 text-center">
                 <div className="text-lg font-bold text-violet-300">4.8</div>
-                <div className="text-[10px] text-violet-400/80">만족도</div>
+                <div className="text-xs text-violet-400/80">만족도</div>
               </div>
               <div className="rounded-md border border-amber-500/20 bg-amber-950/30 px-2 py-2 text-center">
                 <div className="text-lg font-bold text-amber-300">156</div>
-                <div className="text-[10px] text-amber-400/80">완료 치료</div>
+                <div className="text-xs text-amber-400/80">완료 치료</div>
               </div>
             </div>
 
-            <h2 className="mb-2 text-sm font-semibold text-slate-100">최근 활동</h2>
+            <h2 className="mb-2 text-lg font-semibold text-slate-100">최근 활동</h2>
             <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
               <div className="max-h-[min(50vh,24rem)] overflow-auto lg:max-h-none">
-                <table className="min-w-full divide-y divide-white/10 text-xs">
+                <table className="min-w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                     <tr>
-                      <th className="px-2 py-2 text-left font-medium text-slate-400">상담사</th>
-                      <th className="min-w-[10rem] px-2 py-2 text-left font-medium text-slate-400">내용</th>
-                      <th className="whitespace-nowrap px-2 py-2 text-right font-medium text-slate-400">시각</th>
+                      <th className="px-2 py-2 text-left text-xs font-medium text-slate-400">상담사</th>
+                      <th className="min-w-[10rem] px-2 py-2 text-left text-xs font-medium text-slate-400">내용</th>
+                      <th className="whitespace-nowrap px-2 py-2 text-right text-xs font-medium text-slate-400">시각</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.06]">
@@ -920,9 +920,9 @@ function CounselorManagementPageContent() {
                       ['박심리', '내담자 평가 완료', '6시간 전'],
                     ].map(([name, action, time], i) => (
                       <tr key={i} className="hover:bg-white/[0.04]">
-                        <td className="whitespace-nowrap px-2 py-1.5 text-left text-slate-200">{name}</td>
-                        <td className="px-2 py-1.5 text-left text-slate-400">{action}</td>
-                        <td className="whitespace-nowrap px-2 py-1.5 text-right text-slate-500">{time}</td>
+                        <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">{name}</td>
+                        <td className="px-2 py-2 text-left text-sm text-slate-300">{action}</td>
+                        <td className="whitespace-nowrap px-2 py-2 text-right text-sm text-slate-400">{time}</td>
                       </tr>
                     ))}
                   </tbody>
