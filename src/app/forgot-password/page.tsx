@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import { setTempData, getTempData } from '@/utils/localStorageManager';
+import { motion } from 'framer-motion';import { setTempData, getTempData } from '@/utils/localStorageManager';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -97,10 +95,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      {/* 상단 메뉴 */}
-      <Navigation />
-      
-      {/* 네비게이션 높이만큼 여백 추가 */}
+      {/* 상단 메뉴 */}{/* 네비게이션 높이만큼 여백 추가 */}
       <div className="h-20"></div>
       
       {/* 비밀번호 재설정 폼 */}

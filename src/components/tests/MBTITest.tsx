@@ -162,7 +162,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="relative">
+    <div className="relative pt-16">
       {/* 메인 컨텐츠 영역 - 모든 내용을 하나의 페이지로 통합 */}
       <div className="max-w-3xl mx-auto pt-8 px-6 pb-12"
         tabIndex={0}

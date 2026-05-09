@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
-export default function PeriodicTestsPage() {
+import Link from 'next/link';export default function PeriodicTestsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
 
   const testTypes = {
@@ -57,9 +54,7 @@ export default function PeriodicTestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
-      <Navigation />
-      {/* 헤더 */}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">{/* 헤더 */}
       <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
         <div className="container mx-auto px-6 text-center">
           <div className="text-6xl mb-4">📅</div>

@@ -1,9 +1,6 @@
 'use client';
 
-import React from 'react';
-import Navigation from '@/components/Navigation';
-
-export default function ReviewsPage() {
+import React from 'react';export default function ReviewsPage() {
   // 임시 후기 데이터
   const reviews = [
     {
@@ -40,9 +37,7 @@ export default function ReviewsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900">
-      <Navigation />
-      <div className="pt-24 px-4 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900"><div className="pt-24 px-4 pb-12">
         <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-white/20">
           <h1 className="text-3xl font-bold text-white mb-6 text-center">고객 후기</h1>
           <p className="text-purple-200 mb-8 text-center">

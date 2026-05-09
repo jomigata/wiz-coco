@@ -2,9 +2,7 @@
 
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Navigation from '@/components/Navigation';
-import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import { useRouter, useSearchParams } from 'next/navigation';import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { initializeFirebase } from '@/lib/firebase';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 
@@ -65,9 +63,7 @@ function KakaoCallbackInner() {
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <Navigation />
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full rounded-xl border border-emerald-800/40 bg-emerald-900/25 p-6 text-center">
           <p className={`text-sm ${failed ? 'text-red-300' : 'text-emerald-200'}`}>{message}</p>
           {failed && (
@@ -88,9 +84,7 @@ export default function KakaoCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-emerald-950 flex flex-col">
-          <Navigation />
-          <div className="flex-grow flex items-center justify-center text-emerald-300 text-sm">
+        <div className="min-h-screen bg-emerald-950 flex flex-col"><div className="flex-grow flex items-center justify-center text-emerald-300 text-sm">
             로딩 중…
           </div>
         </div>

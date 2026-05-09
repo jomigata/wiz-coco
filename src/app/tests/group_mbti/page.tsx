@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Navigation from '@/components/Navigation';
-import { generateTestCode } from '@/utils/testCodeGenerator';
+import { useRouter } from 'next/navigation';import { generateTestCode } from '@/utils/testCodeGenerator';
 
 const mbtiTypes = [
   'ISTJ', 'ISFJ', 'INFJ', 'INTJ',
@@ -93,10 +91,7 @@ export default function GroupMbtiPage() {
   };
 
   return (
-    <>
-      <Navigation />
-      
-      <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen">
+    <><div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">

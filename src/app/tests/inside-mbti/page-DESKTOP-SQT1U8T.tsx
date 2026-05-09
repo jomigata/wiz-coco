@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
 // 테스트 결과 인터페이스 정의
 interface TestResult {
   code: string;
@@ -206,8 +204,7 @@ export default function InsideMbtiPage() {
 
   return (
     <>
-      <Navigation />
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+<main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">

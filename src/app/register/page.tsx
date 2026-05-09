@@ -3,9 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import { getSession } from 'next-auth/react';
+import { motion } from 'framer-motion';import { getSession } from 'next-auth/react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -13,9 +11,7 @@ import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
-  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-    <Navigation />
-    <div className="h-20"></div>
+  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="h-20"></div>
     <div className="flex-grow flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -215,9 +211,7 @@ const RegisterContent = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <Navigation />
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-emerald-100 mb-1">회원가입</h2>

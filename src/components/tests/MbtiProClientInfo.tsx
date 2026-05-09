@@ -4,7 +4,6 @@ import React, { ChangeEvent, FC, useEffect, useRef, useState, FormEvent, useMemo
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Navigation from '@/components/Navigation';
 
 interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
@@ -306,7 +305,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   };
 
   return (
-    <div className="min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative">
+    <div className="min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative pt-16">
       <style jsx>{`
         @keyframes blink {
           0%, 50%, 100% { opacity: 1; }
@@ -333,10 +332,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      
-      <Navigation />
-      
-      <div className="h-4"></div>
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">

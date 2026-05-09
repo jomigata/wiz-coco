@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { motion } from 'framer-motion';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { TestAssignment } from '@/types/counselor';
 
 export default function AssignTestsPage() {
@@ -183,9 +181,7 @@ export default function AssignTestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <Navigation />
-      <div className="pt-16 p-6">
+    <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">

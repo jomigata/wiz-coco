@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { motion } from 'framer-motion';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { getInProgressTests } from '@/utils/testResume';
 
 // 삭제된 테스트 기록 타입 정의
@@ -739,10 +737,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     }
     return (
       <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col pt-16">
+        
+<div className="flex min-h-0 flex-1 flex-col pt-16">
           <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
             <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6">
@@ -771,10 +767,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     }
     return (
       <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col pt-16">
+        
+<div className="flex min-h-0 flex-1 flex-col pt-16">
           <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
             <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-1 flex-col px-4 py-6 sm:px-6">
@@ -1282,10 +1276,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
-      <div className="fixed left-0 right-0 top-0 z-50">
-        <Navigation />
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col pt-16">
+      
+<div className="flex min-h-0 flex-1 flex-col pt-16">
         <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
           <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1800px] min-w-0 flex-1 flex-col px-4 py-3 sm:px-6">

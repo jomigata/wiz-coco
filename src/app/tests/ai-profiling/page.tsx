@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { generateTestCode } from '@/utils/testCodeGenerator';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-
-function AIProfilingPageContent() {
+import { motion } from 'framer-motion';function AIProfilingPageContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -554,9 +551,7 @@ function AIProfilingPageContent() {
 
   if (showResult && profile) {
     return (
-      <div className="min-h-screen">
-        <Navigation />
-        <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+      <div className="min-h-screen"><main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">

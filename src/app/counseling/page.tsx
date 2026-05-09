@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 
 export default function CounselingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-900">
-      <Navigation />
-      <div className="pt-24 px-4 pb-12">
+<div className="pt-24 px-4 pb-12">
         <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-white/20">
           <h1 className="text-3xl font-bold text-white mb-6 text-center">상담 프로그램</h1>
           <p className="text-blue-200 mb-8 text-center">

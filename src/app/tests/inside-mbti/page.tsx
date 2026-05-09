@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-import { generateTestCode } from '@/utils/testCodeGenerator';
+import Link from 'next/link';import { generateTestCode } from '@/utils/testCodeGenerator';
 import { saveUserTestResultToFirestore } from '@/utils/testResultsStore';
 
 const mbtiTypes = [
@@ -101,10 +99,7 @@ export default function InsideMbtiPage() {
   };
 
   return (
-    <>
-      <Navigation />
-      
-      <div className="bg-blue-950 min-h-screen">
+    <><div className="bg-blue-950 min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-3xl font-bold text-white mb-8 text-center">

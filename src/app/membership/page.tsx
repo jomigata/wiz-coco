@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-import { MEMBERSHIP_PLANS, ADDON_CATALOG, MembershipPlan, AddonCatalogItem } from '@/types/membership';
+import Link from 'next/link';import { MEMBERSHIP_PLANS, ADDON_CATALOG, MembershipPlan, AddonCatalogItem } from '@/types/membership';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 const PLAN_FEATURES_TABLE = [
@@ -197,10 +195,7 @@ export default function MembershipPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950">
-      <Navigation />
-
-      {/* 히어로 섹션 */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950">{/* 히어로 섹션 */}
       <section className="pt-28 pb-16 px-4 text-center">
         <div className="max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-medium mb-6">

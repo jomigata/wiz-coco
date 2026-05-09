@@ -7,7 +7,6 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
 import MbtiProCodeInput from './MbtiProCodeInput';
-import Navigation from '@/components/Navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
 import { initializeFirebase, auth } from '@/lib/firebase';
@@ -622,7 +621,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     const progressPercent = Math.round((answeredCount / totalCount) * 100);
     
     return (
-      <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4 pt-16">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -678,7 +677,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   if (currentStep === 'info') {
     return (
       <>
-        <Navigation />
         <div className="relative min-h-screen pb-12 overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
@@ -719,7 +717,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   // 선택된 문항이 아직 로드되지 않았으면 로딩 표시
   if (selectedQuestions.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-950 relative overflow-y-auto">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-950 relative overflow-y-auto pt-16">
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -742,7 +740,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   }
 
   return (
-    <div className="min-h-screen h-full flex flex-col relative overflow-y-auto bg-emerald-950">
+    <div className="min-h-screen h-full flex flex-col relative overflow-y-auto bg-emerald-950 pt-16">
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -760,12 +758,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       
-      {/* 상단 고정 메뉴 */}
-      <Navigation />
-      
-      {/* 상단 메뉴의 높이만큼 여백 추가 (기본정보 화면과 동일) */}
-      <div className="h-4"></div>
-
       <div className="flex-1 bg-emerald-950 py-4 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-2xl mx-auto relative z-10">
           <div className="text-center mb-5">

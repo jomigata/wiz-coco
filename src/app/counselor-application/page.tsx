@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useRouter } from 'next/navigation';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
 import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
 
@@ -193,9 +191,7 @@ export default function CounselorApplicationPage() {
 
   if (hasExistingApplication) {
     return (
-      <div className="min-h-screen bg-gray-900">
-        <Navigation />
-        <div className="pt-16 p-6">
+      <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -232,9 +228,7 @@ export default function CounselorApplicationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <Navigation />
-      <div className="pt-16 p-6">
+    <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

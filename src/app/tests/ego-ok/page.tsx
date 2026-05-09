@@ -1,8 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function EgoOkTestPage() {
@@ -11,10 +9,7 @@ export default function EgoOkTestPage() {
   // 로그인 체크 제거 - 모든 사용자가 검사 가능하도록 수정
 
   return (
-    <>
-      <Navigation />
-      
-      <div className="bg-orange-950 min-h-screen">
+    <><div className="bg-orange-950 min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl font-bold text-white mb-6">

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, Suspense } from 'react';
-import Navigation from '@/components/Navigation';
 import MBTITest from '@/components/tests/MBTITest';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
@@ -9,6 +8,7 @@ import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, 
 import { motion } from 'framer-motion';
 import MbtiProCodeInput from '@/components/tests/MbtiProCodeInput';
 import MbtiProClientInfo from '@/components/tests/MbtiProClientInfo';
+import { useAppChromeNav } from '@/components/AppChrome';
 
 function MbtiTestPageContent() {
   const router = useRouter();
@@ -91,7 +91,14 @@ function MbtiTestPageContent() {
   
   const initialProgress = getInitialProgress();
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
-  
+  const { setTopNavHidden } = useAppChromeNav();
+
+  // 코드 입력 단계에서는 전역 상단 바 숨김(개인용 전체 화면)
+  useEffect(() => {
+    setTopNavHidden(currentStep === 'code');
+    return () => setTopNavHidden(false);
+  }, [currentStep, setTopNavHidden]);
+
   // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
   // 코드입력, 정보입력, 질문 답변 단계에서는 말풍선 숨김
   useEffect(() => {
@@ -934,7 +941,7 @@ function MbtiTestPageContent() {
   // 단계별 렌더링
   return (
     <>
-      {currentStep !== 'code' && <Navigation />}
+      
       
       <div className="bg-emerald-950 min-h-screen">
         {currentStep === 'code' && (

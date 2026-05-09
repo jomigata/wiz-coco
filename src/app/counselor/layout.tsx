@@ -2,10 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
-export default function CounselorLayout({ children }: { children: React.ReactNode }) {
+import Link from 'next/link';export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>('');
@@ -121,12 +118,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
-      {/* 상단 네비게이션 */}
-      <div className="fixed left-0 right-0 top-0 z-50">
-        <Navigation />
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col pt-16">
+      
+<div className="flex min-h-0 flex-1 flex-col pt-16">
         {/* 페이지 상단 — 마이페이지 본문과 유사한 슬레이트 톤 */}
         <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2.5 backdrop-blur-sm">
           <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">

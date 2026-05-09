@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import Navigation from '@/components/Navigation';
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+import { usePathname, useRouter } from 'next/navigation';export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
@@ -108,11 +105,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col pt-16">
+      
+<div className="flex min-h-0 flex-1 flex-col pt-16">
         <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2 backdrop-blur-sm">
           <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-2">

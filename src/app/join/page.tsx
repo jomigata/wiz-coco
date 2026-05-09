@@ -2,9 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-import { lookupPublicAssessment } from '@/lib/assessmentApi';
+import Link from 'next/link';import { lookupPublicAssessment } from '@/lib/assessmentApi';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import {
   formatJoinAccessCodeWhileTyping,
@@ -70,10 +68,8 @@ export default function AccessCodeInputPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
-      <div className="pt-24 pb-12 px-4">
+      
+<div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">검사 코드 입력</h1>

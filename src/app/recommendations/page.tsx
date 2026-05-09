@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-
-export default function RecommendationsPage() {
+import { motion } from 'framer-motion';export default function RecommendationsPage() {
   const [userProfile, setUserProfile] = useState({
     mbti: 'INTJ',
     interests: ['심리학', '자기계발', '스트레스 관리'],
@@ -123,12 +120,8 @@ export default function RecommendationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* 상단 네비게이션 */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
       
-      {/* 메인 콘텐츠 영역 */}
+{/* 메인 콘텐츠 영역 */}
       <div className="pt-16">
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
           <div className="container mx-auto px-4 py-8">

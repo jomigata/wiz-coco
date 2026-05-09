@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import Link from 'next/link';
+import { motion } from 'framer-motion';import Link from 'next/link';
 import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { shouldShowAdminMenu } from '@/utils/roleUtils';
@@ -202,9 +200,7 @@ function CounselorVerificationPageContent() {
 
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      <Navigation />
-      <div className="h-20"></div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden"><div className="h-20"></div>
       
       {/* Background effects */}
       <div className="absolute inset-0">

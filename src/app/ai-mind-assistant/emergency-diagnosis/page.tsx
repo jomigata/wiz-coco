@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
-interface EmergencyQuestion {
+import Link from 'next/link';interface EmergencyQuestion {
   id: number;
   question: string;
   options: string[];
@@ -181,9 +178,7 @@ export default function EmergencyDiagnosisPage() {
 
   if (diagnosisResult) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
-        <Navigation />
-        {/* 헤더 */}
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">{/* 헤더 */}
         <div className={`bg-gradient-to-r ${diagnosisResult.color} text-white py-12 pt-20`}>
           <div className="container mx-auto px-6 text-center">
             <Link href="/ai-mind-assistant" className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors">
@@ -301,9 +296,7 @@ export default function EmergencyDiagnosisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
-      <Navigation />
-      {/* 헤더 */}
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">{/* 헤더 */}
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-12 pt-20">
         <div className="container mx-auto px-6 text-center">
           <Link href="/ai-mind-assistant" className="inline-flex items-center text-red-100 hover:text-white mb-4 transition-colors">

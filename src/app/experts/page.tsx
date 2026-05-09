@@ -1,13 +1,8 @@
 'use client';
 
-import React from 'react';
-import Navigation from '@/components/Navigation';
-
-export default function ExpertsPage() {
+import React from 'react';export default function ExpertsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900">
-      <Navigation />
-      <div className="pt-24 px-4 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900"><div className="pt-24 px-4 pb-12">
         <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-white/20">
           <h1 className="text-3xl font-bold text-white mb-6 text-center">전문가 소개</h1>
           <p className="text-blue-200 mb-8 text-center">

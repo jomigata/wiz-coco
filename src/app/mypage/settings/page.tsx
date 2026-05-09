@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Navigation from '@/components/Navigation';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';import Link from 'next/link';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 interface User {
@@ -90,9 +88,7 @@ export default function SettingsPage() {
 
   if (firebaseLoading || isLoadingUser) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
-        <Navigation />
-        <div className="h-20"></div>
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
         
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -119,9 +115,7 @@ export default function SettingsPage() {
 
   if (!user) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
-        <Navigation />
-        <div className="h-20"></div>
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
         
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -150,9 +144,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
-      <Navigation />
-      <div className="h-20"></div>
+    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
       
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">

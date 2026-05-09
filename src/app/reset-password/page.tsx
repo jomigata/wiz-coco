@@ -3,14 +3,9 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-
-// 로딩 컴포넌트
+import { motion } from 'framer-motion';// 로딩 컴포넌트
 const LoadingResetPassword = () => (
-  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-    <Navigation />
-    <div className="h-20"></div>
+  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="h-20"></div>
     <div className="flex-grow flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -134,9 +129,7 @@ const ResetPasswordContent = () => {
 
   if (isValidToken === false) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-        <Navigation />
-        <div className="h-20"></div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="h-20"></div>
         <div className="flex-grow flex items-center justify-center px-4 py-12">
           <div className="max-w-md w-full space-y-8 bg-emerald-900/30 p-8 rounded-2xl backdrop-blur-sm border border-emerald-800/50">
             <div className="text-center">
@@ -163,9 +156,7 @@ const ResetPasswordContent = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <Navigation />
-      <div className="h-20"></div>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="h-20"></div>
       <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full space-y-8 bg-emerald-900/30 p-8 rounded-2xl backdrop-blur-sm border border-emerald-800/50">
           <div className="text-center">

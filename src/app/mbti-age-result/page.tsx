@@ -2,7 +2,6 @@
 
 import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 
 function MbtiAgeResultContent() {
@@ -62,9 +61,7 @@ function MbtiAgeResultContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-800 to-green-900">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8">
+<div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* 헤더 */}
           <div className="text-center mb-8">

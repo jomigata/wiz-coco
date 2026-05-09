@@ -3,7 +3,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navigation from '@/components/Navigation';
 import { lookupPublicAssessment, submitResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
@@ -132,10 +131,8 @@ export default function TestRunnerPage() {
   if (!code || !isValidAccessCodeInput(code) || !testId) {
     return (
       <div className="min-h-screen bg-gray-900">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="pt-24 px-4">
+        
+<div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">잘못된 접근입니다.</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
@@ -150,10 +147,8 @@ export default function TestRunnerPage() {
   if (accessCheckLoading) {
     return (
       <div className="min-h-screen bg-gray-900">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="pt-24 px-4">
+        
+<div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-slate-300">검사코드 사용 가능 여부를 확인 중입니다…</p>
           </div>
@@ -165,10 +160,8 @@ export default function TestRunnerPage() {
   if (accessCheckError) {
     return (
       <div className="min-h-screen bg-gray-900">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="pt-24 px-4">
+        
+<div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{accessCheckError}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
@@ -183,10 +176,8 @@ export default function TestRunnerPage() {
   if (done) {
     return (
       <div className="min-h-screen bg-gray-900">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div
+        
+<div
           className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 pt-24"
           role="dialog"
           aria-modal="true"
@@ -216,10 +207,8 @@ export default function TestRunnerPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
-      <div className="pt-24 pb-12 px-4">
+      
+<div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
           <div className="mb-4">
             <button

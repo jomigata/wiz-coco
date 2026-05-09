@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import ConfirmModal from '../deleted-codes/ConfirmModal';
+import { motion } from 'framer-motion';import ConfirmModal from '../deleted-codes/ConfirmModal';
 
 interface TestPrefix {
   code: string;

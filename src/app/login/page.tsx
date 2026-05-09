@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -12,7 +11,6 @@ import { AccountIntegrationManager } from '@/utils/accountIntegration';
 // 로딩 컴포넌트
 const LoadingLogin = () => (
   <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-    <Navigation />
     <div className="h-20"></div>
     <div className="flex-grow flex items-center justify-center">
       <div className="text-center">
@@ -305,8 +303,7 @@ const LoginContent = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <Navigation />
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
+<div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-emerald-100 mb-1">로그인</h2>

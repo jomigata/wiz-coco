@@ -1,11 +1,8 @@
 import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <Navigation />
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
+<div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-2xl rounded-xl border border-emerald-800/40 bg-emerald-900/25 p-6">
           <div className="mb-5">
             <h1 className="text-xl font-semibold text-emerald-100">개인정보처리방침</h1>

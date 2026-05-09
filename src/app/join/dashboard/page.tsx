@@ -3,7 +3,6 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import Navigation from '@/components/Navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
@@ -13,10 +12,8 @@ import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 function DashboardLoading() {
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
-      <div className="pt-24 flex justify-center">
+      
+<div className="pt-24 flex justify-center">
         <p className="text-slate-400">불러오는 중…</p>
       </div>
     </div>
@@ -132,10 +129,8 @@ function JoinDashboardContent() {
   if (error || !assessment) {
     return (
       <div className="min-h-screen bg-gray-900">
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navigation />
-        </div>
-        <div className="pt-24 px-4">
+        
+<div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{error || '검사코드 정보를 불러올 수 없습니다.'}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
@@ -149,10 +144,8 @@ function JoinDashboardContent() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
-      <div className="pt-24 pb-12 px-4">
+      
+<div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{assessment.title}</h1>

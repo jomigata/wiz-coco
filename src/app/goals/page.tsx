@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-
-export default function GoalsPage() {
+import { motion } from 'framer-motion';export default function GoalsPage() {
   const [goals, setGoals] = useState([
     {
       id: 1,
@@ -115,9 +112,7 @@ export default function GoalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50"><div className="container mx-auto px-4 py-8 pt-20">
         {/* 헤더 */}
         <motion.div 
           className="text-center mb-12"

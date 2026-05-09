@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import { FaUser, FaClipboard, FaBrain, FaClock, FaKey, FaHeart, FaComment, FaBuilding } from 'react-icons/fa';
 import { getItem, setItem, getAuthState, setAuthState } from '@/utils/localStorageManager';
@@ -25,7 +24,6 @@ import InlineProfileBlocks from './components/InlineProfileBlocks';
 import SubtleLoadingOverlay from '@/components/SubtleLoadingOverlay';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
-
 
 
 // 아이콘 컴포넌트들
@@ -170,7 +168,6 @@ function formatKoreanDateTime(v: unknown): string {
 // 로딩 컴포넌트
 const LoadingMyPage = () => (
   <main className="relative h-[100dvh] overflow-y-auto bg-[#0b1120] pt-16">
-    <Navigation />
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
     <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-col px-4 py-8 sm:px-6">
       <h1 className="mb-8 text-xl font-semibold tracking-tight text-white">마이페이지</h1>
@@ -212,13 +209,24 @@ function MyPageContent() {
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   
-  // URL 파라미터 변경 시 activeTab 업데이트
+  // 타 페이지에서 링크로 들어오거나 브라우저 앞/뒤로 이동 시 URL과 동기화
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab') || 'profile';
-    if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-    }
+    setActiveTab(tabFromUrl);
   }, [searchParams]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      try {
+        const q = new URLSearchParams(window.location.search);
+        setActiveTab(q.get('tab') || 'profile');
+      } catch {
+        setActiveTab('profile');
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
   
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -446,15 +454,13 @@ function MyPageContent() {
     return '/tests';
   };
 
-  // 탭 변경 함수 (라우터 갱신은 낮은 우선순위로 처리해 탭 전환 반응성 유지)
+  // 탭만 바뀔 때는 History API만 사용해 라우터 소프트 내비게이션(레이아웃 리셋)을 피합니다.
   const changeTab = (tabName: string) => {
     setActiveTab(tabName);
-    const qs = searchParams.toString();
-    startTransition(() => {
-      const params = new URLSearchParams(qs);
-      params.set('tab', tabName);
-      router.replace(`/mypage?${params.toString()}`, { scroll: false });
-    });
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', tabName);
+    window.history.replaceState(null, '', `/mypage?${params.toString()}`);
   };
 
   // 레코드 정규화: status, testType, timestamp, score
@@ -800,11 +806,7 @@ function MyPageContent() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
-
-      <div className="pt-16 flex-1 flex flex-col min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col pt-16">
         <main className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />

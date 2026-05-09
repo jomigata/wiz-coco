@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import MBTIResult from '@/components/tests/MBTIResult';
 import MbtiProResult from '@/components/tests/MbtiProResult';
@@ -78,8 +77,7 @@ const mbtiDescriptions: Record<string, { title: string; description: string }> =
 // 로딩 컴포넌트
 const LoadingResults = () => (
   <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
-    <Navigation />
-    <div className="h-20"></div>
+<div className="h-20"></div>
     
     {/* Background pattern */}
     <div className="absolute inset-0 z-0 opacity-10">
@@ -225,8 +223,7 @@ function MbtiGraphResults() {
   if (errorMessage) {
     return (
       <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
-        <Navigation />
-        <div className="h-20"></div>
+<div className="h-20"></div>
         
         <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
@@ -244,8 +241,7 @@ function MbtiGraphResults() {
   // 결과 컴포넌트 표시 - 로컬 스토리지에서 가져온 데이터 사용
   return (
     <div className="min-h-screen">
-      <Navigation />
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+<main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">

@@ -1,16 +1,11 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-import { motion } from 'framer-motion';
+import Link from 'next/link';import { motion } from 'framer-motion';
 
 export default function UsersAdminPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 pb-16">
-      <Navigation />
-      
-      <div className="p-6">
+    <main className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 pb-16"><div className="p-6">
         <div className="max-w-7xl mx-auto relative z-10">
           {/* 타이틀 섹션 */}
           <motion.div 

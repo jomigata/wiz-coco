@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
-interface ThoughtEntry {
+import Link from 'next/link';interface ThoughtEntry {
   id: string;
   thought: string;
   timestamp: Date;
@@ -97,9 +94,7 @@ export default function DailyThoughtPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <Navigation />
-      {/* 헤더 */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">{/* 헤더 */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12 pt-20">
         <div className="container mx-auto px-6">
           <Link href="/ai-mind-assistant" className="inline-flex items-center text-blue-100 hover:text-white mb-4 transition-colors">

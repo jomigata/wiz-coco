@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
-interface MoodCheckItem {
+import Link from 'next/link';interface MoodCheckItem {
   id: string;
   name: string;
   description: string;
@@ -124,9 +121,7 @@ export default function DailyMoodPage() {
 
   if (isCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
-        <Navigation />
-        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50"><div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
           <div className="container mx-auto px-6 text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h1 className="text-4xl font-bold mb-4">오늘의 마음 상태 기록 완료!</h1>
@@ -217,9 +212,7 @@ export default function DailyMoodPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
-      <Navigation />
-      {/* 헤더 */}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">{/* 헤더 */}
       <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 text-white py-16 pt-24">
         <div className="container mx-auto px-6 text-center">
           <div className="text-6xl mb-4">{currentItem.icon}</div>

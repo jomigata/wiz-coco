@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { motion } from 'framer-motion';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { useCounselorConnection } from '@/hooks/useCounselorConnection';
 import { ChatMessage } from '@/app/api/chat/route';
 
@@ -118,9 +116,7 @@ export default function ChatPage() {
 
   if (!counselorConnection.isConnected) {
     return (
-      <div className="min-h-screen bg-gray-900">
-        <Navigation />
-        <div className="pt-16 p-6">
+      <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -150,9 +146,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <Navigation />
-      <div className="pt-16 h-screen flex flex-col">
+    <div className="min-h-screen bg-gray-900"><div className="pt-16 h-screen flex flex-col">
         {/* 채팅 헤더 */}
         <div className="bg-gray-800 border-b border-gray-700 p-4">
           <div className="flex items-center justify-between">

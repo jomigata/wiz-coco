@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Navigation from '@/components/Navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
@@ -76,8 +75,7 @@ interface DeletedTestRecord extends TestRecord {
 // 로딩 컴포넌트
 const LoadingRecords = () => (
   <main className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12">
-    <Navigation />
-    <div className="h-20"></div>
+<div className="h-20"></div>
     
     {/* Background pattern */}
     <div className="absolute inset-0 z-0 opacity-10">
@@ -1321,8 +1319,7 @@ function TestRecordsContent() {
 
   return (
     <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12">
-      <Navigation />
-      <div className="h-20"></div>
+<div className="h-20"></div>
       
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">

@@ -2,10 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Navigation from '@/components/Navigation';
-
-export default function TestsLayout({ children }: { children: React.ReactNode }) {
+import Link from 'next/link';export default function TestsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>('');
@@ -176,12 +173,8 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* 상단 네비게이션 */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navigation />
-      </div>
       
-      {/* 전문가용 MBTI 결과 페이지는 레이아웃 우회 */}
+{/* 전문가용 MBTI 결과 페이지는 레이아웃 우회 */}
       {pathname.includes('/mbti_pro/result') ? (
         children
       ) : (

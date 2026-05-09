@@ -1,14 +1,9 @@
 'use client';
 
 import MbtiProResult from '@/components/tests/MbtiProResult';
-import { Suspense } from 'react';
-import Navigation from '@/components/Navigation';
-
-export default function MbtiProResultPage() {
+import { Suspense } from 'react';export default function MbtiProResultPage() {
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      <Suspense fallback={
+    <div className="min-h-screen"><Suspense fallback={
         <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
