@@ -286,34 +286,10 @@ export default function Navigation() {
       }
     };
 
-    const handleWheel = (e: WheelEvent) => {
-      if (!activeMenu) return;
-      const target = e.target as Element;
-      const isInsideDropdown = target.closest('[data-dropdown-menu]');
-      if (isInsideDropdown) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!activeMenu) return;
-      const target = e.target as Element;
-      const isInsideDropdown = target.closest('[data-dropdown-menu]');
-      if (isInsideDropdown) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
     document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("wheel", handleWheel, { passive: false });
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
     
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("wheel", handleWheel);
-      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [activeMenu]);
 
