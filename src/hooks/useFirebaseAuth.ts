@@ -1,7 +1,7 @@
 // Firebase Authentication 커스텀 훅
 // 인증 상태 관리 및 사용자 정보 처리
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -36,9 +36,8 @@ export interface AuthUser {
   };
 }
 
-/** 로그인 직후 리다이렉트 시 각 페이지의 훅이 아직 동기화되기 전에 세션을 알 수 있도록 세션 캐시를 채웁니다. */
-export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): void {
-  const baseUser: AuthUser = {
+function authUserFromSdkUser(firebaseUser: FirebaseSdkUser): AuthUser {
+  return {
     uid: firebaseUser.uid,
     email: firebaseUser.email,
     displayName: firebaseUser.displayName,
@@ -49,25 +48,29 @@ export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): vo
       lastSignInTime: firebaseUser.metadata.lastSignInTime,
     },
   };
-  writeSWRCache('swr:firebaseAuthUser', baseUser, { scope: 'session' });
+}
+
+/** 로그인 직후 리다이렉트 시 각 페이지의 훅이 아직 동기화되기 전에 세션을 알 수 있도록 세션 캐시를 채웁니다. */
+export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): void {
+  writeSWRCache('swr:firebaseAuthUser', authUserFromSdkUser(firebaseUser), { scope: 'session' });
 }
 
 export const useFirebaseAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // 0) 즉시 캐시 사용자 표시 (로딩 화면 대체)
-    // - 페이지 이동/탭 전환 시 "불러오는 중..." 화면을 최대한 피하기 위해
+  // paint 전 세션 캐시 복원 → 새 페이지 마운트 직후 '미로그인' 깜빡임 방지
+  useLayoutEffect(() => {
     const cached = readSWRCache<AuthUser>('swr:firebaseAuthUser', {
       scope: 'session',
-      maxAgeMs: 30 * 60 * 1000, // 30분
+      maxAgeMs: 30 * 60 * 1000,
     });
-    if (cached.data) {
-      setUser(cached.data);
-      setLoading(false);
-    }
+    if (!cached.data) return;
+    setUser((prev) => prev ?? cached.data);
+    setLoading(false);
+  }, []);
 
+  useEffect(() => {
     // Firebase 초기화
     const { auth, db } = initializeFirebase();
     
@@ -79,6 +82,7 @@ export const useFirebaseAuth = () => {
 
     let unsubscribeUserDoc: (() => void) | null = null;
     let unsubscribeAuth: (() => void) | null = null;
+    let deferredLogoutTimer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
 
     void auth.authStateReady().then(() => {
@@ -86,27 +90,37 @@ export const useFirebaseAuth = () => {
 
       unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        setUser(null);
-        setLoading(false);
-        writeSWRCache('swr:firebaseAuthUser', null, { scope: 'session' });
-        if (unsubscribeUserDoc) {
-          unsubscribeUserDoc();
-          unsubscribeUserDoc = null;
-        }
+        // 세션 복원/탭 전환 직후 일시적으로 null만 오는 경우가 있어
+        // 한 틱 뒤 auth.currentUser를 다시 보고 로그아웃 확정
+        if (deferredLogoutTimer) clearTimeout(deferredLogoutTimer);
+        deferredLogoutTimer = setTimeout(() => {
+          deferredLogoutTimer = null;
+          if (cancelled) return;
+          const cur = auth.currentUser;
+          if (cur) {
+            const minimal = authUserFromSdkUser(cur);
+            setUser((prev) => prev ?? minimal);
+            writeSWRCache('swr:firebaseAuthUser', minimal, { scope: 'session' });
+            setLoading(false);
+            return;
+          }
+          setUser(null);
+          setLoading(false);
+          writeSWRCache('swr:firebaseAuthUser', null, { scope: 'session' });
+          if (unsubscribeUserDoc) {
+            unsubscribeUserDoc();
+            unsubscribeUserDoc = null;
+          }
+        }, 0);
         return;
       }
 
-      const baseUser: AuthUser = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
-        role: 'user',
-        metadata: {
-          creationTime: firebaseUser.metadata.creationTime,
-          lastSignInTime: firebaseUser.metadata.lastSignInTime,
-        },
-      };
+      if (deferredLogoutTimer) {
+        clearTimeout(deferredLogoutTimer);
+        deferredLogoutTimer = null;
+      }
+
+      const baseUser = authUserFromSdkUser(firebaseUser);
 
       // Firestore /users/{uid}에서 role 읽기 (없으면 기본 user로 생성)
       try {
@@ -184,6 +198,7 @@ export const useFirebaseAuth = () => {
 
     return () => {
       cancelled = true;
+      if (deferredLogoutTimer) clearTimeout(deferredLogoutTimer);
       unsubscribeAuth?.();
       if (unsubscribeUserDoc) unsubscribeUserDoc();
     };

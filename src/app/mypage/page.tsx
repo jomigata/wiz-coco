@@ -315,6 +315,10 @@ function MyPageContent() {
         }
 
         const { auth: authed } = initializeFirebase();
+        if (authed && typeof authed.authStateReady === 'function') {
+          await authed.authStateReady();
+        }
+
         if (!firebaseUser && authed?.currentUser) {
           return;
         }
