@@ -783,13 +783,13 @@ function MyPageContent() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[#0b1120] flex flex-col">
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
       <div className="fixed top-0 left-0 right-0 z-50">
         <Navigation />
       </div>
 
       <div className="pt-16 flex-1 flex flex-col min-h-0">
-        <main className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white relative overflow-hidden">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
 
@@ -912,7 +912,7 @@ function MyPageContent() {
 
             {activeTab === 'profile' && (
               <motion.div
-                className="flex min-h-0 flex-1 flex-col overflow-auto bg-white/[0.06] backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-white/10"
+                className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-4 sm:p-5"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05, duration: 0.35 }}
