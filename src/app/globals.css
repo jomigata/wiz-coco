@@ -54,12 +54,17 @@
 }
 
 @layer base {
+  /* 세로 스크롤바 유무에 따라 콘텐츠 너비가 바뀌지 않게 해 상단 메뉴 좌우 흔들림을 줄임 */
+  html {
+    scrollbar-gutter: stable;
+  }
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground font-sans;
     font-weight: 300;
+    overflow-x: hidden;
   }
   .container {
     @apply px-4 mx-auto max-w-7xl;

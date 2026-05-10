@@ -470,6 +470,8 @@ function MyPageContent() {
     const params = new URLSearchParams(window.location.search);
     params.set('tab', tabName);
     window.history.replaceState(null, '', `/mypage?${params.toString()}`);
+    // Next.js는 replaceState만으로는 라우터 상태가 안 바뀌므로, 상단 메뉴 활성 표시 동기화용
+    window.dispatchEvent(new CustomEvent('wizcoco:mypage-tab'));
   };
 
   // 레코드 정규화: status, testType, timestamp, score

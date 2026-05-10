@@ -172,7 +172,7 @@ export default function Navigation() {
             setParentContainerWidth(totalWidth);
           }
         }
-      }, 350); // 렌더링 완료를 보장하기 위한 충분한 지연
+      }, 0); // 지연을 두면 드롭다운 열릴 때 너비가 뒤늦게 잡혀 상단 가로 레이아웃이 흔들릴 수 있음
       
       return () => clearTimeout(timer);
     } else {
@@ -272,15 +272,30 @@ export default function Navigation() {
     }
   };
 
-  // 기본 useEffect들
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const path = window.location.pathname;
-      setActiveItem(path);
-      // 전역 정리는 제거 - getInProgressTests에서만 수행하여 중복 호출 방지
-      // 페이지 이동 시마다 실행되면 진행 중인 검사까지 삭제될 수 있음
+  // 현재 URL과 활성 메뉴 하이라이트 동기화 (Link 이동·replaceState 탭·뒤로가기)
+  const syncActiveItemFromLocation = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const p = window.location.pathname || '/';
+    if (p === '/mypage') {
+      setActiveItem(`/mypage${window.location.search || ''}`);
+    } else {
+      setActiveItem(p);
     }
-  }, [user, loading, isLoggedIn, userEmail, userName]);
+  }, []);
+
+  useEffect(() => {
+    syncActiveItemFromLocation();
+  }, [pathname, syncActiveItemFromLocation]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.addEventListener('popstate', syncActiveItemFromLocation);
+    window.addEventListener('wizcoco:mypage-tab', syncActiveItemFromLocation as EventListener);
+    return () => {
+      window.removeEventListener('popstate', syncActiveItemFromLocation);
+      window.removeEventListener('wizcoco:mypage-tab', syncActiveItemFromLocation as EventListener);
+    };
+  }, [syncActiveItemFromLocation]);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -674,7 +689,10 @@ export default function Navigation() {
           animation: fadeIn 1.2s ease-out;
         }
       `}</style>
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 shadow-md backdrop-blur-sm">
+      <nav
+        className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 shadow-md backdrop-blur-sm"
+        style={{ contain: 'layout' }}
+      >
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3">
           {/* 브랜드 */}
           <Link
@@ -1550,8 +1568,8 @@ export default function Navigation() {
               </div>
             </div>
 
-            {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 */}
-            <div className="ml-1 flex shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 lg:gap-2.5 lg:pl-5">
+            {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
+            <div className="ml-1 flex min-w-[17.5rem] shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 md:min-w-[19rem] lg:gap-2.5 lg:pl-5 lg:min-w-[20rem]">
               {/* 비로그인 시에만 상단 멤버십 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
               {!isLoggedIn && (
                 <Link
@@ -1797,7 +1815,7 @@ export default function Navigation() {
                       <Link
                         href="/mypage"
                         className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
-                          activeItem === "/mypage" || activeItem.startsWith("/mypage/")
+                          activeItem === "/mypage" || activeItem.startsWith("/mypage/") || activeItem.startsWith("/mypage?")
                             ? "text-white bg-blue-600 border-white"
                             : isDropdownOpen
                             ? "text-gray-300 border-white"
