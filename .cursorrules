@@ -63,6 +63,10 @@ npm run deploy:fast
 - 마우스 클릭 요청
 - 수동 확인 요청
 - 반자동 모드 사용
+- Cursor 채팅에서 **Run 버튼 클릭·터미널 승인**을 유도하지 않음 (에이전트가 터미널에서 직접 `git push` 등 실행하고 결과만 보고)
+
+## ⚙️ **IDE(Cursor)에서 Run 확인을 줄이려면** (로컬 1회)
+- **Ctrl+Shift+J** → **Agents** → **Auto-Run** → **Run Everything** 또는 **Use Allowlist**(전역 `%USERPROFILE%\.cursor\permissions.json`에 `git *`, `npm *`, `gh` 등 — 이미 두었을 수 있음). **Ask Every Time**이면 allowlist가 무시됩니다.
 
 ## ✅ **권장 사항**
 - 항상 `npm run deploy:auto` 사용
