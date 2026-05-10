@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { motion } from 'framer-motion';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { getInProgressTests } from '@/utils/testResume';
 
 // 삭제된 테스트 기록 타입 정의
@@ -710,10 +711,14 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
         const updatedDeletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
         setDeletedCodesCount(updatedDeletedRecords.length);
         
-        // 7. 페이지 새로고침으로 목록 업데이트
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // 7. 삭제코드 탭(마이페이지 내장)에서는 전체 새로고침 없이 목록만 반영
+        if (isEmbedded) {
+          window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
+        } else {
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
       }
     } catch (error) {
       console.error('영구 삭제 오류:', error);
@@ -1309,7 +1314,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               <Link href="/mypage?tab=stats" className={tabLinkBase}>
                 통계 보기
               </Link>
-              <Link href="/mypage/deleted-codes" className={tabLinkActive}>
+              <Link href="/mypage?tab=deleted" className={tabLinkActive}>
                 삭제코드 ({deletedCodesCount})
               </Link>
             </motion.div>

@@ -204,22 +204,27 @@ function MyPageContent() {
   // 상담사 연결 상태 훅 사용
   const { connection: counselorConnection, loading: counselorLoading, refetch: refetchCounselor } = useCounselorConnection();
   
+  const normalizeMypageTab = (tab: string | null | undefined): string => {
+    const t = (tab || 'profile').trim();
+    if (t === 'deleted-codes') return 'deleted';
+    return t;
+  };
+
   // URL에서 탭 파라미터 확인
-  const initialTab = searchParams.get('tab') || 'profile';
+  const initialTab = normalizeMypageTab(searchParams.get('tab'));
   
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   
   // 타 페이지에서 링크로 들어오거나 브라우저 앞/뒤로 이동 시 URL과 동기화
   useEffect(() => {
-    const tabFromUrl = searchParams.get('tab') || 'profile';
-    setActiveTab(tabFromUrl);
+    setActiveTab(normalizeMypageTab(searchParams.get('tab')));
   }, [searchParams]);
 
   useEffect(() => {
     const onPopState = () => {
       try {
         const q = new URLSearchParams(window.location.search);
-        setActiveTab(q.get('tab') || 'profile');
+        setActiveTab(normalizeMypageTab(q.get('tab')));
       } catch {
         setActiveTab('profile');
       }
@@ -922,12 +927,17 @@ function MyPageContent() {
               >
                 ⭐ 멤버십
               </button>
-              <Link
-                href="/mypage/deleted-codes"
-                className="px-3 py-1.5 text-sm font-medium rounded-t-md text-slate-400 hover:text-slate-200 transition-colors"
+              <button
+                type="button"
+                onClick={() => changeTab('deleted')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
+                  activeTab === 'deleted'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
               >
                 삭제코드 ({deletedCodesCount})
-              </Link>
+              </button>
             </motion.div>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">

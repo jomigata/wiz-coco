@@ -1381,7 +1381,7 @@ function TestRecordsContent() {
                 통계 보기
               </Link>
               <Link
-                href="/mypage/deleted-codes"
+                href="/mypage?tab=deleted"
                 className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
               >
                 삭제코드

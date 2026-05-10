@@ -1,7 +1,9 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, memo } from 'react';
 import Navigation from '@/components/Navigation';
+
+const MemoNavigation = memo(Navigation);
 
 type ChromeNavContextValue = {
   /** true이면 전역 상단 네비게이션을 숨김 (전체 화면 검사 단계 등) */
@@ -41,7 +43,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
     <ChromeNavContext.Provider value={value}>
       {!topNavHidden ? (
         <div className="fixed left-0 right-0 top-0 z-50">
-          <Navigation />
+          <MemoNavigation />
         </div>
       ) : null}
       {children}
