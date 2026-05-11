@@ -21,8 +21,9 @@ build/
 firebase-debug.log
 firebase-debug.*.log
 
-# IDE
-.vscode/
+# IDE — 공유 설정만 추적 (로컬 launch 등은 무시)
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
