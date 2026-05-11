@@ -111,6 +111,7 @@ backend/*.pyc
 *.json
 !package.json
 !package-lock.json
+!.vscode/settings.json
 !tsconfig.json
 !next.config.js
 !tailwind.config.js
