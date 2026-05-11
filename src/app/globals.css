@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -56,7 +54,7 @@
 @layer base {
   /* 세로 스크롤바 유무에 따라 콘텐츠 너비가 바뀌지 않게 해 상단 메뉴 좌우 흔들림을 줄임 */
   html {
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable both-edges;
     /* scrollbar-gutter 미지원/부분지원 환경에서도 폭 변동 방지 */
     overflow-y: scroll;
   }
@@ -206,7 +204,7 @@ body.dropdown-open {
 
 body {
   color: rgb(var(--foreground-rgb));
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: inherit;
   background: linear-gradient(
     to bottom,
     rgb(var(--background-start-rgb)),

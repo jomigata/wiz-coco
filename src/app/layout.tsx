@@ -4,14 +4,19 @@ import { Suspense } from 'react'
 import ScrollToTop from '../components/ScrollToTop'
 import LocalStorageInitializer from '@/components/LocalStorageInitializer'
 import BrowserCleanupProvider from '@/components/BrowserCleanupProvider'
-import { Inter } from 'next/font/google'
+import { Noto_Sans_KR } from 'next/font/google'
 import ClientLayoutHandler from '@/components/ClientLayoutHandler'
 import RouteTransitionShell from '@/components/RouteTransitionShell'
 import AppChrome from '@/components/AppChrome'
 import Link from 'next/link'
 import WizcocoLogo from '@/components/WizcocoLogo'
 
-const inter = Inter({ subsets: ['latin'] })
+const notoSansKr = Noto_Sans_KR({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700'],
+  display: 'swap',
+  variable: '--font-noto-sans-kr',
+})
 
 export const metadata: Metadata = {
   title: '심리케어',
@@ -25,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={inter.className}>
+      <body className={notoSansKr.variable}>
         <LocalStorageInitializer />
         <BrowserCleanupProvider />
         <ClientLayoutHandler />
