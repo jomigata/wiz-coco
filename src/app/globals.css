@@ -57,6 +57,8 @@
   /* 세로 스크롤바 유무에 따라 콘텐츠 너비가 바뀌지 않게 해 상단 메뉴 좌우 흔들림을 줄임 */
   html {
     scrollbar-gutter: stable;
+    /* scrollbar-gutter 미지원/부분지원 환경에서도 폭 변동 방지 */
+    overflow-y: scroll;
   }
   * {
     @apply border-border;
