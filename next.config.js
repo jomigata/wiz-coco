@@ -12,12 +12,12 @@ const nextConfig = {
   
   // Firebase 프로덕션 환경을 위한 환경 변수
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://wiz-coco.web.app',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://wizcoco.com',
     NEXT_PUBLIC_FLASK_API_URL: process.env.NEXT_PUBLIC_FLASK_API_URL || 'http://localhost:5000',
     SKIP_ENV_VALIDATION: 'true',
     SKIP_DB_INIT: process.env.SKIP_DB_INIT || 'true',
     DATABASE_URL: process.env.DATABASE_URL,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'https://wiz-coco.web.app',
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'https://wizcoco.com',
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'your-nextauth-secret-key-at-least-32-chars-production',
     // Firebase 환경변수 (빌드 시점에 주입) - 실제 값으로 설정
     NEXT_PUBLIC_FIREBASE_API_KEY: 'AIzaSyAkht437m0cEIY3uFz3RsTpWyZyUakon68',

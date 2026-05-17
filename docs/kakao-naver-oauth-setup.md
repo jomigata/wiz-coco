@@ -1,5 +1,7 @@
 # 카카오·네이버 로그인 설정 가이드 (WizCoCo)
 
+> 프로덕션 메인 URL: **https://wizcoco.com** (`wizcoco.kr`은 `.com`으로 리다이렉트). 도메인·DNS: [domain-registrar-domainclub-kr.md](./domain-registrar-domainclub-kr.md)
+
 이 프로젝트는 **정적 호스팅(Firebase Hosting)** 이므로 NextAuth 서버가 없습니다.  
 대신 **OAuth 2.0 authorization code** → **Firebase Cloud Functions**에서 토큰 교환 → **Firebase Custom Token**으로 로그인합니다.
 

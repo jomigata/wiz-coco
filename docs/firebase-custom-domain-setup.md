@@ -1,5 +1,8 @@
 # Firebase 커스텀 도메인 설정 가이드
 
+> **DOMAINCLUB 이전·wizcoco.kr 리다이렉트:** [domain-registrar-domainclub-kr.md](./domain-registrar-domainclub-kr.md)  
+> DNS는 **Dotname** 대신 **Cloudflare**에서 관리하는 경우가 많습니다. 아래 A/CNAME/TXT는 Cloudflare DNS에 동일하게 입력하세요.
+
 ## 🔧 wizcoco.com 도메인 연결 문제 해결
 
 ### **현재 문제점:**
