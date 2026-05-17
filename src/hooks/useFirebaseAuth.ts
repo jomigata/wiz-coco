@@ -59,14 +59,18 @@ export const useFirebaseAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // paint 전 세션 캐시 복원 → 새 페이지 마운트 직후 '미로그인' 깜빡임 방지
+  // paint 전 세션 복원·UI 잠금 해제 → 상단 로그인/회원가입이 스켈레톤으로 오래 보이지 않게 함
   useLayoutEffect(() => {
+    const { auth } = initializeFirebase();
     const cached = readSWRCache<AuthUser>('swr:firebaseAuthUser', {
       scope: 'session',
       maxAgeMs: 30 * 60 * 1000,
     });
-    if (!cached.data) return;
-    setUser((prev) => prev ?? cached.data);
+    if (cached.data) {
+      setUser((prev) => prev ?? cached.data);
+    } else if (auth?.currentUser) {
+      setUser((prev) => prev ?? authUserFromSdkUser(auth.currentUser));
+    }
     setLoading(false);
   }, []);
 

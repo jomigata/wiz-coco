@@ -16,7 +16,7 @@ import WizcocoLogo from '@/components/WizcocoLogo';
 export default function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, logout } = useFirebaseAuth();
+  const { user, logout } = useFirebaseAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -97,28 +97,11 @@ export default function Navigation() {
   const { auth: firebaseAuth } = initializeFirebase();
   const sessionFirebaseUser = firebaseAuth?.currentUser ?? null;
   const isLoggedIn = Boolean(sessionFirebaseUser) || Boolean(user);
-  /** authStateReady 전에는 currentUser가 null일 수 있어 비로그인 UI가 잠깐 떠 레이아웃이 흔들림 → 준비될 때까지 게스트 액션 숨김 */
-  const [authReady, setAuthReady] = useState(false);
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
   const [isTestInProgress, setIsTestInProgress] = useState(false);
 
   // 기존 완료 기능은 hidden으로 네비에서 숨김. NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 시 복원
   const visibleTestMenuItems = getVisibleTestMenuItems();
-
-  useEffect(() => {
-    const { auth } = initializeFirebase();
-    if (!auth) {
-      setAuthReady(true);
-      return;
-    }
-    let cancelled = false;
-    void auth.authStateReady().then(() => {
-      if (!cancelled) setAuthReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // 심리검사 페이지인지 확인 (모든 /tests/ 경로)
   const isTestPage = pathname?.startsWith('/tests/') || pathname === '/tests';
@@ -1616,7 +1599,7 @@ export default function Navigation() {
             {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
             <div className="ml-1 flex min-w-[17.5rem] shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 md:min-w-[19rem] lg:gap-2.5 lg:pl-5 lg:min-w-[20rem]">
               {/* 비로그인 시에만 상단 멤버십 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
-              {authReady && !isLoggedIn && (
+              {!isLoggedIn && (
                 <Link
                   href="/membership"
                   className={`mr-0.5 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border-2 px-3.5 text-sm font-semibold tracking-tight transition-all duration-300 lg:px-4 lg:text-[15px] ${
@@ -1635,17 +1618,7 @@ export default function Navigation() {
 
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
-                {!authReady ? (
-                  <div
-                    className="flex min-w-[17rem] shrink-0 items-center justify-end gap-2 md:min-w-[18.5rem]"
-                    aria-busy="true"
-                    aria-label="인증 상태 확인 중"
-                  >
-                    <div className="h-10 w-[4.75rem] shrink-0 rounded-lg bg-white/10 animate-pulse md:w-[5.25rem]" />
-                    <div className="h-10 w-[4.75rem] shrink-0 rounded-lg bg-white/10 animate-pulse md:w-[5.25rem]" />
-                    <div className="h-10 w-[6.5rem] shrink-0 rounded-lg bg-white/10 animate-pulse md:w-[7rem]" />
-                  </div>
-                ) : isLoggedIn ? (
+                {isLoggedIn ? (
                   <>
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
                     {shouldShowCounselorMenu(userRole) && (
@@ -2017,7 +1990,7 @@ export default function Navigation() {
                       className="inline-flex h-10 min-w-[5.5rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-semibold tracking-wide text-slate-100 shadow-sm transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white whitespace-nowrap"
                       onClick={(e) => handleAuthLinkClick("/login", e)}
                     >
-                      <span className="text-base leading-none opacity-90" aria-hidden>
+                      <span className="text-base leading-none" aria-hidden>
                         🔑
                       </span>
                       <span>로그인</span>
@@ -2552,7 +2525,7 @@ export default function Navigation() {
 
 
               {/* 멤버십 링크 (모바일) - 비로그인 시에만 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
-              {authReady && !isLoggedIn && (
+              {!isLoggedIn && (
                 <div className="space-y-2 pt-4 border-t border-white/20">
                   <Link
                     href="/membership"
@@ -2565,13 +2538,7 @@ export default function Navigation() {
               )}
 
               {/* 사용자 메뉴 */}
-              {!authReady ? (
-                <div className="space-y-2 pt-4 border-t border-white/20 px-4">
-                  <div className="h-4 w-32 rounded bg-white/10 animate-pulse" />
-                  <div className="h-10 w-full rounded-lg bg-white/10 animate-pulse" />
-                  <div className="h-10 w-full rounded-lg bg-white/10 animate-pulse" />
-                </div>
-              ) : isLoggedIn ? (
+              {isLoggedIn ? (
                 <div className="space-y-2 pt-4 border-t border-white/20">
                   <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide">
                     👤 마이페이지
