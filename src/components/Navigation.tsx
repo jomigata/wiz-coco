@@ -9,6 +9,7 @@ import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
+import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 import WizcocoLogo from '@/components/WizcocoLogo';
 
@@ -33,6 +34,12 @@ export default function Navigation() {
   const contentRefs = useRef<Map<string, HTMLElement>>(new Map());
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const parentContainerRef = useRef<HTMLDivElement>(null);
+  const aiAssistantSubColRef = useRef<HTMLDivElement>(null);
+  const aiAssistantTriggerRef = useRef<HTMLDivElement>(null);
+  const psychologyTestsTriggerRef = useRef<HTMLDivElement>(null);
+  const psychologyTestsPanelRef = useRef<HTMLDivElement>(null);
+  const psychologyTestsLeftColRef = useRef<HTMLDivElement>(null);
+  const psychologyTestsSubColRef = useRef<HTMLDivElement>(null);
   // 드롭다운 닫기 지연 타이머 (grace period: 150ms)
   // onPointerLeave 즉시 닫으면 메뉴 이동/아래서 접근 시 깜빡임 발생
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,6 +60,24 @@ export default function Navigation() {
   const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
   const isCounselorOpen = activeMenu === 'counselor';
   const isAdminOpen = activeMenu === 'admin';
+
+  const psychologyPlacement = useHorizontalMenuPlacement(
+    isPsychologyTestsOpen,
+    psychologyTestsTriggerRef,
+    psychologyTestsPanelRef,
+    psychologyTestsLeftColRef,
+    psychologyTestsSubColRef,
+    [selectedMainCategory, selectedSubcategory]
+  );
+
+  const aiAssistantPlacement = useHorizontalMenuPlacement(
+    isAiMindAssistantOpen,
+    aiAssistantTriggerRef,
+    parentContainerRef,
+    leftColumnRef,
+    aiAssistantSubColRef,
+    [selectedAiAssistantMainCategory, selectedAiAssistantSubcategory, parentContainerWidth, maxButtonWidth]
+  );
 
   const openMenu = useCallback((menuId: string) => {
     if (closeTimerRef.current) {
@@ -189,6 +214,7 @@ export default function Navigation() {
             setParentContainerWidth(totalWidth);
           }
         }
+        aiAssistantPlacement.updatePlacement();
       }, 0); // 지연을 두면 드롭다운 열릴 때 너비가 뒤늦게 잡혀 상단 가로 레이아웃이 흔들릴 수 있음
       
       return () => clearTimeout(timer);
@@ -198,7 +224,7 @@ export default function Navigation() {
       setLeftColumnWidth(0);
       setParentContainerWidth(0);
     }
-  }, [selectedAiAssistantMainCategory, isAiMindAssistantOpen]);
+  }, [selectedAiAssistantMainCategory, isAiMindAssistantOpen, aiAssistantPlacement.updatePlacement]);
 
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
@@ -750,7 +776,7 @@ export default function Navigation() {
                 검사 하기
               </Link>
               {/* 심리검사 드롭다운 메뉴 */}
-              <div className="relative">
+              <div ref={psychologyTestsTriggerRef} className="relative">
                 <Link
                   href="/tests"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -782,8 +808,9 @@ export default function Navigation() {
                 {/* 심리검사 메가 메뉴 */}
                 {isPsychologyTestsOpen && (
                   <div
+                    ref={psychologyTestsPanelRef}
                     data-dropdown-menu="psychology-tests"
-                    className="absolute left-0 top-full mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className={`absolute top-full mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${psychologyPlacement.dropdownAlign}`}
                     onMouseEnter={() => {
                       openMenu('psychology-tests');
                       const firstCategory = visibleTestMenuItems[0];
@@ -796,9 +823,9 @@ export default function Navigation() {
                     }}
                     onMouseLeave={scheduleClose}
                   >
-                    <div className="relative flex h-[70vh]">
+                    <div className={`relative flex h-[70vh] ${psychologyPlacement.subPanelSide === 'left' ? 'flex-row-reverse' : ''}`}>
                       {/* 왼쪽: 대분류 5개 */}
-                      <div className="w-2/5 p-4 border-r border-blue-500/30">
+                      <div ref={psychologyTestsLeftColRef} className="w-2/5 p-4 border-r border-blue-500/30 shrink-0">
                         <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
                         <div className="space-y-2">
                           {visibleTestMenuItems.map((mainCategory, index) => (
@@ -834,7 +861,7 @@ export default function Navigation() {
                                 <span className="text-xl">{mainCategory.icon}</span>
                                 <span className="font-medium">{mainCategory.category}</span>
                                 <svg 
-                                  className="w-4 h-4 text-white ml-auto"
+                                  className={`w-4 h-4 text-white ml-auto transition-transform ${psychologyPlacement.subPanelSide === 'left' ? 'rotate-180' : ''}`}
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -848,7 +875,7 @@ export default function Navigation() {
                       </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div className="w-3/5 p-4">
+                      <div ref={psychologyTestsSubColRef} className="w-3/5 p-4 shrink-0">
                         {selectedMainCategory ? (
                           <div>
                             <div className="text-lg font-bold text-blue-300 mb-4">
@@ -1082,7 +1109,7 @@ export default function Navigation() {
               </div>
 
               {/* AI 마음 비서 드롭다운 메뉴 */}
-              <div className="relative">
+              <div ref={aiAssistantTriggerRef} className="relative">
                 <Link
                   href="/ai-mind-assistant"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -1127,7 +1154,7 @@ export default function Navigation() {
                   <div
                     ref={parentContainerRef}
                     data-dropdown-menu="ai-mind-assistant"
-                    className="absolute left-0 top-full mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
+                    className={`absolute top-full mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${aiAssistantPlacement.dropdownAlign}`}
                     style={{
                       width: parentContainerWidth > 0 ? `${parentContainerWidth}px` : 'auto',
                       minWidth: 'fit-content',
@@ -1147,11 +1174,11 @@ export default function Navigation() {
                     }}
                     onMouseLeave={scheduleClose}
                   >
-                    <div className="relative flex h-[70vh]">
+                    <div className={`relative flex h-[70vh] ${aiAssistantPlacement.subPanelSide === 'left' ? 'flex-row-reverse' : ''}`}>
                       {/* 왼쪽: 그룹 및 대분류 */}
                       <div 
                         ref={leftColumnRef}
-                        className="flex-shrink-0 p-4 border-r border-blue-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        className={`flex-shrink-0 p-4 border-r border-blue-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900 ${aiAssistantPlacement.subPanelSide === 'left' ? '[&_.nav-submenu-chevron]:rotate-180' : ''}`}
                         style={{
                           width: 'auto',
                           minWidth: 'fit-content'
@@ -1206,7 +1233,7 @@ export default function Navigation() {
                                   <div className="text-sm text-blue-300 truncate">매일의 컨디션과 감정을 기록</div>
                                   </div>
                                   <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
+                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -1252,7 +1279,7 @@ export default function Navigation() {
                                   <div className="text-sm text-blue-300 truncate">긴급한 마음 상태 진단</div>
                     </div>
                                 <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
+                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1307,7 +1334,7 @@ export default function Navigation() {
                                   <div className="text-sm text-blue-300 truncate">AI가 분석하는 종합 리포트</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
+                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1353,7 +1380,7 @@ export default function Navigation() {
                                   <div className="text-sm text-blue-300 truncate">나의 심리검사 결과 모음</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
+                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1408,7 +1435,7 @@ export default function Navigation() {
                                   <div className="text-sm text-blue-300 truncate">전문 상담사와의 소통</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
+                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1454,7 +1481,7 @@ export default function Navigation() {
                                   <div className="text-sm text-blue-300 truncate">스스로 실천하는 치료 프로그램</div>
                                 </div>
                                 <svg 
-                                  className="w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
+                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
@@ -1470,7 +1497,8 @@ export default function Navigation() {
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
                       <div 
-                        className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
+                        ref={aiAssistantSubColRef}
+                        className="flex-shrink-0 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
                         style={{
                           width: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'auto', // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(8px) = 좌측보다 작은 우측 공백
                           minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'auto', // 최소 너비 설정으로 일관성 유지
