@@ -868,9 +868,7 @@ export default function Navigation() {
                               {visibleTestMenuItems
                                 .find(category => category.category === selectedMainCategory)
                                 ?.subcategories.map((subcategory, index) => {
-                                  const isFirstSubcategory = index === 0;
                                   const isSelected = selectedSubcategory === subcategory.name;
-                                  const shouldShowWhiteBorder = isSelected || (isFirstSubcategory && isPsychologyTestsOpen && selectedMainCategory === visibleTestMenuItems[0]?.category);
                                   
                                   return (
                                 <div 
@@ -884,7 +882,7 @@ export default function Navigation() {
                                 >
                                   <div
                                     className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                      shouldShowWhiteBorder
+                                      isSelected
                                         ? 'border-2 border-white' 
                                         : 'border-2 border-white/20 hover:border-white'
                                     }`}
@@ -938,12 +936,12 @@ export default function Navigation() {
                                     </svg>
                                   </div>
                                   
-                                  {/* 소분류 메뉴 */}
-                                  {shouldShowWhiteBorder && subcategory.items && (
+                                  {/* 소분류 메뉴 — 선택(호버)된 중분류만 표시 */}
+                                  {isSelected && subcategory.items && (
                                     <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
                                       {subcategory.items.map((item, itemIndex) => {
                                         const isFirstItem = itemIndex === 0;
-                                        const shouldShowItemWhiteBorder = isFirstItem && shouldShowWhiteBorder;
+                                        const shouldShowItemWhiteBorder = isFirstItem && isSelected;
                                         
                                         return (
                                         <Link
