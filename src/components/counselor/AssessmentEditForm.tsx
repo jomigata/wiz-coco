@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { getAssessment, updateAssessment, type CounselorAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -13,7 +14,7 @@ interface AssessmentEditFormProps {
 
 export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormProps) {
   const router = useRouter();
-  const { user, loading: authLoading } = useFirebaseAuth();
+  const { user, authPending, showLoginRequired } = useAuthResolved();
   const [loadingData, setLoadingData] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [initial, setInitial] = useState<CounselorAssessment | null>(null);
@@ -27,8 +28,8 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (authLoading || !user) {
-      if (!authLoading && !user) setLoadingData(false);
+    if (authPending || !user) {
+      if (showLoginRequired) setLoadingData(false);
       return;
     }
     let cancelled = false;
@@ -54,9 +55,9 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
     return () => {
       cancelled = true;
     };
-  }, [assessmentId, authLoading, user]);
+  }, [assessmentId, authPending, user, showLoginRequired]);
 
-  const canSubmit = Boolean(user) && !authLoading && !loading && !loadingData && initial;
+  const canSubmit = Boolean(user) && !authPending && !loading && !loadingData && initial;
 
   const toggleTest = (testId: string) => {
     setSelectedTestIds((prev) => {
@@ -96,15 +97,11 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
     }
   };
 
-  if (authLoading || loadingData) {
-    return <p className="text-slate-400">불러오는 중…</p>;
+  if (authPending || loadingData) {
+    return <AuthLoadingState className="py-8" />;
   }
-  if (!user) {
-    return (
-      <div className="rounded-lg bg-amber-900/20 border border-amber-600/50 p-4 text-amber-200 text-sm">
-        로그인이 필요합니다.
-      </div>
-    );
+  if (showLoginRequired) {
+    return <AuthRequiredState className="max-w-2xl" />;
   }
   if (loadError || !initial) {
     return (

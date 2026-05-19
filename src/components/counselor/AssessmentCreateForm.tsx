@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { createAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 
 export default function AssessmentCreateForm() {
   const router = useRouter();
-  const { user, loading: authLoading } = useFirebaseAuth();
+  const { user, authPending, showLoginRequired } = useAuthResolved();
   const [title, setTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState<'개인' | '그룹'>('개인');
   const [welcomeMessage, setWelcomeMessage] = useState('');
@@ -17,7 +18,7 @@ export default function AssessmentCreateForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const canSubmit = Boolean(user) && !authLoading && !loading;
+  const canSubmit = Boolean(user) && !authPending && !loading;
 
   const toggleTest = (testId: string) => {
     setSelectedTestIds((prev) => {
@@ -69,16 +70,20 @@ export default function AssessmentCreateForm() {
     }
   };
 
+  if (authPending) {
+    return <AuthLoadingState className="py-8" message="로그인 정보를 불러오는 중…" />;
+  }
+  if (showLoginRequired) {
+    return (
+      <AuthRequiredState
+        className="max-w-2xl"
+        description="Firebase에 로그인한 상태에서 다시 시도해 주세요."
+      />
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      {authLoading && (
-        <p className="text-slate-400 text-sm">로그인 정보를 불러오는 중…</p>
-      )}
-      {!authLoading && !user && (
-        <div className="rounded-lg bg-amber-900/20 border border-amber-600/50 p-4 text-amber-200 text-sm">
-          로그인이 필요합니다. Firebase에 로그인한 상태에서 다시 시도해 주세요.
-        </div>
-      )}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-2">
           안내 제목 <span className="text-red-400">*</span>

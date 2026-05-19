@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getInProgressTests } from '@/utils/testResume';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
@@ -36,7 +36,7 @@ interface DeletedTestRecord {
 // 삭제코드 컨텐츠 컴포넌트
 export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const router = useRouter();
-  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  const { user: firebaseUser, authPending: firebaseLoading, showLoginRequired } = useAuthResolved();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deletedRecords, setDeletedRecords] = useState<DeletedTestRecord[]>([]);
@@ -759,8 +759,8 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
     );
   }
 
-  // 인증 체크
-  if (!user) {
+  // 인증 체크 (세션 확인 전에는 로그인 UI 표시 안 함)
+  if (showLoginRequired && !user) {
     if (isEmbedded) {
       return (
         <div className="w-full rounded-lg border border-white/10 bg-white/[0.06] p-6 text-center text-slate-300">

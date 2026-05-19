@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useState, memo } from 'react';
 import Navigation from '@/components/Navigation';
+import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext';
 
 const MemoNavigation = memo(Navigation);
 
@@ -40,13 +41,15 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ChromeNavContext.Provider value={value}>
-      {!topNavHidden ? (
-        <div className="fixed left-0 right-0 top-0 z-50">
-          <MemoNavigation />
-        </div>
-      ) : null}
-      {children}
-    </ChromeNavContext.Provider>
+    <FirebaseAuthProvider>
+      <ChromeNavContext.Provider value={value}>
+        {!topNavHidden ? (
+          <div className="fixed left-0 right-0 top-0 z-50">
+            <MemoNavigation />
+          </div>
+        ) : null}
+        {children}
+      </ChromeNavContext.Provider>
+    </FirebaseAuthProvider>
   );
 }

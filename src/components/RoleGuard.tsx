@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 
 interface RoleGuardProps {
@@ -18,15 +18,15 @@ export default function RoleGuard({
   fallback,
   redirectTo = '/' 
 }: RoleGuardProps) {
-  const { user, loading } = useFirebaseAuth();
+  const { user, authPending, showLoginRequired } = useAuthResolved();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (loading) return;
+    if (authPending) return;
 
-    if (!user) {
+    if (showLoginRequired || !user) {
       setIsAuthorized(false);
       setIsChecking(false);
       return;
@@ -44,12 +44,12 @@ export default function RoleGuard({
     setIsAuthorized(hasAccess);
     setIsChecking(false);
 
-    if (!hasAccess && !loading) {
+    if (!hasAccess && !authPending) {
       router.push(redirectTo);
     }
-  }, [user, loading, allowedRoles, router, redirectTo]);
+  }, [user, authPending, showLoginRequired, allowedRoles, router, redirectTo]);
 
-  if (loading || isChecking) {
+  if (authPending || isChecking) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">

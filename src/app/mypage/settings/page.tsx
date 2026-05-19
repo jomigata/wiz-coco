@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';import Link from 'next/link';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
 
 interface User {
   id: string;
@@ -15,7 +16,7 @@ interface User {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  const { user: firebaseUser, authPending: firebaseLoading, showLoginRequired } = useAuthResolved();
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [notifications, setNotifications] = useState({
@@ -88,7 +89,8 @@ export default function SettingsPage() {
 
   if (firebaseLoading || isLoadingUser) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+<div className="h-20"></div>
         
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -113,9 +115,10 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user) {
+  if (showLoginRequired && !user) {
     return (
-      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
+      <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+<div className="h-20"></div>
         
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -144,7 +147,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
+    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+<div className="h-20"></div>
       
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">

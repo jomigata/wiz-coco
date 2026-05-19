@@ -3,18 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ProgressDashboard from '@/components/counselor/ProgressDashboard';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { getProgress, listAssessments } from '@/lib/assessmentApi';
 import type { ProgressByClient } from '@/lib/assessmentApi';
 
 export default function ProgressDashboardPage() {
-  const { user, loading: authLoading } = useFirebaseAuth();
+  const { user, authPending, showLoginRequired } = useAuthResolved();
   const [assessmentId, setAssessmentId] = useState('');
 
   const [accessCode, setAccessCode] = useState('');
-  const [byClient, setByClient] = useState<
-    ProgressByClient[]
-  >([]);
+  const [byClient, setByClient] = useState<ProgressByClient[]>([]);
   const [title, setTitle] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,10 +28,9 @@ export default function ProgressDashboardPage() {
     }
   }, []);
 
-  // Firebase Auth 준비된 후에만 API 호출
   useEffect(() => {
-    if (authLoading || !user) {
-      if (!authLoading && !user) setLoading(false);
+    if (authPending || !user) {
+      if (showLoginRequired) setLoading(false);
       return;
     }
     if (!assessmentId) {
@@ -61,7 +59,7 @@ export default function ProgressDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user, assessmentId]);
+  }, [authPending, user, showLoginRequired, assessmentId]);
 
   if (!assessmentId) {
     return (
@@ -76,22 +74,12 @@ export default function ProgressDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
-          ← 목록
-        </Link>
-      </div>
+      <ProgressBackLink />
 
-      {authLoading || loading ? (
-        <p className="text-slate-400">불러오는 중…</p>
-      ) : !user ? (
-        <div className="rounded-lg bg-amber-900/20 border border-amber-600/50 p-4 text-amber-200">
-          <p>로그인이 필요합니다.</p>
-          <p className="text-sm mt-2">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
-          <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">
-            검사코드 목록으로
-          </Link>
-        </div>
+      {authPending || loading ? (
+        <AuthLoadingState className="py-8" />
+      ) : showLoginRequired ? (
+        <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />
       ) : error ? (
         <div className="rounded-lg bg-red-900/20 border border-red-600/50 p-4 text-red-300">
           {error}
@@ -102,9 +90,23 @@ export default function ProgressDashboardPage() {
           </div>
         </div>
       ) : (
-        <ProgressDashboard assessmentId={assessmentId} accessCode={accessCode} byClient={byClient} assessmentTitle={title} />
+        <ProgressDashboard
+          assessmentId={assessmentId}
+          accessCode={accessCode}
+          byClient={byClient}
+          assessmentTitle={title}
+        />
       )}
     </div>
   );
 }
 
+function ProgressBackLink() {
+  return (
+    <div className="flex items-center gap-4">
+      <Link href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
+        ← 목록
+      </Link>
+    </div>
+  );
+}

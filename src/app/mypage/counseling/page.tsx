@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import Link from 'next/link';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
 
 export default function CounselingPage() {
-  const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+  const { user: firebaseUser, authPending: firebaseLoading, showLoginRequired } = useAuthResolved();
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
@@ -35,7 +36,8 @@ export default function CounselingPage() {
 
   if (firebaseLoading || isLoadingUser) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16"><div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
+<div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
           <div className="flex items-center justify-center">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -47,9 +49,10 @@ export default function CounselingPage() {
     );
   }
 
-  if (!user) {
+  if (showLoginRequired && !user) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16"><div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
+<div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
             <p className="text-blue-200 mb-4">상담 예약에 접근하려면 로그인이 필요합니다</p>
             <Link 
@@ -65,7 +68,8 @@ export default function CounselingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16"><div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
+<div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="mb-10">
           <Link 
             href="/mypage" 

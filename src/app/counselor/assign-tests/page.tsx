@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { motion } from 'framer-motion';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { TestAssignment } from '@/types/counselor';
 
 export default function AssignTestsPage() {
-  const { user, loading } = useFirebaseAuth();
+  const { user, authPending, showLoginRequired } = useAuthResolved();
   const [clients, setClients] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<TestAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,35 +155,32 @@ export default function AssignTestsPage() {
   };
 
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !authPending) {
       fetchClients();
       fetchAssignments();
     }
-  }, [user, loading]);
+    if (showLoginRequired) setIsLoading(false);
+  }, [user, authPending, showLoginRequired]);
 
-  if (loading) {
+  if (authPending) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-emerald-300 text-lg">로딩 중...</p>
-        </div>
+        <AuthLoadingState message="로딩 중..." />
       </div>
     );
   }
 
-  if (!user) {
+  if (showLoginRequired) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 text-lg">로그인이 필요합니다.</p>
-        </div>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+        <AuthRequiredState className="max-w-md w-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
+    <div className="min-h-screen bg-gray-900">
+<div className="pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">
