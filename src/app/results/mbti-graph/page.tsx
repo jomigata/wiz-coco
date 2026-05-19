@@ -137,7 +137,8 @@ function MbtiGraphResults() {
           setIsLoading(false);
           return;
         }
-        
+        const lookupCode: string = code;
+
         // 로컬 스토리지에서 바로 결과 표시 여부 확인
         const showGraphResult = localStorage.getItem('show_graph_result');
         if (showGraphResult === 'true') {
@@ -152,13 +153,13 @@ function MbtiGraphResults() {
         if (testType.toLowerCase() === 'pro' || testType.toLowerCase() === 'mbti_pro' || testType.toLowerCase() === 'mbti-pro') {
           // 로컬 스토리지에서 데이터 가져오기
           try {
-            const dataStr = readLocalTestResultJson(code);
+            const dataStr = readLocalTestResultJson(lookupCode);
             if (dataStr) {
               const testData = JSON.parse(dataStr);
               
               // 결과 데이터가 있으면 전문가용 결과 페이지로 리디렉션
               if (testData) {
-                const redirectUrl = `/tests/mbti_pro/result?code=${code}`;
+                const redirectUrl = `/tests/mbti_pro/result?code=${encodeURIComponent(lookupCode)}`;
                 setShouldRedirect(redirectUrl);
                 return;
               }
@@ -174,7 +175,7 @@ function MbtiGraphResults() {
           const testRecordsStr = localStorage.getItem('test_records');
           if (testRecordsStr) {
             const records = JSON.parse(testRecordsStr);
-            const record = records.find((r: any) => inspectionCodesMatch(r.code, code));
+            const record = records.find((r: any) => inspectionCodesMatch(r.code, lookupCode));
             
             if (record && record.result) {
               console.log('테스트 기록에서 결과를 찾았습니다:', record);
@@ -185,7 +186,7 @@ function MbtiGraphResults() {
           }
           
           // 2. test-result-[code] 키로 검색
-          const resultStr = readLocalTestResultJson(code);
+          const resultStr = readLocalTestResultJson(lookupCode);
           if (resultStr) {
             const result = JSON.parse(resultStr);
             if (result && result.answers) {
@@ -316,7 +317,7 @@ function MbtiGraphResults() {
                 onClick={() => {
                   const shareData = {
                     title: `내 MBTI 테스트 결과`,
-                    text: `테스트 코드: ${formatAccessCodeDisplay(code)}`,
+                    text: `테스트 코드: ${formatAccessCodeDisplay(code ?? '')}`,
                     url: typeof window !== 'undefined' ? window.location.href : ''
                   };
 
@@ -372,7 +373,7 @@ function MbtiGraphResults() {
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
             {code && (
                 <p className="text-blue-200">
-                  검사결과 코드: <span className="font-mono font-semibold">{formatAccessCodeDisplay(code)}</span>
+                  검사결과 코드: <span className="font-mono font-semibold">{formatAccessCodeDisplay(code ?? '')}</span>
               </p>
             )}
             </div>

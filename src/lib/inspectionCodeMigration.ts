@@ -9,7 +9,7 @@ import {
   normalizeInspectionCode,
 } from '@/lib/accessCodeFormat';
 
-const CODE_FIELD_NAMES = new Set([
+const CODE_FIELD_NAMES = [
   'code',
   'testCode',
   'accessCode',
@@ -19,7 +19,7 @@ const CODE_FIELD_NAMES = new Set([
   'groupCode',
   'resultCode',
   'lastGeneratedCode',
-]);
+] as const;
 
 const RECORD_ARRAY_KEYS = [
   'test_records',

@@ -97,7 +97,7 @@ export function inspectionCodeLookupKeys(raw: string): string[] {
   const keys = new Set<string>();
   if (normalized) keys.add(normalized);
   if (upper) keys.add(upper);
-  return [...keys];
+  return Array.from(keys);
 }
 
 /** 저장된 코드와 조회 코드가 동일한 검사(하이픈 유무 무관)인지 */

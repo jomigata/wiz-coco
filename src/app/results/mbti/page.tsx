@@ -451,7 +451,7 @@ function MbtiResultContent() {
       // 5. 최근 검사 결과에서 찾기 (코드가 일치하지 않더라도)
       if (typeof window !== 'undefined') {
         const recentCode = localStorage.getItem('mbti_test_code');
-        if (inspectionCodesMatch(recentCode, code)) {
+        if (recentCode && inspectionCodesMatch(recentCode, code)) {
           const recentResult = readLocalTestResultJson(recentCode);
           if (recentResult) {
             return JSON.parse(recentResult);
