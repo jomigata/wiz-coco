@@ -19,11 +19,12 @@ alwaysApply: true
 
 1. **Cursor 설정**: `Ctrl + Shift + J` (Windows/Linux) 또는 `Cmd + Shift + J` (macOS)
 2. **Agents** → **Auto-Run**
-3. **Ask Every Time 이 아닌** 값으로 설정:
+3. **Ask Every Time** / **No Allowed** 가 아닌 값으로 설정:
    - **Run in Sandbox** (권장) — allowlist 명령은 샌드박스 제한 없이 즉시 실행
    - **Run Everything** — 모든 명령 자동 실행 (가장 단순)
 
-> **Ask Every Time** 이면 `permissions.json` allowlist가 **적용되지 않아** 매번 Run 확인이 뜹니다.
+> **Ask Every Time** 이면 allowlist가 적용되지 않습니다.  
+> UI에 **No Allowed** 가 보이면 allowlist에 `git`이 있어도 **자동 실행되지 않습니다** — 반드시 Sandbox 또는 Run Everything으로 변경하세요.
 
 ### 2) 전역 `%USERPROFILE%\.cursor\permissions.json`
 

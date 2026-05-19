@@ -8,12 +8,12 @@
 
 1. **Cursor 설정** 열기: `Ctrl + Shift + J` (Windows) / `Cmd + Shift + J` (macOS)
 2. **Agents** → **Auto-Run**
-3. 아래 중 **하나** 선택 (**Ask Every Time 은 사용하지 않음**)
+3. 아래 중 **하나** 선택 (**Ask Every Time** / **No Allowed** 는 사용하지 않음)
    - **Run in Sandbox** (권장) — 샌드박스 안에서 자동 실행, allowlist 명령은 샌드박스 제한 없이 실행
    - **Run Everything** — 모든 명령 자동 실행 (가장 단순, 보안상 주의)
 
 > **Ask Every Time** 이면 `permissions.json` allowlist가 **적용되지 않습니다**.  
-> 이 상태에서는 에이전트가 git을 실행해도 매번 Run 확인 UI가 뜹니다.
+> UI에 **No Allowed** 가 보이면 allowlist에 `git`이 있어도 **자동 실행되지 않습니다** — 반드시 **Run in Sandbox** 또는 **Run Everything**으로 바꿔 주세요.
 
 ### 2) 전역 `permissions.json` (이 PC에 반영됨)
 
@@ -54,7 +54,7 @@ Cursor를 **한 번 재시작**하면 파일 변경이 확실히 반영됩니다
 
 | 증상 | 조치 |
 |------|------|
-| 매번 "Run" / "Allow" 버튼 | Auto-Run이 **Ask Every Time**인지 확인 → Sandbox 또는 Run Everything으로 변경 |
+| 매번 "Run" / "Allow" 버튼 | Auto-Run Mode가 **No Allowed** 또는 **Ask Every Time**인지 확인 → **Run in Sandbox** 또는 **Run Everything**으로 변경 |
 | allowlist를 썼는데도 물어봄 | `permissions.json` 저장 후 Cursor 재시작; 설정 화면에 "configured via permissions.json" 문구 확인 |
 | `git push`만 승인 요청 | `sandbox.json`에 `github.com` 허용 추가; 또는 명령을 allowlist에 추가해 샌드박스 밖에서 실행 |
 | 회사/팀 정책 | Enterprise 대시보드 Auto-Run이 관리자에 의해 잠겨 있을 수 있음 |
