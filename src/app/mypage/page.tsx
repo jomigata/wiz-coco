@@ -1887,7 +1887,7 @@ function TestRecordsTabContent({
   };
 
   const getAccessCodeSetName = (record: TestRecord): string => {
-    // "검사코드" 컬럼: 하이픈 포함 코드 + (안내 제목/검사명)
+    // "검사코드" 컬럼: 코드(하이픈 없음) + (안내 제목/검사명)
     const code = formatCodePinDisplay(record);
     const title = getAccessCodeTitleLabel(record);
     if (!code || code === '—') return '—';
@@ -2493,8 +2493,8 @@ function TestRecordsTabContent({
                             >
                               <span className="text-slate-400">{isOpen ? '▼' : '▶'}</span>
                               <span className="font-medium text-slate-100">{row.title}</span>
-                              <span className="ml-1 rounded bg-white/10 px-2 py-0.5 text-xs text-slate-300">
-                                {row.accessCode}
+                              <span className="ml-1 rounded bg-white/10 px-2 py-0.5 text-xs font-mono text-slate-300">
+                                {formatAccessCodeDisplay(row.accessCode)}
                               </span>
                             </button>
                           </td>
@@ -2770,10 +2770,10 @@ function TestRecordsTabContent({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-300">검사결과 코드:</span>
-                  <span className="text-blue-100">
+                  <span className="text-blue-100 font-mono">
                     {deleteModalRecord.recordSource === 'counselor-assessment'
                       ? deleteModalRecord.counselorTestId || '—'
-                      : deleteModalRecord.code || 'N/A'}
+                      : formatAccessCodeDisplay(deleteModalRecord.code || '') || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -2785,9 +2785,8 @@ function TestRecordsTabContent({
                 {(deleteModalRecord.counselorCodePinDisplay || deleteModalRecord.counselorCode) && (
                   <div className="flex justify-between gap-2">
                     <span className="text-blue-300 shrink-0">검사코드:</span>
-                    <span className="text-blue-100 text-right break-all">
-                      {deleteModalRecord.counselorCodePinDisplay ||
-                        `${deleteModalRecord.counselorCode || '—'} / —`}
+                    <span className="text-blue-100 text-right break-all font-mono">
+                      {formatCodePinDisplay(deleteModalRecord)}
                     </span>
                   </div>
                 )}

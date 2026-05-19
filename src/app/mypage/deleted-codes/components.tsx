@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { getInProgressTests } from '@/utils/testResume';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // 삭제된 테스트 기록 타입 정의
 interface DeletedTestRecord {
@@ -997,24 +998,27 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                           className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
-                          {(() => {
-                            // 타입 안전한 검사코드 추출
-                            const userData = record.userData as any;
-                            return record.counselorCode || 
-                                   userData?.counselorCode || 
-                                   userData?.clientInfo?.counselorCode ||
-                                   userData?.clientInfo?.groupCode ||
-                                   userData?.groupCode ||
-                                   record.code || 
-                                   '-';
-                          })()}
+                          {formatAccessCodeDisplay(
+                            (() => {
+                              const userData = record.userData as any;
+                              return (
+                                record.counselorCode ||
+                                userData?.counselorCode ||
+                                userData?.clientInfo?.counselorCode ||
+                                userData?.clientInfo?.groupCode ||
+                                userData?.groupCode ||
+                                record.code ||
+                                ''
+                              );
+                            })()
+                          ) || '-'}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
                           className="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-300 hover:bg-white/10 hover:text-yellow-200 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
-                          {record.code}
+                          {formatAccessCodeDisplay(record.code || '')}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
@@ -1183,7 +1187,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">검사결과 코드:</span>
-                <span className="text-slate-100">{singleRestoreRecord.code || 'N/A'}</span>
+                <span className="text-slate-100 font-mono">{formatAccessCodeDisplay(singleRestoreRecord.code || '') || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">검사 일시:</span>

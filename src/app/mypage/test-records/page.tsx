@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // chart.js 타입만 임포트 (실제 라이브러리는 클라이언트에서 동적으로 로드)
 import type { ChartData, ChartOptions } from 'chart.js';
@@ -1484,7 +1485,7 @@ function TestRecordsContent() {
                   
                   {codeStats.lastGeneratedTime && (
                     <div className="mb-4">
-                      <p className="text-blue-200">최근 생성 코드: <span className="font-mono text-white">{codeStats.lastGeneratedCode}</span></p>
+                      <p className="text-blue-200">최근 생성 코드: <span className="font-mono text-white">{formatAccessCodeDisplay(codeStats.lastGeneratedCode || '')}</span></p>
                       <p className="text-blue-200">마지막 생성 시간: {formatDate(codeStats.lastGeneratedTime)}</p>
                     </div>
                   )}
@@ -1693,19 +1694,21 @@ function TestRecordsContent() {
                               className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                               title="클릭하여 검사 결과 보기"
                             >
-                              {record.counselorCode || 
-                               record.userData?.counselorCode || 
-                               record.userData?.clientInfo?.counselorCode ||
-                               record.userData?.clientInfo?.groupCode ||
-                               record.userData?.groupCode ||
-                               '-'}
+                              {formatAccessCodeDisplay(
+                                record.counselorCode ||
+                                  record.userData?.counselorCode ||
+                                  record.userData?.clientInfo?.counselorCode ||
+                                  record.userData?.clientInfo?.groupCode ||
+                                  record.userData?.groupCode ||
+                                  ''
+                              ) || '-'}
                             </td>
                             <td 
                               onClick={() => viewTestDetail(record.code)}
                               className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                               title="클릭하여 검사 결과 보기"
                             >
-                              {record.code || '-'}
+                              {formatAccessCodeDisplay(record.code || '') || '-'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-300">
                               <button
@@ -1769,7 +1772,7 @@ function TestRecordsContent() {
                   return (
                     <>
                       <p className="text-white text-sm">검사 유형: {record.testType || '개인용 MBTI 검사'}</p>
-                      <p className="text-white text-sm">검사결과 코드: {record.code}</p>
+                      <p className="text-white text-sm">검사결과 코드: {formatAccessCodeDisplay(record.code || '')}</p>
                       <p className="text-white text-sm">검사 일시: {formattedDate}</p>
                     </>
                   );

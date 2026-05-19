@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';import { lookupPublicAssessment } from '@/lib/assessmentApi';
+import Link from 'next/link';
+import { lookupPublicAssessment } from '@/lib/assessmentApi';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import {
   formatJoinAccessCodeWhileTyping,
@@ -31,7 +32,7 @@ export default function AccessCodeInputPage() {
     e.preventDefault();
     setError('');
     if (code.trim() && !/^[A-Za-z]/.test(code.trim())) {
-      setError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN-724');
+      setError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN724');
       return;
     }
     if (!isLoggedIn) {
@@ -94,13 +95,13 @@ export default function AccessCodeInputPage() {
                   autoComplete="off"
                   spellCheck={false}
                   className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
-                  placeholder="예: KAN-724"
+                  placeholder="예: KAN724"
                   value={code}
                   onChange={(e) => {
                     const raw = e.target.value;
                     const trimmed = raw.trim();
                     if (trimmed && !/^[A-Za-z]/.test(trimmed)) {
-                      setFormatError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN-724');
+                      setFormatError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN724');
                     } else {
                       setFormatError('');
                     }

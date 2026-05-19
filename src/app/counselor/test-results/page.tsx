@@ -3,6 +3,7 @@
 import AdminPageLayout from '@/components/AdminPageLayout';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import React, { useEffect, useMemo, useState } from 'react';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 type CounselorResultRow = {
   id: string;
@@ -129,8 +130,8 @@ export default function TestResultsPage() {
                     <td className="px-3 py-2">{r.testType || '—'}</td>
                     <td className="px-3 py-2">{r.status || 'completed'}</td>
                     <td className="px-3 py-2">
-                      <div className="text-xs text-white/70">{r.code || '—'}</div>
-                      {r.counselorCode && <div className="text-xs text-white/40">연결코드: {r.counselorCode}</div>}
+                      <div className="text-xs text-white/70 font-mono">{formatAccessCodeDisplay(r.code || '') || '—'}</div>
+                      {r.counselorCode && <div className="text-xs text-white/40 font-mono">연결코드: {formatAccessCodeDisplay(r.counselorCode)}</div>}
                     </td>
                   </tr>
                 ))}

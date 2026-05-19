@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 // 테스트 결과 인터페이스 정의
 interface TestResult {
   code: string;
@@ -294,7 +295,7 @@ export default function InsideMbtiPage() {
                             ) : sortedTestResults.length > 0 ? (
                               sortedTestResults.map(test => (
                                 <option key={test.code} value={test.code}>
-                                  {test.code} / {test.testType} / {test.nickname} / {test.testDate}
+                                  {formatAccessCodeDisplay(test.code)} / {test.testType} / {test.nickname} / {test.testDate}
                                 </option>
                               ))
                             ) : (
@@ -358,7 +359,7 @@ export default function InsideMbtiPage() {
                             ) : sortedTestResults.length > 0 ? (
                               sortedTestResults.map(test => (
                                 <option key={test.code} value={test.code}>
-                                  {test.code} / {test.testType} / {test.nickname} / {test.testDate}
+                                  {formatAccessCodeDisplay(test.code)} / {test.testType} / {test.nickname} / {test.testDate}
                                 </option>
                               ))
                             ) : (

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import ConfirmModal from './ConfirmModal';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // 삭제된 테스트 기록 타입 정의
 interface DeletedTestRecord {
@@ -571,7 +572,7 @@ export default function AdminDeletedCodesPage() {
                                 />
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-white font-medium">{record.code}</div>
+                                <div className="text-white font-medium font-mono">{formatAccessCodeDisplay(record.code || '')}</div>
                                 <div className="text-gray-300 text-sm">{new Date(record.timestamp).toLocaleDateString()}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-white">

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { generateTestCode } from '@/utils/testCodeGenerator';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // MBTI 유형별 설명
 const mbtiDescriptions: Record<string, { title: string; description: string }> = {
@@ -732,12 +734,12 @@ function MbtiResultContent() {
                     <>
                       {counselorCode && (
                         <p className="text-blue-200">
-                          검사코드: <span className="font-mono font-semibold">{counselorCode}</span>
+                          검사코드: <span className="font-mono font-semibold">{formatAccessCodeDisplay(counselorCode)}</span>
                         </p>
                       )}
                       {testCode && (
                         <p className="text-blue-200">
-                          검사결과 코드: <span className="font-mono font-semibold">{testCode}</span>
+                          검사결과 코드: <span className="font-mono font-semibold">{formatAccessCodeDisplay(testCode)}</span>
                         </p>
                       )}
                     </>
@@ -871,7 +873,8 @@ function MbtiResultContent() {
 // 로딩 컴포넌트
 function MbtiResultLoading() {
   return (
-    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12"><div className="h-20"></div>
+    <main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+<div className="h-20"></div>
       
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
@@ -898,7 +901,8 @@ function MbtiResultLoading() {
 // 메인 페이지 컴포넌트
 export default function MbtiResultPage() {
   return (
-    <div className="min-h-screen"><Suspense fallback={<MbtiResultLoading />}>
+    <div className="min-h-screen">
+<Suspense fallback={<MbtiResultLoading />}>
         <MbtiResultContent />
       </Suspense>
     </div>

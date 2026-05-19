@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatDate } from '@/utils/dateUtils';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // 테스트 결과 인터페이스
 interface TestResult {
@@ -173,7 +174,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
                   <tbody className="divide-y divide-slate-700">
                     {user.testResults.map((result) => (
                       <tr key={result.id} className="text-white">
-                        <td className="py-2">{result.code}</td>
+                        <td className="py-2 font-mono">{formatAccessCodeDisplay(result.code || '')}</td>
                         <td className="py-2">{result.testType}</td>
                         <td className="py-2">
                           {result.mbtiType ? (

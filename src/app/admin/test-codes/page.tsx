@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 interface TestRecord {
   code: string;
@@ -171,7 +172,7 @@ export default function TestCodesPage() {
             {filteredRecords.map((record, index) => (
               <tr key={record.code + index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {record.code}
+                  {formatAccessCodeDisplay(record.code || '')}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(record.timestamp)}
@@ -282,7 +283,7 @@ export default function TestCodesPage() {
                 <div className="flex flex-wrap justify-between items-center">
                   <div>
                     <h2 className="text-lg font-semibold text-white">{selectedYearMonth} 기간 통계</h2>
-                    <p className="text-blue-200">마지막 생성 코드: <span className="font-mono font-medium text-white">{codeData[selectedYearMonth].lastCode}</span></p>
+                    <p className="text-blue-200">마지막 생성 코드: <span className="font-mono font-medium text-white">{formatAccessCodeDisplay(codeData[selectedYearMonth].lastCode || '')}</span></p>
                   </div>
                   <div className="text-blue-200">
                     총 <span className="font-semibold text-white">{codeData[selectedYearMonth].records.length}</span>개의 코드 생성됨

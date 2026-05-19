@@ -30,6 +30,7 @@ import { generateTestCode } from '../../utils/testCodeGenerator';
 import { generateContextualTestCode, validateCodeFormat } from '@/utils/unifiedTestCodeGenerator';
 import { collection, setDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 ChartJS.register(
   CategoryScale,
@@ -1488,7 +1489,7 @@ const MbtiProResult: React.FC = () => {
                 <>
                   {counselorCode && (
                     <p className="text-blue-200">
-                      검사코드: <span className="font-mono font-semibold">{counselorCode}</span>
+                      검사코드: <span className="font-mono font-semibold">{formatAccessCodeDisplay(counselorCode)}</span>
                     </p>
                   )}
                 </>
@@ -1504,7 +1505,7 @@ const MbtiProResult: React.FC = () => {
               <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">검사결과 정보</h2>
               <div className="bg-blue-900/60 py-2 px-4 rounded-lg shadow-md border border-blue-700/50">
                 <h3 className="text-sm font-medium text-blue-300">검사 결과 코드</h3>
-                <p className="text-xl font-mono font-bold text-white">{resultCode}</p>
+                <p className="text-xl font-mono font-bold text-white">{formatAccessCodeDisplay(resultCode)}</p>
               </div>
             </div>
             
@@ -1531,7 +1532,7 @@ const MbtiProResult: React.FC = () => {
               {clientInfo.groupCode && (
                 <div className="bg-white/10 p-4 rounded-lg border border-white/15">
                   <h3 className="text-sm font-medium text-blue-300">검사 코드</h3>
-                  <p className="text-xl font-semibold text-white">{clientInfo.groupCode}</p>
+                  <p className="text-xl font-semibold text-white font-mono">{formatAccessCodeDisplay(clientInfo.groupCode)}</p>
                 </div>
               )}
             </div>

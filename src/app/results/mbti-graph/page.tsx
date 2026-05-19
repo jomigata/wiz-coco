@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MBTIResult from '@/components/tests/MBTIResult';
 import MbtiProResult from '@/components/tests/MbtiProResult';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // MBTI 유형별 설명
 const mbtiDescriptions: Record<string, { title: string; description: string }> = {
@@ -309,7 +310,7 @@ function MbtiGraphResults() {
                 onClick={() => {
                   const shareData = {
                     title: `내 MBTI 테스트 결과`,
-                    text: `테스트 코드: ${code}`,
+                    text: `테스트 코드: ${formatAccessCodeDisplay(code)}`,
                     url: typeof window !== 'undefined' ? window.location.href : ''
                   };
 
@@ -365,7 +366,7 @@ function MbtiGraphResults() {
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
             {code && (
                 <p className="text-blue-200">
-                  검사결과 코드: <span className="font-mono font-semibold">{code}</span>
+                  검사결과 코드: <span className="font-mono font-semibold">{formatAccessCodeDisplay(code)}</span>
               </p>
             )}
             </div>

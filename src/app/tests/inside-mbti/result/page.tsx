@@ -2,7 +2,9 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
-import Link from 'next/link';import { MbtiType, RelationshipAnalysis, mbtiData, relationshipTypeData, analyzeMbtiCombination } from '../data';
+import Link from 'next/link';
+import { MbtiType, RelationshipAnalysis, mbtiData, relationshipTypeData, analyzeMbtiCombination } from '../data';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 
 // 클라이언트 컴포넌트에서 useSearchParams 사용
 function InsideMbtiResultContent() {
@@ -40,7 +42,8 @@ function InsideMbtiResultContent() {
 
   if (!result) {
     return (
-      <><main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+      <>
+<main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
           <div className="container mx-auto px-4 py-12">
             <div className="flex justify-center items-center h-64">
               <p className="text-white text-xl">데이터를 불러오는 중입니다...</p>
@@ -52,7 +55,8 @@ function InsideMbtiResultContent() {
   }
 
   return (
-    <><main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
+    <>
+<main className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-hidden min-h-screen pt-16 pb-12">
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -191,7 +195,7 @@ function InsideMbtiResultContent() {
                   <div className="text-center mb-8">
                     <div className="inline-block bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
                       <span className="text-blue-200 text-sm">검사 코드: </span>
-                      <span className="text-white font-mono font-semibold">{result.resultCode}</span>
+                      <span className="text-white font-mono font-semibold">{formatAccessCodeDisplay(result.resultCode)}</span>
                     </div>
                   </div>
                 )}
