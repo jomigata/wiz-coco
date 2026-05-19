@@ -1,4 +1,10 @@
 {
   "git.confirmSync": false,
-  "git.enableSmartCommit": true
+  "git.confirmEmptyCommits": false,
+  "git.confirmForcePush": false,
+  "git.confirmNoVerifyCommit": false,
+  "git.promptToSaveFilesBeforeCommit": "never",
+  "git.promptToSaveFilesBeforeStash": "never",
+  "git.enableSmartCommit": true,
+  "git.autofetch": true
 }

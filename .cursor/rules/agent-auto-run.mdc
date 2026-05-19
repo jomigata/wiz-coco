@@ -9,27 +9,43 @@ alwaysApply: true
 
 - `git`, `gh`, GitHub·저장소 관련 터미널 명령을 실행한 뒤 **사용자에게 Run 버튼을 누르거나 터미널 승인을 요청하는 표현을 쓰지 않는다** (예: "Run을 눌러주세요", "승인해 주세요", "실행 버튼을 클릭").
 - 명령이 실제로 자동 실행되는지는 **사용자 Cursor의 Auto-Run 설정·allowlist**에 따른다. 작업 설명에 승인 유도 문구를 반복하지 않는다.
+- 설정 점검·복구 안내가 필요하면 **`docs/cursor-auto-run-git-ko.md`** 를 기준으로 설명한다.
 
 ## 사용자 쪽 설정 (Run 확인 없이 git / gh / npm 배포·CI 명령 실행)
 
-에이전트가 **`git status`, `git push`, `npm run git:push`, `gh …`, `npm run deploy:auto`** 등을 **Run 확인 없이** 돌리려면 아래가 필요합니다. (에이전트는 채팅으로 Run을 유도하지 않지만, IDE 설정이 Ask Every Time이면 UI에서 막힐 수 있습니다.)
+에이전트가 **`git status`, `git commit`, `git push`, `npm run git:push`, `gh …`** 등을 **Run 확인 없이** 돌리려면 아래 **세 가지**가 필요합니다.
 
-### 1) Cursor UI (필수)
+### 1) Cursor UI — Auto-Run 모드 (필수, UI에서만 변경 가능)
 
 1. **Cursor 설정**: `Ctrl + Shift + J` (Windows/Linux) 또는 `Cmd + Shift + J` (macOS)
 2. **Agents** → **Auto-Run**
-3. 모드를 **Ask Every Time이 아닌** 값으로 설정:
-   - **Run Everything** — 모든 명령 자동 실행 (가장 단순, 보안상 주의)
-   - 또는 **Auto-Run in Sandbox** / **Use Allowlist**(표시 이름은 버전별로 다를 수 있음)
+3. **Ask Every Time 이 아닌** 값으로 설정:
+   - **Run in Sandbox** (권장) — allowlist 명령은 샌드박스 제한 없이 즉시 실행
+   - **Run Everything** — 모든 명령 자동 실행 (가장 단순)
 
-공식 문서: **`permissions.json`의 terminal allowlist는 "Ask Every Time" 모드에서는 적용되지 않습니다.** Sandbox 또는 Run Everything 계열로 바꿔야 합니다.
+> **Ask Every Time** 이면 `permissions.json` allowlist가 **적용되지 않아** 매번 Run 확인이 뜹니다.
 
-### 2) 전역 `%USERPROFILE%\.cursor\permissions.json` (권장)
+### 2) 전역 `%USERPROFILE%\.cursor\permissions.json`
 
-- 이 저장소는 `terminalAllowlist`에 `git *`, `gh`, `npm *` 등을 두어 **푸시·패키지 스크립트·배포 보조 스크립트**가 allowlist 모드에서 자동 실행 후보가 되도록 할 수 있습니다.
-- 워크스페이스 규칙과 함께 쓰면 **매 작업 후 푸시 → GitHub Actions 배포**까지 사용자 Run 클릭 없이 이어지기 쉽습니다.
+- `terminalAllowlist`에 **`git`**(접두사) — `git status`, `git push` 등 전체 매칭
+- 예시: `docs/cursor-permissions.json.example`
+- 파일 수정 후 **Cursor 재시작** 권장
+
+### 3) `sandbox.json` — `git push` 네트워크 (Sandbox 모드일 때)
+
+- 전역: `%USERPROFILE%\.cursor\sandbox.json`
+- 이 저장소: `.cursor/sandbox.json`
+- `github.com` 등이 `networkPolicy.allow`에 있어야 push가 샌드박스 안에서 통과합니다.
+
+## 빠른 점검 체크리스트
+
+- [ ] Auto-Run ≠ Ask Every Time
+- [ ] `~/.cursor/permissions.json`에 `git` 포함
+- [ ] (Sandbox 사용 시) `sandbox.json`에 GitHub 도메인 허용
+- [ ] Cursor 재시작 후 `git status` 테스트 시 Run 버튼 없음
 
 ## 참고
 
-- Auto-Run 모드 전환은 보통 **Cursor Settings UI**에서 합니다. VS Code `settings.json`만으로 동일 동작을 보장하는 공식 키는 문서에 명시되어 있지 않습니다.
-- Windows 전역 파일 경로 예: `%USERPROFILE%\.cursor\permissions.json`
+- 상세 한글 가이드: `docs/cursor-auto-run-git-ko.md`
+- [permissions.json 공식 문서](https://cursor.com/docs/reference/permissions)
+- VS Code `settings.json`만으로 Auto-Run 모드를 바꾸는 공식 키는 없습니다.
