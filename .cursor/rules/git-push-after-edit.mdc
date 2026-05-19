@@ -19,6 +19,8 @@ alwaysApply: true
 3. `git commit -m "type: brief description"` — **커밋 메시지는 영어만**, 형식은 저장소 `.cursorrules`와 동일 (`feat`, `fix`, `docs`, `chore` 등)  
 4. **`git push origin HEAD`** 를 **반드시** 실행한다 (현재 브랜치 → 원격 동일 이름 브랜치).
 
+**Auto-Run allowlist**: 위 명령은 **`cd …;` 없이** 저장소 루트에서 `git`만 단독 실행한다 (`cd` 접두사만 있으면 allowlist에 `git`이 매칭되지 않아 Run 확인이 뜰 수 있음).
+
 ### 배포 (GitHub Actions 자동)
 
 - **`main` 브랜치에 `origin`으로 푸시되면** 저장소의 GitHub Actions(예: `.github/workflows/deploy.yml`)가 **자동으로 CI/CD·배포 파이프라인을 실행**한다.

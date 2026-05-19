@@ -75,6 +75,7 @@ Cursor를 **한 번 재시작**하면 파일 변경이 확실히 반영됩니다
 | 매번 "Run" / "Allow" 버튼 | **Ask Every Time**이 아닌지 확인 → **Use Allowlist**(또는 Run in Sandbox) |
 | Sandbox/Run Everything을 꼭 쓰고 싶음 | `permissions.json`에서 `terminalAllowlist` 제거 후 Cursor 재시작 → UI allowlist만 사용 (파일 기반 설정 포기) |
 | allowlist를 썼는데도 물어봄 | `permissions.json` 저장 후 Cursor 재시작; 설정 화면에 "configured via permissions.json" 문구 확인 |
+| `cd …; git …` 한 줄일 때만 Run 확인 | 명령 **맨 앞**이 `cd`이면 `git` allowlist에 안 걸림 → `permissions.json`에 **`cd`** 포함(예시 파일 반영됨) 또는 에이전트가 `git`만 단독 실행 |
 | `git push`만 승인 요청 | `sandbox.json`에 `github.com` 허용 추가; 또는 명령을 allowlist에 추가해 샌드박스 밖에서 실행 |
 | 회사/팀 정책 | Enterprise 대시보드 Auto-Run이 관리자에 의해 잠겨 있을 수 있음 |
 

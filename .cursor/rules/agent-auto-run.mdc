@@ -27,7 +27,8 @@ alwaysApply: true
 
 ### 2) 전역 `%USERPROFILE%\.cursor\permissions.json`
 
-- `terminalAllowlist`에 **`git`**(접두사) — `git status`, `git push` 등 전체 매칭
+- `terminalAllowlist`에 **`git`**, **`cd`**(접두사) — `git status`, `git push` 및 `cd "경로"; git …` 형태 매칭
+- **터미널 명령 작성 시**: 가능하면 `cd …; git …` 대신 워크스페이스 루트에서 **`git`/`npm`/`gh`만 단독** 실행 (allowlist 자동 실행 안정)
 - 예시: `docs/cursor-permissions.json.example`
 - 파일 수정 후 **Cursor 재시작** 권장
 

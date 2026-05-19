@@ -15,6 +15,12 @@
     "pip",
     "pip3",
     "powershell",
-    "pwsh"
+    "pwsh",
+    "cd",
+    "Set-Location",
+    "pushd",
+    "popd",
+    "cmd",
+    "where"
   ]
 }
