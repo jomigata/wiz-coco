@@ -30,7 +30,7 @@ function generateLocalFallbackCode(testType: DBTestType): string {
   const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
   
   // 로컬 폴백 코드 형식: 접두사 + 년도 + 8 + "-" + "LF" + 타임스탬프 + 랜덤문자
-  const fallbackCode = `${prefix}${year.toString().padStart(2, '0')}8-LF${timestamp.slice(-3)}${randomSuffix}`;
+  const fallbackCode = `${prefix}${year.toString().padStart(2, '0')}8LF${timestamp.slice(-3)}${randomSuffix}`;
   
   console.log(`[통합코드생성] 로컬 폴백 코드 생성: ${fallbackCode}`);
   return fallbackCode;
@@ -179,16 +179,15 @@ export function validateCodeFormat(code: string): boolean {
   if (!code || typeof code !== 'string') {
     return false;
   }
-  
-  // 기본 형식: 접두사(2) + 년도(2) + 시퀀스(1) + "-" + 알파벳(2) + 숫자(3) + 확장문자(선택)
-  const pattern = /^[A-Z]{2}\d{2}\d-[A-Z]{2}\d{3}[A-Z]*$/;
-  
-  if (!pattern.test(code)) {
+
+  const normalized = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const pattern = /^[A-Z]{2}\d{2}\d[A-Z]{2}\d{3}[A-Z]*$/;
+
+  if (!pattern.test(normalized)) {
     return false;
   }
-  
-  // 유효한 접두사 확인
-  const prefix = code.substring(0, 2);
+
+  const prefix = normalized.substring(0, 2);
   const validPrefixes = Object.values(TEST_TYPE_PREFIXES);
   
   return validPrefixes.includes(prefix as any);
@@ -208,9 +207,10 @@ export function parseTestCode(code: string): {
   if (!validateCodeFormat(code)) {
     return null;
   }
-  
+
   try {
-    const match = code.match(/^([A-Z]{2})(\d{2})(\d)-([A-Z]{2})(\d{3})([A-Z]*)$/);
+    const normalized = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const match = normalized.match(/^([A-Z]{2})(\d{2})(\d)([A-Z]{2})(\d{3})([A-Z]*)$/);
     if (!match) return null;
     
     return {

@@ -4,7 +4,12 @@ import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'reac
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { generateTestCode } from '@/utils/testCodeGenerator';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import {
+  formatAccessCodeDisplay,
+  inspectionCodesMatch,
+  normalizeInspectionCode,
+  readLocalTestResultJson,
+} from '@/lib/accessCodeFormat';
 
 // MBTI 유형별 설명
 const mbtiDescriptions: Record<string, { title: string; description: string }> = {
@@ -216,7 +221,7 @@ function MbtiResultContent() {
               const testRecordsStr = localStorage.getItem('test_records');
               if (testRecordsStr) {
                 const records = JSON.parse(testRecordsStr);
-                const foundRecord = records.find((record: any) => record.code === code);
+                const foundRecord = records.find((record: any) => inspectionCodesMatch(record.code, code));
                 if (foundRecord) {
                   resultData = {
                     ...resultData,
@@ -261,7 +266,8 @@ function MbtiResultContent() {
     if (isDataLoaded) return;
     
     // URL 파라미터에서 테스트 코드와 MBTI 유형 가져오기
-    const code = searchParams.get('code');
+    const rawCode = searchParams.get('code');
+    const code = rawCode ? normalizeInspectionCode(rawCode) || rawCode : null;
     const type = searchParams.get('type');
     const from = searchParams.get('from');
     
@@ -322,7 +328,7 @@ function MbtiResultContent() {
       if (testRecordsStr) {
         try {
           const records = JSON.parse(testRecordsStr);
-          const foundRecord = records.find((record: any) => record.code === code);
+          const foundRecord = records.find((record: any) => inspectionCodesMatch(record.code, code));
           if (foundRecord) {
             // test_records의 레코드가 가장 정확한 정보를 가지고 있음
             if (foundRecord.result) {
@@ -353,7 +359,7 @@ function MbtiResultContent() {
       }
       
       // 2. 직접 코드로 저장된 결과 찾기
-      const directResult = localStorage.getItem(`test-result-${code}`);
+      const directResult = readLocalTestResultJson(code);
       if (directResult) {
         const parsed = JSON.parse(directResult);
         if (parsed && (parsed.answers || parsed.mbtiType)) {
@@ -362,7 +368,7 @@ function MbtiResultContent() {
             if (testRecordsStr) {
               try {
                 const records = JSON.parse(testRecordsStr);
-                const foundRecord = records.find((record: any) => record.code === code);
+                const foundRecord = records.find((record: any) => inspectionCodesMatch(record.code, code));
                 if (foundRecord) {
                   return {
                     ...parsed,
@@ -391,7 +397,10 @@ function MbtiResultContent() {
         const userRecords = localStorage.getItem(userRecordsKey);
         if (userRecords) {
           const records = JSON.parse(userRecords);
-          const foundRecord = records.find((record: any) => record.testCode === code || record.code === code);
+          const foundRecord = records.find(
+            (record: any) =>
+              inspectionCodesMatch(record.testCode, code) || inspectionCodesMatch(record.code, code)
+          );
           if (foundRecord) {
             if (foundRecord.result) {
               return {
@@ -416,7 +425,10 @@ function MbtiResultContent() {
       const generalRecords = localStorage.getItem('mbti-user-test-records');
       if (generalRecords) {
         const records = JSON.parse(generalRecords);
-        const foundRecord = records.find((record: any) => record.testCode === code || record.code === code);
+        const foundRecord = records.find(
+          (record: any) =>
+            inspectionCodesMatch(record.testCode, code) || inspectionCodesMatch(record.code, code)
+        );
         if (foundRecord) {
           if (foundRecord.result) {
             return {
@@ -439,8 +451,8 @@ function MbtiResultContent() {
       // 5. 최근 검사 결과에서 찾기 (코드가 일치하지 않더라도)
       if (typeof window !== 'undefined') {
         const recentCode = localStorage.getItem('mbti_test_code');
-        if (recentCode === code) {
-          const recentResult = localStorage.getItem(`test-result-${recentCode}`);
+        if (inspectionCodesMatch(recentCode, code)) {
+          const recentResult = readLocalTestResultJson(recentCode);
           if (recentResult) {
             return JSON.parse(recentResult);
           }

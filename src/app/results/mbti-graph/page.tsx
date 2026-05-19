@@ -5,7 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MBTIResult from '@/components/tests/MBTIResult';
 import MbtiProResult from '@/components/tests/MbtiProResult';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import {
+  formatAccessCodeDisplay,
+  inspectionCodesMatch,
+  normalizeInspectionCode,
+  readLocalTestResultJson,
+} from '@/lib/accessCodeFormat';
 
 // MBTI 유형별 설명
 const mbtiDescriptions: Record<string, { title: string; description: string }> = {
@@ -111,7 +116,8 @@ function MbtiGraphResults() {
   const [testResults, setTestResults] = useState<any>({});
   
   // URL 파라미터 가져오기
-  const code = searchParams.get('code');
+  const rawCode = searchParams.get('code');
+  const code = rawCode ? normalizeInspectionCode(rawCode) || rawCode : null;
   const type = searchParams.get('type'); // mbti, enneagram, ego-ok 등
   
   // 테스트 다시 하기 핸들러
@@ -146,7 +152,7 @@ function MbtiGraphResults() {
         if (testType.toLowerCase() === 'pro' || testType.toLowerCase() === 'mbti_pro' || testType.toLowerCase() === 'mbti-pro') {
           // 로컬 스토리지에서 데이터 가져오기
           try {
-            const dataStr = localStorage.getItem(`test-result-${code}`);
+            const dataStr = readLocalTestResultJson(code);
             if (dataStr) {
               const testData = JSON.parse(dataStr);
               
@@ -168,7 +174,7 @@ function MbtiGraphResults() {
           const testRecordsStr = localStorage.getItem('test_records');
           if (testRecordsStr) {
             const records = JSON.parse(testRecordsStr);
-            const record = records.find((r: any) => r.code === code);
+            const record = records.find((r: any) => inspectionCodesMatch(r.code, code));
             
             if (record && record.result) {
               console.log('테스트 기록에서 결과를 찾았습니다:', record);
@@ -179,7 +185,7 @@ function MbtiGraphResults() {
           }
           
           // 2. test-result-[code] 키로 검색
-          const resultStr = localStorage.getItem(`test-result-${code}`);
+          const resultStr = readLocalTestResultJson(code);
           if (resultStr) {
             const result = JSON.parse(resultStr);
             if (result && result.answers) {

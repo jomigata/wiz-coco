@@ -180,6 +180,20 @@ export async function getTestData(code) {
 }
 
 /**
+ * 테스트 데이터 삭제 (코드 키 기준)
+ * @param {string} code - 테스트 코드
+ */
+export async function deleteTestData(code) {
+  return withStore(STORES.TEST_DATA, 'readwrite', (store) => {
+    const request = store.delete(code);
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve();
+      request.onerror = (event) => reject(event.target.error);
+    });
+  });
+}
+
+/**
  * 모든 테스트 데이터 조회
  * @param {Object} options - 조회 옵션 (정렬, 필터링 등)
  * @returns {Promise<Array>} - 테스트 데이터 배열

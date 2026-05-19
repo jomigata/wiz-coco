@@ -105,7 +105,7 @@ function generateFallbackCode(testType: DBTestType): CodeGenerationResult {
     const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
     
     // 폴백 코드 형식: 접두사 + 년도 + 9 + "-" + "FB" + 타임스탬프 + 랜덤문자
-    const fallbackCode = `${prefix}${year.toString().padStart(2, '0')}9-FB${timestamp.slice(-3)}${randomSuffix}`;
+    const fallbackCode = `${prefix}${year.toString().padStart(2, '0')}9FB${timestamp.slice(-3)}${randomSuffix}`;
     
     console.log(`[Firebase코드생성] 폴백 코드 생성: ${fallbackCode}`);
     
@@ -285,7 +285,7 @@ async function generateUniqueTestCodeFirebase(
         
         // 2. 코드 생성
         const numberStr = currentNumber.toString().padStart(3, '0');
-        const baseCode = `${prefix}${year.toString().padStart(2, '0')}${currentSeq}-${currentAlphabet}${numberStr}`;
+        const baseCode = `${prefix}${year.toString().padStart(2, '0')}${currentSeq}${currentAlphabet}${numberStr}`;
         const generatedCode = currentExtension ? `${baseCode}${currentExtension}` : baseCode;
         
         console.log(`[Firebase코드생성] 생성된 코드: ${generatedCode}`);
@@ -395,7 +395,7 @@ export async function validateTestCode(code: string): Promise<{
   // Firebase 환경 확인
   if (!ensureFirebaseEnvironment()) {
     // Firebase 연결 실패 시 기본 형식 검증만 수행
-    const pattern = /^(MP|MG|MA|EP|EA|EG|AP|AA|AG)(\d{2})(\d)-([A-Z]{2})(\d{3})([A-Z]*)$/;
+    const pattern = /^(MP|MG|MA|EP|EA|EG|AP|AA|AG)(\d{2})(\d)([A-Z]{2})(\d{3})([A-Z]*)$/;
     return {
       isValid: pattern.test(code),
       isUsed: false
@@ -405,9 +405,9 @@ export async function validateTestCode(code: string): Promise<{
   try {
     console.log(`[Firebase코드검증] 코드 검증 시작: ${code}`);
     
-    // 코드 형식 검증
-    const pattern = /^(MP|MG|MA|EP|EA|EG|AP|AA|AG)(\d{2})(\d)-([A-Z]{2})(\d{3})([A-Z]*)$/;
-    if (!pattern.test(code)) {
+    const lookupCode = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const pattern = /^(MP|MG|MA|EP|EA|EG|AP|AA|AG)(\d{2})(\d)([A-Z]{2})(\d{3})([A-Z]*)$/;
+    if (!pattern.test(lookupCode)) {
       console.log(`[Firebase코드검증] 형식 불일치: ${code}`);
       return {
         isValid: false,
@@ -417,7 +417,7 @@ export async function validateTestCode(code: string): Promise<{
     
     // Firebase에서 사용 여부 확인
     const { doc, getDoc } = require('firebase/firestore');
-    const testResultRef = doc(db, 'testResults', code);
+    const testResultRef = doc(db, 'testResults', lookupCode);
     const testResultDoc = await getDoc(testResultRef);
     
     if (testResultDoc.exists()) {
@@ -440,7 +440,7 @@ export async function validateTestCode(code: string): Promise<{
   } catch (error) {
     console.error('[Firebase코드검증] 검증 중 오류:', error);
     // 오류 시 기본 형식 검증만 수행
-    const pattern = /^(MP|MG|MA|EP|EA|EG|AP|AA|AG)(\d{2})(\d)-([A-Z]{2})(\d{3})([A-Z]*)$/;
+    const pattern = /^(MP|MG|MA|EP|EA|EG|AP|AA|AG)(\d{2})(\d)([A-Z]{2})(\d{3})([A-Z]*)$/;
     return {
       isValid: pattern.test(code),
       isUsed: false

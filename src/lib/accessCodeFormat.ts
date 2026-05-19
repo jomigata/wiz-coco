@@ -70,3 +70,52 @@ export function formatAccessCodeWhileTyping(raw: string): string {
 export function formatJoinAccessCodeWhileTyping(raw: string): string {
   return normalizeAccessCodeInput(raw);
 }
+
+/** 로컬·서버 마이그레이션 완료 플래그 (localStorage) */
+/** 로컬 저장소 데이터 마이그레이션 완료 플래그 (표시 전용 v1 이후 데이터 갱신) */
+export const INSPECTION_CODE_MIGRATION_STORAGE_KEY = 'wizcoco_inspection_code_no_hyphen_data_v2';
+
+/**
+ * 검사코드·검사결과 코드 저장·조회용 정규화 (하이픈·공백 제거).
+ * accessCode(CVC)와 MBTI 결과코드(MP250AA001) 공통.
+ */
+export function normalizeInspectionCode(raw: string): string {
+  return normalizeAccessCodeInput(raw);
+}
+
+/** 문자열에 하이픈이 포함되어 있으면 true */
+export function inspectionCodeHasHyphen(raw: string): boolean {
+  return typeof raw === 'string' && raw.includes('-');
+}
+
+/** 조회 시 정규화 코드 우선, 레거시(하이픈 포함) URL·키 호환 */
+export function inspectionCodeLookupKeys(raw: string): string[] {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return [];
+  const normalized = normalizeInspectionCode(trimmed);
+  const upper = trimmed.toUpperCase();
+  const keys = new Set<string>();
+  if (normalized) keys.add(normalized);
+  if (upper) keys.add(upper);
+  return [...keys];
+}
+
+/** 저장된 코드와 조회 코드가 동일한 검사(하이픈 유무 무관)인지 */
+export function inspectionCodesMatch(stored: string | undefined | null, lookup: string): boolean {
+  if (!stored || !lookup) return false;
+  const a = normalizeInspectionCode(stored);
+  const b = normalizeInspectionCode(lookup);
+  if (a && b && a === b) return true;
+  return stored.toUpperCase() === lookup.toUpperCase();
+}
+
+/** localStorage test-result-* / mbti-test-result-* 조회 */
+export function readLocalTestResultJson(code: string): string | null {
+  if (typeof window === 'undefined' || !code) return null;
+  for (const k of inspectionCodeLookupKeys(code)) {
+    const v =
+      localStorage.getItem(`test-result-${k}`) ?? localStorage.getItem(`mbti-test-result-${k}`);
+    if (v) return v;
+  }
+  return null;
+}

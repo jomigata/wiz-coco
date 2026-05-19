@@ -244,7 +244,7 @@ function generateNextCode(prefix: TestPrefix, lastData: LastCodeData, year: stri
 function formatCode(prefix: TestPrefix, year: string, data: LastCodeData): string {
   const numericPart = data.number.toString().padStart(3, '0');
   const extension = data.extension || '';
-  return `${prefix}${year}${data.sequence}-${data.alphabet}${numericPart}${extension}`;
+  return `${prefix}${year}${data.sequence}${data.alphabet}${numericPart}${extension}`;
 }
 
 /**
@@ -298,7 +298,7 @@ export function generateTestCode(testType: 'PROFESSIONAL' | 'GROUP' | 'AMATEUR' 
     const prefix = TEST_PREFIXES[testType] || 'XX';
     const year = new Date().getFullYear().toString().slice(-2);
     const timestamp = Date.now().toString().slice(-6);
-    const emergencyCode = `${prefix}${year}9-ZZ${timestamp.slice(-3)}`;
+    const emergencyCode = `${prefix}${year}9ZZ${timestamp.slice(-3)}`;
     
     console.error(`[testCodeGenerator] 응급 코드 생성: ${emergencyCode}`);
     return emergencyCode;
@@ -310,8 +310,9 @@ export function generateTestCode(testType: 'PROFESSIONAL' | 'GROUP' | 'AMATEUR' 
  */
 export function parseTestCode(code: string): TestCodeInfo | null {
   try {
-    // 형식: MP250-AA001 또는 MP250-AA001A
-    const match = code.match(/^([A-Z]{2})(\d{2})(\d)-([A-Z]{2})(\d{3})([A-Z]*)$/);
+    const normalized = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    // 형식: MP250AA001 또는 MP250AA001A (레거시 MP250-AA001 호환: 정규화 후 파싱)
+    const match = normalized.match(/^([A-Z]{2})(\d{2})(\d)([A-Z]{2})(\d{3})([A-Z]*)$/);
     
     if (!match) {
       return null;

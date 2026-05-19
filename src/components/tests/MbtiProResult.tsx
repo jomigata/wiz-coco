@@ -30,7 +30,12 @@ import { generateTestCode } from '../../utils/testCodeGenerator';
 import { generateContextualTestCode, validateCodeFormat } from '@/utils/unifiedTestCodeGenerator';
 import { collection, setDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import {
+  formatAccessCodeDisplay,
+  inspectionCodesMatch,
+  normalizeInspectionCode,
+  readLocalTestResultJson,
+} from '@/lib/accessCodeFormat';
 
 ChartJS.register(
   CategoryScale,
@@ -142,7 +147,8 @@ const MbtiProResult: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dataParam = searchParams.get('data');
-  const codeParam = searchParams.get('code');
+  const rawCodeParam = searchParams.get('code');
+  const codeParam = rawCodeParam ? normalizeInspectionCode(rawCodeParam) || rawCodeParam : null;
   const fromParam = searchParams.get('from');
   const [loadedAnswers, setLoadedAnswers] = React.useState<Answer>({});
   const [loadedClientInfo, setLoadedClientInfo] = React.useState<ClientInfo | null>(null);
