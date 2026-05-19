@@ -8,12 +8,29 @@
 
 1. **Cursor 설정** 열기: `Ctrl + Shift + J` (Windows) / `Cmd + Shift + J` (macOS)
 2. **Agents** → **Auto-Run**
-3. 아래 중 **하나** 선택 (**Ask Every Time** / **No Allowed** 는 사용하지 않음)
-   - **Run in Sandbox** (권장) — 샌드박스 안에서 자동 실행, allowlist 명령은 샌드박스 제한 없이 실행
-   - **Run Everything** — 모든 명령 자동 실행 (가장 단순, 보안상 주의)
 
-> **Ask Every Time** 이면 `permissions.json` allowlist가 **적용되지 않습니다**.  
-> UI에 **No Allowed** 가 보이면 allowlist에 `git`이 있어도 **자동 실행되지 않습니다** — 반드시 **Run in Sandbox** 또는 **Run Everything**으로 바꿔 주세요.
+#### A. `~/.cursor/permissions.json`에 `terminalAllowlist`가 **있을 때** (WizCoCo 권장 설정)
+
+화면에 **Run in Sandbox / Run Everything이 안 보이는 것이 정상**입니다.  
+설명 문구: *「Run Everything is disabled while that file defines allowlists…」*
+
+이때 드롭다운은 보통 다음 **두 가지만** 표시됩니다.
+
+| UI 표시 | 의미 |
+|--------|------|
+| **Use Allowlist** | allowlist에 있는 명령(`git`, `gh`, `npm` …)은 **승인 없이 자동 실행** |
+| **Ask Every Time** | 매번 Run/Allow 확인 (allowlist **무시**) |
+
+→ **`Use Allowlist`를 선택**하면 됩니다. 별도로 Sandbox/Run Everything을 찾을 필요 없습니다.
+
+Command Allowlist에 `git`, `gh`, `npm` 등이 보이고 *「configured via `~/.cursor/permissions.json`」* 이면 설정이 적용된 상태입니다.
+
+#### B. `permissions.json`에 `terminalAllowlist`가 **없을 때**
+
+드롭다운에 **Run in Sandbox** / **Ask Every Time** / **Run Everything** 이 보입니다.  
+Git만 자동 실행하려면 **Run in Sandbox** + UI에서 `git`을 allowlist에 추가하세요.
+
+> **Ask Every Time** 이면 `permissions.json` allowlist가 **적용되지 않습니다**.
 
 ### 2) 전역 `permissions.json` (이 PC에 반영됨)
 
@@ -45,7 +62,7 @@ Cursor를 **한 번 재시작**하면 파일 변경이 확실히 반영됩니다
 
 ## 동작 확인 방법
 
-1. Auto-Run을 **Run in Sandbox** 또는 **Run Everything**으로 설정
+1. Auto-Run을 **Use Allowlist**(permissions.json 사용 시) 또는 **Run in Sandbox** 로 설정
 2. Cursor 재시작
 3. 채팅에서 에이전트에게 `git status` 실행 요청
 4. **Run / Allow 버튼 없이** 터미널에 결과가 바로 나오면 성공
@@ -54,7 +71,9 @@ Cursor를 **한 번 재시작**하면 파일 변경이 확실히 반영됩니다
 
 | 증상 | 조치 |
 |------|------|
-| 매번 "Run" / "Allow" 버튼 | Auto-Run Mode가 **No Allowed** 또는 **Ask Every Time**인지 확인 → **Run in Sandbox** 또는 **Run Everything**으로 변경 |
+| Run in Sandbox / Run Everything이 안 보임 | `permissions.json`에 allowlist가 있어서 정상 → **Use Allowlist** 선택 |
+| 매번 "Run" / "Allow" 버튼 | **Ask Every Time**이 아닌지 확인 → **Use Allowlist**(또는 Run in Sandbox) |
+| Sandbox/Run Everything을 꼭 쓰고 싶음 | `permissions.json`에서 `terminalAllowlist` 제거 후 Cursor 재시작 → UI allowlist만 사용 (파일 기반 설정 포기) |
 | allowlist를 썼는데도 물어봄 | `permissions.json` 저장 후 Cursor 재시작; 설정 화면에 "configured via permissions.json" 문구 확인 |
 | `git push`만 승인 요청 | `sandbox.json`에 `github.com` 허용 추가; 또는 명령을 allowlist에 추가해 샌드박스 밖에서 실행 |
 | 회사/팀 정책 | Enterprise 대시보드 Auto-Run이 관리자에 의해 잠겨 있을 수 있음 |
