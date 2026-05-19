@@ -28,7 +28,8 @@ Cursor를 **한 번 재시작**하면 파일 변경이 확실히 반영됩니다
 ### 3) 샌드박스 네트워크 (`git push`용)
 
 경로 (전역): `%USERPROFILE%\.cursor\sandbox.json`  
-경로 (이 저장소): `.cursor/sandbox.json`
+경로 (이 저장소): 프로젝트 루트 `.cursor/sandbox.json`  
+(예시: [docs/cursor-sandbox.json.example](./cursor-sandbox.json.example) — `.gitignore` 때문에 저장소에는 예시만 포함)
 
 - `git push`는 `github.com` 등으로 네트워크 접속이 필요합니다.
 - **Run in Sandbox** 모드에서 push가 막히면, 위 `sandbox.json`의 `networkPolicy.allow`에 GitHub 도메인이 있는지 확인하세요.

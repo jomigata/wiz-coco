@@ -1,0 +1,18 @@
+{
+  "networkPolicy": {
+    "default": "deny",
+    "allow": [
+      "github.com",
+      "*.github.com",
+      "api.github.com",
+      "registry.npmjs.org",
+      "registry.yarnpkg.com",
+      "pypi.org",
+      "files.pythonhosted.org",
+      "*.googleapis.com",
+      "firebase.googleapis.com",
+      "*.cloudfunctions.net"
+    ]
+  },
+  "enableSharedBuildCache": true
+}
