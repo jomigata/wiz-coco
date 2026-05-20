@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -24,6 +25,7 @@ import { initializeFirebase } from '@/lib/firebase';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
+import { clearAllAuthStorage, evaluateAuthSessionOnStartup } from '@/utils/authSessionLifecycle';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
 const AUTH_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
@@ -102,9 +104,16 @@ const FirebaseAuthContext = createContext<FirebaseAuthContextValue | null>(null)
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const authExpiredOnStartupRef = useRef(false);
 
   // paint 전 세션 복원 (로그인 UI 깜빡임 방지)
   useLayoutEffect(() => {
+    authExpiredOnStartupRef.current = evaluateAuthSessionOnStartup();
+    if (authExpiredOnStartupRef.current) {
+      setUser(null);
+      return;
+    }
+
     const primed = readCachedAuthUser();
     if (primed) {
       setUser((prev) => prev ?? primed);
@@ -118,6 +127,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       console.error('Firebase Auth가 초기화되지 않았습니다.');
       setLoading(false);
       return;
+    }
+
+    if (authExpiredOnStartupRef.current) {
+      void clearAllAuthStorage().then(() => {
+        writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+      });
     }
 
     let unsubscribeUserDoc: (() => void) | null = null;

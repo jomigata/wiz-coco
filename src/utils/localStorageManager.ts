@@ -496,54 +496,10 @@ export function printStorageGuidelines(): void {
 }
 
 /**
- * 브라우저 종료 시 개인정보 및 인증 정보 완전 삭제
+ * @deprecated authSessionLifecycle(browserCleanup)에서 처리합니다.
  */
 export function setupBrowserCloseHandler(): void {
-  if (typeof window === 'undefined') return;
-  
-  // 페이지 언로드 시 개인정보 및 인증 정보 삭제
-  const handleBeforeUnload = () => {
-    console.log('[LocalStorage] 브라우저 종료 감지 - 개인정보 및 인증 정보 삭제');
-    
-    try {
-      // 인증 관련 정보 삭제
-      localStorage.removeItem('oktest-auth-state');
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userToken');
-      
-      // 임시 로그인 정보 삭제
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('temp-auth-') || 
-            key.startsWith('login-form') || 
-            key.startsWith('temp-login-')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // 개인정보가 포함된 검사 데이터 삭제 (코드만 남기고)
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('mbti-user-test-records-') || 
-            key.includes('clientInfo') ||
-            key.includes('personal')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      console.log('[LocalStorage] 브라우저 종료 시 개인정보 삭제 완료');
-    } catch (error) {
-      console.error('[LocalStorage] 브라우저 종료 시 정보 삭제 오류:', error);
-    }
-  };
-  
-  // beforeunload 이벤트로 브라우저 종료 감지
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  
-  // pagehide 이벤트로 페이지 숨김 감지 (더 확실한 감지)
-  window.addEventListener('pagehide', handleBeforeUnload);
-  
-  // 탭 종료나 새로고침 시에도 처리
-  window.addEventListener('unload', handleBeforeUnload);
+  // BrowserCleanupProvider → initBrowserCleanup → initAuthSessionLifecycle 에서 통합 처리
 }
 
 /**

@@ -1,112 +1,82 @@
 // 브라우저 종료 시 개인정보 완전 삭제를 위한 유틸리티
-
-// 세션 식별자를 위한 키
-const SESSION_ID_KEY = 'current_session_id';
-const LAST_ACTIVITY_KEY = 'last_activity_time';
-
-// 현재 세션 ID 생성
-const generateSessionId = () => {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-};
-
-// 현재 세션인지 확인
-const isCurrentSession = () => {
-  const currentSessionId = sessionStorage.getItem(SESSION_ID_KEY);
-  const storedSessionId = localStorage.getItem(SESSION_ID_KEY);
-  return currentSessionId && currentSessionId === storedSessionId;
-};
+import { initAuthSessionLifecycle, recordBrowserClose } from '@/utils/authSessionLifecycle';
 
 export const initBrowserCleanup = () => {
   if (typeof window === 'undefined') return;
 
-  // 브라우저 완전 종료 시 모든 데이터 삭제
-  const clearAllDataOnExit = () => {
+  const cleanupAuthLifecycle = initAuthSessionLifecycle();
+
+  // 브라우저 완전 종료 시 테스트/개인 데이터 삭제 (로그인 정보는 30초 grace 후 삭제)
+  const clearNonAuthDataOnExit = () => {
     try {
-      // 모든 개인정보 및 로그인 정보 삭제
-      const allKeysToRemove = [
-        'isLoggedIn',
-        'userToken', 
-        'user',
+      const nonAuthKeysToRemove = [
         'mbti_result',
         'mbti_answers',
         'mbti_completion_time',
         'mbti_test_code',
         'mbti_pro_completion_time',
         'mbti_pro_client_info',
-        'auth_status',
-        'session_token',
-        'login_time'
       ];
 
-      allKeysToRemove.forEach(key => {
+      nonAuthKeysToRemove.forEach((key) => {
         localStorage.removeItem(key);
       });
 
-      // 패턴 매치로 모든 관련 데이터 삭제
       const allKeys = Object.keys(localStorage);
-      allKeys.forEach(key => {
-        if (key.includes('user-test-records') || 
-            key.includes('mbti-user-test-records') ||
-            key.startsWith('client-info-') ||
-            key.includes('-test-') ||
-            key.includes('auth') ||
-            key.includes('session') ||
-            key.includes('login')) {
+      allKeys.forEach((key) => {
+        if (
+          key.includes('user-test-records') ||
+          key.includes('mbti-user-test-records') ||
+          key.startsWith('client-info-') ||
+          (key.includes('-test-') && !key.includes('auth') && !key.includes('login'))
+        ) {
           localStorage.removeItem(key);
         }
       });
 
-      // sessionStorage 전체 삭제
-      sessionStorage.clear();
-
-      console.log('[BrowserCleanup] 브라우저 종료 시 모든 데이터 삭제 완료');
+      console.log('[BrowserCleanup] 브라우저 종료 시 비인증 데이터 삭제 완료');
     } catch (error) {
       console.error('[BrowserCleanup] 브라우저 종료 정리 중 오류:', error);
     }
   };
 
-  // 브라우저 종료/새로고침 구분
-  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-    // 새로고침인지 확인
+  const handleBeforeUnload = () => {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navigation?.type === 'reload') {
       console.log('[BrowserCleanup] 새로고침 감지 - 데이터 보존');
       sessionStorage.setItem('page_refreshing', 'true');
       return;
     }
-    
-    // 진짜 브라우저 종료인 경우에만 데이터 삭제
-    console.log('[BrowserCleanup] 브라우저 종료 감지 - 데이터 삭제');
-    clearAllDataOnExit();
+
+    console.log('[BrowserCleanup] 브라우저 종료 감지 - 로그인 30초 grace 기록');
+    recordBrowserClose();
+    clearNonAuthDataOnExit();
   };
 
-  // 페이지 언로드 시 (탭 닫기 등) - 매우 보수적으로 실행
-  const handlePageHide = () => {
-    // 새로고침 중이거나 페이지 이동 중이면 실행하지 않음
-    if (sessionStorage.getItem('page_refreshing') || 
-        document.visibilityState === 'visible') {
+  const handlePageHide = (event: PageTransitionEvent) => {
+    if (event.persisted) return;
+    if (sessionStorage.getItem('page_refreshing') || document.visibilityState === 'visible') {
       console.log('[BrowserCleanup] 페이지 이동 감지 - 데이터 보존');
       return;
     }
-    
-    console.log('[BrowserCleanup] 탭 닫기 감지 - 데이터 삭제');
-    clearAllDataOnExit();
+
+    console.log('[BrowserCleanup] 탭 닫기 감지 - 로그인 30초 grace 기록');
+    recordBrowserClose();
+    clearNonAuthDataOnExit();
   };
 
-  // 이벤트 리스너 등록 (visibilitychange 제거)
   window.addEventListener('beforeunload', handleBeforeUnload);
-  window.addEventListener('unload', clearAllDataOnExit);
+  const handleUnload = () => {
+    recordBrowserClose();
+    clearNonAuthDataOnExit();
+  };
+  window.addEventListener('unload', handleUnload);
   window.addEventListener('pagehide', handlePageHide);
 
-  // 페이지 로드 시 새로고침 플래그 제거
-  setTimeout(() => {
-    sessionStorage.removeItem('page_refreshing');
-  }, 500);
-
-  // cleanup 함수 반환
   return () => {
+    cleanupAuthLifecycle();
     window.removeEventListener('beforeunload', handleBeforeUnload);
-    window.removeEventListener('unload', clearAllDataOnExit);
+    window.removeEventListener('unload', handleUnload);
     window.removeEventListener('pagehide', handlePageHide);
   };
 };
