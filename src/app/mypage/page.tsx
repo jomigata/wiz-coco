@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, startTransition } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -200,6 +200,19 @@ function MyPageContent() {
 
   // Firebase 인증 훅 사용
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
+
+  const resolvedUser = useMemo((): User | null => {
+    if (user) return user;
+    if (!firebaseUser) return null;
+    return {
+      id: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      name: firebaseUser.displayName || undefined,
+      role: firebaseUser.role || 'user',
+      createdAt: firebaseUser.metadata?.creationTime || '',
+      lastLoginAt: firebaseUser.metadata?.lastSignInTime || '',
+    };
+  }, [user, firebaseUser]);
   
   // 상담사 연결 상태 훅 사용
   const { connection: counselorConnection, loading: counselorLoading, refetch: refetchCounselor } = useCounselorConnection();
@@ -962,11 +975,13 @@ function MyPageContent() {
                     각 블록의 <span className="text-violet-300/90 font-medium">수정</span>으로 정보를 바로 편집할 수 있습니다.
                   </p>
                 </motion.div>
-                <InlineProfileBlocks
-                  user={user}
-                  firebaseUserRole={firebaseUser?.role}
-                  onUpdate={() => window.location.reload()}
-                />
+                {resolvedUser ? (
+                  <InlineProfileBlocks
+                    user={resolvedUser}
+                    firebaseUserRole={firebaseUser?.role}
+                    onUpdate={() => window.location.reload()}
+                  />
+                ) : null}
                 <SubtleLoadingOverlay show={recordsSyncPending} />
               </motion.div>
             )}
