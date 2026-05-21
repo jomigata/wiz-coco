@@ -1,6 +1,6 @@
 /**
  * 탭/브라우저 종료 시 로그인 정보를 즉시 삭제합니다.
- * 다른 탭이 열려 있어도 사이트 탭이 하나 닫히면 BroadcastChannel로 전체 로그아웃합니다.
+ * 사이트 내부 이동(로그인 → 마이페이지 등)이나 탭 전환에서는 삭제하지 않습니다.
  */
 
 import { signOut } from 'firebase/auth';
@@ -9,6 +9,7 @@ import { initializeFirebase } from '@/lib/firebase';
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
 const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
 const PAGE_REFRESHING_KEY = 'page_refreshing';
+const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
 
 const AUTH_LOCAL_KEYS = [
   'oktest-auth-state',
@@ -95,6 +96,23 @@ function isPageRefreshing(): boolean {
   }
 }
 
+function shouldSkipAuthClear(): boolean {
+  return sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1' || isPageRefreshing();
+}
+
+/** router.push/replace 등 사이트 내부 이동 직전에 호출 */
+export function markInternalNavigation(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(SKIP_AUTH_CLEAR_KEY, '1');
+}
+
+/** 새 페이지 진입 시 내부 이동 플래그·오탐 종료 플래그 정리 */
+export function consumeInternalNavigationFlags(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(SKIP_AUTH_CLEAR_KEY);
+  localStorage.removeItem(AUTH_CLEARED_FLAG);
+}
+
 function broadcastAuthClear(): void {
   if (typeof window === 'undefined') return;
   try {
@@ -109,7 +127,7 @@ function broadcastAuthClear(): void {
 /** 탭/브라우저 종료 시 즉시 로그인 정보 삭제 */
 export function clearAuthOnClose(): void {
   if (typeof window === 'undefined') return;
-  if (isPageRefreshing()) return;
+  if (shouldSkipAuthClear()) return;
 
   clearAuthStorageSync();
   try {
@@ -126,6 +144,7 @@ export function clearAuthOnClose(): void {
  */
 export function evaluateAuthSessionOnStartup(): boolean {
   if (typeof window === 'undefined') return false;
+  if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
 
   const wasCleared = localStorage.getItem(AUTH_CLEARED_FLAG) === '1';
   if (!wasCleared) return false;
@@ -143,6 +162,7 @@ export function subscribeAuthClearEvents(onClear: () => void): () => void {
   try {
     channel = new BroadcastChannel(AUTH_CLEAR_CHANNEL);
     channel.onmessage = () => {
+      if (shouldSkipAuthClear()) return;
       void clearAllAuthStorage().then(onClear);
     };
   } catch {
@@ -162,17 +182,11 @@ export function initAuthSessionLifecycle(): () => void {
       sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
       return;
     }
-    clearAuthOnClose();
-  };
-
-  const handlePageHide = (event: PageTransitionEvent) => {
-    if (event.persisted) return;
-    if (isPageRefreshing()) return;
+    // beforeunload는 탭/브라우저 닫기·전체 페이지 이동에서만 발생 (탭 전환 pagehide와 구분)
     clearAuthOnClose();
   };
 
   window.addEventListener('beforeunload', handleBeforeUnload);
-  window.addEventListener('pagehide', handlePageHide);
 
   const refreshFlagTimer = window.setTimeout(() => {
     sessionStorage.removeItem(PAGE_REFRESHING_KEY);
@@ -181,6 +195,34 @@ export function initAuthSessionLifecycle(): () => void {
   return () => {
     window.clearTimeout(refreshFlagTimer);
     window.removeEventListener('beforeunload', handleBeforeUnload);
-    window.removeEventListener('pagehide', handlePageHide);
   };
+}
+
+/** 같은 origin 링크 클릭 시 내부 이동으로 표시 */
+export function bindInternalNavigationMarkers(): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const handleClick = (event: MouseEvent) => {
+    if (event.defaultPrevented) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const anchor = (event.target as Element | null)?.closest('a');
+    if (!anchor) return;
+    if (anchor.target && anchor.target !== '_self') return;
+
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin === window.location.origin) {
+        markInternalNavigation();
+      }
+    } catch {
+      // ignore invalid URLs
+    }
+  };
+
+  document.addEventListener('click', handleClick, true);
+  return () => document.removeEventListener('click', handleClick, true);
 }

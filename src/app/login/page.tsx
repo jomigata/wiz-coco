@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
+import { markInternalNavigation } from '@/utils/authSessionLifecycle';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -60,6 +61,7 @@ const LoginContent = () => {
       
       // 리다이렉트 처리
       setTimeout(() => {
+        markInternalNavigation();
         router.replace(redirectUrl);
       }, 100);
     }
@@ -109,6 +111,7 @@ const LoginContent = () => {
 
         // 리다이렉트 처리
         setTimeout(() => {
+          markInternalNavigation();
           router.replace(redirectUrl);
         }, 100);
       } else {
@@ -198,6 +201,7 @@ const LoginContent = () => {
 
         // 리다이렉트 처리
         setTimeout(() => {
+          markInternalNavigation();
           router.replace(redirectUrl);
         }, 100);
       } else {

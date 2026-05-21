@@ -843,14 +843,14 @@ function MyPageContent() {
           />
         )}
         
-        {firebaseLoading || isLoading ? (
+        {firebaseLoading || isLoading || (!user && firebaseUser) ? (
           <div className="flex items-center justify-center">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
             </div>
           </div>
-        ) : !user ? (
+        ) : !(user || firebaseUser) ? (
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
             <p className="text-blue-200 mb-4">마이페이지에 접근하려면 로그인이 필요합니다</p>
             <Link 

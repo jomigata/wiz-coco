@@ -6,6 +6,7 @@ import LocalStorageInitializer from '@/components/LocalStorageInitializer'
 import BrowserCleanupProvider from '@/components/BrowserCleanupProvider'
 import { Noto_Sans_KR } from 'next/font/google'
 import ClientLayoutHandler from '@/components/ClientLayoutHandler'
+import AuthNavigationGuard from '@/components/AuthNavigationGuard'
 import RouteTransitionShell from '@/components/RouteTransitionShell'
 import AppChrome from '@/components/AppChrome'
 import Link from 'next/link'
@@ -33,6 +34,9 @@ export default function RootLayout({
       <body className={notoSansKr.variable}>
         <LocalStorageInitializer />
         <BrowserCleanupProvider />
+        <Suspense fallback={null}>
+          <AuthNavigationGuard />
+        </Suspense>
         <ClientLayoutHandler />
         <AppChrome>
           <Suspense fallback={null}>
