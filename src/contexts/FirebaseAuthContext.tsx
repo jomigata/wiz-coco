@@ -25,7 +25,11 @@ import { initializeFirebase } from '@/lib/firebase';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
-import { clearAllAuthStorage, evaluateAuthSessionOnStartup } from '@/utils/authSessionLifecycle';
+import {
+  clearAllAuthStorage,
+  evaluateAuthSessionOnStartup,
+  subscribeAuthClearEvents,
+} from '@/utils/authSessionLifecycle';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
 const AUTH_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
@@ -134,6 +138,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
       });
     }
+
+    const unsubscribeAuthClear = subscribeAuthClearEvents(() => {
+      setUser(null);
+      writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+    });
 
     let unsubscribeUserDoc: (() => void) | null = null;
     let unsubscribeAuth: (() => void) | null = null;
@@ -281,6 +290,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       cancelled = true;
       clearTimeout(loadingSafetyTimer);
       if (deferredLogoutTimer) clearTimeout(deferredLogoutTimer);
+      unsubscribeAuthClear();
       unsubscribeAuth?.();
       if (unsubscribeUserDoc) unsubscribeUserDoc();
     };

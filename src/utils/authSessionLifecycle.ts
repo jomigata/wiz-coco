@@ -1,18 +1,14 @@
 /**
- * 브라우저 종료 후 30초가 지나면 로그인 정보를 삭제합니다.
- * (브라우저가 닫힌 뒤 JS 타이머를 실행할 수 없으므로, 다음 방문 시 만료를 검사합니다.)
+ * 탭/브라우저 종료 시 로그인 정보를 즉시 삭제합니다.
+ * 다른 탭이 열려 있어도 사이트 탭이 하나 닫히면 BroadcastChannel로 전체 로그아웃합니다.
  */
 
 import { signOut } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 
-export const AUTH_SESSION_GRACE_MS = 30_000;
-const LAST_CLOSED_KEY = 'wizcoco:last-closed-at';
-const ACTIVE_TABS_KEY = 'wizcoco:active-tabs';
-const TAB_ID_KEY = 'wizcoco:tab-id';
+const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
+const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
 const PAGE_REFRESHING_KEY = 'page_refreshing';
-const HEARTBEAT_INTERVAL_MS = 5_000;
-const TAB_STALE_MS = 15_000;
 
 const AUTH_LOCAL_KEYS = [
   'oktest-auth-state',
@@ -34,95 +30,6 @@ const AUTH_SESSION_KEYS = [
   'oauth_provider',
   'oauth_state',
 ] as const;
-
-type ActiveTabs = Record<string, number>;
-
-function generateTabId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function readActiveTabs(): ActiveTabs {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = localStorage.getItem(ACTIVE_TABS_KEY);
-    const parsed = raw ? (JSON.parse(raw) as ActiveTabs) : {};
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeActiveTabs(tabs: ActiveTabs): void {
-  if (typeof window === 'undefined') return;
-  try {
-    if (Object.keys(tabs).length === 0) {
-      localStorage.removeItem(ACTIVE_TABS_KEY);
-      return;
-    }
-    localStorage.setItem(ACTIVE_TABS_KEY, JSON.stringify(tabs));
-  } catch {
-    // ignore quota errors
-  }
-}
-
-function pruneStaleTabs(tabs: ActiveTabs, staleMs = TAB_STALE_MS): ActiveTabs {
-  const now = Date.now();
-  const next: ActiveTabs = {};
-  for (const [tabId, lastSeen] of Object.entries(tabs)) {
-    if (now - lastSeen <= staleMs) {
-      next[tabId] = lastSeen;
-    }
-  }
-  return next;
-}
-
-function getTabId(): string {
-  if (typeof window === 'undefined') return '';
-  let tabId = sessionStorage.getItem(TAB_ID_KEY);
-  if (!tabId) {
-    tabId = generateTabId();
-    sessionStorage.setItem(TAB_ID_KEY, tabId);
-  }
-  return tabId;
-}
-
-function touchTabHeartbeat(tabId = getTabId()): void {
-  if (!tabId) return;
-  const tabs = pruneStaleTabs(readActiveTabs());
-  tabs[tabId] = Date.now();
-  writeActiveTabs(tabs);
-}
-
-function unregisterTab(tabId = getTabId()): void {
-  if (!tabId) return;
-  const tabs = pruneStaleTabs(readActiveTabs());
-  delete tabs[tabId];
-  writeActiveTabs(tabs);
-
-  if (Object.keys(tabs).length === 0) {
-    try {
-      localStorage.setItem(LAST_CLOSED_KEY, String(Date.now()));
-    } catch {
-      // ignore
-    }
-  }
-}
-
-export function hasActiveTabs(): boolean {
-  const tabs = pruneStaleTabs(readActiveTabs());
-  writeActiveTabs(tabs);
-  return Object.keys(tabs).length > 0;
-}
-
-function shouldClearAuthOnStartup(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const lastClosed = Number(localStorage.getItem(LAST_CLOSED_KEY) || 0);
-  if (!lastClosed) return false;
-  if (hasActiveTabs()) return false;
-
-  return Date.now() - lastClosed > AUTH_SESSION_GRACE_MS;
-}
 
 function clearAuthCookies(): void {
   if (typeof document === 'undefined') return;
@@ -176,25 +83,6 @@ export async function clearAllAuthStorage(): Promise<void> {
   }
 }
 
-/**
- * 앱 시작 시 호출 — 30초 grace 만료 시 true 반환 (동기 정리 완료)
- */
-export function evaluateAuthSessionOnStartup(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const shouldClear = shouldClearAuthOnStartup();
-
-  if (shouldClear) {
-    clearAuthStorageSync();
-    console.log('[AuthSessionLifecycle] 브라우저 종료 30초 경과 — 로그인 정보 삭제');
-  }
-
-  touchTabHeartbeat();
-  localStorage.removeItem(LAST_CLOSED_KEY);
-
-  return shouldClear;
-}
-
 function isPageRefreshing(): boolean {
   if (typeof window === 'undefined') return false;
   if (sessionStorage.getItem(PAGE_REFRESHING_KEY) === 'true') return true;
@@ -207,36 +95,81 @@ function isPageRefreshing(): boolean {
   }
 }
 
-/** 브라우저/탭 종료 시 호출 — 즉시 삭제 대신 종료 시각 기록 */
-export function recordBrowserClose(): void {
+function broadcastAuthClear(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const channel = new BroadcastChannel(AUTH_CLEAR_CHANNEL);
+    channel.postMessage({ type: 'clear' });
+    channel.close();
+  } catch {
+    // BroadcastChannel 미지원 환경
+  }
+}
+
+/** 탭/브라우저 종료 시 즉시 로그인 정보 삭제 */
+export function clearAuthOnClose(): void {
   if (typeof window === 'undefined') return;
   if (isPageRefreshing()) return;
 
-  unregisterTab();
+  clearAuthStorageSync();
+  try {
+    localStorage.setItem(AUTH_CLEARED_FLAG, '1');
+  } catch {
+    // ignore
+  }
+  broadcastAuthClear();
+  console.log('[AuthSessionLifecycle] 탭/브라우저 종료 — 로그인 정보 즉시 삭제');
+}
+
+/**
+ * 앱 시작 시 호출 — 종료 시 signOut이 완료되지 않았으면 true 반환
+ */
+export function evaluateAuthSessionOnStartup(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const wasCleared = localStorage.getItem(AUTH_CLEARED_FLAG) === '1';
+  if (!wasCleared) return false;
+
+  localStorage.removeItem(AUTH_CLEARED_FLAG);
+  clearAuthStorageSync();
+  console.log('[AuthSessionLifecycle] 이전 세션 종료 감지 — 로그인 정보 정리');
+  return true;
+}
+
+export function subscribeAuthClearEvents(onClear: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  let channel: BroadcastChannel | null = null;
+  try {
+    channel = new BroadcastChannel(AUTH_CLEAR_CHANNEL);
+    channel.onmessage = () => {
+      void clearAllAuthStorage().then(onClear);
+    };
+  } catch {
+    // ignore
+  }
+
+  return () => {
+    channel?.close();
+  };
 }
 
 export function initAuthSessionLifecycle(): () => void {
   if (typeof window === 'undefined') return () => {};
-
-  touchTabHeartbeat();
 
   const handleBeforeUnload = () => {
     if (isPageRefreshing()) {
       sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
       return;
     }
-    recordBrowserClose();
+    clearAuthOnClose();
   };
 
   const handlePageHide = (event: PageTransitionEvent) => {
     if (event.persisted) return;
     if (isPageRefreshing()) return;
-    recordBrowserClose();
+    clearAuthOnClose();
   };
-
-  const heartbeat = window.setInterval(() => {
-    touchTabHeartbeat();
-  }, HEARTBEAT_INTERVAL_MS);
 
   window.addEventListener('beforeunload', handleBeforeUnload);
   window.addEventListener('pagehide', handlePageHide);
@@ -246,7 +179,6 @@ export function initAuthSessionLifecycle(): () => void {
   }, 500);
 
   return () => {
-    window.clearInterval(heartbeat);
     window.clearTimeout(refreshFlagTimer);
     window.removeEventListener('beforeunload', handleBeforeUnload);
     window.removeEventListener('pagehide', handlePageHide);

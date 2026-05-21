@@ -1,12 +1,12 @@
 // 브라우저 종료 시 개인정보 완전 삭제를 위한 유틸리티
-import { initAuthSessionLifecycle, recordBrowserClose } from '@/utils/authSessionLifecycle';
+import { clearAuthOnClose, initAuthSessionLifecycle } from '@/utils/authSessionLifecycle';
 
 export const initBrowserCleanup = () => {
   if (typeof window === 'undefined') return;
 
   const cleanupAuthLifecycle = initAuthSessionLifecycle();
 
-  // 브라우저 완전 종료 시 테스트/개인 데이터 삭제 (로그인 정보는 30초 grace 후 삭제)
+  // 브라우저 완전 종료 시 테스트/개인 데이터 삭제 (로그인 정보는 authSessionLifecycle에서 즉시 삭제)
   const clearNonAuthDataOnExit = () => {
     try {
       const nonAuthKeysToRemove = [
@@ -48,8 +48,8 @@ export const initBrowserCleanup = () => {
       return;
     }
 
-    console.log('[BrowserCleanup] 브라우저 종료 감지 - 로그인 30초 grace 기록');
-    recordBrowserClose();
+    console.log('[BrowserCleanup] 브라우저 종료 감지 - 로그인 정보 즉시 삭제');
+    clearAuthOnClose();
     clearNonAuthDataOnExit();
   };
 
@@ -60,14 +60,14 @@ export const initBrowserCleanup = () => {
       return;
     }
 
-    console.log('[BrowserCleanup] 탭 닫기 감지 - 로그인 30초 grace 기록');
-    recordBrowserClose();
+    console.log('[BrowserCleanup] 탭 닫기 감지 - 로그인 정보 즉시 삭제');
+    clearAuthOnClose();
     clearNonAuthDataOnExit();
   };
 
   window.addEventListener('beforeunload', handleBeforeUnload);
   const handleUnload = () => {
-    recordBrowserClose();
+    clearAuthOnClose();
     clearNonAuthDataOnExit();
   };
   window.addEventListener('unload', handleUnload);
