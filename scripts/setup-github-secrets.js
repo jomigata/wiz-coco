@@ -35,7 +35,7 @@ const requiredSecrets = [
     name: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
     description: 'Firebase Auth Domain',
     required: true,
-    example: 'www.wizcoco.com',
+    example: 'wiz-coco.firebaseapp.com',
   },
   {
     name: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID',

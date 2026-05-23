@@ -205,8 +205,8 @@ jobs:
         # Firebase 환경 변수 설정
         echo "NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" >> .env
         AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"
-        if [ -z "$AUTH_DOMAIN" ] || [ "$AUTH_DOMAIN" = "wiz-coco.firebaseapp.com" ]; then
-          AUTH_DOMAIN="www.wizcoco.com"
+        if [ -z "$AUTH_DOMAIN" ] || [ "$AUTH_DOMAIN" = "www.wizcoco.com" ] || [ "$AUTH_DOMAIN" = "wizcoco.com" ]; then
+          AUTH_DOMAIN="wiz-coco.firebaseapp.com"
         fi
         echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$AUTH_DOMAIN" >> .env
         echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" >> .env
