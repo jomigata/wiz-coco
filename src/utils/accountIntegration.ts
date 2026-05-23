@@ -11,6 +11,11 @@ import {
   signInWithCustomToken,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
+import {
+  beginAuthLoginAttempt,
+  endAuthLoginAttempt,
+  markAuthenticatedTabSession,
+} from '@/utils/authSessionLifecycle';
 import { UserAccountManager } from './userAccountManager';
 
 // 로깅 헬퍼 함수
@@ -82,6 +87,7 @@ export class AccountIntegrationManager {
     needsAccountLinking?: boolean;
     snsAuthMethods?: string[];
   }> {
+    beginAuthLoginAttempt();
     try {
       console.log('[AccountIntegration] 이메일 로그인 시도:', { email });
       await logToFirebase('info', '이메일 로그인 시도', { email });
@@ -158,6 +164,8 @@ export class AccountIntegrationManager {
         authMethods: userAccount.authMethods
       });
 
+      markAuthenticatedTabSession();
+
       return {
         success: true,
         user: result.user
@@ -206,7 +214,9 @@ export class AccountIntegrationManager {
                 uid: result.user.uid,
                 email: result.user.email
               });
-              
+
+              markAuthenticatedTabSession();
+
               return {
                 success: true,
                 user: result.user
@@ -242,6 +252,8 @@ export class AccountIntegrationManager {
         success: false,
         error: '로그인 처리 중 오류가 발생했습니다.'
       };
+    } finally {
+      endAuthLoginAttempt();
     }
   }
 
@@ -254,46 +266,60 @@ export class AccountIntegrationManager {
     error?: string;
     needsAccountLinking?: boolean;
   }> {
+    beginAuthLoginAttempt();
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
-      // 사용자 계정 관리 시스템에 등록/업데이트
-      const userAccount = UserAccountManager.createOrUpdateUser(
-        result.user.email!,
-        result.user.displayName || 'Google 사용자',
-        'google',
-        result.user.uid,
-        'user'
-      );
-      
-      console.log('[AccountIntegration] Google 로그인 성공:', {
-        uid: result.user.uid,
-        email: result.user.email,
-        providerId: result.user.providerId,
-        authMethods: userAccount.authMethods
-      });
+
+      markAuthenticatedTabSession();
+
+      try {
+        const userAccount = UserAccountManager.createOrUpdateUser(
+          result.user.email!,
+          result.user.displayName || 'Google 사용자',
+          'google',
+          result.user.uid,
+          'user',
+        );
+
+        console.log('[AccountIntegration] Google 로그인 성공:', {
+          uid: result.user.uid,
+          email: result.user.email,
+          providerId: result.user.providerId,
+          authMethods: userAccount.authMethods,
+        });
+      } catch (accountError) {
+        console.warn('[AccountIntegration] Google 로그인 후 로컬 계정 동기화 실패:', accountError);
+      }
 
       return {
         success: true,
-        user: result.user
+        user: result.user,
       };
     } catch (error: any) {
       console.error('[AccountIntegration] Google 로그인 실패:', error);
-      
-      // 계정이 이미 다른 제공자로 연결된 경우
+
+      if (
+        error.code === 'auth/popup-closed-by-user' ||
+        error.code === 'auth/cancelled-popup-request'
+      ) {
+        return { success: false };
+      }
+
       if (error.code === 'auth/account-exists-with-different-credential') {
         return {
           success: false,
           error: '이 이메일은 다른 방법으로 이미 가입되어 있습니다.',
-          needsAccountLinking: true
+          needsAccountLinking: true,
         };
       }
 
       return {
         success: false,
-        error: 'Google 로그인 처리 중 오류가 발생했습니다.'
+        error: error.message || 'Google 로그인 처리 중 오류가 발생했습니다.',
       };
+    } finally {
+      endAuthLoginAttempt();
     }
   }
 
@@ -439,8 +465,14 @@ export class AccountIntegrationManager {
       if (!authed) {
         return { success: false, error: 'Firebase 인증을 초기화할 수 없습니다.' };
       }
-      await signInWithCustomToken(authed, data.customToken);
-      return { success: true };
+      beginAuthLoginAttempt();
+      try {
+        await signInWithCustomToken(authed, data.customToken);
+        markAuthenticatedTabSession();
+        return { success: true };
+      } finally {
+        endAuthLoginAttempt();
+      }
     } catch (error: unknown) {
       console.error('[AccountIntegration] OAuth 콜백 실패:', error);
       return {

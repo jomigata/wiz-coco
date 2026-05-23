@@ -11,6 +11,7 @@ const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
 const AUTH_TAB_SESSION_KEY = 'wizcoco:auth-tab-session';
 const PAGE_REFRESHING_KEY = 'page_refreshing';
 const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
+const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
 const FIREBASE_IDB_NAME = 'firebaseLocalStorageDb';
 
 const AUTH_LOCAL_KEYS = [
@@ -85,8 +86,27 @@ export function clearAuthStorageSync(): void {
   }
 }
 
+/** 로그인 시도 시작 — startup signOut·세션 정리와의 경쟁 방지 */
+export function beginAuthLoginAttempt(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(AUTH_LOGIN_IN_PROGRESS_KEY, '1');
+}
+
+/** 로그인 시도 종료 */
+export function endAuthLoginAttempt(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(AUTH_LOGIN_IN_PROGRESS_KEY);
+}
+
+export function isAuthLoginInProgress(): boolean {
+  if (typeof window === 'undefined') return false;
+  return sessionStorage.getItem(AUTH_LOGIN_IN_PROGRESS_KEY) === '1';
+}
+
 /** Firebase signOut 포함 전체 로그인 정보 삭제 */
 export async function clearAllAuthStorage(): Promise<void> {
+  if (isAuthLoginInProgress()) return;
+
   clearAuthStorageSync();
 
   try {
@@ -155,6 +175,7 @@ export function clearAuthOnClose(): void {
   if (typeof window === 'undefined') return;
   if (shouldSkipAuthClear()) return;
 
+  endAuthLoginAttempt();
   clearAuthStorageSync();
   try {
     localStorage.setItem(AUTH_CLEARED_FLAG, '1');
@@ -190,7 +211,7 @@ export function subscribeAuthClearEvents(onClear: () => void): () => void {
   try {
     channel = new BroadcastChannel(AUTH_CLEAR_CHANNEL);
     channel.onmessage = () => {
-      if (shouldSkipAuthClear()) return;
+      if (shouldSkipAuthClear() || isAuthLoginInProgress()) return;
       void clearAllAuthStorage().then(onClear);
     };
   } catch {

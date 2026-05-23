@@ -13,6 +13,7 @@ import React, {
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   User as FirebaseSdkUser,
   GoogleAuthProvider,
@@ -28,6 +29,7 @@ import {
   clearAllAuthStorage,
   evaluateAuthSessionOnStartup,
   hasAuthenticatedTabSession,
+  isAuthLoginInProgress,
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
 } from '@/utils/authSessionLifecycle';
@@ -137,17 +139,6 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       return;
     }
 
-    if (authExpiredOnStartupRef.current) {
-      void clearAllAuthStorage().then(() => {
-        writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
-      });
-    }
-
-    const unsubscribeAuthClear = subscribeAuthClearEvents(() => {
-      setUser(null);
-      writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
-    });
-
     let unsubscribeUserDoc: (() => void) | null = null;
     let unsubscribeAuth: (() => void) | null = null;
     let deferredLogoutTimer: ReturnType<typeof setTimeout> | null = null;
@@ -251,7 +242,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         }
 
         const cur = auth.currentUser;
-        if (cur) {
+        if (cur && hasAuthenticatedTabSession()) {
           const minimal = authUserFromSdkUser(cur);
           setUser((prev) => prev ?? minimal);
           writeSWRCache(AUTH_CACHE_KEY, minimal, { scope: 'session' });
@@ -279,12 +270,37 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       if (!cancelled) finishLoading();
     }, 8000);
 
-    void auth.authStateReady().then(() => {
+    const unsubscribeAuthClear = subscribeAuthClearEvents(() => {
+      setUser(null);
+      writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+    });
+
+    void (async () => {
+      try {
+        await auth.authStateReady();
+      } catch {
+        // ignore
+      }
+
+      if (cancelled) return;
+
+      if (authExpiredOnStartupRef.current && !isAuthLoginInProgress()) {
+        if (auth.currentUser && !hasAuthenticatedTabSession()) {
+          try {
+            await signOut(auth);
+          } catch {
+            // ignore
+          }
+        }
+        writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+        setUser(null);
+      }
+
       if (cancelled) return;
 
       unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          if (!hasAuthenticatedTabSession() && !authExpiredOnStartupRef.current) {
+          if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
             void clearAllAuthStorage().then(() => {
               setUser(null);
               writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
@@ -297,7 +313,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         }
         scheduleLogoutCheck();
       });
-    });
+    })();
 
     return () => {
       cancelled = true;
