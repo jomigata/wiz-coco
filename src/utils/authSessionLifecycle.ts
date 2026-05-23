@@ -1,6 +1,6 @@
 /**
- * 탭/브라우저 종료 시 로그인 정보를 즉시 삭제합니다.
- * 사이트 내부 이동(로그인 → 마이페이지 등)이나 탭 전환에서는 삭제하지 않습니다.
+ * 탭/브라우저 종료·로그아웃 시 로그인 정보를 즉시 삭제합니다.
+ * sessionStorage 탭 세션 마커로 재접속 시 Firebase/캐시 자동 로그인을 차단합니다.
  */
 
 import { signOut } from 'firebase/auth';
@@ -8,8 +8,10 @@ import { initializeFirebase } from '@/lib/firebase';
 
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
 const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
+const AUTH_TAB_SESSION_KEY = 'wizcoco:auth-tab-session';
 const PAGE_REFRESHING_KEY = 'page_refreshing';
 const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
+const FIREBASE_IDB_NAME = 'firebaseLocalStorageDb';
 
 const AUTH_LOCAL_KEYS = [
   'oktest-auth-state',
@@ -23,6 +25,7 @@ const AUTH_LOCAL_KEYS = [
   'session_token',
   'login_time',
   'oauth_state',
+  'user_settings',
 ] as const;
 
 const AUTH_SESSION_KEYS = [
@@ -37,6 +40,15 @@ function clearAuthCookies(): void {
   const expires = 'expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   document.cookie = `auth_token=; ${expires}`;
   document.cookie = `user_role=; ${expires}`;
+}
+
+function clearFirebaseIndexedDB(): void {
+  if (typeof indexedDB === 'undefined') return;
+  try {
+    indexedDB.deleteDatabase(FIREBASE_IDB_NAME);
+  } catch {
+    // ignore
+  }
 }
 
 /** Firebase signOut 없이 동기적으로 로그인 관련 저장소만 정리 */
@@ -54,6 +66,7 @@ export function clearAuthStorageSync(): void {
         key.startsWith('login-form') ||
         key.startsWith('temp-login-') ||
         key.includes('firebase:authUser:') ||
+        key.includes('firebase:host:') ||
         (key.includes('auth') && !key.startsWith('wizcoco:'))
       ) {
         localStorage.removeItem(key);
@@ -64,7 +77,9 @@ export function clearAuthStorageSync(): void {
       sessionStorage.removeItem(key);
     });
 
+    sessionStorage.removeItem(AUTH_TAB_SESSION_KEY);
     clearAuthCookies();
+    clearFirebaseIndexedDB();
   } catch (error) {
     console.error('[AuthSessionLifecycle] 동기 로그인 정보 삭제 오류:', error);
   }
@@ -82,6 +97,18 @@ export async function clearAllAuthStorage(): Promise<void> {
   } catch (error) {
     console.warn('[AuthSessionLifecycle] Firebase signOut 실패:', error);
   }
+}
+
+/** 현재 탭에서 로그인 세션이 유효한지 (탭/브라우저 종료 후 재접속 시 false) */
+export function hasAuthenticatedTabSession(): boolean {
+  if (typeof window === 'undefined') return false;
+  return sessionStorage.getItem(AUTH_TAB_SESSION_KEY) === '1';
+}
+
+/** 로그인 성공 후 현재 탭 세션을 활성화 */
+export function markAuthenticatedTabSession(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(AUTH_TAB_SESSION_KEY, '1');
 }
 
 function isPageRefreshing(): boolean {
@@ -106,11 +133,10 @@ export function markInternalNavigation(): void {
   sessionStorage.setItem(SKIP_AUTH_CLEAR_KEY, '1');
 }
 
-/** 새 페이지 진입 시 내부 이동 플래그·오탐 종료 플래그 정리 */
+/** 새 페이지 진입 시 내부 이동 플래그 정리 */
 export function consumeInternalNavigationFlags(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.removeItem(SKIP_AUTH_CLEAR_KEY);
-  localStorage.removeItem(AUTH_CLEARED_FLAG);
 }
 
 function broadcastAuthClear(): void {
@@ -124,7 +150,7 @@ function broadcastAuthClear(): void {
   }
 }
 
-/** 탭/브라우저 종료 시 즉시 로그인 정보 삭제 */
+/** 탭/브라우저 종료·로그아웃 시 즉시 로그인 정보 삭제 */
 export function clearAuthOnClose(): void {
   if (typeof window === 'undefined') return;
   if (shouldSkipAuthClear()) return;
@@ -140,18 +166,20 @@ export function clearAuthOnClose(): void {
 }
 
 /**
- * 앱 시작 시 호출 — 종료 시 signOut이 완료되지 않았으면 true 반환
+ * 앱 시작 시 호출 — 탭 세션 없음/이전 종료 감지 시 true (동기 정리 완료)
  */
 export function evaluateAuthSessionOnStartup(): boolean {
   if (typeof window === 'undefined') return false;
   if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
 
-  const wasCleared = localStorage.getItem(AUTH_CLEARED_FLAG) === '1';
-  if (!wasCleared) return false;
+  const hasTabSession = hasAuthenticatedTabSession();
+  const wasClosed = localStorage.getItem(AUTH_CLEARED_FLAG) === '1';
 
-  localStorage.removeItem(AUTH_CLEARED_FLAG);
+  if (hasTabSession && !wasClosed) return false;
+
+  if (wasClosed) localStorage.removeItem(AUTH_CLEARED_FLAG);
   clearAuthStorageSync();
-  console.log('[AuthSessionLifecycle] 이전 세션 종료 감지 — 로그인 정보 정리');
+  console.log('[AuthSessionLifecycle] 재접속 또는 세션 만료 — 로그인 정보 초기화');
   return true;
 }
 
@@ -182,7 +210,6 @@ export function initAuthSessionLifecycle(): () => void {
       sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
       return;
     }
-    // beforeunload는 탭/브라우저 닫기·전체 페이지 이동에서만 발생 (탭 전환 pagehide와 구분)
     clearAuthOnClose();
   };
 

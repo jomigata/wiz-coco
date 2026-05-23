@@ -13,7 +13,6 @@ import React, {
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
   onAuthStateChanged,
   User as FirebaseSdkUser,
   GoogleAuthProvider,
@@ -28,6 +27,8 @@ import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 import {
   clearAllAuthStorage,
   evaluateAuthSessionOnStartup,
+  hasAuthenticatedTabSession,
+  markAuthenticatedTabSession,
   subscribeAuthClearEvents,
 } from '@/utils/authSessionLifecycle';
 
@@ -69,6 +70,8 @@ function authUserFromSdkUser(firebaseUser: FirebaseSdkUser): AuthUser {
 
 function readCachedAuthUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
+  if (!hasAuthenticatedTabSession()) return null;
+
   const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
     scope: 'session',
     maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
@@ -85,6 +88,7 @@ function readCachedAuthUser(): AuthUser | null {
 
 /** 로그인 직후 리다이렉트 시 각 페이지의 훅이 아직 동기화되기 전에 세션을 알 수 있도록 세션 캐시를 채웁니다. */
 export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): void {
+  markAuthenticatedTabSession();
   writeSWRCache(AUTH_CACHE_KEY, authUserFromSdkUser(firebaseUser), { scope: 'session' });
 }
 
@@ -163,6 +167,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         deferredLogoutTimer = null;
       }
 
+      markAuthenticatedTabSession();
       const baseUser = authUserFromSdkUser(firebaseUser);
 
       try {
@@ -258,7 +263,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           scope: 'session',
           maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
         });
-        if (cached.data) {
+        if (cached.data && hasAuthenticatedTabSession()) {
           setUser((prev) => prev ?? cached.data);
           finishLoading();
           return;
@@ -279,6 +284,14 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
+          if (!hasAuthenticatedTabSession() && !authExpiredOnStartupRef.current) {
+            void clearAllAuthStorage().then(() => {
+              setUser(null);
+              writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+              finishLoading();
+            });
+            return;
+          }
           void applyFirebaseUser(firebaseUser);
           return;
         }
@@ -335,9 +348,8 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
   const logout = useCallback(async () => {
     try {
-      const { auth } = initializeFirebase();
-      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
-      await signOut(auth);
+      await clearAllAuthStorage();
+      setUser(null);
       writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
       return { success: true };
     } catch (error: unknown) {

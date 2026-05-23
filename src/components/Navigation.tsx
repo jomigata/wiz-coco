@@ -5,7 +5,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
-import { removeItem } from '@/utils/localStorageManager';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
@@ -351,25 +350,10 @@ export default function Navigation() {
   // 핸들러 함수들
   const handleLogout = async () => {
     try {
-      const result = await logout();
-      if (result.success) {
-        removeItem('auth-state');
-        removeItem('user');
-        removeItem('userToken');
-        removeItem('oktest-auth-state');
-        document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        router.push('/');
-      } else {
-        removeItem('auth-state');
-        removeItem('user');
-        removeItem('userToken');
-        router.push('/');
-      }
+      await logout();
+      router.push('/');
     } catch (error) {
-      removeItem('auth-state');
-      removeItem('user');
-      removeItem('userToken');
+      console.error('[Navigation] 로그아웃 오류:', error);
       router.push('/');
     }
   };

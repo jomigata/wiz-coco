@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation } from '@/utils/authSessionLifecycle';
+import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -52,20 +52,24 @@ const LoginContent = () => {
     }
   }, [emailVerification]);
   
-  // Firebase 인증 상태 확인
+  // Firebase 인증 상태 확인 (현재 탭에서 로그인한 경우에만 자동 이동)
   useEffect(() => {
     console.log('[Login] Firebase 인증 상태:', { user, loading });
-    
-    if (!loading && user) {
+
+    if (!loading && user && hasAuthenticatedTabSession()) {
       console.log('[Login] 이미 로그인된 상태:', user);
-      
-      // 리다이렉트 처리
+
       setTimeout(() => {
         markInternalNavigation();
         router.replace(redirectUrl);
       }, 100);
     }
   }, [user, loading, router, redirectUrl]);
+
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+  }, []);
 
   useEffect(() => {
     if (loginError && !showSnsLogin) setEmailLoginOpen(true);
@@ -480,14 +484,17 @@ const LoginContent = () => {
               </button>
 
               {emailLoginOpen && (
-                <form className="space-y-2 mt-1" onSubmit={handleLogin}>
+                <form className="space-y-2 mt-1" onSubmit={handleLogin} autoComplete="off">
                   <div className="relative">
                     <label htmlFor="email" className="sr-only">이메일</label>
                     <input
                       id="email"
-                      name="email"
+                      name="wizcoco-login-email"
                       type="email"
-                      autoComplete="email"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                       required
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
@@ -510,9 +517,9 @@ const LoginContent = () => {
                   <label htmlFor="password" className="sr-only">비밀번호</label>
                   <input
                     id="password"
-                    name="password"
+                    name="wizcoco-login-password"
                     type="password"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

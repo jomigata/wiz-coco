@@ -14,7 +14,7 @@
 // (디자인/기능 100% 유지, 기존 코드와 충돌 없이 적용)
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { browserSessionPersistence, getAuth, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -48,6 +48,11 @@ export function initializeFirebase() {
       
       // Firebase 서비스 초기화
       auth = getAuth(app);
+      if (typeof window !== 'undefined') {
+        void setPersistence(auth, browserSessionPersistence).catch((error) => {
+          console.warn('Firebase Auth session persistence 설정 실패:', error);
+        });
+      }
       db = getFirestore(app);
       storage = getStorage(app);
       
