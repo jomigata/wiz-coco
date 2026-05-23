@@ -10,7 +10,7 @@ import {
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
-import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
+import { JOIN_STORAGE_KEY, pushToJoinDashboard } from '@/lib/joinAssessmentSession';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';
@@ -59,7 +59,7 @@ export default function AccessCodeInputPage() {
           })
         );
       }
-      router.push(`/join/dashboard?accessCode=${encodeURIComponent(normalizedCode)}`);
+      pushToJoinDashboard(router, normalizedCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : MSG_LOOKUP_DEFAULT);
     } finally {
