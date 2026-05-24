@@ -29,6 +29,8 @@ import {
   clearAllAuthStorage,
   evaluateAuthSessionOnStartup,
   hasAuthenticatedTabSession,
+  beginAuthLoginAttempt,
+  endAuthLoginAttempt,
   isAuthLoginInProgress,
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
@@ -366,6 +368,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    beginAuthLoginAttempt();
     try {
       const { auth } = initializeFirebase();
       if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
@@ -374,6 +377,8 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       return { success: true, user: result.user };
     } catch (error: unknown) {
       return { success: false, error: error instanceof Error ? error.message : String(error) };
+    } finally {
+      endAuthLoginAttempt();
     }
   }, []);
 

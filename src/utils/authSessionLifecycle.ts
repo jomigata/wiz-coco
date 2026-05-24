@@ -172,7 +172,11 @@ function isPageRefreshing(): boolean {
 }
 
 function shouldSkipAuthClear(): boolean {
-  return sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1' || isPageRefreshing();
+  return (
+    sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1' ||
+    isPageRefreshing() ||
+    isAuthLoginInProgress()
+  );
 }
 
 /** router.push/replace 등 사이트 내부 이동 직전에 호출 */
@@ -203,7 +207,6 @@ export function clearAuthOnClose(): void {
   if (typeof window === 'undefined') return;
   if (shouldSkipAuthClear()) return;
 
-  endAuthLoginAttempt();
   clearAuthStorageSync();
   try {
     localStorage.setItem(AUTH_CLEARED_FLAG, '1');
@@ -220,6 +223,7 @@ export function clearAuthOnClose(): void {
 export function evaluateAuthSessionOnStartup(): boolean {
   if (typeof window === 'undefined') return false;
   if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
+  if (isAuthLoginInProgress()) return false;
 
   if (isPageRefreshing()) {
     sessionStorage.removeItem(PAGE_REFRESHING_KEY);
@@ -271,14 +275,7 @@ export function initAuthSessionLifecycle(): () => void {
     clearAuthOnClose();
   };
 
-  const handlePageHide = (event: PageTransitionEvent) => {
-    if (event.persisted) return;
-    if (shouldSkipAuthClear()) return;
-    clearAuthOnClose();
-  };
-
   window.addEventListener('beforeunload', handleBeforeUnload);
-  window.addEventListener('pagehide', handlePageHide);
 
   const refreshFlagTimer = window.setTimeout(() => {
     sessionStorage.removeItem(PAGE_REFRESHING_KEY);
@@ -287,7 +284,6 @@ export function initAuthSessionLifecycle(): () => void {
   return () => {
     window.clearTimeout(refreshFlagTimer);
     window.removeEventListener('beforeunload', handleBeforeUnload);
-    window.removeEventListener('pagehide', handlePageHide);
   };
 }
 

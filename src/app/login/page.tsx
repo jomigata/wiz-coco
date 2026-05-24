@@ -209,7 +209,11 @@ const LoginContent = () => {
           router.replace(redirectUrl);
         }, 100);
       } else {
-        let errorMessage = result.error || 'Google 로그인 처리 중 오류가 발생했습니다.';
+        if (!result.error) {
+          return;
+        }
+
+        let errorMessage = result.error;
 
         if (result.needsAccountLinking) {
           errorMessage = '이 이메일은 다른 방법으로 이미 가입되어 있습니다.';
