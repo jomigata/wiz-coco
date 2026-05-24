@@ -16,12 +16,12 @@ import {
   signOut,
   onAuthStateChanged,
   User as FirebaseSdkUser,
-  GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
+import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
@@ -32,6 +32,7 @@ import {
   isAuthLoginInProgress,
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
+  touchAuthHeartbeat,
 } from '@/utils/authSessionLifecycle';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
@@ -129,6 +130,20 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       setUser((prev) => prev ?? primed);
     }
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    touchAuthHeartbeat();
+    const heartbeatTimer = window.setInterval(touchAuthHeartbeat, 10_000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') touchAuthHeartbeat();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.clearInterval(heartbeatTimer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [user]);
 
   useEffect(() => {
     const { auth, db } = initializeFirebase();
@@ -354,7 +369,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       const { auth } = initializeFirebase();
       if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
-      const provider = new GoogleAuthProvider();
+      const provider = createGoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       return { success: true, user: result.user };
     } catch (error: unknown) {

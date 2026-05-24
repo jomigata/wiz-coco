@@ -3,7 +3,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
-  GoogleAuthProvider,
   linkWithCredential,
   EmailAuthProvider,
   updateProfile,
@@ -11,6 +10,7 @@ import {
   signInWithCustomToken,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
+import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
@@ -268,7 +268,7 @@ export class AccountIntegrationManager {
   }> {
     beginAuthLoginAttempt();
     try {
-      const provider = new GoogleAuthProvider();
+      const provider = createGoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
 
       markAuthenticatedTabSession();
@@ -602,8 +602,6 @@ export class AccountIntegrationManager {
       const user = emailResult.user;
 
       if (provider === 'google') {
-        // Google 계정 연결
-        const googleProvider = new GoogleAuthProvider();
         const credential = EmailAuthProvider.credential(email, password);
         
         const linkResult = await linkWithCredential(user, credential);

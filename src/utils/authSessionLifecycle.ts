@@ -9,6 +9,8 @@ import { initializeFirebase } from '@/lib/firebase';
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
 const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
 const AUTH_TAB_SESSION_KEY = 'wizcoco:auth-tab-session';
+const AUTH_HEARTBEAT_KEY = 'wizcoco:auth-heartbeat';
+const AUTH_HEARTBEAT_MAX_AGE_MS = 20_000;
 const PAGE_REFRESHING_KEY = 'page_refreshing';
 const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
 const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
@@ -74,6 +76,8 @@ export function clearAuthStorageSync(): void {
       }
     });
 
+    localStorage.removeItem(AUTH_HEARTBEAT_KEY);
+
     AUTH_SESSION_KEYS.forEach((key) => {
       sessionStorage.removeItem(key);
     });
@@ -125,10 +129,34 @@ export function hasAuthenticatedTabSession(): boolean {
   return sessionStorage.getItem(AUTH_TAB_SESSION_KEY) === '1';
 }
 
+/** 로그인 유지 중 주기적으로 갱신 — 탭/브라우저 종료 후 stale 세션 차단 */
+export function touchAuthHeartbeat(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(AUTH_HEARTBEAT_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+}
+
+function isAuthHeartbeatFresh(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem(AUTH_HEARTBEAT_KEY);
+    if (!raw) return false;
+    const ts = Number(raw);
+    if (!Number.isFinite(ts)) return false;
+    return Date.now() - ts <= AUTH_HEARTBEAT_MAX_AGE_MS;
+  } catch {
+    return false;
+  }
+}
+
 /** 로그인 성공 후 현재 탭 세션을 활성화 */
 export function markAuthenticatedTabSession(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(AUTH_TAB_SESSION_KEY, '1');
+  touchAuthHeartbeat();
 }
 
 function isPageRefreshing(): boolean {
@@ -187,16 +215,25 @@ export function clearAuthOnClose(): void {
 }
 
 /**
- * 앱 시작 시 호출 — 탭 세션 없음/이전 종료 감지 시 true (동기 정리 완료)
+ * 앱 시작 시 호출 — 탭 세션 없음/이전 종료/heartbeat 만료 시 true (동기 정리 완료)
  */
 export function evaluateAuthSessionOnStartup(): boolean {
   if (typeof window === 'undefined') return false;
   if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
 
+  if (isPageRefreshing()) {
+    sessionStorage.removeItem(PAGE_REFRESHING_KEY);
+    if (hasAuthenticatedTabSession()) {
+      touchAuthHeartbeat();
+      return false;
+    }
+  }
+
   const hasTabSession = hasAuthenticatedTabSession();
   const wasClosed = localStorage.getItem(AUTH_CLEARED_FLAG) === '1';
+  const heartbeatFresh = isAuthHeartbeatFresh();
 
-  if (hasTabSession && !wasClosed) return false;
+  if (hasTabSession && !wasClosed && heartbeatFresh) return false;
 
   if (wasClosed) localStorage.removeItem(AUTH_CLEARED_FLAG);
   clearAuthStorageSync();
@@ -234,7 +271,14 @@ export function initAuthSessionLifecycle(): () => void {
     clearAuthOnClose();
   };
 
+  const handlePageHide = (event: PageTransitionEvent) => {
+    if (event.persisted) return;
+    if (shouldSkipAuthClear()) return;
+    clearAuthOnClose();
+  };
+
   window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('pagehide', handlePageHide);
 
   const refreshFlagTimer = window.setTimeout(() => {
     sessionStorage.removeItem(PAGE_REFRESHING_KEY);
@@ -243,6 +287,7 @@ export function initAuthSessionLifecycle(): () => void {
   return () => {
     window.clearTimeout(refreshFlagTimer);
     window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('pagehide', handlePageHide);
   };
 }
 
