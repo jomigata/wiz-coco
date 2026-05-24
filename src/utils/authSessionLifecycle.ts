@@ -188,6 +188,18 @@ export function markInternalNavigation(): void {
   }
 }
 
+/** Next.js router.push — 탭/브라우저 종료 오탐 로그아웃 방지 */
+export function pushWithAuthSession(router: { push: (href: string) => void }, href: string): void {
+  markInternalNavigation();
+  router.push(href);
+}
+
+/** Next.js router.replace — 탭/브라우저 종료 오탐 로그아웃 방지 */
+export function replaceWithAuthSession(router: { replace: (href: string) => void }, href: string): void {
+  markInternalNavigation();
+  router.replace(href);
+}
+
 /** 새 페이지 진입 시 내부 이동 플래그 정리 */
 export function consumeInternalNavigationFlags(): void {
   if (typeof window === 'undefined') return;

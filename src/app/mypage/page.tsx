@@ -15,7 +15,7 @@ import { auth, db, initializeFirebase } from '@/lib/firebase'; // Firebase 인�
 import { doc, getDoc } from 'firebase/firestore';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { isCounselor } from '@/utils/roleUtils';
-import { markInternalNavigation } from '@/utils/authSessionLifecycle';
+import { hasAuthenticatedTabSession, markInternalNavigation, pushWithAuthSession } from '@/utils/authSessionLifecycle';
 
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
@@ -829,6 +829,9 @@ function MyPageContent() {
     return <LoadingMyPage />;
   }
 
+  const awaitingAuthRestore =
+    hasAuthenticatedTabSession() && !user && !firebaseUser && (firebaseLoading || isLoading);
+
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
       <div className="flex min-h-0 flex-1 flex-col pt-16">
@@ -857,7 +860,7 @@ function MyPageContent() {
           />
         )}
         
-        {firebaseLoading || isLoading || (!user && firebaseUser) ? (
+        {firebaseLoading || isLoading || awaitingAuthRestore || (!user && firebaseUser) ? (
           <div className="flex items-center justify-center">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -1762,11 +1765,6 @@ const getResultPageUrl = (record: TestRecord): string => {
 // (테이블 컬럼은 최소화했지만, 기존 정렬/검색 로직에서 사용하는 필드들은 유지합니다.)
 type SortField = 'code' | 'testType' | 'timestamp' | 'mbtiType' | 'counselorCode';
 type SortDirection = 'asc' | 'desc';
-
-function pushWithAuthSession(router: ReturnType<typeof useRouter>, href: string) {
-  markInternalNavigation();
-  router.push(href);
-}
 
 function resolveRecordAccessCode(record: TestRecord): string {
   const raw =

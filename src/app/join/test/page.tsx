@@ -7,6 +7,7 @@ import { lookupPublicAssessment, submitResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
+import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 const SCALE_LABELS: Record<number, string> = {
@@ -121,7 +122,7 @@ export default function TestRunnerPage() {
   };
 
   const goToMyRecords = () => {
-    router.replace('/mypage?tab=records');
+    replaceWithAuthSession(router, '/mypage?tab=records');
   };
 
   if (!hydrated) {

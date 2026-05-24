@@ -2,7 +2,7 @@
  * 검사코드 참여 세션: 브라우저 sessionStorage에 세트 메타만 보관합니다.
  */
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
-import { markInternalNavigation } from '@/utils/authSessionLifecycle';
+import { markInternalNavigation, pushWithAuthSession } from '@/utils/authSessionLifecycle';
 
 export const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 
@@ -26,7 +26,5 @@ export function pushToJoinDashboard(
   router: { push: (href: string) => void },
   accessCodeNorm: string
 ): void {
-  const path = getJoinDashboardPath(accessCodeNorm);
-  markInternalNavigation();
-  router.push(path);
+  pushWithAuthSession(router, getJoinDashboardPath(accessCodeNorm));
 }
