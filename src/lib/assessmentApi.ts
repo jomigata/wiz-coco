@@ -26,8 +26,22 @@ export async function getCounselorToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
   try {
     const { initializeFirebase } = await import('@/lib/firebase');
+    const { hasAuthenticatedTabSession } = await import('@/utils/authSessionLifecycle');
     const { auth } = initializeFirebase();
-    const user = auth?.currentUser;
+    if (!auth) return null;
+
+    await auth.authStateReady();
+
+    let user = auth.currentUser;
+    if (!user && hasAuthenticatedTabSession()) {
+      // 정적 페이지 이동 직후 Firebase persistence 복원 대기
+      for (let i = 0; i < 5 && !user; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        await auth.authStateReady();
+        user = auth.currentUser;
+      }
+    }
+
     if (!user) return null;
     return await user.getIdToken();
   } catch {

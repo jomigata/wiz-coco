@@ -34,7 +34,7 @@ function formatUsageEndDateLabel(raw?: string): string {
 
 function JoinDashboardContent() {
   const searchParams = useSearchParams();
-  const { user } = useFirebaseAuth();
+  const { user, loading: authLoading } = useFirebaseAuth();
   const accessCodeRaw = searchParams.get('accessCode') ?? '';
 
   const code = useMemo(
@@ -167,7 +167,7 @@ function JoinDashboardContent() {
             )}
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
-            {!clientUid ? (
+            {!authLoading && !clientUid ? (
               <p className="text-amber-200/90 text-sm mb-2">로그인하면 아래에 완료 여부가 표시됩니다.</p>
             ) : null}
             {assessment.testList.length === 0 ? (
@@ -220,7 +220,12 @@ function JoinDashboardContent() {
             )}
           </div>
 
-          <CompletedTestList clientUid={clientUid} onRefresh={loadAssessment} onResultsChange={setJoinResults} />
+          <CompletedTestList
+            clientUid={clientUid}
+            authLoading={authLoading}
+            onRefresh={loadAssessment}
+            onResultsChange={setJoinResults}
+          />
         </main>
 
         <p className="text-center mt-6">

@@ -13,6 +13,8 @@ interface StoredAssessment {
 
 interface CompletedTestListProps {
   clientUid: string;
+  /** Firebase Auth 초기화·복원 완료 전에는 API 호출하지 않음 */
+  authLoading?: boolean;
   onRefresh?: () => void;
   /** 대시보드「수행할 검사」정렬·상태용으로 완료 목록 동기화 */
   onResultsChange?: (items: TestResultItem[]) => void;
@@ -27,6 +29,7 @@ type SortColumn = 'name' | 'date';
 
 export default function CompletedTestList({
   clientUid,
+  authLoading = false,
   onRefresh,
   onResultsChange,
 }: CompletedTestListProps) {
@@ -58,14 +61,20 @@ export default function CompletedTestList({
   }, []);
 
   useEffect(() => {
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
     if (!stored?.accessCode) {
       setResults([]);
       onResultsChange?.([]);
       setLoading(false);
       return;
     }
-    // 로그인(UID) 준비 전에는 API 호출을 하지 않고, 로그인된 뒤에 다시 시도
     if (!clientUid?.trim()) {
+      setResults([]);
+      onResultsChange?.([]);
+      setError('');
       setLoading(false);
       return;
     }
@@ -83,7 +92,7 @@ export default function CompletedTestList({
         onResultsChange?.([]);
       })
       .finally(() => setLoading(false));
-  }, [stored?.accessCode, clientUid, onResultsChange]);
+  }, [stored?.accessCode, clientUid, authLoading, onResultsChange]);
 
   const sortedResults = useMemo(() => {
     const tl = stored?.testList || [];
@@ -135,6 +144,15 @@ export default function CompletedTestList({
       .catch((err) => setActionError(err instanceof Error ? err.message : '삭제 실패'))
       .finally(() => setActionLoading(false));
   };
+
+  if (authLoading) {
+    return (
+      <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
+        <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
+        <p className="text-slate-400 text-sm">불러오는 중…</p>
+      </div>
+    );
+  }
 
   if (!clientUid?.trim()) {
     return (

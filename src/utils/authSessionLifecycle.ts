@@ -183,6 +183,9 @@ function shouldSkipAuthClear(): boolean {
 export function markInternalNavigation(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(SKIP_AUTH_CLEAR_KEY, '1');
+  if (hasAuthenticatedTabSession()) {
+    touchAuthHeartbeat();
+  }
 }
 
 /** 새 페이지 진입 시 내부 이동 플래그 정리 */
