@@ -1,8 +1,10 @@
 import { GoogleAuthProvider } from 'firebase/auth';
 
-/** 탭/브라우저 재접속 시 Google 계정 자동 선택을 막고 매번 로그인 화면을 표시 */
+/**
+ * Google 계정 선택 화면 표시 (prompt=login 은 팝업·COOP 환경에서 흐름이 끊기는 경우가 많음)
+ */
 export function createGoogleAuthProvider(): GoogleAuthProvider {
   const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'login' });
+  provider.setCustomParameters({ prompt: 'select_account' });
   return provider;
 }

@@ -265,12 +265,18 @@ export class AccountIntegrationManager {
     user?: any;
     error?: string;
     needsAccountLinking?: boolean;
+    cancelled?: boolean;
   }> {
     beginAuthLoginAttempt();
     try {
-      const provider = createGoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const { auth: firebaseAuth } = initializeFirebase();
+      if (!firebaseAuth) {
+        return { success: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
+      }
 
+      const provider = createGoogleAuthProvider();
+      const result = await signInWithPopup(firebaseAuth, provider);
+      await firebaseAuth.authStateReady();
       markAuthenticatedTabSession();
 
       try {
@@ -303,7 +309,14 @@ export class AccountIntegrationManager {
         error.code === 'auth/popup-closed-by-user' ||
         error.code === 'auth/cancelled-popup-request'
       ) {
-        return { success: false };
+        return { success: false, cancelled: true };
+      }
+
+      if (error.code === 'auth/popup-blocked') {
+        return {
+          success: false,
+          error: '팝업이 차단되었습니다. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.',
+        };
       }
 
       if (error.code === 'auth/account-exists-with-different-credential') {

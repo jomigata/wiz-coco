@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
+import { markInternalNavigation, hasAuthenticatedTabSession, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -202,13 +202,13 @@ const LoginContent = () => {
         });
 
         primeFirebaseAuthSessionCache(result.user);
-
-        // 리다이렉트 처리
-        setTimeout(() => {
-          markInternalNavigation();
-          router.replace(redirectUrl);
-        }, 100);
+        replaceWithAuthSession(router, redirectUrl);
       } else {
+        if (result.cancelled) {
+          setLoginError('Google 로그인이 완료되지 않았습니다. 팝업에서 계정을 선택해 주세요.');
+          return;
+        }
+
         if (!result.error) {
           return;
         }

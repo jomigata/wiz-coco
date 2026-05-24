@@ -176,6 +176,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       markAuthenticatedTabSession();
+      authExpiredOnStartupRef.current = false;
       const baseUser = authUserFromSdkUser(firebaseUser);
 
       try {
