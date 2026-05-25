@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithRedirect,
+  signInWithPopup,
   getRedirectResult,
   linkWithCredential,
   EmailAuthProvider,
@@ -16,6 +17,10 @@ import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
   markAuthenticatedTabSession,
+  markGoogleOAuthPending,
+  isGoogleOAuthPending,
+  clearGoogleOAuthPending,
+  getGoogleRedirectTimeoutMs,
 } from '@/utils/authSessionLifecycle';
 import { UserAccountManager } from './userAccountManager';
 
@@ -261,7 +266,13 @@ export class AccountIntegrationManager {
   /**
    * Google OAuth redirect 시작 (팝업 COOP 오류 회피)
    */
-  static async startGoogleOAuth(returnPath?: string): Promise<{ ok: boolean; error?: string }> {
+  static async startGoogleOAuth(returnPath?: string): Promise<{
+    ok: boolean;
+    error?: string;
+    user?: any;
+    redirect?: string;
+    viaPopup?: boolean;
+  }> {
     if (typeof window === 'undefined') {
       return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
     }
@@ -283,15 +294,66 @@ export class AccountIntegrationManager {
     try {
       await firebaseAuth.authStateReady();
       const provider = createGoogleAuthProvider();
+      markGoogleOAuthPending();
       console.log('[AccountIntegration] Google redirect 시작', {
         authDomain: firebaseAuth.config.authDomain,
         host: window.location.hostname,
       });
-      await signInWithRedirect(firebaseAuth, provider);
-      return { ok: true };
+
+      const redirectPromise = signInWithRedirect(firebaseAuth, provider);
+      const timeoutMs = getGoogleRedirectTimeoutMs();
+      let timedOut = false;
+      const timeoutPromise = new Promise<void>((_, reject) => {
+        window.setTimeout(() => {
+          timedOut = true;
+          reject(new Error('GOOGLE_REDIRECT_TIMEOUT'));
+        }, timeoutMs);
+      });
+
+      try {
+        await Promise.race([redirectPromise, timeoutPromise]);
+        return { ok: true };
+      } catch (raceError: unknown) {
+        const raceMsg =
+          raceError && typeof raceError === 'object' && 'message' in raceError
+            ? String((raceError as { message?: string }).message)
+            : '';
+        if (!timedOut && raceMsg !== 'GOOGLE_REDIRECT_TIMEOUT') {
+          throw raceError;
+        }
+        console.warn('[AccountIntegration] Google redirect 지연 — 팝업 로그인으로 전환');
+        const popupResult = await signInWithPopup(firebaseAuth, provider);
+        markAuthenticatedTabSession();
+        endAuthLoginAttempt();
+        clearGoogleOAuthPending();
+        try {
+          UserAccountManager.createOrUpdateUser(
+            popupResult.user.email!,
+            popupResult.user.displayName || 'Google 사용자',
+            'google',
+            popupResult.user.uid,
+            'user',
+          );
+        } catch (accountError) {
+          console.warn('[AccountIntegration] Google popup 후 로컬 계정 동기화 실패:', accountError);
+        }
+        const redirect =
+          sessionStorage.getItem('oauth_return') ||
+          localStorage.getItem('oauth_return') ||
+          destination;
+        sessionStorage.removeItem('oauth_return');
+        localStorage.removeItem('oauth_return');
+        return {
+          ok: true,
+          user: popupResult.user,
+          redirect,
+          viaPopup: true,
+        };
+      }
     } catch (error: unknown) {
       console.error('[AccountIntegration] Google redirect 시작 실패:', error);
       endAuthLoginAttempt();
+      clearGoogleOAuthPending();
       sessionStorage.removeItem('oauth_return');
       localStorage.removeItem('oauth_return');
       const message =
@@ -316,6 +378,10 @@ export class AccountIntegrationManager {
       return { success: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
     }
 
+    if (!isGoogleOAuthPending()) {
+      return { success: false };
+    }
+
     try {
       await firebaseAuth.authStateReady();
       const result = await getRedirectResult(firebaseAuth);
@@ -323,6 +389,8 @@ export class AccountIntegrationManager {
       if (!result) {
         return { success: false };
       }
+
+      clearGoogleOAuthPending();
 
       markAuthenticatedTabSession();
       endAuthLoginAttempt();
@@ -355,6 +423,7 @@ export class AccountIntegrationManager {
     } catch (error: any) {
       console.error('[AccountIntegration] Google redirect 로그인 실패:', error);
       endAuthLoginAttempt();
+      clearGoogleOAuthPending();
       sessionStorage.removeItem('oauth_return');
       localStorage.removeItem('oauth_return');
 

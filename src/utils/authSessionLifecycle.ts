@@ -14,7 +14,10 @@ const AUTH_HEARTBEAT_MAX_AGE_MS = 20_000;
 const PAGE_REFRESHING_KEY = 'page_refreshing';
 const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
 const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
+/** Google redirect OAuth 진행·복귀 구간 표시 (getRedirectResult 호출 조건) */
+export const GOOGLE_OAUTH_PENDING_KEY = 'wizcoco:google-oauth-pending';
 const FIREBASE_IDB_NAME = 'firebaseLocalStorageDb';
+const GOOGLE_REDIRECT_TIMEOUT_MS = 12_000;
 
 const AUTH_LOCAL_KEYS = [
   'oktest-auth-state',
@@ -78,13 +81,23 @@ export function clearAuthStorageSync(): void {
 
     localStorage.removeItem(AUTH_HEARTBEAT_KEY);
 
-    AUTH_SESSION_KEYS.forEach((key) => {
-      sessionStorage.removeItem(key);
-    });
+    const loginInProgress = isAuthLoginInProgress();
+    if (loginInProgress) {
+      AUTH_SESSION_KEYS.filter((key) => key !== 'oauth_return').forEach((key) => {
+        sessionStorage.removeItem(key);
+      });
+    } else {
+      AUTH_SESSION_KEYS.forEach((key) => {
+        sessionStorage.removeItem(key);
+      });
+      sessionStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY);
+    }
 
     sessionStorage.removeItem(AUTH_TAB_SESSION_KEY);
     clearAuthCookies();
-    clearFirebaseIndexedDB();
+    if (!loginInProgress) {
+      clearFirebaseIndexedDB();
+    }
   } catch (error) {
     console.error('[AuthSessionLifecycle] 동기 로그인 정보 삭제 오류:', error);
   }
@@ -105,6 +118,25 @@ export function endAuthLoginAttempt(): void {
 export function isAuthLoginInProgress(): boolean {
   if (typeof window === 'undefined') return false;
   return sessionStorage.getItem(AUTH_LOGIN_IN_PROGRESS_KEY) === '1';
+}
+
+export function markGoogleOAuthPending(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(GOOGLE_OAUTH_PENDING_KEY, '1');
+}
+
+export function isGoogleOAuthPending(): boolean {
+  if (typeof window === 'undefined') return false;
+  return sessionStorage.getItem(GOOGLE_OAUTH_PENDING_KEY) === '1';
+}
+
+export function clearGoogleOAuthPending(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY);
+}
+
+export function getGoogleRedirectTimeoutMs(): number {
+  return GOOGLE_REDIRECT_TIMEOUT_MS;
 }
 
 /** Firebase signOut 포함 전체 로그인 정보 삭제 */

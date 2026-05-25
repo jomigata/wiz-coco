@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { getSession } from 'next-auth/react';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import { beginAuthLoginAttempt } from '@/utils/authSessionLifecycle';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 
 // 로딩 컴포넌트
@@ -171,6 +172,7 @@ const RegisterContent = () => {
       console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
+        beginAuthLoginAttempt();
         try {
           sessionStorage.setItem('oauth_return', '/mypage');
           localStorage.setItem('oauth_return', '/mypage');

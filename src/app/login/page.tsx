@@ -5,7 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
+import {
+  beginAuthLoginAttempt,
+  markInternalNavigation,
+  hasAuthenticatedTabSession,
+} from '@/utils/authSessionLifecycle';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -188,6 +192,7 @@ const LoginContent = () => {
     setLoginError('');
     setShowSnsLogin(false);
     console.log('[Login] Google 로그인 시도');
+    beginAuthLoginAttempt();
     try {
       const destination = redirectUrl || '/';
       sessionStorage.setItem('oauth_return', destination);
