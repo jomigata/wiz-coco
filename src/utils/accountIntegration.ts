@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithRedirect,
   getRedirectResult,
+  onAuthStateChanged,
   linkWithCredential,
   EmailAuthProvider,
   updateProfile,
@@ -364,25 +365,50 @@ export class AccountIntegrationManager {
     try {
       await firebaseAuth.authStateReady();
 
-      let result = await Promise.race([
-        getRedirectResult(firebaseAuth),
-        new Promise<Awaited<ReturnType<typeof getRedirectResult>> | null>((resolve) => {
-          window.setTimeout(() => resolve(null), 10_000);
-        }),
-      ]);
-
-      const currentUser = firebaseAuth.currentUser;
-      if (!result?.user && currentUser) {
-        console.log('[AccountIntegration] getRedirectResult 없음 — currentUser로 로그인 완료 처리');
-        result = {
-          user: currentUser,
-          providerId: 'google.com',
-          operationType: 'signIn',
-        } as Awaited<ReturnType<typeof getRedirectResult>>;
+      // 1차: getRedirectResult (Firebase SDK 표준 방식)
+      let redirectUser: any = null;
+      try {
+        const r = await getRedirectResult(firebaseAuth);
+        redirectUser = r?.user ?? null;
+        if (redirectUser) {
+          console.log('[AccountIntegration] getRedirectResult 성공:', redirectUser.email);
+        }
+      } catch (e) {
+        console.warn('[AccountIntegration] getRedirectResult 오류:', e);
       }
 
+      // 2차: currentUser 확인 (이미 처리된 경우)
+      if (!redirectUser) redirectUser = firebaseAuth.currentUser ?? null;
+
+      // 3차: onAuthStateChanged 대기 (Firebase가 redirect를 비동기로 처리하는 경우)
+      if (!redirectUser && (isGoogleOAuthPending() || isFirebaseAuthRedirectReturn())) {
+        console.log('[AccountIntegration] getRedirectResult null — onAuthStateChanged 대기 (최대 10초)');
+        redirectUser = await new Promise<any>((resolve) => {
+          let settled = false;
+          const finish = (user: any) => {
+            if (settled) return;
+            settled = true;
+            unsubscribe?.();
+            resolve(user);
+          };
+          const unsubscribe = onAuthStateChanged(firebaseAuth, (u) => {
+            if (u) finish(u);
+          });
+          if (firebaseAuth.currentUser) {
+            finish(firebaseAuth.currentUser);
+            return;
+          }
+          window.setTimeout(() => finish(null), 10_000);
+        });
+        if (redirectUser) {
+          console.log('[AccountIntegration] onAuthStateChanged 로 사용자 확인:', redirectUser.email);
+        }
+      }
+
+      const result = redirectUser ? { user: redirectUser } : null;
+
       if (!result?.user) {
-        if (isFirebaseAuthRedirectReturn() || isGoogleOAuthPending()) {
+        if (isGoogleOAuthPending() || isFirebaseAuthRedirectReturn()) {
           return {
             success: false,
             error: 'Google 로그인을 완료하지 못했습니다. 다시 시도해 주세요.',

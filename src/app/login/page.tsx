@@ -73,6 +73,7 @@ const LoginContent = () => {
   }, []);
 
 
+
   useEffect(() => {
     if (loginError && !showSnsLogin) setEmailLoginOpen(true);
   }, [loginError, showSnsLogin]);

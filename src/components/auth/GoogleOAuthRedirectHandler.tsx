@@ -1,7 +1,8 @@
 'use client';
 
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import {
@@ -38,34 +39,36 @@ export default function GoogleOAuthRedirectHandler({
       if (result.success) {
         onProcessingChange?.(false);
         if (result.user) primeFirebaseAuthSessionCache(result.user);
-        if (typeof window !== 'undefined' && window.location.hash) {
+        if (window.location.hash) {
           window.history.replaceState(null, '', window.location.pathname + window.location.search);
         }
         replaceWithAuthSession(router, result.redirect || defaultRedirect);
         return;
       }
 
-      // getRedirectResult가 null을 반환했지만 auth.currentUser가 있는 경우
-      // (Firebase SDK가 handler에서 이미 로그인 처리를 완료한 상황)
+      // completeGoogleRedirectSignIn의 3차 onAuthStateChanged 대기까지 실패한 경우
+      // — 마지막으로 Firebase currentUser 체크
       try {
         const { auth: firebaseAuth } = initializeFirebase();
-        await firebaseAuth?.authStateReady();
-        const currentUser = firebaseAuth?.currentUser;
-        if (currentUser) {
-          console.log('[GoogleOAuthRedirectHandler] currentUser로 로그인 완료:', currentUser.email);
-          markAuthenticatedTabSession();
-          endAuthLoginAttempt();
-          clearGoogleOAuthPending();
-          primeFirebaseAuthSessionCache(currentUser);
-          const redirect =
-            sessionStorage.getItem('oauth_return') ||
-            localStorage.getItem('oauth_return') ||
-            defaultRedirect;
-          sessionStorage.removeItem('oauth_return');
-          localStorage.removeItem('oauth_return');
-          onProcessingChange?.(false);
-          replaceWithAuthSession(router, redirect);
-          return;
+        if (firebaseAuth) {
+          await firebaseAuth.authStateReady();
+          const currentUser = firebaseAuth.currentUser;
+          if (currentUser) {
+            console.log('[GoogleOAuthRedirectHandler] 최종 currentUser 확인:', currentUser.email);
+            markAuthenticatedTabSession();
+            endAuthLoginAttempt();
+            clearGoogleOAuthPending();
+            primeFirebaseAuthSessionCache(currentUser);
+            const redirect =
+              sessionStorage.getItem('oauth_return') ||
+              localStorage.getItem('oauth_return') ||
+              defaultRedirect;
+            sessionStorage.removeItem('oauth_return');
+            localStorage.removeItem('oauth_return');
+            onProcessingChange?.(false);
+            replaceWithAuthSession(router, redirect);
+            return;
+          }
         }
       } catch { /* ignore */ }
 
