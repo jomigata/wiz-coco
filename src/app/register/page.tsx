@@ -8,6 +8,13 @@ import { getSession } from 'next-auth/react';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
+import { ensureAuthPersistenceReady } from '@/lib/firebase';
+import {
+  clearGoogleOAuthPending,
+  endAuthLoginAttempt,
+  isFirebaseAuthRedirectReturn,
+  isGoogleOAuthPending,
+} from '@/utils/authSessionLifecycle';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -35,6 +42,14 @@ const RegisterContent = () => {
   const [showCounselorCode, setShowCounselorCode] = useState<boolean>(false);
   const [emailRegisterOpen, setEmailRegisterOpen] = useState<boolean>(false);
   
+  useEffect(() => {
+    void ensureAuthPersistenceReady();
+    if (isGoogleOAuthPending() && !isFirebaseAuthRedirectReturn()) {
+      clearGoogleOAuthPending();
+      endAuthLoginAttempt();
+    }
+  }, []);
+
   // 로그인 상태 확인
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -172,12 +187,11 @@ const RegisterContent = () => {
       console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
-        void AccountIntegrationManager.startGoogleOAuth('/mypage').then((result) => {
-          if (!result.ok) {
-            setRegisterError(result.error || 'Google 로그인을 시작할 수 없습니다.');
-            setIsLoading(false);
-          }
-        });
+        const result = AccountIntegrationManager.startGoogleOAuth('/mypage');
+        if (!result.ok) {
+          setRegisterError(result.error || 'Google 로그인을 시작할 수 없습니다.');
+          setIsLoading(false);
+        }
         return;
       } else if (provider === 'naver') {
         const result = await AccountIntegrationManager.signInWithNaver('/mypage');

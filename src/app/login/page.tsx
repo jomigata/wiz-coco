@@ -5,7 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
+import {
+  clearGoogleOAuthPending,
+  endAuthLoginAttempt,
+  isFirebaseAuthRedirectReturn,
+  isGoogleOAuthPending,
+  markInternalNavigation,
+  hasAuthenticatedTabSession,
+} from '@/utils/authSessionLifecycle';
+import { ensureAuthPersistenceReady } from '@/lib/firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -70,6 +78,14 @@ const LoginContent = () => {
   useEffect(() => {
     setEmail('');
     setPassword('');
+  }, []);
+
+  useEffect(() => {
+    void ensureAuthPersistenceReady();
+    if (isGoogleOAuthPending() && !isFirebaseAuthRedirectReturn()) {
+      clearGoogleOAuthPending();
+      endAuthLoginAttempt();
+    }
   }, []);
 
   useEffect(() => {
@@ -184,18 +200,17 @@ const LoginContent = () => {
     }
   };
 
-  // Google 로그인 — 클릭 직후 redirect (팝업 없음, 동일 탭)
+  // Google 로그인 — handler URL로 즉시 이동 (팝업 없음)
   const handleGoogleLogin = () => {
     setLoginError('');
     setShowSnsLogin(false);
     setIsLoading(true);
     console.log('[Login] Google 로그인 시도');
-    void AccountIntegrationManager.startGoogleOAuth(redirectUrl).then((result) => {
-      if (!result.ok) {
-        setLoginError(result.error || 'Google 로그인을 시작할 수 없습니다.');
-        setIsLoading(false);
-      }
-    });
+    const result = AccountIntegrationManager.startGoogleOAuth(redirectUrl);
+    if (!result.ok) {
+      setLoginError(result.error || 'Google 로그인을 시작할 수 없습니다.');
+      setIsLoading(false);
+    }
   };
 
   // Kakao 로그인 처리 (OAuth 페이지로 이동 → 콜백에서 Custom Token 로그인)

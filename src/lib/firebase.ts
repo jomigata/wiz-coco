@@ -14,7 +14,7 @@
 // (디자인/기능 100% 유지, 기존 코드와 충돌 없이 적용)
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { browserSessionPersistence, getAuth, setPersistence } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -40,6 +40,22 @@ let db: any = null;
 let storage: any = null;
 let analytics: any = null;
 let performance: any = null;
+let authPersistenceReady: Promise<void> | null = null;
+
+/** OAuth redirect·복귀에 필요 — 로그인 페이지에서 미리 호출 */
+export function ensureAuthPersistenceReady(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  const { auth: authed } = initializeFirebase();
+  if (!authed) return Promise.resolve();
+  if (!authPersistenceReady) {
+    authPersistenceReady = setPersistence(authed, browserLocalPersistence)
+      .then(() => undefined)
+      .catch((error) => {
+        console.warn('Firebase Auth persistence 설정 실패:', error);
+      });
+  }
+  return authPersistenceReady;
+}
 
 // Firebase 초기화 함수
 export function initializeFirebase() {
@@ -51,9 +67,7 @@ export function initializeFirebase() {
       // Firebase 서비스 초기화
       auth = getAuth(app);
       if (typeof window !== 'undefined') {
-        void setPersistence(auth, browserSessionPersistence).catch((error) => {
-          console.warn('Firebase Auth session persistence 설정 실패:', error);
-        });
+        void ensureAuthPersistenceReady();
       }
       db = getFirestore(app);
       storage = getStorage(app);

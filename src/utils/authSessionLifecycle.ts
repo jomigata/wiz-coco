@@ -279,6 +279,10 @@ export function clearAuthOnClose(): void {
  */
 export function evaluateAuthSessionOnStartup(): boolean {
   if (typeof window === 'undefined') return false;
+  const path = window.location.pathname || '';
+  if (path.startsWith('/login') || path.startsWith('/register')) {
+    return false;
+  }
   if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
   if (isAuthLoginInProgress()) return false;
 

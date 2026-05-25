@@ -2,7 +2,6 @@ import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
   getRedirectResult,
   linkWithCredential,
   EmailAuthProvider,
@@ -12,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
+import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
@@ -263,20 +263,16 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google OAuth redirect 시작 (팝업 COOP 오류 회피)
+   * Google OAuth redirect 시작 (handler URL 즉시 이동 — 팝업·SDK 대기 없음)
    */
-  /**
-   * Google OAuth redirect 시작 (클릭 핸들러에서 즉시 호출 — 팝업 없음)
-   * 성공 시 브라우저가 Google 계정 선택 페이지로 바로 이동합니다.
-   */
-  static startGoogleOAuth(returnPath?: string): Promise<{ ok: boolean; error?: string }> {
+  static startGoogleOAuth(returnPath?: string): { ok: boolean; error?: string } {
     if (typeof window === 'undefined') {
-      return Promise.resolve({ ok: false, error: '브라우저에서만 사용할 수 있습니다.' });
+      return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
     }
 
     const { auth: firebaseAuth } = initializeFirebase();
     if (!firebaseAuth) {
-      return Promise.resolve({ ok: false, error: 'Firebase Auth가 초기화되지 않았습니다.' });
+      return { ok: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
     }
 
     beginAuthLoginAttempt();
@@ -296,20 +292,21 @@ export class AccountIntegrationManager {
       path: window.location.pathname,
     });
 
-    return signInWithRedirect(firebaseAuth, provider)
-      .then(() => ({ ok: true as const }))
-      .catch((error: unknown) => {
-        console.error('[AccountIntegration] Google redirect 시작 실패:', error);
-        endAuthLoginAttempt();
-        clearGoogleOAuthPending();
-        sessionStorage.removeItem('oauth_return');
-        localStorage.removeItem('oauth_return');
-        const message =
-          error && typeof error === 'object' && 'message' in error
-            ? String((error as { message?: string }).message)
-            : 'Google 로그인을 시작할 수 없습니다.';
-        return { ok: false as const, error: message };
-      });
+    try {
+      navigateToGoogleSignInRedirect(firebaseAuth, provider);
+      return { ok: true };
+    } catch (error: unknown) {
+      console.error('[AccountIntegration] Google redirect 시작 실패:', error);
+      endAuthLoginAttempt();
+      clearGoogleOAuthPending();
+      sessionStorage.removeItem('oauth_return');
+      localStorage.removeItem('oauth_return');
+      const message =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message?: string }).message)
+          : 'Google 로그인을 시작할 수 없습니다.';
+      return { ok: false, error: message };
+    }
   }
 
   /** Google redirect 복귀 후 로그인 완료 */
@@ -408,12 +405,11 @@ export class AccountIntegrationManager {
     error?: string;
     needsAccountLinking?: boolean;
   }> {
-    return this.startGoogleOAuth(returnPath).then((started) => {
-      if (!started.ok) {
-        return { success: false, error: started.error };
-      }
-      return { success: true };
-    });
+    const started = this.startGoogleOAuth(returnPath);
+    if (!started.ok) {
+      return { success: false, error: started.error };
+    }
+    return { success: true };
   }
 
   /** Firebase Functions 등으로 배포된 소셜 OAuth 교환 API 전체 URL */
