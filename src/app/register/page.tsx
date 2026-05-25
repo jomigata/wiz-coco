@@ -177,7 +177,10 @@ const RegisterContent = () => {
       console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
-        const result = AccountIntegrationManager.startGoogleOAuth('/mypage');
+        const result = AccountIntegrationManager.startGoogleOAuth('/mypage', (errMsg) => {
+          setRegisterError(errMsg);
+          setIsLoading(false);
+        });
         if (!result.ok) {
           setRegisterError(result.error || 'Google 로그인을 시작할 수 없습니다.');
           setIsLoading(false);

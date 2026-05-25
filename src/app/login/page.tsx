@@ -189,13 +189,16 @@ const LoginContent = () => {
     }
   };
 
-  // Google 로그인 — handler URL로 즉시 이동 (팝업 없음)
+  // Google 로그인 — signInWithRedirect, 에러 발생 시 UI에 표시
   const handleGoogleLogin = () => {
     setLoginError('');
     setShowSnsLogin(false);
     setIsLoading(true);
     console.log('[Login] Google 로그인 시도');
-    const result = AccountIntegrationManager.startGoogleOAuth(redirectUrl);
+    const result = AccountIntegrationManager.startGoogleOAuth(redirectUrl, (errMsg) => {
+      setLoginError(errMsg);
+      setIsLoading(false);
+    });
     if (!result.ok) {
       setLoginError(result.error || 'Google 로그인을 시작할 수 없습니다.');
       setIsLoading(false);

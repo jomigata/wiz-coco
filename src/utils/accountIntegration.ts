@@ -264,11 +264,15 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google OAuth redirect 시작 (Firebase SDK signInWithRedirect 사용)
-   * 동기 반환 후 Firebase가 IndexedDB 상태를 저장하고 Google 페이지로 이동합니다.
-   * pending 플래그를 localStorage에도 저장하므로 크로스 오리진 복귀 후에도 유지됩니다.
+   * Google OAuth redirect 시작
+   * - signInWithRedirect가 성공하면 브라우저가 Google 페이지로 이동 (현재 페이지는 unload)
+   * - 실패하면 onError 콜백으로 에러 메시지 전달
+   * - 15초 내에 이동이 없으면 timeout 에러 표시
    */
-  static startGoogleOAuth(returnPath?: string): { ok: boolean; error?: string } {
+  static startGoogleOAuth(
+    returnPath?: string,
+    onError?: (message: string) => void,
+  ): { ok: boolean; error?: string } {
     if (typeof window === 'undefined') {
       return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
     }
@@ -285,7 +289,6 @@ export class AccountIntegrationManager {
       localStorage.setItem('oauth_return', destination);
     } catch { /* ignore */ }
 
-    // localStorage에도 저장 → 크로스 오리진 이동 후에도 pending 플래그 유지
     markGoogleOAuthPending();
     const provider = createGoogleAuthProvider();
 
@@ -294,16 +297,37 @@ export class AccountIntegrationManager {
       host: window.location.hostname,
     });
 
-    // Firebase SDK가 IndexedDB 상태를 기록한 뒤 Google로 이동 (fire-and-forget)
-    void ensureAuthPersistenceReady().then(() =>
-      signInWithRedirect(firebaseAuth, provider).catch((error: unknown) => {
-        console.error('[AccountIntegration] signInWithRedirect 실패:', error);
-        endAuthLoginAttempt();
-        clearGoogleOAuthPending();
-        sessionStorage.removeItem('oauth_return');
-        localStorage.removeItem('oauth_return');
+    const cleanup = () => {
+      endAuthLoginAttempt();
+      clearGoogleOAuthPending();
+      try { sessionStorage.removeItem('oauth_return'); } catch { /* ignore */ }
+      try { localStorage.removeItem('oauth_return'); } catch { /* ignore */ }
+    };
+
+    // 15초 내에 페이지가 이동하지 않으면 타임아웃 에러
+    const timeoutId = window.setTimeout(() => {
+      cleanup();
+      onError?.('Google 로그인 페이지로 이동하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    }, 15_000);
+
+    // signInWithRedirect는 성공 시 브라우저가 Google 페이지로 이동 → resolve 후 unload
+    signInWithRedirect(firebaseAuth, provider)
+      .then(() => {
+        window.clearTimeout(timeoutId);
       })
-    );
+      .catch((error: unknown) => {
+        window.clearTimeout(timeoutId);
+        cleanup();
+        const code = (error as any)?.code ?? '';
+        let msg = (error as any)?.message ?? 'Google 로그인을 시작할 수 없습니다.';
+        if (code === 'auth/unauthorized-domain') {
+          msg = `이 도메인(${window.location.hostname})은 Google 로그인이 허용되지 않습니다. Firebase 콘솔에서 도메인을 추가해 주세요.`;
+        } else if (code === 'auth/operation-not-allowed') {
+          msg = 'Google 로그인이 비활성화되어 있습니다. Firebase 콘솔에서 설정을 확인해 주세요.';
+        }
+        console.error('[AccountIntegration] signInWithRedirect 오류:', code, msg);
+        onError?.(msg);
+      });
 
     return { ok: true };
   }
