@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { lookupPublicAssessment } from '@/lib/assessmentApi';
@@ -10,7 +10,10 @@ import {
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
-import { JOIN_STORAGE_KEY, pushToJoinDashboard } from '@/lib/joinAssessmentSession';
+import {
+  persistJoinAssessmentSession,
+  pushToJoinDashboard,
+} from '@/lib/joinAssessmentSession';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';
@@ -27,45 +30,59 @@ export default function AccessCodeInputPage() {
   /** 마이페이지·네비와 동일: Firebase 세션만으로 로그인 판별(이메일 없는 소셜 계정 포함) */
   const isLoggedIn = !authLoading && !!user;
   const canSubmit = isValidAccessCodeInput(normalizedCode) && isLoggedIn;
+  const autoStartedRef = useRef(false);
+
+  const runJoinLookup = useCallback(
+    async (codeInput: string) => {
+      const norm = normalizeAccessCodeInput(codeInput);
+      setError('');
+      if (codeInput.trim() && !/^[A-Za-z]/.test(codeInput.trim())) {
+        setError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN724');
+        return false;
+      }
+      if (!isLoggedIn) {
+        setError('로그인 후 검사가 가능합니다.');
+        return false;
+      }
+      if (!isValidAccessCodeInput(norm)) {
+        setError('검사 코드 형식을 확인해 주시기 바랍니다.');
+        return false;
+      }
+      setLoading(true);
+      try {
+        const data = await lookupPublicAssessment(norm);
+        persistJoinAssessmentSession(norm, data);
+        pushToJoinDashboard(router, norm);
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : MSG_LOOKUP_DEFAULT);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isLoggedIn, router],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (code.trim() && !/^[A-Za-z]/.test(code.trim())) {
-      setError('검사 코드는 알파벳으로 시작해야 합니다. 예: KAN724');
-      return;
-    }
-    if (!isLoggedIn) {
-      setError('로그인 후 검사가 가능합니다.');
-      return;
-    }
-    if (!isValidAccessCodeInput(normalizedCode)) {
-      setError('검사 코드 형식을 확인해 주시기 바랍니다.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await lookupPublicAssessment(normalizedCode);
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(
-          JOIN_STORAGE_KEY,
-          JSON.stringify({
-            accessCode: normalizedCode,
-            assessmentId: data.assessmentId,
-            title: data.title,
-            welcomeMessage: data.welcomeMessage,
-              usageEndDate: data.usageEndDate || '',
-            testList: data.testList,
-          })
-        );
-      }
-      pushToJoinDashboard(router, normalizedCode);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : MSG_LOOKUP_DEFAULT);
-    } finally {
-      setLoading(false);
-    }
+    await runJoinLookup(code);
   };
+
+  // 마이페이지 등에서 ?accessCode=…&auto=1 로 진입 시 코드 채우기·자동 진행
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = (params.get('accessCode') || '').trim();
+    if (!raw) return;
+    setCode(formatJoinAccessCodeWhileTyping(raw));
+    if (params.get('auto') !== '1' || authLoading) return;
+    if (!isLoggedIn || autoStartedRef.current) return;
+    const norm = normalizeAccessCodeInput(raw);
+    if (!isValidAccessCodeInput(norm)) return;
+    autoStartedRef.current = true;
+    void runJoinLookup(raw);
+  }, [authLoading, isLoggedIn, runJoinLookup]);
 
   return (
     <div className="min-h-screen bg-gray-900">

@@ -1892,12 +1892,30 @@ function TestRecordsTabContent({
     pushWithAuthSession(router, '/join');
   };
 
+  const handleNotStartedCounselorTest = async (record: TestRecord) => {
+    const normalized = resolveRecordAccessCode(record);
+    if (!normalized) {
+      pushWithAuthSession(router, '/join');
+      return;
+    }
+    const { getJoinEntryPath, startJoinAssessmentFromAccessCode } = await import(
+      '@/lib/joinAssessmentSession'
+    );
+    const started = await startJoinAssessmentFromAccessCode(router, normalized);
+    if (!started.ok) {
+      pushWithAuthSession(router, getJoinEntryPath(normalized, true));
+    }
+  };
+
   const handleAddTestForRecord = (record: TestRecord) => {
     const normalized = resolveRecordAccessCode(record);
 
-    // 상담사가 생성한 검사코드: 마이페이지에서 그룹 펼침·상세만 (로그아웃 유발 이동 없음)
     if (record.recordSource === 'counselor-assessment') {
-      revealCounselorAssessmentRecord(record);
+      if (record.status === 'completed' || record.status === 'in_progress') {
+        revealCounselorAssessmentRecord(record);
+        return;
+      }
+      void handleNotStartedCounselorTest(record);
       return;
     }
 
@@ -2612,7 +2630,7 @@ function TestRecordsTabContent({
                                     <button
                                       type="button"
                                       className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
-                                      title="클릭하여 해당 검사코드 세트 현황 펼치기"
+                                      title="클릭하여 검사하기로 이동 (검사코드 자동 입력)"
                                       onClick={() => handleAddTestForRecord(record)}
                                     >
                                       ➕ 미검사
@@ -2695,7 +2713,7 @@ function TestRecordsTabContent({
                             <button
                               type="button"
                               className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
-                              title="클릭하여 해당 검사코드 세트 현황 펼치기"
+                              title="클릭하여 검사하기로 이동 (검사코드 자동 입력)"
                               onClick={() => handleAddTestForRecord(record)}
                             >
                               ➕ 미검사
