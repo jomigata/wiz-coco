@@ -10,7 +10,6 @@ import {
   signInWithCustomToken,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
 import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
 import {
   beginAuthLoginAttempt,
@@ -285,7 +284,6 @@ export class AccountIntegrationManager {
     }
 
     markGoogleOAuthPending();
-    const provider = createGoogleAuthProvider();
     console.log('[AccountIntegration] Google redirect 시작', {
       authDomain: firebaseAuth.config.authDomain,
       host: window.location.hostname,
@@ -293,7 +291,7 @@ export class AccountIntegrationManager {
     });
 
     try {
-      navigateToGoogleSignInRedirect(firebaseAuth, provider);
+      navigateToGoogleSignInRedirect(firebaseAuth);
       return { ok: true };
     } catch (error: unknown) {
       console.error('[AccountIntegration] Google redirect 시작 실패:', error);
