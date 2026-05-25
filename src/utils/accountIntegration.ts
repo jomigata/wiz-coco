@@ -3,8 +3,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithRedirect,
+  signInWithCredential,
   getRedirectResult,
   onAuthStateChanged,
+  GoogleAuthProvider,
   linkWithCredential,
   EmailAuthProvider,
   updateProfile,
@@ -13,6 +15,7 @@ import {
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
+import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
@@ -327,18 +330,49 @@ export class AccountIntegrationManager {
       onError?.(msg);
     };
 
-    // 30초 안에 페이지가 이동하지 않으면 에러 표시 (Firebase 내부 iframe 초기화 포함)
+    // 최종 30초 타임아웃
     const timeoutId = window.setTimeout(() => handleError(new Error('TIMEOUT')), 30_000);
+
+    // beforeunload = 페이지가 실제로 이동 중 (signInWithRedirect OR 직접 handler URL)
+    let pageNavigating = false;
+    const markNavigating = () => { pageNavigating = true; };
+    window.addEventListener('beforeunload', markNavigating, { once: true });
+
+    // 5초 후에도 이동이 없으면 Firebase handler URL로 직접 이동 (iframe 완전 우회)
+    const fallbackId = window.setTimeout(() => {
+      window.removeEventListener('beforeunload', markNavigating);
+      if (!pageNavigating && !resolved) {
+        console.warn('[AccountIntegration] signInWithRedirect 5초 지연 → 직접 handler URL로 폴백');
+        try {
+          navigateToGoogleSignInRedirect(firebaseAuth);
+          pageNavigating = true;
+          window.clearTimeout(timeoutId);
+        } catch (e) {
+          handleError(e);
+        }
+      }
+    }, 5_000);
 
     signInWithRedirect(firebaseAuth, provider)
       .then(() => {
         resolved = true;
+        pageNavigating = true;
+        window.clearTimeout(fallbackId);
         window.clearTimeout(timeoutId);
-        // 페이지가 Google로 이동하는 중 — 현재 컨텍스트는 곧 unload
       })
       .catch((error: unknown) => {
-        window.clearTimeout(timeoutId);
-        handleError(error);
+        window.clearTimeout(fallbackId);
+        if (!pageNavigating) {
+          // signInWithRedirect 즉시 실패, 직접 handler URL 시도
+          console.warn('[AccountIntegration] signInWithRedirect 즉시 실패 → 직접 handler URL로 폴백', error);
+          try {
+            navigateToGoogleSignInRedirect(firebaseAuth);
+            pageNavigating = true;
+            window.clearTimeout(timeoutId);
+          } catch (e2) {
+            handleError(e2);
+          }
+        }
       });
 
     return { ok: true };
@@ -382,7 +416,7 @@ export class AccountIntegrationManager {
 
       // 3차: onAuthStateChanged 대기 (Firebase가 redirect를 비동기로 처리하는 경우)
       if (!redirectUser && (isGoogleOAuthPending() || isFirebaseAuthRedirectReturn())) {
-        console.log('[AccountIntegration] getRedirectResult null — onAuthStateChanged 대기 (최대 10초)');
+        console.log('[AccountIntegration] getRedirectResult null — onAuthStateChanged 대기 (최대 8초)');
         redirectUser = await new Promise<any>((resolve) => {
           let settled = false;
           const finish = (user: any) => {
@@ -398,10 +432,38 @@ export class AccountIntegrationManager {
             finish(firebaseAuth.currentUser);
             return;
           }
-          window.setTimeout(() => finish(null), 10_000);
+          window.setTimeout(() => finish(null), 8_000);
         });
         if (redirectUser) {
           console.log('[AccountIntegration] onAuthStateChanged 로 사용자 확인:', redirectUser.email);
+        }
+      }
+
+      // 4차: URL hash에서 토큰 파싱 → signInWithCredential
+      // (navigateToGoogleSignInRedirect 폴백 사용 시 Firebase handler가 hash로 토큰 전달)
+      if (!redirectUser) {
+        const hash = window.location.hash.replace(/^#/, '');
+        if (hash) {
+          const hp = new URLSearchParams(hash);
+          const idToken =
+            hp.get('id_token') || hp.get('oauthIdToken') || null;
+          const accessToken =
+            hp.get('access_token') || hp.get('oauthAccessToken') || null;
+          if (idToken || accessToken) {
+            console.log('[AccountIntegration] URL hash에서 Google 토큰 발견 → signInWithCredential 시도');
+            try {
+              const credential = GoogleAuthProvider.credential(idToken, accessToken);
+              const cr = await signInWithCredential(firebaseAuth, credential);
+              redirectUser = cr.user ?? null;
+              if (redirectUser) {
+                console.log('[AccountIntegration] signInWithCredential 성공:', redirectUser.email);
+                // hash 정리
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+              }
+            } catch (credErr) {
+              console.warn('[AccountIntegration] signInWithCredential 실패:', credErr);
+            }
+          }
         }
       }
 
