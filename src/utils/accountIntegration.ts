@@ -2,7 +2,8 @@ import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   linkWithCredential,
   EmailAuthProvider,
   updateProfile,
@@ -258,72 +259,93 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google 소셜 로그인
+   * Google OAuth redirect 시작 (팝업 COOP 오류 회피)
    */
-  static async signInWithGoogle(): Promise<{
+  static startGoogleOAuth(returnPath?: string): { ok: boolean; error?: string } {
+    if (typeof window === 'undefined') {
+      return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
+    }
+
+    const { auth: firebaseAuth } = initializeFirebase();
+    if (!firebaseAuth) {
+      return { ok: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
+    }
+
+    beginAuthLoginAttempt();
+    try {
+      sessionStorage.setItem('oauth_return', returnPath || '/');
+      sessionStorage.setItem('oauth_provider', 'google');
+    } catch {
+      // ignore
+    }
+
+    const provider = createGoogleAuthProvider();
+    void signInWithRedirect(firebaseAuth, provider);
+    return { ok: true };
+  }
+
+  /** Google redirect 복귀 후 로그인 완료 */
+  static async completeGoogleRedirectSignIn(): Promise<{
     success: boolean;
     user?: any;
     error?: string;
-    needsAccountLinking?: boolean;
-    cancelled?: boolean;
+    redirect?: string;
   }> {
-    beginAuthLoginAttempt();
+    if (typeof window === 'undefined') return { success: false };
+
+    const { auth: firebaseAuth } = initializeFirebase();
+    if (!firebaseAuth) {
+      return { success: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
+    }
+
     try {
-      const { auth: firebaseAuth } = initializeFirebase();
-      if (!firebaseAuth) {
-        return { success: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
+      await firebaseAuth.authStateReady();
+      const result = await getRedirectResult(firebaseAuth);
+
+      if (!result) {
+        if (sessionStorage.getItem('oauth_provider') === 'google') {
+          endAuthLoginAttempt();
+          sessionStorage.removeItem('oauth_provider');
+          sessionStorage.removeItem('oauth_return');
+        }
+        return { success: false };
       }
 
-      const provider = createGoogleAuthProvider();
-      const result = await signInWithPopup(firebaseAuth, provider);
-      await firebaseAuth.authStateReady();
       markAuthenticatedTabSession();
+      endAuthLoginAttempt();
 
       try {
-        const userAccount = UserAccountManager.createOrUpdateUser(
+        UserAccountManager.createOrUpdateUser(
           result.user.email!,
           result.user.displayName || 'Google 사용자',
           'google',
           result.user.uid,
           'user',
         );
-
-        console.log('[AccountIntegration] Google 로그인 성공:', {
-          uid: result.user.uid,
-          email: result.user.email,
-          providerId: result.user.providerId,
-          authMethods: userAccount.authMethods,
-        });
       } catch (accountError) {
-        console.warn('[AccountIntegration] Google 로그인 후 로컬 계정 동기화 실패:', accountError);
+        console.warn('[AccountIntegration] Google redirect 후 로컬 계정 동기화 실패:', accountError);
       }
 
-      return {
-        success: true,
-        user: result.user,
-      };
+      const redirect = sessionStorage.getItem('oauth_return') || '/';
+      sessionStorage.removeItem('oauth_return');
+      sessionStorage.removeItem('oauth_provider');
+
+      console.log('[AccountIntegration] Google redirect 로그인 성공:', {
+        uid: result.user.uid,
+        email: result.user.email,
+      });
+
+      return { success: true, user: result.user, redirect };
     } catch (error: any) {
-      console.error('[AccountIntegration] Google 로그인 실패:', error);
-
-      if (
-        error.code === 'auth/popup-closed-by-user' ||
-        error.code === 'auth/cancelled-popup-request'
-      ) {
-        return { success: false, cancelled: true };
-      }
-
-      if (error.code === 'auth/popup-blocked') {
-        return {
-          success: false,
-          error: '팝업이 차단되었습니다. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.',
-        };
-      }
+      console.error('[AccountIntegration] Google redirect 로그인 실패:', error);
+      endAuthLoginAttempt();
+      sessionStorage.removeItem('oauth_provider');
+      sessionStorage.removeItem('oauth_return');
 
       if (error.code === 'auth/account-exists-with-different-credential') {
         return {
           success: false,
           error: '이 이메일은 다른 방법으로 이미 가입되어 있습니다.',
-          needsAccountLinking: true,
         };
       }
 
@@ -331,9 +353,23 @@ export class AccountIntegrationManager {
         success: false,
         error: error.message || 'Google 로그인 처리 중 오류가 발생했습니다.',
       };
-    } finally {
-      endAuthLoginAttempt();
     }
+  }
+
+  /**
+   * Google 소셜 로그인 (redirect — 동일 탭에서 Google 계정 선택 후 복귀)
+   */
+  static async signInWithGoogle(returnPath?: string): Promise<{
+    success: boolean;
+    user?: any;
+    error?: string;
+    needsAccountLinking?: boolean;
+  }> {
+    const started = this.startGoogleOAuth(returnPath);
+    if (!started.ok) {
+      return { success: false, error: started.error };
+    }
+    return { success: true };
   }
 
   /** Firebase Functions 등으로 배포된 소셜 OAuth 교환 API 전체 URL */

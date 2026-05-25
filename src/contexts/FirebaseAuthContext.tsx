@@ -16,12 +16,11 @@ import {
   signOut,
   onAuthStateChanged,
   User as FirebaseSdkUser,
-  signInWithPopup,
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
+import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
@@ -29,8 +28,6 @@ import {
   clearAllAuthStorage,
   evaluateAuthSessionOnStartup,
   hasAuthenticatedTabSession,
-  beginAuthLoginAttempt,
-  endAuthLoginAttempt,
   isAuthLoginInProgress,
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
@@ -107,7 +104,7 @@ type FirebaseAuthContextValue = {
     password: string,
     displayName?: string,
   ) => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
-  signInWithGoogle: () => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
+  signInWithGoogle: (returnPath?: string) => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
 };
@@ -368,19 +365,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    beginAuthLoginAttempt();
-    try {
-      const { auth } = initializeFirebase();
-      if (!auth) throw new Error('Firebase Auth가 초기화되지 않았습니다.');
-      const provider = createGoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      return { success: true, user: result.user };
-    } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
-    } finally {
-      endAuthLoginAttempt();
+  const signInWithGoogle = useCallback(async (returnPath?: string) => {
+    const result = await AccountIntegrationManager.signInWithGoogle(returnPath);
+    if (!result.success) {
+      return { success: false, error: result.error };
     }
+    return { success: true };
   }, []);
 
   const logout = useCallback(async () => {

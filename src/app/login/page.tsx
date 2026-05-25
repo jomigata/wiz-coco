@@ -5,10 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation, hasAuthenticatedTabSession, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
+import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
+import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 // 로딩 컴포넌트
 const LoadingLogin = () => (
   <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
@@ -183,52 +184,15 @@ const LoginContent = () => {
     }
   };
 
-  // Google 로그인 처리
+  // Google 로그인 처리 (OAuth redirect — 팝업 COOP 오류 회피)
   const handleGoogleLogin = async () => {
-    try {
-      setIsLoading(true);
-      setLoginError('');
-      setShowSnsLogin(false);
-      
-      console.log('[Login] Google 로그인 시도');
-      
-      const result = await AccountIntegrationManager.signInWithGoogle();
-      
-      if (result.success) {
-        console.log('[Login] Google 로그인 성공:', {
-          uid: result.user.uid,
-          email: result.user.email,
-          displayName: result.user.displayName
-        });
-
-        primeFirebaseAuthSessionCache(result.user);
-        replaceWithAuthSession(router, redirectUrl);
-      } else {
-        if (result.cancelled) {
-          setLoginError('Google 로그인이 완료되지 않았습니다. 팝업에서 계정을 선택해 주세요.');
-          return;
-        }
-
-        if (!result.error) {
-          return;
-        }
-
-        let errorMessage = result.error;
-
-        if (result.needsAccountLinking) {
-          errorMessage = '이 이메일은 다른 방법으로 이미 가입되어 있습니다.';
-          setShowSnsLogin(true);
-        }
-
-        if (errorMessage) {
-          setLoginError(errorMessage);
-        }
-      }
-      
-    } catch (error: any) {
-      console.error('[Login] Google 로그인 오류:', error);
-      setLoginError('Google 로그인 처리 중 오류가 발생했습니다.');
-    } finally {
+    setIsLoading(true);
+    setLoginError('');
+    setShowSnsLogin(false);
+    console.log('[Login] Google 로그인 시도');
+    const result = await AccountIntegrationManager.signInWithGoogle(redirectUrl);
+    if (!result.success) {
+      setLoginError(result.error || 'Google 로그인을 시작할 수 없습니다.');
       setIsLoading(false);
     }
   };
@@ -317,6 +281,11 @@ const LoginContent = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
+      <GoogleOAuthRedirectHandler
+        defaultRedirect={redirectUrl}
+        onError={setLoginError}
+        onProcessingChange={setIsLoading}
+      />
 <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">

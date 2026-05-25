@@ -3,15 +3,16 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';import { getSession } from 'next-auth/react';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { motion } from 'framer-motion';
+import { getSession } from 'next-auth/react';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
+import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
-  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="h-20"></div>
+  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
+<div className="h-20"></div>
     <div className="flex-grow flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -171,22 +172,12 @@ const RegisterContent = () => {
       console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
-        const result = await AccountIntegrationManager.signInWithGoogle();
-        
-        if (result.success) {
-          console.log('[Register] Google 소셜 로그인 성공:', {
-            uid: result.user.uid,
-            email: result.user.email,
-            displayName: result.user.displayName
-          });
-
-          primeFirebaseAuthSessionCache(result.user);
-
-          // 마이페이지로 리다이렉트
-          router.push('/mypage');
-        } else {
-          setRegisterError(result.error || 'Google 로그인 처리 중 오류가 발생했습니다.');
+        const result = await AccountIntegrationManager.signInWithGoogle('/mypage');
+        if (!result.success) {
+          setRegisterError(result.error || 'Google 로그인을 시작할 수 없습니다.');
+          setIsLoading(false);
         }
+        return;
       } else if (provider === 'naver') {
         const result = await AccountIntegrationManager.signInWithNaver('/mypage');
         if (result.success) {
@@ -211,7 +202,13 @@ const RegisterContent = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col"><div className="flex-grow flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
+      <GoogleOAuthRedirectHandler
+        defaultRedirect="/mypage"
+        onError={setRegisterError}
+        onProcessingChange={setIsLoading}
+      />
+<div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-emerald-100 mb-1">회원가입</h2>
