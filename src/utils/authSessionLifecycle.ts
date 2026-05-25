@@ -17,7 +17,6 @@ const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
 /** Google redirect OAuth 진행·복귀 구간 표시 (getRedirectResult 호출 조건) */
 export const GOOGLE_OAUTH_PENDING_KEY = 'wizcoco:google-oauth-pending';
 const FIREBASE_IDB_NAME = 'firebaseLocalStorageDb';
-const GOOGLE_REDIRECT_TIMEOUT_MS = 12_000;
 
 const AUTH_LOCAL_KEYS = [
   'oktest-auth-state',
@@ -135,8 +134,19 @@ export function clearGoogleOAuthPending(): void {
   sessionStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY);
 }
 
-export function getGoogleRedirectTimeoutMs(): number {
-  return GOOGLE_REDIRECT_TIMEOUT_MS;
+/** Google OAuth redirect 복귀 URL(해시·쿼리) 여부 */
+export function isFirebaseAuthRedirectReturn(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  return (
+    hash.includes('apiKey=') ||
+    hash.includes('access_token=') ||
+    hash.includes('id_token=') ||
+    hash.includes('__/auth/') ||
+    search.includes('state=') ||
+    search.includes('code=')
+  );
 }
 
 /** Firebase signOut 포함 전체 로그인 정보 삭제 */
