@@ -21,7 +21,7 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'your-nextauth-secret-key-at-least-32-chars-production',
     // Firebase 환경변수 (빌드 시점에 주입) - 실제 값으로 설정
     NEXT_PUBLIC_FIREBASE_API_KEY: 'AIzaSyAkht437m0cEIY3uFz3RsTpWyZyUakon68',
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'www.wizcoco.com',
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'wiz-coco.firebaseapp.com',
     NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'wiz-coco',
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'wiz-coco.firebasestorage.app',
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '1088573742018',
