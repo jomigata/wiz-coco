@@ -18,7 +18,6 @@ import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { getPerformance } from 'firebase/performance';
 import { getFirebaseAuthDomain } from '@/lib/firebaseAuthDomain';
 
 function buildFirebaseConfig() {
@@ -77,12 +76,9 @@ export function initializeFirebase() {
         // Analytics 초기화 (지원되는 경우에만)
         isSupported().then((yes) => (yes ? (analytics = getAnalytics(app)) : null));
 
-        // Performance 초기화 (지원되는 경우에만)
-        try {
-          performance = getPerformance(app);
-        } catch (error) {
-          console.warn('Firebase Performance 초기화 실패:', error);
-        }
+        // Performance Monitoring 비활성화 — invalid timestamp attribute uncaught 오류가
+        // Auth·로그인 플로우를 중단시키는 경우가 있음 (performance/invalid-attribute-value)
+        performance = null;
       }
     } catch (error) {
       console.error('❌ Firebase 초기화 실패:', error);
