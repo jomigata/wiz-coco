@@ -9,7 +9,6 @@ import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/auth
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
-import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 // 로딩 컴포넌트
 const LoadingLogin = () => (
   <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
@@ -184,17 +183,19 @@ const LoginContent = () => {
     }
   };
 
-  // Google 로그인 처리 (OAuth redirect — 팝업 COOP 오류 회피)
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
+  // Google 로그인 — 전용 redirect 페이지로 이동 (같은 탭에서 Google 계정 선택)
+  const handleGoogleLogin = () => {
     setLoginError('');
     setShowSnsLogin(false);
     console.log('[Login] Google 로그인 시도');
-    const result = await AccountIntegrationManager.signInWithGoogle(redirectUrl);
-    if (!result.success) {
-      setLoginError(result.error || 'Google 로그인을 시작할 수 없습니다.');
-      setIsLoading(false);
+    try {
+      const destination = redirectUrl || '/';
+      sessionStorage.setItem('oauth_return', destination);
+      localStorage.setItem('oauth_return', destination);
+    } catch {
+      // ignore
     }
+    window.location.assign('/login/google/');
   };
 
   // Kakao 로그인 처리 (OAuth 페이지로 이동 → 콜백에서 Custom Token 로그인)
@@ -281,11 +282,6 @@ const LoginContent = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <GoogleOAuthRedirectHandler
-        defaultRedirect={redirectUrl}
-        onError={setLoginError}
-        onProcessingChange={setIsLoading}
-      />
 <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">

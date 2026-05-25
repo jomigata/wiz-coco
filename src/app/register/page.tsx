@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { getSession } from 'next-auth/react';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -172,11 +171,13 @@ const RegisterContent = () => {
       console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
-        const result = await AccountIntegrationManager.signInWithGoogle('/mypage');
-        if (!result.success) {
-          setRegisterError(result.error || 'Google 로그인을 시작할 수 없습니다.');
-          setIsLoading(false);
+        try {
+          sessionStorage.setItem('oauth_return', '/mypage');
+          localStorage.setItem('oauth_return', '/mypage');
+        } catch {
+          // ignore
         }
+        window.location.assign('/login/google/');
         return;
       } else if (provider === 'naver') {
         const result = await AccountIntegrationManager.signInWithNaver('/mypage');
@@ -203,11 +204,6 @@ const RegisterContent = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <GoogleOAuthRedirectHandler
-        defaultRedirect="/mypage"
-        onError={setRegisterError}
-        onProcessingChange={setIsLoading}
-      />
 <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">

@@ -261,7 +261,7 @@ export class AccountIntegrationManager {
   /**
    * Google OAuth redirect 시작 (팝업 COOP 오류 회피)
    */
-  static startGoogleOAuth(returnPath?: string): { ok: boolean; error?: string } {
+  static async startGoogleOAuth(returnPath?: string): Promise<{ ok: boolean; error?: string }> {
     if (typeof window === 'undefined') {
       return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
     }
@@ -272,16 +272,34 @@ export class AccountIntegrationManager {
     }
 
     beginAuthLoginAttempt();
+    const destination = returnPath || '/';
     try {
-      sessionStorage.setItem('oauth_return', returnPath || '/');
-      sessionStorage.setItem('oauth_provider', 'google');
+      sessionStorage.setItem('oauth_return', destination);
+      localStorage.setItem('oauth_return', destination);
     } catch {
       // ignore
     }
 
-    const provider = createGoogleAuthProvider();
-    void signInWithRedirect(firebaseAuth, provider);
-    return { ok: true };
+    try {
+      await firebaseAuth.authStateReady();
+      const provider = createGoogleAuthProvider();
+      console.log('[AccountIntegration] Google redirect 시작', {
+        authDomain: firebaseAuth.config.authDomain,
+        host: window.location.hostname,
+      });
+      await signInWithRedirect(firebaseAuth, provider);
+      return { ok: true };
+    } catch (error: unknown) {
+      console.error('[AccountIntegration] Google redirect 시작 실패:', error);
+      endAuthLoginAttempt();
+      sessionStorage.removeItem('oauth_return');
+      localStorage.removeItem('oauth_return');
+      const message =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message?: string }).message)
+          : 'Google 로그인을 시작할 수 없습니다.';
+      return { ok: false, error: message };
+    }
   }
 
   /** Google redirect 복귀 후 로그인 완료 */
@@ -303,11 +321,6 @@ export class AccountIntegrationManager {
       const result = await getRedirectResult(firebaseAuth);
 
       if (!result) {
-        if (sessionStorage.getItem('oauth_provider') === 'google') {
-          endAuthLoginAttempt();
-          sessionStorage.removeItem('oauth_provider');
-          sessionStorage.removeItem('oauth_return');
-        }
         return { success: false };
       }
 
@@ -326,9 +339,12 @@ export class AccountIntegrationManager {
         console.warn('[AccountIntegration] Google redirect 후 로컬 계정 동기화 실패:', accountError);
       }
 
-      const redirect = sessionStorage.getItem('oauth_return') || '/';
+      const redirect =
+        sessionStorage.getItem('oauth_return') ||
+        localStorage.getItem('oauth_return') ||
+        '/';
       sessionStorage.removeItem('oauth_return');
-      sessionStorage.removeItem('oauth_provider');
+      localStorage.removeItem('oauth_return');
 
       console.log('[AccountIntegration] Google redirect 로그인 성공:', {
         uid: result.user.uid,
@@ -339,8 +355,8 @@ export class AccountIntegrationManager {
     } catch (error: any) {
       console.error('[AccountIntegration] Google redirect 로그인 실패:', error);
       endAuthLoginAttempt();
-      sessionStorage.removeItem('oauth_provider');
       sessionStorage.removeItem('oauth_return');
+      localStorage.removeItem('oauth_return');
 
       if (error.code === 'auth/account-exists-with-different-credential') {
         return {
@@ -365,7 +381,7 @@ export class AccountIntegrationManager {
     error?: string;
     needsAccountLinking?: boolean;
   }> {
-    const started = this.startGoogleOAuth(returnPath);
+    const started = await this.startGoogleOAuth(returnPath);
     if (!started.ok) {
       return { success: false, error: started.error };
     }
