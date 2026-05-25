@@ -81,7 +81,11 @@ export function clearAuthStorageSync(): void {
     localStorage.removeItem(AUTH_HEARTBEAT_KEY);
 
     const loginInProgress = isAuthLoginInProgress();
-    if (loginInProgress) {
+    const oauthPending = isGoogleOAuthPending(); // localStorage도 확인
+    const protectOAuth = loginInProgress || oauthPending;
+
+    if (protectOAuth) {
+      // oauth_return·Firebase IndexedDB 보존
       AUTH_SESSION_KEYS.filter((key) => key !== 'oauth_return').forEach((key) => {
         sessionStorage.removeItem(key);
       });
@@ -94,7 +98,7 @@ export function clearAuthStorageSync(): void {
 
     sessionStorage.removeItem(AUTH_TAB_SESSION_KEY);
     clearAuthCookies();
-    if (!loginInProgress) {
+    if (!protectOAuth) {
       clearFirebaseIndexedDB();
     }
   } catch (error) {
@@ -119,19 +123,29 @@ export function isAuthLoginInProgress(): boolean {
   return sessionStorage.getItem(AUTH_LOGIN_IN_PROGRESS_KEY) === '1';
 }
 
+/** Google OAuth pending 플래그: sessionStorage + localStorage 양쪽에 저장
+ *  크로스 오리진 이동(Google → Firebase handler → 앱) 시 sessionStorage는 지워지지만
+ *  localStorage는 살아 있으므로 복귀 처리가 가능합니다. */
 export function markGoogleOAuthPending(): void {
   if (typeof window === 'undefined') return;
-  sessionStorage.setItem(GOOGLE_OAUTH_PENDING_KEY, '1');
+  try { sessionStorage.setItem(GOOGLE_OAUTH_PENDING_KEY, '1'); } catch { /* ignore */ }
+  try { localStorage.setItem(GOOGLE_OAUTH_PENDING_KEY, '1'); } catch { /* ignore */ }
 }
 
 export function isGoogleOAuthPending(): boolean {
   if (typeof window === 'undefined') return false;
-  return sessionStorage.getItem(GOOGLE_OAUTH_PENDING_KEY) === '1';
+  try {
+    return (
+      sessionStorage.getItem(GOOGLE_OAUTH_PENDING_KEY) === '1' ||
+      localStorage.getItem(GOOGLE_OAUTH_PENDING_KEY) === '1'
+    );
+  } catch { return false; }
 }
 
 export function clearGoogleOAuthPending(): void {
   if (typeof window === 'undefined') return;
-  sessionStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY);
+  try { sessionStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY); } catch { /* ignore */ }
+  try { localStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY); } catch { /* ignore */ }
 }
 
 /** Google OAuth redirect 복귀 URL(해시·쿼리) 여부 */

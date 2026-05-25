@@ -2,6 +2,7 @@ import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithRedirect,
   getRedirectResult,
   linkWithCredential,
   EmailAuthProvider,
@@ -9,8 +10,8 @@ import {
   sendEmailVerification,
   signInWithCustomToken,
 } from 'firebase/auth';
-import { initializeFirebase } from '@/lib/firebase';
-import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
+import { initializeFirebase, ensureAuthPersistenceReady } from '@/lib/firebase';
+import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
@@ -21,7 +22,6 @@ import {
   isFirebaseAuthRedirectReturn,
   isGoogleOAuthFlowActive,
 } from '@/utils/authSessionLifecycle';
-import { ensureAuthPersistenceReady } from '@/lib/firebase';
 import { UserAccountManager } from './userAccountManager';
 
 // 로깅 헬퍼 함수
@@ -264,7 +264,9 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google OAuth redirect 시작 (handler URL 즉시 이동 — 팝업·SDK 대기 없음)
+   * Google OAuth redirect 시작 (Firebase SDK signInWithRedirect 사용)
+   * 동기 반환 후 Firebase가 IndexedDB 상태를 저장하고 Google 페이지로 이동합니다.
+   * pending 플래그를 localStorage에도 저장하므로 크로스 오리진 복귀 후에도 유지됩니다.
    */
   static startGoogleOAuth(returnPath?: string): { ok: boolean; error?: string } {
     if (typeof window === 'undefined') {
@@ -281,32 +283,29 @@ export class AccountIntegrationManager {
     try {
       sessionStorage.setItem('oauth_return', destination);
       localStorage.setItem('oauth_return', destination);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
 
+    // localStorage에도 저장 → 크로스 오리진 이동 후에도 pending 플래그 유지
     markGoogleOAuthPending();
-    console.log('[AccountIntegration] Google redirect 시작', {
+    const provider = createGoogleAuthProvider();
+
+    console.log('[AccountIntegration] Google signInWithRedirect 시작', {
       authDomain: firebaseAuth.config.authDomain,
       host: window.location.hostname,
-      path: window.location.pathname,
     });
 
-    try {
-      navigateToGoogleSignInRedirect(firebaseAuth);
-      return { ok: true };
-    } catch (error: unknown) {
-      console.error('[AccountIntegration] Google redirect 시작 실패:', error);
-      endAuthLoginAttempt();
-      clearGoogleOAuthPending();
-      sessionStorage.removeItem('oauth_return');
-      localStorage.removeItem('oauth_return');
-      const message =
-        error && typeof error === 'object' && 'message' in error
-          ? String((error as { message?: string }).message)
-          : 'Google 로그인을 시작할 수 없습니다.';
-      return { ok: false, error: message };
-    }
+    // Firebase SDK가 IndexedDB 상태를 기록한 뒤 Google로 이동 (fire-and-forget)
+    void ensureAuthPersistenceReady().then(() =>
+      signInWithRedirect(firebaseAuth, provider).catch((error: unknown) => {
+        console.error('[AccountIntegration] signInWithRedirect 실패:', error);
+        endAuthLoginAttempt();
+        clearGoogleOAuthPending();
+        sessionStorage.removeItem('oauth_return');
+        localStorage.removeItem('oauth_return');
+      })
+    );
+
+    return { ok: true };
   }
 
   /** Google redirect 복귀 후 로그인 완료 */
