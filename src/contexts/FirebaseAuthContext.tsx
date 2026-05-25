@@ -29,6 +29,7 @@ import {
   evaluateAuthSessionOnStartup,
   hasAuthenticatedTabSession,
   isAuthLoginInProgress,
+  isGoogleOAuthFlowActive,
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
   touchAuthHeartbeat,
@@ -299,7 +300,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       if (cancelled) return;
 
-      if (authExpiredOnStartupRef.current && !isAuthLoginInProgress()) {
+      if (authExpiredOnStartupRef.current && !isGoogleOAuthFlowActive()) {
         if (auth.currentUser && !hasAuthenticatedTabSession()) {
           try {
             await signOut(auth);
@@ -315,7 +316,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
+          if (!hasAuthenticatedTabSession() && !isGoogleOAuthFlowActive()) {
             void clearAllAuthStorage().then(() => {
               setUser(null);
               writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });

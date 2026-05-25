@@ -19,7 +19,9 @@ import {
   isGoogleOAuthPending,
   clearGoogleOAuthPending,
   isFirebaseAuthRedirectReturn,
+  isGoogleOAuthFlowActive,
 } from '@/utils/authSessionLifecycle';
+import { ensureAuthPersistenceReady } from '@/lib/firebase';
 import { UserAccountManager } from './userAccountManager';
 
 // 로깅 헬퍼 함수
@@ -321,20 +323,33 @@ export class AccountIntegrationManager {
       return { success: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
     }
 
-    if (!isGoogleOAuthPending() && !isFirebaseAuthRedirectReturn()) {
+    if (!isGoogleOAuthFlowActive()) {
       return { success: false };
     }
 
     try {
-      const result = await Promise.race([
+      await ensureAuthPersistenceReady();
+      await firebaseAuth.authStateReady();
+
+      let result = await Promise.race([
         getRedirectResult(firebaseAuth),
-        new Promise<null>((resolve) => {
+        new Promise<Awaited<ReturnType<typeof getRedirectResult>> | null>((resolve) => {
           window.setTimeout(() => resolve(null), 10_000);
         }),
       ]);
 
-      if (!result) {
-        if (isFirebaseAuthRedirectReturn()) {
+      const currentUser = firebaseAuth.currentUser;
+      if (!result?.user && currentUser) {
+        console.log('[AccountIntegration] getRedirectResult 없음 — currentUser로 로그인 완료 처리');
+        result = {
+          user: currentUser,
+          providerId: 'google.com',
+          operationType: 'signIn',
+        } as Awaited<ReturnType<typeof getRedirectResult>>;
+      }
+
+      if (!result?.user) {
+        if (isFirebaseAuthRedirectReturn() || isGoogleOAuthPending()) {
           return {
             success: false,
             error: 'Google 로그인을 완료하지 못했습니다. 다시 시도해 주세요.',

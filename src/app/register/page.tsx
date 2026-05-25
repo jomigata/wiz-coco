@@ -9,12 +9,6 @@ import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 import { ensureAuthPersistenceReady } from '@/lib/firebase';
-import {
-  clearGoogleOAuthPending,
-  endAuthLoginAttempt,
-  isFirebaseAuthRedirectReturn,
-  isGoogleOAuthPending,
-} from '@/utils/authSessionLifecycle';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -44,10 +38,6 @@ const RegisterContent = () => {
   
   useEffect(() => {
     void ensureAuthPersistenceReady();
-    if (isGoogleOAuthPending() && !isFirebaseAuthRedirectReturn()) {
-      clearGoogleOAuthPending();
-      endAuthLoginAttempt();
-    }
   }, []);
 
   // 로그인 상태 확인

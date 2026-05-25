@@ -5,14 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import {
-  clearGoogleOAuthPending,
-  endAuthLoginAttempt,
-  isFirebaseAuthRedirectReturn,
-  isGoogleOAuthPending,
-  markInternalNavigation,
-  hasAuthenticatedTabSession,
-} from '@/utils/authSessionLifecycle';
+import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
 import { ensureAuthPersistenceReady } from '@/lib/firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -82,10 +75,6 @@ const LoginContent = () => {
 
   useEffect(() => {
     void ensureAuthPersistenceReady();
-    if (isGoogleOAuthPending() && !isFirebaseAuthRedirectReturn()) {
-      clearGoogleOAuthPending();
-      endAuthLoginAttempt();
-    }
   }, []);
 
   useEffect(() => {

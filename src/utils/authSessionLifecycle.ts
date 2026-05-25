@@ -143,9 +143,21 @@ export function isFirebaseAuthRedirectReturn(): boolean {
     hash.includes('apiKey=') ||
     hash.includes('access_token=') ||
     hash.includes('id_token=') ||
+    hash.includes('refresh_token=') ||
     hash.includes('__/auth/') ||
+    hash.includes('firebase') ||
     search.includes('state=') ||
-    search.includes('code=')
+    search.includes('code=') ||
+    search.includes('mode=signIn')
+  );
+}
+
+/** Google OAuth 복귀 처리 중 — 세션 삭제·signOut 방지 */
+export function isGoogleOAuthFlowActive(): boolean {
+  return (
+    isAuthLoginInProgress() ||
+    isGoogleOAuthPending() ||
+    isFirebaseAuthRedirectReturn()
   );
 }
 

@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import {
-  isFirebaseAuthRedirectReturn,
-  isGoogleOAuthPending,
-  replaceWithAuthSession,
-} from '@/utils/authSessionLifecycle';
+import { isGoogleOAuthFlowActive, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 
-/** Firebase Google redirect 로그인 복귀 처리 (login/register 공통, 팝업 없음) */
+/** Firebase Google redirect 로그인 복귀 처리 (login/register — paint 전 실행) */
 export default function GoogleOAuthRedirectHandler({
   defaultRedirect = '/',
   onError,
@@ -23,10 +19,10 @@ export default function GoogleOAuthRedirectHandler({
   const router = useRouter();
   const ran = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (ran.current) return;
     if (typeof window === 'undefined') return;
-    if (!isGoogleOAuthPending() && !isFirebaseAuthRedirectReturn()) return;
+    if (!isGoogleOAuthFlowActive()) return;
 
     ran.current = true;
     onProcessingChange?.(true);
@@ -41,6 +37,9 @@ export default function GoogleOAuthRedirectHandler({
 
       if (result.user) {
         primeFirebaseAuthSessionCache(result.user);
+      }
+      if (typeof window !== 'undefined' && window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
       }
       replaceWithAuthSession(router, result.redirect || defaultRedirect);
     });
