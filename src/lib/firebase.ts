@@ -1,20 +1,5 @@
-// [Firebase 연동 안내]
-// 1. .env 파일에 Firebase 환경변수를 실제 값으로 입력하세요.
-// 2. 예시는 .env.example 참고 (NEXT_PUBLIC_FIREBASE_...)
-// 3. firebaseConfig는 절대 코드에 직접 노출하지 마세요.
-// 4. Firebase 콘솔에서 각 값 복사 후 입력
-//
-// ex)
-// NEXT_PUBLIC_FIREBASE_API_KEY=...
-// NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-// ...
-//
-// 이 파일은 Firebase 서비스(app, auth, db, storage, analytics, performance) 초기화만 담당합니다.
-//
-// (디자인/기능 100% 유지, 기존 코드와 충돌 없이 적용)
-
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -32,53 +17,29 @@ function buildFirebaseConfig() {
   };
 }
 
-// Firebase 서비스 인스턴스보내기
 let app: any = null;
 let auth: any = null;
 let db: any = null;
 let storage: any = null;
 let analytics: any = null;
-let performance: any = null;
-let authPersistenceReady: Promise<void> | null = null;
+const performance: any = null;
 
-/** OAuth redirect·복귀에 필요 — 로그인 페이지에서 미리 호출 */
-export function ensureAuthPersistenceReady(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
-  const { auth: authed } = initializeFirebase();
-  if (!authed) return Promise.resolve();
-  if (!authPersistenceReady) {
-    authPersistenceReady = setPersistence(authed, browserLocalPersistence)
-      .then(() => undefined)
-      .catch((error) => {
-        console.warn('Firebase Auth persistence 설정 실패:', error);
-      });
-  }
-  return authPersistenceReady;
-}
-
-// Firebase 초기화 함수
 export function initializeFirebase() {
   if (!app) {
     try {
-      // Firebase 앱 초기화
       app = !getApps().length ? initializeApp(buildFirebaseConfig()) : getApp();
 
-      // Firebase 서비스 초기화
+      // setPersistence 호출 없이 Firebase 기본 persistence(IndexedDB) 사용
+      // setPersistence가 Firebase 내부 큐에 pending 상태로 쌓이면
+      // signInWithRedirect가 완료될 때까지 블록되어 OAuth 이동이 안 됨
       auth = getAuth(app);
-      if (typeof window !== 'undefined') {
-        void ensureAuthPersistenceReady();
-      }
+
       db = getFirestore(app);
       storage = getStorage(app);
 
-      // 클라이언트 사이드에서만 Analytics와 Performance 초기화
       if (typeof window !== 'undefined') {
-        // Analytics 초기화 (지원되는 경우에만)
         isSupported().then((yes) => (yes ? (analytics = getAnalytics(app)) : null));
-
-        // Performance Monitoring 비활성화 — invalid timestamp attribute uncaught 오류가
-        // Auth·로그인 플로우를 중단시키는 경우가 있음 (performance/invalid-attribute-value)
-        performance = null;
+        // Firebase Performance 비활성화 (invalid-attribute-value 오류 방지)
       }
     } catch (error) {
       console.error('❌ Firebase 초기화 실패:', error);
@@ -88,8 +49,5 @@ export function initializeFirebase() {
   return { app, auth, db, storage, analytics, performance };
 }
 
-// Firebase 서비스 인스턴스보내기
 export { app, auth, db, storage, analytics, performance };
-
-// 기본 export
 export default app;

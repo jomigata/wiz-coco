@@ -10,7 +10,7 @@ import {
   sendEmailVerification,
   signInWithCustomToken,
 } from 'firebase/auth';
-import { initializeFirebase, ensureAuthPersistenceReady } from '@/lib/firebase';
+import { initializeFirebase } from '@/lib/firebase';
 import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
 import {
   beginAuthLoginAttempt,
@@ -304,29 +304,35 @@ export class AccountIntegrationManager {
       try { localStorage.removeItem('oauth_return'); } catch { /* ignore */ }
     };
 
-    // 15초 내에 페이지가 이동하지 않으면 타임아웃 에러
-    const timeoutId = window.setTimeout(() => {
-      cleanup();
-      onError?.('Google 로그인 페이지로 이동하지 못했습니다. 잠시 후 다시 시도해 주세요.');
-    }, 15_000);
+    let resolved = false;
 
-    // signInWithRedirect는 성공 시 브라우저가 Google 페이지로 이동 → resolve 후 unload
+    const handleError = (error: unknown) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      const code = (error as any)?.code ?? '';
+      let msg = (error as any)?.message ?? 'Google 로그인을 시작할 수 없습니다.';
+      if (code === 'auth/unauthorized-domain') {
+        msg = `이 도메인(${window.location.hostname})은 Google 로그인이 허용되지 않습니다. Firebase 콘솔 > Authentication > Settings > Authorized domains 에서 추가해 주세요.`;
+      } else if (code === 'auth/operation-not-allowed') {
+        msg = 'Google 로그인이 비활성화되어 있습니다. Firebase 콘솔에서 Google 제공업체를 활성화해 주세요.';
+      }
+      console.error('[AccountIntegration] signInWithRedirect 오류:', code, msg, error);
+      onError?.(msg);
+    };
+
+    // 10초 안에 페이지가 이동하지 않으면 에러 표시
+    const timeoutId = window.setTimeout(() => handleError(new Error('TIMEOUT')), 10_000);
+
     signInWithRedirect(firebaseAuth, provider)
       .then(() => {
+        resolved = true;
         window.clearTimeout(timeoutId);
+        // 페이지가 Google로 이동하는 중 — 현재 컨텍스트는 곧 unload
       })
       .catch((error: unknown) => {
         window.clearTimeout(timeoutId);
-        cleanup();
-        const code = (error as any)?.code ?? '';
-        let msg = (error as any)?.message ?? 'Google 로그인을 시작할 수 없습니다.';
-        if (code === 'auth/unauthorized-domain') {
-          msg = `이 도메인(${window.location.hostname})은 Google 로그인이 허용되지 않습니다. Firebase 콘솔에서 도메인을 추가해 주세요.`;
-        } else if (code === 'auth/operation-not-allowed') {
-          msg = 'Google 로그인이 비활성화되어 있습니다. Firebase 콘솔에서 설정을 확인해 주세요.';
-        }
-        console.error('[AccountIntegration] signInWithRedirect 오류:', code, msg);
-        onError?.(msg);
+        handleError(error);
       });
 
     return { ok: true };
@@ -351,7 +357,6 @@ export class AccountIntegrationManager {
     }
 
     try {
-      await ensureAuthPersistenceReady();
       await firebaseAuth.authStateReady();
 
       let result = await Promise.race([

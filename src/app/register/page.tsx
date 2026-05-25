@@ -8,7 +8,6 @@ import { getSession } from 'next-auth/react';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
-import { ensureAuthPersistenceReady } from '@/lib/firebase';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -36,9 +35,6 @@ const RegisterContent = () => {
   const [showCounselorCode, setShowCounselorCode] = useState<boolean>(false);
   const [emailRegisterOpen, setEmailRegisterOpen] = useState<boolean>(false);
   
-  useEffect(() => {
-    void ensureAuthPersistenceReady();
-  }, []);
 
   // 로그인 상태 확인
   useEffect(() => {

@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
-import { ensureAuthPersistenceReady } from '@/lib/firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -73,9 +72,6 @@ const LoginContent = () => {
     setPassword('');
   }, []);
 
-  useEffect(() => {
-    void ensureAuthPersistenceReady();
-  }, []);
 
   useEffect(() => {
     if (loginError && !showSnsLogin) setEmailLoginOpen(true);
