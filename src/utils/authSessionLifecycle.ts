@@ -16,6 +16,9 @@ const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
 const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
 /** Google redirect OAuth 진행·복귀 구간 표시 (getRedirectResult 호출 조건) */
 export const GOOGLE_OAUTH_PENDING_KEY = 'wizcoco:google-oauth-pending';
+const GOOGLE_OAUTH_PENDING_TS_KEY = 'wizcoco:google-oauth-ts';
+/** 이 시간(ms)이 지난 pending 플래그는 stale로 간주하고 무시 */
+const GOOGLE_OAUTH_STALE_MS = 5 * 60 * 1000; // 5분
 const FIREBASE_IDB_NAME = 'firebaseLocalStorageDb';
 
 const AUTH_LOCAL_KEYS = [
@@ -123,21 +126,32 @@ export function isAuthLoginInProgress(): boolean {
   return sessionStorage.getItem(AUTH_LOGIN_IN_PROGRESS_KEY) === '1';
 }
 
-/** Google OAuth pending 플래그: sessionStorage + localStorage 양쪽에 저장
- *  크로스 오리진 이동(Google → Firebase handler → 앱) 시 sessionStorage는 지워지지만
- *  localStorage는 살아 있으므로 복귀 처리가 가능합니다. */
+/** Google OAuth pending 플래그: sessionStorage + localStorage(타임스탬프 포함)에 저장
+ *  크로스 오리진 이동 시 sessionStorage는 지워지지만 localStorage는 유지됩니다.
+ *  5분 이상 된 stale 플래그는 자동으로 무시·정리합니다. */
 export function markGoogleOAuthPending(): void {
   if (typeof window === 'undefined') return;
+  const ts = String(Date.now());
   try { sessionStorage.setItem(GOOGLE_OAUTH_PENDING_KEY, '1'); } catch { /* ignore */ }
   try { localStorage.setItem(GOOGLE_OAUTH_PENDING_KEY, '1'); } catch { /* ignore */ }
+  try { localStorage.setItem(GOOGLE_OAUTH_PENDING_TS_KEY, ts); } catch { /* ignore */ }
 }
 
 export function isGoogleOAuthPending(): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    const raw = localStorage.getItem(GOOGLE_OAUTH_PENDING_KEY);
+    if (raw === '1') {
+      const ts = parseInt(localStorage.getItem(GOOGLE_OAUTH_PENDING_TS_KEY) ?? '0', 10);
+      if (ts && Date.now() - ts > GOOGLE_OAUTH_STALE_MS) {
+        // 5분 이상 된 stale 플래그 — 이전 실패한 OAuth 시도 잔존물
+        clearGoogleOAuthPending();
+        return false;
+      }
+    }
     return (
       sessionStorage.getItem(GOOGLE_OAUTH_PENDING_KEY) === '1' ||
-      localStorage.getItem(GOOGLE_OAUTH_PENDING_KEY) === '1'
+      raw === '1'
     );
   } catch { return false; }
 }
@@ -146,6 +160,7 @@ export function clearGoogleOAuthPending(): void {
   if (typeof window === 'undefined') return;
   try { sessionStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY); } catch { /* ignore */ }
   try { localStorage.removeItem(GOOGLE_OAUTH_PENDING_KEY); } catch { /* ignore */ }
+  try { localStorage.removeItem(GOOGLE_OAUTH_PENDING_TS_KEY); } catch { /* ignore */ }
 }
 
 /** Google OAuth redirect 복귀 URL(해시·쿼리) 여부 */

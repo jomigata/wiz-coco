@@ -311,18 +311,23 @@ export class AccountIntegrationManager {
       resolved = true;
       cleanup();
       const code = (error as any)?.code ?? '';
-      let msg = (error as any)?.message ?? 'Google 로그인을 시작할 수 없습니다.';
+      const rawMsg = (error as any)?.message ?? '';
+      let msg: string;
       if (code === 'auth/unauthorized-domain') {
-        msg = `이 도메인(${window.location.hostname})은 Google 로그인이 허용되지 않습니다. Firebase 콘솔 > Authentication > Settings > Authorized domains 에서 추가해 주세요.`;
+        msg = `도메인 오류: ${window.location.hostname} 이 Firebase 허용 도메인에 없습니다. (Firebase 콘솔 > Authentication > Settings > Authorized domains)`;
       } else if (code === 'auth/operation-not-allowed') {
         msg = 'Google 로그인이 비활성화되어 있습니다. Firebase 콘솔에서 Google 제공업체를 활성화해 주세요.';
+      } else if (rawMsg === 'TIMEOUT' || !rawMsg) {
+        msg = 'Google 로그인 페이지로 이동하지 못했습니다. 광고 차단기(uBlock 등) 비활성화 후 다시 시도해 주세요.';
+      } else {
+        msg = `Google 로그인 오류 (${code || rawMsg}) — 잠시 후 다시 시도해 주세요.`;
       }
-      console.error('[AccountIntegration] signInWithRedirect 오류:', code, msg, error);
+      console.error('[AccountIntegration] signInWithRedirect 오류 —', code || rawMsg, error);
       onError?.(msg);
     };
 
-    // 10초 안에 페이지가 이동하지 않으면 에러 표시
-    const timeoutId = window.setTimeout(() => handleError(new Error('TIMEOUT')), 10_000);
+    // 30초 안에 페이지가 이동하지 않으면 에러 표시 (Firebase 내부 iframe 초기화 포함)
+    const timeoutId = window.setTimeout(() => handleError(new Error('TIMEOUT')), 30_000);
 
     signInWithRedirect(firebaseAuth, provider)
       .then(() => {
