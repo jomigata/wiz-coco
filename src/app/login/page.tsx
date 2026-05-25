@@ -186,13 +186,13 @@ const LoginContent = () => {
     }
   };
 
-  // Google 로그인 — signInWithRedirect, 에러 발생 시 UI에 표시
-  const handleGoogleLogin = () => {
+  // Google 로그인 — createAuthUri REST API로 직접 이동 (Firebase iframe 우회)
+  const handleGoogleLogin = async () => {
     setLoginError('');
     setShowSnsLogin(false);
     setIsLoading(true);
     console.log('[Login] Google 로그인 시도');
-    const result = AccountIntegrationManager.startGoogleOAuth(redirectUrl, (errMsg) => {
+    const result = await AccountIntegrationManager.startGoogleOAuth(redirectUrl, (errMsg) => {
       setLoginError(errMsg);
       setIsLoading(false);
     });

@@ -268,15 +268,13 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google OAuth redirect 시작
-   * - signInWithRedirect가 성공하면 브라우저가 Google 페이지로 이동 (현재 페이지는 unload)
-   * - 실패하면 onError 콜백으로 에러 메시지 전달
-   * - 15초 내에 이동이 없으면 timeout 에러 표시
+   * Google OAuth 시작 — Firebase createAuthUri REST API로 직접 Google로 이동
+   * (signInWithRedirect 내부 iframe 완전 우회)
    */
-  static startGoogleOAuth(
+  static async startGoogleOAuth(
     returnPath?: string,
     onError?: (message: string) => void,
-  ): { ok: boolean; error?: string } {
+  ): Promise<{ ok: boolean; error?: string }> {
     if (typeof window === 'undefined') {
       return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
     }
@@ -286,96 +284,60 @@ export class AccountIntegrationManager {
       return { ok: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
     }
 
+    const apiKey = firebaseAuth.config.apiKey;
+    if (!apiKey) return { ok: false, error: 'Firebase API Key가 없습니다.' };
+
     beginAuthLoginAttempt();
     const destination = returnPath || '/';
     try {
       sessionStorage.setItem('oauth_return', destination);
       localStorage.setItem('oauth_return', destination);
     } catch { /* ignore */ }
-
     markGoogleOAuthPending();
-    const provider = createGoogleAuthProvider();
 
-    console.log('[AccountIntegration] Google signInWithRedirect 시작', {
-      authDomain: firebaseAuth.config.authDomain,
-      host: window.location.hostname,
-    });
+    try {
+      // Firebase createAuthUri REST API로 Google OAuth URL 직접 획득
+      // (signInWithRedirect의 iframe 초기화 없이 바로 Google로 이동 가능)
+      const continueUri = `${window.location.origin}/login/`;
+      console.log('[AccountIntegration] Google OAuth createAuthUri 요청', { continueUri });
 
-    const cleanup = () => {
+      const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            providerId: 'google.com',
+            continueUri,
+            customParameter: { prompt: 'select_account' },
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message ?? 'createAuthUri 실패');
+      }
+
+      const { authUri, sessionId } = (await res.json()) as { authUri: string; sessionId: string };
+      if (!authUri) throw new Error('Google OAuth URL을 가져올 수 없습니다.');
+
+      // sessionId: signInWithIdp 검증에 사용
+      try { localStorage.setItem('google_oauth_session_id', sessionId ?? ''); } catch { /* ignore */ }
+
+      console.log('[AccountIntegration] Google OAuth 이동', { authUri: authUri.slice(0, 80) });
+      window.location.assign(authUri);
+      return { ok: true };
+    } catch (error: unknown) {
       endAuthLoginAttempt();
       clearGoogleOAuthPending();
       try { sessionStorage.removeItem('oauth_return'); } catch { /* ignore */ }
       try { localStorage.removeItem('oauth_return'); } catch { /* ignore */ }
-    };
-
-    let resolved = false;
-
-    const handleError = (error: unknown) => {
-      if (resolved) return;
-      resolved = true;
-      cleanup();
-      const code = (error as any)?.code ?? '';
-      const rawMsg = (error as any)?.message ?? '';
-      let msg: string;
-      if (code === 'auth/unauthorized-domain') {
-        msg = `도메인 오류: ${window.location.hostname} 이 Firebase 허용 도메인에 없습니다. (Firebase 콘솔 > Authentication > Settings > Authorized domains)`;
-      } else if (code === 'auth/operation-not-allowed') {
-        msg = 'Google 로그인이 비활성화되어 있습니다. Firebase 콘솔에서 Google 제공업체를 활성화해 주세요.';
-      } else if (rawMsg === 'TIMEOUT' || !rawMsg) {
-        msg = 'Google 로그인 페이지로 이동하지 못했습니다. 광고 차단기(uBlock 등) 비활성화 후 다시 시도해 주세요.';
-      } else {
-        msg = `Google 로그인 오류 (${code || rawMsg}) — 잠시 후 다시 시도해 주세요.`;
-      }
-      console.error('[AccountIntegration] signInWithRedirect 오류 —', code || rawMsg, error);
+      const msg = (error as any)?.message ?? 'Google 로그인을 시작할 수 없습니다.';
+      console.error('[AccountIntegration] startGoogleOAuth 오류:', msg);
       onError?.(msg);
-    };
-
-    // 최종 30초 타임아웃
-    const timeoutId = window.setTimeout(() => handleError(new Error('TIMEOUT')), 30_000);
-
-    // beforeunload = 페이지가 실제로 이동 중 (signInWithRedirect OR 직접 handler URL)
-    let pageNavigating = false;
-    const markNavigating = () => { pageNavigating = true; };
-    window.addEventListener('beforeunload', markNavigating, { once: true });
-
-    // 5초 후에도 이동이 없으면 Firebase handler URL로 직접 이동 (iframe 완전 우회)
-    const fallbackId = window.setTimeout(() => {
-      window.removeEventListener('beforeunload', markNavigating);
-      if (!pageNavigating && !resolved) {
-        console.warn('[AccountIntegration] signInWithRedirect 5초 지연 → 직접 handler URL로 폴백');
-        try {
-          navigateToGoogleSignInRedirect(firebaseAuth);
-          pageNavigating = true;
-          window.clearTimeout(timeoutId);
-        } catch (e) {
-          handleError(e);
-        }
-      }
-    }, 5_000);
-
-    signInWithRedirect(firebaseAuth, provider)
-      .then(() => {
-        resolved = true;
-        pageNavigating = true;
-        window.clearTimeout(fallbackId);
-        window.clearTimeout(timeoutId);
-      })
-      .catch((error: unknown) => {
-        window.clearTimeout(fallbackId);
-        if (!pageNavigating) {
-          // signInWithRedirect 즉시 실패, 직접 handler URL 시도
-          console.warn('[AccountIntegration] signInWithRedirect 즉시 실패 → 직접 handler URL로 폴백', error);
-          try {
-            navigateToGoogleSignInRedirect(firebaseAuth);
-            pageNavigating = true;
-            window.clearTimeout(timeoutId);
-          } catch (e2) {
-            handleError(e2);
-          }
-        }
-      });
-
-    return { ok: true };
+      return { ok: false, error: msg };
+    }
   }
 
   /** Google redirect 복귀 후 로그인 완료 */
@@ -439,30 +401,77 @@ export class AccountIntegrationManager {
         }
       }
 
-      // 4차: URL hash에서 토큰 파싱 → signInWithCredential
-      // (navigateToGoogleSignInRedirect 폴백 사용 시 Firebase handler가 hash로 토큰 전달)
+      // 4차: URL hash/search에서 토큰 파싱 → signInWithCredential
       if (!redirectUser) {
         const hash = window.location.hash.replace(/^#/, '');
-        if (hash) {
-          const hp = new URLSearchParams(hash);
-          const idToken =
-            hp.get('id_token') || hp.get('oauthIdToken') || null;
-          const accessToken =
-            hp.get('access_token') || hp.get('oauthAccessToken') || null;
-          if (idToken || accessToken) {
-            console.log('[AccountIntegration] URL hash에서 Google 토큰 발견 → signInWithCredential 시도');
-            try {
-              const credential = GoogleAuthProvider.credential(idToken, accessToken);
-              const cr = await signInWithCredential(firebaseAuth, credential);
-              redirectUser = cr.user ?? null;
-              if (redirectUser) {
-                console.log('[AccountIntegration] signInWithCredential 성공:', redirectUser.email);
-                // hash 정리
-                window.history.replaceState(null, '', window.location.pathname + window.location.search);
-              }
-            } catch (credErr) {
-              console.warn('[AccountIntegration] signInWithCredential 실패:', credErr);
+        const sp = new URLSearchParams(hash || window.location.search);
+        const idToken = sp.get('id_token') || sp.get('oauthIdToken') || null;
+        const accessToken = sp.get('access_token') || sp.get('oauthAccessToken') || null;
+        if (idToken || accessToken) {
+          console.log('[AccountIntegration] URL에서 Google 토큰 발견 → signInWithCredential');
+          try {
+            const credential = GoogleAuthProvider.credential(idToken, accessToken);
+            const cr = await signInWithCredential(firebaseAuth, credential);
+            redirectUser = cr.user ?? null;
+            if (redirectUser) {
+              console.log('[AccountIntegration] signInWithCredential 성공:', redirectUser.email);
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
             }
+          } catch (credErr) {
+            console.warn('[AccountIntegration] signInWithCredential 실패:', credErr);
+          }
+        }
+      }
+
+      // 5차: accounts:signInWithIdp REST API (createAuthUri 흐름용)
+      // Firebase handler가 OAuth 결과를 URL로 전달하면 REST API로 처리
+      if (!redirectUser) {
+        const apiKey = firebaseAuth.config.apiKey;
+        const sessionId = localStorage.getItem('google_oauth_session_id') ?? undefined;
+        const currentUrl = window.location.href;
+        // URL에 OAuth 관련 파라미터가 있을 때만 시도
+        const hasOAuthParams =
+          currentUrl.includes('state=') ||
+          currentUrl.includes('code=') ||
+          currentUrl.includes('token=') ||
+          currentUrl.includes('#');
+        if (apiKey && hasOAuthParams) {
+          console.log('[AccountIntegration] accounts:signInWithIdp REST API 시도', { url: currentUrl.slice(0, 100) });
+          try {
+            const idpRes = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  requestUri: currentUrl,
+                  ...(sessionId ? { sessionId } : {}),
+                  returnSecureToken: true,
+                }),
+              },
+            );
+            if (idpRes.ok) {
+              const idpData = await idpRes.json();
+              const googleIdToken: string | null = idpData.oauthIdToken ?? null;
+              const googleAccessToken: string | null = idpData.oauthAccessToken ?? null;
+              if (googleIdToken || googleAccessToken) {
+                const credential = GoogleAuthProvider.credential(googleIdToken, googleAccessToken);
+                const cr = await signInWithCredential(firebaseAuth, credential);
+                redirectUser = cr.user ?? null;
+                if (redirectUser) {
+                  console.log('[AccountIntegration] signInWithIdp → signInWithCredential 성공:', redirectUser.email);
+                  localStorage.removeItem('google_oauth_session_id');
+                  window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+              } else {
+                console.log('[AccountIntegration] signInWithIdp 응답에 oauthIdToken 없음:', Object.keys(idpData));
+              }
+            } else {
+              const errData = await idpRes.json().catch(() => ({}));
+              console.warn('[AccountIntegration] signInWithIdp 실패:', errData?.error?.message);
+            }
+          } catch (idpErr) {
+            console.warn('[AccountIntegration] signInWithIdp REST API 오류:', idpErr);
           }
         }
       }

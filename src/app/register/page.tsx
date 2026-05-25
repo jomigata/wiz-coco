@@ -173,7 +173,7 @@ const RegisterContent = () => {
       console.log(`[Register] ${provider} 소셜 로그인 시도`);
       
       if (provider === 'google') {
-        const result = AccountIntegrationManager.startGoogleOAuth('/mypage', (errMsg) => {
+        const result = await AccountIntegrationManager.startGoogleOAuth('/mypage', (errMsg) => {
           setRegisterError(errMsg);
           setIsLoading(false);
         });
