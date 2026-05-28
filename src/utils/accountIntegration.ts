@@ -2,7 +2,6 @@ import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
   signInWithCredential,
   getRedirectResult,
   onAuthStateChanged,
@@ -14,8 +13,6 @@ import {
   signInWithCustomToken,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
-import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
@@ -548,7 +545,7 @@ export class AccountIntegrationManager {
     error?: string;
     needsAccountLinking?: boolean;
   }> {
-    const started = this.startGoogleOAuth(returnPath);
+    const started = await this.startGoogleOAuth(returnPath);
     if (!started.ok) {
       return { success: false, error: started.error };
     }
