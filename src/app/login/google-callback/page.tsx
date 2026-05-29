@@ -50,6 +50,7 @@ function GoogleCallbackInner() {
         code,
         state,
         redirectUri,
+        onStatus: (status) => setMessage(status),
       });
       if (!result.success) {
         setFailed(true);

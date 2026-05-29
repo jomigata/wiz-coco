@@ -40,6 +40,63 @@ const logToFirebase = async (level: string, message: string, data?: any) => {
   }
 };
 
+function firebaseAuthErrorMessage(error: unknown): string {
+  const code = (error as { code?: string })?.code;
+  const msg = (error as { message?: string })?.message;
+  if (code === 'auth/network-request-failed') {
+    return 'Firebase 서버 연결 실패. 광고 차단기·VPN을 끄고 identitytoolkit.googleapis.com 접속을 허용한 뒤 다시 시도해 주세요.';
+  }
+  if (code === 'auth/invalid-custom-token') {
+    return '로그인 토큰이 유효하지 않습니다. 다시 시도해 주세요.';
+  }
+  return msg || '로그인 처리 중 오류가 발생했습니다.';
+}
+
+/** signInWithCustomToken — 네트워크 일시 오류 시 REST 검증 후 재시도 */
+async function signInWithCustomTokenRobust(
+  firebaseAuth: import('firebase/auth').Auth,
+  customToken: string,
+): Promise<void> {
+  const apiKey = firebaseAuth.config.apiKey;
+  await firebaseAuth.authStateReady();
+
+  const verifyViaRest = async () => {
+    if (!apiKey) throw new Error('Firebase API Key 없음');
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: customToken, returnSecureToken: true }),
+      },
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(
+        (err as { error?: { message?: string } })?.error?.message ||
+          'Custom token REST 검증 실패',
+      );
+    }
+    return res.json();
+  };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await signInWithCustomToken(firebaseAuth, customToken);
+      return;
+    } catch (e: unknown) {
+      lastError = e;
+      const code = (e as { code?: string })?.code;
+      if (code !== 'auth/network-request-failed' || attempt >= 2) break;
+      console.warn(`[AccountIntegration] signInWithCustomToken 재시도 ${attempt + 1}/3`, code);
+      await verifyViaRest();
+      await new Promise((r) => window.setTimeout(r, 1000 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 export interface AccountInfo {
   uid: string;
   email: string;
@@ -405,7 +462,9 @@ export class AccountIntegrationManager {
     code: string;
     state: string | null;
     redirectUri: string;
+    onStatus?: (message: string) => void;
   }): Promise<{ success: boolean; error?: string }> {
+    beginAuthLoginAttempt();
     try {
       const stored = sessionStorage.getItem('oauth_state') || localStorage.getItem('oauth_state');
       // 저장된 state가 없으면(탭/스토리지 유실) UX를 위해 진행은 허용하되,
@@ -454,6 +513,8 @@ export class AccountIntegrationManager {
         if (storedClientId) body.clientId = storedClientId;
       }
 
+      params.onStatus?.('서버에서 로그인 토큰 확인 중… (최초 10~20초 걸릴 수 있습니다)');
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -477,19 +538,36 @@ export class AccountIntegrationManager {
       if (!authed) {
         return { success: false, error: 'Firebase 인증을 초기화할 수 없습니다.' };
       }
-      beginAuthLoginAttempt();
+
+      params.onStatus?.('Firebase 로그인 중…');
       try {
-        await signInWithCustomToken(authed, data.customToken);
+        await signInWithCustomTokenRobust(authed, data.customToken);
         markAuthenticatedTabSession();
+
+        if (params.provider === 'google' && authed.currentUser) {
+          try {
+            UserAccountManager.createOrUpdateUser(
+              authed.currentUser.email!,
+              authed.currentUser.displayName || 'Google 사용자',
+              'google',
+              authed.currentUser.uid,
+              'user',
+            );
+          } catch (accountError) {
+            console.warn('[AccountIntegration] Google 로그인 후 로컬 계정 동기화 실패:', accountError);
+          }
+        }
+
         return { success: true };
       } finally {
         endAuthLoginAttempt();
       }
     } catch (error: unknown) {
+      endAuthLoginAttempt();
       console.error('[AccountIntegration] OAuth 콜백 실패:', error);
       return {
         success: false,
-        error: '로그인 처리 중 오류가 발생했습니다.',
+        error: firebaseAuthErrorMessage(error),
       };
     }
   }
