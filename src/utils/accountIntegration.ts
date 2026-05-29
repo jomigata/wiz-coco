@@ -15,6 +15,12 @@ import {
   markAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 import { UserAccountManager } from './userAccountManager';
+import {
+  buildOAuthState,
+  oauthCallbackUrl,
+  resolveOAuthRedirectUri,
+  validateOAuthState,
+} from './oauthRedirectOrigin';
 
 // 로깅 헬퍼 함수
 const logToFirebase = async (level: string, message: string, data?: any) => {
@@ -334,8 +340,8 @@ export class AccountIntegrationManager {
     }
 
     const destination = returnPath || '/';
-    const redirectUri = `${window.location.origin}/login/google-callback/`;
-    const state = crypto.randomUUID();
+    const redirectUri = oauthCallbackUrl('google');
+    const state = buildOAuthState(redirectUri);
     try {
       sessionStorage.setItem('oauth_state', state);
       localStorage.setItem('oauth_state', state);
@@ -406,8 +412,8 @@ export class AccountIntegrationManager {
           '카카오 로그인이 설정되지 않았습니다. NEXT_PUBLIC_KAKAO_REST_API_KEY를 확인하세요.',
       };
     }
-    const redirectUri = `${window.location.origin}/login/kakao-callback/`;
-    const state = crypto.randomUUID();
+    const redirectUri = oauthCallbackUrl('kakao');
+    const state = buildOAuthState(redirectUri);
     sessionStorage.setItem('oauth_state', state);
     // sessionStorage가 탭/복원/리다이렉트 과정에서 유실되는 케이스가 있어 localStorage에 백업
     // (state 불일치 시에는 여전히 실패 처리)
@@ -439,8 +445,8 @@ export class AccountIntegrationManager {
           '네이버 로그인이 설정되지 않았습니다. NEXT_PUBLIC_NAVER_CLIENT_ID를 확인하세요.',
       };
     }
-    const redirectUri = `${window.location.origin}/login/naver-callback/`;
-    const state = crypto.randomUUID();
+    const redirectUri = oauthCallbackUrl('naver');
+    const state = buildOAuthState(redirectUri);
     sessionStorage.setItem('oauth_state', state);
     localStorage.setItem('oauth_state', state);
     if (returnPath) sessionStorage.setItem('oauth_return', returnPath);
@@ -466,20 +472,9 @@ export class AccountIntegrationManager {
   }): Promise<{ success: boolean; error?: string }> {
     beginAuthLoginAttempt();
     try {
-      const stored = sessionStorage.getItem('oauth_state') || localStorage.getItem('oauth_state');
-      // 저장된 state가 없으면(탭/스토리지 유실) UX를 위해 진행은 허용하되,
-      // 저장된 값이 있는데 불일치하면 CSRF 방지 차원에서 실패 처리
-      if (!params.state) {
-        return {
-          success: false,
-          error: '잘못된 로그인 요청입니다. 다시 시도해 주세요.',
-        };
-      }
-      if (stored && params.state !== stored) {
-        return {
-          success: false,
-          error: '잘못된 로그인 요청입니다. 다시 시도해 주세요.',
-        };
+      const stateCheck = validateOAuthState(params.state);
+      if (!stateCheck.ok) {
+        return { success: false, error: stateCheck.error };
       }
       sessionStorage.removeItem('oauth_state');
       localStorage.removeItem('oauth_state');
@@ -495,12 +490,7 @@ export class AccountIntegrationManager {
       const body: Record<string, string> = {
         provider: params.provider,
         code: params.code,
-        redirectUri:
-          params.provider === 'google'
-            ? sessionStorage.getItem('oauth_redirect_uri') ||
-              localStorage.getItem('oauth_redirect_uri') ||
-              params.redirectUri
-            : params.redirectUri,
+        redirectUri: resolveOAuthRedirectUri(params.state, params.provider),
       };
       if (params.provider === 'naver' && params.state) {
         body.state = params.state;

@@ -7,6 +7,7 @@ import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { initializeFirebase } from '@/lib/firebase';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
+import { resolveOAuthRedirectUri } from '@/utils/oauthRedirectOrigin';
 
 function NaverCallbackInner() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ function NaverCallbackInner() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/login/naver-callback/`;
+    const redirectUri = resolveOAuthRedirectUri(state, 'naver');
 
     (async () => {
       const result = await AccountIntegrationManager.completeOAuthFromCallback({

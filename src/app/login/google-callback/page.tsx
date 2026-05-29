@@ -7,6 +7,7 @@ import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { initializeFirebase } from '@/lib/firebase';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
+import { resolveOAuthRedirectUri } from '@/utils/oauthRedirectOrigin';
 
 function GoogleCallbackInner() {
   const searchParams = useSearchParams();
@@ -39,10 +40,7 @@ function GoogleCallbackInner() {
       return;
     }
 
-    const redirectUri =
-      sessionStorage.getItem('oauth_redirect_uri') ||
-      localStorage.getItem('oauth_redirect_uri') ||
-      `${window.location.origin}/login/google-callback/`;
+    const redirectUri = resolveOAuthRedirectUri(state, 'google');
 
     (async () => {
       const result = await AccountIntegrationManager.completeOAuthFromCallback({

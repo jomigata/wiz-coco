@@ -7,6 +7,7 @@ import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { initializeFirebase } from '@/lib/firebase';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
+import { resolveOAuthRedirectUri } from '@/utils/oauthRedirectOrigin';
 
 function KakaoCallbackInner() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ function KakaoCallbackInner() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/login/kakao-callback/`;
+    const redirectUri = resolveOAuthRedirectUri(state, 'kakao');
 
     (async () => {
       const result = await AccountIntegrationManager.completeOAuthFromCallback({
