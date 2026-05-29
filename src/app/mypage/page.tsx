@@ -709,7 +709,7 @@ function MyPageContent() {
             if (id) rowsById.set(id, row);
           }
         }
-        const rows = [...rowsById.values()];
+        const rows = Array.from(rowsById.values());
 
         const [bundle] = await Promise.all([
           (async () => {
