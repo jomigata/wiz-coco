@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { getSession } from 'next-auth/react';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 
 // 로딩 컴포넌트
 const LoadingRegister = () => (
@@ -207,7 +206,6 @@ const RegisterContent = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <GoogleOAuthRedirectHandler defaultRedirect="/mypage" onError={setRegisterError} onProcessingChange={setIsLoading} />
 <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">

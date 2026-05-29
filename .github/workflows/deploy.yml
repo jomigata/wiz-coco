@@ -221,6 +221,9 @@ jobs:
         if [ -n "${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_ID }}" ]; then
           echo "NEXT_PUBLIC_NAVER_CLIENT_ID=${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_ID }}" >> .env
         fi
+        if [ -n "${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}" ]; then
+          echo "NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}" >> .env
+        fi
         if [ -n "${{ secrets.NEXT_PUBLIC_SOCIAL_AUTH_URL }}" ]; then
           echo "NEXT_PUBLIC_SOCIAL_AUTH_URL=${{ secrets.NEXT_PUBLIC_SOCIAL_AUTH_URL }}" >> .env
         fi
@@ -291,6 +294,7 @@ jobs:
         optional_vars=(
           "NEXT_PUBLIC_KAKAO_REST_API_KEY"
           "NEXT_PUBLIC_NAVER_CLIENT_ID"
+          "NEXT_PUBLIC_GOOGLE_CLIENT_ID"
           "NEXT_PUBLIC_SOCIAL_AUTH_URL"
         )
         
@@ -338,6 +342,9 @@ jobs:
               ;;
             "NEXT_PUBLIC_NAVER_CLIENT_ID")
               secret_value="${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_ID }}"
+              ;;
+            "NEXT_PUBLIC_GOOGLE_CLIENT_ID")
+              secret_value="${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
               ;;
             "NEXT_PUBLIC_SOCIAL_AUTH_URL")
               secret_value="${{ secrets.NEXT_PUBLIC_SOCIAL_AUTH_URL }}"
@@ -433,6 +440,14 @@ jobs:
           echo "✅ Naver functions config set"
         else
           echo "⚠️  NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 미설정(네이버 로그인 서버 교환이 실패할 수 있음)"
+        fi
+        
+        if [ -n "${{ secrets.GOOGLE_CLIENT_ID }}" ] && [ -n "${{ secrets.GOOGLE_CLIENT_SECRET }}" ]; then
+          firebase functions:config:set google.client_id="${{ secrets.GOOGLE_CLIENT_ID }}" google.client_secret="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+          echo "✅ Google functions config set"
+        else
+          echo "⚠️  GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 미설정(구글 로그인 서버 교환이 실패할 수 있음)"
         fi
         
         echo "=================================="

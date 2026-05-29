@@ -376,8 +376,9 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google OAuth 시작 — signInWithRedirect (SDK redirect 상태 저장 → getRedirectResult 가능)
-   * 6초 내 이동 없으면 handler 직접 이동 폴백
+   * Google OAuth 시작 — 서버 교환 방식 (카카오/네이버와 동일)
+   * Google authorize URL로 직접 이동 → /login/google-callback/ 에서 code를 서버에서
+   * Firebase custom token으로 교환. Firebase iframe/redirect 미사용으로 cross-origin 문제 회피.
    */
   static async startGoogleOAuth(
     returnPath?: string,
@@ -387,60 +388,39 @@ export class AccountIntegrationManager {
       return { ok: false, error: '브라우저에서만 사용할 수 있습니다.' };
     }
 
-    const { auth: firebaseAuth } = initializeFirebase();
-    if (!firebaseAuth) {
-      return { ok: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
+    if (!clientId) {
+      const msg =
+        '구글 로그인이 설정되지 않았습니다. NEXT_PUBLIC_GOOGLE_CLIENT_ID를 확인하세요.';
+      onError?.(msg);
+      return { ok: false, error: msg };
     }
 
-    const apiKey = firebaseAuth.config.apiKey;
-    if (!apiKey) return { ok: false, error: 'Firebase API Key가 없습니다.' };
-
-    beginAuthLoginAttempt();
     const destination = returnPath || '/';
+    const redirectUri = `${window.location.origin}/login/google-callback/`;
+    const state = crypto.randomUUID();
     try {
+      sessionStorage.setItem('oauth_state', state);
+      localStorage.setItem('oauth_state', state);
       sessionStorage.setItem('oauth_return', destination);
       localStorage.setItem('oauth_return', destination);
+      sessionStorage.setItem('oauth_provider', 'google');
     } catch { /* ignore */ }
-    markGoogleOAuthPending();
 
-    const returnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-    let fallbackTimer: number | null = null;
-
-    try {
-      console.log('[AccountIntegration] Google OAuth signInWithRedirect 시작', {
-        authDomain: firebaseAuth.config.authDomain,
-        returnUrl,
-      });
-
-      fallbackTimer = window.setTimeout(() => {
-        console.warn('[AccountIntegration] signInWithRedirect 지연 — handler 직접 이동 폴백');
-        try {
-          navigateToGoogleSignInRedirect(firebaseAuth, returnUrl);
-        } catch (navErr) {
-          console.error('[AccountIntegration] handler 폴백 실패:', navErr);
-        }
-      }, 6_000);
-
-      const provider = createGoogleAuthProvider();
-      await signInWithRedirect(firebaseAuth, provider);
-      if (fallbackTimer) window.clearTimeout(fallbackTimer);
-      return { ok: true };
-    } catch (error: unknown) {
-      if (fallbackTimer) window.clearTimeout(fallbackTimer);
-      try {
-        navigateToGoogleSignInRedirect(firebaseAuth, returnUrl);
-        return { ok: true };
-      } catch {
-        endAuthLoginAttempt();
-        clearGoogleOAuthPending();
-        try { sessionStorage.removeItem('oauth_return'); } catch { /* ignore */ }
-        try { localStorage.removeItem('oauth_return'); } catch { /* ignore */ }
-        const msg = (error as any)?.message ?? 'Google 로그인을 시작할 수 없습니다.';
-        console.error('[AccountIntegration] startGoogleOAuth 오류:', msg);
-        onError?.(msg);
-        return { ok: false, error: msg };
-      }
-    }
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state,
+      prompt: 'select_account',
+      access_type: 'online',
+      include_granted_scopes: 'true',
+    });
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    console.log('[AccountIntegration] Google OAuth authorize 이동', { redirectUri });
+    window.location.assign(url);
+    return { ok: true };
   }
 
   /** Google redirect 복귀 후 로그인 완료 */
@@ -677,7 +657,7 @@ export class AccountIntegrationManager {
    * OAuth 콜백에서 authorization_code → Custom Token 로그인
    */
   static async completeOAuthFromCallback(params: {
-    provider: 'kakao' | 'naver';
+    provider: 'kakao' | 'naver' | 'google';
     code: string;
     state: string | null;
     redirectUri: string;

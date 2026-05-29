@@ -9,7 +9,6 @@ import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/auth
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
-import GoogleOAuthRedirectHandler from '@/components/auth/GoogleOAuthRedirectHandler';
 // 로딩 컴포넌트
 const LoadingLogin = () => (
   <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
@@ -286,11 +285,6 @@ const LoginContent = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <GoogleOAuthRedirectHandler
-        defaultRedirect={redirectUrl}
-        onError={setLoginError}
-        onProcessingChange={setIsLoading}
-      />
 <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">

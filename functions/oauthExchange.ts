@@ -10,6 +10,8 @@ const KAKAO_TOKEN = 'https://kauth.kakao.com/oauth/token';
 const KAKAO_USER = 'https://kapi.kakao.com/v2/user/me';
 const NAVER_TOKEN = 'https://nid.naver.com/oauth2.0/token';
 const NAVER_PROFILE = 'https://openapi.naver.com/v1/nid/me';
+const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
+const GOOGLE_USER = 'https://www.googleapis.com/oauth2/v3/userinfo';
 
 function setCors(res: Response, origin?: string) {
   const allow =
@@ -33,6 +35,14 @@ function getConfig() {
     naverClientId: process.env.NAVER_CLIENT_ID || cfg.naver?.client_id,
     naverClientSecret:
       process.env.NAVER_CLIENT_SECRET || cfg.naver?.client_secret,
+    googleClientId:
+      process.env.GOOGLE_CLIENT_ID ||
+      process.env.GOOGLE_OAUTH_CLIENT_ID ||
+      cfg.google?.client_id,
+    googleClientSecret:
+      process.env.GOOGLE_CLIENT_SECRET ||
+      process.env.GOOGLE_OAUTH_CLIENT_SECRET ||
+      cfg.google?.client_secret,
   };
 }
 
@@ -50,14 +60,19 @@ function isAllowedRedirectUri(uri: string): boolean {
   const defaults = [
     'https://wiz-coco.web.app/login/kakao-callback/',
     'https://wiz-coco.web.app/login/naver-callback/',
+    'https://wiz-coco.web.app/login/google-callback/',
     'https://wizcoco.com/login/kakao-callback/',
     'https://wizcoco.com/login/naver-callback/',
+    'https://wizcoco.com/login/google-callback/',
     'https://www.wizcoco.com/login/kakao-callback/',
     'https://www.wizcoco.com/login/naver-callback/',
+    'https://www.wizcoco.com/login/google-callback/',
     'http://localhost:3000/login/kakao-callback/',
     'http://localhost:3000/login/naver-callback/',
+    'http://localhost:3000/login/google-callback/',
     'http://127.0.0.1:3000/login/kakao-callback/',
     'http://127.0.0.1:3000/login/naver-callback/',
+    'http://127.0.0.1:3000/login/google-callback/',
   ];
   const allowed = [...fromEnv, ...defaults].map(normalizeRedirectUri);
   const norm = normalizeRedirectUri(uri);
@@ -146,6 +161,52 @@ async function naverExchange(
     providerUid: r.id,
     email: r.email,
     displayName: r.name || r.nickname || `네이버${r.id}`,
+  };
+}
+
+async function googleExchange(
+  code: string,
+  redirectUri: string,
+  clientId: string,
+  clientSecret: string
+) {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: redirectUri,
+    code,
+  });
+  const tokenRes = await fetch(GOOGLE_TOKEN, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!tokenRes.ok) {
+    const t = await tokenRes.text();
+    functions.logger.error('Google token error', tokenRes.status, t);
+    throw new Error('구글 토큰 교환에 실패했습니다.');
+  }
+  const tokenJson = (await tokenRes.json()) as { access_token: string };
+  const meRes = await fetch(GOOGLE_USER, {
+    headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+  });
+  if (!meRes.ok) {
+    throw new Error('구글 사용자 정보를 가져오지 못했습니다.');
+  }
+  const me = (await meRes.json()) as {
+    sub: string;
+    email?: string;
+    email_verified?: boolean;
+    name?: string;
+  };
+  if (!me.sub) {
+    throw new Error('구글 프로필이 올바르지 않습니다.');
+  }
+  return {
+    providerUid: me.sub,
+    email: me.email,
+    displayName: me.name || `구글사용자${me.sub.slice(-6)}`,
   };
 }
 
@@ -278,6 +339,20 @@ export const socialOAuthExchange = functions.https.onRequest(
         providerUid = n.providerUid;
         email = n.email;
         displayName = n.displayName;
+      } else if (provider === 'google') {
+        if (!cfg.googleClientId || !cfg.googleClientSecret) {
+          res.status(500).json({ error: '구글 서버 설정이 없습니다.' });
+          return;
+        }
+        const g = await googleExchange(
+          code,
+          redirectUri,
+          cfg.googleClientId,
+          cfg.googleClientSecret
+        );
+        providerUid = g.providerUid;
+        email = g.email;
+        displayName = g.displayName;
       } else {
         res.status(400).json({ error: '지원하지 않는 provider입니다.' });
         return;
