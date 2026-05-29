@@ -16,8 +16,7 @@ import {
 function GoogleCallbackInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [message, setMessage] = useState('구글 로그인 처리 중…');
-  const [failed, setFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const ran = useRef(false);
 
   useEffect(() => {
@@ -27,11 +26,10 @@ function GoogleCallbackInner() {
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
     if (error) {
-      setFailed(true);
-      setMessage(
+      setErrorMessage(
         errorDescription
           ? decodeURIComponent(errorDescription)
-          : '구글 인증이 취소되었거나 거절되었습니다.'
+          : '구글 인증이 취소되었거나 거절되었습니다.',
       );
       return;
     }
@@ -39,21 +37,20 @@ function GoogleCallbackInner() {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     if (!code) {
-      setFailed(true);
-      setMessage('인증 코드가 없습니다.');
+      setErrorMessage('인증 코드가 없습니다.');
       return;
     }
 
     if (isOAuthCodeAlreadyConsumed(code)) {
-      setFailed(true);
-      setMessage(
-        '이미 처리된 로그인입니다. 새로고침하지 말고 로그인 페이지에서 Google 로그인을 다시 시도해 주세요.',
+      setErrorMessage(
+        '이미 처리된 로그인입니다. 로그인 페이지에서 Google 로그인을 다시 시도해 주세요.',
       );
       stripOAuthParamsFromUrl();
       return;
     }
 
     stripOAuthParamsFromUrl();
+    initializeFirebase();
 
     const redirectUri = resolveOAuthRedirectUri(state, 'google');
 
@@ -63,11 +60,9 @@ function GoogleCallbackInner() {
         code,
         state,
         redirectUri,
-        onStatus: (status) => setMessage(status),
       });
       if (!result.success) {
-        setFailed(true);
-        setMessage(result.error || '로그인에 실패했습니다.');
+        setErrorMessage(result.error || '로그인에 실패했습니다.');
         return;
       }
       const ret = sessionStorage.getItem('oauth_return') || '/mypage';
@@ -86,35 +81,31 @@ function GoogleCallbackInner() {
     })();
   }, [router, searchParams]);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="max-w-sm w-full rounded-xl border border-emerald-800/40 bg-emerald-900/25 p-6 text-center">
-          <p className={`text-sm ${failed ? 'text-red-300' : 'text-emerald-200'}`}>{message}</p>
-          {failed && (
+  if (errorMessage) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
+        <div className="flex-grow flex items-center justify-center px-4 py-12">
+          <div className="max-w-sm w-full rounded-xl border border-emerald-800/40 bg-emerald-900/25 p-6 text-center">
+            <p className="text-sm text-red-300">{errorMessage}</p>
             <Link
               href="/login/"
               className="mt-4 inline-block text-sm text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
             >
               로그인으로 돌아가기
             </Link>
-          )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <div className="min-h-screen bg-emerald-950" aria-busy="true" />;
 }
 
 export default function GoogleCallbackPage() {
   return (
     <Suspense
-      fallback={
-        <div className="min-h-screen bg-emerald-950 flex flex-col">
-          <div className="flex-grow flex items-center justify-center text-emerald-300 text-sm">
-            로딩 중…
-          </div>
-        </div>
-      }
+      fallback={<div className="min-h-screen bg-emerald-950" />}
     >
       <GoogleCallbackInner />
     </Suspense>

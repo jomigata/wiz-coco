@@ -68,69 +68,21 @@ function firebaseAuthErrorMessage(error: unknown): string {
   return msg || '로그인 처리 중 오류가 발생했습니다.';
 }
 
-/** signInWithCustomToken — 시간 초과·IndexedDB 블로킹 완화 (REST로 토큰 소모하지 않음) */
+/** signInWithCustomToken — 단순·빠른 경로 (중간 persistence 전환 없음) */
 async function signInWithCustomTokenRobust(
   firebaseAuth: import('firebase/auth').Auth,
   customToken: string,
 ): Promise<void> {
-  const {
-    signInWithCustomToken,
-    setPersistence,
-    inMemoryPersistence,
-    browserLocalPersistence,
-  } = await import('firebase/auth');
-
-  const withTimeout = <T>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
-    new Promise<T>((resolve, reject) => {
-      const timer = window.setTimeout(
-        () => reject(new Error(`${label} 시간 초과 (${Math.round(ms / 1000)}초)`)),
-        ms,
+  const timeoutMs = 10_000;
+  await Promise.race([
+    signInWithCustomToken(firebaseAuth, customToken),
+    new Promise<never>((_, reject) => {
+      window.setTimeout(
+        () => reject(new Error('Firebase 로그인 시간 초과 (10초)')),
+        timeoutMs,
       );
-      promise
-        .then((v) => {
-          window.clearTimeout(timer);
-          resolve(v);
-        })
-        .catch((e) => {
-          window.clearTimeout(timer);
-          reject(e);
-        });
-    });
-
-  try {
-    await firebaseAuth.authStateReady();
-  } catch {
-    // ignore
-  }
-
-  try {
-    await setPersistence(firebaseAuth, inMemoryPersistence);
-  } catch {
-    // persistence 설정 실패 시 기본 persistence로 진행
-  }
-
-  const SIGN_IN_TIMEOUT_MS = 15_000;
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      await withTimeout(
-        signInWithCustomToken(firebaseAuth, customToken),
-        SIGN_IN_TIMEOUT_MS,
-        'Firebase 로그인',
-      );
-      void setPersistence(firebaseAuth, browserLocalPersistence).catch(() => {});
-      return;
-    } catch (e: unknown) {
-      lastError = e;
-      const code = (e as { code?: string })?.code;
-      if (code === 'auth/invalid-custom-token' || attempt >= 1) break;
-      console.warn('[AccountIntegration] signInWithCustomToken 재시도', code);
-      await new Promise((r) => window.setTimeout(r, 800));
-    }
-  }
-
-  throw lastError;
+    }),
+  ]);
 }
 
 export interface AccountInfo {
@@ -544,8 +496,6 @@ export class AccountIntegrationManager {
         if (storedClientId) body.clientId = storedClientId;
       }
 
-      params.onStatus?.('서버에서 로그인 토큰 확인 중… (최초 10~20초 걸릴 수 있습니다)');
-
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -570,28 +520,30 @@ export class AccountIntegrationManager {
         return { success: false, error: 'Firebase 인증을 초기화할 수 없습니다.' };
       }
 
-      params.onStatus?.('Firebase 로그인 중…');
       try {
         await signInWithCustomTokenRobust(authed, data.customToken);
         markAuthenticatedTabSession();
         clearGoogleOAuthPending();
 
         if (params.provider === 'google' && authed.currentUser) {
-          try {
-            const email =
-              authed.currentUser.email?.trim() ||
-              authed.currentUser.providerData.find((p: UserInfo) => p.email)?.email?.trim() ||
-              `google_${authed.currentUser.uid}@wizcoco.oauth`;
-            UserAccountManager.createOrUpdateUser(
-              email,
-              authed.currentUser.displayName || 'Google 사용자',
-              'google',
-              authed.currentUser.uid,
-              'user',
-            );
-          } catch (accountError) {
-            console.warn('[AccountIntegration] Google 로그인 후 로컬 계정 동기화 실패:', accountError);
-          }
+          const user = authed.currentUser;
+          void Promise.resolve().then(() => {
+            try {
+              const email =
+                user.email?.trim() ||
+                user.providerData.find((p: UserInfo) => p.email)?.email?.trim() ||
+                `google_${user.uid}@wizcoco.oauth`;
+              UserAccountManager.createOrUpdateUser(
+                email,
+                user.displayName || 'Google 사용자',
+                'google',
+                user.uid,
+                'user',
+              );
+            } catch (accountError) {
+              console.warn('[AccountIntegration] Google 로그인 후 로컬 계정 동기화 실패:', accountError);
+            }
+          });
         }
 
         return { success: true };

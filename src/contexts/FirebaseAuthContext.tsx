@@ -178,20 +178,29 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       authExpiredOnStartupRef.current = false;
       const baseUser = authUserFromSdkUser(firebaseUser);
 
-      try {
-        if (db) {
-          let resolvedRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';
+      const quickRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';
+      const quickUser = { ...baseUser, role: quickRole };
+      setUser(quickUser);
+      writeSWRCache(AUTH_CACHE_KEY, quickUser, { scope: 'session' });
+      finishLoading();
 
+      if (!db) return;
+
+      void (async () => {
+        try {
+          let resolvedRole = quickRole;
           try {
             const token = await firebaseUser.getIdToken();
             const baseUrl = getFlaskApiBaseUrl();
             const headers = { Authorization: `Bearer ${token}` };
-            const [bootstrapRes] = await Promise.all([
-              fetch(`${baseUrl}/api/auth/bootstrap-role`, { method: 'POST', headers }),
-              fetch(`${baseUrl}/api/auth/link-legacy-data`, { method: 'POST', headers }).catch(
-                () => null,
-              ),
-            ]);
+            void fetch(`${baseUrl}/api/auth/link-legacy-data`, {
+              method: 'POST',
+              headers,
+            }).catch(() => null);
+            const bootstrapRes = await fetch(`${baseUrl}/api/auth/bootstrap-role`, {
+              method: 'POST',
+              headers,
+            });
             if (bootstrapRes.ok) {
               const boot = (await bootstrapRes.json().catch(() => ({}))) as { role?: AppRole };
               if (boot.role === 'admin' || boot.role === 'counselor' || boot.role === 'user') {
@@ -199,18 +208,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
               }
             }
           } catch {
-            // ignore — Firestore users 문서에서 role 재조회
+            // ignore
           }
 
           const ref = doc(db, 'users', firebaseUser.uid);
           const snap = await getDoc(ref);
-          if (snap.exists()) {
-            const data = snap.data() as { role?: AppRole };
-            const role = (data?.role || resolvedRole || 'user') as AppRole;
-            const nextUser = { ...baseUser, role };
-            setUser(nextUser);
-            writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
-          } else {
+          if (!snap.exists()) {
             await setDoc(
               ref,
               {
@@ -223,10 +226,18 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
               },
               { merge: true },
             );
-            const nextUser = { ...baseUser, role: resolvedRole };
-            setUser(nextUser);
-            writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
           }
+
+          const role = (
+            snap.exists()
+              ? ((snap.data() as { role?: AppRole })?.role || resolvedRole)
+              : resolvedRole
+          ) as AppRole;
+          setUser((prev) => {
+            const nextUser = prev ? { ...prev, role } : { ...baseUser, role };
+            writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
+            return nextUser;
+          });
 
           if (unsubscribeUserDoc) unsubscribeUserDoc();
           unsubscribeUserDoc = onSnapshot(
@@ -245,17 +256,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
               // ignore realtime errors
             },
           );
-        } else {
-          setUser(baseUser);
-          writeSWRCache(AUTH_CACHE_KEY, baseUser, { scope: 'session' });
+        } catch (e) {
+          console.warn('[FirebaseAuth] role 로드 실패:', e);
         }
-      } catch (e) {
-        console.warn('[FirebaseAuth] role 로드 실패:', e);
-        setUser(baseUser);
-        writeSWRCache(AUTH_CACHE_KEY, baseUser, { scope: 'session' });
-      } finally {
-        finishLoading();
-      }
+      })();
     };
 
     const scheduleLogoutCheck = () => {
