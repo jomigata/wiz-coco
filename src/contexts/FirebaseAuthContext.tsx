@@ -247,6 +247,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
     const scheduleLogoutCheck = () => {
       if (deferredLogoutTimer) clearTimeout(deferredLogoutTimer);
+      const deferMs = isGoogleOAuthFlowActive() ? 10_000 : LOGOUT_DEFER_MS;
       deferredLogoutTimer = setTimeout(async () => {
         deferredLogoutTimer = null;
         if (cancelled) return;
@@ -279,7 +280,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         setUser(null);
         writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
         finishLoading();
-      }, LOGOUT_DEFER_MS);
+      }, deferMs);
     };
 
     const loadingSafetyTimer = setTimeout(() => {

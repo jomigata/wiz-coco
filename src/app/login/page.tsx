@@ -186,7 +186,7 @@ const LoginContent = () => {
     }
   };
 
-  // Google 로그인 — Firebase handler 직접 이동 (iframe 우회)
+  // Google 로그인 — signInWithRedirect (복귀 시 getRedirectResult)
   const handleGoogleLogin = async () => {
     setLoginError('');
     setShowSnsLogin(false);

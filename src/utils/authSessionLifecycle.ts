@@ -109,21 +109,36 @@ export function clearAuthStorageSync(): void {
   }
 }
 
+const AUTH_LOGIN_IN_PROGRESS_LS_KEY = 'wizcoco:auth-login-in-progress-ls';
+
 /** 로그인 시도 시작 — startup signOut·세션 정리와의 경쟁 방지 */
 export function beginAuthLoginAttempt(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(AUTH_LOGIN_IN_PROGRESS_KEY, '1');
+  try {
+    localStorage.setItem(AUTH_LOGIN_IN_PROGRESS_LS_KEY, '1');
+  } catch {
+    // ignore
+  }
 }
 
 /** 로그인 시도 종료 */
 export function endAuthLoginAttempt(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.removeItem(AUTH_LOGIN_IN_PROGRESS_KEY);
+  try {
+    localStorage.removeItem(AUTH_LOGIN_IN_PROGRESS_LS_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export function isAuthLoginInProgress(): boolean {
   if (typeof window === 'undefined') return false;
-  return sessionStorage.getItem(AUTH_LOGIN_IN_PROGRESS_KEY) === '1';
+  return (
+    sessionStorage.getItem(AUTH_LOGIN_IN_PROGRESS_KEY) === '1' ||
+    localStorage.getItem(AUTH_LOGIN_IN_PROGRESS_LS_KEY) === '1'
+  );
 }
 
 /** Google OAuth pending 플래그: sessionStorage + localStorage(타임스탬프 포함)에 저장
