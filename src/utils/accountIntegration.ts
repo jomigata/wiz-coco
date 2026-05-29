@@ -404,7 +404,7 @@ export class AccountIntegrationManager {
     markGoogleOAuthPending();
 
     const returnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let fallbackTimer: number | null = null;
 
     try {
       console.log('[AccountIntegration] Google OAuth signInWithRedirect 시작', {
