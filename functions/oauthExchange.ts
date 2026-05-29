@@ -325,8 +325,9 @@ async function getOrCreateUid(
   return uid;
 }
 
-export const socialOAuthExchange = functions.https.onRequest(
-  async (req: Request, res: Response) => {
+export const socialOAuthExchange = functions
+  .runWith({ minInstances: 1 })
+  .https.onRequest(async (req: Request, res: Response) => {
     setCors(res, req.get('origin'));
 
     if (req.method === 'OPTIONS') {

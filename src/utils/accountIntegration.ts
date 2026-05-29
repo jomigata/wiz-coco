@@ -6,9 +6,9 @@ import {
   EmailAuthProvider,
   updateProfile,
   sendEmailVerification,
-  signInWithCustomToken,
   type UserInfo,
 } from 'firebase/auth';
+import { signInWithAppCustomToken } from '@/lib/firebaseCustomTokenSignIn';
 import { initializeFirebase } from '@/lib/firebase';
 import {
   beginAuthLoginAttempt,
@@ -56,8 +56,8 @@ const logToFirebase = async (level: string, message: string, data?: any) => {
 function firebaseAuthErrorMessage(error: unknown): string {
   const code = (error as { code?: string })?.code;
   const msg = (error as { message?: string })?.message;
-  if (msg?.includes('시간 초과')) {
-    return `${msg}. 광고 차단기·VPN을 끄고 다시 시도해 주세요.`;
+  if (msg?.includes('시간 초과') || msg?.includes('Firebase 로그인')) {
+    return 'Firebase 로그인에 실패했습니다. 광고 차단기·VPN을 끄고 identitytoolkit.googleapis.com 접속을 허용한 뒤 다시 시도해 주세요.';
   }
   if (code === 'auth/network-request-failed') {
     return 'Firebase 서버 연결 실패. 광고 차단기·VPN을 끄고 identitytoolkit.googleapis.com 접속을 허용한 뒤 다시 시도해 주세요.';
@@ -68,21 +68,12 @@ function firebaseAuthErrorMessage(error: unknown): string {
   return msg || '로그인 처리 중 오류가 발생했습니다.';
 }
 
-/** signInWithCustomToken — 단순·빠른 경로 (중간 persistence 전환 없음) */
+/** Custom token → Firebase 세션 (compat, IndexedDB hang 회피) */
 async function signInWithCustomTokenRobust(
-  firebaseAuth: import('firebase/auth').Auth,
+  _firebaseAuth: import('firebase/auth').Auth,
   customToken: string,
 ): Promise<void> {
-  const timeoutMs = 10_000;
-  await Promise.race([
-    signInWithCustomToken(firebaseAuth, customToken),
-    new Promise<never>((_, reject) => {
-      window.setTimeout(
-        () => reject(new Error('Firebase 로그인 시간 초과 (10초)')),
-        timeoutMs,
-      );
-    }),
-  ]);
+  await signInWithAppCustomToken(customToken);
 }
 
 export interface AccountInfo {
