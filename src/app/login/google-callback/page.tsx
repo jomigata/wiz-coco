@@ -39,7 +39,10 @@ function GoogleCallbackInner() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/login/google-callback/`;
+    const redirectUri =
+      sessionStorage.getItem('oauth_redirect_uri') ||
+      localStorage.getItem('oauth_redirect_uri') ||
+      `${window.location.origin}/login/google-callback/`;
 
     (async () => {
       const result = await AccountIntegrationManager.completeOAuthFromCallback({
@@ -56,6 +59,10 @@ function GoogleCallbackInner() {
       const ret = sessionStorage.getItem('oauth_return') || '/mypage';
       sessionStorage.removeItem('oauth_return');
       sessionStorage.removeItem('oauth_provider');
+      sessionStorage.removeItem('oauth_redirect_uri');
+      sessionStorage.removeItem('oauth_client_id');
+      localStorage.removeItem('oauth_redirect_uri');
+      localStorage.removeItem('oauth_client_id');
       const { auth: authed } = initializeFirebase();
       if (authed?.currentUser) {
         primeFirebaseAuthSessionCache(authed.currentUser);

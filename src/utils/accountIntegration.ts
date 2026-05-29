@@ -285,6 +285,10 @@ export class AccountIntegrationManager {
       sessionStorage.setItem('oauth_return', destination);
       localStorage.setItem('oauth_return', destination);
       sessionStorage.setItem('oauth_provider', 'google');
+      sessionStorage.setItem('oauth_redirect_uri', redirectUri);
+      localStorage.setItem('oauth_redirect_uri', redirectUri);
+      sessionStorage.setItem('oauth_client_id', clientId);
+      localStorage.setItem('oauth_client_id', clientId);
     } catch { /* ignore */ }
 
     const params = new URLSearchParams({
@@ -432,10 +436,22 @@ export class AccountIntegrationManager {
       const body: Record<string, string> = {
         provider: params.provider,
         code: params.code,
-        redirectUri: params.redirectUri,
+        redirectUri:
+          params.provider === 'google'
+            ? sessionStorage.getItem('oauth_redirect_uri') ||
+              localStorage.getItem('oauth_redirect_uri') ||
+              params.redirectUri
+            : params.redirectUri,
       };
       if (params.provider === 'naver' && params.state) {
         body.state = params.state;
+      }
+      if (params.provider === 'google') {
+        const storedClientId =
+          sessionStorage.getItem('oauth_client_id') ||
+          localStorage.getItem('oauth_client_id') ||
+          process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
+        if (storedClientId) body.clientId = storedClientId;
       }
 
       const res = await fetch(endpoint, {

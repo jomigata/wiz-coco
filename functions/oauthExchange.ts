@@ -35,14 +35,19 @@ function getConfig() {
     naverClientId: process.env.NAVER_CLIENT_ID || cfg.naver?.client_id,
     naverClientSecret:
       process.env.NAVER_CLIENT_SECRET || cfg.naver?.client_secret,
-    googleClientId:
+    // functions:config(배포 시 주입) 우선 — GCP에 남은 stale env가 config를 덮어쓰지 않도록
+    googleClientId: (
+      cfg.google?.client_id ||
       process.env.GOOGLE_CLIENT_ID ||
       process.env.GOOGLE_OAUTH_CLIENT_ID ||
-      cfg.google?.client_id,
-    googleClientSecret:
+      ''
+    ).trim(),
+    googleClientSecret: (
+      cfg.google?.client_secret ||
       process.env.GOOGLE_CLIENT_SECRET ||
       process.env.GOOGLE_OAUTH_CLIENT_SECRET ||
-      cfg.google?.client_secret,
+      ''
+    ).trim(),
   };
 }
 
@@ -184,8 +189,22 @@ async function googleExchange(
   });
   if (!tokenRes.ok) {
     const t = await tokenRes.text();
-    functions.logger.error('Google token error', tokenRes.status, t);
-    throw new Error('구글 토큰 교환에 실패했습니다.');
+    functions.logger.error('Google token error', tokenRes.status, t, {
+      redirectUri,
+      clientId: clientId.slice(0, 12) + '…',
+    });
+    let detail = '';
+    try {
+      const errJson = JSON.parse(t) as { error?: string; error_description?: string };
+      detail = errJson.error_description || errJson.error || '';
+    } catch {
+      detail = t.slice(0, 200);
+    }
+    throw new Error(
+      detail
+        ? `구글 토큰 교환에 실패했습니다: ${detail}`
+        : '구글 토큰 교환에 실패했습니다.',
+    );
   }
   const tokenJson = (await tokenRes.json()) as { access_token: string };
   const meRes = await fetch(GOOGLE_USER, {
@@ -285,11 +304,13 @@ export const socialOAuthExchange = functions.https.onRequest(
         code,
         redirectUri,
         state,
+        clientId: bodyClientId,
       } = req.body as {
         provider?: string;
         code?: string;
         redirectUri?: string;
         state?: string;
+        clientId?: string;
       };
 
       if (!provider || !code || !redirectUri) {
@@ -340,14 +361,25 @@ export const socialOAuthExchange = functions.https.onRequest(
         email = n.email;
         displayName = n.displayName;
       } else if (provider === 'google') {
-        if (!cfg.googleClientId || !cfg.googleClientSecret) {
+        if (!cfg.googleClientSecret) {
           res.status(500).json({ error: '구글 서버 설정이 없습니다.' });
           return;
+        }
+        const googleClientId = (bodyClientId?.trim() || cfg.googleClientId).trim();
+        if (!googleClientId) {
+          res.status(500).json({ error: '구글 클라이언트 ID가 설정되지 않았습니다.' });
+          return;
+        }
+        if (cfg.googleClientId && googleClientId !== cfg.googleClientId) {
+          functions.logger.warn('Google clientId mismatch', {
+            body: googleClientId.slice(0, 20),
+            config: cfg.googleClientId.slice(0, 20),
+          });
         }
         const g = await googleExchange(
           code,
           redirectUri,
-          cfg.googleClientId,
+          googleClientId,
           cfg.googleClientSecret
         );
         providerUid = g.providerUid;
