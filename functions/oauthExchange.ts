@@ -175,58 +175,99 @@ async function googleExchange(
   clientId: string,
   clientSecret: string
 ) {
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: clientId,
-    client_secret: clientSecret,
-    redirect_uri: redirectUri,
-    code,
-  });
-  const tokenRes = await fetch(GOOGLE_TOKEN, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  });
-  if (!tokenRes.ok) {
-    const t = await tokenRes.text();
-    functions.logger.error('Google token error', tokenRes.status, t, {
-      redirectUri,
-      clientId: clientId.slice(0, 12) + '…',
-    });
-    let detail = '';
-    try {
-      const errJson = JSON.parse(t) as { error?: string; error_description?: string };
-      detail = errJson.error_description || errJson.error || '';
-    } catch {
-      detail = t.slice(0, 200);
+  const redirectCandidates = [
+    redirectUri,
+    redirectUri.replace(/\/+$/, ''),
+    redirectUri.replace(/\/+$/, '') + '/',
+  ];
+  try {
+    const u = new URL(redirectUri);
+    if (u.hostname === 'wizcoco.com') {
+      u.hostname = 'www.wizcoco.com';
+      redirectCandidates.push(u.toString(), u.toString().replace(/\/+$/, '') + '/');
+    } else if (u.hostname === 'www.wizcoco.com') {
+      u.hostname = 'wizcoco.com';
+      redirectCandidates.push(u.toString(), u.toString().replace(/\/+$/, '') + '/');
     }
-    throw new Error(
-      detail
-        ? `구글 토큰 교환에 실패했습니다: ${detail}`
-        : '구글 토큰 교환에 실패했습니다.',
-    );
+  } catch {
+    // ignore
   }
-  const tokenJson = (await tokenRes.json()) as { access_token: string };
-  const meRes = await fetch(GOOGLE_USER, {
-    headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+  const uniqueRedirects = [...new Set(redirectCandidates)];
+
+  let lastErrorText = '';
+  for (const uri of uniqueRedirects) {
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: uri,
+      code,
+    });
+    const tokenRes = await fetch(GOOGLE_TOKEN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    if (tokenRes.ok) {
+      const tokenJson = (await tokenRes.json()) as { access_token: string };
+      const meRes = await fetch(GOOGLE_USER, {
+        headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+      });
+      if (!meRes.ok) {
+        throw new Error('구글 사용자 정보를 가져오지 못했습니다.');
+      }
+      const me = (await meRes.json()) as {
+        sub: string;
+        email?: string;
+        email_verified?: boolean;
+        name?: string;
+      };
+      if (!me.sub) {
+        throw new Error('구글 프로필이 올바르지 않습니다.');
+      }
+      return {
+        providerUid: me.sub,
+        email: me.email,
+        displayName: me.name || `구글사용자${me.sub.slice(-6)}`,
+      };
+    }
+    lastErrorText = await tokenRes.text();
+    functions.logger.warn('Google token attempt failed', tokenRes.status, uri, lastErrorText.slice(0, 120));
+    const errJson = (() => {
+      try {
+        return JSON.parse(lastErrorText) as { error?: string };
+      } catch {
+        return {};
+      }
+    })();
+    if (errJson.error === 'invalid_grant') {
+      break;
+    }
+  }
+
+  functions.logger.error('Google token error', lastErrorText, {
+    redirectUri,
+    clientId: clientId.slice(0, 12) + '…',
   });
-  if (!meRes.ok) {
-    throw new Error('구글 사용자 정보를 가져오지 못했습니다.');
+  let detail = '';
+  try {
+    const errJson = JSON.parse(lastErrorText) as {
+      error?: string;
+      error_description?: string;
+    };
+    detail = errJson.error_description || errJson.error || '';
+    if (errJson.error === 'invalid_grant') {
+      detail =
+        '인증 코드가 만료되었거나 이미 사용되었습니다. 로그인 페이지에서 다시 시도해 주세요.';
+    }
+  } catch {
+    detail = lastErrorText.slice(0, 200);
   }
-  const me = (await meRes.json()) as {
-    sub: string;
-    email?: string;
-    email_verified?: boolean;
-    name?: string;
-  };
-  if (!me.sub) {
-    throw new Error('구글 프로필이 올바르지 않습니다.');
-  }
-  return {
-    providerUid: me.sub,
-    email: me.email,
-    displayName: me.name || `구글사용자${me.sub.slice(-6)}`,
-  };
+  throw new Error(
+    detail
+      ? `구글 토큰 교환에 실패했습니다: ${detail}`
+      : '구글 토큰 교환에 실패했습니다.',
+  );
 }
 
 async function getOrCreateUid(

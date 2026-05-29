@@ -8,6 +8,10 @@ import { initializeFirebase } from '@/lib/firebase';
 import { primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
 import { resolveOAuthRedirectUri } from '@/utils/oauthRedirectOrigin';
+import {
+  isOAuthCodeAlreadyConsumed,
+  stripOAuthParamsFromUrl,
+} from '@/utils/oauthCallbackGuard';
 
 function GoogleCallbackInner() {
   const searchParams = useSearchParams();
@@ -39,6 +43,17 @@ function GoogleCallbackInner() {
       setMessage('인증 코드가 없습니다.');
       return;
     }
+
+    if (isOAuthCodeAlreadyConsumed(code)) {
+      setFailed(true);
+      setMessage(
+        '이미 처리된 로그인입니다. 새로고침하지 말고 로그인 페이지에서 Google 로그인을 다시 시도해 주세요.',
+      );
+      stripOAuthParamsFromUrl();
+      return;
+    }
+
+    stripOAuthParamsFromUrl();
 
     const redirectUri = resolveOAuthRedirectUri(state, 'google');
 

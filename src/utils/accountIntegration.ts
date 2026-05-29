@@ -13,6 +13,8 @@ import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
   markAuthenticatedTabSession,
+  markGoogleOAuthPending,
+  clearGoogleOAuthPending,
 } from '@/utils/authSessionLifecycle';
 import { UserAccountManager } from './userAccountManager';
 import {
@@ -21,6 +23,10 @@ import {
   resolveOAuthRedirectUri,
   validateOAuthState,
 } from './oauthRedirectOrigin';
+import {
+  isOAuthCodeAlreadyConsumed,
+  markOAuthCodeConsumed,
+} from './oauthCallbackGuard';
 
 // 로깅 헬퍼 함수
 const logToFirebase = async (level: string, message: string, data?: any) => {
@@ -49,6 +55,9 @@ const logToFirebase = async (level: string, message: string, data?: any) => {
 function firebaseAuthErrorMessage(error: unknown): string {
   const code = (error as { code?: string })?.code;
   const msg = (error as { message?: string })?.message;
+  if (msg?.includes('시간 초과')) {
+    return `${msg}. 광고 차단기·VPN을 끄고 다시 시도해 주세요.`;
+  }
   if (code === 'auth/network-request-failed') {
     return 'Firebase 서버 연결 실패. 광고 차단기·VPN을 끄고 identitytoolkit.googleapis.com 접속을 허용한 뒤 다시 시도해 주세요.';
   }
@@ -58,48 +67,68 @@ function firebaseAuthErrorMessage(error: unknown): string {
   return msg || '로그인 처리 중 오류가 발생했습니다.';
 }
 
-/** signInWithCustomToken — 네트워크 일시 오류 시 REST 검증 후 재시도 */
+/** signInWithCustomToken — 시간 초과·IndexedDB 블로킹 완화 (REST로 토큰 소모하지 않음) */
 async function signInWithCustomTokenRobust(
   firebaseAuth: import('firebase/auth').Auth,
   customToken: string,
 ): Promise<void> {
-  const apiKey = firebaseAuth.config.apiKey;
-  await firebaseAuth.authStateReady();
+  const {
+    signInWithCustomToken,
+    setPersistence,
+    inMemoryPersistence,
+    browserLocalPersistence,
+  } = await import('firebase/auth');
 
-  const verifyViaRest = async () => {
-    if (!apiKey) throw new Error('Firebase API Key 없음');
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: customToken, returnSecureToken: true }),
-      },
-    );
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(
-        (err as { error?: { message?: string } })?.error?.message ||
-          'Custom token REST 검증 실패',
+  const withTimeout = <T>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      const timer = window.setTimeout(
+        () => reject(new Error(`${label} 시간 초과 (${Math.round(ms / 1000)}초)`)),
+        ms,
       );
-    }
-    return res.json();
-  };
+      promise
+        .then((v) => {
+          window.clearTimeout(timer);
+          resolve(v);
+        })
+        .catch((e) => {
+          window.clearTimeout(timer);
+          reject(e);
+        });
+    });
 
+  try {
+    await firebaseAuth.authStateReady();
+  } catch {
+    // ignore
+  }
+
+  try {
+    await setPersistence(firebaseAuth, inMemoryPersistence);
+  } catch {
+    // persistence 설정 실패 시 기본 persistence로 진행
+  }
+
+  const SIGN_IN_TIMEOUT_MS = 15_000;
   let lastError: unknown;
-  for (let attempt = 0; attempt < 3; attempt++) {
+
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await signInWithCustomToken(firebaseAuth, customToken);
+      await withTimeout(
+        signInWithCustomToken(firebaseAuth, customToken),
+        SIGN_IN_TIMEOUT_MS,
+        'Firebase 로그인',
+      );
+      void setPersistence(firebaseAuth, browserLocalPersistence).catch(() => {});
       return;
     } catch (e: unknown) {
       lastError = e;
       const code = (e as { code?: string })?.code;
-      if (code !== 'auth/network-request-failed' || attempt >= 2) break;
-      console.warn(`[AccountIntegration] signInWithCustomToken 재시도 ${attempt + 1}/3`, code);
-      await verifyViaRest();
-      await new Promise((r) => window.setTimeout(r, 1000 * (attempt + 1)));
+      if (code === 'auth/invalid-custom-token' || attempt >= 1) break;
+      console.warn('[AccountIntegration] signInWithCustomToken 재시도', code);
+      await new Promise((r) => window.setTimeout(r, 800));
     }
   }
+
   throw lastError;
 }
 
@@ -352,6 +381,7 @@ export class AccountIntegrationManager {
       localStorage.setItem('oauth_redirect_uri', redirectUri);
       sessionStorage.setItem('oauth_client_id', clientId);
       localStorage.setItem('oauth_client_id', clientId);
+      markGoogleOAuthPending();
     } catch { /* ignore */ }
 
     const params = new URLSearchParams({
@@ -479,6 +509,15 @@ export class AccountIntegrationManager {
       sessionStorage.removeItem('oauth_state');
       localStorage.removeItem('oauth_state');
 
+      if (isOAuthCodeAlreadyConsumed(params.code)) {
+        return {
+          success: false,
+          error:
+            '이미 처리된 로그인 요청입니다. 새로고침하지 말고 로그인 페이지에서 다시 시도해 주세요.',
+        };
+      }
+      markOAuthCodeConsumed(params.code);
+
       const endpoint = this.getSocialAuthEndpoint();
       if (!endpoint) {
         return {
@@ -533,6 +572,7 @@ export class AccountIntegrationManager {
       try {
         await signInWithCustomTokenRobust(authed, data.customToken);
         markAuthenticatedTabSession();
+        clearGoogleOAuthPending();
 
         if (params.provider === 'google' && authed.currentUser) {
           try {
@@ -554,6 +594,7 @@ export class AccountIntegrationManager {
       }
     } catch (error: unknown) {
       endAuthLoginAttempt();
+      clearGoogleOAuthPending();
       console.error('[AccountIntegration] OAuth 콜백 실패:', error);
       return {
         success: false,
