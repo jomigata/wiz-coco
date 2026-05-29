@@ -377,7 +377,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
   const logout = useCallback(async () => {
     try {
-      await clearAllAuthStorage();
+      await clearAllAuthStorage({ fullReset: true });
       setUser(null);
       writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
       return { success: true };

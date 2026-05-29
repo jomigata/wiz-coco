@@ -33,6 +33,10 @@ const AUTH_LOCAL_KEYS = [
   'session_token',
   'login_time',
   'oauth_state',
+  'oauth_return',
+  'oauth_provider',
+  'oauth_redirect_uri',
+  'oauth_client_id',
   'user_settings',
 ] as const;
 
@@ -41,6 +45,8 @@ const AUTH_SESSION_KEYS = [
   'oauth_return',
   'oauth_provider',
   'oauth_state',
+  'oauth_redirect_uri',
+  'oauth_client_id',
 ] as const;
 
 function clearAuthCookies(): void {
@@ -60,8 +66,10 @@ function clearFirebaseIndexedDB(): void {
 }
 
 /** Firebase signOut 없이 동기적으로 로그인 관련 저장소만 정리 */
-export function clearAuthStorageSync(): void {
+export function clearAuthStorageSync(options?: { fullReset?: boolean }): void {
   if (typeof window === 'undefined') return;
+
+  const fullReset = options?.fullReset === true;
 
   try {
     AUTH_LOCAL_KEYS.forEach((key) => {
@@ -73,6 +81,7 @@ export function clearAuthStorageSync(): void {
         key.startsWith('temp-auth-') ||
         key.startsWith('login-form') ||
         key.startsWith('temp-login-') ||
+        key.startsWith('oauth_code_done:') ||
         key.includes('firebase:authUser:') ||
         key.includes('firebase:host:') ||
         (key.includes('auth') && !key.startsWith('wizcoco:'))
@@ -84,11 +93,26 @@ export function clearAuthStorageSync(): void {
     localStorage.removeItem(AUTH_HEARTBEAT_KEY);
 
     const loginInProgress = isAuthLoginInProgress();
-    const oauthPending = isGoogleOAuthPending(); // localStorage도 확인
-    const protectOAuth = loginInProgress || oauthPending;
+    const oauthPending = isGoogleOAuthPending();
+    const protectOAuth = !fullReset && (loginInProgress || oauthPending);
 
-    if (protectOAuth) {
-      // oauth_return·Firebase IndexedDB 보존
+    if (fullReset) {
+      clearGoogleOAuthPending();
+      endAuthLoginAttempt();
+      AUTH_SESSION_KEYS.forEach((key) => {
+        sessionStorage.removeItem(key);
+      });
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith('oauth_') || key.startsWith('oauth_code_done:')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+      try {
+        localStorage.setItem(AUTH_CLEARED_FLAG, '1');
+      } catch {
+        // ignore
+      }
+    } else if (protectOAuth) {
       AUTH_SESSION_KEYS.filter((key) => key !== 'oauth_return').forEach((key) => {
         sessionStorage.removeItem(key);
       });
@@ -101,7 +125,7 @@ export function clearAuthStorageSync(): void {
 
     sessionStorage.removeItem(AUTH_TAB_SESSION_KEY);
     clearAuthCookies();
-    if (!protectOAuth) {
+    if (fullReset || !protectOAuth) {
       clearFirebaseIndexedDB();
     }
   } catch (error) {
@@ -206,10 +230,11 @@ export function isGoogleOAuthFlowActive(): boolean {
 }
 
 /** Firebase signOut 포함 전체 로그인 정보 삭제 */
-export async function clearAllAuthStorage(): Promise<void> {
-  if (isAuthLoginInProgress()) return;
+export async function clearAllAuthStorage(options?: { fullReset?: boolean }): Promise<void> {
+  const fullReset = options?.fullReset === true;
+  if (!fullReset && isAuthLoginInProgress()) return;
 
-  clearAuthStorageSync();
+  clearAuthStorageSync({ fullReset });
 
   try {
     const { auth } = initializeFirebase();
@@ -218,6 +243,10 @@ export async function clearAllAuthStorage(): Promise<void> {
     }
   } catch (error) {
     console.warn('[AuthSessionLifecycle] Firebase signOut 실패:', error);
+  }
+
+  if (fullReset) {
+    broadcastAuthClear();
   }
 }
 

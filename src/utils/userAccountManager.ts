@@ -264,9 +264,12 @@ export class UserAccountManager {
    * 이메일로 사용자 계정 찾기
    */
   static findUserByEmail(email: string): UserAccount | null {
+    if (!email || typeof email !== 'string') return null;
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return null;
     const accounts = Array.from(this.accounts.values());
     for (const account of accounts) {
-      if (account.email.toLowerCase() === email.toLowerCase()) {
+      if (account.email?.toLowerCase() === normalized) {
         return account;
       }
     }
@@ -283,6 +286,9 @@ export class UserAccountManager {
     providerId: string,
     role: 'user' | 'counselor' | 'admin' = 'user'
   ): UserAccount {
+    if (!email?.trim()) {
+      throw new Error('이메일이 필요합니다.');
+    }
     const existingUser = this.findUserByEmail(email);
     
     if (existingUser) {

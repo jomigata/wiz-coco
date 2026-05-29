@@ -351,10 +351,10 @@ export default function Navigation() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/');
+      router.push('/login/');
     } catch (error) {
       console.error('[Navigation] 로그아웃 오류:', error);
-      router.push('/');
+      router.push('/login/');
     }
   };
 

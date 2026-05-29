@@ -390,7 +390,8 @@ export class AccountIntegrationManager {
       response_type: 'code',
       scope: 'openid email profile',
       state,
-      prompt: 'select_account',
+      /** 계정 선택 + 비밀번호 재입력(매번 새로 로그인) */
+      prompt: 'select_account login',
       access_type: 'online',
       include_granted_scopes: 'true',
     });
@@ -576,8 +577,12 @@ export class AccountIntegrationManager {
 
         if (params.provider === 'google' && authed.currentUser) {
           try {
+            const email =
+              authed.currentUser.email?.trim() ||
+              authed.currentUser.providerData.find((p) => p.email)?.email?.trim() ||
+              `google_${authed.currentUser.uid}@wizcoco.oauth`;
             UserAccountManager.createOrUpdateUser(
-              authed.currentUser.email!,
+              email,
               authed.currentUser.displayName || 'Google 사용자',
               'google',
               authed.currentUser.uid,
