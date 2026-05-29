@@ -23,6 +23,7 @@ import { initializeFirebase } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
+import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 import {
   clearAllAuthStorage,
@@ -179,22 +180,33 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       try {
         if (db) {
+          let resolvedRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';
+
           try {
             const token = await firebaseUser.getIdToken();
             const baseUrl = getFlaskApiBaseUrl();
-            void fetch(`${baseUrl}/api/auth/bootstrap-role`, {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const headers = { Authorization: `Bearer ${token}` };
+            const [bootstrapRes] = await Promise.all([
+              fetch(`${baseUrl}/api/auth/bootstrap-role`, { method: 'POST', headers }),
+              fetch(`${baseUrl}/api/auth/link-legacy-data`, { method: 'POST', headers }).catch(
+                () => null,
+              ),
+            ]);
+            if (bootstrapRes.ok) {
+              const boot = (await bootstrapRes.json().catch(() => ({}))) as { role?: AppRole };
+              if (boot.role === 'admin' || boot.role === 'counselor' || boot.role === 'user') {
+                resolvedRole = boot.role;
+              }
+            }
           } catch {
-            // ignore
+            // ignore — Firestore users 문서에서 role 재조회
           }
 
           const ref = doc(db, 'users', firebaseUser.uid);
           const snap = await getDoc(ref);
           if (snap.exists()) {
             const data = snap.data() as { role?: AppRole };
-            const role = (data?.role || 'user') as AppRole;
+            const role = (data?.role || resolvedRole || 'user') as AppRole;
             const nextUser = { ...baseUser, role };
             setUser(nextUser);
             writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
@@ -211,8 +223,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
               },
               { merge: true },
             );
-            setUser(baseUser);
-            writeSWRCache(AUTH_CACHE_KEY, baseUser, { scope: 'session' });
+            const nextUser = { ...baseUser, role: resolvedRole };
+            setUser(nextUser);
+            writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
           }
 
           if (unsubscribeUserDoc) unsubscribeUserDoc();

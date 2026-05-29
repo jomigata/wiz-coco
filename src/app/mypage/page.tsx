@@ -666,17 +666,52 @@ function MyPageContent() {
         const userRole = firebaseUser.role || user?.role;
         const userIsCounselor = isCounselor(userRole);
 
-        const [rows, bundle] = await Promise.all([
+        const accountEmail = (firebaseUser.email || user?.email || '').trim().toLowerCase();
+        const fsQueryJobs: Promise<any[]>[] = [
           queryDocuments(
             'testResults',
             [{ field: 'uid', operator: '==', value: firebaseUser.uid }],
             'createdAt',
             'desc',
-            100
-          ).catch((e) => {
-            console.warn('[MyPage] Firestore testResults(uid) 병합 실패:', e);
-            return [] as any[];
-          }),
+            100,
+          ),
+        ];
+        if (accountEmail) {
+          fsQueryJobs.push(
+            queryDocuments(
+              'testResults',
+              [{ field: 'email', operator: '==', value: accountEmail }],
+              'createdAt',
+              'desc',
+              100,
+            ),
+            queryDocuments(
+              'testResults',
+              [{ field: 'clientEmail', operator: '==', value: accountEmail }],
+              'createdAt',
+              'desc',
+              100,
+            ),
+          );
+        }
+        const fsBatches = await Promise.all(
+          fsQueryJobs.map((job) =>
+            job.catch((e) => {
+              console.warn('[MyPage] Firestore testResults 병합 실패:', e);
+              return [] as any[];
+            }),
+          ),
+        );
+        const rowsById = new Map<string, any>();
+        for (const batch of fsBatches) {
+          for (const row of batch) {
+            const id = String((row as { id?: string }).id || '');
+            if (id) rowsById.set(id, row);
+          }
+        }
+        const rows = [...rowsById.values()];
+
+        const [bundle] = await Promise.all([
           (async () => {
             const resultsPromise = assessmentApi.listMyAssessmentResults().catch((e) => {
               console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', e);
@@ -698,7 +733,7 @@ function MyPageContent() {
           })(),
         ]);
 
-        for (const row of rows || []) {
+        for (const row of rows) {
           merged.push({
             code: `fs-${String((row as any).id || '')}`,
             testType: String((row as any).testType || (row as any).testId || '검사 결과'),
