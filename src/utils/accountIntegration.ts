@@ -13,6 +13,7 @@ import {
   signInWithCustomToken,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
+import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
@@ -265,8 +266,8 @@ export class AccountIntegrationManager {
   }
 
   /**
-   * Google OAuth 시작 — Firebase createAuthUri REST API로 직접 Google로 이동
-   * (signInWithRedirect 내부 iframe 완전 우회)
+   * Google OAuth 시작 — Firebase /__/auth/handler 로 직접 이동
+   * (signInWithRedirect iframe 초기화 우회, Google redirect_uri = firebaseapp.com/handler)
    */
   static async startGoogleOAuth(
     returnPath?: string,
@@ -293,37 +294,14 @@ export class AccountIntegrationManager {
     markGoogleOAuthPending();
 
     try {
-      // Firebase createAuthUri REST API로 Google OAuth URL 직접 획득
-      // (signInWithRedirect의 iframe 초기화 없이 바로 Google로 이동 가능)
-      const continueUri = `${window.location.origin}/login/`;
-      console.log('[AccountIntegration] Google OAuth createAuthUri 요청', { continueUri });
-
-      const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            providerId: 'google.com',
-            continueUri,
-            customParameter: { prompt: 'select_account' },
-          }),
-        },
-      );
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.error?.message ?? 'createAuthUri 실패');
-      }
-
-      const { authUri, sessionId } = (await res.json()) as { authUri: string; sessionId: string };
-      if (!authUri) throw new Error('Google OAuth URL을 가져올 수 없습니다.');
-
-      // sessionId: signInWithIdp 검증에 사용
-      try { localStorage.setItem('google_oauth_session_id', sessionId ?? ''); } catch { /* ignore */ }
-
-      console.log('[AccountIntegration] Google OAuth 이동', { authUri: authUri.slice(0, 80) });
-      window.location.assign(authUri);
+      // handler 경유: Google redirect_uri = https://wiz-coco.firebaseapp.com/__/auth/handler
+      // (createAuthUri + continueUri=/login/ 은 redirect_uri_mismatch 유발)
+      const returnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+      console.log('[AccountIntegration] Google OAuth handler 이동', {
+        authDomain: firebaseAuth.config.authDomain,
+        returnUrl,
+      });
+      navigateToGoogleSignInRedirect(firebaseAuth, returnUrl);
       return { ok: true };
     } catch (error: unknown) {
       endAuthLoginAttempt();
