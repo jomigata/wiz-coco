@@ -2,11 +2,6 @@ import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
-  signInWithCredential,
-  getRedirectResult,
-  onAuthStateChanged,
-  GoogleAuthProvider,
   linkWithCredential,
   EmailAuthProvider,
   updateProfile,
@@ -14,17 +9,10 @@ import {
   signInWithCustomToken,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { createGoogleAuthProvider } from '@/lib/googleAuthProvider';
-import { navigateToGoogleSignInRedirect } from '@/lib/googleAuthRedirect';
 import {
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
   markAuthenticatedTabSession,
-  markGoogleOAuthPending,
-  isGoogleOAuthPending,
-  clearGoogleOAuthPending,
-  isFirebaseAuthRedirectReturn,
-  isGoogleOAuthFlowActive,
 } from '@/utils/authSessionLifecycle';
 import { UserAccountManager } from './userAccountManager';
 
@@ -51,114 +39,6 @@ const logToFirebase = async (level: string, message: string, data?: any) => {
     console.error('[Logging] Firebase 로그 전송 실패:', error);
   }
 };
-
-/** getRedirectResult는 페이지당 한 번만 호출 (Firebase SDK 요구) */
-let sharedRedirectResultPromise: Promise<import('firebase/auth').UserCredential | null> | null = null;
-
-function consumeRedirectResult(auth: import('firebase/auth').Auth) {
-  if (!sharedRedirectResultPromise) {
-    sharedRedirectResultPromise = getRedirectResult(auth).catch((e) => {
-      console.warn('[AccountIntegration] getRedirectResult 예외:', e);
-      return null;
-    });
-  }
-  return sharedRedirectResultPromise;
-}
-
-function parseGoogleOAuthTokensFromUrl(): { idToken: string | null; accessToken: string | null } {
-  if (typeof window === 'undefined') {
-    return { idToken: null, accessToken: null };
-  }
-  const hash = window.location.hash.replace(/^#/, '');
-  const search = window.location.search.replace(/^\?/, '');
-  const sp = new URLSearchParams(hash || search);
-  return {
-    idToken: sp.get('id_token') || sp.get('oauthIdToken') || null,
-    accessToken: sp.get('access_token') || sp.get('oauthAccessToken') || null,
-  };
-}
-
-async function signInWithGoogleTokensFromUrl(
-  firebaseAuth: import('firebase/auth').Auth,
-): Promise<import('firebase/auth').User | null> {
-  const { idToken, accessToken } = parseGoogleOAuthTokensFromUrl();
-  if (!idToken && !accessToken) return null;
-
-  console.log('[AccountIntegration] URL에서 Google 토큰 발견 → signInWithCredential');
-  try {
-    const credential = GoogleAuthProvider.credential(idToken, accessToken);
-    const cr = await signInWithCredential(firebaseAuth, credential);
-    if (cr.user) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-    return cr.user ?? null;
-  } catch (credErr) {
-    console.warn('[AccountIntegration] signInWithCredential 실패:', credErr);
-    return null;
-  }
-}
-
-async function signInWithGoogleIdpRest(
-  firebaseAuth: import('firebase/auth').Auth,
-): Promise<import('firebase/auth').User | null> {
-  const apiKey = firebaseAuth.config.apiKey;
-  if (!apiKey) return null;
-
-  const currentUrl = window.location.href;
-  const hasOAuthParams =
-    isFirebaseAuthRedirectReturn() ||
-    currentUrl.includes('state=') ||
-    currentUrl.includes('code=') ||
-    currentUrl.includes('token=') ||
-    currentUrl.includes('#');
-
-  if (!hasOAuthParams) return null;
-
-  console.log('[AccountIntegration] accounts:signInWithIdp REST API 시도', {
-    url: currentUrl.slice(0, 120),
-  });
-
-  try {
-    const sessionId = localStorage.getItem('google_oauth_session_id') ?? undefined;
-    const idpRes = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestUri: currentUrl,
-          ...(sessionId ? { sessionId } : {}),
-          returnSecureToken: true,
-        }),
-      },
-    );
-
-    if (!idpRes.ok) {
-      const errData = await idpRes.json().catch(() => ({}));
-      console.warn('[AccountIntegration] signInWithIdp 실패:', errData?.error?.message);
-      return null;
-    }
-
-    const idpData = await idpRes.json();
-    const googleIdToken: string | null = idpData.oauthIdToken ?? null;
-    const googleAccessToken: string | null = idpData.oauthAccessToken ?? null;
-    if (!googleIdToken && !googleAccessToken) {
-      console.log('[AccountIntegration] signInWithIdp 응답에 oauthIdToken 없음:', Object.keys(idpData));
-      return null;
-    }
-
-    const credential = GoogleAuthProvider.credential(googleIdToken, googleAccessToken);
-    const cr = await signInWithCredential(firebaseAuth, credential);
-    localStorage.removeItem('google_oauth_session_id');
-    if (cr.user) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-    return cr.user ?? null;
-  } catch (idpErr) {
-    console.warn('[AccountIntegration] signInWithIdp REST API 오류:', idpErr);
-    return null;
-  }
-}
 
 export interface AccountInfo {
   uid: string;
@@ -423,148 +303,8 @@ export class AccountIntegrationManager {
     return { ok: true };
   }
 
-  /** Google redirect 복귀 후 로그인 완료 */
-  static async completeGoogleRedirectSignIn(): Promise<{
-    success: boolean;
-    user?: any;
-    error?: string;
-    redirect?: string;
-  }> {
-    if (typeof window === 'undefined') return { success: false };
-
-    const { auth: firebaseAuth } = initializeFirebase();
-    if (!firebaseAuth) {
-      return { success: false, error: 'Firebase Auth가 초기화되지 않았습니다.' };
-    }
-
-    if (!isGoogleOAuthFlowActive()) {
-      return { success: false };
-    }
-
-    try {
-      // getRedirectResult는 authStateReady 전에 호출 (페이지당 1회)
-      let redirectUser: any = null;
-      try {
-        const r = await consumeRedirectResult(firebaseAuth);
-        redirectUser = r?.user ?? null;
-        if (redirectUser) {
-          console.log('[AccountIntegration] getRedirectResult 성공:', redirectUser.email);
-        }
-      } catch (e) {
-        console.warn('[AccountIntegration] getRedirectResult 오류:', e);
-      }
-
-      await firebaseAuth.authStateReady();
-
-      // URL hash 토큰 (handler 직접 이동 폴백용)
-      if (!redirectUser) {
-        redirectUser = await signInWithGoogleTokensFromUrl(firebaseAuth);
-        if (redirectUser) {
-          console.log('[AccountIntegration] signInWithCredential(URL) 성공:', redirectUser.email);
-        }
-      }
-
-      // REST signInWithIdp (handler/createAuthUri 폴백)
-      if (!redirectUser) {
-        redirectUser = await signInWithGoogleIdpRest(firebaseAuth);
-        if (redirectUser) {
-          console.log('[AccountIntegration] signInWithIdp → signInWithCredential 성공:', redirectUser.email);
-        }
-      }
-
-      // currentUser 확인 (이미 처리된 경우)
-      if (!redirectUser) redirectUser = firebaseAuth.currentUser ?? null;
-
-      // onAuthStateChanged 대기 (Firebase가 redirect를 비동기로 처리하는 경우)
-      if (!redirectUser && (isGoogleOAuthPending() || isFirebaseAuthRedirectReturn())) {
-        console.log('[AccountIntegration] getRedirectResult null — onAuthStateChanged 대기 (최대 8초)');
-        redirectUser = await new Promise<any>((resolve) => {
-          let settled = false;
-          const finish = (user: any) => {
-            if (settled) return;
-            settled = true;
-            unsubscribe?.();
-            resolve(user);
-          };
-          const unsubscribe = onAuthStateChanged(firebaseAuth, (u) => {
-            if (u) finish(u);
-          });
-          if (firebaseAuth.currentUser) {
-            finish(firebaseAuth.currentUser);
-            return;
-          }
-          window.setTimeout(() => finish(null), 8_000);
-        });
-        if (redirectUser) {
-          console.log('[AccountIntegration] onAuthStateChanged 로 사용자 확인:', redirectUser.email);
-        }
-      }
-
-      const result = redirectUser ? { user: redirectUser } : null;
-
-      if (!result?.user) {
-        if (isGoogleOAuthPending() || isFirebaseAuthRedirectReturn()) {
-          return {
-            success: false,
-            error: 'Google 로그인을 완료하지 못했습니다. 다시 시도해 주세요.',
-          };
-        }
-        return { success: false };
-      }
-
-      clearGoogleOAuthPending();
-
-      markAuthenticatedTabSession();
-      endAuthLoginAttempt();
-
-      try {
-        UserAccountManager.createOrUpdateUser(
-          result.user.email!,
-          result.user.displayName || 'Google 사용자',
-          'google',
-          result.user.uid,
-          'user',
-        );
-      } catch (accountError) {
-        console.warn('[AccountIntegration] Google redirect 후 로컬 계정 동기화 실패:', accountError);
-      }
-
-      const redirect =
-        sessionStorage.getItem('oauth_return') ||
-        localStorage.getItem('oauth_return') ||
-        '/';
-      sessionStorage.removeItem('oauth_return');
-      localStorage.removeItem('oauth_return');
-
-      console.log('[AccountIntegration] Google redirect 로그인 성공:', {
-        uid: result.user.uid,
-        email: result.user.email,
-      });
-
-      return { success: true, user: result.user, redirect };
-    } catch (error: any) {
-      console.error('[AccountIntegration] Google redirect 로그인 실패:', error);
-      endAuthLoginAttempt();
-      clearGoogleOAuthPending();
-      sessionStorage.removeItem('oauth_return');
-      localStorage.removeItem('oauth_return');
-
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        return {
-          success: false,
-          error: '이 이메일은 다른 방법으로 이미 가입되어 있습니다.',
-        };
-      }
-
-      return {
-        success: false,
-        error: error.message || 'Google 로그인 처리 중 오류가 발생했습니다.',
-      };
-    }
-  }
-
   /**
-   * Google 소셜 로그인 (redirect — 동일 탭에서 Google 계정 선택 후 복귀)
+   * Google 소셜 로그인 (서버 교환 — Google authorize URL → /login/google-callback/)
    */
   static async signInWithGoogle(returnPath?: string): Promise<{
     success: boolean;
