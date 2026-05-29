@@ -7,6 +7,7 @@ import {
   updateProfile,
   sendEmailVerification,
   signInWithCustomToken,
+  type UserInfo,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import {
@@ -579,7 +580,7 @@ export class AccountIntegrationManager {
           try {
             const email =
               authed.currentUser.email?.trim() ||
-              authed.currentUser.providerData.find((p) => p.email)?.email?.trim() ||
+              authed.currentUser.providerData.find((p: UserInfo) => p.email)?.email?.trim() ||
               `google_${authed.currentUser.uid}@wizcoco.oauth`;
             UserAccountManager.createOrUpdateUser(
               email,
