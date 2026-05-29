@@ -459,7 +459,8 @@ jobs:
         
         # 배포 실행
         # /api/social-oauth 리라이트가 Functions를 필요로 하므로 hosting+functions 같이 배포
-        firebase deploy --only hosting,functions --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+        # --force: Artifact Registry 정리 정책을 자동 설정해 배포 후 exit 1 오탐 방지
+        firebase deploy --only hosting,functions --force --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
         
         echo "🎉 Firebase Hosting + Functions 배포 완료!"
       env:
