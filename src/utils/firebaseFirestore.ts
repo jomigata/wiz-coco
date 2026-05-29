@@ -116,8 +116,11 @@ export async function queryDocuments(
       id: doc.id,
       ...doc.data()
     }));
-  } catch (error) {
-    console.error('쿼리 조회 실패:', error);
+  } catch (error: unknown) {
+    const code = (error as { code?: string })?.code;
+    if (code !== 'failed-precondition') {
+      console.error('쿼리 조회 실패:', error);
+    }
     throw new Error('쿼리 결과를 조회할 수 없습니다.');
   }
 }

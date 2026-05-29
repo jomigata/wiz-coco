@@ -663,6 +663,9 @@ function MyPageContent() {
           import('@/lib/assessmentApi'),
         ]);
 
+        const userRole = firebaseUser.role || user?.role;
+        const userIsCounselor = isCounselor(userRole);
+
         const [rows, bundle] = await Promise.all([
           queryDocuments(
             'testResults',
@@ -674,19 +677,25 @@ function MyPageContent() {
             console.warn('[MyPage] Firestore testResults(uid) 병합 실패:', e);
             return [] as any[];
           }),
-          Promise.all([
-            assessmentApi.listMyAssessmentResults().catch((e) => {
+          (async () => {
+            const resultsPromise = assessmentApi.listMyAssessmentResults().catch((e) => {
               console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', e);
               return { results: [] as any[] };
-            }),
-            assessmentApi.listAssessments().catch((e) => {
+            });
+            if (!userIsCounselor) {
+              const r = await resultsPromise;
+              return { results: r.results || [], assessments: [] as any[] };
+            }
+            const assessmentsPromise = assessmentApi.listAssessments().catch((e) => {
               console.warn('[MyPage] 상담사 검사코드(세트) 목록 병합 실패:', e);
               return { assessments: [] as any[] };
-            }),
-          ]).then(([r, a]) => ({
-            results: r.results || [],
-            assessments: a.assessments || [],
-          })),
+            });
+            const [r, a] = await Promise.all([resultsPromise, assessmentsPromise]);
+            return {
+              results: r.results || [],
+              assessments: a.assessments || [],
+            };
+          })(),
         ]);
 
         for (const row of rows || []) {
