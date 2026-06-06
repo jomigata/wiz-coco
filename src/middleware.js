@@ -27,7 +27,7 @@ export function middleware(request) {
     
     // 인증이 없거나 관리자가 아닌 경우 로그인 페이지로 리디렉션
     if (!authToken || userRole !== 'admin') {
-      return NextResponse.redirect(new URL('/auth/login?redirect=/admin', request.url));
+      return NextResponse.redirect(new URL('/login?redirect=/admin', request.url));
     }
   }
   

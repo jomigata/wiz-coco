@@ -23,7 +23,7 @@ export default function TermsPage() {
             <section className="space-y-2">
               <h2 className="text-emerald-100 font-medium">2. 계정 및 인증</h2>
               <p className="text-emerald-200/85">
-                이용자는 카카오/네이버 등 소셜 로그인 또는 이메일 계정을 통해 서비스를 이용할 수 있습니다.
+                이용자는 이메일 계정을 통해 서비스를 이용할 수 있습니다.
                 이용자는 본인의 정보로 가입해야 하며, 타인의 정보를 도용해서는 안 됩니다.
               </p>
             </section>

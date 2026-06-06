@@ -11,11 +11,29 @@
       "**/prisma/**",
       "**/psych-test/**"
     ],
-    "rewrites": [
+    "redirects": [
       {
-        "source": "/api/social-oauth",
-        "function": "socialOAuthExchange"
+        "source": "/login/google-callback",
+        "destination": "/login/",
+        "type": 301
       },
+      {
+        "source": "/login/kakao-callback",
+        "destination": "/login/",
+        "type": 301
+      },
+      {
+        "source": "/login/naver-callback",
+        "destination": "/login/",
+        "type": 301
+      },
+      {
+        "source": "/login/google",
+        "destination": "/login/",
+        "type": 301
+      }
+    ],
+    "rewrites": [
       {
         "source": "/tests/mbti",
         "destination": "/tests/mbti/index.html"
@@ -60,15 +78,6 @@
     "cleanUrls": true,
     "trailingSlash": true,
     "headers": [
-      {
-        "source": "**",
-        "headers": [
-          {
-            "key": "Cross-Origin-Opener-Policy",
-            "value": "same-origin-allow-popups"
-          }
-        ]
-      },
       {
         "source": "**/*.@(js|css)",
         "headers": [

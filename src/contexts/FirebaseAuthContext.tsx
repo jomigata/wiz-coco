@@ -20,7 +20,6 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { AppRole } from '@/utils/roleUtils';
 import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
@@ -30,7 +29,6 @@ import {
   evaluateAuthSessionOnStartup,
   hasAuthenticatedTabSession,
   isAuthLoginInProgress,
-  isGoogleOAuthFlowActive,
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
   touchAuthHeartbeat,
@@ -106,7 +104,6 @@ type FirebaseAuthContextValue = {
     password: string,
     displayName?: string,
   ) => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
-  signInWithGoogle: (returnPath?: string) => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
 };
@@ -264,7 +261,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
     const scheduleLogoutCheck = () => {
       if (deferredLogoutTimer) clearTimeout(deferredLogoutTimer);
-      const deferMs = isGoogleOAuthFlowActive() ? 10_000 : LOGOUT_DEFER_MS;
+      const deferMs = isAuthLoginInProgress() ? 10_000 : LOGOUT_DEFER_MS;
       deferredLogoutTimer = setTimeout(async () => {
         deferredLogoutTimer = null;
         if (cancelled) return;
@@ -318,7 +315,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       if (cancelled) return;
 
-      if (authExpiredOnStartupRef.current && !isGoogleOAuthFlowActive()) {
+      if (authExpiredOnStartupRef.current && !isAuthLoginInProgress()) {
         if (auth.currentUser && !hasAuthenticatedTabSession()) {
           try {
             await signOut(auth);
@@ -334,7 +331,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          if (!hasAuthenticatedTabSession() && !isGoogleOAuthFlowActive()) {
+          if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
             void clearAllAuthStorage().then(() => {
               setUser(null);
               writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
@@ -384,14 +381,6 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const signInWithGoogle = useCallback(async (returnPath?: string) => {
-    const result = await AccountIntegrationManager.signInWithGoogle(returnPath);
-    if (!result.success) {
-      return { success: false, error: result.error };
-    }
-    return { success: true };
-  }, []);
-
   const logout = useCallback(async () => {
     try {
       await clearAllAuthStorage({ fullReset: true });
@@ -420,11 +409,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       loading,
       signIn,
       signUp,
-      signInWithGoogle,
       logout,
       resetPassword,
     }),
-    [user, loading, signIn, signUp, signInWithGoogle, logout, resetPassword],
+    [user, loading, signIn, signUp, logout, resetPassword],
   );
 
   return <FirebaseAuthContext.Provider value={value}>{children}</FirebaseAuthContext.Provider>;

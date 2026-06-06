@@ -33,12 +33,10 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processLogs = exports.api = exports.scheduledSyncCounselFaq = exports.syncCounselFaqFromSheet = exports.endAiSession = exports.sendCounselMessage = exports.startAiSession = exports.socialOAuthExchange = void 0;
+exports.processLogs = exports.api = exports.scheduledSyncCounselFaq = exports.syncCounselFaqFromSheet = exports.endAiSession = exports.sendCounselMessage = exports.startAiSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-const oauthExchange_1 = require("./oauthExchange");
-Object.defineProperty(exports, "socialOAuthExchange", { enumerable: true, get: function () { return oauthExchange_1.socialOAuthExchange; } });
-// Firebase Admin 초기화 (oauthExchange에서 선초기화될 수 있음)
+// Firebase Admin 초기화
 if (!admin.apps.length) {
     admin.initializeApp();
 }

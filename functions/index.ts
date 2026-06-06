@@ -1,14 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { Request, Response } from 'express';
-import { socialOAuthExchange } from './oauthExchange';
-
-// Firebase Admin 초기화 (oauthExchange에서 선초기화될 수 있음)
+// Firebase Admin 초기화
 if (!admin.apps.length) {
   admin.initializeApp();
 }
-
-export { socialOAuthExchange };
 
 // AiCoCo → WizCoCo 이식: Gemini AI 상담 (Callable v2)
 export {

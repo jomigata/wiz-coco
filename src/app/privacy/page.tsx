@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             <section className="space-y-2">
               <h2 className="text-emerald-100 font-medium">1. 수집하는 개인정보 항목</h2>
               <ul className="list-disc pl-5 space-y-1 text-emerald-200/85">
-                <li>필수: 이메일, 이름(닉네임), 로그인 제공자 식별자(카카오/네이버 등)</li>
+                <li>필수: 이메일, 이름(닉네임)</li>
                 <li>선택: 프로필 이미지, 상담사 인증코드(입력한 경우)</li>
                 <li>서비스 이용 과정에서 자동 생성: 접속 로그, 기기/브라우저 정보, 쿠키, 이용 기록</li>
               </ul>
@@ -42,9 +42,8 @@ export default function PrivacyPage() {
             <section className="space-y-2">
               <h2 className="text-emerald-100 font-medium">4. 제3자 제공 및 처리위탁</h2>
               <p className="text-emerald-200/85">
-                회사는 원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다. 다만 소셜 로그인을 위해
-                카카오/네이버 등 외부 인증 제공자를 이용할 수 있으며, 서비스 제공을 위해 클라우드 인프라를
-                사용할 수 있습니다.
+                회사는 원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다. 서비스 제공을 위해
+                Firebase 등 클라우드 인프라를 사용할 수 있습니다.
               </p>
             </section>
 
