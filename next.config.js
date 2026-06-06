@@ -1,3 +1,8 @@
+const path = require('path');
+
+/** 프로젝트 루트 Cloud Functions 폴더만 제외 (node_modules/firebase/functions 와 구분) */
+const projectFunctionsDir = path.join(__dirname, 'functions').replace(/\\/g, '/');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -37,16 +42,13 @@ const nextConfig = {
       use: 'ignore-loader'
     });
 
-    // functions 폴더를 빌드에서 제외
+    // 프로젝트 루트 functions/ 만 제외 — firebase/functions npm 패키지는 포함
     config.module.rules.push({
-      test: /functions\/.*\.(ts|js)$/,
-      use: 'ignore-loader'
-    });
-
-    // functions 폴더의 모든 파일을 제외
-    config.module.rules.push({
-      test: /^.*\/functions\/.*$/,
-      use: 'ignore-loader'
+      test: (resourcePath) => {
+        const normalized = resourcePath.replace(/\\/g, '/');
+        return normalized.startsWith(`${projectFunctionsDir}/`);
+      },
+      use: 'ignore-loader',
     });
 
     if (!isServer) {

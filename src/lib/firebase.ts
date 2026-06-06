@@ -36,7 +36,9 @@ export function initializeFirebase() {
       }
 
       db = getFirestore(app);
-      functions = getFunctions(app, FUNCTIONS_REGION);
+      if (typeof window !== 'undefined') {
+        functions = getFunctions(app, FUNCTIONS_REGION);
+      }
       storage = getStorage(app);
 
       if (typeof window !== 'undefined') {

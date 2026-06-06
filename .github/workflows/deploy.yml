@@ -244,8 +244,13 @@ jobs:
           echo "❌ .env 파일이 없습니다."
         fi
         echo "=================================="
-        # 빌드 로그를 남겨 실패 원인 진단을 쉽게 함
+        # 빌드 로그를 남기되 pipefail로 npm 실패를 감지
+        set -o pipefail
         npm run build 2>&1 | tee build.log
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+          echo "❌ 프로젝트 빌드 실패"
+          exit 1
+        fi
         echo "✅ 빌드 완료!"
     
     - name: 📎 빌드 로그 업로드
