@@ -33,11 +33,22 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processLogs = exports.api = void 0;
+exports.processLogs = exports.api = exports.scheduledSyncCounselFaq = exports.syncCounselFaqFromSheet = exports.endAiSession = exports.sendCounselMessage = exports.startAiSession = exports.socialOAuthExchange = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-// Firebase Admin 초기화
-admin.initializeApp();
+const oauthExchange_1 = require("./oauthExchange");
+Object.defineProperty(exports, "socialOAuthExchange", { enumerable: true, get: function () { return oauthExchange_1.socialOAuthExchange; } });
+// Firebase Admin 초기화 (oauthExchange에서 선초기화될 수 있음)
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+// AiCoCo → WizCoCo 이식: Gemini AI 상담 (Callable v2)
+var index_1 = require("./src/index");
+Object.defineProperty(exports, "startAiSession", { enumerable: true, get: function () { return index_1.startAiSession; } });
+Object.defineProperty(exports, "sendCounselMessage", { enumerable: true, get: function () { return index_1.sendCounselMessage; } });
+Object.defineProperty(exports, "endAiSession", { enumerable: true, get: function () { return index_1.endAiSession; } });
+Object.defineProperty(exports, "syncCounselFaqFromSheet", { enumerable: true, get: function () { return index_1.syncCounselFaqFromSheet; } });
+Object.defineProperty(exports, "scheduledSyncCounselFaq", { enumerable: true, get: function () { return index_1.scheduledSyncCounselFaq; } });
 // API Functions - 간단한 API 엔드포인트
 exports.api = functions.https.onRequest(async (req, res) => {
     try {

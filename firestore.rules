@@ -144,6 +144,70 @@ service cloud.firestore {
     match /system_meta/{docId} {
       allow read, write: if false;
     }
+
+    // AI 상담 세션 (Gemini Functions — AiCoCo 이식)
+    match /aiCounselSessions/{sessionId} {
+      function isAiCounselAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
+      function canAccessAiCounselSession() {
+        return request.auth != null && (
+          resource.data.clientId == request.auth.uid || isAiCounselAdmin()
+        );
+      }
+
+      function canAccessAiCounselSessionById() {
+        let session = get(/databases/$(database)/documents/aiCounselSessions/$(sessionId));
+        return request.auth != null && (
+          session.data.clientId == request.auth.uid || isAiCounselAdmin()
+        );
+      }
+
+      allow read: if canAccessAiCounselSession();
+      allow create: if request.auth != null
+        && request.resource.data.clientId == request.auth.uid
+        && request.resource.data.type == 'ai'
+        && request.resource.data.status in ['active', 'ended', 'escalated']
+        && request.resource.data.riskLevel in ['none', 'low', 'medium', 'high'];
+      allow update: if request.auth != null
+        && resource.data.clientId == request.auth.uid
+        && request.resource.data.clientId == resource.data.clientId
+        && request.resource.data.type == resource.data.type;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if canAccessAiCounselSessionById();
+        allow create: if canAccessAiCounselSessionById()
+          && request.resource.data.role == 'user'
+          && request.resource.data.content is string
+          && request.resource.data.content.size() > 0
+          && request.resource.data.content.size() <= 2000;
+        allow update, delete: if false;
+      }
+    }
+
+    match /crisisEvents/{eventId} {
+      function isAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /counselFaqs/{faqId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /counselFaqMeta/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
     
     // 다른 컬렉션에 대한 기본 규칙
     match /{document=**} {

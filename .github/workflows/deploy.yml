@@ -452,15 +452,35 @@ jobs:
         
         echo "=================================="
 
+    - name: 🔐 Gemini AI 상담 Functions 환경 준비
+      run: |
+        echo "🔐 Gemini / FAQ 시트 환경 준비..."
+        SHEET_ID="${{ secrets.COUNSEL_FAQ_SHEET_ID }}"
+        if [ -z "$SHEET_ID" ]; then SHEET_ID="unset"; fi
+        GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
+        if [ -z "$GID" ]; then GID="0"; fi
+        printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\n' "$SHEET_ID" "$GID" > functions/.env
+        if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
+          printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt
+          firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
+            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+          rm -f /tmp/gemini-key.txt
+          echo "✅ GEMINI_API_KEY secret 설정됨"
+        else
+          echo "⚠️  GEMINI_API_KEY 미설정 — AI 상담 Functions는 배포되나 응답 생성 시 실패할 수 있음"
+        fi
+        echo "=================================="
+
     - name: 🚀 Firebase Hosting + Functions 배포
       run: |
-        echo "🚀 Firebase Hosting + Functions 배포 시작..."
+        echo "🚀 Firebase Hosting + Functions + Firestore 배포 시작..."
         export GOOGLE_APPLICATION_CREDENTIALS="$PWD/firebase-service-account.json"
         
         # 배포 실행
         # /api/social-oauth 리라이트가 Functions를 필요로 하므로 hosting+functions 같이 배포
+        # firestore: AI 상담(aiCounselSessions) 규칙·인덱스 반영
         # --force: Artifact Registry 정리 정책을 자동 설정해 배포 후 exit 1 오탐 방지
-        firebase deploy --only hosting,functions --force --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+        firebase deploy --only hosting,functions,firestore --force --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
         
         echo "🎉 Firebase Hosting + Functions 배포 완료!"
       env:

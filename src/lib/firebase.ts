@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { browserLocalPersistence, getAuth, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFirebaseClientConfig } from '@/lib/firebaseClientConfig';
@@ -11,8 +12,11 @@ let app: any = null;
 let auth: any = null;
 let db: any = null;
 let storage: any = null;
+let functions: any = null;
 let analytics: any = null;
 const performance: any = null;
+
+export const FUNCTIONS_REGION = 'asia-northeast3';
 
 export function initializeFirebase() {
   if (!app) {
@@ -32,6 +36,7 @@ export function initializeFirebase() {
       }
 
       db = getFirestore(app);
+      functions = getFunctions(app, FUNCTIONS_REGION);
       storage = getStorage(app);
 
       if (typeof window !== 'undefined') {
@@ -43,8 +48,8 @@ export function initializeFirebase() {
       throw error;
     }
   }
-  return { app, auth, db, storage, analytics, performance };
+  return { app, auth, db, functions, storage, analytics, performance };
 }
 
-export { app, auth, db, storage, analytics, performance };
+export { app, auth, db, functions, storage, analytics, performance };
 export default app;

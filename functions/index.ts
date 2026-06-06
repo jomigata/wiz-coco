@@ -10,6 +10,15 @@ if (!admin.apps.length) {
 
 export { socialOAuthExchange };
 
+// AiCoCo → WizCoCo 이식: Gemini AI 상담 (Callable v2)
+export {
+  startAiSession,
+  sendCounselMessage,
+  endAiSession,
+  syncCounselFaqFromSheet,
+  scheduledSyncCounselFaq,
+} from './src/index';
+
 // API Functions - 간단한 API 엔드포인트
 export const api = functions.https.onRequest(async (req: Request, res: Response) => {
   try {

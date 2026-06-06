@@ -1,0 +1,401 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.socialOAuthExchange = void 0;
+/**
+ * 카카오/네이버 OAuth authorization_code → Firebase Custom Token
+ * 클라이언트 시크릿은 이 함수에서만 사용합니다.
+ */
+const functions = __importStar(require("firebase-functions"));
+const admin = __importStar(require("firebase-admin"));
+const KAKAO_TOKEN = 'https://kauth.kakao.com/oauth/token';
+const KAKAO_USER = 'https://kapi.kakao.com/v2/user/me';
+const NAVER_TOKEN = 'https://nid.naver.com/oauth2.0/token';
+const NAVER_PROFILE = 'https://openapi.naver.com/v1/nid/me';
+const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
+const GOOGLE_USER = 'https://www.googleapis.com/oauth2/v3/userinfo';
+function setCors(res, origin) {
+    const allow = origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+        ? origin
+        : '*';
+    res.set('Access-Control-Allow-Origin', allow);
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+}
+function getConfig() {
+    var _a, _b, _c, _d, _e, _f;
+    const cfg = functions.config();
+    return {
+        kakaoClientId: process.env.KAKAO_CLIENT_ID ||
+            process.env.KAKAO_REST_API_KEY ||
+            ((_a = cfg.kakao) === null || _a === void 0 ? void 0 : _a.client_id),
+        kakaoClientSecret: process.env.KAKAO_CLIENT_SECRET || ((_b = cfg.kakao) === null || _b === void 0 ? void 0 : _b.client_secret),
+        naverClientId: process.env.NAVER_CLIENT_ID || ((_c = cfg.naver) === null || _c === void 0 ? void 0 : _c.client_id),
+        naverClientSecret: process.env.NAVER_CLIENT_SECRET || ((_d = cfg.naver) === null || _d === void 0 ? void 0 : _d.client_secret),
+        // functions:config(배포 시 주입) 우선 — GCP에 남은 stale env가 config를 덮어쓰지 않도록
+        googleClientId: (((_e = cfg.google) === null || _e === void 0 ? void 0 : _e.client_id) ||
+            process.env.GOOGLE_CLIENT_ID ||
+            process.env.GOOGLE_OAUTH_CLIENT_ID ||
+            '').trim(),
+        googleClientSecret: (((_f = cfg.google) === null || _f === void 0 ? void 0 : _f.client_secret) ||
+            process.env.GOOGLE_CLIENT_SECRET ||
+            process.env.GOOGLE_OAUTH_CLIENT_SECRET ||
+            '').trim(),
+    };
+}
+/** 네이버/카카오 콘솔과 앱의 redirect_uri 끝 슬래시 불일치 허용 */
+function normalizeRedirectUri(u) {
+    return u.trim().replace(/\/+$/, '');
+}
+function isAllowedRedirectUri(uri) {
+    const envList = process.env.OAUTH_REDIRECT_URI_ALLOWLIST || '';
+    const fromEnv = envList
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const defaults = [
+        'https://wiz-coco.web.app/login/kakao-callback/',
+        'https://wiz-coco.web.app/login/naver-callback/',
+        'https://wiz-coco.web.app/login/google-callback/',
+        'https://wizcoco.com/login/kakao-callback/',
+        'https://wizcoco.com/login/naver-callback/',
+        'https://wizcoco.com/login/google-callback/',
+        'https://www.wizcoco.com/login/kakao-callback/',
+        'https://www.wizcoco.com/login/naver-callback/',
+        'https://www.wizcoco.com/login/google-callback/',
+        'http://localhost:3000/login/kakao-callback/',
+        'http://localhost:3000/login/naver-callback/',
+        'http://localhost:3000/login/google-callback/',
+        'http://127.0.0.1:3000/login/kakao-callback/',
+        'http://127.0.0.1:3000/login/naver-callback/',
+        'http://127.0.0.1:3000/login/google-callback/',
+    ];
+    const allowed = [...fromEnv, ...defaults].map(normalizeRedirectUri);
+    const norm = normalizeRedirectUri(uri);
+    return allowed.includes(norm);
+}
+async function kakaoExchange(code, redirectUri, clientId, clientSecret) {
+    var _a, _b;
+    const body = new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        code,
+        client_secret: clientSecret,
+    });
+    const tokenRes = await fetch(KAKAO_TOKEN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+    });
+    if (!tokenRes.ok) {
+        const t = await tokenRes.text();
+        functions.logger.error('Kakao token error', tokenRes.status, t);
+        throw new Error('카카오 토큰 교환에 실패했습니다.');
+    }
+    const tokenJson = (await tokenRes.json());
+    const meRes = await fetch(KAKAO_USER, {
+        headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+    });
+    if (!meRes.ok) {
+        throw new Error('카카오 사용자 정보를 가져오지 못했습니다.');
+    }
+    const me = (await meRes.json());
+    const email = (_a = me.kakao_account) === null || _a === void 0 ? void 0 : _a.email;
+    const name = ((_b = me.kakao_account) === null || _b === void 0 ? void 0 : _b.name) || `카카오사용자${me.id}`;
+    return {
+        providerUid: String(me.id),
+        email: email || undefined,
+        displayName: name,
+    };
+}
+async function naverExchange(code, state, clientId, clientSecret) {
+    const qs = new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        state,
+    });
+    const tokenRes = await fetch(`${NAVER_TOKEN}?${qs.toString()}`, {
+        method: 'GET',
+    });
+    if (!tokenRes.ok) {
+        const t = await tokenRes.text();
+        functions.logger.error('Naver token error', tokenRes.status, t);
+        throw new Error('네이버 토큰 교환에 실패했습니다.');
+    }
+    const tokenJson = (await tokenRes.json());
+    const meRes = await fetch(NAVER_PROFILE, {
+        headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+    });
+    if (!meRes.ok) {
+        throw new Error('네이버 사용자 정보를 가져오지 못했습니다.');
+    }
+    const me = (await meRes.json());
+    const r = me.response;
+    if (!(r === null || r === void 0 ? void 0 : r.id)) {
+        throw new Error('네이버 프로필이 올바르지 않습니다.');
+    }
+    return {
+        providerUid: r.id,
+        email: r.email,
+        displayName: r.name || r.nickname || `네이버${r.id}`,
+    };
+}
+async function googleExchange(code, redirectUri, clientId, clientSecret) {
+    const redirectCandidates = [
+        redirectUri,
+        redirectUri.replace(/\/+$/, ''),
+        redirectUri.replace(/\/+$/, '') + '/',
+    ];
+    try {
+        const u = new URL(redirectUri);
+        if (u.hostname === 'wizcoco.com') {
+            u.hostname = 'www.wizcoco.com';
+            redirectCandidates.push(u.toString(), u.toString().replace(/\/+$/, '') + '/');
+        }
+        else if (u.hostname === 'www.wizcoco.com') {
+            u.hostname = 'wizcoco.com';
+            redirectCandidates.push(u.toString(), u.toString().replace(/\/+$/, '') + '/');
+        }
+    }
+    catch (_a) {
+        // ignore
+    }
+    const uniqueRedirects = [...new Set(redirectCandidates)];
+    let lastErrorText = '';
+    for (const uri of uniqueRedirects) {
+        const body = new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: uri,
+            code,
+        });
+        const tokenRes = await fetch(GOOGLE_TOKEN, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString(),
+        });
+        if (tokenRes.ok) {
+            const tokenJson = (await tokenRes.json());
+            const meRes = await fetch(GOOGLE_USER, {
+                headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+            });
+            if (!meRes.ok) {
+                throw new Error('구글 사용자 정보를 가져오지 못했습니다.');
+            }
+            const me = (await meRes.json());
+            if (!me.sub) {
+                throw new Error('구글 프로필이 올바르지 않습니다.');
+            }
+            return {
+                providerUid: me.sub,
+                email: me.email,
+                displayName: me.name || `구글사용자${me.sub.slice(-6)}`,
+            };
+        }
+        lastErrorText = await tokenRes.text();
+        functions.logger.warn('Google token attempt failed', tokenRes.status, uri, lastErrorText.slice(0, 120));
+        const errJson = (() => {
+            try {
+                return JSON.parse(lastErrorText);
+            }
+            catch (_a) {
+                return {};
+            }
+        })();
+        if (errJson.error === 'invalid_grant') {
+            break;
+        }
+    }
+    functions.logger.error('Google token error', lastErrorText, {
+        redirectUri,
+        clientId: clientId.slice(0, 12) + '…',
+    });
+    let detail = '';
+    try {
+        const errJson = JSON.parse(lastErrorText);
+        detail = errJson.error_description || errJson.error || '';
+        if (errJson.error === 'invalid_grant') {
+            detail =
+                '인증 코드가 만료되었거나 이미 사용되었습니다. 로그인 페이지에서 다시 시도해 주세요.';
+        }
+    }
+    catch (_b) {
+        detail = lastErrorText.slice(0, 200);
+    }
+    throw new Error(detail
+        ? `구글 토큰 교환에 실패했습니다: ${detail}`
+        : '구글 토큰 교환에 실패했습니다.');
+}
+async function getOrCreateUid(provider, providerUid, email, displayName) {
+    const uid = `${provider}_${providerUid}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 120);
+    const syntheticDomain = process.env.OAUTH_SYNTHETIC_EMAIL_DOMAIN || 'wizcoco.com';
+    const safeEmail = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        ? email
+        : `wizcoco+${provider}.${providerUid}@${syntheticDomain}`;
+    try {
+        await admin.auth().getUser(uid);
+        if (email) {
+            try {
+                await admin.auth().updateUser(uid, {
+                    email,
+                    displayName: displayName || undefined,
+                });
+            }
+            catch (e) {
+                functions.logger.warn('updateUser skipped', e);
+            }
+        }
+        return uid;
+    }
+    catch (e) {
+        const err = e;
+        if ((err === null || err === void 0 ? void 0 : err.code) !== 'auth/user-not-found') {
+            throw e;
+        }
+    }
+    try {
+        await admin.auth().createUser({
+            uid,
+            email: safeEmail,
+            displayName: displayName || undefined,
+            emailVerified: !!email,
+        });
+    }
+    catch (e) {
+        const err = e;
+        if ((err === null || err === void 0 ? void 0 : err.code) === 'auth/email-already-exists') {
+            await admin.auth().createUser({
+                uid,
+                displayName: displayName || undefined,
+            });
+        }
+        else {
+            throw e;
+        }
+    }
+    return uid;
+}
+exports.socialOAuthExchange = functions
+    .runWith({ minInstances: 1 })
+    .https.onRequest(async (req, res) => {
+    setCors(res, req.get('origin'));
+    if (req.method === 'OPTIONS') {
+        res.status(204).end();
+        return;
+    }
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+    try {
+        const { provider, code, redirectUri, state, clientId: bodyClientId, } = req.body;
+        if (!provider || !code || !redirectUri) {
+            res.status(400).json({ error: 'provider, code, redirectUri가 필요합니다.' });
+            return;
+        }
+        if (!isAllowedRedirectUri(redirectUri)) {
+            res.status(400).json({ error: '허용되지 않은 redirect URI입니다.' });
+            return;
+        }
+        const cfg = getConfig();
+        let providerUid;
+        let email;
+        let displayName;
+        if (provider === 'kakao') {
+            if (!cfg.kakaoClientId || !cfg.kakaoClientSecret) {
+                res.status(500).json({ error: '카카오 서버 설정이 없습니다.' });
+                return;
+            }
+            const k = await kakaoExchange(code, redirectUri, cfg.kakaoClientId, cfg.kakaoClientSecret);
+            providerUid = k.providerUid;
+            email = k.email;
+            displayName = k.displayName;
+        }
+        else if (provider === 'naver') {
+            if (!state) {
+                res.status(400).json({ error: '네이버는 state가 필요합니다.' });
+                return;
+            }
+            if (!cfg.naverClientId || !cfg.naverClientSecret) {
+                res.status(500).json({ error: '네이버 서버 설정이 없습니다.' });
+                return;
+            }
+            const n = await naverExchange(code, state, cfg.naverClientId, cfg.naverClientSecret);
+            providerUid = n.providerUid;
+            email = n.email;
+            displayName = n.displayName;
+        }
+        else if (provider === 'google') {
+            if (!cfg.googleClientSecret) {
+                res.status(500).json({ error: '구글 서버 설정이 없습니다.' });
+                return;
+            }
+            const googleClientId = ((bodyClientId === null || bodyClientId === void 0 ? void 0 : bodyClientId.trim()) || cfg.googleClientId).trim();
+            if (!googleClientId) {
+                res.status(500).json({ error: '구글 클라이언트 ID가 설정되지 않았습니다.' });
+                return;
+            }
+            if (cfg.googleClientId && googleClientId !== cfg.googleClientId) {
+                functions.logger.warn('Google clientId mismatch', {
+                    body: googleClientId.slice(0, 20),
+                    config: cfg.googleClientId.slice(0, 20),
+                });
+            }
+            const g = await googleExchange(code, redirectUri, googleClientId, cfg.googleClientSecret);
+            providerUid = g.providerUid;
+            email = g.email;
+            displayName = g.displayName;
+        }
+        else {
+            res.status(400).json({ error: '지원하지 않는 provider입니다.' });
+            return;
+        }
+        const uid = await getOrCreateUid(provider, providerUid, email, displayName);
+        const customToken = await admin.auth().createCustomToken(uid, {
+            provider,
+        });
+        res.status(200).json({ customToken, uid });
+    }
+    catch (err) {
+        const msg = err instanceof Error ? err.message : 'OAuth 처리 오류';
+        functions.logger.error('socialOAuthExchange', err);
+        res.status(500).json({ error: msg });
+    }
+});
+//# sourceMappingURL=oauthExchange.js.map

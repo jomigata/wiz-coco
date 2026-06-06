@@ -43,6 +43,7 @@ import Link from 'next/link';export default function AIMindAssistantPage() {
       { name: '월별검사 및 분기별 검사', href: '/ai-mind-assistant/periodic-tests', icon: '📅', description: '정기적인 심리 상태 점검' }
     ],
     '마음 SOS': [
+      { name: 'AI 실시간 상담', href: '/ai-mind-assistant/counsel', icon: '💬', description: 'Gemini AI와 대화 상담', badge: '신규' },
       { name: 'AI 긴급 마음진단', href: '/ai-mind-assistant/emergency-diagnosis', icon: '🚨', description: '1분 AI 솔루션', badge: '긴급' },
       { name: 'AI 번아웃 체크', href: '/ai-mind-assistant/burnout-check', icon: '🔥', description: '번아웃 신호등 확인' },
       { name: 'AI 자존감 온도계', href: '/ai-mind-assistant/self-esteem', icon: '🌡️', description: '현재 자존감 수준 측정' }

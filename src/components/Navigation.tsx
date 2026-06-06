@@ -671,6 +671,7 @@ export default function Navigation() {
           name: "AI 맞춤 치료",
           icon: "🤖",
           items: [
+            { name: "AI 실시간 상담", href: "/ai-mind-assistant/counsel", description: "Gemini AI와 대화 상담", icon: "💬", badge: "신규" },
             { name: "AI 맞춤 치료", href: "/recommendations", description: "AI 기반 상담 추천", icon: "🤖" }
           ]
         },
