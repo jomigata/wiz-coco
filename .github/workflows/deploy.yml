@@ -465,15 +465,18 @@ jobs:
         GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
         if [ -z "$GID" ]; then GID="0"; fi
         printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\n' "$SHEET_ID" "$GID" > functions/.env
+        # defineSecret(GEMINI_API_KEY) Functions는 Firebase Secret이 없으면 비대화형 배포가 실패함
         if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
           printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt
-          firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
-            --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
-          rm -f /tmp/gemini-key.txt
-          echo "✅ GEMINI_API_KEY secret 설정됨"
+          echo "✅ GitHub Secrets에서 GEMINI_API_KEY 사용"
         else
-          echo "⚠️  GEMINI_API_KEY 미설정 — AI 상담 Functions는 배포되나 응답 생성 시 실패할 수 있음"
+          printf 'unset' > /tmp/gemini-key.txt
+          echo "⚠️  GEMINI_API_KEY 미설정 — placeholder로 Firebase Secret 등록 (AI 응답은 런타임 실패)"
         fi
+        firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
+          --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+        rm -f /tmp/gemini-key.txt
+        echo "✅ GEMINI_API_KEY Firebase Secret 반영됨"
         echo "=================================="
 
     - name: 🚀 Firebase Hosting + Functions 배포
