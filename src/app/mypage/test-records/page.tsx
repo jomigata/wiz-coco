@@ -551,9 +551,7 @@ function TestRecordsContent() {
         createdAt: new Date().toISOString(),
       };
       setUser(userData);
-      void firebaseUser.getIdToken().then((token) => {
-        fetchTestRecordsFromDB(firebaseUser.uid, token);
-      });
+      fetchTestRecordsFromDB(firebaseUser.uid, '');
       return;
     }
 
