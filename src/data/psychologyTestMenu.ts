@@ -37,6 +37,67 @@ export function getVisibleTestMenuItems(): TestCategory[] {
   return testSubMenuItems.filter((c) => !c.hidden);
 }
 
+/** 중분류명 → /tests/{slug} 경로 (실제 폴더명과 일치) */
+export const TEST_SUBCATEGORY_SLUGS: Record<string, string> = {
+  '성격 및 기질 탐색': 'personality-temperament',
+  '자아정체감 및 가치관': 'identity-values',
+  '잠재력 및 역량 개발': 'potential-development',
+  '삶의 의미 및 실존적 문제': 'life-meaning',
+  '가족 관계': 'family-relations',
+  '연인 및 부부 관계': 'romantic-relations',
+  '친구 및 동료 관계': 'friend-colleague',
+  '사회적 기술 및 소통': 'social-communication',
+  '우울 및 기분 문제': 'depression-mood',
+  '불안 및 스트레스': 'anxiety-stress',
+  '외상 및 위기 개입': 'trauma-crisis',
+  '중독 및 충동 조절': 'addiction-impulse',
+  '진로 및 직업 문제': 'career-work',
+  '경제 및 재정 문제': 'economic-finance',
+  '건강 및 신체 문제': 'health-body',
+  '일상생활 및 자기 관리': 'daily-management',
+  '다문화 적응': 'multicultural',
+  '디지털 환경 적응': 'digital-adaptation',
+  '생애주기별 적응': 'lifecycle-adaptation',
+  '사회 환경 적응': 'social-environment',
+};
+
+export interface FlatTestMenuItem {
+  id: string;
+  name: string;
+  href: string;
+  description: string;
+  icon: string;
+  category: string;
+  subcategory: string;
+  subcategorySlug: string;
+}
+
+/** 검색·추천용 — 3단계 메뉴를 leaf 단위로 평탄화 */
+export function flattenTestMenuItems(categories: TestCategory[]): FlatTestMenuItem[] {
+  const items: FlatTestMenuItem[] = [];
+  for (const cat of categories) {
+    if (cat.hidden) continue;
+    for (const sub of cat.subcategories) {
+      if (sub.hidden) continue;
+      const subcategorySlug = TEST_SUBCATEGORY_SLUGS[sub.name] ?? '';
+      for (const item of sub.items) {
+        if (item.hidden) continue;
+        items.push({
+          id: item.href.replace(/^\/tests\//, ''),
+          name: item.name,
+          href: item.href,
+          description: item.description,
+          icon: item.icon,
+          category: cat.category,
+          subcategory: sub.name,
+          subcategorySlug,
+        });
+      }
+    }
+  }
+  return items;
+}
+
 export const testSubMenuItems: TestCategory[] = [
   {
     category: "임시 검사",

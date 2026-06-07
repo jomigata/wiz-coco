@@ -208,6 +208,27 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if false;
     }
+
+    // 심리검사 메뉴 검색 — 키워드·검색 로그 (클라이언트 기록, 읽기 공개)
+    match /testSearchKeywords/{keywordId} {
+      allow read: if true;
+      allow create: if request.resource.data.normalizedTerm is string
+        && request.resource.data.normalizedTerm.size() >= 1
+        && request.resource.data.normalizedTerm.size() <= 80
+        && request.resource.data.term is string;
+      allow update: if request.resource.data.normalizedTerm == resource.data.normalizedTerm
+        && request.resource.data.searchCount is int
+        && request.resource.data.searchCount >= resource.data.searchCount;
+    }
+
+    match /testSearchQueries/{queryId} {
+      allow create: if request.resource.data.term is string
+        && request.resource.data.term.size() >= 1
+        && request.resource.data.term.size() <= 100
+        && request.resource.data.normalizedTerm is string
+        && request.resource.data.resultCount is int;
+      allow read, update, delete: if false;
+    }
     
     // 다른 컬렉션에 대한 기본 규칙
     match /{document=**} {

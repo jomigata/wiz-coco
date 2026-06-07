@@ -12,6 +12,7 @@ import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import TestMenuSearch from '@/components/tests/TestMenuSearch';
 
 export default function Navigation() {
   const router = useRouter();
@@ -789,7 +790,14 @@ export default function Navigation() {
                     }}
                     onMouseLeave={scheduleClose}
                   >
-                    <div className={`relative flex h-[70vh] ${psychologyPlacement.subPanelSide === 'left' ? 'flex-row-reverse' : ''}`}>
+                    <div className="px-4 pt-2 pb-3 border-b border-blue-500/20">
+                      <TestMenuSearch
+                        categories={visibleTestMenuItems}
+                        variant="desktop"
+                        onNavigate={() => setActiveMenu(null)}
+                      />
+                    </div>
+                    <div className={`relative flex h-[62vh] ${psychologyPlacement.subPanelSide === 'left' ? 'flex-row-reverse' : ''}`}>
                       {/* 왼쪽: 대분류 5개 */}
                       <div ref={psychologyTestsLeftColRef} className="w-2/5 p-4 border-r border-blue-500/30 shrink-0">
                         <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
@@ -2053,6 +2061,13 @@ export default function Navigation() {
               <div className="space-y-3">
                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
                   🧠 AI 심리검사
+                </div>
+                <div className="px-2">
+                  <TestMenuSearch
+                    categories={visibleTestMenuItems}
+                    variant="mobile"
+                    onNavigate={() => setIsMobileMenuOpen(false)}
+                  />
                 </div>
                 
                 {/* 대분류 5개 */}
