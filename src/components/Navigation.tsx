@@ -11,10 +11,12 @@ import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 import WizcocoLogo from '@/components/WizcocoLogo';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 
 export default function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
+  const navigateTo = (href: string) => pushWithAuthSession(router, href);
   const { user, logout } = useFirebaseAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
@@ -210,7 +212,7 @@ export default function Navigation() {
 
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
-    router.push('/mypage?tab=in-progress');
+    navigateTo('/mypage?tab=in-progress');
   };
   const userEmail = user?.email || sessionFirebaseUser?.email || '';
   const userRole = user?.role || 'user';
@@ -364,11 +366,7 @@ export default function Navigation() {
 
   const handleAuthLinkClick = (href: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (href === "/register") {
-      router.push("/register");
-    } else {
-      router.push(href);
-    }
+    pushWithAuthSession(router, href);
   };
 
   // 메뉴 데이터
@@ -815,7 +813,7 @@ export default function Navigation() {
                                   "임시 검사": "temporary-tests"
                                 };
                                 const categoryId = categoryMap[mainCategory.category];
-                                router.push(`/tests?category=${categoryId}`);
+                                navigateTo(`/tests?category=${categoryId}`);
                                 setActiveMenu(null);
                               }}
                               onMouseEnter={() => {
@@ -900,7 +898,7 @@ export default function Navigation() {
                                       };
                                       const categoryId = categoryMap[subcategory.name];
                                       if (categoryId) {
-                                        router.push(`/tests/${categoryId}`);
+                                        navigateTo(`/tests/${categoryId}`);
                                         setActiveMenu(null);
                                       }
                                     }}
@@ -1182,7 +1180,7 @@ export default function Navigation() {
                                   if (category?.subcategories && category.subcategories.length > 0) {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      router.push(firstSubcategory.items[0].href);
+                                      navigateTo(firstSubcategory.items[0].href);
                                       setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("일일 체크");
@@ -1228,7 +1226,7 @@ export default function Navigation() {
                                   if (category?.subcategories && category.subcategories.length > 0) {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      router.push(firstSubcategory.items[0].href);
+                                      navigateTo(firstSubcategory.items[0].href);
                                       setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("마음 SOS");
@@ -1283,7 +1281,7 @@ export default function Navigation() {
                                   if (category?.subcategories && category.subcategories.length > 0) {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      router.push(firstSubcategory.items[0].href);
+                                      navigateTo(firstSubcategory.items[0].href);
                                       setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("AI 리포트");
@@ -1329,7 +1327,7 @@ export default function Navigation() {
                                   if (category?.subcategories && category.subcategories.length > 0) {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      router.push(firstSubcategory.items[0].href);
+                                      navigateTo(firstSubcategory.items[0].href);
                                       setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("검사 기록");
@@ -1384,7 +1382,7 @@ export default function Navigation() {
                                   if (category?.subcategories && category.subcategories.length > 0) {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      router.push(firstSubcategory.items[0].href);
+                                      navigateTo(firstSubcategory.items[0].href);
                       setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("도와줘요 상담사님");
@@ -1430,7 +1428,7 @@ export default function Navigation() {
                                   if (category?.subcategories && category.subcategories.length > 0) {
                                     const firstSubcategory = category.subcategories[0];
                                     if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      router.push(firstSubcategory.items[0].href);
+                                      navigateTo(firstSubcategory.items[0].href);
                                       setActiveMenu(null);
                                     } else {
                                       setSelectedAiAssistantMainCategory("셀프 치료");
@@ -1518,7 +1516,7 @@ export default function Navigation() {
                                     }}
                                     onClick={() => {
                                       if (subcategory.items && subcategory.items.length > 0) {
-                                        router.push(subcategory.items[0].href);
+                                        navigateTo(subcategory.items[0].href);
                                         setActiveMenu(null);
                                       }
                                     }}
@@ -2116,7 +2114,7 @@ export default function Navigation() {
                                   };
                                   const categoryId = categoryMap[subcategory.name];
                                   if (categoryId) {
-                                    router.push(`/tests/${categoryId}`);
+                                    navigateTo(`/tests/${categoryId}`);
                                     setActiveMenu(null);
                                   }
                                 }}
@@ -2247,7 +2245,7 @@ export default function Navigation() {
                                 }`}
                                 onClick={() => {
                                   if (subcategory.items && subcategory.items.length > 0) {
-                                    router.push(subcategory.items[0].href);
+                                    navigateTo(subcategory.items[0].href);
                                     setIsMobileMenuOpen(false);
                                   }
                                   setSelectedAiAssistantSubcategory(selectedAiAssistantSubcategory === subcategory.name ? null : subcategory.name);
@@ -2346,7 +2344,7 @@ export default function Navigation() {
                                 }`}
                                 onClick={() => {
                                   if (subcategory.items && subcategory.items.length > 0) {
-                                    router.push(subcategory.items[0].href);
+                                    navigateTo(subcategory.items[0].href);
                                     setIsMobileMenuOpen(false);
                                   }
                                   setSelectedAiAssistantSubcategory(selectedAiAssistantSubcategory === subcategory.name ? null : subcategory.name);
@@ -2445,7 +2443,7 @@ export default function Navigation() {
                                 }`}
                                 onClick={() => {
                                   if (subcategory.items && subcategory.items.length > 0) {
-                                    router.push(subcategory.items[0].href);
+                                    navigateTo(subcategory.items[0].href);
                                     setIsMobileMenuOpen(false);
                                   }
                                   setSelectedAiAssistantSubcategory(selectedAiAssistantSubcategory === subcategory.name ? null : subcategory.name);

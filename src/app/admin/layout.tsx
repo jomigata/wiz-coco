@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';export default function AdminLayout({ children }: { children: React.ReactNode }) {
+import { usePathname, useRouter } from 'next/navigation';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState(getActiveSection(pathname));
@@ -100,7 +102,7 @@ import { usePathname, useRouter } from 'next/navigation';export default functio
   const handleMenuClick = (itemId: string, href: string) => {
     setActiveSection(itemId);
     setCurrentPageTitle(getPageTitle(itemId));
-    router.push(href);
+    pushWithAuthSession(router, href);
   };
 
   return (

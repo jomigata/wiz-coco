@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -538,30 +539,42 @@ function TestRecordsContent() {
     }
   };
   
-  // 초기 데이터 로드
+  // 초기 데이터 로드 — Firebase Auth 우선, 레거시 localStorage 폴백
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // 로컬 스토리지에서 사용자 정보 가져오기
-      const userStr = localStorage.getItem('user');
-      const token = localStorage.getItem('userToken');
-      
-      if (userStr && token) {
-        try {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-          
-          // DB에서 테스트 기록 가져오기
-          fetchTestRecordsFromDB(userData.id, token);
-        } catch (e) {
-          console.error('사용자 정보 파싱 오류:', e);
-          setIsLoading(false);
-        }
-      } else {
-        console.log('로그인 정보가 없습니다.');
-        router.push('/login');
-      }
+    if (firebaseLoading) return;
+
+    if (firebaseUser?.uid) {
+      const userData: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || undefined,
+        createdAt: new Date().toISOString(),
+      };
+      setUser(userData);
+      void firebaseUser.getIdToken().then((token) => {
+        fetchTestRecordsFromDB(firebaseUser.uid, token);
+      });
+      return;
     }
-  }, [router]);
+
+    const userStr = localStorage.getItem('user');
+    const token = localStorage.getItem('userToken');
+
+    if (userStr && token) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+        fetchTestRecordsFromDB(userData.id, token);
+      } catch (e) {
+        console.error('사용자 정보 파싱 오류:', e);
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    console.log('로그인 정보가 없습니다.');
+    pushWithAuthSession(router, '/login');
+  }, [firebaseLoading, firebaseUser, router]);
 
   // Firebase DB에서 테스트 기록 가져오기 (주 저장소)
   const fetchTestRecordsFromDB = async (userId: string, token: string) => {
@@ -1295,7 +1308,7 @@ function TestRecordsContent() {
     }
     
     console.log(`테스트 결과 페이지로 이동: ${resultPath}`);
-    router.push(resultPath);
+    pushWithAuthSession(router, resultPath);
   };
 
   // 로그아웃 처리

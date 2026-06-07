@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';export default function TestsLayout({ children }: { children: React.ReactNode }) {
+import Link from 'next/link';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+export default function TestsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>('');
@@ -160,7 +162,7 @@ import Link from 'next/link';export default function TestsLayout({ children }: 
   const handleMenuClick = (sectionId: string, href: string) => {
     setActiveSection(sectionId);
     setPageTitle(getPageTitle(href));
-    router.push(href);
+    pushWithAuthSession(router, href);
   };
 
   // 경로 변경 시 활성 섹션 업데이트
