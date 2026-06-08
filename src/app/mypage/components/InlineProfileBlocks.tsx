@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
@@ -40,7 +40,7 @@ interface UserData {
 interface Props {
   user: UserData;
   firebaseUserRole?: string;
-  onUpdate: () => void;
+  onUpdate: (patch?: Record<string, unknown>) => void;
 }
 
 type EditBlock = 'profile' | 'personal' | 'org' | 'report' | null;
@@ -84,6 +84,21 @@ function genderLabel(v?: string) {
 }
 function multilineText(v?: string, fallback = '정보 없음') {
   return (v || '').trim() || fallback;
+}
+
+/** Firestore 저장 payload → 화면 표시용 user 객체로 병합 (부모 state 동기화용 export) */
+export function applySavePatch(base: UserData, data: Record<string, unknown>): UserData {
+  const next: UserData = { ...base, ...(data as Partial<UserData>) };
+  const displayName =
+    typeof data.displayName === 'string'
+      ? data.displayName
+      : typeof data.name === 'string'
+        ? data.name
+        : undefined;
+  if (displayName !== undefined) {
+    next.name = displayName;
+  }
+  return next;
 }
 
 // ─── 공통 스타일 ────────────────────────────────────────────────────────────
@@ -188,10 +203,15 @@ function BlockMessage({ error, success }: { error: string; success: string }) {
 
 // ─── 메인 컴포넌트 ───────────────────────────────────────────────────────────
 export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }: Props) {
+  const [displayUser, setDisplayUser] = useState<UserData>(user);
   const [editingBlock, setEditingBlock] = useState<EditBlock>(null);
   const [saving, setSaving] = useState(false);
   const [blockError, setBlockError] = useState('');
   const [blockSuccess, setBlockSuccess] = useState('');
+
+  useEffect(() => {
+    setDisplayUser(user);
+  }, [user]);
 
   // 프로필 요약 폼
   const [profileForm, setProfileForm] = useState({
@@ -232,7 +252,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     reportSignature: '',
   });
 
-  const role = firebaseUserRole || user.role;
+  const role = firebaseUserRole || displayUser.role;
   const counselor = isCounselor(role);
 
   const startEdit = (block: EditBlock) => {
@@ -240,38 +260,38 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     setBlockSuccess('');
     if (block === 'profile') {
       setProfileForm({
-        reportDisplayName: user.reportDisplayName || user.name || '',
-        practiceType: user.practiceType || 'solo',
-        teamSharingEnabled: user.teamSharingEnabled ?? false,
-        shareContactInReport: user.shareContactInReport ?? true,
+        reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
+        practiceType: displayUser.practiceType || 'solo',
+        teamSharingEnabled: displayUser.teamSharingEnabled ?? false,
+        shareContactInReport: displayUser.shareContactInReport ?? true,
       });
     } else if (block === 'personal') {
       setPersonalForm({
-        displayName: user.name || '',
-        phoneNumber: user.phoneNumber || '',
-        birthDate: user.birthDate || '',
-        gender: user.gender || '',
-        occupation: user.occupation || '',
+        displayName: displayUser.name || '',
+        phoneNumber: displayUser.phoneNumber || '',
+        birthDate: displayUser.birthDate || '',
+        gender: displayUser.gender || '',
+        occupation: displayUser.occupation || '',
       });
     } else if (block === 'org') {
       setOrgForm({
-        practiceType: user.practiceType || 'solo',
-        organizationName: user.organizationName || '',
-        organizationManager: user.organizationManager || '',
-        organizationTel: user.organizationTel || '',
-        organizationMobile: user.organizationMobile || '',
-        organizationFax: user.organizationFax || '',
-        organizationEmail: user.organizationEmail || '',
-        organizationAddress: user.organizationAddress || '',
+        practiceType: displayUser.practiceType || 'solo',
+        organizationName: displayUser.organizationName || '',
+        organizationManager: displayUser.organizationManager || '',
+        organizationTel: displayUser.organizationTel || '',
+        organizationMobile: displayUser.organizationMobile || '',
+        organizationFax: displayUser.organizationFax || '',
+        organizationEmail: displayUser.organizationEmail || '',
+        organizationAddress: displayUser.organizationAddress || '',
       });
     } else if (block === 'report') {
       setReportForm({
-        reportDisplayName: user.reportDisplayName || user.name || '',
-        specialties: user.specialties || '',
-        clientFocus: user.clientFocus || '',
-        shareOrganizationInReport: user.shareOrganizationInReport ?? true,
-        shareContactInReport: user.shareContactInReport ?? true,
-        reportSignature: user.reportSignature || '',
+        reportDisplayName: displayUser.reportDisplayName || displayUser.name || '',
+        specialties: displayUser.specialties || '',
+        clientFocus: displayUser.clientFocus || '',
+        shareOrganizationInReport: displayUser.shareOrganizationInReport ?? true,
+        shareContactInReport: displayUser.shareContactInReport ?? true,
+        reportSignature: displayUser.reportSignature || '',
       });
     }
     setEditingBlock(block);
@@ -289,12 +309,11 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
     setBlockSuccess('');
     try {
       await saveToFirestore(data);
+      const patch = applySavePatch(displayUser, data);
+      setDisplayUser(patch);
       setBlockSuccess('저장되었습니다.');
       setEditingBlock(null);
-      setTimeout(() => {
-        setBlockSuccess('');
-        onUpdate();
-      }, 800);
+      onUpdate(data);
     } catch (e) {
       setBlockError(e instanceof Error ? e.message : '저장에 실패했습니다.');
     } finally {
@@ -372,28 +391,28 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
         <div className="space-y-3">
           <div className={rowCls}>
             <span className={keySpan}>회원 유형</span>
-            <span className={valSpan}>{roleLabel(user.role)}</span>
+            <span className={valSpan}>{roleLabel(displayUser.role)}</span>
           </div>
           <div className={rowCls}>
             <span className={keySpan}>리포트 표기명</span>
-            <span className={valSpan}>{user.reportDisplayName || user.name || '정보 없음'}</span>
+            <span className={valSpan}>{displayUser.reportDisplayName || displayUser.name || '정보 없음'}</span>
           </div>
           <div className={rowCls}>
             <span className={keySpan}>운영 형태</span>
             <span className={valSpan}>
-              {counselor ? practiceLabel(user.practiceType) : '개인 이용자'}
+              {counselor ? practiceLabel(displayUser.practiceType) : '개인 이용자'}
             </span>
           </div>
           <div className={rowCls}>
             <span className={keySpan}>팀 정보 공유</span>
             <span className={valSpan}>
-              {counselor ? boolLabel(user.teamSharingEnabled, '공유 가능', '개별 운영') : '해당 없음'}
+              {counselor ? boolLabel(displayUser.teamSharingEnabled, '공유 가능', '개별 운영') : '해당 없음'}
             </span>
           </div>
           <div className={rowCls}>
             <span className={keySpan}>리포트 연락처 노출</span>
             <span className={valSpan}>
-              {counselor ? boolLabel(user.shareContactInReport, '노출', '비노출') : '기본'}
+              {counselor ? boolLabel(displayUser.shareContactInReport, '노출', '비노출') : '기본'}
             </span>
           </div>
         </div>
@@ -482,12 +501,12 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
         </div>
       ) : (
         <div className="space-y-3">
-          <div className={rowCls}><span className={keySpan}>이름</span><span className={valSpan}>{user.name || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{user.phoneNumber || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>이메일(개인)</span><span className={valSpan}>{user.email || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>생년월일</span><span className={valSpan}>{user.birthDate || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>성별</span><span className={valSpan}>{genderLabel(user.gender)}</span></div>
-          <div className={rowCls}><span className={keySpan}>직업/배경</span><span className={valSpan}>{OCCUPATION_LABEL[user.occupation || ''] || user.occupation || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>이름</span><span className={valSpan}>{displayUser.name || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{displayUser.phoneNumber || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>이메일(개인)</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>생년월일</span><span className={valSpan}>{displayUser.birthDate || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>성별</span><span className={valSpan}>{genderLabel(displayUser.gender)}</span></div>
+          <div className={rowCls}><span className={keySpan}>직업/배경</span><span className={valSpan}>{OCCUPATION_LABEL[displayUser.occupation || ''] || displayUser.occupation || '정보 없음'}</span></div>
         </div>
       )}
     </div>
@@ -553,14 +572,14 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
         </div>
       ) : (
         <div className="space-y-3">
-          <div className={rowCls}><span className={keySpan}>운영 형태</span><span className={valSpan}>{practiceLabel(user.practiceType)}</span></div>
-          <div className={rowCls}><span className={keySpan}>회사/기관명</span><span className={valSpan}>{user.organizationName?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>담당자</span><span className={valSpan}>{user.organizationManager?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{user.organizationTel?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>핸드폰번호</span><span className={valSpan}>{user.organizationMobile?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>팩스번호</span><span className={valSpan}>{user.organizationFax?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{user.organizationEmail?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>주소</span><span className={valSpan}>{user.organizationAddress?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>운영 형태</span><span className={valSpan}>{practiceLabel(displayUser.practiceType)}</span></div>
+          <div className={rowCls}><span className={keySpan}>회사/기관명</span><span className={valSpan}>{displayUser.organizationName?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>담당자</span><span className={valSpan}>{displayUser.organizationManager?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{displayUser.organizationTel?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>핸드폰번호</span><span className={valSpan}>{displayUser.organizationMobile?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>팩스번호</span><span className={valSpan}>{displayUser.organizationFax?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{displayUser.organizationEmail?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>주소</span><span className={valSpan}>{displayUser.organizationAddress?.trim() || '정보 없음'}</span></div>
         </div>
       )}
     </div>
@@ -647,15 +666,15 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
         </div>
       ) : (
         <div className="space-y-3">
-          <div className={rowCls}><span className={keySpan}>리포트 표기명</span><span className={valSpan}>{user.reportDisplayName?.trim() || user.name || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>전문 영역</span><span className={valSpan}>{multilineText(user.specialties)}</span></div>
-          <div className={rowCls}><span className={keySpan}>주요 대상/활용</span><span className={valSpan}>{multilineText(user.clientFocus)}</span></div>
-          <div className={rowCls}><span className={keySpan}>기관 정보 리포트 노출</span><span className={valSpan}>{boolLabel(user.shareOrganizationInReport, '노출', '비노출')}</span></div>
-          <div className={rowCls}><span className={keySpan}>연락처 리포트 노출</span><span className={valSpan}>{boolLabel(user.shareContactInReport, '노출', '비노출')}</span></div>
+          <div className={rowCls}><span className={keySpan}>리포트 표기명</span><span className={valSpan}>{displayUser.reportDisplayName?.trim() || displayUser.name || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>전문 영역</span><span className={valSpan}>{multilineText(displayUser.specialties)}</span></div>
+          <div className={rowCls}><span className={keySpan}>주요 대상/활용</span><span className={valSpan}>{multilineText(displayUser.clientFocus)}</span></div>
+          <div className={rowCls}><span className={keySpan}>기관 정보 리포트 노출</span><span className={valSpan}>{boolLabel(displayUser.shareOrganizationInReport, '노출', '비노출')}</span></div>
+          <div className={rowCls}><span className={keySpan}>연락처 리포트 노출</span><span className={valSpan}>{boolLabel(displayUser.shareContactInReport, '노출', '비노출')}</span></div>
           <div className="pt-2 border-t border-white/10">
             <div className="text-blue-200 text-xs mb-1.5">리포트 서명</div>
             <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
-              {multilineText(user.reportSignature, '설정된 서명이 없습니다.')}
+              {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
             </div>
           </div>
         </div>
@@ -672,16 +691,16 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
           계정 정보
         </h3>
         <div className="space-y-3">
-          <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{user.email || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
           <div className={rowCls}>
             <span className={keySpan}>가입일</span>
-            <span className={valSpan}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString('ko-KR') : '-'}</span>
+            <span className={valSpan}>{displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('ko-KR') : '-'}</span>
           </div>
           <div className={rowCls}>
             <span className={keySpan}>마지막 로그인</span>
             <span className={valSpan}>
-              {user.lastLoginAt
-                ? new Date(user.lastLoginAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+              {displayUser.lastLoginAt
+                ? new Date(displayUser.lastLoginAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
                 : '-'}
             </span>
           </div>

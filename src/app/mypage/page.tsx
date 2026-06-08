@@ -21,7 +21,7 @@ import { hasAuthenticatedTabSession, markInternalNavigation, pushWithAuthSession
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
 import MembershipTab from './components/MembershipTab';
-import InlineProfileBlocks from './components/InlineProfileBlocks';
+import InlineProfileBlocks, { applySavePatch } from './components/InlineProfileBlocks';
 import SubtleLoadingOverlay from '@/components/SubtleLoadingOverlay';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
@@ -358,6 +358,7 @@ function MyPageContent() {
           if (userDoc.exists()) {
             const userDetailData = userDoc.data();
             Object.assign(userData, {
+              name: userDetailData.name || userDetailData.displayName || userData.name || '',
               email: userDetailData.email || userData.email || '',
               phoneNumber: userDetailData.phoneNumber || '',
               birthDate: userDetailData.birthDate || '',
@@ -1027,7 +1028,12 @@ function MyPageContent() {
                   <InlineProfileBlocks
                     user={resolvedUser}
                     firebaseUserRole={firebaseUser?.role}
-                    onUpdate={() => void loadUserProfile()}
+                    onUpdate={(patch) => {
+                      if (patch) {
+                        setUser((prev) => (prev ? applySavePatch(prev, patch) : prev));
+                      }
+                      void loadUserProfile();
+                    }}
                   />
                 ) : null}
                 <SubtleLoadingOverlay show={recordsSyncPending} />
