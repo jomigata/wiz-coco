@@ -1,6 +1,8 @@
 // 브라우저 종료 시 개인정보 완전 삭제를 위한 유틸리티
 import { initAuthSessionLifecycle } from '@/utils/authSessionLifecycle';
 
+const PAGE_REFRESHING_KEY = 'page_refreshing';
+
 export const initBrowserCleanup = () => {
   if (typeof window === 'undefined') return;
 
@@ -40,9 +42,7 @@ export const initBrowserCleanup = () => {
   };
 
   const handleBeforeUnload = () => {
-    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    if (navigation?.type === 'reload') {
-      sessionStorage.setItem('page_refreshing', 'true');
+    if (sessionStorage.getItem(PAGE_REFRESHING_KEY) === 'true') {
       return;
     }
     clearNonAuthDataOnExit();

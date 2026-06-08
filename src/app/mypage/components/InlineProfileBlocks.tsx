@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
+import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
 import { FaUser, FaHeart, FaBuilding, FaComment, FaKey } from 'react-icons/fa';
 
@@ -105,6 +106,8 @@ async function saveToFirestore(data: Record<string, unknown>) {
   if ('displayName' in data && typeof data.displayName === 'string' && data.displayName !== currentUser.displayName) {
     await updateProfile(currentUser, { displayName: data.displayName });
   }
+  markAuthenticatedTabSession();
+  touchAuthHeartbeat();
 }
 
 // ─── 블록 헤더 ───────────────────────────────────────────────────────────────

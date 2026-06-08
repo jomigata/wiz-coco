@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense, startTransition } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -325,102 +325,102 @@ function MyPageContent() {
   const [recordsLoading, setRecordsLoading] = useState<boolean>(true);
   const [recordsError, setRecordsError] = useState<string | null>(null);
 
-  // 로그인 상태 확인
-  useEffect(() => {
-    const checkAuthAndLoadUser = async () => {
-      try {
-        if (firebaseLoading) {
-          return;
-        }
+  // 로그인 상태 확인 및 프로필 로드
+  const loadUserProfile = useCallback(async () => {
+    try {
+      if (firebaseLoading) {
+        return;
+      }
 
-        const { auth: authed } = initializeFirebase();
-        if (authed && typeof authed.authStateReady === 'function') {
-          await authed.authStateReady();
-        }
+      const { auth: authed } = initializeFirebase();
+      if (authed && typeof authed.authStateReady === 'function') {
+        await authed.authStateReady();
+      }
 
-        if (!firebaseUser && authed?.currentUser) {
-          return;
-        }
+      if (!firebaseUser && authed?.currentUser) {
+        return;
+      }
 
-        if (firebaseUser) {
-          const userData: User = {
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            name: firebaseUser.displayName || undefined,
-            role: firebaseUser.role || 'user',
-            createdAt: firebaseUser.metadata?.creationTime || '',
-            lastLoginAt: firebaseUser.metadata?.lastSignInTime || ''
-          };
+      if (firebaseUser) {
+        const userData: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || undefined,
+          role: firebaseUser.role || 'user',
+          createdAt: firebaseUser.metadata?.creationTime || '',
+          lastLoginAt: firebaseUser.metadata?.lastSignInTime || '',
+        };
 
-          try {
-            const userRef = doc(db, 'users', firebaseUser.uid);
-            const userDoc = await getDoc(userRef);
-            
-            if (userDoc.exists()) {
-              const userDetailData = userDoc.data();
-              Object.assign(userData, {
-                email: userDetailData.email || userData.email || '',
-                phoneNumber: userDetailData.phoneNumber || '',
-                birthDate: userDetailData.birthDate || '',
-                gender: userDetailData.gender || '',
-                occupation: userDetailData.occupation || '',
-                reportDisplayName: userDetailData.reportDisplayName || '',
-                practiceType: userDetailData.practiceType || 'solo',
-                teamSharingEnabled: Boolean(userDetailData.teamSharingEnabled),
-                specialties: userDetailData.specialties || '',
-                clientFocus: userDetailData.clientFocus || '',
-                reportSignature: userDetailData.reportSignature || '',
-                shareOrganizationInReport: Boolean(userDetailData.shareOrganizationInReport),
-                shareContactInReport: Boolean(userDetailData.shareContactInReport),
-                interests: userDetailData.interests || [],
-                bio: userDetailData.bio || '',
-                organizationName: userDetailData.organizationName || userDetailData.companyName || '',
-                organizationManager: userDetailData.organizationManager || userDetailData.managerName || '',
-                organizationTel: userDetailData.organizationTel || userDetailData.tel || '',
-                organizationMobile: userDetailData.organizationMobile || userDetailData.mobile || '',
-                organizationFax: userDetailData.organizationFax || userDetailData.fax || '',
-                organizationEmail: userDetailData.organizationEmail || '',
-                organizationAddress: userDetailData.organizationAddress || userDetailData.address || '',
-                createdAt:
-                  normalizeDateValue(userDetailData.createdAt) ||
-                  firebaseUser.metadata?.creationTime ||
-                  '',
-                lastLoginAt:
-                  normalizeDateValue(userDetailData.lastLoginAt) ||
-                  firebaseUser.metadata?.lastSignInTime ||
-                  '',
-              });
-            }
-          } catch (firestoreError) {
-            console.warn('Firestore에서 사용자 상세 정보를 가져오는 중 오류:', firestoreError);
+        try {
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userRef);
+
+          if (userDoc.exists()) {
+            const userDetailData = userDoc.data();
+            Object.assign(userData, {
+              email: userDetailData.email || userData.email || '',
+              phoneNumber: userDetailData.phoneNumber || '',
+              birthDate: userDetailData.birthDate || '',
+              gender: userDetailData.gender || '',
+              occupation: userDetailData.occupation || '',
+              reportDisplayName: userDetailData.reportDisplayName || '',
+              practiceType: userDetailData.practiceType || 'solo',
+              teamSharingEnabled: Boolean(userDetailData.teamSharingEnabled),
+              specialties: userDetailData.specialties || '',
+              clientFocus: userDetailData.clientFocus || '',
+              reportSignature: userDetailData.reportSignature || '',
+              shareOrganizationInReport: Boolean(userDetailData.shareOrganizationInReport),
+              shareContactInReport: Boolean(userDetailData.shareContactInReport),
+              interests: userDetailData.interests || [],
+              bio: userDetailData.bio || '',
+              organizationName: userDetailData.organizationName || userDetailData.companyName || '',
+              organizationManager: userDetailData.organizationManager || userDetailData.managerName || '',
+              organizationTel: userDetailData.organizationTel || userDetailData.tel || '',
+              organizationMobile: userDetailData.organizationMobile || userDetailData.mobile || '',
+              organizationFax: userDetailData.organizationFax || userDetailData.fax || '',
+              organizationEmail: userDetailData.organizationEmail || '',
+              organizationAddress: userDetailData.organizationAddress || userDetailData.address || '',
+              createdAt:
+                normalizeDateValue(userDetailData.createdAt) ||
+                firebaseUser.metadata?.creationTime ||
+                '',
+              lastLoginAt:
+                normalizeDateValue(userDetailData.lastLoginAt) ||
+                firebaseUser.metadata?.lastSignInTime ||
+                '',
+            });
           }
+        } catch (firestoreError) {
+          console.warn('Firestore에서 사용자 상세 정보를 가져오는 중 오류:', firestoreError);
+        }
 
-          setUser(userData);
+        setUser(userData);
+        setIsLoading(false);
+        return;
+      }
+
+      const localUser = localStorage.getItem('user_settings');
+      if (localUser) {
+        try {
+          const parsedUser = JSON.parse(localUser);
+          setUser(parsedUser);
           setIsLoading(false);
           return;
+        } catch (error) {
+          console.error('로컬 사용자 정보 파싱 오류:', error);
         }
-
-        const localUser = localStorage.getItem('user_settings');
-        if (localUser) {
-          try {
-            const parsedUser = JSON.parse(localUser);
-            setUser(parsedUser);
-            setIsLoading(false);
-            return;
-          } catch (error) {
-            console.error('로컬 사용자 정보 파싱 오류:', error);
-          }
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('사용자 인증 확인 오류:', error);
-        setIsLoading(false);
       }
-    };
 
-    checkAuthAndLoadUser();
+      setIsLoading(false);
+    } catch (error) {
+      console.error('사용자 인증 확인 오류:', error);
+      setIsLoading(false);
+    }
   }, [firebaseUser, firebaseLoading]);
+
+  useEffect(() => {
+    void loadUserProfile();
+  }, [loadUserProfile]);
 
   // 진행 중인 검사 목록 로드
   useEffect(() => {
@@ -1027,7 +1027,7 @@ function MyPageContent() {
                   <InlineProfileBlocks
                     user={resolvedUser}
                     firebaseUserRole={firebaseUser?.role}
-                    onUpdate={() => window.location.reload()}
+                    onUpdate={() => void loadUserProfile()}
                   />
                 ) : null}
                 <SubtleLoadingOverlay show={recordsSyncPending} />
@@ -1669,7 +1669,7 @@ function MyPageContent() {
           <ProfileEditor
             onClose={() => setShowProfileEditor(false)}
             onUpdate={() => {
-              window.location.reload();
+              void loadUserProfile();
             }}
           />
         )}

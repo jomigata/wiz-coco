@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { UserIcon, KeyIcon, ArrowPathIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { reloadWithAuthSession } from '@/utils/authSessionLifecycle';
 
 interface User {
   id: string;
@@ -239,7 +240,7 @@ export default function AdminSettingsPage() {
                       </div>
                       <p className="text-red-200 text-sm">{error}</p>
                       <button 
-                        onClick={() => window.location.reload()} 
+                        onClick={() => reloadWithAuthSession()} 
                         className="mt-3 px-4 py-2 bg-red-600/60 hover:bg-red-600/80 text-white text-sm rounded transition-colors"
                       >
                         페이지 새로고침

@@ -14,6 +14,7 @@ import {
   ArcElement
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import { reloadWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useRouter } from 'next/navigation';
 
 ChartJS.register(
@@ -245,7 +246,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-xl text-red-300 mb-4">{error}</p>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={() => reloadWithAuthSession()}
                 className="px-4 py-2 bg-blue-600/70 hover:bg-blue-600/90 text-white rounded-lg font-medium transition-all"
               >
                 다시 시도

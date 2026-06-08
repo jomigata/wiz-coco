@@ -298,6 +298,18 @@ function isPageRefreshing(): boolean {
   }
 }
 
+/** F5·Ctrl+R·저장 후 reload 등 의도적 새로고침 직전 호출 */
+export function markPageRefreshing(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
+}
+
+/** 로그인 세션을 유지한 채 페이지 새로고침 */
+export function reloadWithAuthSession(): void {
+  markPageRefreshing();
+  window.location.reload();
+}
+
 function shouldSkipAuthClear(): boolean {
   return (
     sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1' ||
@@ -413,22 +425,38 @@ export function subscribeAuthClearEvents(onClear: () => void): () => void {
 export function initAuthSessionLifecycle(): () => void {
   if (typeof window === 'undefined') return () => {};
 
+  let keyboardRefresh = false;
+  const markKeyboardRefresh = (event: KeyboardEvent) => {
+    if (event.key === 'F5') {
+      keyboardRefresh = true;
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'r' || event.key === 'R')) {
+      keyboardRefresh = true;
+    }
+  };
+
   const handleBeforeUnload = () => {
-    if (isPageRefreshing()) {
+    if (shouldSkipAuthClear()) return;
+    if (keyboardRefresh || sessionStorage.getItem(PAGE_REFRESHING_KEY) === 'true') {
       sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
       return;
     }
     clearAuthOnClose();
   };
 
+  window.addEventListener('keydown', markKeyboardRefresh, true);
   window.addEventListener('beforeunload', handleBeforeUnload);
 
   const refreshFlagTimer = window.setTimeout(() => {
-    sessionStorage.removeItem(PAGE_REFRESHING_KEY);
+    if (!isPageRefreshing()) {
+      sessionStorage.removeItem(PAGE_REFRESHING_KEY);
+    }
   }, 500);
 
   return () => {
     window.clearTimeout(refreshFlagTimer);
+    window.removeEventListener('keydown', markKeyboardRefresh, true);
     window.removeEventListener('beforeunload', handleBeforeUnload);
   };
 }

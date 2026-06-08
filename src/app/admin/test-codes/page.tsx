@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { reloadWithAuthSession } from '@/utils/authSessionLifecycle';
 
 interface TestRecord {
   code: string;
@@ -247,7 +248,7 @@ export default function TestCodesPage() {
               </div>
               <p className="text-xl text-red-300 mb-4">{error}</p>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={() => reloadWithAuthSession()}
                 className="px-4 py-2 bg-blue-600/70 hover:bg-blue-600/90 text-white rounded-lg font-medium transition-all"
               >
                 다시 시도

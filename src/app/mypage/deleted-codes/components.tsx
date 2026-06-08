@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getInProgressTests } from '@/utils/testResume';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { reloadWithAuthSession } from '@/utils/authSessionLifecycle';
 
 // 삭제된 테스트 기록 타입 정의
 interface DeletedTestRecord {
@@ -717,7 +718,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
           window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
         } else {
           setTimeout(() => {
-            window.location.reload();
+            reloadWithAuthSession();
           }, 500);
         }
       }
