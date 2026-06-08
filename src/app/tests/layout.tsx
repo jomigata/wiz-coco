@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import RoleGuard from '@/components/RoleGuard';
+import { requiresPsychologyTestsMenuAccess } from '@/utils/roleUtils';
+
 export default function TestsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -173,7 +176,9 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
     setPageTitle(currentTitle);
   }, [pathname]);
 
-  return (
+  const guardPsychologyTests = requiresPsychologyTestsMenuAccess(pathname || '');
+
+  const layoutBody = (
     <div className="min-h-screen bg-gray-900">
       
 {/* 전문가용 MBTI 결과 페이지는 레이아웃 우회 */}
@@ -210,5 +215,15 @@ export default function TestsLayout({ children }: { children: React.ReactNode })
         </>
       )}
     </div>
+  );
+
+  if (!guardPsychologyTests) {
+    return layoutBody;
+  }
+
+  return (
+    <RoleGuard allowedRoles={['counselor', 'admin']} redirectTo="/">
+      {layoutBody}
+    </RoleGuard>
   );
 }

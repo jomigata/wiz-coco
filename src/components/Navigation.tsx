@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
-import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
+import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu } from '@/utils/roleUtils';
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -218,6 +218,13 @@ export default function Navigation() {
   const userEmail = user?.email || sessionFirebaseUser?.email || '';
   const userRole = user?.role || 'user';
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
+  const showPsychologyTestsMenu = shouldShowPsychologyTestsMenu(userRole);
+
+  useEffect(() => {
+    if (!showPsychologyTestsMenu && activeMenu === 'psychology-tests') {
+      setActiveMenu(null);
+    }
+  }, [showPsychologyTestsMenu, activeMenu]);
 
   // 스크롤 상태 감지 함수
   const checkScrollState = (menuId: string, scrollElement: HTMLElement) => {
@@ -742,7 +749,8 @@ export default function Navigation() {
               >
                 검사 하기
               </Link>
-              {/* 심리검사 드롭다운 메뉴 */}
+              {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
+              {showPsychologyTestsMenu && (
               <div ref={psychologyTestsTriggerRef} className="relative">
                 <Link
                   href="/tests"
@@ -980,6 +988,7 @@ export default function Navigation() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* 상담 프로그램 드롭다운 메뉴 */}
               <div className="relative">
@@ -2057,7 +2066,8 @@ export default function Navigation() {
                 검사 하기
               </Link>
 
-              {/* 심리검사 */}
+              {/* 심리검사 — 상담사·관리자 전용 */}
+              {showPsychologyTestsMenu && (
               <div className="space-y-3">
                 <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
                   🧠 AI 심리검사
@@ -2177,6 +2187,7 @@ export default function Navigation() {
                   ))}
                 </div>
               </div>
+              )}
 
               {/* 상담 프로그램 */}
               <div className="space-y-2">
