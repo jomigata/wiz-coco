@@ -77,11 +77,13 @@ Cursor를 **한 번 재시작**하면 파일 변경이 확실히 반영됩니다
 | allowlist를 썼는데도 물어봄 | `permissions.json` 저장 후 Cursor 재시작; 설정 화면에 "configured via permissions.json" 문구 확인 |
 | `cd …; git …` 한 줄일 때만 Run 확인 | 명령 **맨 앞**이 `cd`이면 `git` allowlist에 안 걸림 → `permissions.json`에 **`cd`** 포함(예시 파일 반영됨) 또는 에이전트가 `git`만 단독 실행 |
 | `git push`만 승인 요청 | `sandbox.json`에 `github.com` 허용 추가; 또는 명령을 allowlist에 추가해 샌드박스 밖에서 실행 |
+| **`Not in allowlist: Select-Object`** | `.cursor/permissions.json`·전역 `permissions.json`에 `Select-Object` 등 PowerShell cmdlet 추가. 에이전트는 **`npx tsc --noEmit` 단독** (파이프 금지) |
 | 회사/팀 정책 | Enterprise 대시보드 Auto-Run이 관리자에 의해 잠겨 있을 수 있음 |
 
 ## 저장소 에이전트 규칙
 
-- `.cursor/rules/agent-auto-run.mdc` — Run 클릭 유도 문구 금지
+- `.cursor/rules/agent-auto-run.mdc` — Run 클릭 유도 문구 금지, allowlist 친화적 단독 명령만 사용
+- `.cursor/permissions.json` — 저장소 터미널 allowlist (전역과 병합)
 - `.cursor/rules/git-push-after-edit.mdc` — 작업 후 `git push origin HEAD` 실행
 
 에이전트는 위 규칙에 따라 **사용자에게 Run을 요청하지 않고** git 명령을 직접 실행합니다.  

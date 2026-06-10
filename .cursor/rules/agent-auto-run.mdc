@@ -27,9 +27,13 @@ alwaysApply: true
 
 ### 2) 전역 `%USERPROFILE%\.cursor\permissions.json`
 
-- `terminalAllowlist`에 **`git`**, **`cd`**(접두사) — `git status`, `git push` 및 `cd "경로"; git …` 형태 매칭
-- **터미널 명령 작성 시**: 가능하면 `cd …; git …` 대신 워크스페이스 루트에서 **`git`/`npm`/`gh`만 단독** 실행 (allowlist 자동 실행 안정)
-- 예시: `docs/cursor-permissions.json.example`
+- `terminalAllowlist`에 **`git`**, **`cd`**(접두사), **`npx`**, PowerShell **`Select-Object`** 등 포함
+- **이 저장소**에도 `.cursor/permissions.json`이 있으면 전역 목록과 **병합**됩니다 (팀 공유용)
+- **터미널 명령 작성 시 (에이전트 필수)**:
+  - **`git` / `npm` / `npx` / `gh`만 단독** 실행 (워크스페이스 루트 기준)
+  - **`cd "경로"; git …` 금지** — 맨 앞이 `cd`면 allowlist 미매칭
+  - **`2>&1 | Select-Object -First N` 금지** — 파이프 각 단계가 allowlist에 있어야 함. TypeScript 검사는 **`npx tsc --noEmit`만** 사용
+- 예시: `docs/cursor-permissions.json.example`, `.cursor/permissions.json`
 - 파일 수정 후 **Cursor 재시작** 권장
 
 ### 3) `sandbox.json` — `git push` 네트워크 (Sandbox 모드일 때)
@@ -37,6 +41,13 @@ alwaysApply: true
 - 전역: `%USERPROFILE%\.cursor\sandbox.json`
 - 이 저장소: `.cursor/sandbox.json`
 - `github.com` 등이 `networkPolicy.allow`에 있어야 push가 샌드박스 안에서 통과합니다.
+
+## 에이전트 터미널 명령 작성 (allowlist 자동 실행)
+
+- **단독 명령만** 사용: `git status`, `git commit -m "..."`, `git push origin HEAD`, `npx tsc --noEmit`, `npm run build`
+- **금지 패턴**: `cd "…"; git …`, `npx … 2>&1 | Select-Object …`, `&&`/`;`로 여러 도구를 이어 붙이기
+- 출력이 길어도 **파이프로 자르지 말 것** — allowlist에 없는 cmdlet이 있으면 Run 확인이 뜸
+- TypeScript 검사: **`npx tsc --noEmit`** (파이프 없음)
 
 ## 빠른 점검 체크리스트
 

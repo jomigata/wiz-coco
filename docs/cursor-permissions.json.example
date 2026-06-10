@@ -21,6 +21,17 @@
     "pushd",
     "popd",
     "cmd",
-    "where"
+    "where",
+    "Select-Object",
+    "ForEach-Object",
+    "Where-Object",
+    "Out-Null",
+    "Sort-Object",
+    "Measure-Object",
+    "Get-Content",
+    "Get-ChildItem",
+    "Test-Path",
+    "Write-Output",
+    "echo"
   ]
 }
