@@ -339,6 +339,63 @@ export function replaceWithAuthSession(router: { replace: (href: string) => void
   router.replace(href);
 }
 
+/** Next.js router.back / history.back — 뒤로가기 시 세션 유지 */
+export function backWithAuthSession(router: { back: () => void }): void {
+  markInternalNavigation();
+  router.back();
+}
+
+/** window.history.back — 프로그램적 브라우저 뒤로가기 */
+export function backWithBrowserHistory(): void {
+  markInternalNavigation();
+  window.history.back();
+}
+
+function bindHistoryNavigationMarkers(): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const handlePopState = () => {
+    markInternalNavigation();
+  };
+
+  const handlePageShow = (event: PageTransitionEvent) => {
+    if (!event.persisted) return;
+    consumeInternalNavigationFlags();
+    if (hasAuthenticatedTabSession()) {
+      touchAuthHeartbeat();
+    }
+  };
+
+  const cleanups: Array<() => void> = [];
+
+  try {
+    const nav = (window as Window & { navigation?: { addEventListener: typeof window.addEventListener; removeEventListener: typeof window.removeEventListener } }).navigation;
+    if (nav?.addEventListener) {
+      const onNavigate = (event: Event) => {
+        const navigationType = (event as Event & { navigationType?: string }).navigationType;
+        if (navigationType === 'traverse') {
+          markInternalNavigation();
+        }
+      };
+      nav.addEventListener('navigate', onNavigate);
+      cleanups.push(() => nav.removeEventListener('navigate', onNavigate));
+    }
+  } catch {
+    // Navigation API 미지원
+  }
+
+  window.addEventListener('popstate', handlePopState);
+  window.addEventListener('pageshow', handlePageShow);
+  cleanups.push(() => {
+    window.removeEventListener('popstate', handlePopState);
+    window.removeEventListener('pageshow', handlePageShow);
+  });
+
+  return () => {
+    cleanups.forEach((fn) => fn());
+  };
+}
+
 /** 새 페이지 진입 시 내부 이동 플래그 정리 */
 export function consumeInternalNavigationFlags(): void {
   if (typeof window === 'undefined') return;
@@ -447,6 +504,7 @@ export function initAuthSessionLifecycle(): () => void {
 
   window.addEventListener('keydown', markKeyboardRefresh, true);
   window.addEventListener('beforeunload', handleBeforeUnload);
+  const cleanupHistoryMarkers = bindHistoryNavigationMarkers();
 
   const refreshFlagTimer = window.setTimeout(() => {
     if (!isPageRefreshing()) {
@@ -458,6 +516,7 @@ export function initAuthSessionLifecycle(): () => void {
     window.clearTimeout(refreshFlagTimer);
     window.removeEventListener('keydown', markKeyboardRefresh, true);
     window.removeEventListener('beforeunload', handleBeforeUnload);
+    cleanupHistoryMarkers();
   };
 }
 

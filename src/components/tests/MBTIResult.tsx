@@ -7,6 +7,7 @@ import { questions } from '@/data/mbtiQuestions';
 import { useRouter } from 'next/navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { backWithAuthSession } from '@/utils/authSessionLifecycle';
 
 interface Props {
   results: { [key: string]: { type: string; answer: number } };
@@ -439,7 +440,7 @@ export default function MBTIResult({ results, onRetake }: Props) {
                 }
                 
                 // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
-                router.back();
+                backWithAuthSession(router);
               }
             }}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md"

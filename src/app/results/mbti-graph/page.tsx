@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MBTIResult from '@/components/tests/MBTIResult';
 import MbtiProResult from '@/components/tests/MbtiProResult';
+import { backWithAuthSession } from '@/utils/authSessionLifecycle';
 import {
   formatAccessCodeDisplay,
   inspectionCodesMatch,
@@ -273,14 +274,14 @@ function MbtiGraphResults() {
                   // 삭제코드 페이지에서 접근한 경우
                   if (sessionStorage.getItem('returnToDeletedCodes') === 'true') {
                     sessionStorage.removeItem('returnToDeletedCodes');
-                    router.back();
+                    backWithAuthSession(router);
                     return;
                   }
                   
                   // 검사기록 페이지에서 접근한 경우
                   if (sessionStorage.getItem('returnToTestRecords') === 'true') {
                     sessionStorage.removeItem('returnToTestRecords');
-                    router.back();
+                    backWithAuthSession(router);
                     return;
                   }
                   
@@ -293,7 +294,7 @@ function MbtiGraphResults() {
                   }
                   
                   // 그 외의 경우 이전 페이지로 이동
-                  router.back();
+                  backWithAuthSession(router);
                 }
               }}
               className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"

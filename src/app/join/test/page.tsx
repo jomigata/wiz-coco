@@ -214,7 +214,7 @@ export default function TestRunnerPage() {
           <div className="mb-4">
             <button
               type="button"
-              onClick={() => navigateToJoinSelectionDashboard(code)}
+              onClick={() => navigateToJoinSelectionDashboard(code, router)}
               className="text-blue-400 hover:text-blue-300 text-sm bg-transparent border-0 cursor-pointer p-0 underline-offset-2 hover:underline text-left"
             >
               ← 검사 선택 현황
@@ -234,7 +234,7 @@ export default function TestRunnerPage() {
                 {' · '}
                 <button
                   type="button"
-                  onClick={() => navigateToJoinSelectionDashboard(code)}
+                  onClick={() => navigateToJoinSelectionDashboard(code, router)}
                   className="text-blue-400 hover:text-blue-300 underline bg-transparent border-0 cursor-pointer p-0"
                 >
                   검사 선택 현황

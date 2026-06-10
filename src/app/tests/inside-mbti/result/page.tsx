@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { MbtiType, RelationshipAnalysis, mbtiData, relationshipTypeData, analyzeMbtiCombination } from '../data';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { backWithAuthSession } from '@/utils/authSessionLifecycle';
 
 // 클라이언트 컴포넌트에서 useSearchParams 사용
 function InsideMbtiResultContent() {
@@ -87,14 +88,14 @@ function InsideMbtiResultContent() {
                       // 삭제코드 페이지에서 접근한 경우
                       if (sessionStorage.getItem('returnToDeletedCodes') === 'true') {
                         sessionStorage.removeItem('returnToDeletedCodes');
-                        router.back();
+                        backWithAuthSession(router);
                         return;
                       }
                       
                       // 검사기록 페이지에서 접근한 경우
                       if (sessionStorage.getItem('returnToTestRecords') === 'true') {
                         sessionStorage.removeItem('returnToTestRecords');
-                        router.back();
+                        backWithAuthSession(router);
                         return;
                       }
                       
@@ -107,7 +108,7 @@ function InsideMbtiResultContent() {
                       }
                       
                       // 그 외의 경우 이전 페이지로 이동
-                      router.back();
+                      backWithAuthSession(router);
                     }
                   }}
                   className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"

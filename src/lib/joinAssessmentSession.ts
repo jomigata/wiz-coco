@@ -3,7 +3,7 @@
  */
 import { lookupPublicAssessment } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
-import { markInternalNavigation, pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 
 export const JOIN_STORAGE_KEY = 'wizcoco_join_assessment';
 
@@ -50,13 +50,12 @@ export function getJoinDashboardPath(accessCodeNorm: string): string {
   return `/join/dashboard?accessCode=${encodeURIComponent(code)}`;
 }
 
-/** 검사 선택 현황으로 이동 (전체 페이지 이동) */
-export function navigateToJoinSelectionDashboard(accessCodeNorm: string): void {
-  if (typeof window === 'undefined') return;
-  const path = getJoinDashboardPath(accessCodeNorm);
-  if (path === '/join') return;
-  markInternalNavigation();
-  window.location.assign(path);
+/** 검사 선택 현황으로 이동 (Next router — 세션 유지) */
+export function navigateToJoinSelectionDashboard(
+  accessCodeNorm: string,
+  router: { push: (href: string) => void },
+): void {
+  pushToJoinDashboard(router, accessCodeNorm);
 }
 
 /** 검사 선택 현황으로 이동 (Next router) */

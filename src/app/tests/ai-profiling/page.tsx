@@ -6,6 +6,7 @@ import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
 import { generateTestCode } from '@/utils/testCodeGenerator';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { backWithAuthSession } from '@/utils/authSessionLifecycle';
 import { motion } from 'framer-motion';
 function AIProfilingPageContent() {
   const pathname = usePathname();
@@ -582,7 +583,7 @@ function AIProfilingPageContent() {
                     }
                     
                     // 검사기록 목록에서 접근한 경우 이전 페이지로 이동
-                    router.back();
+                    backWithAuthSession(router);
                   }
                 }}
                 className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"

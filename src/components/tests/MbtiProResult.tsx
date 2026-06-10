@@ -26,7 +26,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useApiRequestLock from '@/hooks/useApiRequestLock';
 import { setWithExpiry, getItem, setItem, removeItem } from '@/utils/localStorageManager';
 import { addToSyncQueue, setupSyncMonitor } from '@/utils/syncService';
-import { generateTestCode } from '../../utils/testCodeGenerator';
+import { backWithAuthSession, backWithBrowserHistory } from '@/utils/authSessionLifecycle';
 import { generateContextualTestCode, validateCodeFormat } from '@/utils/unifiedTestCodeGenerator';
 import { collection, setDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -1332,14 +1332,14 @@ const MbtiProResult: React.FC = () => {
                 // 삭제코드 페이지에서 접근한 경우
                 if (sessionStorage.getItem('returnToDeletedCodes') === 'true') {
                   sessionStorage.removeItem('returnToDeletedCodes');
-                  router.back();
+                  backWithAuthSession(router);
                   return;
                 }
                 
                 // 검사기록 페이지에서 접근한 경우
                 if (sessionStorage.getItem('returnToTestRecords') === 'true') {
                   sessionStorage.removeItem('returnToTestRecords');
-                  router.back();
+                  backWithAuthSession(router);
                   return;
                 }
                 
@@ -1352,7 +1352,7 @@ const MbtiProResult: React.FC = () => {
                 }
                 
                 // 그 외의 경우 이전 페이지로 이동
-                router.back();
+                backWithAuthSession(router);
               }
             }}
             className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors"
@@ -1837,7 +1837,7 @@ const MbtiProResult: React.FC = () => {
                       if (typeof window !== 'undefined') {
                         sessionStorage.removeItem('returnToDeletedCodes');
                       }
-                      window.history.back();
+                      backWithBrowserHistory();
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md flex items-center"
                   >
@@ -1859,7 +1859,7 @@ const MbtiProResult: React.FC = () => {
                       }
                       
                       // 검사기록 목록이나 삭제코드 목록에서 접근한 경우 이전 페이지로 이동
-                      window.history.back();
+                      backWithBrowserHistory();
                     }
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md flex items-center"
