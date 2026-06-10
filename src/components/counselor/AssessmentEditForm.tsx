@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { getAssessment, updateAssessment, type CounselorAssessment } from '@/lib/assessmentApi';
@@ -88,7 +89,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         usageEndDate: usageEndDate.trim(),
         testList,
       });
-      router.push('/counselor/assessments');
+      pushWithAuthSession(router, '/counselor/assessments');
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
@@ -110,7 +111,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         <div className="mt-3">
           <button
             type="button"
-            onClick={() => router.push('/counselor/assessments')}
+            onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
             className="text-blue-400 hover:text-blue-300 text-sm"
           >
             목록으로
@@ -240,7 +241,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         </button>
         <button
           type="button"
-          onClick={() => router.push('/counselor/assessments')}
+          onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
           disabled={loading}
           className="px-5 py-2.5 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
         >

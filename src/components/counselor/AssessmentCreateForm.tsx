@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { createAssessment } from '@/lib/assessmentApi';
@@ -62,7 +63,7 @@ export default function AssessmentCreateForm() {
       } catch {
         // ignore
       }
-      router.push(`/counselor/assessments?created=${result.assessmentId}`);
+      pushWithAuthSession(router, `/counselor/assessments?created=${result.assessmentId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '검사코드 만들기에 실패했습니다.');
     } finally {
@@ -197,7 +198,7 @@ export default function AssessmentCreateForm() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/counselor/assessments')}
+          onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
           disabled={loading}
           className="px-5 py-2.5 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
         >

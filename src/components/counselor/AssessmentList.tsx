@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
+import AuthLink from '@/components/auth/AuthLink';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
@@ -152,7 +152,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
         </div>
-        <Link
+        <AuthLink
           href="/counselor/assessments/new"
           className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors sm:self-auto"
         >
@@ -160,7 +160,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           새 검사코드 만들기
-        </Link>
+        </AuthLink>
       </div>
 
       <p className="mb-2 text-xs text-slate-400 sm:text-sm">
@@ -179,7 +179,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             {assessments.length === 0 ? '첫 검사코드를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
           </p>
           {assessments.length === 0 && (
-            <Link
+            <AuthLink
               href="/counselor/assessments/new"
               className="mt-6 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
             >
@@ -187,7 +187,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               첫 검사코드 만들기
-            </Link>
+            </AuthLink>
           )}
         </div>
       ) : (
@@ -247,18 +247,18 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-wrap items-center justify-center gap-1">
-                          <Link
+                          <AuthLink
                             href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
                             className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
                           >
                             진행 현황
-                          </Link>
-                          <Link
+                          </AuthLink>
+                          <AuthLink
                             href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
                             className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
                           >
                             수정
-                          </Link>
+                          </AuthLink>
                           <button
                             type="button"
                             onClick={() => { setDeleteError(''); setDeleteTarget(a); }}

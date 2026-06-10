@@ -1,8 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import AuthLink from '@/components/auth/AuthLink';import { useSearchParams } from 'next/navigation';
 import AssessmentEditForm from '@/components/counselor/AssessmentEditForm';
 
 function AssessmentEditContent() {
@@ -13,9 +12,9 @@ function AssessmentEditContent() {
     return (
       <div className="text-red-400">
         수정할 검사코드를 선택해 주세요.{' '}
-        <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
+        <AuthLink href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
           목록으로
-        </Link>
+        </AuthLink>
       </div>
     );
   }
@@ -23,9 +22,9 @@ function AssessmentEditContent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
+        <AuthLink href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
           ← 목록
-        </Link>
+        </AuthLink>
         <h1 className="text-2xl font-bold text-white">검사코드 수정</h1>
       </div>
       <p className="text-slate-400 text-sm">

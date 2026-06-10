@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 
@@ -45,7 +46,7 @@ export default function RoleGuard({
     setIsChecking(false);
 
     if (!hasAccess && !authPending) {
-      router.push(redirectTo);
+      pushWithAuthSession(router, redirectTo);
     }
   }, [user, authPending, showLoginRequired, allowedRoles, router, redirectTo]);
 
@@ -71,7 +72,7 @@ export default function RoleGuard({
           <h2 className="text-2xl font-bold text-red-400 mb-4">접근 권한이 없습니다</h2>
           <p className="text-red-200 mb-6">이 페이지에 접근할 권한이 없습니다.</p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => pushWithAuthSession(router, '/')}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             홈으로 돌아가기

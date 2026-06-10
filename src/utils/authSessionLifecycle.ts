@@ -13,6 +13,9 @@ const AUTH_HEARTBEAT_KEY = 'wizcoco:auth-heartbeat';
 const AUTH_HEARTBEAT_MAX_AGE_MS = 20_000;
 const PAGE_REFRESHING_KEY = 'page_refreshing';
 const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
+/** popstate·뒤로가기 직후 beforeunload 오탐 방지 (ms) */
+const INTERNAL_NAV_GRACE_MS = 2000;
+let internalNavGraceUntil = 0;
 const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
 /** Google redirect OAuth 진행·복귀 구간 표시 (getRedirectResult 호출 조건) */
 export const GOOGLE_OAUTH_PENDING_KEY = 'wizcoco:google-oauth-pending';
@@ -314,7 +317,8 @@ function shouldSkipAuthClear(): boolean {
   return (
     sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1' ||
     isPageRefreshing() ||
-    isAuthLoginInProgress()
+    isAuthLoginInProgress() ||
+    Date.now() < internalNavGraceUntil
   );
 }
 
@@ -322,6 +326,7 @@ function shouldSkipAuthClear(): boolean {
 export function markInternalNavigation(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(SKIP_AUTH_CLEAR_KEY, '1');
+  internalNavGraceUntil = Date.now() + INTERNAL_NAV_GRACE_MS;
   if (hasAuthenticatedTabSession()) {
     touchAuthHeartbeat();
   }

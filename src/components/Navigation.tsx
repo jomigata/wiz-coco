@@ -11,7 +11,7 @@ import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 import WizcocoLogo from '@/components/WizcocoLogo';
-import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 
 export default function Navigation() {
@@ -369,6 +369,7 @@ export default function Navigation() {
   };
 
   const handleNavLinkClick = (href: string, e: React.MouseEvent) => {
+    markInternalNavigation();
     setActiveItem(href);
   };
 

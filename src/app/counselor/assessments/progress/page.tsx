@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import AuthLink from '@/components/auth/AuthLink';
 import ProgressDashboard from '@/components/counselor/ProgressDashboard';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -65,9 +65,9 @@ export default function ProgressDashboardPage() {
     return (
       <div className="space-y-4">
         <p className="text-red-400">잘못된 경로입니다.</p>
-        <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
+        <AuthLink href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
           검사코드 목록으로
-        </Link>
+        </AuthLink>
       </div>
     );
   }
@@ -84,9 +84,9 @@ export default function ProgressDashboardPage() {
         <div className="rounded-lg bg-red-900/20 border border-red-600/50 p-4 text-red-300">
           {error}
           <div className="mt-2">
-            <Link href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm">
+            <AuthLink href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm">
               검사코드 목록으로
-            </Link>
+            </AuthLink>
           </div>
         </div>
       ) : (
@@ -104,9 +104,9 @@ export default function ProgressDashboardPage() {
 function ProgressBackLink() {
   return (
     <div className="flex items-center gap-4">
-      <Link href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
+      <AuthLink href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
         ← 목록
-      </Link>
+      </AuthLink>
     </div>
   );
 }

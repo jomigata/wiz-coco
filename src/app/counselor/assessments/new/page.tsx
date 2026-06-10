@@ -1,19 +1,19 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import AuthLink from '@/components/auth/AuthLink';
 import AssessmentCreateForm from '@/components/counselor/AssessmentCreateForm';
 
 export default function AssessmentCreatePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link
+        <AuthLink
           href="/counselor/assessments"
           className="text-slate-400 hover:text-white text-sm"
         >
           ← 목록
-        </Link>
+        </AuthLink>
         <h1 className="text-2xl font-bold text-white">새 검사코드 만들기</h1>
       </div>
       <p className="text-slate-400 text-sm">
