@@ -5,6 +5,12 @@ import { motion } from 'framer-motion';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { CounselorCode } from '@/types/counselor';
+import {
+  createCounselorCode,
+  deactivateCounselorCode,
+  fetchCounselorCodes,
+  updateCounselorCodeName,
+} from '@/lib/firestore/counselorCodesStore';
 
 export default function CounselorCodesPage() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
@@ -20,14 +26,8 @@ export default function CounselorCodesPage() {
     if (!user?.uid) return;
     
     try {
-      const response = await fetch(`/api/counselor-codes?counselorId=${user.uid}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setCodes(result.data);
-      } else {
-        setError(result.error || '인증코드 조회에 실패했습니다.');
-      }
+      const data = await fetchCounselorCodes(user.uid);
+      setCodes(data);
     } catch (err) {
       console.error('인증코드 조회 오류:', err);
       setError('인증코드 조회 중 오류가 발생했습니다.');
@@ -40,6 +40,11 @@ export default function CounselorCodesPage() {
   const handleCreateCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user?.uid) {
+      setError('로그인이 필요합니다.');
+      return;
+    }
+
     if (!newCodeName.trim()) {
       setError('코드명을 입력해주세요.');
       return;
@@ -49,29 +54,13 @@ export default function CounselorCodesPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/counselor-codes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          counselorId: user?.uid,
-          codeName: newCodeName.trim()
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setNewCodeName('');
-        setShowCreateForm(false);
-        await fetchCodes(); // 목록 새로고침
-      } else {
-        setError(result.error || '인증코드 생성에 실패했습니다.');
-      }
+      await createCounselorCode(user.uid, newCodeName.trim());
+      setNewCodeName('');
+      setShowCreateForm(false);
+      await fetchCodes();
     } catch (err) {
       console.error('인증코드 생성 오류:', err);
-      setError('인증코드 생성 중 오류가 발생했습니다.');
+      setError(err instanceof Error ? err.message : '인증코드 생성 중 오류가 발생했습니다.');
     } finally {
       setIsCreating(false);
     }
@@ -80,27 +69,11 @@ export default function CounselorCodesPage() {
   // 인증코드명 수정
   const handleUpdateCode = async (codeId: string, newName: string) => {
     try {
-      const response = await fetch('/api/counselor-codes', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          codeId,
-          codeName: newName
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchCodes(); // 목록 새로고침
-      } else {
-        setError(result.error || '코드명 수정에 실패했습니다.');
-      }
+      await updateCounselorCodeName(codeId, newName);
+      await fetchCodes();
     } catch (err) {
       console.error('코드명 수정 오류:', err);
-      setError('코드명 수정 중 오류가 발생했습니다.');
+      setError(err instanceof Error ? err.message : '코드명 수정 중 오류가 발생했습니다.');
     }
   };
 
@@ -109,17 +82,8 @@ export default function CounselorCodesPage() {
     if (!confirm('이 인증코드를 비활성화하시겠습니까?')) return;
 
     try {
-      const response = await fetch(`/api/counselor-codes?codeId=${codeId}`, {
-        method: 'DELETE',
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchCodes(); // 목록 새로고침
-      } else {
-        setError(result.error || '인증코드 비활성화에 실패했습니다.');
-      }
+      await deactivateCounselorCode(codeId);
+      await fetchCodes();
     } catch (err) {
       console.error('인증코드 비활성화 오류:', err);
       setError('인증코드 비활성화 중 오류가 발생했습니다.');

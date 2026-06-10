@@ -86,6 +86,53 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // 상담사 인증코드 - counselorCodes
+    // 상담사는 자신의 코드 CRUD. 활성 코드는 인증된 사용자가 코드명으로 조회 가능(중복 확인·연결).
+    match /counselorCodes/{codeId} {
+      function isOwner() {
+        return request.auth != null && resource.data.counselorId == request.auth.uid;
+      }
+
+      allow read: if request.auth != null && (
+        isOwner() || resource.data.isActive == true
+      );
+
+      allow create: if request.auth != null
+        && request.resource.data.counselorId == request.auth.uid
+        && request.resource.data.isActive == true
+        && request.resource.data.codeName is string
+        && request.resource.data.codeName.size() >= 1
+        && request.resource.data.codeName.size() <= 100
+        && request.resource.data.codeNumber is string
+        && request.resource.data.codeNumber.size() >= 8;
+
+      allow update: if request.auth != null
+        && resource.data.counselorId == request.auth.uid
+        && request.resource.data.counselorId == resource.data.counselorId
+        && request.resource.data.codeNumber == resource.data.codeNumber;
+
+      allow delete: if false;
+    }
+
+    // 내담자-상담사 연결 - clientCounselorRelations
+    match /clientCounselorRelations/{relationId} {
+      allow read: if request.auth != null && (
+        resource.data.clientId == request.auth.uid
+        || resource.data.counselorId == request.auth.uid
+      );
+
+      allow create: if request.auth != null
+        && request.resource.data.clientId == request.auth.uid
+        && request.resource.data.isActive == true;
+
+      allow update: if request.auth != null && (
+        resource.data.clientId == request.auth.uid
+        || resource.data.counselorId == request.auth.uid
+      );
+
+      allow delete: if false;
+    }
+
     // 상담사 지원 신청 - counselorApplications
     // - 신청자: 본인 문서 생성/조회 가능 (상태는 pending으로만 생성)
     // - admin: 전체 조회/승인/반려 및 메모 수정 가능
