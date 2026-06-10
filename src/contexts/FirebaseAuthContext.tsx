@@ -32,6 +32,7 @@ import {
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
   touchAuthHeartbeat,
+  tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
@@ -273,12 +274,17 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         }
 
         const cur = auth.currentUser;
-        if (cur && hasAuthenticatedTabSession()) {
-          const minimal = authUserFromSdkUser(cur);
-          setUser((prev) => prev ?? minimal);
-          writeSWRCache(AUTH_CACHE_KEY, minimal, { scope: 'session' });
-          finishLoading();
-          return;
+        if (cur) {
+          if (!hasAuthenticatedTabSession() && !authExpiredOnStartupRef.current) {
+            tryRestoreAuthenticatedTabSession();
+          }
+          if (hasAuthenticatedTabSession() || authExpiredOnStartupRef.current === false) {
+            const minimal = authUserFromSdkUser(cur);
+            setUser((prev) => prev ?? minimal);
+            writeSWRCache(AUTH_CACHE_KEY, minimal, { scope: 'session' });
+            finishLoading();
+            return;
+          }
         }
 
         const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
@@ -332,12 +338,15 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
           if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
-            void clearAllAuthStorage().then(() => {
-              setUser(null);
-              writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
-              finishLoading();
-            });
-            return;
+            if (authExpiredOnStartupRef.current) {
+              void clearAllAuthStorage().then(() => {
+                setUser(null);
+                writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+                finishLoading();
+              });
+              return;
+            }
+            tryRestoreAuthenticatedTabSession();
           }
           void applyFirebaseUser(firebaseUser);
           return;

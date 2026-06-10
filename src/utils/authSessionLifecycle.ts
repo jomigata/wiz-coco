@@ -13,8 +13,8 @@ const AUTH_HEARTBEAT_KEY = 'wizcoco:auth-heartbeat';
 const AUTH_HEARTBEAT_MAX_AGE_MS = 20_000;
 const PAGE_REFRESHING_KEY = 'page_refreshing';
 const SKIP_AUTH_CLEAR_KEY = 'wizcoco:skip-auth-clear';
-/** popstate·뒤로가기 직후 beforeunload 오탐 방지 (ms) */
-const INTERNAL_NAV_GRACE_MS = 2000;
+/** popstate·뒤로가기 직후 beforeunload/pagehide 오탐 방지 (ms) */
+const INTERNAL_NAV_GRACE_MS = 3000;
 let internalNavGraceUntil = 0;
 const AUTH_LOGIN_IN_PROGRESS_KEY = 'wizcoco:auth-login-in-progress';
 /** Google redirect OAuth 진행·복귀 구간 표시 (getRedirectResult 호출 조건) */
@@ -327,9 +327,36 @@ export function markInternalNavigation(): void {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(SKIP_AUTH_CLEAR_KEY, '1');
   internalNavGraceUntil = Date.now() + INTERNAL_NAV_GRACE_MS;
+  try {
+    localStorage.removeItem(AUTH_CLEARED_FLAG);
+  } catch {
+    // ignore
+  }
   if (hasAuthenticatedTabSession()) {
     touchAuthHeartbeat();
   }
+}
+
+/**
+ * SPA 내부 이동·뒤로가기 등으로 탭 마커만 유실된 경우 Firebase 세션 기준 복구.
+ * 브라우저 재접속(AUTH_CLEARED_FLAG)은 복구하지 않음.
+ */
+export function tryRestoreAuthenticatedTabSession(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (hasAuthenticatedTabSession()) return true;
+  if (isAuthLoginInProgress()) return false;
+  if (localStorage.getItem(AUTH_CLEARED_FLAG) === '1') return false;
+
+  try {
+    const { auth } = initializeFirebase();
+    if (auth?.currentUser) {
+      markAuthenticatedTabSession();
+      return true;
+    }
+  } catch {
+    // ignore
+  }
+  return false;
 }
 
 /** Next.js router.push — 탭/브라우저 종료 오탐 로그아웃 방지 */
@@ -504,11 +531,24 @@ export function initAuthSessionLifecycle(): () => void {
       sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
       return;
     }
+    // beforeunload는 뒤로가기·내부 이동에서도 자주 발생 → 세션 삭제는 pagehide에만 수행
+  };
+
+  const handlePageHide = (event: PageTransitionEvent) => {
+    if (event.persisted) {
+      markInternalNavigation();
+      return;
+    }
+    if (shouldSkipAuthClear()) return;
+    if (keyboardRefresh || sessionStorage.getItem(PAGE_REFRESHING_KEY) === 'true') {
+      return;
+    }
     clearAuthOnClose();
   };
 
   window.addEventListener('keydown', markKeyboardRefresh, true);
   window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('pagehide', handlePageHide);
   const cleanupHistoryMarkers = bindHistoryNavigationMarkers();
 
   const refreshFlagTimer = window.setTimeout(() => {
@@ -521,6 +561,7 @@ export function initAuthSessionLifecycle(): () => void {
     window.clearTimeout(refreshFlagTimer);
     window.removeEventListener('keydown', markKeyboardRefresh, true);
     window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('pagehide', handlePageHide);
     cleanupHistoryMarkers();
   };
 }
