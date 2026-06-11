@@ -6,6 +6,7 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { CounselorCode } from '@/types/counselor';
 import {
+  activateCounselorCode,
   createCounselorCode,
   deactivateCounselorCode,
   fetchCounselorCodes,
@@ -82,6 +83,7 @@ export default function CounselorCodesPage() {
     if (!confirm('이 인증코드를 비활성화하시겠습니까?')) return;
 
     try {
+      setError('');
       await deactivateCounselorCode(codeId);
       await fetchCodes();
     } catch (err) {
@@ -89,6 +91,23 @@ export default function CounselorCodesPage() {
       setError('인증코드 비활성화 중 오류가 발생했습니다.');
     }
   };
+
+  // 인증코드 재활성화
+  const handleActivateCode = async (codeId: string, codeName: string) => {
+    if (!confirm('이 인증코드를 다시 활성화하시겠습니까?')) return;
+
+    try {
+      setError('');
+      await activateCounselorCode(codeId, codeName);
+      await fetchCodes();
+    } catch (err) {
+      console.error('인증코드 활성화 오류:', err);
+      setError(err instanceof Error ? err.message : '인증코드 활성화 중 오류가 발생했습니다.');
+    }
+  };
+
+  const activeCodes = codes.filter((c) => c.isActive);
+  const inactiveCodes = codes.filter((c) => !c.isActive);
 
   useEffect(() => {
     if (user && !authPending) {
@@ -192,7 +211,16 @@ export default function CounselorCodesPage() {
           )}
 
           {/* 인증코드 목록 */}
-          <div className="space-y-4">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">인증코드 목록</h2>
+              {!isLoading && codes.length > 0 && (
+                <p className="text-sm text-gray-400">
+                  활성 {activeCodes.length}개 · 비활성 {inactiveCodes.length}개
+                </p>
+              )}
+            </div>
+
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -204,14 +232,37 @@ export default function CounselorCodesPage() {
                 <p className="text-gray-500 text-sm mt-2">새 인증코드를 생성하여 내담자와 연결하세요.</p>
               </div>
             ) : (
-              codes.map((code) => (
-                <CodeCard
-                  key={code.id}
-                  code={code}
-                  onUpdate={handleUpdateCode}
-                  onDeactivate={handleDeactivateCode}
-                />
-              ))
+              <>
+                {activeCodes.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-emerald-400 uppercase tracking-wide">활성</h3>
+                    {activeCodes.map((code) => (
+                      <CodeCard
+                        key={code.id}
+                        code={code}
+                        onUpdate={handleUpdateCode}
+                        onDeactivate={handleDeactivateCode}
+                        onActivate={handleActivateCode}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {inactiveCodes.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">비활성</h3>
+                    {inactiveCodes.map((code) => (
+                      <CodeCard
+                        key={code.id}
+                        code={code}
+                        onUpdate={handleUpdateCode}
+                        onDeactivate={handleDeactivateCode}
+                        onActivate={handleActivateCode}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -221,14 +272,16 @@ export default function CounselorCodesPage() {
 }
 
 // 인증코드 카드 컴포넌트
-function CodeCard({ 
-  code, 
-  onUpdate, 
-  onDeactivate 
-}: { 
-  code: CounselorCode; 
+function CodeCard({
+  code,
+  onUpdate,
+  onDeactivate,
+  onActivate,
+}: {
+  code: CounselorCode;
   onUpdate: (codeId: string, newName: string) => void;
   onDeactivate: (codeId: string) => void;
+  onActivate: (codeId: string, codeName: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(code.codeName);
@@ -249,12 +302,14 @@ function CodeCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800 rounded-lg p-6 border border-gray-700"
+      className={`bg-gray-800 rounded-lg p-6 border ${
+        code.isActive ? 'border-gray-700' : 'border-gray-700/60 opacity-80'
+      }`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-4 mb-2">
-            {isEditing ? (
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-3 mb-2">
+            {isEditing && code.isActive ? (
               <input
                 type="text"
                 value={editName}
@@ -263,50 +318,70 @@ function CodeCard({
                 autoFocus
               />
             ) : (
-              <h3 className="text-xl font-semibold text-white">{code.codeName}</h3>
+              <h3 className="text-xl font-semibold text-white truncate">{code.codeName}</h3>
             )}
-            <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-sm">
-              활성
+            <span
+              className={`px-2 py-1 rounded text-sm shrink-0 ${
+                code.isActive
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-gray-600/40 text-gray-400'
+              }`}
+            >
+              {code.isActive ? '활성' : '비활성'}
             </span>
           </div>
-          
-          <div className="space-y-2 text-sm text-gray-400">
-            <p><span className="text-gray-300">코드번호:</span> {code.codeNumber}</p>
-            <p><span className="text-gray-300">생성일:</span> {new Date(code.createdAt).toLocaleDateString('ko-KR')}</p>
+
+          <div className="space-y-1 text-sm text-gray-400">
+            <p>
+              <span className="text-gray-300">코드번호:</span> {code.codeNumber}
+            </p>
+            <p>
+              <span className="text-gray-300">생성일:</span>{' '}
+              {new Date(code.createdAt).toLocaleDateString('ko-KR')}
+            </p>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          {isEditing ? (
-            <>
-              <button
-                onClick={handleSave}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm transition-colors"
-              >
-                저장
-              </button>
-              <button
-                onClick={handleCancel}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm transition-colors"
-              >
-                취소
-              </button>
-            </>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {code.isActive ? (
+            isEditing ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  취소
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  수정
+                </button>
+                <button
+                  onClick={() => onDeactivate(code.id)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  비활성화
+                </button>
+              </>
+            )
           ) : (
-            <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"
-              >
-                수정
-              </button>
-              <button
-                onClick={() => onDeactivate(code.id)}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
-              >
-                비활성화
-              </button>
-            </>
+            <button
+              onClick={() => onActivate(code.id, code.codeName)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm transition-colors"
+            >
+              활성화
+            </button>
           )}
         </div>
       </div>

@@ -36,13 +36,13 @@ function mapDoc(id: string, data: Record<string, unknown>): CounselorCode {
 
 export async function fetchCounselorCodes(counselorId: string): Promise<CounselorCode[]> {
   const db = getDb();
-  const q = query(
-    collection(db, COLLECTION),
-    where('counselorId', '==', counselorId),
-    where('isActive', '==', true),
-  );
+  const q = query(collection(db, COLLECTION), where('counselorId', '==', counselorId));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => mapDoc(d.id, d.data() as Record<string, unknown>));
+  const codes = snapshot.docs.map((d) => mapDoc(d.id, d.data() as Record<string, unknown>));
+  return codes.sort((a, b) => {
+    if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 }
 
 async function isCodeNameTaken(codeName: string, excludeId?: string): Promise<boolean> {
@@ -105,6 +105,21 @@ export async function deactivateCounselorCode(codeId: string): Promise<void> {
   const db = getDb();
   await updateDoc(doc(db, COLLECTION, codeId), {
     isActive: false,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function activateCounselorCode(codeId: string, codeName: string): Promise<void> {
+  const trimmed = codeName.trim();
+  if (!trimmed) throw new Error('코드명을 입력해주세요.');
+
+  if (await isCodeNameTaken(trimmed, codeId)) {
+    throw new Error('이미 사용 중인 코드명입니다. 다른 상담사가 동일한 활성 코드명을 사용 중입니다.');
+  }
+
+  const db = getDb();
+  await updateDoc(doc(db, COLLECTION, codeId), {
+    isActive: true,
     updatedAt: new Date().toISOString(),
   });
 }
