@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -13,6 +13,44 @@ import {
   updateCounselorCodeName,
 } from '@/lib/firestore/counselorCodesStore';
 
+type CodeSortKey = 'codeNumber' | 'codeName' | 'createdAt';
+type CodeSortOrder = 'asc' | 'desc';
+type CodeSortOption = `${CodeSortKey}-${CodeSortOrder}`;
+
+const CODE_SORT_OPTIONS: { value: CodeSortOption; label: string }[] = [
+  { value: 'createdAt-desc', label: '생성일 · 최신순' },
+  { value: 'createdAt-asc', label: '생성일 · 오래된순' },
+  { value: 'codeNumber-asc', label: '코드번호 · 오름차순' },
+  { value: 'codeNumber-desc', label: '코드번호 · 내림차순' },
+  { value: 'codeName-asc', label: '상담사명 · 가나다순' },
+  { value: 'codeName-desc', label: '상담사명 · 역순' },
+];
+
+function sortCounselorCodes(
+  list: CounselorCode[],
+  sortKey: CodeSortKey,
+  order: CodeSortOrder,
+): CounselorCode[] {
+  const sorted = [...list];
+  sorted.sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === 'codeNumber') {
+      cmp = a.codeNumber.localeCompare(b.codeNumber, 'ko', { numeric: true });
+    } else if (sortKey === 'codeName') {
+      cmp = a.codeName.localeCompare(b.codeName, 'ko');
+    } else {
+      cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return order === 'asc' ? cmp : -cmp;
+  });
+  return sorted;
+}
+
+function parseSortOption(option: CodeSortOption): { sortKey: CodeSortKey; sortOrder: CodeSortOrder } {
+  const [sortKey, sortOrder] = option.split('-') as [CodeSortKey, CodeSortOrder];
+  return { sortKey, sortOrder };
+}
+
 export default function CounselorCodesPage() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [codes, setCodes] = useState<CounselorCode[]>([]);
@@ -21,6 +59,7 @@ export default function CounselorCodesPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCodeName, setNewCodeName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [sortOption, setSortOption] = useState<CodeSortOption>('createdAt-desc');
 
   // 상담사 인증코드 목록 조회
   const fetchCodes = async () => {
@@ -108,6 +147,16 @@ export default function CounselorCodesPage() {
 
   const activeCodes = codes.filter((c) => c.isActive);
   const inactiveCodes = codes.filter((c) => !c.isActive);
+
+  const { sortKey, sortOrder } = parseSortOption(sortOption);
+  const sortedActiveCodes = useMemo(
+    () => sortCounselorCodes(activeCodes, sortKey, sortOrder),
+    [activeCodes, sortKey, sortOrder],
+  );
+  const sortedInactiveCodes = useMemo(
+    () => sortCounselorCodes(inactiveCodes, sortKey, sortOrder),
+    [inactiveCodes, sortKey, sortOrder],
+  );
 
   useEffect(() => {
     if (user && !authPending) {
@@ -212,12 +261,29 @@ export default function CounselorCodesPage() {
 
           {/* 인증코드 목록 */}
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold text-white">인증코드 목록</h2>
               {!isLoading && codes.length > 0 && (
-                <p className="text-sm text-gray-400">
-                  활성 {activeCodes.length}개 · 비활성 {inactiveCodes.length}개
-                </p>
+                <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                  <p className="text-sm text-gray-400">
+                    활성 {activeCodes.length}개 · 비활성 {inactiveCodes.length}개
+                  </p>
+                  <label className="flex items-center gap-2 text-sm text-gray-400">
+                    <span className="shrink-0">정렬</span>
+                    <select
+                      value={sortOption}
+                      onChange={(e) => setSortOption(e.target.value as CodeSortOption)}
+                      className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-w-[160px]"
+                      aria-label="인증코드 목록 정렬"
+                    >
+                      {CODE_SORT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
               )}
             </div>
 
@@ -236,7 +302,7 @@ export default function CounselorCodesPage() {
                 {activeCodes.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium text-emerald-400 uppercase tracking-wide">활성</h3>
-                    {activeCodes.map((code) => (
+                    {sortedActiveCodes.map((code) => (
                       <CodeCard
                         key={code.id}
                         code={code}
@@ -251,7 +317,7 @@ export default function CounselorCodesPage() {
                 {inactiveCodes.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">비활성</h3>
-                    {inactiveCodes.map((code) => (
+                    {sortedInactiveCodes.map((code) => (
                       <CodeCard
                         key={code.id}
                         code={code}
