@@ -92,7 +92,6 @@ jobs:
           if [ -n "${SMTP_HOST}" ]; then ENV_VARS="${ENV_VARS},SMTP_HOST=${SMTP_HOST}"; fi
           if [ -n "${SMTP_PORT}" ]; then ENV_VARS="${ENV_VARS},SMTP_PORT=${SMTP_PORT}"; else ENV_VARS="${ENV_VARS},SMTP_PORT=587"; fi
           if [ -n "${SMTP_USER}" ]; then ENV_VARS="${ENV_VARS},SMTP_USER=${SMTP_USER}"; fi
-          if [ -n "${SMTP_PASSWORD}" ]; then ENV_VARS="${ENV_VARS},SMTP_PASSWORD=${SMTP_PASSWORD}"; fi
           if [ -n "${MAIL_FROM}" ]; then ENV_VARS="${ENV_VARS},MAIL_FROM=${MAIL_FROM}"; fi
           if [ -n "${COUNSELOR_ADMIN_NOTIFY_EMAIL}" ]; then
             ENV_VARS="${ENV_VARS},COUNSELOR_ADMIN_NOTIFY_EMAIL=${COUNSELOR_ADMIN_NOTIFY_EMAIL}"
@@ -101,13 +100,12 @@ jobs:
           fi
 
           if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then
-            echo "✅ SMTP 환경 변수가 Cloud Run에 주입됩니다 (상담사 승인 알림 메일 활성화)."
+            echo "✅ SMTP 설정을 Cloud Run에 주입합니다 (비밀번호는 Secret Manager)."
           else
             echo "⚠️ SMTP GitHub Secrets 미설정 — 메일 발송 없이 API만 배포됩니다."
             echo "   필요 Secrets: SMTP_HOST, SMTP_USER, SMTP_PASSWORD (선택: SMTP_PORT, MAIL_FROM, COUNSELOR_ADMIN_NOTIFY_EMAIL)"
           fi
 
-          # Cloud Run에 SMTP_PASSWORD가 Secret Manager 참조로 등록된 경우 env literal과 충돌 → 제거
           GCLOUD_FLAGS=(
             --image "$IMAGE"
             --region "${{ env.REGION }}"
@@ -123,7 +121,30 @@ jobs:
             --update-env-vars "${ENV_VARS}"
             --project "${PROJECT_ID}"
           )
+
           if [ -n "${SMTP_PASSWORD}" ]; then
+            SMTP_SECRET_NAME="wizcoco-smtp-password"
+            if ! gcloud secrets describe "${SMTP_SECRET_NAME}" --project "${PROJECT_ID}" >/dev/null 2>&1; then
+              printf '%s' "${SMTP_PASSWORD}" | gcloud secrets create "${SMTP_SECRET_NAME}" \
+                --replication-policy=automatic \
+                --data-file=- \
+                --project "${PROJECT_ID}"
+            else
+              printf '%s' "${SMTP_PASSWORD}" | gcloud secrets versions add "${SMTP_SECRET_NAME}" \
+                --data-file=- \
+                --project "${PROJECT_ID}"
+            fi
+
+            PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')
+            RUN_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+            gcloud secrets add-iam-policy-binding "${SMTP_SECRET_NAME}" \
+              --project "${PROJECT_ID}" \
+              --member="serviceAccount:${RUN_SA}" \
+              --role="roles/secretmanager.secretAccessor" \
+              --quiet >/dev/null 2>&1 || true
+
+            GCLOUD_FLAGS+=(--set-secrets=SMTP_PASSWORD=${SMTP_SECRET_NAME}:latest)
+          else
             GCLOUD_FLAGS+=(--remove-secrets=SMTP_PASSWORD)
           fi
 
