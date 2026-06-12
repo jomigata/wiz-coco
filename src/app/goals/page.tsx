@@ -232,7 +232,7 @@ import { motion } from 'framer-motion';export default function GoalsPage() {
                   <select
                     value={newGoal.category}
                     onChange={(e) => setNewGoal({...newGoal, category: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="select-theme-light w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {categories.map(category => (
                       <option key={category.id} value={category.id}>

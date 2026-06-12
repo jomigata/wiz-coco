@@ -202,7 +202,7 @@ import { motion } from 'framer-motion';export default function ProgressPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="select-theme-light px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>

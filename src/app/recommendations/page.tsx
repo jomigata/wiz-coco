@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';export default function RecommendationsPage() {
+import { motion } from 'framer-motion';
+export default function RecommendationsPage() {
   const [userProfile, setUserProfile] = useState({
     mbti: 'INTJ',
     interests: ['심리학', '자기계발', '스트레스 관리'],
@@ -200,7 +201,7 @@ import { motion } from 'framer-motion';export default function RecommendationsP
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="select-theme-light px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     {categories.map(category => (
                       <option key={category} value={category}>
@@ -214,7 +215,7 @@ import { motion } from 'framer-motion';export default function RecommendationsP
                   <select
                     value={selectedPriority}
                     onChange={(e) => setSelectedPriority(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="select-theme-light px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     {priorities.map(priority => (
                       <option key={priority} value={priority}>

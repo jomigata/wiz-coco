@@ -72,6 +72,43 @@
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
   }
+
+  /*
+   * Native <select> 드롭다운 가독성
+   * - 어두운 UI(text-white 등)에서 option hover/선택 시 글자·배경색 충돌 방지
+   * - 밝은 UI는 select에 select-theme-light 클래스 사용
+   */
+  select:not(.select-theme-light) {
+    color-scheme: dark;
+  }
+
+  select:not(.select-theme-light) option {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+
+  select:not(.select-theme-light) option:disabled {
+    color: #94a3b8;
+  }
+
+  select:not(.select-theme-light) option:checked {
+    background-color: #1d4ed8;
+    color: #ffffff;
+  }
+
+  select.select-theme-light {
+    color-scheme: light;
+  }
+
+  select.select-theme-light option {
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+
+  select.select-theme-light option:checked {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+  }
 }
 
 /* Animation Delays */

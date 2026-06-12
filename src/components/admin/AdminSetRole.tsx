@@ -113,7 +113,7 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultUid = '' }) => {
           id="role"
           value={role}
           onChange={(e) => setRole(e.target.value as AppRole)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="select-theme-light w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="user">user</option>
           <option value="counselor">counselor</option>

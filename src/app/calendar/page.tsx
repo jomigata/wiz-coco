@@ -356,7 +356,7 @@ import { motion } from 'framer-motion';export default function CalendarPage() {
                   <select
                     value={newEvent.type}
                     onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="select-theme-light w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {eventTypes.map(type => (
                       <option key={type.id} value={type.id}>
