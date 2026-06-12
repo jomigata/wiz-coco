@@ -1,0 +1,47 @@
+export type CounselorPracticeType = 'solo' | 'organization';
+
+export interface CounselorProfileData {
+  name: string;
+  email: string;
+  phone: string;
+  specialization: string[];
+  experience: number;
+  education: string;
+  bio: string;
+  license: string;
+  practiceType: CounselorPracticeType;
+  organizationName: string;
+  reportDisplayName: string;
+}
+
+export const COUNSELOR_SPECIALIZATIONS = [
+  '개인상담',
+  '가족상담',
+  '커플상담',
+  '청소년상담',
+  '노인상담',
+  '우울증',
+  '불안장애',
+  '트라우마',
+  '중독',
+  '성격장애',
+  '직장상담',
+  '진로상담',
+  '학습상담',
+  '인간관계',
+  '기타',
+] as const;
+
+export const EMPTY_COUNSELOR_PROFILE: CounselorProfileData = {
+  name: '',
+  email: '',
+  phone: '',
+  specialization: [],
+  experience: 0,
+  education: '',
+  bio: '',
+  license: '',
+  practiceType: 'solo',
+  organizationName: '',
+  reportDisplayName: '',
+};

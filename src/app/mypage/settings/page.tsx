@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import CounselorSwitchPanel from './components/CounselorSwitchPanel';
 
 interface User {
   id: string;
@@ -309,6 +310,14 @@ export default function SettingsPage() {
                   />
                 </button>
               </div>
+
+              {user && (
+                <CounselorSwitchPanel
+                  uid={user.id}
+                  email={user.email}
+                  role={user.role}
+                />
+              )}
             </div>
           </div>
         </div>
