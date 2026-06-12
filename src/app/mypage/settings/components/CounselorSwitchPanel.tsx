@@ -45,6 +45,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [applicationStatus, setApplicationStatus] = useState<CounselorApplicationStatus | null>(null);
+  const [adminReviewNotes, setAdminReviewNotes] = useState('');
   const [profile, setProfile] = useState<CounselorProfileData>({
     ...EMPTY_COUNSELOR_PROFILE,
     email,
@@ -71,6 +72,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
           email: loaded.profile?.email || email,
         });
         setApplicationStatus(application?.status ?? null);
+        setAdminReviewNotes(application?.reviewNotes ?? '');
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : '상담사 정보를 불러오지 못했습니다.');
@@ -189,6 +191,21 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
       {expanded && (
         <div className="mt-4 space-y-4">
           <p className="text-blue-300 text-sm">{subtitle}</p>
+
+          {adminReviewNotes && !counselor && (pending || rejected || applicationStatus === 'approved') && (
+            <div
+              className={`rounded-lg p-3 border text-sm ${
+                rejected
+                  ? 'bg-red-500/10 border-red-500/25 text-red-100'
+                  : pending
+                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-100'
+                    : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-100'
+              }`}
+            >
+              <p className="text-xs font-medium mb-1 opacity-80">관리자 안내</p>
+              <p className="whitespace-pre-wrap">{adminReviewNotes}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4 bg-white/5 rounded-lg p-4 border border-white/10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

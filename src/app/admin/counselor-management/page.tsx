@@ -1,134 +1,130 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FaUserCheck, FaSearch, FaCheck, FaTimes, FaEye, FaFileAlt, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
+import { FaUserCheck, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
 import RoleGuard from '@/components/RoleGuard';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import CounselorApplicationReviewModal from '@/app/admin/components/CounselorApplicationReviewModal';
+import SortableTableHeader, { type SortOrder } from '@/app/admin/components/SortableTableHeader';
+import {
+  approveCounselorApplication,
+  listAllCounselorApplications,
+  rejectCounselorApplication,
+  type AdminCounselorApplicationRow,
+} from '@/lib/firestore/counselorApplicationsStore';
 
-interface CounselorApplication {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  licenseNumber: string;
-  institution: string;
-  experience: number;
-  specialization: string[];
-  education: string;
-  status: 'pending' | 'approved' | 'rejected';
-  appliedDate: string;
-  documents: string[];
-  notes: string;
-  reviewNotes?: string;
+type SortKey =
+  | 'appliedDate'
+  | 'name'
+  | 'email'
+  | 'licenseNumber'
+  | 'institution'
+  | 'education'
+  | 'specialization'
+  | 'experience'
+  | 'status';
+
+type ReviewTarget =
+  | { mode: 'single'; application: AdminCounselorApplicationRow; action: 'approve' | 'reject' }
+  | { mode: 'bulk'; ids: string[]; action: 'approve' | 'reject' };
+
+function sortApplications(
+  list: AdminCounselorApplicationRow[],
+  sortKey: SortKey,
+  order: SortOrder,
+): AdminCounselorApplicationRow[] {
+  const sorted = [...list];
+  sorted.sort((a, b) => {
+    let cmp = 0;
+    switch (sortKey) {
+      case 'appliedDate':
+        cmp = new Date(a.appliedDate).getTime() - new Date(b.appliedDate).getTime();
+        break;
+      case 'name':
+        cmp = a.name.localeCompare(b.name, 'ko');
+        break;
+      case 'email':
+        cmp = a.email.localeCompare(b.email, 'ko');
+        break;
+      case 'licenseNumber':
+        cmp = a.licenseNumber.localeCompare(b.licenseNumber, 'ko');
+        break;
+      case 'institution':
+        cmp = a.institution.localeCompare(b.institution, 'ko');
+        break;
+      case 'education':
+        cmp = a.education.localeCompare(b.education, 'ko');
+        break;
+      case 'specialization':
+        cmp = a.specialization.join(', ').localeCompare(b.specialization.join(', '), 'ko');
+        break;
+      case 'experience':
+        cmp = a.experience - b.experience;
+        break;
+      case 'status':
+        cmp = a.status.localeCompare(b.status, 'ko');
+        break;
+      default:
+        cmp = 0;
+    }
+    return order === 'asc' ? cmp : -cmp;
+  });
+  return sorted;
 }
 
-// 샘플 데이터
-const sampleApplications: CounselorApplication[] = [
-  {
-    id: '1',
-    name: '김상담',
-    email: 'counselor1@example.com',
-    phone: '010-1234-5678',
-    licenseNumber: 'PSY-2024-001',
-    institution: '한국심리상담협회',
-    experience: 5,
-    specialization: ['우울증', '불안장애', '관계상담'],
-    education: '서울대학교 심리학과 석사',
-    status: 'pending',
-    appliedDate: '2024-01-20',
-    documents: ['자격증.pdf', '경력증명서.pdf', '학위증명서.pdf'],
-    notes: '5년간의 상담 경험을 보유하고 있으며, 다양한 연령대의 내담자와 상담한 경험이 있습니다.'
-  },
-  {
-    id: '2',
-    name: '이치료',
-    email: 'counselor2@example.com',
-    phone: '010-2345-6789',
-    licenseNumber: 'PSY-2024-002',
-    institution: '한국상담심리학회',
-    experience: 3,
-    specialization: ['가족상담', '부부상담', '청소년상담'],
-    education: '연세대학교 상담심리학과 석사',
-    status: 'pending',
-    appliedDate: '2024-01-18',
-    documents: ['자격증.pdf', '경력증명서.pdf'],
-    notes: '가족상담 전문가로서 다양한 가족 문제 해결에 경험이 있습니다.'
-  },
-  {
-    id: '3',
-    name: '박심리',
-    email: 'counselor3@example.com',
-    phone: '010-3456-7890',
-    licenseNumber: 'PSY-2024-003',
-    institution: '한국임상심리학회',
-    experience: 8,
-    specialization: ['트라우마', 'PTSD', '인지행동치료'],
-    education: '고려대학교 임상심리학과 박사',
-    status: 'approved',
-    appliedDate: '2024-01-15',
-    documents: ['자격증.pdf', '경력증명서.pdf', '학위증명서.pdf', '추천서.pdf'],
-    notes: '트라우마 전문가로서 많은 임상 경험을 보유하고 있습니다.',
-    reviewNotes: '우수한 자격과 경험을 보유하고 있어 승인합니다.'
-  },
-  {
-    id: '4',
-    name: '최상담',
-    email: 'counselor4@example.com',
-    phone: '010-4567-8901',
-    licenseNumber: 'PSY-2024-004',
-    institution: '한국심리상담협회',
-    experience: 1,
-    specialization: ['일반상담'],
-    education: '이화여자대학교 심리학과 학사',
-    status: 'rejected',
-    appliedDate: '2024-01-10',
-    documents: ['자격증.pdf'],
-    notes: '신규 상담사로서 경험이 부족합니다.',
-    reviewNotes: '상담 경험이 부족하여 현재로서는 승인하기 어렵습니다. 추가 경험 후 재신청 바랍니다.'
-  }
-];
-
 function CounselorManagementPageContent() {
-  const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useFirebaseAuth();
   const [activeTab, setActiveTab] = useState<'verification' | 'profiles' | 'activity'>('verification');
-  const [applications, setApplications] = useState<CounselorApplication[]>(sampleApplications);
+  const [applications, setApplications] = useState<AdminCounselorApplicationRow[]>([]);
+  const [loadError, setLoadError] = useState('');
+  const [busy, setBusy] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [selectedApplication, setSelectedApplication] = useState<CounselorApplication | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>('appliedDate');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [selectedApplication, setSelectedApplication] = useState<AdminCounselorApplicationRow | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingApplication, setEditingApplication] = useState<CounselorApplication | null>(null);
-  const [newApplication, setNewApplication] = useState<Partial<CounselorApplication>>({
-    name: '',
-    email: '',
-    phone: '',
-    licenseNumber: '',
-    institution: '',
-    experience: 0,
-    specialization: [],
-    education: '',
-    status: 'pending',
-    appliedDate: new Date().toISOString().split('T')[0],
-    documents: [],
-    notes: ''
-  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
+  const [reviewMemo, setReviewMemo] = useState('');
 
-  // URL 파라미터 확인하여 자동으로 추가 모달 열기
-  useEffect(() => {
-    if (searchParams.get('add') === 'true') {
-      setShowAddModal(true);
+  const loadApplications = useCallback(async () => {
+    try {
+      setLoadError('');
+      setBusy(true);
+      const rows = await listAllCounselorApplications();
+      setApplications(rows);
+    } catch (e) {
+      console.error('상담사 신청 목록 로딩 오류:', e);
+      setLoadError('상담사 신청 목록을 불러오지 못했습니다.');
+    } finally {
+      setBusy(false);
     }
-  }, [searchParams]);
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      void loadApplications();
+    }
+  }, [authLoading, user?.uid, loadApplications]);
 
   useEffect(() => {
     setSelectedIds([]);
   }, [searchQuery, statusFilter, activeTab]);
 
-  // 필터링
-  const filteredApplications = applications
-    .filter((app) => {
+  const handleSort = (key: string) => {
+    const k = key as SortKey;
+    if (sortKey === k) {
+      setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(k);
+      setSortOrder(k === 'appliedDate' ? 'desc' : 'asc');
+    }
+  };
+
+  const filteredApplications = useMemo(() => {
+    const filtered = applications.filter((app) => {
       const q = searchQuery.toLowerCase().trim();
       const blob = [
         app.name,
@@ -137,16 +133,18 @@ function CounselorManagementPageContent() {
         app.institution,
         app.education,
         app.specialization.join(' '),
+        app.applicantUid,
       ]
         .join(' ')
         .toLowerCase();
       const matchesSearch = !q || blob.includes(q);
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
+    });
+    return sortApplications(filtered, sortKey, sortOrder);
+  }, [applications, searchQuery, statusFilter, sortKey, sortOrder]);
 
-  const getStatusBadgeClass = (status: CounselorApplication['status']) => {
+  const getStatusBadgeClass = (status: AdminCounselorApplicationRow['status']) => {
     switch (status) {
       case 'pending':
         return 'border border-amber-500/30 bg-amber-500/10 text-amber-100';
@@ -159,7 +157,7 @@ function CounselorManagementPageContent() {
     }
   };
 
-  const getStatusText = (status: CounselorApplication['status']) => {
+  const getStatusText = (status: AdminCounselorApplicationRow['status']) => {
     switch (status) {
       case 'pending':
         return '검토 중';
@@ -172,93 +170,86 @@ function CounselorManagementPageContent() {
     }
   };
 
-  const handleApprove = (id: string) => {
-    setApplications(prev => prev.map(app => 
-      app.id === id ? { ...app, status: 'approved' as const } : app
-    ));
+  const openReviewModal = (
+    target: ReviewTarget,
+    defaultMemo = '',
+  ) => {
+    setReviewMemo(defaultMemo);
+    setReviewTarget(target);
   };
 
-  const handleReject = (id: string) => {
-    setApplications(prev => prev.map(app => 
-      app.id === id ? { ...app, status: 'rejected' as const } : app
-    ));
+  const closeReviewModal = () => {
+    setReviewTarget(null);
+    setReviewMemo('');
   };
 
-  const openModal = (application: CounselorApplication) => {
+  const confirmReview = async () => {
+    if (!reviewTarget || !user?.uid) return;
+    setBusy(true);
+    try {
+      if (reviewTarget.mode === 'single') {
+        const app = reviewTarget.application;
+        if (reviewTarget.action === 'approve') {
+          if (!app.applicantUid?.trim()) {
+            alert('신청자 UID가 없어 승인할 수 없습니다.');
+            return;
+          }
+          await approveCounselorApplication({
+            applicationId: app.id,
+            applicantUid: app.applicantUid,
+            personalInfo: app.personalInfo,
+            reviewerUid: user.uid,
+            reviewNotes: reviewMemo,
+          });
+        } else {
+          await rejectCounselorApplication({
+            applicationId: app.id,
+            reviewerUid: user.uid,
+            reviewNotes: reviewMemo,
+          });
+        }
+      } else {
+        for (const id of reviewTarget.ids) {
+          const app = applications.find((a) => a.id === id);
+          if (!app || app.status !== 'pending') continue;
+          if (reviewTarget.action === 'approve') {
+            if (!app.applicantUid?.trim()) continue;
+            await approveCounselorApplication({
+              applicationId: app.id,
+              applicantUid: app.applicantUid,
+              personalInfo: app.personalInfo,
+              reviewerUid: user.uid,
+              reviewNotes: reviewMemo,
+            });
+          } else {
+            await rejectCounselorApplication({
+              applicationId: app.id,
+              reviewerUid: user.uid,
+              reviewNotes: reviewMemo,
+            });
+          }
+        }
+      }
+      closeReviewModal();
+      setShowModal(false);
+      setSelectedIds([]);
+      await loadApplications();
+    } catch (e) {
+      console.error('검토 처리 오류:', e);
+      alert('처리 중 오류가 발생했습니다.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openModal = (application: AdminCounselorApplicationRow) => {
     setSelectedApplication(application);
     setShowModal(true);
   };
 
-  const openAddModal = () => {
-    setNewApplication({
-      name: '',
-      email: '',
-      phone: '',
-      licenseNumber: '',
-      institution: '',
-      experience: 0,
-      specialization: [],
-      education: '',
-      status: 'pending',
-      appliedDate: new Date().toISOString().split('T')[0],
-      documents: [],
-      notes: ''
-    });
-    setShowAddModal(true);
-  };
-
-  const handleAddCounselor = () => {
-    if (!newApplication.name || !newApplication.email) {
-      alert('이름과 이메일은 필수 입력 항목입니다.');
-      return;
-    }
-
-    const counselor: CounselorApplication = {
-      id: Date.now().toString(),
-      name: newApplication.name!,
-      email: newApplication.email!,
-      phone: newApplication.phone || '',
-      licenseNumber: newApplication.licenseNumber || '',
-      institution: newApplication.institution || '',
-      experience: newApplication.experience || 0,
-      specialization: newApplication.specialization || [],
-      education: newApplication.education || '',
-      status: newApplication.status || 'pending',
-      appliedDate: newApplication.appliedDate || new Date().toISOString().split('T')[0],
-      documents: newApplication.documents || [],
-      notes: newApplication.notes || ''
-    };
-
-    setApplications(prev => [counselor, ...prev]);
-    setShowAddModal(false);
-    setNewApplication({
-      name: '',
-      email: '',
-      phone: '',
-      licenseNumber: '',
-      institution: '',
-      experience: 0,
-      specialization: [],
-      education: '',
-      status: 'pending',
-      appliedDate: new Date().toISOString().split('T')[0],
-      documents: [],
-      notes: ''
-    });
-  };
-
-  const handleSpecializationChange = (value: string) => {
-    const specializations = value.split(',').map(s => s.trim()).filter(s => s);
-    setNewApplication(prev => ({ ...prev, specialization: specializations }));
-  };
-
-  const handleDocumentsChange = (value: string) => {
-    const documents = value.split(',').map(d => d.trim()).filter(d => d);
-    setNewApplication(prev => ({ ...prev, documents }));
-  };
-
   const pendingCount = applications.filter((app) => app.status === 'pending').length;
-  const approvedForProfile = applications.filter((a) => a.status === 'approved').length;
+  const approvedCount = applications.filter((a) => a.status === 'approved').length;
+  const rejectedCount = applications.filter((a) => a.status === 'rejected').length;
 
   const toggleSelectRow = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -280,20 +271,19 @@ function CounselorManagementPageContent() {
   const handleBulkApprove = () => {
     const ids = selectedIds.filter((id) => applications.find((a) => a.id === id)?.status === 'pending');
     if (ids.length === 0) return;
-    setApplications((prev) =>
-      prev.map((app) => (ids.includes(app.id) ? { ...app, status: 'approved' as const } : app)),
-    );
-    setSelectedIds([]);
+    openReviewModal({ mode: 'bulk', ids, action: 'approve' });
   };
 
   const handleBulkReject = () => {
     const ids = selectedIds.filter((id) => applications.find((a) => a.id === id)?.status === 'pending');
     if (ids.length === 0) return;
-    setApplications((prev) =>
-      prev.map((app) => (ids.includes(app.id) ? { ...app, status: 'rejected' as const } : app)),
-    );
-    setSelectedIds([]);
+    openReviewModal({ mode: 'bulk', ids, action: 'reject' });
   };
+
+  const reviewApplicantName =
+    reviewTarget?.mode === 'single' ? reviewTarget.application.name : '';
+  const reviewBulkCount =
+    reviewTarget?.mode === 'bulk' ? reviewTarget.ids.length : 1;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 text-slate-100">
@@ -305,16 +295,11 @@ function CounselorManagementPageContent() {
       >
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs leading-snug text-slate-300">
-            검토 대기 <span className="font-semibold text-amber-200/95">{pendingCount}</span>건 · 자격·학력 서류를
-            확인한 뒤 승인 또는 거부를 선택하세요.
+            검토 중 <span className="font-semibold text-amber-200/95">{pendingCount}</span> · 승인{' '}
+            <span className="font-semibold text-emerald-200/95">{approvedCount}</span> · 거부{' '}
+            <span className="font-semibold text-rose-200/95">{rejectedCount}</span> — Firestore 실시간
+            신청 목록입니다.
           </p>
-          <button
-            type="button"
-            onClick={openAddModal}
-            className="shrink-0 self-start rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 sm:self-auto"
-          >
-            상담사 추가
-          </button>
         </div>
       </motion.div>
 
@@ -344,7 +329,7 @@ function CounselorManagementPageContent() {
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          프로필 ({approvedForProfile})
+          프로필 ({approvedCount})
         </button>
         <button
           type="button"
@@ -366,6 +351,14 @@ function CounselorManagementPageContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
+          {loadError && (
+            <div className="mb-2 rounded-md border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+              {loadError}
+            </div>
+          )}
+          {busy && !reviewTarget && (
+            <div className="mb-2 text-xs text-slate-400">목록 갱신 중…</div>
+          )}
           <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <h2 className="text-lg font-semibold text-slate-100 sm:w-auto sm:shrink-0">
               인증 신청{' '}
@@ -433,29 +426,82 @@ function CounselorManagementPageContent() {
                           className="h-3.5 w-3.5 cursor-pointer rounded border-white/30 bg-transparent text-sky-400 focus:ring-sky-400/50"
                         />
                       </th>
-                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">
-                        신청일
-                      </th>
-                      <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">
-                        이름
-                      </th>
-                      <th scope="col" className="min-w-[8rem] px-2 py-2 text-left text-xs font-medium text-slate-400">
-                        이메일
-                      </th>
-                      <th scope="col" className="min-w-[6rem] px-2 py-2 text-left text-xs font-medium text-slate-400">
-                        자격증 번호
-                      </th>
-                      <th scope="col" className="hidden min-w-[6rem] px-2 py-2 text-left text-xs font-medium text-slate-400 lg:table-cell">
-                        소속
-                      </th>
-                      <th scope="col" className="hidden min-w-[7rem] px-2 py-2 text-left text-xs font-medium text-slate-400 xl:table-cell">
-                        학력
-                      </th>
-                      <th scope="col" className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 md:table-cell">
-                        전문분야
-                      </th>
-                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
-                        상태
+                      <SortableTableHeader
+                        label="신청일"
+                        sortKey="appliedDate"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="whitespace-nowrap px-2 py-2"
+                      />
+                      <SortableTableHeader
+                        label="이름"
+                        sortKey="name"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="px-2 py-2"
+                      />
+                      <SortableTableHeader
+                        label="이메일"
+                        sortKey="email"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="min-w-[8rem] px-2 py-2"
+                      />
+                      <SortableTableHeader
+                        label="자격증 번호"
+                        sortKey="licenseNumber"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="hidden min-w-[6rem] px-2 py-2 lg:table-cell"
+                      />
+                      <SortableTableHeader
+                        label="소속"
+                        sortKey="institution"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="hidden min-w-[6rem] px-2 py-2 lg:table-cell"
+                      />
+                      <SortableTableHeader
+                        label="학력"
+                        sortKey="education"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="hidden min-w-[7rem] px-2 py-2 xl:table-cell"
+                      />
+                      <SortableTableHeader
+                        label="전문분야"
+                        sortKey="specialization"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="hidden px-2 py-2 md:table-cell"
+                      />
+                      <SortableTableHeader
+                        label="경력"
+                        sortKey="experience"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="hidden whitespace-nowrap px-2 py-2 sm:table-cell"
+                        align="center"
+                      />
+                      <SortableTableHeader
+                        label="상태"
+                        sortKey="status"
+                        activeKey={sortKey}
+                        order={sortOrder}
+                        onSort={handleSort}
+                        className="whitespace-nowrap px-2 py-2"
+                        align="center"
+                      />
+                      <th scope="col" className="min-w-[5rem] whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
+                        검토 메모
                       </th>
                       <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                         작업
@@ -492,12 +538,18 @@ function CounselorManagementPageContent() {
                           {application.education}
                         </td>
                         <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 md:table-cell" title={application.specialization.join(', ')}>
-                          {application.specialization.join(', ')}
+                          {application.specialization.join(', ') || '-'}
+                        </td>
+                        <td className="hidden whitespace-nowrap px-2 py-2 text-center text-sm text-slate-300 sm:table-cell">
+                          {application.experience}년
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-center">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(application.status)}`}>
                             {getStatusText(application.status)}
                           </span>
+                        </td>
+                        <td className="max-w-[8rem] truncate px-2 py-2 text-center text-xs text-slate-400" title={application.reviewNotes || ''}>
+                          {application.reviewNotes || '-'}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-center">
                           <div className="flex flex-wrap items-center justify-center gap-1">
@@ -512,14 +564,14 @@ function CounselorManagementPageContent() {
                               <>
                                 <button
                                   type="button"
-                                  onClick={() => handleApprove(application.id)}
+                                  onClick={() => openReviewModal({ mode: 'single', application, action: 'approve' })}
                                   className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
                                 >
                                   승인
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleReject(application.id)}
+                                  onClick={() => openReviewModal({ mode: 'single', application, action: 'reject' })}
                                   className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
                                 >
                                   거부
@@ -538,162 +590,6 @@ function CounselorManagementPageContent() {
           <div className="mt-2 shrink-0 text-xs text-slate-500">총 {filteredApplications.length}건</div>
         </motion.div>
       )}
-
-        {/* 상담사 추가 모달 */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
-            <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">상담사 수동 추가</h3>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-red-300 hover:text-white transition-colors"
-                >
-                  <FaTimes className="w-6 h-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium">이름 *</label>
-                    <input
-                      type="text"
-                      value={newApplication.name || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="상담사 이름"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium">이메일 *</label>
-                    <input
-                      type="email"
-                      value={newApplication.email || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="이메일 주소"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium">전화번호</label>
-                    <input
-                      type="tel"
-                      value={newApplication.phone || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="010-1234-5678"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium">자격증 번호</label>
-                    <input
-                      type="text"
-                      value={newApplication.licenseNumber || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, licenseNumber: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="PSY-2024-001"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium">소속 기관</label>
-                    <input
-                      type="text"
-                      value={newApplication.institution || ''}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, institution: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="한국심리상담협회"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium">경력 (년)</label>
-                    <input
-                      type="number"
-                      value={newApplication.experience || 0}
-                      onChange={(e) => setNewApplication(prev => ({ ...prev, experience: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="5"
-                      min="0"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-slate-300 text-sm font-medium">학력</label>
-                  <input
-                    type="text"
-                    value={newApplication.education || ''}
-                    onChange={(e) => setNewApplication(prev => ({ ...prev, education: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="서울대학교 심리학과 석사"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-slate-300 text-sm font-medium">전문분야 (쉼표로 구분)</label>
-                  <input
-                    type="text"
-                    value={newApplication.specialization?.join(', ') || ''}
-                    onChange={(e) => handleSpecializationChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="우울증, 불안장애, 관계상담"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-slate-300 text-sm font-medium">첨부 문서 (쉼표로 구분)</label>
-                  <input
-                    type="text"
-                    value={newApplication.documents?.join(', ') || ''}
-                    onChange={(e) => handleDocumentsChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="자격증.pdf, 경력증명서.pdf, 학위증명서.pdf"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-slate-300 text-sm font-medium">메모</label>
-                  <textarea
-                    value={newApplication.notes || ''}
-                    onChange={(e) => setNewApplication(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="상담사에 대한 추가 정보나 메모"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-slate-300 text-sm font-medium">상태</label>
-                  <select
-                    value={newApplication.status || 'pending'}
-                    onChange={(e) => setNewApplication(prev => ({ ...prev, status: e.target.value as 'pending' | 'approved' | 'rejected' }))}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                  >
-                    <option value="pending" className="bg-gray-800">검토 중</option>
-                    <option value="approved" className="bg-gray-800">승인됨</option>
-                    <option value="rejected" className="bg-gray-800">거부됨</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-6">
-                <button
-                  onClick={handleAddCounselor}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <FaSave className="w-4 h-4" />
-                  상담사 추가
-                </button>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 상세보기 모달 */}
         {showModal && selectedApplication && (
@@ -735,39 +631,51 @@ function CounselorManagementPageContent() {
                     <label className="text-slate-300 text-sm">경력</label>
                     <p className="text-white">{selectedApplication.experience}년</p>
                   </div>
+                  <div>
+                    <label className="text-slate-300 text-sm">상태</label>
+                    <p className="text-white">{getStatusText(selectedApplication.status)}</p>
+                  </div>
+                  <div>
+                    <label className="text-slate-300 text-sm">신청일</label>
+                    <p className="text-white">
+                      {selectedApplication.appliedDate
+                        ? new Date(selectedApplication.appliedDate).toLocaleDateString('ko-KR')
+                        : '-'}
+                    </p>
+                  </div>
                 </div>
                 
                 <div>
                   <label className="text-slate-300 text-sm">학력</label>
-                  <p className="text-white">{selectedApplication.education}</p>
+                  <p className="text-white">{selectedApplication.education || '-'}</p>
                 </div>
                 
                 <div>
                   <label className="text-slate-300 text-sm">전문분야</label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedApplication.specialization.map((spec, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-slate-300 text-sm">첨부 문서</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedApplication.documents.map((doc, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
-                        {doc}
-                      </span>
-                    ))}
+                    {selectedApplication.specialization.length > 0 ? (
+                      selectedApplication.specialization.map((spec, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-slate-800 rounded text-sm text-slate-100">
+                          {spec}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-slate-400 text-sm">-</span>
+                    )}
                   </div>
                 </div>
                 
                 <div>
                   <label className="text-slate-300 text-sm">신청자 메모</label>
-                  <p className="text-white mt-1">{selectedApplication.notes}</p>
+                  <p className="text-white mt-1">{selectedApplication.notes || '-'}</p>
                 </div>
+
+                {selectedApplication.reviewNotes && (
+                  <div>
+                    <label className="text-slate-300 text-sm">관리자 검토 메모</label>
+                    <p className="text-white mt-1 whitespace-pre-wrap">{selectedApplication.reviewNotes}</p>
+                  </div>
+                )}
               </div>
               
               <div className="flex gap-2 mt-6">
@@ -775,8 +683,8 @@ function CounselorManagementPageContent() {
                   <>
                     <button
                       onClick={() => {
-                        handleApprove(selectedApplication.id);
                         setShowModal(false);
+                        openReviewModal({ mode: 'single', application: selectedApplication, action: 'approve' });
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
@@ -785,8 +693,8 @@ function CounselorManagementPageContent() {
                     </button>
                     <button
                       onClick={() => {
-                        handleReject(selectedApplication.id);
                         setShowModal(false);
+                        openReviewModal({ mode: 'single', application: selectedApplication, action: 'reject' });
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
@@ -817,11 +725,11 @@ function CounselorManagementPageContent() {
             <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-slate-100">
                 승인 프로필{' '}
-                <span className="font-normal text-slate-500">({approvedForProfile})</span>
+                <span className="font-normal text-slate-500">({approvedCount})</span>
               </h2>
             </div>
             <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
-              {approvedForProfile === 0 ? (
+              {approvedCount === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center text-base text-slate-300">
                   승인된 상담사가 없습니다.
                 </div>
@@ -869,7 +777,7 @@ function CounselorManagementPageContent() {
                 </div>
               )}
             </div>
-            <div className="mt-2 text-xs text-slate-500">총 {approvedForProfile}명</div>
+            <div className="mt-2 text-xs text-slate-500">총 {approvedCount}명</div>
           </motion.div>
         )}
 
@@ -931,6 +839,18 @@ function CounselorManagementPageContent() {
             </div>
           </motion.div>
         )}
+
+        <CounselorApplicationReviewModal
+          open={Boolean(reviewTarget)}
+          action={reviewTarget?.action ?? 'approve'}
+          applicantName={reviewApplicantName}
+          bulkCount={reviewBulkCount}
+          memo={reviewMemo}
+          busy={busy}
+          onMemoChange={setReviewMemo}
+          onConfirm={() => void confirmReview()}
+          onCancel={closeReviewModal}
+        />
     </div>
   );
 }

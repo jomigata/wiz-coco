@@ -8,9 +8,12 @@ import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, Fa
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { shouldShowAdminMenu } from '@/utils/roleUtils';
 import RoleGuard from '@/components/RoleGuard';
-import { initializeFirebase } from '@/lib/firebase';
-import { collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { finalizeCounselorApproval } from '@/lib/firestore/counselorRegistration';
+import CounselorApplicationReviewModal from '@/app/admin/components/CounselorApplicationReviewModal';
+import {
+  approveCounselorApplication,
+  listAllCounselorApplications,
+  rejectCounselorApplication,
+} from '@/lib/firestore/counselorApplicationsStore';
 
 interface CounselorApplication {
   id: string;
@@ -36,20 +39,6 @@ interface CounselorApplication {
   };
 }
 
-function toDateString(value: any): string {
-  if (!value) return '';
-  const d =
-    typeof value?.toDate === 'function'
-      ? value.toDate()
-      : value instanceof Date
-        ? value
-        : typeof value === 'string'
-          ? new Date(value)
-          : null;
-  if (!d || Number.isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0, 10);
-}
-
 function CounselorVerificationPageContent() {
   const searchParams = useSearchParams();
   const { user, loading } = useFirebaseAuth();
@@ -61,36 +50,27 @@ function CounselorVerificationPageContent() {
   const [selectedApplication, setSelectedApplication] = useState<CounselorApplication | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-
-  // URL 파라미터 확인하여 자동으로 추가 모달 열기
-  useEffect(() => {
-    if (searchParams.get('add') === 'true') {
-      setShowAddModal(true);
-    }
-  }, [searchParams]);
+  const [reviewTarget, setReviewTarget] = useState<{
+    application: CounselorApplication;
+    action: 'approve' | 'reject';
+  } | null>(null);
+  const [reviewMemo, setReviewMemo] = useState('');
 
   const loadApplications = async () => {
     try {
       setLoadError('');
-      const { db } = initializeFirebase();
-      if (!db) return;
       setBusy(true);
-      const q = query(collection(db, 'counselorApplications'), orderBy('submittedAt', 'desc'), limit(200));
-      const snap = await getDocs(q);
-      const apps: CounselorApplication[] = snap.docs.map((d) => {
-        const data: any = d.data();
-        const personalInfo = (data?.personalInfo || {}) as any;
-        return {
-          id: d.id,
-          applicantUid: String(data?.applicantUid || ''),
-          status: (data?.status || 'pending') as CounselorApplication['status'],
-          appliedDate: toDateString(data?.submittedAt) || '',
-          notes: String(personalInfo?.bio || ''),
-          reviewNotes: typeof data?.reviewNotes === 'string' ? data.reviewNotes : undefined,
-          personalInfo,
-          documents: data?.documents || {},
-        };
-      });
+      const rows = await listAllCounselorApplications();
+      const apps: CounselorApplication[] = rows.map((row) => ({
+        id: row.id,
+        applicantUid: row.applicantUid,
+        status: row.status,
+        appliedDate: row.appliedDate,
+        notes: row.notes,
+        reviewNotes: row.reviewNotes,
+        personalInfo: row.personalInfo,
+        documents: {},
+      }));
       setApplications(apps);
     } catch (e) {
       console.error('상담사 신청 목록 로딩 오류:', e);
@@ -145,50 +125,60 @@ function CounselorVerificationPageContent() {
     }
   };
 
-  const handleApprove = async (application: CounselorApplication) => {
+  // URL 파라미터 확인하여 자동으로 추가 모달 열기
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      setShowAddModal(true);
+    }
+  }, [searchParams]);
+
+  const openReviewModal = (application: CounselorApplication, action: 'approve' | 'reject') => {
+    setReviewMemo('');
+    setReviewTarget({ application, action });
+  };
+
+  const confirmReview = async () => {
+    if (!reviewTarget || !user?.uid) return;
+    const { application, action } = reviewTarget;
     try {
-      const { db } = initializeFirebase();
-      if (!db) return;
-      if (!application.applicantUid?.trim()) {
-        alert('신청자 UID가 없어 승인할 수 없습니다.');
-        return;
-      }
       setBusy(true);
-      await updateDoc(doc(db, 'counselorApplications', application.id), {
-        status: 'approved',
-        reviewedAt: serverTimestamp(),
-        reviewerUid: user?.uid || null,
-      });
-      await finalizeCounselorApproval(
-        application.applicantUid,
-        application.personalInfo || {},
-      );
+      if (action === 'approve') {
+        if (!application.applicantUid?.trim()) {
+          alert('신청자 UID가 없어 승인할 수 없습니다.');
+          return;
+        }
+        await approveCounselorApplication({
+          applicationId: application.id,
+          applicantUid: application.applicantUid,
+          personalInfo: application.personalInfo || {},
+          reviewerUid: user.uid,
+          reviewNotes: reviewMemo,
+        });
+      } else {
+        await rejectCounselorApplication({
+          applicationId: application.id,
+          reviewerUid: user.uid,
+          reviewNotes: reviewMemo,
+        });
+      }
+      setReviewTarget(null);
+      setReviewMemo('');
+      setShowModal(false);
       await loadApplications();
     } catch (e) {
-      console.error('승인 처리 오류:', e);
-      alert('승인 처리 중 오류가 발생했습니다.');
+      console.error('검토 처리 오류:', e);
+      alert('처리 중 오류가 발생했습니다.');
     } finally {
       setBusy(false);
     }
   };
 
-  const handleReject = async (application: CounselorApplication) => {
-    try {
-      const { db } = initializeFirebase();
-      if (!db) return;
-      setBusy(true);
-      await updateDoc(doc(db, 'counselorApplications', application.id), {
-        status: 'rejected',
-        reviewedAt: serverTimestamp(),
-        reviewerUid: user?.uid || null,
-      });
-      await loadApplications();
-    } catch (e) {
-      console.error('반려 처리 오류:', e);
-      alert('반려 처리 중 오류가 발생했습니다.');
-    } finally {
-      setBusy(false);
-    }
+  const handleApprove = (application: CounselorApplication) => {
+    openReviewModal(application, 'approve');
+  };
+
+  const handleReject = (application: CounselorApplication) => {
+    openReviewModal(application, 'reject');
   };
 
   const openModal = (application: CounselorApplication) => {
@@ -537,8 +527,8 @@ function CounselorVerificationPageContent() {
                   <>
                     <button
                       onClick={() => {
-                        handleApprove(selectedApplication);
                         setShowModal(false);
+                        handleApprove(selectedApplication);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
@@ -547,8 +537,8 @@ function CounselorVerificationPageContent() {
                     </button>
                     <button
                       onClick={() => {
-                        handleReject(selectedApplication);
                         setShowModal(false);
+                        handleReject(selectedApplication);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
@@ -568,6 +558,22 @@ function CounselorVerificationPageContent() {
           </div>
         )}
       </div>
+
+      <CounselorApplicationReviewModal
+        open={Boolean(reviewTarget)}
+        action={reviewTarget?.action ?? 'approve'}
+        applicantName={reviewTarget?.application.personalInfo?.name ?? ''}
+        memo={reviewMemo}
+        busy={busy}
+        onMemoChange={setReviewMemo}
+        onConfirm={() => void confirmReview()}
+        onCancel={() => {
+          if (!busy) {
+            setReviewTarget(null);
+            setReviewMemo('');
+          }
+        }}
+      />
     </main>
   );
 }
