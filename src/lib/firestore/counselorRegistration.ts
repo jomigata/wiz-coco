@@ -1,5 +1,5 @@
 /**
- * 상담사 전환·프로필 저장 (Firestore 클라이언트)
+ * 상담사 프로필 저장 (승인 후 수정용)
  */
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
@@ -97,37 +97,104 @@ export async function loadCounselorProfile(uid: string): Promise<{
   };
 }
 
-async function writeCounselorDocuments(
+async function writeCounselorProfileFields(
   uid: string,
   email: string,
   profile: CounselorProfileData,
-  options: { switchRole: boolean },
+  options: { profileComplete: boolean },
 ) {
   const db = getDb();
-  const userRef = doc(db, 'users', uid);
   const now = new Date().toISOString();
 
-  const userPayload: Record<string, unknown> = {
-    counselorProfileComplete: true,
-    counselorProfile: profile,
-    name: profile.name,
-    displayName: profile.name,
-    phoneNumber: profile.phone,
-    email: profile.email || email,
-    specialties: profile.specialization.join(', '),
-    practiceType: profile.practiceType,
-    organizationName: profile.organizationName,
-    reportDisplayName: profile.reportDisplayName,
-    counselorUpdatedAt: now,
-    updatedAt: serverTimestamp(),
-  };
+  await setDoc(
+    doc(db, 'users', uid),
+    {
+      counselorProfileComplete: options.profileComplete,
+      counselorProfile: profile,
+      name: profile.name,
+      displayName: profile.name,
+      phoneNumber: profile.phone,
+      email: profile.email || email,
+      specialties: profile.specialization.join(', '),
+      practiceType: profile.practiceType,
+      organizationName: profile.organizationName,
+      reportDisplayName: profile.reportDisplayName,
+      counselorUpdatedAt: now,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
-  if (options.switchRole) {
-    userPayload.role = 'counselor';
-    userPayload.counselorRegisteredAt = now;
+  const { auth } = initializeFirebase();
+  if (auth?.currentUser && profile.name) {
+    try {
+      await updateProfile(auth.currentUser, { displayName: profile.name });
+    } catch {
+      // ignore
+    }
   }
+}
 
-  await setDoc(userRef, userPayload, { merge: true });
+/** 승인 전 신청용 — users 문서에 초안만 저장 (role 변경 없음) */
+export async function saveCounselorProfileDraft(
+  uid: string,
+  email: string,
+  input: CounselorProfileData,
+): Promise<void> {
+  const profile = normalizeProfile(input, email);
+  const validationError = validateCounselorProfile(profile);
+  if (validationError) throw new Error(validationError);
+  await writeCounselorProfileFields(uid, email, profile, { profileComplete: false });
+}
+
+/** 관리자 승인 — role·프로필·counselors 문서 반영 */
+export async function finalizeCounselorApproval(
+  uid: string,
+  rawPersonalInfo: Partial<CounselorProfileData> | Record<string, unknown>,
+): Promise<void> {
+  const email = String(rawPersonalInfo.email || '');
+  const profile = normalizeProfile(
+    {
+      name: String(rawPersonalInfo.name || ''),
+      email,
+      phone: String(rawPersonalInfo.phone || ''),
+      specialization: Array.isArray(rawPersonalInfo.specialization)
+        ? rawPersonalInfo.specialization.map(String)
+        : [],
+      experience: Number(rawPersonalInfo.experience ?? 0),
+      education: String(rawPersonalInfo.education || ''),
+      bio: String(rawPersonalInfo.bio || ''),
+      license: String(rawPersonalInfo.license || ''),
+      practiceType: rawPersonalInfo.practiceType === 'organization' ? 'organization' : 'solo',
+      organizationName: String(rawPersonalInfo.organizationName || ''),
+      reportDisplayName: String(
+        rawPersonalInfo.reportDisplayName || rawPersonalInfo.name || '',
+      ),
+    },
+    email,
+  );
+
+  const db = getDb();
+  await setDoc(
+    doc(db, 'users', uid),
+    {
+      role: 'counselor',
+      roleUpdatedAt: serverTimestamp(),
+      counselorProfileComplete: true,
+      counselorProfile: profile,
+      name: profile.name,
+      displayName: profile.name,
+      phoneNumber: profile.phone,
+      email: profile.email || email,
+      specialties: profile.specialization.join(', '),
+      practiceType: profile.practiceType,
+      organizationName: profile.organizationName,
+      reportDisplayName: profile.reportDisplayName,
+      counselorUpdatedAt: new Date().toISOString(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
   await setDoc(
     doc(db, 'counselors', uid),
@@ -143,36 +210,16 @@ async function writeCounselorDocuments(
       phoneNumber: profile.phone,
       practiceType: profile.practiceType,
       organizationName: profile.organizationName,
+      reportDisplayName: profile.reportDisplayName,
       isActive: true,
-      updatedAt: now,
+      approvedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
     { merge: true },
   );
-
-  const { auth } = initializeFirebase();
-  if (auth?.currentUser && profile.name) {
-    try {
-      await updateProfile(auth.currentUser, { displayName: profile.name });
-    } catch {
-      // displayName 동기화 실패는 무시
-    }
-  }
 }
 
-/** 일반 회원 → 상담사 전환 */
-export async function switchToCounselor(
-  uid: string,
-  email: string,
-  input: CounselorProfileData,
-): Promise<void> {
-  const profile = normalizeProfile(input, email);
-  const validationError = validateCounselorProfile(profile);
-  if (validationError) throw new Error(validationError);
-
-  await writeCounselorDocuments(uid, email, profile, { switchRole: true });
-}
-
-/** 기존 상담사 프로필 수정 */
+/** 승인된 상담사 프로필 수정 */
 export async function updateCounselorProfile(
   uid: string,
   email: string,
@@ -182,5 +229,26 @@ export async function updateCounselorProfile(
   const validationError = validateCounselorProfile(profile);
   if (validationError) throw new Error(validationError);
 
-  await writeCounselorDocuments(uid, email, profile, { switchRole: false });
+  await writeCounselorProfileFields(uid, email, profile, { profileComplete: true });
+
+  const db = getDb();
+  await setDoc(
+    doc(db, 'counselors', uid),
+    {
+      id: uid,
+      email: profile.email || email,
+      name: profile.name,
+      specialization: profile.specialization,
+      experience: profile.experience,
+      education: profile.education,
+      bio: profile.bio,
+      license: profile.license,
+      phoneNumber: profile.phone,
+      practiceType: profile.practiceType,
+      organizationName: profile.organizationName,
+      isActive: true,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
 }

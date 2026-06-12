@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';import Link from 'next/link';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { FaUserCheck, FaSearch, FaFilter, FaCheck, FaTimes, FaEye, FaFileAlt, FaGraduationCap, FaCertificate, FaPlus, FaSave, FaEdit } from 'react-icons/fa';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { shouldShowAdminMenu } from '@/utils/roleUtils';
 import RoleGuard from '@/components/RoleGuard';
 import { initializeFirebase } from '@/lib/firebase';
 import { collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { finalizeCounselorApproval } from '@/lib/firestore/counselorRegistration';
 
 interface CounselorApplication {
   id: string;
@@ -157,10 +159,10 @@ function CounselorVerificationPageContent() {
         reviewedAt: serverTimestamp(),
         reviewerUid: user?.uid || null,
       });
-      await updateDoc(doc(db, 'users', application.applicantUid), {
-        role: 'counselor',
-        roleUpdatedAt: serverTimestamp(),
-      });
+      await finalizeCounselorApproval(
+        application.applicantUid,
+        application.personalInfo || {},
+      );
       await loadApplications();
     } catch (e) {
       console.error('승인 처리 오류:', e);
@@ -200,7 +202,8 @@ function CounselorVerificationPageContent() {
 
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden"><div className="h-20"></div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
+<div className="h-20"></div>
       
       {/* Background effects */}
       <div className="absolute inset-0">

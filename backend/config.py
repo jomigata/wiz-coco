@@ -43,3 +43,6 @@ BOOTSTRAP_ADMIN_EMAILS = [
     if x.strip()
 ]
 BOOTSTRAP_COUNSELOR_EMAILS = [x.strip().lower() for x in os.getenv("BOOTSTRAP_COUNSELOR_EMAILS", "").split(",") if x.strip()]
+
+# 상담사 전환 승인 요청 알림 수신
+COUNSELOR_ADMIN_NOTIFY_EMAIL = os.getenv("COUNSELOR_ADMIN_NOTIFY_EMAIL", "jomigata@gmail.com").strip().lower()

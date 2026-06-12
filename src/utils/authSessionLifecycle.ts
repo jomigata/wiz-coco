@@ -474,10 +474,14 @@ export function evaluateAuthSessionOnStartup(): boolean {
 
   if (isPageRefreshing()) {
     sessionStorage.removeItem(PAGE_REFRESHING_KEY);
-    if (hasAuthenticatedTabSession()) {
-      touchAuthHeartbeat();
-      return false;
+    try {
+      localStorage.removeItem(AUTH_CLEARED_FLAG);
+    } catch {
+      // ignore
     }
+    tryRestoreAuthenticatedTabSession();
+    touchAuthHeartbeat();
+    return false;
   }
 
   const hasTabSession = hasAuthenticatedTabSession();
@@ -527,11 +531,7 @@ export function initAuthSessionLifecycle(): () => void {
 
   const handleBeforeUnload = () => {
     if (shouldSkipAuthClear()) return;
-    if (keyboardRefresh || sessionStorage.getItem(PAGE_REFRESHING_KEY) === 'true') {
-      sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
-      return;
-    }
-    // beforeunload는 뒤로가기·내부 이동에서도 자주 발생 → 세션 삭제는 pagehide에만 수행
+    sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
   };
 
   const handlePageHide = (event: PageTransitionEvent) => {

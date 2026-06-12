@@ -6,6 +6,7 @@ from flask_cors import CORS
 from config import FLASK_ENV, SECRET_KEY
 from routes.assessments import bp as assessments_bp
 from routes.auth import bp as auth_bp
+from routes.counselor_applications import bp as counselor_applications_bp
 from routes.results import bp as results_bp
 
 
@@ -16,6 +17,7 @@ def create_app():
 
     app.register_blueprint(assessments_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(counselor_applications_bp)
     app.register_blueprint(results_bp)
 
     @app.route("/", methods=["GET"])

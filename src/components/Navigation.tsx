@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
 import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu } from '@/utils/roleUtils';
+import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -217,6 +218,7 @@ export default function Navigation() {
   };
   const userEmail = user?.email || sessionFirebaseUser?.email || '';
   const userRole = user?.role || 'user';
+  const pendingCounselorCount = usePendingCounselorApplicationsCount(userRole);
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
   const showPsychologyTestsMenu = shouldShowPsychologyTestsMenu(userRole);
 
@@ -493,6 +495,7 @@ export default function Navigation() {
       items: [
         { name: "사용자 관리", href: "/admin/user-management", description: "상담사/내담자 통합 관리", icon: "👥" },
         { name: "상담사 관리", href: "/admin/counselor-management", description: "상담사 인증, 자격 검증, 프로필 관리", icon: "👨‍⚕️" },
+        { name: "상담사 인증 승인", href: "/admin/counselor-verification", description: "상담사 전환·지원 신청 검토", icon: "✅" },
         { name: "상담 관리", href: "/admin/counseling-management", description: "상담 일정, 진행 상황, 결과 관리", icon: "💭" },
         { name: "심리검사 관리", href: "/admin/psychological-tests", description: "검사 생성, 배포, 결과 분석", icon: "🧠" },
         { name: "콘텐츠 관리", href: "/admin/content-management", description: "상담 프로그램, 공지사항, 자료 관리", icon: "📚" }
@@ -1732,7 +1735,7 @@ export default function Navigation() {
                       <div className="relative">
                         <Link
                           href="/admin"
-                          className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
+                          className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                             activeItem === "/admin" || activeItem.startsWith("/admin/")
                               ? "text-white bg-blue-600 border-white"
                               : isAdminOpen
@@ -1744,6 +1747,11 @@ export default function Navigation() {
                           onMouseLeave={scheduleClose}
                         >
                           🔧 관리자
+                          {pendingCounselorCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                              {pendingCounselorCount > 99 ? '99+' : pendingCounselorCount}
+                            </span>
+                          )}
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 20 20"
@@ -1807,6 +1815,11 @@ export default function Navigation() {
                                           <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                               <span className="text-base font-medium text-white truncate">{item.name}</span>
+                                              {item.href === '/admin/counselor-verification' && pendingCounselorCount > 0 && (
+                                                <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                                                  {pendingCounselorCount > 99 ? '99+' : pendingCounselorCount}
+                                                </span>
+                                              )}
                                             </div>
                                             <div className="text-sm text-blue-300 truncate">{item.description}</div>
                                           </div>

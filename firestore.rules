@@ -19,24 +19,10 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.resource.data.role == 'user';
 
-      function isValidCounselorSelfUpgrade() {
-        return resource.data.role == 'user'
-          && request.resource.data.role == 'counselor'
-          && request.resource.data.counselorProfileComplete == true
-          && request.resource.data.counselorProfile is map
-          && request.resource.data.counselorProfile.name is string
-          && request.resource.data.counselorProfile.name.size() >= 1
-          && request.resource.data.counselorProfile.phone is string
-          && request.resource.data.counselorProfile.phone.size() >= 1;
-      }
-
-      // 본인 업데이트는 role 변경 금지 (단, user → counselor 자가 등록은 허용)
+      // 본인 업데이트는 role 변경 금지
       allow update: if request.auth != null
         && request.auth.uid == userId
-        && (
-          request.resource.data.role == resource.data.role
-          || isValidCounselorSelfUpgrade()
-        );
+        && request.resource.data.role == resource.data.role;
 
       // admin은 어떤 문서든 수정 가능
       allow update, delete: if isAdmin();
@@ -44,10 +30,17 @@ service cloud.firestore {
 
     // 상담사 공개 프로필 - counselors (내담자 연결 시 조회)
     match /counselors/{counselorId} {
+      function isCounselorAdmin() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+
       allow read: if request.auth != null;
-      allow create, update: if request.auth != null
-        && counselorId == request.auth.uid
-        && request.resource.data.id == request.auth.uid;
+      allow create, update: if request.auth != null && (
+        (counselorId == request.auth.uid && request.resource.data.id == request.auth.uid)
+        || isCounselorAdmin()
+      );
       allow delete: if false;
     }
 
