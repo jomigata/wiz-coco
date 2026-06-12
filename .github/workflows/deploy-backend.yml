@@ -107,20 +107,27 @@ jobs:
             echo "   필요 Secrets: SMTP_HOST, SMTP_USER, SMTP_PASSWORD (선택: SMTP_PORT, MAIL_FROM, COUNSELOR_ADMIN_NOTIFY_EMAIL)"
           fi
 
-          gcloud run deploy "${{ env.SERVICE_NAME }}" \
-            --image "$IMAGE" \
-            --region "${{ env.REGION }}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --port 5000 \
-            --min-instances=0 \
-            --max-instances=3 \
-            --memory=512Mi \
-            --cpu=1 \
-            --concurrency=80 \
-            --cpu-throttling \
-            --update-env-vars "${ENV_VARS}" \
+          # Cloud Run에 SMTP_PASSWORD가 Secret Manager 참조로 등록된 경우 env literal과 충돌 → 제거
+          GCLOUD_FLAGS=(
+            --image "$IMAGE"
+            --region "${{ env.REGION }}"
+            --platform managed
+            --allow-unauthenticated
+            --port 5000
+            --min-instances=0
+            --max-instances=3
+            --memory=512Mi
+            --cpu=1
+            --concurrency=80
+            --cpu-throttling
+            --update-env-vars "${ENV_VARS}"
             --project "${PROJECT_ID}"
+          )
+          if [ -n "${SMTP_PASSWORD}" ]; then
+            GCLOUD_FLAGS+=(--remove-secrets=SMTP_PASSWORD)
+          fi
+
+          gcloud run deploy "${{ env.SERVICE_NAME }}" "${GCLOUD_FLAGS[@]}"
 
       - name: 🔗 Output service URL
         run: |
