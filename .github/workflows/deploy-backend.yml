@@ -75,11 +75,38 @@ jobs:
 
       # PERMISSION_DENIED: artifactregistry.repositories.downloadArtifacts → 서비스 계정에 roles/artifactregistry.reader 부여 (backend/README.md 참고)
       - name: 🚀 Deploy to Cloud Run
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          COUNSELOR_ADMIN_NOTIFY_EMAIL: ${{ secrets.COUNSELOR_ADMIN_NOTIFY_EMAIL }}
         run: |
           if [ -z "${PROJECT_ID}" ]; then
             echo "❌ GCP_PROJECT_ID secret가 설정되어 있지 않습니다."
             exit 1
           fi
+
+          ENV_VARS="FLASK_ENV=production"
+          if [ -n "${SMTP_HOST}" ]; then ENV_VARS="${ENV_VARS},SMTP_HOST=${SMTP_HOST}"; fi
+          if [ -n "${SMTP_PORT}" ]; then ENV_VARS="${ENV_VARS},SMTP_PORT=${SMTP_PORT}"; else ENV_VARS="${ENV_VARS},SMTP_PORT=587"; fi
+          if [ -n "${SMTP_USER}" ]; then ENV_VARS="${ENV_VARS},SMTP_USER=${SMTP_USER}"; fi
+          if [ -n "${SMTP_PASSWORD}" ]; then ENV_VARS="${ENV_VARS},SMTP_PASSWORD=${SMTP_PASSWORD}"; fi
+          if [ -n "${MAIL_FROM}" ]; then ENV_VARS="${ENV_VARS},MAIL_FROM=${MAIL_FROM}"; fi
+          if [ -n "${COUNSELOR_ADMIN_NOTIFY_EMAIL}" ]; then
+            ENV_VARS="${ENV_VARS},COUNSELOR_ADMIN_NOTIFY_EMAIL=${COUNSELOR_ADMIN_NOTIFY_EMAIL}"
+          else
+            ENV_VARS="${ENV_VARS},COUNSELOR_ADMIN_NOTIFY_EMAIL=jomigata@gmail.com"
+          fi
+
+          if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then
+            echo "✅ SMTP 환경 변수가 Cloud Run에 주입됩니다 (상담사 승인 알림 메일 활성화)."
+          else
+            echo "⚠️ SMTP GitHub Secrets 미설정 — 메일 발송 없이 API만 배포됩니다."
+            echo "   필요 Secrets: SMTP_HOST, SMTP_USER, SMTP_PASSWORD (선택: SMTP_PORT, MAIL_FROM, COUNSELOR_ADMIN_NOTIFY_EMAIL)"
+          fi
+
           gcloud run deploy "${{ env.SERVICE_NAME }}" \
             --image "$IMAGE" \
             --region "${{ env.REGION }}" \
@@ -92,6 +119,7 @@ jobs:
             --cpu=1 \
             --concurrency=80 \
             --cpu-throttling \
+            --update-env-vars "${ENV_VARS}" \
             --project "${PROJECT_ID}"
 
       - name: 🔗 Output service URL

@@ -112,6 +112,22 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "submittedAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "counselorCodes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "codeNumber", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "counselorCodes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "codeName", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

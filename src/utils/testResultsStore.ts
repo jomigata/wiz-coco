@@ -1,5 +1,6 @@
 import { initializeFirebase } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { fetchCounselorConnection } from '@/utils/counselorConnectionClient';
 
 export type StoredTestResult = {
   /** Firebase Auth UID (로그인 사용자만 저장) */
@@ -39,12 +40,10 @@ export async function saveUserTestResultToFirestore(input: Omit<StoredTestResult
   let counselorCode: string | undefined = input.counselorCode;
   if (!counselorId) {
     try {
-      const res = await fetch(`/api/verify-counselor-code?clientId=${encodeURIComponent(u.uid)}`);
-      const json = (await res.json().catch(() => null)) as any;
-      const conn = json?.success ? json?.data : null;
-      if (conn?.isConnected && conn?.counselorId && conn?.sharedData?.testResults !== false) {
-        counselorId = String(conn.counselorId);
-        if (conn.counselorCode) counselorCode = String(conn.counselorCode);
+      const conn = await fetchCounselorConnection(u.uid);
+      if (conn.isConnected && conn.counselorId && conn.sharedData?.testResults !== false) {
+        counselorId = conn.counselorId;
+        if (conn.counselorCode) counselorCode = conn.counselorCode;
       }
     } catch {
       // ignore

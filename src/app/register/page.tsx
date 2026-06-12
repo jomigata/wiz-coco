@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache, useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { connectCounselorByCode } from '@/utils/counselorConnectionClient';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
 
 const LoadingRegister = () => (
@@ -74,21 +75,10 @@ const RegisterContent = () => {
 
       if (counselorCode.trim()) {
         try {
-          const verifyResponse = await fetch('/api/verify-counselor-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientId: result.user.uid,
-              counselorCode: counselorCode.trim(),
-            }),
-          });
-          const verifyResult = await verifyResponse.json();
-
-          if (verifyResult.success) {
-            primeFirebaseAuthSessionCache(result.user);
-            router.push('/mypage?connected=true');
-            return;
-          }
+          await connectCounselorByCode(result.user.uid, counselorCode.trim());
+          primeFirebaseAuthSessionCache(result.user);
+          router.push('/mypage?connected=true');
+          return;
         } catch {
           // 상담사 연결 실패해도 가입은 완료
         }

@@ -15,13 +15,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 인증코드로 상담사 찾기
-    const codesQuery = query(
-      collection(db, 'counselorCodes'),
-      where('codeName', '==', counselorCode),
-      where('isActive', '==', true)
+    // 인증코드로 상담사 찾기 (8자리 codeNumber 또는 codeName)
+    let codesSnapshot = await getDocs(
+      query(
+        collection(db, 'counselorCodes'),
+        where('codeNumber', '==', counselorCode.trim()),
+        where('isActive', '==', true),
+      ),
     );
-    const codesSnapshot = await getDocs(codesQuery);
+    if (codesSnapshot.empty) {
+      codesSnapshot = await getDocs(
+        query(
+          collection(db, 'counselorCodes'),
+          where('codeName', '==', counselorCode.trim()),
+          where('isActive', '==', true),
+        ),
+      );
+    }
 
     if (codesSnapshot.empty) {
       return NextResponse.json(
@@ -32,6 +42,7 @@ export async function POST(request: NextRequest) {
 
     const counselorCodeData = codesSnapshot.docs[0].data();
     const counselorId = counselorCodeData.counselorId;
+    const isSelfConnection = clientId === counselorId;
 
     // 이미 연결된 관계가 있는지 확인
     const existingRelationQuery = query(
@@ -53,7 +64,7 @@ export async function POST(request: NextRequest) {
     const relationData: Omit<ClientCounselorRelation, 'id'> = {
       clientId,
       counselorId,
-      counselorCode,
+      counselorCode: String(counselorCodeData.codeNumber || counselorCode.trim()),
       assignedAt: new Date().toISOString(),
       isActive: true,
       sharedData: {
@@ -83,9 +94,12 @@ export async function POST(request: NextRequest) {
       data: {
         relationId: relationRef.id,
         counselorId,
-        counselorCode,
+        counselorCode: String(counselorCodeData.codeNumber || counselorCode.trim()),
         counselorInfo,
-        message: '상담사와 성공적으로 연결되었습니다.'
+        isSelfConnection,
+        message: isSelfConnection
+          ? '상담사 셀프 연결이 완료되었습니다.'
+          : '상담사와 성공적으로 연결되었습니다.'
       }
     });
 
