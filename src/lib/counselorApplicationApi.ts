@@ -45,3 +45,34 @@ export async function notifyAdminCounselorApplication(
     return { emailed: false };
   }
 }
+
+export async function notifyApplicantCounselorApplicationResult(params: {
+  applicantEmail: string;
+  applicantName: string;
+  approved: boolean;
+  reviewNotes?: string;
+}): Promise<{ emailed: boolean }> {
+  const token = await getCounselorToken();
+  if (!token) return { emailed: false };
+
+  try {
+    const res = await fetch(`${getBaseUrl()}/api/counselor-applications/notify-result`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        applicantEmail: params.applicantEmail,
+        applicantName: params.applicantName,
+        approved: params.approved,
+        reviewNotes: params.reviewNotes || '',
+      }),
+    });
+    if (!res.ok) return { emailed: false };
+    const data = (await res.json().catch(() => ({}))) as { emailed?: boolean };
+    return { emailed: Boolean(data.emailed) };
+  } catch {
+    return { emailed: false };
+  }
+}

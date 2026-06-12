@@ -81,3 +81,33 @@ def require_counselor(f):
         g.counselor_uid = uid
         return f(*args, **kwargs)
     return decorated
+
+
+def require_admin(f):
+    """관리자 전용 라우트."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        uid = get_bearer_uid()
+        if not uid:
+            return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
+        try:
+            db = get_firestore()
+            user_ref = db.collection(USERS_COLLECTION).document(uid)
+            doc = user_ref.get()
+            role = (doc.to_dict() or {}).get("role") if doc.exists else None
+
+            if role != "admin":
+                email = get_bearer_email_optional()
+                if email:
+                    email = email.strip().lower()
+                if email and email in BOOTSTRAP_ADMIN_EMAILS:
+                    user_ref.set({"role": "admin", "email": email}, merge=True)
+                    role = "admin"
+        except Exception:
+            role = None
+        if role != "admin":
+            return jsonify({"error": "Forbidden", "message": "Admin role required"}), 403
+        from flask import g
+        g.admin_uid = uid
+        return f(*args, **kwargs)
+    return decorated

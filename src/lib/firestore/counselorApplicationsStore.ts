@@ -27,11 +27,12 @@ export interface AdminCounselorApplicationRow {
   name: string;
   email: string;
   phone: string;
-  licenseNumber: string;
-  institution: string;
+  /** 기관명/회사명 */
+  organizationName: string;
   experience: number;
   specialization: string[];
-  education: string;
+  /** 활동 지역 */
+  region: string;
   status: AdminApplicationStatus;
   appliedDate: string;
   notes: string;
@@ -45,6 +46,7 @@ export interface CounselorApplicationRecord {
   applicantUid: string;
   personalInfo: CounselorProfileData;
   reviewNotes?: string;
+  reviewedAt?: string;
 }
 
 const COLLECTION = 'counselorApplications';
@@ -56,17 +58,20 @@ function getDb() {
 }
 
 function profileToPersonalInfo(profile: CounselorProfileData) {
+  const region = (profile.region || profile.education || '').trim();
+  const organizationName = (profile.organizationName || profile.license || '').trim();
   return {
     name: profile.name,
     email: profile.email,
     phone: profile.phone,
     specialization: profile.specialization,
     experience: profile.experience,
-    education: profile.education,
+    region,
+    education: region,
     bio: profile.bio,
-    license: profile.license,
+    license: '',
     practiceType: profile.practiceType,
-    organizationName: profile.organizationName,
+    organizationName,
     reportDisplayName: profile.reportDisplayName,
   };
 }
@@ -91,18 +96,34 @@ export function normalizeAdminApplicationStatus(status: unknown): AdminApplicati
   return 'pending';
 }
 
+function toReviewedAtKey(value: unknown): string {
+  if (!value) return '';
+  const d =
+    typeof (value as { toDate?: () => Date })?.toDate === 'function'
+      ? (value as { toDate: () => Date }).toDate()
+      : value instanceof Date
+        ? value
+        : typeof value === 'string'
+          ? new Date(value)
+          : null;
+  if (!d || Number.isNaN(d.getTime())) return '';
+  return String(d.getTime());
+}
+
 function mapPersonalInfo(raw: Partial<CounselorProfileData>): CounselorProfileData {
+  const region = String(raw.region || raw.education || '');
   return {
     name: String(raw.name || ''),
     email: String(raw.email || ''),
     phone: String(raw.phone || ''),
     specialization: Array.isArray(raw.specialization) ? raw.specialization.map(String) : [],
     experience: Number(raw.experience ?? 0),
-    education: String(raw.education || ''),
+    region,
+    education: region,
     bio: String(raw.bio || ''),
     license: String(raw.license || ''),
     practiceType: raw.practiceType === 'organization' ? 'organization' : 'solo',
-    organizationName: String(raw.organizationName || ''),
+    organizationName: String(raw.organizationName || raw.license || ''),
     reportDisplayName: String(raw.reportDisplayName || raw.name || ''),
   };
 }
@@ -115,11 +136,10 @@ function mapDocToAdminRow(id: string, data: Record<string, unknown>): AdminCouns
     name: personalInfo.name,
     email: personalInfo.email,
     phone: personalInfo.phone,
-    licenseNumber: personalInfo.license,
-    institution: personalInfo.organizationName,
+    organizationName: personalInfo.organizationName,
     experience: personalInfo.experience,
     specialization: personalInfo.specialization,
-    education: personalInfo.education,
+    region: personalInfo.region,
     status: normalizeAdminApplicationStatus(data.status),
     appliedDate: toDateString(data.submittedAt),
     notes: personalInfo.bio,
@@ -192,21 +212,8 @@ export async function getUserCounselorApplication(
     status: (data.status || 'pending') as CounselorApplicationStatus,
     applicantUid: String(data.applicantUid || uid),
     reviewNotes: typeof data.reviewNotes === 'string' ? data.reviewNotes : undefined,
-    personalInfo: {
-      name: String(personalInfo.name || ''),
-      email: String(personalInfo.email || ''),
-      phone: String(personalInfo.phone || ''),
-      specialization: Array.isArray(personalInfo.specialization)
-        ? personalInfo.specialization.map(String)
-        : [],
-      experience: Number(personalInfo.experience ?? 0),
-      education: String(personalInfo.education || ''),
-      bio: String(personalInfo.bio || ''),
-      license: String(personalInfo.license || ''),
-      practiceType: personalInfo.practiceType === 'organization' ? 'organization' : 'solo',
-      organizationName: String(personalInfo.organizationName || ''),
-      reportDisplayName: String(personalInfo.reportDisplayName || personalInfo.name || ''),
-    },
+    reviewedAt: toReviewedAtKey(data.reviewedAt),
+    personalInfo: mapPersonalInfo(personalInfo),
   };
 }
 

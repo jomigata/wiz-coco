@@ -13,17 +13,20 @@ function getDb() {
 }
 
 function normalizeProfile(input: CounselorProfileData, email: string): CounselorProfileData {
+  const region = (input.region || input.education || '').trim();
+  const organizationName = (input.organizationName || input.license || '').trim();
   return {
     name: input.name.trim(),
     email: (input.email || email).trim(),
     phone: input.phone.trim(),
     specialization: input.specialization.filter(Boolean),
     experience: Math.max(0, Number(input.experience) || 0),
-    education: input.education.trim(),
+    region,
+    education: region,
     bio: input.bio.trim(),
-    license: input.license.trim(),
+    license: '',
     practiceType: input.practiceType === 'organization' ? 'organization' : 'solo',
-    organizationName: input.organizationName.trim(),
+    organizationName,
     reportDisplayName: (input.reportDisplayName || input.name).trim(),
   };
 }
@@ -31,9 +34,10 @@ function normalizeProfile(input: CounselorProfileData, email: string): Counselor
 export function validateCounselorProfile(profile: CounselorProfileData): string | null {
   if (!profile.name) return '이름을 입력해주세요.';
   if (!profile.phone) return '전화번호를 입력해주세요.';
+  if (!profile.region?.trim()) return '지역을 선택해주세요.';
   if (profile.specialization.length === 0) return '전문 분야를 최소 하나 이상 선택해주세요.';
   if (profile.practiceType === 'organization' && !profile.organizationName) {
-    return '조직/기관명을 입력해주세요.';
+    return '기관명/회사명을 입력해주세요.';
   }
   return null;
 }
@@ -53,6 +57,7 @@ export async function loadCounselorProfile(uid: string): Promise<{
   const stored = data.counselorProfile as Partial<CounselorProfileData> | undefined;
 
   if (stored && typeof stored === 'object') {
+    const region = String(stored.region || stored.education || '');
     return {
       role,
       profile: {
@@ -66,11 +71,12 @@ export async function loadCounselorProfile(uid: string): Promise<{
               .map((s) => s.trim())
               .filter(Boolean),
         experience: Number(stored.experience ?? 0),
-        education: String(stored.education || ''),
+        region,
+        education: region,
         bio: String(stored.bio || ''),
         license: String(stored.license || ''),
         practiceType: stored.practiceType === 'organization' ? 'organization' : 'solo',
-        organizationName: String(stored.organizationName || data.organizationName || ''),
+        organizationName: String(stored.organizationName || data.organizationName || stored.license || ''),
         reportDisplayName: String(stored.reportDisplayName || data.reportDisplayName || stored.name || ''),
       },
     };
@@ -87,6 +93,7 @@ export async function loadCounselorProfile(uid: string): Promise<{
         .map((s) => s.trim())
         .filter(Boolean),
       experience: 0,
+      region: '',
       education: '',
       bio: '',
       license: '',
@@ -162,11 +169,12 @@ export async function finalizeCounselorApproval(
         ? rawPersonalInfo.specialization.map(String)
         : [],
       experience: Number(rawPersonalInfo.experience ?? 0),
-      education: String(rawPersonalInfo.education || ''),
+      region: String(rawPersonalInfo.region || rawPersonalInfo.education || ''),
+      education: String(rawPersonalInfo.region || rawPersonalInfo.education || ''),
       bio: String(rawPersonalInfo.bio || ''),
       license: String(rawPersonalInfo.license || ''),
       practiceType: rawPersonalInfo.practiceType === 'organization' ? 'organization' : 'solo',
-      organizationName: String(rawPersonalInfo.organizationName || ''),
+      organizationName: String(rawPersonalInfo.organizationName || rawPersonalInfo.license || ''),
       reportDisplayName: String(
         rawPersonalInfo.reportDisplayName || rawPersonalInfo.name || '',
       ),
@@ -204,7 +212,8 @@ export async function finalizeCounselorApproval(
       name: profile.name,
       specialization: profile.specialization,
       experience: profile.experience,
-      education: profile.education,
+      region: profile.region,
+      education: profile.region,
       bio: profile.bio,
       license: profile.license,
       phoneNumber: profile.phone,
@@ -240,7 +249,8 @@ export async function updateCounselorProfile(
       name: profile.name,
       specialization: profile.specialization,
       experience: profile.experience,
-      education: profile.education,
+      region: profile.region,
+      education: profile.region,
       bio: profile.bio,
       license: profile.license,
       phoneNumber: profile.phone,

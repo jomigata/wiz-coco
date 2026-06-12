@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
+  COUNSELOR_REGIONS,
   COUNSELOR_SPECIALIZATIONS,
   EMPTY_COUNSELOR_PROFILE,
   type CounselorProfileData,
@@ -19,6 +20,7 @@ import {
   type CounselorApplicationStatus,
 } from '@/lib/firestore/counselorApplicationsStore';
 import { notifyAdminCounselorApplication } from '@/lib/counselorApplicationApi';
+import { markCounselorResultSeen } from '@/utils/counselorApplicationNotification';
 import { isCounselor, isAdmin } from '@/utils/roleUtils';
 
 const fieldCls =
@@ -44,6 +46,8 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [applicationId, setApplicationId] = useState('');
+  const [reviewedAt, setReviewedAt] = useState('');
   const [applicationStatus, setApplicationStatus] = useState<CounselorApplicationStatus | null>(null);
   const [adminReviewNotes, setAdminReviewNotes] = useState('');
   const [profile, setProfile] = useState<CounselorProfileData>({
@@ -55,7 +59,14 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const admin = isAdmin(role);
   const pending = applicationStatus === 'pending' || applicationStatus === 'under_review';
   const rejected = applicationStatus === 'rejected';
+  const hasResult = applicationStatus === 'approved' || rejected;
   const readOnlyForm = pending;
+
+  const markResultSeen = () => {
+    if (applicationId && reviewedAt && hasResult) {
+      markCounselorResultSeen(applicationId, reviewedAt);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +84,8 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         });
         setApplicationStatus(application?.status ?? null);
         setAdminReviewNotes(application?.reviewNotes ?? '');
+        setApplicationId(application?.id ?? '');
+        setReviewedAt(application?.reviewedAt ?? '');
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : '상담사 정보를 불러오지 못했습니다.');
@@ -86,6 +99,16 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
     };
   }, [uid, email]);
 
+  useEffect(() => {
+    if (!loading && applicationId && reviewedAt && hasResult) {
+      markCounselorResultSeen(applicationId, reviewedAt);
+    }
+  }, [loading, applicationId, reviewedAt, hasResult]);
+
+  useEffect(() => {
+    if (expanded) markResultSeen();
+  }, [expanded, applicationId, reviewedAt, hasResult]);
+
   const toggleSpecialization = (item: string, checked: boolean) => {
     if (readOnlyForm) return;
     setProfile((prev) => ({
@@ -94,6 +117,14 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         ? [...prev.specialization, item]
         : prev.specialization.filter((s) => s !== item),
     }));
+  };
+
+  const handleToggleExpanded = () => {
+    setExpanded((v) => {
+      const next = !v;
+      if (next) markResultSeen();
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,9 +146,12 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         setSuccess('상담사 정보가 저장되었습니다.');
       } else {
         await saveCounselorProfileDraft(uid, email, profile);
-        const applicationId = await submitCounselorApplication(uid, profile);
+        const newApplicationId = await submitCounselorApplication(uid, profile);
+        setApplicationId(newApplicationId);
+        setReviewedAt('');
         setApplicationStatus('pending');
-        const { emailed } = await notifyAdminCounselorApplication(applicationId, profile);
+        setAdminReviewNotes('');
+        const { emailed } = await notifyAdminCounselorApplication(newApplicationId, profile);
         setSuccess(
           emailed
             ? '상담사 전환 승인을 요청했습니다. 관리자 검토 후 이메일로 안내됩니다.'
@@ -145,13 +179,15 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
       ? '관리자 승인을 기다리는 중입니다.'
       : rejected
         ? '신청이 반려되었습니다. 내용을 수정해 다시 요청할 수 있습니다.'
-        : '승인 후 상담사 메뉴·내담자 연결 기능을 사용할 수 있습니다.';
+        : applicationStatus === 'approved'
+          ? '상담사 전환이 승인되었습니다.'
+          : '승인 후 상담사 메뉴·내담자 연결 기능을 사용할 수 있습니다.';
 
   return (
     <div className="pt-4 border-t border-white/10">
       <button
         type="button"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={handleToggleExpanded}
         className="w-full flex items-center justify-between gap-3 text-left group"
         aria-expanded={expanded}
       >
@@ -160,7 +196,14 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
             상담사 계정
           </p>
           {!expanded && (
-            <p className="text-blue-300 text-sm mt-0.5 truncate">{subtitle}</p>
+            <>
+              <p className="text-blue-300 text-sm mt-0.5 truncate">{subtitle}</p>
+              {adminReviewNotes && !counselor && hasResult && (
+                <p className="text-xs text-amber-200/90 mt-1 line-clamp-2">
+                  관리자 메모: {adminReviewNotes}
+                </p>
+              )}
+            </>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -177,6 +220,9 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
           {!counselor && rejected && (
             <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-300">반려됨</span>
           )}
+          {!counselor && applicationStatus === 'approved' && (
+            <span className="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-300">승인됨</span>
+          )}
           <svg
             className={`w-5 h-5 text-blue-300 transition-transform ${expanded ? 'rotate-180' : ''}`}
             fill="none"
@@ -192,7 +238,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         <div className="mt-4 space-y-4">
           <p className="text-blue-300 text-sm">{subtitle}</p>
 
-          {adminReviewNotes && !counselor && (pending || rejected || applicationStatus === 'approved') && (
+          {adminReviewNotes && !counselor && (pending || hasResult) && (
             <div
               className={`rounded-lg p-3 border text-sm ${
                 rejected
@@ -202,7 +248,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
                     : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-100'
               }`}
             >
-              <p className="text-xs font-medium mb-1 opacity-80">관리자 안내</p>
+              <p className="text-xs font-medium mb-1 opacity-80">관리자 메모</p>
               <p className="whitespace-pre-wrap">{adminReviewNotes}</p>
             </div>
           )}
@@ -260,12 +306,12 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
                 />
               </div>
               <div>
-                <label className={labelCls}>자격증 번호</label>
+                <label className={labelCls}>기관명/회사명</label>
                 <input
                   className={fieldCls}
-                  value={profile.license}
-                  onChange={(e) => setProfile((p) => ({ ...p, license: e.target.value }))}
-                  placeholder="상담 관련 자격증 (선택)"
+                  value={profile.organizationName}
+                  onChange={(e) => setProfile((p) => ({ ...p, organizationName: e.target.value }))}
+                  placeholder="소속 기관 또는 회사명 (선택)"
                   readOnly={readOnlyForm}
                 />
               </div>
@@ -289,28 +335,24 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
               </select>
             </div>
 
-            {profile.practiceType === 'organization' && (
-              <div>
-                <label className={labelCls}>조직/기관명 *</label>
-                <input
-                  className={fieldCls}
-                  value={profile.organizationName}
-                  onChange={(e) => setProfile((p) => ({ ...p, organizationName: e.target.value }))}
-                  placeholder="소속 기관 또는 센터명"
-                  readOnly={readOnlyForm}
-                />
-              </div>
-            )}
-
             <div>
-              <label className={labelCls}>학력</label>
-              <input
+              <label className={labelCls}>지역 *</label>
+              <select
                 className={fieldCls}
-                value={profile.education}
-                onChange={(e) => setProfile((p) => ({ ...p, education: e.target.value }))}
-                placeholder="예: OO대학교 상담심리학 석사"
-                readOnly={readOnlyForm}
-              />
+                value={profile.region}
+                onChange={(e) =>
+                  setProfile((p) => ({ ...p, region: e.target.value, education: e.target.value }))
+                }
+                disabled={readOnlyForm}
+                required
+              >
+                <option value="">지역을 선택하세요</option>
+                {COUNSELOR_REGIONS.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

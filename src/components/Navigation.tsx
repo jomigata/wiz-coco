@@ -7,6 +7,7 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
 import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu } from '@/utils/roleUtils';
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
+import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
 import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -217,8 +218,10 @@ export default function Navigation() {
     navigateTo('/mypage?tab=in-progress');
   };
   const userEmail = user?.email || sessionFirebaseUser?.email || '';
+  const userUid = user?.uid || sessionFirebaseUser?.uid || '';
   const userRole = user?.role || 'user';
   const pendingCounselorCount = usePendingCounselorApplicationsCount(userRole);
+  const counselorResultCount = useCounselorApplicationNotificationCount(userUid, userRole);
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
   const showPsychologyTestsMenu = shouldShowPsychologyTestsMenu(userRole);
 
@@ -1854,7 +1857,7 @@ export default function Navigation() {
                     <div className="relative">
                       <Link
                         href="/mypage"
-                        className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
+                        className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/") || activeItem.startsWith("/mypage?")
                             ? "text-white bg-blue-600 border-white"
                             : isDropdownOpen
@@ -1866,6 +1869,11 @@ export default function Navigation() {
                         onMouseLeave={scheduleClose}
                       >
                         👤 마이페이지
+                        {counselorResultCount > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                            {counselorResultCount > 99 ? '99+' : counselorResultCount}
+                          </span>
+                        )}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"
@@ -1927,7 +1935,7 @@ export default function Navigation() {
                                   { name: "멤버십 관리", href: "/mypage?tab=membership", description: "구독 플랜 및 결제 관리", icon: "⭐" },
                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
                                   { name: "삭제된 코드", href: "/mypage?tab=deleted", description: "삭제된 테스트 코드 복구", icon: "📋" },
-                                  { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️" }
+                                  { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️", badge: counselorResultCount }
                                 ].map((item, index) => (
                                   <Link
                                     key={item.name}
@@ -1943,7 +1951,14 @@ export default function Navigation() {
                                       {item.icon}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-white truncate">{item.name}</div>
+                                      <div className="font-medium text-white truncate flex items-center gap-2">
+                                        {item.name}
+                                        {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
+                                          <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none shrink-0">
+                                            {item.badge > 99 ? '99+' : item.badge}
+                                          </span>
+                                        )}
+                                      </div>
                                       <div className="text-xs text-green-300 truncate">{item.description}</div>
                                     </div>
                                     <svg 
@@ -2561,8 +2576,13 @@ export default function Navigation() {
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
                 <div className="space-y-2 pt-4 border-t border-white/20">
-                  <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide">
+                  <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide flex items-center gap-2">
                     👤 마이페이지
+                    {counselorResultCount > 0 && (
+                      <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                        {counselorResultCount > 99 ? '99+' : counselorResultCount}
+                      </span>
+                    )}
                   </div>
                   <Link
                     href="/mypage"

@@ -13,14 +13,14 @@ import {
   rejectCounselorApplication,
   type AdminCounselorApplicationRow,
 } from '@/lib/firestore/counselorApplicationsStore';
+import { notifyApplicantCounselorApplicationResult } from '@/lib/counselorApplicationApi';
 
 type SortKey =
   | 'appliedDate'
   | 'name'
   | 'email'
-  | 'licenseNumber'
-  | 'institution'
-  | 'education'
+  | 'organizationName'
+  | 'region'
   | 'specialization'
   | 'experience'
   | 'status';
@@ -47,14 +47,11 @@ function sortApplications(
       case 'email':
         cmp = a.email.localeCompare(b.email, 'ko');
         break;
-      case 'licenseNumber':
-        cmp = a.licenseNumber.localeCompare(b.licenseNumber, 'ko');
+      case 'organizationName':
+        cmp = a.organizationName.localeCompare(b.organizationName, 'ko');
         break;
-      case 'institution':
-        cmp = a.institution.localeCompare(b.institution, 'ko');
-        break;
-      case 'education':
-        cmp = a.education.localeCompare(b.education, 'ko');
+      case 'region':
+        cmp = a.region.localeCompare(b.region, 'ko');
         break;
       case 'specialization':
         cmp = a.specialization.join(', ').localeCompare(b.specialization.join(', '), 'ko');
@@ -129,9 +126,8 @@ function CounselorManagementPageContent() {
       const blob = [
         app.name,
         app.email,
-        app.licenseNumber,
-        app.institution,
-        app.education,
+        app.organizationName,
+        app.region,
         app.specialization.join(' '),
         app.applicantUid,
       ]
@@ -187,6 +183,8 @@ function CounselorManagementPageContent() {
     if (!reviewTarget || !user?.uid) return;
     setBusy(true);
     try {
+      const notifyResults: Array<{ email: string; name: string; approved: boolean }> = [];
+
       if (reviewTarget.mode === 'single') {
         const app = reviewTarget.application;
         if (reviewTarget.action === 'approve') {
@@ -201,11 +199,21 @@ function CounselorManagementPageContent() {
             reviewerUid: user.uid,
             reviewNotes: reviewMemo,
           });
+          notifyResults.push({
+            email: app.email,
+            name: app.name,
+            approved: true,
+          });
         } else {
           await rejectCounselorApplication({
             applicationId: app.id,
             reviewerUid: user.uid,
             reviewNotes: reviewMemo,
+          });
+          notifyResults.push({
+            email: app.email,
+            name: app.name,
+            approved: false,
           });
         }
       } else {
@@ -221,15 +229,37 @@ function CounselorManagementPageContent() {
               reviewerUid: user.uid,
               reviewNotes: reviewMemo,
             });
+            notifyResults.push({
+              email: app.email,
+              name: app.name,
+              approved: true,
+            });
           } else {
             await rejectCounselorApplication({
               applicationId: app.id,
               reviewerUid: user.uid,
               reviewNotes: reviewMemo,
             });
+            notifyResults.push({
+              email: app.email,
+              name: app.name,
+              approved: false,
+            });
           }
         }
       }
+
+      await Promise.all(
+        notifyResults.map((item) =>
+          notifyApplicantCounselorApplicationResult({
+            applicantEmail: item.email,
+            applicantName: item.name,
+            approved: item.approved,
+            reviewNotes: reviewMemo,
+          }),
+        ),
+      );
+
       closeReviewModal();
       setShowModal(false);
       setSelectedIds([]);
@@ -368,7 +398,7 @@ function CounselorManagementPageContent() {
               <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
-                placeholder="이름 · 이메일 · 자격증 · 소속 · 학력 · 분야 검색"
+                placeholder="이름 · 이메일 · 기관명 · 지역 · 분야 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
@@ -451,24 +481,16 @@ function CounselorManagementPageContent() {
                         className="min-w-[8rem] px-2 py-2"
                       />
                       <SortableTableHeader
-                        label="자격증 번호"
-                        sortKey="licenseNumber"
+                        label="기관명/회사명"
+                        sortKey="organizationName"
                         activeKey={sortKey}
                         order={sortOrder}
                         onSort={handleSort}
                         className="hidden min-w-[6rem] px-2 py-2 lg:table-cell"
                       />
                       <SortableTableHeader
-                        label="소속"
-                        sortKey="institution"
-                        activeKey={sortKey}
-                        order={sortOrder}
-                        onSort={handleSort}
-                        className="hidden min-w-[6rem] px-2 py-2 lg:table-cell"
-                      />
-                      <SortableTableHeader
-                        label="학력"
-                        sortKey="education"
+                        label="지역"
+                        sortKey="region"
                         activeKey={sortKey}
                         order={sortOrder}
                         onSort={handleSort}
@@ -528,14 +550,11 @@ function CounselorManagementPageContent() {
                         <td className="max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={application.email}>
                           {application.email}
                         </td>
-                        <td className="max-w-[8rem] truncate px-2 py-2 text-left font-mono text-sm text-slate-400" title={application.licenseNumber}>
-                          {application.licenseNumber}
+                        <td className="hidden max-w-[8rem] truncate px-2 py-2 text-left text-sm text-slate-300 lg:table-cell" title={application.organizationName}>
+                          {application.organizationName || '-'}
                         </td>
-                        <td className="hidden max-w-[8rem] truncate px-2 py-2 text-left text-sm text-slate-300 lg:table-cell" title={application.institution}>
-                          {application.institution}
-                        </td>
-                        <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 xl:table-cell" title={application.education}>
-                          {application.education}
+                        <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 xl:table-cell" title={application.region}>
+                          {application.region || '-'}
                         </td>
                         <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 md:table-cell" title={application.specialization.join(', ')}>
                           {application.specialization.join(', ') || '-'}
@@ -620,12 +639,12 @@ function CounselorManagementPageContent() {
                     <p className="text-white">{selectedApplication.phone}</p>
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm">자격증 번호</label>
-                    <p className="text-white">{selectedApplication.licenseNumber}</p>
+                    <label className="text-slate-300 text-sm">기관명/회사명</label>
+                    <p className="text-white">{selectedApplication.organizationName || '-'}</p>
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm">소속 기관</label>
-                    <p className="text-white">{selectedApplication.institution}</p>
+                    <label className="text-slate-300 text-sm">지역</label>
+                    <p className="text-white">{selectedApplication.region || '-'}</p>
                   </div>
                   <div>
                     <label className="text-slate-300 text-sm">경력</label>
@@ -643,11 +662,6 @@ function CounselorManagementPageContent() {
                         : '-'}
                     </p>
                   </div>
-                </div>
-                
-                <div>
-                  <label className="text-slate-300 text-sm">학력</label>
-                  <p className="text-white">{selectedApplication.education || '-'}</p>
                 </div>
                 
                 <div>
@@ -740,7 +754,7 @@ function CounselorManagementPageContent() {
                       <tr>
                         <th className="px-2 py-2 text-left text-xs font-medium text-slate-400">이름</th>
                         <th className="min-w-[8rem] px-2 py-2 text-left text-xs font-medium text-slate-400">이메일</th>
-                        <th className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 sm:table-cell">소속</th>
+                        <th className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 sm:table-cell">기관명</th>
                         <th className="hidden px-2 py-2 text-left text-xs font-medium text-slate-400 md:table-cell">전문분야</th>
                         <th className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">경력</th>
                         <th className="px-2 py-2 text-center text-xs font-medium text-slate-400">작업</th>
@@ -755,8 +769,8 @@ function CounselorManagementPageContent() {
                             <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={c.email}>
                               {c.email}
                             </td>
-                            <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:table-cell" title={c.institution}>
-                              {c.institution}
+                            <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:table-cell" title={c.organizationName}>
+                              {c.organizationName || '-'}
                             </td>
                             <td className="hidden max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-300 md:table-cell" title={c.specialization.join(', ')}>
                               {c.specialization.join(', ')}

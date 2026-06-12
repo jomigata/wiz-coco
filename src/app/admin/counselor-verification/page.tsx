@@ -14,6 +14,7 @@ import {
   listAllCounselorApplications,
   rejectCounselorApplication,
 } from '@/lib/firestore/counselorApplicationsStore';
+import { notifyApplicantCounselorApplicationResult } from '@/lib/counselorApplicationApi';
 
 interface CounselorApplication {
   id: string;
@@ -28,7 +29,9 @@ interface CounselorApplication {
     phone?: string;
     specialization?: string[];
     experience?: number;
+    region?: string;
     education?: string;
+    organizationName?: string;
     bio?: string;
   };
   documents?: {
@@ -161,6 +164,12 @@ function CounselorVerificationPageContent() {
           reviewNotes: reviewMemo,
         });
       }
+      await notifyApplicantCounselorApplicationResult({
+        applicantEmail: application.personalInfo?.email || '',
+        applicantName: application.personalInfo?.name || '',
+        approved: action === 'approve',
+        reviewNotes: reviewMemo,
+      });
       setReviewTarget(null);
       setReviewMemo('');
       setShowModal(false);
@@ -319,11 +328,11 @@ function CounselorVerificationPageContent() {
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-red-200">
                   <FaGraduationCap className="w-4 h-4" />
-                  <span className="text-sm">{application.personalInfo?.education || '-'}</span>
+                  <span className="text-sm">지역: {application.personalInfo?.region || application.personalInfo?.education || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-red-200">
                   <FaCertificate className="w-4 h-4" />
-                  <span className="text-sm">-</span>
+                  <span className="text-sm">기관명: {application.personalInfo?.organizationName || '-'}</span>
                 </div>
                 <div className="text-sm text-red-200">
                   경력: {application.personalInfo?.experience ?? 0}년
@@ -486,8 +495,12 @@ function CounselorVerificationPageContent() {
                 </div>
                 
                 <div>
-                  <label className="text-slate-300 text-sm">학력</label>
-                  <p className="text-white">{selectedApplication.personalInfo?.education || '-'}</p>
+                  <label className="text-slate-300 text-sm">지역</label>
+                  <p className="text-white">{selectedApplication.personalInfo?.region || selectedApplication.personalInfo?.education || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-slate-300 text-sm">기관명/회사명</label>
+                  <p className="text-white">{selectedApplication.personalInfo?.organizationName || '-'}</p>
                 </div>
                 
                 <div>
