@@ -7,6 +7,7 @@ import { FaUserCheck, FaSearch, FaCheck, FaTimes, FaEye, FaPlus } from 'react-ic
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import RoleGuard from '@/components/RoleGuard';
 import CounselorApplicationReviewModal from '@/app/admin/components/CounselorApplicationReviewModal';
+import CounselorApplicationAttachmentList from '@/app/admin/components/CounselorApplicationAttachmentList';
 import SortableTableHeader, { type SortOrder } from '@/app/admin/components/SortableTableHeader';
 import {
   approveCounselorApplication,
@@ -390,6 +391,9 @@ function CounselorVerificationPageContent() {
                       className="whitespace-nowrap px-3 py-2.5"
                       align="center"
                     />
+                    <th scope="col" className="min-w-[3rem] px-3 py-2.5 text-center text-xs font-medium text-slate-400">
+                      첨부
+                    </th>
                     <th scope="col" className="min-w-[5rem] px-3 py-2.5 text-center text-xs font-medium text-slate-400">
                       검토 메모
                     </th>
@@ -428,6 +432,15 @@ function CounselorVerificationPageContent() {
                         <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(application.status)}`}>
                           {getStatusText(application.status)}
                         </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-center text-slate-300">
+                        {application.attachments.length > 0 ? (
+                          <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-500/20 px-1.5 py-0.5 text-xs text-sky-200">
+                            {application.attachments.length}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td className="max-w-[8rem] truncate px-3 py-2.5 text-center text-xs text-slate-400" title={application.reviewNotes || ''}>
                         {application.reviewNotes || '-'}
@@ -569,6 +582,11 @@ function CounselorVerificationPageContent() {
                       <span className="text-slate-400">-</span>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <p className="text-slate-400 text-xs mb-1">첨부 파일</p>
+                  <CounselorApplicationAttachmentList attachments={selectedApplication.attachments} />
                 </div>
 
                 <div>

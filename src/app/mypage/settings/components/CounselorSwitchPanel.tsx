@@ -20,8 +20,11 @@ import {
   type CounselorApplicationStatus,
 } from '@/lib/firestore/counselorApplicationsStore';
 import { notifyAdminCounselorApplication } from '@/lib/counselorApplicationApi';
+import { uploadCounselorApplicationAttachments } from '@/lib/counselorApplicationFiles';
 import { markCounselorResultSeen, shouldNotifyCounselorResult } from '@/utils/counselorApplicationNotification';
 import { isCounselor, isAdmin } from '@/utils/roleUtils';
+import type { CounselorAttachmentItem } from '@/types/counselorApplication';
+import CounselorApplicationAttachmentsField from '@/app/mypage/settings/components/CounselorApplicationAttachmentsField';
 
 const fieldCls =
   'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm';
@@ -75,6 +78,8 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const [applicationStatus, setApplicationStatus] = useState<CounselorApplicationStatus | null>(null);
   const [adminReviewNotes, setAdminReviewNotes] = useState('');
   const [unreadResult, setUnreadResult] = useState(false);
+  const [attachmentItems, setAttachmentItems] = useState<CounselorAttachmentItem[]>([]);
+  const [attachmentError, setAttachmentError] = useState('');
   const [profile, setProfile] = useState<CounselorProfileData>({
     ...EMPTY_COUNSELOR_PROFILE,
     email,
@@ -120,6 +125,12 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         setAdminReviewNotes(application?.reviewNotes ?? '');
         setApplicationId(application?.id ?? '');
         setReviewedAt(application?.reviewedAt ?? '');
+        setAttachmentItems(
+          (application?.attachments || []).map((attachment) => ({
+            source: 'saved' as const,
+            attachment,
+          })),
+        );
         const status = application?.status ?? null;
         const appId = application?.id ?? '';
         const reviewed = application?.reviewedAt ?? '';
@@ -179,6 +190,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
     setSaving(true);
     setError('');
     setSuccess('');
+    setAttachmentError('');
 
     const validationError = validateCounselorProfile(profile);
     if (validationError) {
@@ -192,12 +204,25 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         await updateCounselorProfile(uid, email, profile);
         setSuccess('상담사 정보가 저장되었습니다.');
       } else {
+        const savedAttachments = attachmentItems
+          .filter((item): item is Extract<CounselorAttachmentItem, { source: 'saved' }> => item.source === 'saved')
+          .map((item) => item.attachment);
+        const localFiles = attachmentItems
+          .filter((item): item is Extract<CounselorAttachmentItem, { source: 'local' }> => item.source === 'local')
+          .map((item) => item.file);
+
+        const uploaded = localFiles.length
+          ? await uploadCounselorApplicationAttachments(uid, localFiles)
+          : [];
+        const allAttachments = [...savedAttachments, ...uploaded];
+
         await saveCounselorProfileDraft(uid, email, profile);
-        const newApplicationId = await submitCounselorApplication(uid, profile);
+        const newApplicationId = await submitCounselorApplication(uid, profile, allAttachments);
         setApplicationId(newApplicationId);
         setReviewedAt('');
         setApplicationStatus('pending');
         setAdminReviewNotes('');
+        setAttachmentItems(allAttachments.map((attachment) => ({ source: 'saved', attachment })));
         const { emailed } = await notifyAdminCounselorApplication(newApplicationId, profile);
         setSuccess(
           emailed
@@ -433,6 +458,15 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
                 readOnly={readOnlyForm}
               />
             </div>
+
+            <CounselorApplicationAttachmentsField
+              items={attachmentItems}
+              onChange={setAttachmentItems}
+              disabled={saving}
+              readOnly={readOnlyForm}
+              error={attachmentError}
+              onError={setAttachmentError}
+            />
 
             {error && (
               <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">

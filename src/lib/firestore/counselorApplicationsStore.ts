@@ -15,7 +15,9 @@ import {
 } from 'firebase/firestore';
 import { initializeFirebase } from '@/lib/firebase';
 import { finalizeCounselorApproval } from '@/lib/firestore/counselorRegistration';
+import { mapRawAttachments } from '@/lib/counselorApplicationFiles';
 import type { CounselorProfileData } from '@/types/counselorProfile';
+import type { CounselorApplicationAttachment } from '@/types/counselorApplication';
 
 export type CounselorApplicationStatus = 'pending' | 'under_review' | 'approved' | 'rejected';
 
@@ -38,6 +40,7 @@ export interface AdminCounselorApplicationRow {
   notes: string;
   reviewNotes?: string;
   personalInfo: CounselorProfileData;
+  attachments: CounselorApplicationAttachment[];
 }
 
 export interface CounselorApplicationRecord {
@@ -47,6 +50,7 @@ export interface CounselorApplicationRecord {
   personalInfo: CounselorProfileData;
   reviewNotes?: string;
   reviewedAt?: string;
+  attachments: CounselorApplicationAttachment[];
 }
 
 const COLLECTION = 'counselorApplications';
@@ -145,6 +149,7 @@ function mapDocToAdminRow(id: string, data: Record<string, unknown>): AdminCouns
     notes: personalInfo.bio,
     reviewNotes: typeof data.reviewNotes === 'string' ? data.reviewNotes : undefined,
     personalInfo,
+    attachments: mapRawAttachments(data.attachments),
   };
 }
 
@@ -214,12 +219,14 @@ export async function getUserCounselorApplication(
     reviewNotes: typeof data.reviewNotes === 'string' ? data.reviewNotes : undefined,
     reviewedAt: toReviewedAtKey(data.reviewedAt),
     personalInfo: mapPersonalInfo(personalInfo),
+    attachments: mapRawAttachments(data.attachments),
   };
 }
 
 export async function submitCounselorApplication(
   uid: string,
   profile: CounselorProfileData,
+  attachments: CounselorApplicationAttachment[] = [],
 ): Promise<string> {
   const db = getDb();
 
@@ -244,6 +251,7 @@ export async function submitCounselorApplication(
     source: 'mypage_settings',
     submittedAt: serverTimestamp(),
     personalInfo,
+    attachments,
   });
 
   return docRef.id;

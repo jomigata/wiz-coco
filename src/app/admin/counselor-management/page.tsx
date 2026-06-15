@@ -6,6 +6,7 @@ import { FaUserCheck, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
 import RoleGuard from '@/components/RoleGuard';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import CounselorApplicationReviewModal from '@/app/admin/components/CounselorApplicationReviewModal';
+import CounselorApplicationAttachmentList from '@/app/admin/components/CounselorApplicationAttachmentList';
 import SortableTableHeader, { type SortOrder } from '@/app/admin/components/SortableTableHeader';
 import {
   approveCounselorApplication,
@@ -679,6 +680,13 @@ function CounselorManagementPageContent() {
                   </div>
                 </div>
                 
+                <div>
+                  <label className="text-slate-300 text-sm">첨부 파일</label>
+                  <div className="mt-1">
+                    <CounselorApplicationAttachmentList attachments={selectedApplication.attachments} />
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-slate-300 text-sm">신청자 메모</label>
                   <p className="text-white mt-1">{selectedApplication.notes || '-'}</p>

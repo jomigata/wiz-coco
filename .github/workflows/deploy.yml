@@ -403,7 +403,7 @@ jobs:
         # 배포 실행
         # firestore: AI 상담(aiCounselSessions) 규칙·인덱스 반영
         # --force: Artifact Registry 정리 정책을 자동 설정해 배포 후 exit 1 오탐 방지
-        firebase deploy --only hosting,functions,firestore --force --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
+        firebase deploy --only hosting,functions,firestore,storage --force --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
         
         echo "🎉 Firebase Hosting + Functions 배포 완료!"
       env:
