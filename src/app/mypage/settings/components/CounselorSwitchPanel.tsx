@@ -20,7 +20,7 @@ import {
   type CounselorApplicationStatus,
 } from '@/lib/firestore/counselorApplicationsStore';
 import { notifyAdminCounselorApplication } from '@/lib/counselorApplicationApi';
-import { markCounselorResultSeen } from '@/utils/counselorApplicationNotification';
+import { markCounselorResultSeen, shouldNotifyCounselorResult } from '@/utils/counselorApplicationNotification';
 import { isCounselor, isAdmin } from '@/utils/roleUtils';
 
 const fieldCls =
@@ -40,6 +40,30 @@ function statusLabel(status: CounselorApplicationStatus | null): string {
   return '';
 }
 
+function StatusBadge({
+  label,
+  toneClass,
+  showNotify,
+}: {
+  label: string;
+  toneClass: string;
+  showNotify: boolean;
+}) {
+  return (
+    <span className={`relative inline-flex px-2 py-1 rounded text-xs ${toneClass}`}>
+      {label}
+      {showNotify && (
+        <span
+          className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none ring-2 ring-indigo-950/80"
+          aria-label="미확인 결과 1건"
+        >
+          1
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,6 +74,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const [reviewedAt, setReviewedAt] = useState('');
   const [applicationStatus, setApplicationStatus] = useState<CounselorApplicationStatus | null>(null);
   const [adminReviewNotes, setAdminReviewNotes] = useState('');
+  const [unreadResult, setUnreadResult] = useState(false);
   const [profile, setProfile] = useState<CounselorProfileData>({
     ...EMPTY_COUNSELOR_PROFILE,
     email,
@@ -65,7 +90,16 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   const markResultSeen = () => {
     if (applicationId && reviewedAt && hasResult) {
       markCounselorResultSeen(applicationId, reviewedAt);
+      setUnreadResult(false);
     }
+  };
+
+  const refreshUnread = () => {
+    if (!applicationId || !reviewedAt || !hasResult) {
+      setUnreadResult(false);
+      return;
+    }
+    setUnreadResult(shouldNotifyCounselorResult(applicationStatus, reviewedAt, applicationId));
   };
 
   useEffect(() => {
@@ -86,6 +120,15 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
         setAdminReviewNotes(application?.reviewNotes ?? '');
         setApplicationId(application?.id ?? '');
         setReviewedAt(application?.reviewedAt ?? '');
+        const status = application?.status ?? null;
+        const appId = application?.id ?? '';
+        const reviewed = application?.reviewedAt ?? '';
+        const isResult = status === 'approved' || status === 'rejected';
+        setUnreadResult(
+          isResult && appId && reviewed
+            ? shouldNotifyCounselorResult(status, reviewed, appId)
+            : false,
+        );
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : '상담사 정보를 불러오지 못했습니다.');
@@ -100,10 +143,14 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
   }, [uid, email]);
 
   useEffect(() => {
-    if (!loading && applicationId && reviewedAt && hasResult) {
-      markCounselorResultSeen(applicationId, reviewedAt);
-    }
-  }, [loading, applicationId, reviewedAt, hasResult]);
+    refreshUnread();
+  }, [applicationId, reviewedAt, applicationStatus, hasResult]);
+
+  useEffect(() => {
+    const onSeen = () => refreshUnread();
+    window.addEventListener('wizcoco:counselor-result-seen', onSeen);
+    return () => window.removeEventListener('wizcoco:counselor-result-seen', onSeen);
+  }, [applicationId, reviewedAt, applicationStatus, hasResult]);
 
   useEffect(() => {
     if (expanded) markResultSeen();
@@ -218,10 +265,10 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
             </span>
           )}
           {!counselor && rejected && (
-            <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-300">반려됨</span>
+            <StatusBadge label="반려됨" toneClass="bg-red-500/20 text-red-300" showNotify={unreadResult} />
           )}
           {!counselor && applicationStatus === 'approved' && (
-            <span className="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-300">승인됨</span>
+            <StatusBadge label="승인됨" toneClass="bg-emerald-500/20 text-emerald-300" showNotify={unreadResult} />
           )}
           <svg
             className={`w-5 h-5 text-blue-300 transition-transform ${expanded ? 'rotate-180' : ''}`}
