@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (path.includes('/admin/notification-management')) return 'notification-management';
     if (path.includes('/admin/user-management')) return 'user-management';
     if (path.includes('/admin/counselor-management')) return 'counselor-management';
+    if (path.includes('/admin/counselor-verification')) return 'counselor-verification';
     if (path.includes('/admin/counseling-management')) return 'counseling-management';
     if (path.includes('/admin/psychological-tests')) return 'psychological-tests';
     if (path.includes('/admin/content-management')) return 'content-management';
@@ -38,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       'notification-management': '알림 관리',
       'user-management': '사용자 관리',
       'counselor-management': '상담사 관리',
+      'counselor-verification': '상담사 인증 관리',
       'counseling-management': '상담 관리',
       'psychological-tests': '심리검사 관리',
       'content-management': '콘텐츠 관리',
@@ -110,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
         <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2 backdrop-blur-sm">
-          <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="flex w-full items-center justify-between gap-3 px-3 sm:px-4">
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-sky-500/25 bg-sky-500/10">
                 <svg className="h-4 w-4 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <main className="mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 flex-col overflow-y-auto overflow-x-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 px-4 py-3 sm:px-6 sm:py-3">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 px-3 py-2 sm:px-4 sm:py-2">
           {children}
         </main>
       </div>

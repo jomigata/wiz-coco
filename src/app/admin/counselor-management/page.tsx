@@ -487,7 +487,7 @@ function CounselorManagementPageContent() {
                         activeKey={sortKey}
                         order={sortOrder}
                         onSort={handleSort}
-                        className="hidden min-w-[6rem] px-2 py-2 lg:table-cell"
+                        className="min-w-[6rem] px-2 py-2"
                       />
                       <SortableTableHeader
                         label="지역"
@@ -495,7 +495,7 @@ function CounselorManagementPageContent() {
                         activeKey={sortKey}
                         order={sortOrder}
                         onSort={handleSort}
-                        className="hidden min-w-[7rem] px-2 py-2 xl:table-cell"
+                        className="whitespace-nowrap px-2 py-2"
                       />
                       <SortableTableHeader
                         label="전문분야"
@@ -503,7 +503,7 @@ function CounselorManagementPageContent() {
                         activeKey={sortKey}
                         order={sortOrder}
                         onSort={handleSort}
-                        className="hidden px-2 py-2 md:table-cell"
+                        className="min-w-[8rem] px-2 py-2"
                       />
                       <SortableTableHeader
                         label="경력"
@@ -511,7 +511,7 @@ function CounselorManagementPageContent() {
                         activeKey={sortKey}
                         order={sortOrder}
                         onSort={handleSort}
-                        className="hidden whitespace-nowrap px-2 py-2 sm:table-cell"
+                        className="whitespace-nowrap px-2 py-2"
                         align="center"
                       />
                       <SortableTableHeader
@@ -545,22 +545,22 @@ function CounselorManagementPageContent() {
                         <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
                           {new Date(application.appliedDate).toLocaleDateString('ko-KR')}
                         </td>
-                        <td className="max-w-[6rem] truncate px-2 py-2 text-left text-sm font-medium text-white">
+                        <td className="whitespace-nowrap px-2 py-2 text-left text-sm font-medium text-white">
                           {application.name}
                         </td>
-                        <td className="max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={application.email}>
+                        <td className="px-2 py-2 text-left text-sm text-slate-200" title={application.email}>
                           {application.email}
                         </td>
-                        <td className="hidden max-w-[8rem] truncate px-2 py-2 text-left text-sm text-slate-300 lg:table-cell" title={application.organizationName}>
+                        <td className="px-2 py-2 text-left text-sm text-slate-300" title={application.organizationName}>
                           {application.organizationName || '-'}
                         </td>
-                        <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 xl:table-cell" title={application.region}>
+                        <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-300">
                           {application.region || '-'}
                         </td>
-                        <td className="hidden max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-300 md:table-cell" title={application.specialization.join(', ')}>
+                        <td className="px-2 py-2 text-left text-sm text-slate-300" title={application.specialization.join(', ')}>
                           {application.specialization.join(', ') || '-'}
                         </td>
-                        <td className="hidden whitespace-nowrap px-2 py-2 text-center text-sm text-slate-300 sm:table-cell">
+                        <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-300">
                           {application.experience}년
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-center">
@@ -568,7 +568,7 @@ function CounselorManagementPageContent() {
                             {getStatusText(application.status)}
                           </span>
                         </td>
-                        <td className="max-w-[8rem] truncate px-2 py-2 text-center text-xs text-slate-400" title={application.reviewNotes || ''}>
+                        <td className="px-2 py-2 text-center text-xs text-slate-400" title={application.reviewNotes || ''}>
                           {application.reviewNotes || '-'}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-center">
