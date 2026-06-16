@@ -792,7 +792,7 @@ export default function Navigation() {
                   <div
                     ref={psychologyTestsPanelRef}
                     data-dropdown-menu="psychology-tests"
-                    className={`absolute top-full mt-0 pt-4 pb-8 w-[900px] min-w-[48rem] max-w-[60rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${psychologyPlacement.dropdownAlign}`}
+                    className={`absolute top-full mt-0 pt-4 pb-8 w-auto min-w-[48rem] max-w-[56rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${psychologyPlacement.dropdownAlign}`}
                     onMouseEnter={() => {
                       openMenu('psychology-tests');
                       const firstCategory = visibleTestMenuItems[0];
@@ -814,7 +814,7 @@ export default function Navigation() {
                     </div>
                     <div className="relative flex flex-row h-[62vh]">
                       {/* 왼쪽: 대분류 (메뉴 아래 세로 목록) */}
-                      <div ref={psychologyTestsLeftColRef} className="w-2/5 p-4 border-r border-blue-500/30 shrink-0">
+                      <div ref={psychologyTestsLeftColRef} className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 border-r border-blue-500/30 shrink-0">
                         <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
                         <div className="space-y-2">
                           {visibleTestMenuItems.map((mainCategory, index) => (
@@ -864,7 +864,7 @@ export default function Navigation() {
                       </div>
 
                       {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div ref={psychologyTestsSubColRef} className="w-3/5 p-4 shrink-0">
+                      <div ref={psychologyTestsSubColRef} className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 shrink-0">
                         {selectedMainCategory ? (
                           <div>
                             <div className="text-lg font-bold text-blue-300 mb-4">
