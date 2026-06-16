@@ -430,53 +430,24 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
             <div>
               <label className={labelCls}>전문 분야 * (복수 선택)</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                {COUNSELOR_SPECIALIZATIONS.map((item) => {
-                  const isSelected = profile.specialization.includes(item);
-                  return (
-                    <label
-                      key={item}
-                      className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 text-sm transition-colors ${
-                        isSelected
-                          ? readOnlyForm
-                            ? 'border-emerald-400/60 bg-emerald-500/30 text-emerald-50'
-                            : 'border-emerald-500/50 bg-emerald-500/20 text-white cursor-pointer hover:bg-emerald-500/30'
-                          : readOnlyForm
-                            ? 'border-white/10 bg-white/[0.03] text-blue-300/45'
-                            : 'border-white/20 bg-white/5 text-blue-100 cursor-pointer hover:border-white/35 hover:bg-white/10'
+                {COUNSELOR_SPECIALIZATIONS.map((item) => (
+                  <label
+                    key={item}
+                    className={`flex items-center gap-2 text-sm text-blue-100 ${readOnlyForm ? 'opacity-70' : 'cursor-pointer'}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={profile.specialization.includes(item)}
+                      onChange={(e) => toggleSpecialization(item, e.target.checked)}
+                      readOnly={readOnlyForm}
+                      tabIndex={readOnlyForm ? -1 : 0}
+                      className={`h-4 w-4 shrink-0 rounded border-white/40 bg-slate-800/90 accent-emerald-300 focus:ring-emerald-500 focus:ring-offset-0 ${
+                        readOnlyForm ? 'pointer-events-none' : 'cursor-pointer'
                       }`}
-                    >
-                      <span
-                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                          isSelected
-                            ? 'border-emerald-300 bg-emerald-500 text-white'
-                            : 'border-white/50 bg-slate-900/60'
-                        }`}
-                        aria-hidden
-                      >
-                        {isSelected && (
-                          <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
-                            <path
-                              d="M2.5 6L5 8.5L9.5 3.5"
-                              stroke="currentColor"
-                              strokeWidth="1.75"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </span>
-                      <span className="leading-tight">{item}</span>
-                      {!readOnlyForm && (
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={isSelected}
-                          onChange={(e) => toggleSpecialization(item, e.target.checked)}
-                        />
-                      )}
-                    </label>
-                  );
-                })}
+                    />
+                    {item}
+                  </label>
+                ))}
               </div>
             </div>
 
