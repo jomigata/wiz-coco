@@ -15,6 +15,12 @@ import {
   type AdminCounselorApplicationRow,
 } from '@/lib/firestore/counselorApplicationsStore';
 import { notifyApplicantCounselorApplicationResult } from '@/lib/counselorApplicationApi';
+import CounselorApplicationHistoryPanel from '@/app/admin/components/CounselorApplicationHistoryPanel';
+import {
+  buildApplicantSearchBlob,
+  groupCounselorApplicationsByApplicant,
+  type GroupedCounselorApplicationRow,
+} from '@/lib/firestore/counselorApplicationGrouping';
 
 type SortKey =
   | 'appliedDate'
@@ -27,14 +33,14 @@ type SortKey =
   | 'status';
 
 type ReviewTarget =
-  | { mode: 'single'; application: AdminCounselorApplicationRow; action: 'approve' | 'reject' }
+  | { mode: 'single'; application: GroupedCounselorApplicationRow; action: 'approve' | 'reject' }
   | { mode: 'bulk'; ids: string[]; action: 'approve' | 'reject' };
 
 function sortApplications(
-  list: AdminCounselorApplicationRow[],
+  list: GroupedCounselorApplicationRow[],
   sortKey: SortKey,
   order: SortOrder,
-): AdminCounselorApplicationRow[] {
+): GroupedCounselorApplicationRow[] {
   const sorted = [...list];
   sorted.sort((a, b) => {
     let cmp = 0;
@@ -81,7 +87,7 @@ function CounselorManagementPageContent() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('appliedDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [selectedApplication, setSelectedApplication] = useState<AdminCounselorApplicationRow | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<GroupedCounselorApplicationRow | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
@@ -121,25 +127,21 @@ function CounselorManagementPageContent() {
     }
   };
 
+  const groupedApplications = useMemo(
+    () => groupCounselorApplicationsByApplicant(applications),
+    [applications],
+  );
+
   const filteredApplications = useMemo(() => {
-    const filtered = applications.filter((app) => {
-      const q = searchQuery.toLowerCase().trim();
-      const blob = [
-        app.name,
-        app.email,
-        app.organizationName,
-        app.region,
-        app.specialization.join(' '),
-        app.applicantUid,
-      ]
-        .join(' ')
-        .toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
+    const filtered = groupedApplications.filter((app) => {
+      const blob = buildApplicantSearchBlob(app);
       const matchesSearch = !q || blob.includes(q);
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
     return sortApplications(filtered, sortKey, sortOrder);
-  }, [applications, searchQuery, statusFilter, sortKey, sortOrder]);
+  }, [groupedApplications, searchQuery, statusFilter, sortKey, sortOrder]);
 
   const getStatusBadgeClass = (status: AdminCounselorApplicationRow['status']) => {
     switch (status) {
@@ -273,14 +275,14 @@ function CounselorManagementPageContent() {
     }
   };
 
-  const openModal = (application: AdminCounselorApplicationRow) => {
+  const openModal = (application: GroupedCounselorApplicationRow) => {
     setSelectedApplication(application);
     setShowModal(true);
   };
 
-  const pendingCount = applications.filter((app) => app.status === 'pending').length;
-  const approvedCount = applications.filter((a) => a.status === 'approved').length;
-  const rejectedCount = applications.filter((a) => a.status === 'rejected').length;
+  const pendingCount = groupedApplications.filter((app) => app.status === 'pending').length;
+  const approvedCount = groupedApplications.filter((a) => a.status === 'approved').length;
+  const rejectedCount = groupedApplications.filter((a) => a.status === 'rejected').length;
 
   const toggleSelectRow = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -328,8 +330,9 @@ function CounselorManagementPageContent() {
           <p className="text-xs leading-snug text-slate-300">
             검토 중 <span className="font-semibold text-amber-200/95">{pendingCount}</span> · 승인{' '}
             <span className="font-semibold text-emerald-200/95">{approvedCount}</span> · 거부{' '}
-            <span className="font-semibold text-rose-200/95">{rejectedCount}</span> — Firestore 실시간
-            신청 목록입니다.
+            <span className="font-semibold text-rose-200/95">{rejectedCount}</span> · 신청자{' '}
+            <span className="font-semibold text-slate-200">{groupedApplications.length}</span> — 최신 신청 기준
+            그룹 목록입니다.
           </p>
         </div>
       </motion.div>
@@ -349,7 +352,7 @@ function CounselorManagementPageContent() {
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          인증 관리 ({applications.length})
+          인증 관리 ({filteredApplications.length})
         </button>
         <button
           type="button"
@@ -473,6 +476,9 @@ function CounselorManagementPageContent() {
                         onSort={handleSort}
                         className="px-2 py-2"
                       />
+                      <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
+                        신청
+                      </th>
                       <SortableTableHeader
                         label="이메일"
                         sortKey="email"
@@ -533,7 +539,7 @@ function CounselorManagementPageContent() {
                   </thead>
                   <tbody className="divide-y divide-white/[0.06]">
                     {filteredApplications.map((application) => (
-                      <tr key={application.id} className="hover:bg-white/[0.04]">
+                      <tr key={`${application.applicantUid}-${application.id}`} className="hover:bg-white/[0.04]">
                         <td className="whitespace-nowrap px-2 py-1.5 text-center">
                           <input
                             type="checkbox"
@@ -547,6 +553,18 @@ function CounselorManagementPageContent() {
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-left text-sm font-medium text-white">
                           {application.name}
+                        </td>
+                        <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-400">
+                          {application.applicationCount > 1 ? (
+                            <span
+                              className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-violet-500/20 px-1.5 py-0.5 text-violet-200"
+                              title={`총 ${application.applicationCount}회 신청`}
+                            >
+                              {application.applicationCount}
+                            </span>
+                          ) : (
+                            '1'
+                          )}
                         </td>
                         <td className="px-2 py-2 text-left text-sm text-slate-200" title={application.email}>
                           {application.email}
@@ -698,6 +716,12 @@ function CounselorManagementPageContent() {
                     <p className="text-white mt-1 whitespace-pre-wrap">{selectedApplication.reviewNotes}</p>
                   </div>
                 )}
+
+                <CounselorApplicationHistoryPanel
+                  history={selectedApplication.history}
+                  getStatusText={getStatusText}
+                  getStatusBadgeClass={getStatusBadgeClass}
+                />
               </div>
               
               <div className="flex gap-2 mt-6">
@@ -769,7 +793,7 @@ function CounselorManagementPageContent() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.06]">
-                      {applications
+                      {groupedApplications
                         .filter((app) => app.status === 'approved')
                         .map((c) => (
                           <tr key={c.id} className="hover:bg-white/[0.04]">

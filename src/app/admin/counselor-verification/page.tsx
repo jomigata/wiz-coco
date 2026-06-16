@@ -16,6 +16,13 @@ import {
   type AdminCounselorApplicationRow,
 } from '@/lib/firestore/counselorApplicationsStore';
 import { notifyApplicantCounselorApplicationResult } from '@/lib/counselorApplicationApi';
+import CounselorApplicationHistoryPanel from '@/app/admin/components/CounselorApplicationHistoryPanel';
+import {
+  buildApplicantSearchBlob,
+  countGroupedPendingApplications,
+  groupCounselorApplicationsByApplicant,
+  type GroupedCounselorApplicationRow,
+} from '@/lib/firestore/counselorApplicationGrouping';
 
 type SortKey =
   | 'appliedDate'
@@ -28,10 +35,10 @@ type SortKey =
   | 'status';
 
 function sortApplications(
-  list: AdminCounselorApplicationRow[],
+  list: GroupedCounselorApplicationRow[],
   sortKey: SortKey,
   order: SortOrder,
-): AdminCounselorApplicationRow[] {
+): GroupedCounselorApplicationRow[] {
   const sorted = [...list];
   sorted.sort((a, b) => {
     let cmp = 0;
@@ -78,7 +85,7 @@ function CounselorVerificationPageContent() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('appliedDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [selectedApplication, setSelectedApplication] = useState<AdminCounselorApplicationRow | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<GroupedCounselorApplicationRow | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<{
@@ -123,29 +130,26 @@ function CounselorVerificationPageContent() {
     }
   };
 
+  const groupedApplications = useMemo(
+    () => groupCounselorApplicationsByApplicant(applications),
+    [applications],
+  );
+
   const filteredApplications = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    const filtered = applications.filter((app) => {
-      const blob = [
-        app.name,
-        app.email,
-        app.organizationName,
-        app.region,
-        app.specialization.join(' '),
-        app.applicantUid,
-        app.notes,
-        app.reviewNotes || '',
-      ]
-        .join(' ')
-        .toLowerCase();
+    const filtered = groupedApplications.filter((app) => {
+      const blob = buildApplicantSearchBlob(app);
       const matchesSearch = !q || blob.includes(q);
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
     return sortApplications(filtered, sortKey, sortOrder);
-  }, [applications, searchQuery, statusFilter, sortKey, sortOrder]);
+  }, [groupedApplications, searchQuery, statusFilter, sortKey, sortOrder]);
 
-  const pendingCount = applications.filter((app) => app.status === 'pending').length;
+  const pendingCount = useMemo(
+    () => countGroupedPendingApplications(applications),
+    [applications],
+  );
 
   const getStatusBadgeClass = (status: AdminCounselorApplicationRow['status']) => {
     switch (status) {
@@ -173,7 +177,7 @@ function CounselorVerificationPageContent() {
     }
   };
 
-  const openReviewModal = (application: AdminCounselorApplicationRow, action: 'approve' | 'reject') => {
+  const openReviewModal = (application: GroupedCounselorApplicationRow, action: 'approve' | 'reject') => {
     setReviewMemo('');
     setReviewTarget({ application, action });
   };
@@ -220,7 +224,7 @@ function CounselorVerificationPageContent() {
     }
   };
 
-  const openModal = (application: AdminCounselorApplicationRow) => {
+  const openModal = (application: GroupedCounselorApplicationRow) => {
     setSelectedApplication(application);
     setShowModal(true);
   };
@@ -238,6 +242,7 @@ function CounselorVerificationPageContent() {
             <span className="font-semibold text-white">상담사 인증 관리</span>
             <span className="text-slate-400">
               검토 대기 <span className="font-semibold text-amber-200">{pendingCount}</span>
+              · 신청자 <span className="font-semibold text-slate-200">{groupedApplications.length}</span>
             </span>
           </div>
           <button
@@ -314,6 +319,9 @@ function CounselorVerificationPageContent() {
                       onSort={handleSort}
                       className="whitespace-nowrap px-2 py-2"
                     />
+                    <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
+                      신청
+                    </th>
                     <SortableTableHeader
                       label="이메일"
                       sortKey="email"
@@ -376,8 +384,8 @@ function CounselorVerificationPageContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
-                  {filteredApplications.map((application) => (
-                    <tr key={application.id} className="hover:bg-white/[0.04]">
+                    {filteredApplications.map((application) => (
+                      <tr key={`${application.applicantUid}-${application.id}`} className="hover:bg-white/[0.04]">
                       <td className="whitespace-nowrap px-2 py-2 text-slate-200">
                         {application.appliedDate
                           ? new Date(application.appliedDate).toLocaleDateString('ko-KR')
@@ -385,6 +393,18 @@ function CounselorVerificationPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 font-medium text-white">
                         {application.name || '-'}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2 text-center text-slate-400">
+                        {application.applicationCount > 1 ? (
+                          <span
+                            className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-violet-500/20 px-1.5 py-0.5 text-xs text-violet-200"
+                            title={`총 ${application.applicationCount}회 신청`}
+                          >
+                            {application.applicationCount}
+                          </span>
+                        ) : (
+                          '1'
+                        )}
                       </td>
                       <td className="px-2 py-2 text-slate-200" title={application.email}>
                         {application.email || '-'}
@@ -515,11 +535,16 @@ function CounselorVerificationPageContent() {
                     <p className="text-white break-all">{selectedApplication.applicantUid || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs mb-0.5">신청일</p>
+                    <p className="text-slate-400 text-xs mb-0.5">최종 신청일</p>
                     <p className="text-white">
                       {selectedApplication.appliedDate
                         ? new Date(selectedApplication.appliedDate).toLocaleDateString('ko-KR')
                         : '-'}
+                      {selectedApplication.applicationCount > 1 && (
+                        <span className="ml-2 text-violet-300 text-xs">
+                          (총 {selectedApplication.applicationCount}회 신청)
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div>
@@ -535,12 +560,18 @@ function CounselorVerificationPageContent() {
                     <p className="text-white">{selectedApplication.organizationName || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs mb-0.5">상태</p>
+                    <p className="text-slate-400 text-xs mb-0.5">최종 상태</p>
                     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(selectedApplication.status)}`}>
                       {getStatusText(selectedApplication.status)}
                     </span>
                   </div>
                 </div>
+
+                <CounselorApplicationHistoryPanel
+                  history={selectedApplication.history}
+                  getStatusText={getStatusText}
+                  getStatusBadgeClass={getStatusBadgeClass}
+                />
 
                 <div>
                   <p className="text-slate-400 text-xs mb-1">전문분야</p>
