@@ -812,8 +812,8 @@ export default function Navigation() {
                         onNavigate={() => setActiveMenu(null)}
                       />
                     </div>
-                    <div className={`relative flex h-[62vh] ${psychologyPlacement.subPanelSide === 'left' ? 'flex-row-reverse' : ''}`}>
-                      {/* 왼쪽: 대분류 5개 */}
+                    <div className="relative flex flex-row h-[62vh]">
+                      {/* 왼쪽: 대분류 (메뉴 아래 세로 목록) */}
                       <div ref={psychologyTestsLeftColRef} className="w-2/5 p-4 border-r border-blue-500/30 shrink-0">
                         <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
                         <div className="space-y-2">
@@ -850,7 +850,7 @@ export default function Navigation() {
                                 <span className="text-xl">{mainCategory.icon}</span>
                                 <span className="font-medium">{mainCategory.category}</span>
                                 <svg 
-                                  className={`w-4 h-4 text-white ml-auto transition-transform ${psychologyPlacement.subPanelSide === 'left' ? 'rotate-180' : ''}`}
+                                  className="w-4 h-4 text-white ml-auto"
                                   fill="none" 
                                   stroke="currentColor" 
                                   viewBox="0 0 24 24"
