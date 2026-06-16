@@ -898,7 +898,7 @@ export default function Navigation() {
                                       }
                                     }}
                                   >
-                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                                    <div className="w-8 shrink-0 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
                                       {subcategory.icon}
                                     </div>
                                     <div className="flex flex-col gap-1 flex-1 min-w-0">
