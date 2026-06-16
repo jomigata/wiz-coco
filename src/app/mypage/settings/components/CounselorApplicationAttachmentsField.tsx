@@ -15,6 +15,8 @@ interface Props {
   onChange: (items: CounselorAttachmentItem[]) => void;
   disabled?: boolean;
   readOnly?: boolean;
+  /** 승인 완료 후 — 파일명만 표시 (업로드·삭제·용량 안내 숨김) */
+  namesOnly?: boolean;
   error?: string;
   onError?: (message: string) => void;
 }
@@ -24,6 +26,7 @@ export default function CounselorApplicationAttachmentsField({
   onChange,
   disabled = false,
   readOnly = false,
+  namesOnly = false,
   error,
   onError,
 }: Props) {
@@ -57,14 +60,16 @@ export default function CounselorApplicationAttachmentsField({
   return (
     <div>
       <label className={labelCls}>
-        첨부 파일 (최대 {COUNSELOR_APPLICATION_MAX_FILES}개 · 파일당 {COUNSELOR_APPLICATION_MAX_FILE_SIZE_MB}MB)
+        {namesOnly ? '제출된 첨부 파일' : `첨부 파일 (최대 ${COUNSELOR_APPLICATION_MAX_FILES}개 · 파일당 ${COUNSELOR_APPLICATION_MAX_FILE_SIZE_MB}MB)`}
       </label>
-      <p className="text-blue-300/70 text-xs mb-2">
-        PDF, JPG, PNG, DOC, DOCX, HWP — 자격증·재직증명 등 관련 서류를 첨부해 주세요.
-      </p>
+      {!namesOnly && (
+        <p className="text-blue-300/70 text-xs mb-2">
+          PDF, JPG, PNG, DOC, DOCX, HWP — 자격증·재직증명 등 관련 서류를 첨부해 주세요.
+        </p>
+      )}
 
       {items.length > 0 && (
-        <ul className="space-y-2 mb-3">
+        <ul className={`space-y-2 ${namesOnly ? '' : 'mb-3'}`}>
           {items.map((item, index) => {
             const name = item.source === 'saved' ? item.attachment.name : item.file.name;
             const size = item.source === 'saved' ? item.attachment.size : item.file.size;
@@ -74,13 +79,23 @@ export default function CounselorApplicationAttachmentsField({
             return (
               <li
                 key={key}
-                className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm"
+                className={`flex items-center gap-2 text-sm ${
+                  namesOnly
+                    ? 'text-blue-100'
+                    : 'rounded-lg border border-white/15 bg-white/5 px-3 py-2'
+                }`}
               >
-                <span className="text-lg shrink-0" aria-hidden>
-                  📎
-                </span>
+                {!namesOnly && (
+                  <span className="text-lg shrink-0" aria-hidden>
+                    📎
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
-                  {url ? (
+                  {namesOnly ? (
+                    <span className="truncate block" title={name}>
+                      · {name}
+                    </span>
+                  ) : url ? (
                     <a
                       href={url}
                       target="_blank"
@@ -95,9 +110,11 @@ export default function CounselorApplicationAttachmentsField({
                       {name}
                     </span>
                   )}
-                  <span className="text-blue-300/60 text-xs">{formatCounselorFileSize(size)}</span>
+                  {!namesOnly && (
+                    <span className="text-blue-300/60 text-xs">{formatCounselorFileSize(size)}</span>
+                  )}
                 </div>
-                {!readOnly && !disabled && (
+                {!readOnly && !disabled && !namesOnly && (
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
@@ -112,7 +129,7 @@ export default function CounselorApplicationAttachmentsField({
         </ul>
       )}
 
-      {!readOnly && (
+      {!readOnly && !namesOnly && (
         <div className="flex flex-wrap items-center gap-2">
           <input
             ref={inputRef}
@@ -134,7 +151,7 @@ export default function CounselorApplicationAttachmentsField({
         </div>
       )}
 
-      {readOnly && items.length === 0 && (
+      {(readOnly || namesOnly) && items.length === 0 && (
         <p className="text-blue-300/60 text-sm">첨부된 파일이 없습니다.</p>
       )}
 

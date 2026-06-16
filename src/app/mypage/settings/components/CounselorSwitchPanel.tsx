@@ -463,7 +463,8 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
               items={attachmentItems}
               onChange={setAttachmentItems}
               disabled={saving}
-              readOnly={readOnlyForm}
+              readOnly={readOnlyForm || counselor}
+              namesOnly={counselor}
               error={attachmentError}
               onError={setAttachmentError}
             />
