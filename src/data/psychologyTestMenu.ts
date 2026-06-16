@@ -37,28 +37,38 @@ export function getVisibleTestMenuItems(): TestCategory[] {
   return testSubMenuItems.filter((c) => !c.hidden);
 }
 
+/** 대분류명 → /tests?category={slug} 경로 */
+export const TEST_CATEGORY_SLUGS: Record<string, string> = {
+  '1. 개인 심리 및 성장': 'personal-growth',
+  '2. 대인관계 및 사회적응': 'relationships-social',
+  '3. 정서 문제 및 정신 건강': 'emotional-mental',
+  '4. 현실 문제 및 생활 관리': 'reality-life',
+  '5. 문화 및 환경 적응': 'culture-environment',
+  '임시 검사': 'temporary-tests',
+};
+
 /** 중분류명 → /tests/{slug} 경로 (실제 폴더명과 일치) */
 export const TEST_SUBCATEGORY_SLUGS: Record<string, string> = {
-  '성격 및 기질 탐색': 'personality-temperament',
-  '자아정체감 및 가치관': 'identity-values',
-  '잠재력 및 역량 개발': 'potential-development',
-  '삶의 의미 및 실존적 문제': 'life-meaning',
-  '가족 관계': 'family-relations',
-  '연인 및 부부 관계': 'romantic-relations',
-  '친구 및 동료 관계': 'friend-colleague',
-  '사회적 기술 및 소통': 'social-communication',
-  '우울 및 기분 문제': 'depression-mood',
-  '불안 및 스트레스': 'anxiety-stress',
-  '외상 및 위기 개입': 'trauma-crisis',
-  '중독 및 충동 조절': 'addiction-impulse',
-  '진로 및 직업 문제': 'career-work',
-  '경제 및 재정 문제': 'economic-finance',
-  '건강 및 신체 문제': 'health-body',
-  '일상생활 및 자기 관리': 'daily-management',
-  '다문화 적응': 'multicultural',
-  '디지털 환경 적응': 'digital-adaptation',
-  '생애주기별 적응': 'lifecycle-adaptation',
-  '사회 환경 적응': 'social-environment',
+  '1a. 성격 및 기질 탐색': 'personality-temperament',
+  '1b. 자아정체감 및 가치관': 'identity-values',
+  '1c. 잠재력 및 역량 개발': 'potential-development',
+  '1d. 삶의 의미 및 실존적 문제': 'life-meaning',
+  '2a. 가족 관계': 'family-relations',
+  '2b. 연인 및 부부 관계': 'romantic-relations',
+  '2c. 친구 및 동료 관계': 'friend-colleague',
+  '2d. 사회적 기술 및 소통': 'social-communication',
+  '3a. 우울 및 기분 문제': 'depression-mood',
+  '3b. 불안 및 스트레스': 'anxiety-stress',
+  '3c. 외상 및 위기 개입': 'trauma-crisis',
+  '3d. 중독 및 충동 조절': 'addiction-impulse',
+  '4a. 진로 및 직업 문제': 'career-work',
+  '4b. 경제 및 재정 문제': 'economic-finance',
+  '4c. 건강 및 신체 문제': 'health-body',
+  '4d. 일상생활 및 자기 관리': 'daily-management',
+  '5a. 다문화 적응': 'multicultural',
+  '5b. 디지털 환경 적응': 'digital-adaptation',
+  '5c. 생애주기별 적응': 'lifecycle-adaptation',
+  '5d. 사회 환경 적응': 'social-environment',
 };
 
 export interface FlatTestMenuItem {
@@ -124,11 +134,11 @@ export const testSubMenuItems: TestCategory[] = [
     ]
   },
   {
-    category: "개인 심리 및 성장",
+    category: "1. 개인 심리 및 성장",
     icon: "🚀",
     subcategories: [
       {
-        name: "성격 및 기질 탐색",
+        name: "1a. 성격 및 기질 탐색",
         icon: "🔍",
         items: [
           { name: "MBTI 성격 유형 분석", href: "/tests/mbti-analysis", description: "16가지 성격 유형을 통한 나만의 특성 발견", icon: "🧠" },
@@ -138,7 +148,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "자아정체감 및 가치관",
+        name: "1b. 자아정체감 및 가치관",
         icon: "🎯",
         items: [
           { name: "핵심 가치관 정립", href: "/tests/core-values", description: "나만의 핵심 가치관 발견 및 삶의 방향 설정", icon: "⭐" },
@@ -148,7 +158,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "잠재력 및 역량 개발",
+        name: "1c. 잠재력 및 역량 개발",
         icon: "💪",
         items: [
           { name: "목표 달성 시스템", href: "/tests/goal-achievement", description: "SMART 목표 설정부터 실행까지 완벽 가이드", icon: "🎯" },
@@ -158,7 +168,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "삶의 의미 및 실존적 문제",
+        name: "1d. 삶의 의미 및 실존적 문제",
         icon: "🌟",
         items: [
           { name: "삶의 방향성 재설정", href: "/tests/life-direction", description: "현재 삶의 방향성 점검 및 새로운 방향 모색", icon: "🧭" },
@@ -170,11 +180,11 @@ export const testSubMenuItems: TestCategory[] = [
     ]
   },
   {
-    category: "대인관계 및 사회적응",
+    category: "2. 대인관계 및 사회적응",
     icon: "💕",
     subcategories: [
       {
-        name: "가족 관계",
+        name: "2a. 가족 관계",
         icon: "👨‍👩‍👧‍👦",
         items: [
           { name: "부모-자녀 관계 개선", href: "/tests/parent-child-relationship", description: "세대 간 소통과 이해를 통한 건강한 가족 관계", icon: "👶" },
@@ -184,7 +194,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "연인 및 부부 관계",
+        name: "2b. 연인 및 부부 관계",
         icon: "💑",
         items: [
           { name: "연인 관계 갈등 해결", href: "/tests/romantic-conflict", description: "연인 간 갈등 해결과 건강한 관계 유지", icon: "💕" },
@@ -194,7 +204,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "친구 및 동료 관계",
+        name: "2c. 친구 및 동료 관계",
         icon: "👥",
         items: [
           { name: "직장 내 인간관계", href: "/tests/workplace-relationships", description: "직장에서의 효과적인 인간관계 구축과 유지", icon: "💼" },
@@ -204,7 +214,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "사회적 기술 및 소통",
+        name: "2d. 사회적 기술 및 소통",
         icon: "💬",
         items: [
           { name: "효과적인 소통 기술", href: "/tests/communication-skills", description: "비폭력 대화법과 효과적인 의사소통 기술", icon: "🗣️" },
@@ -216,11 +226,11 @@ export const testSubMenuItems: TestCategory[] = [
     ]
   },
   {
-    category: "정서 문제 및 정신 건강",
+    category: "3. 정서 문제 및 정신 건강",
     icon: "💙",
     subcategories: [
       {
-        name: "우울 및 기분 문제",
+        name: "3a. 우울 및 기분 문제",
         icon: "😔",
         items: [
           { name: "우울감 완화 프로그램", href: "/tests/depression-relief", description: "경미한 우울감과 무기력감 극복을 위한 단계별 프로그램", icon: "🌅" },
@@ -230,7 +240,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "불안 및 스트레스",
+        name: "3b. 불안 및 스트레스",
         icon: "😰",
         items: [
           { name: "불안 완화 기법", href: "/tests/anxiety-relief", description: "일상 불안감과 걱정을 줄이는 실용적 기법", icon: "🧘" },
@@ -240,7 +250,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "외상 및 위기 개입",
+        name: "3c. 외상 및 위기 개입",
         icon: "🆘",
         items: [
           { name: "위기 상황 대응", href: "/tests/crisis-intervention", description: "예상치 못한 위기 상황에서의 심리적 지원", icon: "🚨" },
@@ -250,7 +260,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "중독 및 충동 조절",
+        name: "3d. 중독 및 충동 조절",
         icon: "🔄",
         items: [
           { name: "디지털 중독 관리", href: "/tests/digital-addiction", description: "스마트폰, 인터넷, SNS 중독 예방과 관리", icon: "📱" },
@@ -262,11 +272,11 @@ export const testSubMenuItems: TestCategory[] = [
     ]
   },
   {
-    category: "현실 문제 및 생활 관리",
+    category: "4. 현실 문제 및 생활 관리",
     icon: "🔧",
     subcategories: [
       {
-        name: "진로 및 직업 문제",
+        name: "4a. 진로 및 직업 문제",
         icon: "💼",
         items: [
           { name: "진로 탐색 및 설계", href: "/tests/career-exploration", description: "개인의 적성과 흥미를 바탕으로 한 진로 탐색", icon: "🔍" },
@@ -276,7 +286,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "경제 및 재정 문제",
+        name: "4b. 경제 및 재정 문제",
         icon: "💰",
         items: [
           { name: "재정 스트레스 해결", href: "/tests/financial-stress", description: "부채와 경제적 압박으로 인한 스트레스 관리", icon: "💸" },
@@ -286,7 +296,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "건강 및 신체 문제",
+        name: "4c. 건강 및 신체 문제",
         icon: "🏥",
         items: [
           { name: "만성 질환 적응", href: "/tests/chronic-illness", description: "만성 질환 진단 후 심리적 적응과 관리", icon: "🩺" },
@@ -296,7 +306,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "일상생활 및 자기 관리",
+        name: "4d. 일상생활 및 자기 관리",
         icon: "📅",
         items: [
           { name: "시간 관리 시스템", href: "/tests/time-management", description: "효율적인 시간 관리와 생산성 향상", icon: "⏰" },
@@ -308,11 +318,11 @@ export const testSubMenuItems: TestCategory[] = [
     ]
   },
   {
-    category: "문화 및 환경 적응",
+    category: "5. 문화 및 환경 적응",
     icon: "🌍",
     subcategories: [
       {
-        name: "다문화 적응",
+        name: "5a. 다문화 적응",
         icon: "🌏",
         items: [
           { name: "문화 충격 극복", href: "/tests/culture-shock", description: "새로운 문화 환경 적응과 문화 충격 극복", icon: "🌊" },
@@ -322,7 +332,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "디지털 환경 적응",
+        name: "5b. 디지털 환경 적응",
         icon: "💻",
         items: [
           { name: "디지털 피로 완화", href: "/tests/digital-fatigue", description: "디지털 기기 과사용으로 인한 피로와 스트레스 관리", icon: "📱" },
@@ -332,7 +342,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "생애주기별 적응",
+        name: "5c. 생애주기별 적응",
         icon: "🔄",
         items: [
           { name: "청소년기 성장", href: "/tests/adolescent-growth", description: "청소년기의 정체성 형성과 학업 스트레스 관리", icon: "🎓" },
@@ -342,7 +352,7 @@ export const testSubMenuItems: TestCategory[] = [
         ]
       },
       {
-        name: "사회 환경 적응",
+        name: "5d. 사회 환경 적응",
         icon: "🏘️",
         items: [
           { name: "사회 변화 적응", href: "/tests/social-change", description: "급변하는 사회 환경에 대한 적응과 대응", icon: "🌊" },

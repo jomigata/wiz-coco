@@ -8,7 +8,7 @@ import { initializeFirebase } from '@/lib/firebase';
 import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu } from '@/utils/roleUtils';
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
-import { getVisibleTestMenuItems, TestCategory } from '@/data/psychologyTestMenu';
+import { getVisibleTestMenuItems, TestCategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
@@ -827,17 +827,11 @@ export default function Navigation() {
                               }`}
                               onClick={() => {
                                 setSelectedMainCategory(mainCategory.category);
-                                const categoryMap: { [key: string]: string } = {
-                                  "개인 심리 및 성장": "personal-growth",
-                                  "대인관계 및 사회적응": "relationships-social", 
-                                  "정서 문제 및 정신 건강": "emotional-mental",
-                                  "현실 문제 및 생활 관리": "reality-life",
-                                  "문화 및 환경 적응": "culture-environment",
-                                  "임시 검사": "temporary-tests"
-                                };
-                                const categoryId = categoryMap[mainCategory.category];
-                                navigateTo(`/tests?category=${categoryId}`);
-                                setActiveMenu(null);
+                                const categoryId = TEST_CATEGORY_SLUGS[mainCategory.category];
+                                if (categoryId) {
+                                  navigateTo(`/tests?category=${categoryId}`);
+                                  setActiveMenu(null);
+                                }
                               }}
                               onMouseEnter={() => {
                                 setSelectedMainCategory(mainCategory.category);
@@ -897,29 +891,7 @@ export default function Navigation() {
                                       setSelectedSubcategory(subcategory.name);
                                     }}
                                     onClick={() => {
-                                      const categoryMap: { [key: string]: string } = {
-                                        "성격 및 기질 탐색": "personality-temperament",
-                                        "자아정체감 및 가치관": "identity-values",
-                                        "잠재력 및 역량 개발": "potential-development",
-                                        "삶의 의미 및 실존적 문제": "life-meaning",
-                                        "가족 관계": "family-relationships",
-                                        "연인 및 부부 관계": "romantic-marital",
-                                        "친구 및 동료 관계": "friends-colleagues",
-                                        "사회적 기술 및 소통": "social-skills-communication",
-                                        "우울 및 기분 문제": "depression-mood",
-                                        "불안 및 스트레스": "anxiety-stress",
-                                        "외상 및 위기 개입": "trauma-crisis",
-                                        "중독 및 충동 조절": "addiction-impulse",
-                                        "진로 및 직업 문제": "career-job",
-                                        "경제 및 재정 문제": "financial-economic",
-                                        "건강 및 신체 문제": "health-physical",
-                                        "일상생활 및 자기 관리": "daily-life-management",
-                                        "다문화 적응": "multicultural-adaptation",
-                                        "디지털 환경 적응": "digital-environment",
-                                        "생애주기별 적응": "lifecycle-adaptation",
-                                        "사회 환경 적응": "social-environmental-issues"
-                                      };
-                                      const categoryId = categoryMap[subcategory.name];
+                                      const categoryId = TEST_SUBCATEGORY_SLUGS[subcategory.name];
                                       if (categoryId) {
                                         navigateTo(`/tests/${categoryId}`);
                                         setActiveMenu(null);
@@ -2144,29 +2116,7 @@ export default function Navigation() {
                                   selectedSubcategory === subcategory.name ? 'bg-purple-500/30' : 'hover:bg-purple-500/30'
                                 }`}
                                 onClick={() => {
-                                  const categoryMap: { [key: string]: string } = {
-                                    "성격 및 기질 탐색": "personality-temperament",
-                                    "자아정체감 및 가치관": "identity-values",
-                                    "잠재력 및 역량 개발": "potential-development",
-                                    "삶의 의미 및 실존적 문제": "life-meaning",
-                                    "가족 관계": "family-relationships",
-                                    "연인 및 부부 관계": "romantic-marital",
-                                    "친구 및 동료 관계": "friends-colleagues",
-                                    "사회적 기술 및 소통": "social-skills-communication",
-                                    "우울 및 기분 문제": "depression-mood",
-                                    "불안 및 스트레스": "anxiety-stress",
-                                    "외상 및 위기 개입": "trauma-crisis",
-                                    "중독 및 충동 조절": "addiction-impulse",
-                                    "진로 및 직업 문제": "career-job",
-                                    "경제 및 재정 문제": "financial-economic",
-                                    "건강 및 신체 문제": "health-physical",
-                                    "일상생활 및 자기 관리": "daily-life-management",
-                                    "다문화 적응": "multicultural-adaptation",
-                                    "디지털 환경 적응": "digital-environment",
-                                    "생애주기별 적응": "lifecycle-adaptation",
-                                    "사회 환경 적응": "social-environmental-issues"
-                                  };
-                                  const categoryId = categoryMap[subcategory.name];
+                                  const categoryId = TEST_SUBCATEGORY_SLUGS[subcategory.name];
                                   if (categoryId) {
                                     navigateTo(`/tests/${categoryId}`);
                                     setActiveMenu(null);
