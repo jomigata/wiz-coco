@@ -8,13 +8,17 @@ import { initializeFirebase } from '@/lib/firebase';
 import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu } from '@/utils/roleUtils';
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
-import { getVisibleTestMenuItems, TestCategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
+import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
+import { counselingMenuCategories, COUNSELING_MAIN_HREF } from '@/data/counselingMenu';
+import { aiMindAssistantMenuCategories, AI_MIND_ASSISTANT_MAIN_HREF } from '@/data/aiMindAssistantMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
+import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
+import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 
 export default function Navigation() {
   const router = useRouter();
@@ -29,15 +33,15 @@ export default function Navigation() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedAiAssistantMainCategory, setSelectedAiAssistantMainCategory] = useState<string | null>(null);
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
+  const [selectedCounselingMainCategory, setSelectedCounselingMainCategory] = useState<string | null>(null);
+  const [selectedCounselingSubcategory, setSelectedCounselingSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [maxButtonWidth, setMaxButtonWidth] = useState<number>(0);
-  const [maxContentWidth, setMaxContentWidth] = useState<number>(0);
-  const [leftColumnWidth, setLeftColumnWidth] = useState<number>(0);
-  const [parentContainerWidth, setParentContainerWidth] = useState<number>(0);
-  const buttonRefs = useRef<Map<string, HTMLElement>>(new Map());
-  const contentRefs = useRef<Map<string, HTMLElement>>(new Map());
-  const leftColumnRef = useRef<HTMLDivElement>(null);
-  const parentContainerRef = useRef<HTMLDivElement>(null);
+  const counselingTriggerRef = useRef<HTMLDivElement>(null);
+  const counselingPanelRef = useRef<HTMLDivElement>(null);
+  const counselingLeftColRef = useRef<HTMLDivElement>(null);
+  const counselingSubColRef = useRef<HTMLDivElement>(null);
+  const aiAssistantPanelRef = useRef<HTMLDivElement>(null);
+  const aiAssistantLeftColRef = useRef<HTMLDivElement>(null);
   const aiAssistantSubColRef = useRef<HTMLDivElement>(null);
   const aiAssistantTriggerRef = useRef<HTMLDivElement>(null);
   const psychologyTestsTriggerRef = useRef<HTMLDivElement>(null);
@@ -52,9 +56,7 @@ export default function Navigation() {
   const [scrollStates, setScrollStates] = useState<{[key: string]: {canScrollUp: boolean, canScrollDown: boolean}}>({});
   const [scrollIntervals, setScrollIntervals] = useState<{[key: string]: NodeJS.Timeout | null}>({});
   
-  // 자동 스크롤 훅들
-  const counselingScroll = useAutoScroll();
-  const aiAssistantScroll = useAutoScroll();
+  // 자동 스크롤 훅
   const userMenuScroll = useAutoScroll();
   
   const isDropdownOpen = activeMenu === 'user';
@@ -74,13 +76,22 @@ export default function Navigation() {
     [selectedMainCategory, selectedSubcategory]
   );
 
+  const counselingPlacement = useHorizontalMenuPlacement(
+    isCounselingDropdownOpen,
+    counselingTriggerRef,
+    counselingPanelRef,
+    counselingLeftColRef,
+    counselingSubColRef,
+    [selectedCounselingMainCategory, selectedCounselingSubcategory]
+  );
+
   const aiAssistantPlacement = useHorizontalMenuPlacement(
     isAiMindAssistantOpen,
     aiAssistantTriggerRef,
-    parentContainerRef,
-    leftColumnRef,
+    aiAssistantPanelRef,
+    aiAssistantLeftColRef,
     aiAssistantSubColRef,
-    [selectedAiAssistantMainCategory, selectedAiAssistantSubcategory, parentContainerWidth, maxButtonWidth]
+    [selectedAiAssistantMainCategory, selectedAiAssistantSubcategory]
   );
 
   const openMenu = useCallback((menuId: string) => {
@@ -158,60 +169,6 @@ export default function Navigation() {
 
     setIsTestInProgress(false);
   }, [pathname, isTestPage]);
-
-  // 중분류 버튼 중 가장 큰 버튼의 너비 계산 및 부모 컨테이너 너비 계산
-  useEffect(() => {
-    if (selectedAiAssistantMainCategory && isAiMindAssistantOpen) {
-      // 버튼이 렌더링된 후 계산하기 위해 약간의 지연 추가
-      const timer = setTimeout(() => {
-        let maxContentW = 0;
-        
-        // 1단계: 텍스트 영역의 실제 너비 측정 (width 제한 없이 자연스러운 너비 측정)
-        // 텍스트 영역은 아직 width가 설정되지 않은 상태(auto)이므로 실제 텍스트 너비를 측정할 수 있음
-        contentRefs.current.forEach((ref) => {
-          if (ref) {
-            // scrollWidth를 사용하여 텍스트의 실제 내용 너비 측정
-            const width = ref.scrollWidth;
-            if (width > maxContentW) {
-              maxContentW = width;
-            }
-          }
-        });
-        
-        // 2단계: 텍스트 너비를 기준으로 버튼 너비 정확히 계산
-        if (maxContentW > 0) {
-          setMaxContentWidth(maxContentW);
-          
-          // 버튼 전체 너비 계산: 텍스트 너비 + 아이콘(32px) + gap(16px) + 화살표(16px) + gap(16px) + 좌우 패딩(32px)
-          // 아이콘: text-2xl ≈ 32px, 화살표: w-4 h-4 = 16px, gap-4 = 16px, px-4 = 16px (좌우 각각)
-          // border-2 = 2px * 2 = 4px (좌우 각각)
-          const calculatedButtonWidth = maxContentW + 32 + 16 + 16 + 16 + 32 + 4; // 텍스트 + 아이콘 + gap + 화살표 + gap + padding + border
-          setMaxButtonWidth(calculatedButtonWidth);
-        }
-        
-        // 3단계: 왼쪽 컬럼 너비 측정 및 부모 컨테이너 너비 계산
-        if (leftColumnRef.current) {
-          const leftWidth = leftColumnRef.current.offsetWidth;
-          setLeftColumnWidth(leftWidth);
-          
-          // 4단계: 부모 컨테이너 너비 계산 (왼쪽 컬럼 + 오른쪽 컬럼)
-          const rightColumnWidth = maxContentW > 0 ? (maxContentW + 32 + 16 + 16 + 16 + 32 + 4 + 24) : 0; // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(8px)
-          const totalWidth = leftWidth + rightColumnWidth;
-          if (totalWidth > 0) {
-            setParentContainerWidth(totalWidth);
-          }
-        }
-        aiAssistantPlacement.updatePlacement();
-      }, 0); // 지연을 두면 드롭다운 열릴 때 너비가 뒤늦게 잡혀 상단 가로 레이아웃이 흔들릴 수 있음
-      
-      return () => clearTimeout(timer);
-    } else {
-      setMaxButtonWidth(0);
-      setMaxContentWidth(0);
-      setLeftColumnWidth(0);
-      setParentContainerWidth(0);
-    }
-  }, [selectedAiAssistantMainCategory, isAiMindAssistantOpen, aiAssistantPlacement.updatePlacement]);
 
   // 진행중인 검사 팝업 클릭 핸들러
   const handleInProgressTestsClick = () => {
@@ -383,61 +340,36 @@ export default function Navigation() {
     pushWithAuthSession(router, href);
   };
 
+  const initTierMenuSelection = (
+    categories: TestCategory[],
+    setMain: (value: string) => void,
+    setSub: (value: string) => void
+  ) => {
+    const first = categories[0];
+    if (!first) return;
+    setMain(first.category);
+    const firstSub = first.subcategories[0];
+    if (firstSub) setSub(firstSub.name);
+  };
+
+  const handleTierSubcategoryNav = (
+    subcategory: TestSubcategory,
+    slugMap?: Record<string, string>
+  ) => {
+    const slug = slugMap?.[subcategory.name];
+    if (slug) {
+      navigateTo(`/tests/${slug}`);
+      setActiveMenu(null);
+      return;
+    }
+    const href = subcategory.items[0]?.href;
+    if (href) {
+      navigateTo(href);
+      setActiveMenu(null);
+    }
+  };
+
   // 메뉴 데이터
-  const counselingMenuItems = [
-    {
-      category: "개인 상담",
-      items: [
-        { name: "심리 상담", href: "/counseling/psychology", description: "전문 심리상담사와 1:1 상담", badge: "24시간", icon: "💭" },
-        { name: "성장 코칭", href: "/counseling/growth", description: "개인 성장을 위한 코칭", icon: "🌱" },
-        { name: "관계 상담", href: "/counseling/relationship", description: "인간관계 문제 해결", icon: "💔" }
-      ]
-    },
-    {
-      category: "그룹 상담",
-      items: [
-        { name: "가족 상담", href: "/counseling/family", description: "가족 관계 개선 상담", icon: "👨‍👩‍👧‍👦" },
-        { name: "커플 상담", href: "/counseling/couple", description: "연인/부부 관계 상담", icon: "💑" },
-        { name: "직장 상담", href: "/counseling/workplace", description: "직장 내 스트레스 관리", icon: "🏢" }
-      ]
-    }
-  ];
-
-  const personalFeaturesMenu = [
-    {
-      category: "개인 관리",
-      items: [
-        { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음", icon: "📊" },
-        { name: "할당된 검사", href: "/mypage/assigned-tests", description: "상담사가 할당한 검사", icon: "📋" },
-        { name: "AI 종합 분석", href: "/tests/ai-analysis", description: "AI 기반 맞춤형 리포트", icon: "🤖" },
-        { name: "목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
-      ]
-    },
-    {
-      category: "상담 & 소통",
-      items: [
-        { name: "1:1 채팅", href: "/chat", description: "상담사와 실시간 채팅", icon: "💬" },
-        { name: "상담 예약", href: "/counseling/appointments", description: "개인/가족/커플 상담 예약", icon: "📅" },
-        { name: "상담사 연결", href: "/mypage/connect-counselor", description: "상담사 인증코드 입력", icon: "🔗" }
-      ]
-    },
-    {
-      category: "일상 관리",
-      items: [
-        { name: "일상 추적", href: "/mypage/daily-tracking", description: "매일의 마음 상태 기록", icon: "📝" },
-        { name: "MBTI 궁합", href: "/mbti-compatibility", description: "AI 기반 MBTI 궁합 분석", icon: "💕" }
-      ]
-    },
-    {
-      category: "학습 & 성장",
-      items: [
-        { name: "학습 자료", href: "/learning", description: "심리학 교육 콘텐츠", icon: "📚" },
-        { name: "맞춤 추천", href: "/recommendations", description: "AI 기반 상담 추천", icon: "💡" },
-        { name: "일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리", icon: "📅" }
-      ]
-    }
-  ];
-
   // 상담사 메뉴 데이터 (심리검사 관리 그룹을 맨 위에 표시)
   const counselorMenuItems = [
     {
@@ -514,191 +446,6 @@ export default function Navigation() {
     }
   ];
 
-  // '나의 AI 비서' 메뉴 데이터 - 3단계 구조 (대분류-중분류-소분류)
-  // 구조: 그룹(나의마음/AI기록분석/AI상담사) > 대분류 > 중분류 > 소분류
-  const aiMindAssistantSubMenuItems: TestCategory[] = [
-    // <나의마음> 그룹
-    { 
-      category: "일일 체크",
-      icon: "📊",
-      subcategories: [
-        {
-          name: "오늘의 컨디션 체크",
-          icon: "📊",
-      items: [
-            { name: "오늘의 컨디션 체크", href: "/ai-mind-assistant/daily-mood", description: "수면/스트레스/우울/불안 등 통합 체크", icon: "📊" }
-          ]
-        },
-        {
-          name: "오늘의 감정일기",
-          icon: "📝",
-          items: [
-            { name: "오늘의 감정일기", href: "/ai-mind-assistant/daily-thought", description: "AI가 분석하는 감정 변화", icon: "📝" }
-          ]
-        },
-        {
-          name: "나의 목표 관리",
-          icon: "🎯",
-          items: [
-            { name: "나의 목표 관리", href: "/goals", description: "개인 목표 설정 및 추적", icon: "🎯" }
-          ]
-        },
-        {
-          name: "일정 관리",
-          icon: "📅",
-          items: [
-            { name: "일정 관리", href: "/calendar", description: "상담 예약 및 일정 관리", icon: "📅" }
-          ]
-        }
-      ]
-    },
-    { 
-      category: "마음 SOS",
-      icon: "🚨",
-      subcategories: [
-        {
-          name: "나의 긴급 마음진단",
-          icon: "🚨",
-      items: [
-            { name: "나의 긴급 마음진단", href: "/ai-mind-assistant/emergency-diagnosis", description: "1분 AI 솔루션", icon: "🚨", badge: "긴급" }
-      ]
-    },
-    { 
-          name: "나의 번아웃 체크",
-          icon: "🔥",
-      items: [
-            { name: "나의 번아웃 체크", href: "/ai-mind-assistant/burnout-check", description: "번아웃 신호등 확인", icon: "🔥" }
-          ]
-        }
-      ]
-    },
-    // <AI기록분석> 그룹
-    {
-      category: "AI 리포트",
-      icon: "📋",
-      subcategories: [
-        {
-          name: "일상 추적",
-          icon: "📝",
-          items: [
-            { name: "일상 추적", href: "/mypage/daily-tracking", description: "매일의 마음 상태 기록", icon: "📝" }
-          ]
-        },
-        {
-          name: "AI 감정/스트레스 분석",
-          icon: "📊",
-          items: [
-            { name: "AI 감정/스트레스 분석", href: "/ai-mind-assistant/emotion-report", description: "종합 감정 및 스트레스 분석 결과", icon: "📊" }
-          ]
-        },
-        {
-          name: "AI 종합 분석 리포트",
-          icon: "🏆",
-          items: [
-            { name: "AI 종합 분석 리포트", href: "/tests/ai-analysis", description: "현재 마음 상태 종합 점검", icon: "🏆" }
-          ]
-        },
-        {
-          name: "K-MBTI 궁합",
-          icon: "💕",
-          items: [
-            { name: "K-MBTI 궁합", href: "/mbti-compatibility", description: "AI 기반 MBTI 궁합 분석", icon: "💕" }
-          ]
-        },
-        {
-          name: "성장 리포트",
-          icon: "📈",
-          items: [
-            { name: "성장 리포트", href: "/progress", description: "개인 성장 분석 리포트", icon: "📈" }
-          ]
-        },
-        {
-          name: "AI 프로파일링",
-          icon: "🔍",
-          items: [
-            { name: "AI 프로파일링", href: "/tests/ai-profiling", description: "캠퍼스 라이프 시크릿 리포트", icon: "🔍" }
-          ]
-        }
-      ]
-    },
-    {
-      category: "검사 기록",
-      icon: "📋",
-      subcategories: [
-        {
-          name: "나의 검사결과",
-          icon: "📊",
-          items: [
-            { name: "나의 검사결과", href: "/mypage?tab=records", description: "나의 심리검사 결과 모음", icon: "📊" }
-          ]
-        },
-        {
-          name: "상담사 할당검사",
-          icon: "📋",
-          items: [
-            { name: "상담사 할당검사", href: "/mypage/assigned-tests", description: "상담사가 할당한 검사", icon: "📋" }
-          ]
-        }
-      ]
-    },
-    // <AI상담사> 그룹
-    {
-      category: "도와줘요 상담사님",
-      icon: "💬",
-      subcategories: [
-        {
-          name: "1:1 채팅",
-          icon: "💬",
-          items: [
-            { name: "1:1 채팅", href: "/chat", description: "상담사와 실시간 채팅", icon: "💬" }
-          ]
-        },
-        {
-          name: "상담 예약",
-          icon: "📅",
-          items: [
-            { name: "상담 예약", href: "/counseling/appointments", description: "개인/가족/커플 상담 예약", icon: "📅" }
-          ]
-        },
-        {
-          name: "상담사 연결",
-          icon: "🔗",
-          items: [
-            { name: "상담사 연결", href: "/mypage/connect-counselor", description: "상담사 인증코드 입력", icon: "🔗" }
-          ]
-        }
-      ]
-    },
-    {
-      category: "셀프 치료",
-      icon: "🧘",
-      subcategories: [
-        {
-          name: "학습 치료",
-          icon: "📚",
-          items: [
-            { name: "학습 치료", href: "/learning", description: "심리학 교육 콘텐츠", icon: "📚" }
-          ]
-        },
-        {
-          name: "AI 맞춤 치료",
-          icon: "🤖",
-          items: [
-            { name: "AI 실시간 상담", href: "/ai-mind-assistant/counsel", description: "Gemini AI와 대화 상담", icon: "💬", badge: "신규" },
-            { name: "AI 맞춤 치료", href: "/recommendations", description: "AI 기반 상담 추천", icon: "🤖" }
-          ]
-        },
-        {
-          name: "상담사 할당 치료",
-          icon: "👨‍⚕️",
-          items: [
-            { name: "상담사 할당 치료", href: "/counselor/treatment-plans", description: "상담사가 할당한 치료 프로그램", icon: "👨‍⚕️" }
-          ]
-        }
-      ]
-    }
-  ];
-
   return (
     <>
       <style jsx>{`
@@ -754,6 +501,7 @@ export default function Navigation() {
                 }`}
                 onClick={(e) => handleNavLinkClick('/join', e)}
               >
+                <span aria-hidden>⭐</span>
                 검사 하기
               </Link>
               {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
@@ -789,188 +537,49 @@ export default function Navigation() {
 
                 {/* 심리검사 메가 메뉴 */}
                 {isPsychologyTestsOpen && (
-                  <div
-                    ref={psychologyTestsPanelRef}
-                    data-dropdown-menu="psychology-tests"
-                    className={`absolute top-full mt-0 pt-4 pb-8 w-auto min-w-[48rem] max-w-[56rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${psychologyPlacement.dropdownAlign}`}
-                    onMouseEnter={() => {
-                      openMenu('psychology-tests');
-                      const firstCategory = visibleTestMenuItems[0];
-                      if (firstCategory) {
-                        setSelectedMainCategory(firstCategory.category);
-                        if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
-                          setSelectedSubcategory(firstCategory.subcategories[0].name);
-                        }
+                  <ThreeTierMegaMenuPanel
+                    panelRef={psychologyTestsPanelRef}
+                    leftColRef={psychologyTestsLeftColRef}
+                    subColRef={psychologyTestsSubColRef}
+                    dropdownAlign={psychologyPlacement.dropdownAlign}
+                    menuDataAttribute="psychology-tests"
+                    panelTitle="🧠 AI 심리검사"
+                    categories={visibleTestMenuItems}
+                    selectedMainCategory={selectedMainCategory}
+                    selectedSubcategory={selectedSubcategory}
+                    isMenuOpen={isPsychologyTestsOpen}
+                    onSelectMainCategory={setSelectedMainCategory}
+                    onSelectSubcategory={setSelectedSubcategory}
+                    onHoverSubcategory={setHoveredCategory}
+                    navigateTo={navigateTo}
+                    onMainCategoryClick={(category) => {
+                      const categoryId = TEST_CATEGORY_SLUGS[category.category];
+                      if (categoryId) {
+                        navigateTo(`/tests?category=${categoryId}`);
+                        setActiveMenu(null);
                       }
                     }}
-                    onMouseLeave={scheduleClose}
-                  >
-                    <div className="px-4 pt-2 pb-3 border-b border-blue-500/20">
+                    onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS)}
+                    onCloseMenu={() => setActiveMenu(null)}
+                    onPanelMouseEnter={() => {
+                      openMenu('psychology-tests');
+                      initTierMenuSelection(visibleTestMenuItems, setSelectedMainCategory, setSelectedSubcategory);
+                    }}
+                    onPanelMouseLeave={scheduleClose}
+                    searchSlot={
                       <TestMenuSearch
                         categories={visibleTestMenuItems}
                         variant="desktop"
                         onNavigate={() => setActiveMenu(null)}
                       />
-                    </div>
-                    <div className="relative flex flex-row h-[62vh]">
-                      {/* 왼쪽: 대분류 (메뉴 아래 세로 목록) */}
-                      <div ref={psychologyTestsLeftColRef} className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 border-r border-blue-500/30 shrink-0">
-                        <div className="text-lg font-bold text-blue-300 mb-4">🧠 AI 심리검사</div>
-                        <div className="space-y-2">
-                          {visibleTestMenuItems.map((mainCategory, index) => (
-                            <div
-                              key={mainCategory.category}
-                              className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
-                                selectedMainCategory === mainCategory.category || (index === 0 && isPsychologyTestsOpen)
-                                  ? 'text-white border-white shadow-lg'
-                                  : 'text-blue-300 border-white/20 hover:text-white hover:border-white hover:shadow-md'
-                              }`}
-                              onClick={() => {
-                                setSelectedMainCategory(mainCategory.category);
-                                const categoryId = TEST_CATEGORY_SLUGS[mainCategory.category];
-                                if (categoryId) {
-                                  navigateTo(`/tests?category=${categoryId}`);
-                                  setActiveMenu(null);
-                                }
-                              }}
-                              onMouseEnter={() => {
-                                setSelectedMainCategory(mainCategory.category);
-                                if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
-                                  setSelectedSubcategory(mainCategory.subcategories[0].name);
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-xl">{mainCategory.icon}</span>
-                                <span className="font-medium">{mainCategory.category}</span>
-                                <svg 
-                                  className="w-4 h-4 text-white ml-auto"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div ref={psychologyTestsSubColRef} className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 shrink-0">
-                        {selectedMainCategory ? (
-                          <div>
-                            <div className="text-lg font-bold text-blue-300 mb-4">
-                              {selectedMainCategory}
-                            </div>
-                            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                              {visibleTestMenuItems
-                                .find(category => category.category === selectedMainCategory)
-                                ?.subcategories.map((subcategory, index) => {
-                                  const isSelected = selectedSubcategory === subcategory.name;
-                                  
-                                  return (
-                                <div 
-                                  key={subcategory.name} 
-                                  className="relative"
-                                  style={{
-                                    animation: 'fadeIn 0.3s ease-out',
-                                    animationDelay: `${index * 0.1}s`,
-                                    animationFillMode: 'both'
-                                  }}
-                                >
-                                  <div
-                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                      isSelected
-                                        ? 'border-2 border-white' 
-                                        : 'border-2 border-white/20 hover:border-white'
-                                    }`}
-                                    onMouseEnter={() => {
-                                      setHoveredCategory(subcategory.name);
-                                      setSelectedSubcategory(subcategory.name);
-                                    }}
-                                    onClick={() => {
-                                      const categoryId = TEST_SUBCATEGORY_SLUGS[subcategory.name];
-                                      if (categoryId) {
-                                        navigateTo(`/tests/${categoryId}`);
-                                        setActiveMenu(null);
-                                      }
-                                    }}
-                                  >
-                                    <div className="w-8 shrink-0 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
-                                      {subcategory.icon}
-                                    </div>
-                                    <div className="flex flex-col gap-1 flex-1 min-w-0">
-                                      <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
-                                    </div>
-                                    <svg 
-                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                  </div>
-                                  
-                                  {/* 소분류 메뉴 — 선택(호버)된 중분류만 표시 */}
-                                  {isSelected && subcategory.items && (
-                                    <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
-                                      {subcategory.items.map((item, itemIndex) => {
-                                        const isFirstItem = itemIndex === 0;
-                                        const shouldShowItemWhiteBorder = isFirstItem && isSelected;
-                                        
-                                        return (
-                                        <Link
-                                          key={item.name}
-                                          href={item.href}
-                                          className={`group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 ml-8 shadow-sm hover:shadow-md ${
-                                            shouldShowItemWhiteBorder
-                                              ? 'border-white'
-                                              : 'border-white/20 hover:border-white'
-                                          }`}
-                                          onClick={() => setActiveMenu(null)}
-                                        >
-                                          <div className="text-base group-hover:scale-110 transition-transform duration-300">
-                                            {item.icon}
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{item.name}</div>
-                                            <div className="text-xs text-blue-300 group-hover:text-blue-100 truncate">{item.description}</div>
-                                          </div>
-                                          <svg 
-                                            className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                          </svg>
-                                        </Link>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                              })}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-blue-300">
-                            대분류를 선택해주세요
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    }
+                  />
                 )}
               </div>
               )}
 
               {/* 상담 프로그램 드롭다운 메뉴 */}
-              <div className="relative">
+              <div ref={counselingTriggerRef} className="relative">
                 <Link
                   href="/counseling"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -981,7 +590,10 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
-                  onMouseEnter={() => openMenu('counseling')}
+                  onMouseEnter={() => {
+                    openMenu('counseling');
+                    initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
+                  }}
                   onMouseLeave={scheduleClose}
                 >
                   💬 상담 프로그램
@@ -999,76 +611,37 @@ export default function Navigation() {
                   </svg>
                 </Link>
 
-                {/* 상담 프로그램 메가 메뉴 */}
                 {isCounselingDropdownOpen && (
-                  <div
-                    data-dropdown-menu="counseling"
-                    className="absolute left-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                    onMouseEnter={() => openMenu('counseling')}
-                    onMouseLeave={scheduleClose}
-                  >
-                    <div className="relative">
-                      <div 
-                        ref={counselingScroll.scrollRef}
-                        className="px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
-                        onMouseMove={counselingScroll.handleMouseMove}
-                        onMouseLeave={counselingScroll.handleMouseLeave}
-                      >
-                        {counselingMenuItems.map((category) => (
-                          <div key={category.category} className="mb-4 last:mb-0">
-                            <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
-                              {category.category}
-                            </div>
-                            <div className="space-y-1">
-                              {category.items.map((item) => (
-                                <Link
-                                  key={item.name}
-                                  href={item.href}
-                                  className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
-                                    category === counselingMenuItems[0] && item === category.items[0]
-                                      ? 'border-white'
-                                      : 'border-white/20 hover:border-white'
-                                  }`}
-                                  onClick={() => setActiveMenu(null)}
-                                >
-                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                    {item.icon || '💭'}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                      {'badge' in item && (item as any).badge && (
-                                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                          (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
-                                            (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                            'bg-orange-500 text-white'
-                                        }`}>
-                                          {(item as any).badge}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                  </div>
-                                  <svg 
-                                    className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <ThreeTierMegaMenuPanel
+                    panelRef={counselingPanelRef}
+                    leftColRef={counselingLeftColRef}
+                    subColRef={counselingSubColRef}
+                    dropdownAlign={counselingPlacement.dropdownAlign}
+                    menuDataAttribute="counseling"
+                    panelTitle="💬 상담 프로그램"
+                    categories={counselingMenuCategories}
+                    selectedMainCategory={selectedCounselingMainCategory}
+                    selectedSubcategory={selectedCounselingSubcategory}
+                    isMenuOpen={isCounselingDropdownOpen}
+                    onSelectMainCategory={setSelectedCounselingMainCategory}
+                    onSelectSubcategory={setSelectedCounselingSubcategory}
+                    navigateTo={navigateTo}
+                    onMainCategoryClick={() => {
+                      navigateTo(COUNSELING_MAIN_HREF);
+                      setActiveMenu(null);
+                    }}
+                    onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                    onCloseMenu={() => setActiveMenu(null)}
+                    onPanelMouseEnter={() => {
+                      openMenu('counseling');
+                      initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
+                    }}
+                    onPanelMouseLeave={scheduleClose}
+                  />
                 )}
               </div>
 
-              {/* AI 마음 비서 드롭다운 메뉴 */}
+              {/* 나만의 공간 드롭다운 메뉴 */}
               <div ref={aiAssistantTriggerRef} className="relative">
                 <Link
                   href="/ai-mind-assistant"
@@ -1082,19 +655,11 @@ export default function Navigation() {
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                   onMouseEnter={() => {
                     openMenu('ai-mind-assistant');
-                    if (!selectedAiAssistantMainCategory) {
-                      const firstCategory = aiMindAssistantSubMenuItems[0];
-                      if (firstCategory) {
-                        setSelectedAiAssistantMainCategory(firstCategory.category);
-                        if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
-                          setSelectedAiAssistantSubcategory(firstCategory.subcategories[0].name);
-                        }
-                      }
-                    }
+                    initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
                   }}
                   onMouseLeave={scheduleClose}
                 >
-                  🤖 나의 AI 비서
+                  🏠 나만의 공간
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
@@ -1109,490 +674,39 @@ export default function Navigation() {
                   </svg>
                 </Link>
 
-                {/* AI 마음 비서 메가 메뉴 - 중분류가 옆으로 펼쳐지는 구조 */}
                 {isAiMindAssistantOpen && (
-                  <div
-                    ref={parentContainerRef}
-                    data-dropdown-menu="ai-mind-assistant"
-                    className={`absolute top-full mt-0 pt-4 pb-8 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${aiAssistantPlacement.dropdownAlign}`}
-                    style={{
-                      width: parentContainerWidth > 0 ? `${parentContainerWidth}px` : 'auto',
-                      minWidth: 'fit-content',
-                      maxWidth: 'none'
-                    }}
-                    onMouseEnter={() => {
-                      openMenu('ai-mind-assistant');
-                      if (!selectedAiAssistantMainCategory) {
-                        const firstCategory = aiMindAssistantSubMenuItems[0];
-                        if (firstCategory) {
-                          setSelectedAiAssistantMainCategory(firstCategory.category);
-                          if (firstCategory.subcategories && firstCategory.subcategories.length > 0) {
-                            setSelectedAiAssistantSubcategory(firstCategory.subcategories[0].name);
-                          }
-                        }
-                      }
-                    }}
-                    onMouseLeave={scheduleClose}
-                  >
-                    <div className={`relative flex h-[70vh] ${aiAssistantPlacement.subPanelSide === 'left' ? 'flex-row-reverse' : ''}`}>
-                      {/* 왼쪽: 그룹 및 대분류 */}
-                      <div 
-                        ref={leftColumnRef}
-                        className={`flex-shrink-0 p-4 border-r border-blue-500/30 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900 ${aiAssistantPlacement.subPanelSide === 'left' ? '[&_.nav-submenu-chevron]:rotate-180' : ''}`}
-                        style={{
-                          width: 'auto',
-                          minWidth: 'fit-content'
-                        }}
-                      >
-                      <div 
-                        ref={aiAssistantScroll.scrollRef}
-                          className="space-y-2"
-                        onMouseMove={aiAssistantScroll.handleMouseMove}
-                        onMouseLeave={aiAssistantScroll.handleMouseLeave}
-                      >
-                        {/* 나의마음 그룹 */}
-                        <div className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
-                            나의 마음
-                            </div>
-                            <div className="space-y-1">
-                            {/* 일일 체크 */}
-                            <div className="relative">
-                              <div
-                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "일일 체크" 
-                                    ? 'border-2 border-white' 
-                                    : 'border-2 border-white/20 hover:border-white'
-                                }`}
-                                onMouseEnter={() => {
-                                  setSelectedAiAssistantMainCategory("일일 체크");
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "일일 체크");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
-                                  }
-                                }}
-                                onClick={() => {
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "일일 체크");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    const firstSubcategory = category.subcategories[0];
-                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      navigateTo(firstSubcategory.items[0].href);
-                                      setActiveMenu(null);
-                                    } else {
-                                      setSelectedAiAssistantMainCategory("일일 체크");
-                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
-                                    }
-                                  }
-                                }}
-                                >
-                                  <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  📊
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                  <div className="text-base font-medium text-white truncate">일일 체크</div>
-                                  <div className="text-sm text-blue-300 truncate">매일의 컨디션과 감정을 기록</div>
-                                  </div>
-                                  <svg 
-                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                            </div>
-                          </div>
-                            {/* 마음 SOS */}
-                            <div className="relative">
-                              <div
-                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "마음 SOS" 
-                                    ? 'border-2 border-white' 
-                                    : 'border-2 border-white/20 hover:border-white'
-                                }`}
-                                onMouseEnter={() => {
-                                  setSelectedAiAssistantMainCategory("마음 SOS");
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "마음 SOS");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
-                                  }
-                                }}
-                                onClick={() => {
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "마음 SOS");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    const firstSubcategory = category.subcategories[0];
-                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      navigateTo(firstSubcategory.items[0].href);
-                                      setActiveMenu(null);
-                                    } else {
-                                      setSelectedAiAssistantMainCategory("마음 SOS");
-                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
-                                    }
-                                  }
-                                }}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  🚨
-                      </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-base font-medium text-white truncate">마음 SOS</div>
-                                  <div className="text-sm text-blue-300 truncate">긴급한 마음 상태 진단</div>
-                    </div>
-                                <svg 
-                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                  </div>
-                            </div>
-                          </div>
-              </div>
-
-                        {/* AI기록분석 그룹 */}
-                        <div className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
-                            AI 기록 분석
-                          </div>
-                          <div className="space-y-1">
-                            {/* AI 리포트 */}
-              <div className="relative">
-                              <div
-                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "AI 리포트" 
-                                    ? 'border-2 border-white' 
-                                    : 'border-2 border-white/20 hover:border-white'
-                                }`}
-                                onMouseEnter={() => {
-                                  setSelectedAiAssistantMainCategory("AI 리포트");
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "AI 리포트");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
-                                  }
-                                }}
-                                onClick={() => {
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "AI 리포트");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    const firstSubcategory = category.subcategories[0];
-                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      navigateTo(firstSubcategory.items[0].href);
-                                      setActiveMenu(null);
-                                    } else {
-                                      setSelectedAiAssistantMainCategory("AI 리포트");
-                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
-                                    }
-                                  }
-                                }}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  📋
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-base font-medium text-white truncate">AI 리포트</div>
-                                  <div className="text-sm text-blue-300 truncate">AI가 분석하는 종합 리포트</div>
-                                </div>
-                                <svg 
-                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                              </div>
-                            </div>
-                            {/* 검사 기록 */}
-                            <div className="relative">
-                              <div
-                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "검사 기록" 
-                                    ? 'border-2 border-white' 
-                                    : 'border-2 border-white/20 hover:border-white'
-                                }`}
-                                onMouseEnter={() => {
-                                  setSelectedAiAssistantMainCategory("검사 기록");
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "검사 기록");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
-                                  }
-                                }}
-                                onClick={() => {
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "검사 기록");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    const firstSubcategory = category.subcategories[0];
-                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      navigateTo(firstSubcategory.items[0].href);
-                                      setActiveMenu(null);
-                                    } else {
-                                      setSelectedAiAssistantMainCategory("검사 기록");
-                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
-                                    }
-                                  }
-                                }}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  📋
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-base font-medium text-white truncate">검사 기록</div>
-                                  <div className="text-sm text-blue-300 truncate">나의 심리검사 결과 모음</div>
-                                </div>
-                                <svg 
-                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* AI상담사 그룹 */}
-                        <div className="mb-4 last:mb-0">
-                          <div className="px-2 py-1 text-base font-bold text-purple-300 uppercase tracking-wide mb-2">
-                            AI 상담사
-                          </div>
-                          <div className="space-y-1">
-                            {/* 도와줘요 상담사님 */}
-                            <div className="relative">
-                              <div
-                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "도와줘요 상담사님" 
-                                    ? 'border-2 border-white' 
-                                    : 'border-2 border-white/20 hover:border-white'
-                                }`}
-                                onMouseEnter={() => {
-                                  setSelectedAiAssistantMainCategory("도와줘요 상담사님");
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "도와줘요 상담사님");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
-                                  }
-                                }}
-                                onClick={() => {
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "도와줘요 상담사님");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    const firstSubcategory = category.subcategories[0];
-                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      navigateTo(firstSubcategory.items[0].href);
+                  <ThreeTierMegaMenuPanel
+                    panelRef={aiAssistantPanelRef}
+                    leftColRef={aiAssistantLeftColRef}
+                    subColRef={aiAssistantSubColRef}
+                    dropdownAlign={aiAssistantPlacement.dropdownAlign}
+                    menuDataAttribute="ai-mind-assistant"
+                    panelTitle="🏠 나만의 공간"
+                    categories={aiMindAssistantMenuCategories}
+                    selectedMainCategory={selectedAiAssistantMainCategory}
+                    selectedSubcategory={selectedAiAssistantSubcategory}
+                    isMenuOpen={isAiMindAssistantOpen}
+                    onSelectMainCategory={setSelectedAiAssistantMainCategory}
+                    onSelectSubcategory={setSelectedAiAssistantSubcategory}
+                    navigateTo={navigateTo}
+                    onMainCategoryClick={() => {
+                      navigateTo(AI_MIND_ASSISTANT_MAIN_HREF);
                       setActiveMenu(null);
-                                    } else {
-                                      setSelectedAiAssistantMainCategory("도와줘요 상담사님");
-                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
-                                    }
-                                  }
-                                }}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  💬
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-base font-medium text-white truncate">도와줘요 상담사님</div>
-                                  <div className="text-sm text-blue-300 truncate">전문 상담사와의 소통</div>
-                                </div>
-                                <svg 
-                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                            </div>
-                            {/* 셀프 치료 */}
-                    <div className="relative">
-                              <div
-                                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                  selectedAiAssistantMainCategory === "셀프 치료" 
-                                    ? 'border-2 border-white' 
-                                    : 'border-2 border-white/20 hover:border-white'
-                                }`}
-                                onMouseEnter={() => {
-                                  setSelectedAiAssistantMainCategory("셀프 치료");
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "셀프 치료");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    setSelectedAiAssistantSubcategory(category.subcategories[0].name);
-                                  }
-                                }}
-                                onClick={() => {
-                                  const category = aiMindAssistantSubMenuItems.find(c => c.category === "셀프 치료");
-                                  if (category?.subcategories && category.subcategories.length > 0) {
-                                    const firstSubcategory = category.subcategories[0];
-                                    if (firstSubcategory.items && firstSubcategory.items.length > 0) {
-                                      navigateTo(firstSubcategory.items[0].href);
-                                      setActiveMenu(null);
-                                    } else {
-                                      setSelectedAiAssistantMainCategory("셀프 치료");
-                                      setSelectedAiAssistantSubcategory(firstSubcategory.name);
-                                    }
-                                  }
-                                }}
-                              >
-                                <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                  🧘
-                        </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-base font-medium text-white truncate">셀프 치료</div>
-                                  <div className="text-sm text-blue-300 truncate">스스로 실천하는 치료 프로그램</div>
-                                </div>
-                                <svg 
-                                  className="nav-submenu-chevron w-4 h-4 text-blue-300 group-hover:text-white transition-all duration-300"
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        </div>
-                      </div>
-
-                      {/* 오른쪽: 선택된 대분류의 중분류 */}
-                      <div 
-                        ref={aiAssistantSubColRef}
-                        className="flex-shrink-0 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
-                        style={{
-                          width: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'auto', // 버튼 너비 + 좌측 패딩(16px) + 우측 패딩(8px) = 좌측보다 작은 우측 공백
-                          minWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'auto', // 최소 너비 설정으로 일관성 유지
-                          maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth + 24}px` : 'none', // 최대 너비 설정으로 컨테이너 크기 고정
-                          paddingLeft: '16px', // 좌측 패딩
-                          paddingRight: '8px', // 우측 패딩 (좌측보다 작게 설정)
-                          paddingTop: '16px',
-                          paddingBottom: '16px',
-                          boxSizing: 'content-box' // 패딩을 포함하지 않은 너비 계산 (width에 패딩이 포함되지 않음)
-                        }}
-                      >
-                        {selectedAiAssistantMainCategory ? (
-                          <div>
-                            <div className="text-lg font-bold text-purple-300 mb-4">
-                              {selectedAiAssistantMainCategory}
-                            </div>
-                            <div className="space-y-1">
-                              {aiMindAssistantSubMenuItems
-                                .find(category => category.category === selectedAiAssistantMainCategory)
-                                ?.subcategories.map((subcategory, index) => (
-                                <div 
-                                  key={`${selectedAiAssistantMainCategory}-${subcategory.name}-${index}`}
-                                  className="relative"
-                                  style={{
-                                    animation: 'fadeIn 0.3s ease-out',
-                                    animationDelay: `${index * 0.1}s`,
-                                    animationFillMode: 'both'
-                                  }}
-                                >
-                                  <div
-                                    ref={(el) => {
-                                      if (el) {
-                                        buttonRefs.current.set(`${selectedAiAssistantMainCategory}-${subcategory.name}`, el);
-                                      }
-                                    }}
-                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                                      selectedAiAssistantSubcategory === subcategory.name 
-                                        ? 'border-2 border-white' 
-                                        : 'border-2 border-white/20 hover:border-white'
-                                    }`}
-                                    style={{
-                                      width: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 가장 긴 텍스트를 기준으로 계산된 고정 너비
-                                      minWidth: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'auto', // 최소 너비 설정으로 일관성 유지
-                                      maxWidth: maxButtonWidth > 0 ? `${maxButtonWidth}px` : 'none', // 최대 너비 설정으로 버튼 크기 고정
-                                      flexShrink: 0, // flex 아이템이 축소되지 않도록 설정
-                                      boxSizing: 'border-box' // 패딩과 보더를 포함한 너비 계산
-                                    }}
-                                    onMouseEnter={() => {
-                                      setHoveredCategory(subcategory.name);
-                                      setSelectedAiAssistantSubcategory(subcategory.name);
-                                    }}
-                                    onClick={() => {
-                                      if (subcategory.items && subcategory.items.length > 0) {
-                                        navigateTo(subcategory.items[0].href);
-                                        setActiveMenu(null);
-                                      }
-                                    }}
-                                >
-                                    <div className="text-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                                      {subcategory.icon}
-                                  </div>
-                                    <div 
-                                      ref={(el) => {
-                                        if (el) {
-                                          contentRefs.current.set(`${selectedAiAssistantMainCategory}-${subcategory.name}`, el);
-                                        }
-                                      }}
-                                      className="flex flex-col gap-1 flex-1 min-w-0"
-                                      style={{
-                                        width: maxContentWidth > 0 ? `${maxContentWidth}px` : 'auto',
-                                        maxWidth: maxContentWidth > 0 ? `${maxContentWidth}px` : 'none'
-                                      }}
-                                    >
-                                    <div className="flex items-center gap-2">
-                                        <div className="text-base font-medium text-white whitespace-nowrap">{subcategory.name}</div>
-                                        {subcategory.items && subcategory.items.length > 0 && 'badge' in subcategory.items[0] && (subcategory.items[0] as any).badge && (
-                                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
-                                            (subcategory.items[0] as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                            (subcategory.items[0] as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                          'bg-orange-500 text-white'
-                                        }`}>
-                                            {(subcategory.items[0] as any).badge}
-                                        </span>
-                                      )}
-                                    </div>
-                                      {subcategory.items && subcategory.items.length > 0 && (
-                                        <div className="text-sm text-blue-300 whitespace-nowrap">{subcategory.items[0].description}</div>
-                                      )}
-                                  </div>
-                                  <svg 
-                                      className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0 ml-auto"
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-blue-300">
-                            대분류를 선택해주세요
-                        </div>
-                      )}
-                      </div>
-                    </div>
-                  </div>
+                    }}
+                    onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                    onCloseMenu={() => setActiveMenu(null)}
+                    onPanelMouseEnter={() => {
+                      openMenu('ai-mind-assistant');
+                      initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
+                    }}
+                    onPanelMouseLeave={scheduleClose}
+                  />
                 )}
               </div>
             </div>
 
             {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
-            <div className="ml-1 flex min-w-[17.5rem] shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 md:min-w-[19rem] lg:gap-2.5 lg:pl-5 lg:min-w-[20rem]">
-              {/* 비로그인 시에만 상단 멤버십 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
-              {!isLoggedIn && (
-                <Link
-                  href="/membership"
-                  className={`mr-0.5 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border-2 px-3.5 text-sm font-semibold tracking-tight transition-all duration-300 lg:px-4 lg:text-[15px] ${
-                    activeItem === "/membership"
-                      ? "text-white bg-amber-500/90 border-white shadow-sm"
-                      : "text-amber-100/95 hover:text-white hover:bg-white/10 border-transparent hover:border-white/30"
-                  }`}
-                  onClick={(e) => handleNavLinkClick("/membership", e)}
-                >
-                  <span className="text-base leading-none" aria-hidden>
-                    ⭐
-                  </span>
-                  멤버십
-                </Link>
-              )}
-
+            <div className="ml-1 flex min-w-[14rem] shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 md:min-w-[15rem] lg:gap-2.5 lg:pl-5 lg:min-w-[16rem]">
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
                 {isLoggedIn ? (
@@ -2064,464 +1178,58 @@ export default function Navigation() {
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
+                <span aria-hidden>⭐</span>
                 검사 하기
               </Link>
 
               {/* 심리검사 — 상담사·관리자 전용 */}
               {showPsychologyTestsMenu && (
-              <div className="space-y-3">
-                <div className="px-4 py-2 text-sm font-semibold text-blue-300 uppercase tracking-wide border-b border-blue-500/30">
-                  🧠 AI 심리검사
-                </div>
-                <div className="px-2">
-                  <TestMenuSearch
-                    categories={visibleTestMenuItems}
-                    variant="mobile"
-                    onNavigate={() => setIsMobileMenuOpen(false)}
-                  />
-                </div>
-                
-                {/* 대분류 5개 */}
-                <div className="space-y-2">
-                  {visibleTestMenuItems.map((mainCategory, index) => (
-                    <div key={mainCategory.category} className="space-y-2">
-                      {/* 대분류 */}
-                      <div 
-                        className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-blue-200 bg-blue-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
-                          selectedMainCategory === mainCategory.category ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/30'
-                        }`}
-                        onClick={() => setSelectedMainCategory(selectedMainCategory === mainCategory.category ? null : mainCategory.category)}
-                      >
-                        <span className="text-lg">{mainCategory.icon}</span>
-                        <span className="flex-1">{mainCategory.category}</span>
-                        <svg 
-                          className={`w-4 h-4 transition-transform duration-300 ${
-                            selectedMainCategory === mainCategory.category ? 'rotate-90' : ''
-                          }`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    
-                      {/* 선택된 대분류의 중분류 */}
-                      {selectedMainCategory === mainCategory.category && (
-                        <div className="ml-4 space-y-2 animate-fadeIn">
-                          {mainCategory.subcategories.map((subcategory) => (
-                            <div key={subcategory.name} className="space-y-1">
-                              <div 
-                                className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-purple-300 bg-purple-500/20 rounded cursor-pointer transition-all duration-300 ${
-                                  selectedSubcategory === subcategory.name ? 'bg-purple-500/30' : 'hover:bg-purple-500/30'
-                                }`}
-                                onClick={() => {
-                                  const categoryId = TEST_SUBCATEGORY_SLUGS[subcategory.name];
-                                  if (categoryId) {
-                                    navigateTo(`/tests/${categoryId}`);
-                                    setActiveMenu(null);
-                                  }
-                                }}
-                              >
-                                <span className="text-lg">{subcategory.icon}</span>
-                                <span className="flex-1">{subcategory.name}</span>
-                                <svg 
-                                  className={`w-4 h-4 transition-transform duration-300 ${
-                                    selectedSubcategory === subcategory.name ? 'rotate-90' : ''
-                                  }`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                              
-                              {/* 소분류 */}
-                              {selectedSubcategory === subcategory.name && (
-                                <div className="ml-4 space-y-1 animate-fadeIn-slow">
-                                  {subcategory.items.map((item) => (
-                                    <Link
-                                      key={item.name}
-                                      href={item.href}
-                                      className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                                      onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs">{item.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="font-medium">{item.name}</div>
-                                          <div className="text-xs text-gray-400">{item.description}</div>
-                                        </div>
-                                      </div>
-                                    </Link>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+                <ThreeTierMobileMenuSection
+                  sectionTitle="🧠 AI 심리검사"
+                  categories={visibleTestMenuItems}
+                  selectedMainCategory={selectedMainCategory}
+                  selectedSubcategory={selectedSubcategory}
+                  onToggleMainCategory={(category) =>
+                    setSelectedMainCategory(selectedMainCategory === category ? null : category)
+                  }
+                  onSelectSubcategory={setSelectedSubcategory}
+                  onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS)}
+                  onCloseMenu={() => setIsMobileMenuOpen(false)}
+                  searchSlot={
+                    <TestMenuSearch
+                      categories={visibleTestMenuItems}
+                      variant="mobile"
+                      onNavigate={() => setIsMobileMenuOpen(false)}
+                    />
+                  }
+                />
               )}
 
-              {/* 상담 프로그램 */}
-              <div className="space-y-2">
-                <div className="px-4 py-2 text-sm font-semibold text-purple-300 uppercase tracking-wide">
-                  💬 상담 프로그램
-                </div>
-                {counselingMenuItems.map((category) => (
-                  <div key={category.category} className="ml-4 space-y-1">
-                    <div className="px-2 py-1 text-base font-bold text-purple-400 uppercase tracking-wide">
-                      {category.category}
-                    </div>
-                    {category.items.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="block px-4 py-2 text-base text-gray-300 hover:text-white hover:bg-purple-800/30 rounded-lg transition-all duration-300"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>{item.icon}</span>
-                          <span>{item.name}</span>
-                          {'badge' in item && (item as any).badge && (
-                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                              (item as any).badge === '24시간' ? 'bg-red-500 text-white' :
-                              (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                              'bg-orange-500 text-white'
-                            }`}>
-                              {(item as any).badge}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-purple-300 ml-6 mt-1">{item.description}</div>
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              <ThreeTierMobileMenuSection
+                sectionTitle="💬 상담 프로그램"
+                categories={counselingMenuCategories}
+                selectedMainCategory={selectedCounselingMainCategory}
+                selectedSubcategory={selectedCounselingSubcategory}
+                onToggleMainCategory={(category) =>
+                  setSelectedCounselingMainCategory(selectedCounselingMainCategory === category ? null : category)
+                }
+                onSelectSubcategory={setSelectedCounselingSubcategory}
+                onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                onCloseMenu={() => setIsMobileMenuOpen(false)}
+              />
 
-              {/* AI 마음 비서 */}
-              <div className="space-y-3">
-                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide border-b border-green-500/30">
-                  🤖 나의 AI 비서
-                </div>
-                
-                {/* 나의마음 그룹 */}
-              <div className="space-y-2">
-                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
-                    나의 마음
-                </div>
-                  {aiMindAssistantSubMenuItems.filter(c => c.category === "일일 체크" || c.category === "마음 SOS").map((mainCategory) => (
-                    <div key={mainCategory.category} className="space-y-2 ml-4">
-                      {/* 대분류 */}
-                      <div 
-                        className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-green-200 bg-green-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
-                          selectedAiAssistantMainCategory === mainCategory.category ? 'bg-green-600 text-white' : 'hover:bg-green-500/30'
-                        }`}
-                        onClick={() => setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === mainCategory.category ? null : mainCategory.category)}
-                      >
-                        <span className="text-lg">{mainCategory.icon}</span>
-                        <span className="flex-1">{mainCategory.category}</span>
-                        <svg 
-                          className={`w-4 h-4 transition-transform duration-300 ${
-                            selectedAiAssistantMainCategory === mainCategory.category ? 'rotate-90' : ''
-                          }`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                    </div>
-                    
-                      {/* 선택된 대분류의 중분류 */}
-                      {selectedAiAssistantMainCategory === mainCategory.category && (
-                        <div className="ml-4 space-y-2 animate-fadeIn">
-                          {mainCategory.subcategories.map((subcategory) => (
-                            <div key={subcategory.name} className="space-y-1">
-                              <div 
-                                className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-green-300 bg-green-500/20 rounded cursor-pointer transition-all duration-300 ${
-                                  selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-500/30' : 'hover:bg-green-500/30'
-                                }`}
-                                onClick={() => {
-                                  if (subcategory.items && subcategory.items.length > 0) {
-                                    navigateTo(subcategory.items[0].href);
-                                    setIsMobileMenuOpen(false);
-                                  }
-                                  setSelectedAiAssistantSubcategory(selectedAiAssistantSubcategory === subcategory.name ? null : subcategory.name);
-                                }}
-                              >
-                                <span className="text-lg">{subcategory.icon}</span>
-                                <span className="flex-1">{subcategory.name}</span>
-                                <svg 
-                                  className={`w-4 h-4 transition-transform duration-300 ${
-                                    selectedAiAssistantSubcategory === subcategory.name ? 'rotate-90' : ''
-                                  }`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                              
-                              {/* 소분류 */}
-                              {selectedAiAssistantSubcategory === subcategory.name && (
-                                <div className="ml-4 space-y-1 animate-fadeIn-slow">
-                                  {subcategory.items.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                                      className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                                        <span className="text-xs">{item.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <div className="font-medium">{item.name}</div>
-                          {'badge' in item && (item as any).badge && (
-                            <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                              (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                              (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                              'bg-orange-500 text-white'
-                            }`}>
-                              {(item as any).badge}
-                            </span>
-                          )}
-                        </div>
-                                          <div className="text-xs text-gray-400">{item.description}</div>
-                                        </div>
-                                      </div>
-                      </Link>
-                    ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </div>
-
-                {/* AI기록분석 그룹 */}
-              <div className="space-y-2">
-                <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
-                    AI 기록 분석
-                </div>
-                  {aiMindAssistantSubMenuItems.filter(c => c.category === "AI 리포트" || c.category === "검사 기록").map((mainCategory) => (
-                    <div key={mainCategory.category} className="space-y-2 ml-4">
-                      {/* 대분류 */}
-                      <div 
-                        className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-green-200 bg-green-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
-                          selectedAiAssistantMainCategory === mainCategory.category ? 'bg-green-600 text-white' : 'hover:bg-green-500/30'
-                        }`}
-                        onClick={() => setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === mainCategory.category ? null : mainCategory.category)}
-                      >
-                        <span className="text-lg">{mainCategory.icon}</span>
-                        <span className="flex-1">{mainCategory.category}</span>
-                        <svg 
-                          className={`w-4 h-4 transition-transform duration-300 ${
-                            selectedAiAssistantMainCategory === mainCategory.category ? 'rotate-90' : ''
-                          }`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                    </div>
-                    
-                      {/* 선택된 대분류의 중분류 */}
-                      {selectedAiAssistantMainCategory === mainCategory.category && (
-                        <div className="ml-4 space-y-2 animate-fadeIn">
-                          {mainCategory.subcategories.map((subcategory) => (
-                            <div key={subcategory.name} className="space-y-1">
-                              <div 
-                                className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-green-300 bg-green-500/20 rounded cursor-pointer transition-all duration-300 ${
-                                  selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-500/30' : 'hover:bg-green-500/30'
-                                }`}
-                                onClick={() => {
-                                  if (subcategory.items && subcategory.items.length > 0) {
-                                    navigateTo(subcategory.items[0].href);
-                                    setIsMobileMenuOpen(false);
-                                  }
-                                  setSelectedAiAssistantSubcategory(selectedAiAssistantSubcategory === subcategory.name ? null : subcategory.name);
-                                }}
-                              >
-                                <span className="text-lg">{subcategory.icon}</span>
-                                <span className="flex-1">{subcategory.name}</span>
-                                <svg 
-                                  className={`w-4 h-4 transition-transform duration-300 ${
-                                    selectedAiAssistantSubcategory === subcategory.name ? 'rotate-90' : ''
-                                  }`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                              
-                              {/* 소분류 */}
-                              {selectedAiAssistantSubcategory === subcategory.name && (
-                                <div className="ml-4 space-y-1 animate-fadeIn-slow">
-                                  {subcategory.items.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                                      className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                                        <span className="text-xs">{item.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <div className="font-medium">{item.name}</div>
-                                            {'badge' in item && (item as any).badge && (
-                                              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                                (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                                'bg-orange-500 text-white'
-                                              }`}>
-                                                {(item as any).badge}
-                                              </span>
-                                            )}
-                        </div>
-                                          <div className="text-xs text-gray-400">{item.description}</div>
-                                        </div>
-                                      </div>
-                      </Link>
-                    ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </div>
-
-                {/* AI상담사 그룹 */}
-                <div className="space-y-2">
-                  <div className="px-4 py-2 text-sm font-semibold text-green-300 uppercase tracking-wide">
-                    AI 상담사
-                  </div>
-                  {aiMindAssistantSubMenuItems.filter(c => c.category === "도와줘요 상담사님" || c.category === "셀프 치료").map((mainCategory) => (
-                    <div key={mainCategory.category} className="space-y-2 ml-4">
-                      {/* 대분류 */}
-                      <div 
-                        className={`flex items-center gap-2 px-3 py-2 text-sm font-bold text-green-200 bg-green-500/20 rounded-lg cursor-pointer transition-all duration-300 ${
-                          selectedAiAssistantMainCategory === mainCategory.category ? 'bg-green-600 text-white' : 'hover:bg-green-500/30'
-                        }`}
-                        onClick={() => setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === mainCategory.category ? null : mainCategory.category)}
-                      >
-                        <span className="text-lg">{mainCategory.icon}</span>
-                        <span className="flex-1">{mainCategory.category}</span>
-                        <svg 
-                          className={`w-4 h-4 transition-transform duration-300 ${
-                            selectedAiAssistantMainCategory === mainCategory.category ? 'rotate-90' : ''
-                          }`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    
-                      {/* 선택된 대분류의 중분류 */}
-                      {selectedAiAssistantMainCategory === mainCategory.category && (
-                        <div className="ml-4 space-y-2 animate-fadeIn">
-                          {mainCategory.subcategories.map((subcategory) => (
-                            <div key={subcategory.name} className="space-y-1">
-                              <div 
-                                className={`flex items-center gap-2 px-2 py-1 text-base font-bold text-green-300 bg-green-500/20 rounded cursor-pointer transition-all duration-300 ${
-                                  selectedAiAssistantSubcategory === subcategory.name ? 'bg-green-500/30' : 'hover:bg-green-500/30'
-                                }`}
-                                onClick={() => {
-                                  if (subcategory.items && subcategory.items.length > 0) {
-                                    navigateTo(subcategory.items[0].href);
-                                    setIsMobileMenuOpen(false);
-                                  }
-                                  setSelectedAiAssistantSubcategory(selectedAiAssistantSubcategory === subcategory.name ? null : subcategory.name);
-                                }}
-                              >
-                                <span className="text-lg">{subcategory.icon}</span>
-                                <span className="flex-1">{subcategory.name}</span>
-                                <svg 
-                                  className={`w-4 h-4 transition-transform duration-300 ${
-                                    selectedAiAssistantSubcategory === subcategory.name ? 'rotate-90' : ''
-                                  }`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                              
-                              {/* 소분류 */}
-                              {selectedAiAssistantSubcategory === subcategory.name && (
-                                <div className="ml-4 space-y-1 animate-fadeIn-slow">
-                                  {subcategory.items.map((item) => (
-                                    <Link
-                                      key={item.name}
-                                      href={item.href}
-                                      className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-green-800/30 rounded-lg transition-all duration-300"
-                                      onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs">{item.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <div className="font-medium">{item.name}</div>
-                                            {'badge' in item && (item as any).badge && (
-                                              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                                                (item as any).badge === '긴급' ? 'bg-red-500 text-white' :
-                                                (item as any).badge === '신규' ? 'bg-green-500 text-white' :
-                                                'bg-orange-500 text-white'
-                                              }`}>
-                                                {(item as any).badge}
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div className="text-xs text-gray-400">{item.description}</div>
-                                        </div>
-                                      </div>
-                                    </Link>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-
-              {/* 멤버십 링크 (모바일) - 비로그인 시에만 노출 (로그인 후에는 마이페이지 > 멤버십 관리로 대체) */}
-              {!isLoggedIn && (
-                <div className="space-y-2 pt-4 border-t border-white/20">
-                  <Link
-                    href="/membership"
-                    className="block px-4 py-2 text-base text-yellow-300 hover:text-white hover:bg-yellow-700/30 rounded-lg transition-all duration-300 font-semibold"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    ⭐ 멤버십 플랜
-                  </Link>
-                </div>
-              )}
+              <ThreeTierMobileMenuSection
+                sectionTitle="🏠 나만의 공간"
+                categories={aiMindAssistantMenuCategories}
+                selectedMainCategory={selectedAiAssistantMainCategory}
+                selectedSubcategory={selectedAiAssistantSubcategory}
+                onToggleMainCategory={(category) =>
+                  setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === category ? null : category)
+                }
+                onSelectSubcategory={setSelectedAiAssistantSubcategory}
+                onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                onCloseMenu={() => setIsMobileMenuOpen(false)}
+              />
 
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
