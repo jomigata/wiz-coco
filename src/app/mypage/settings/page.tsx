@@ -27,8 +27,6 @@ export default function SettingsPage() {
   });
   const [privacy, setPrivacy] = useState({
     profileVisibility: 'public',
-    dataSharing: false,
-    analytics: true
   });
 
   useEffect(() => {
@@ -271,44 +269,6 @@ export default function SettingsPage() {
                   <option value="friends">친구만</option>
                   <option value="private">비공개</option>
                 </select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">데이터 공유</p>
-                  <p className="text-blue-300 text-sm">익명화된 데이터를 연구 목적으로 공유</p>
-                </div>
-                <button
-                  onClick={() => handlePrivacyChange('dataSharing', !privacy.dataSharing)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    privacy.dataSharing ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      privacy.dataSharing ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">분석 데이터 수집</p>
-                  <p className="text-blue-300 text-sm">서비스 개선을 위한 사용 패턴 분석</p>
-                </div>
-                <button
-                  onClick={() => handlePrivacyChange('analytics', !privacy.analytics)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    privacy.analytics ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      privacy.analytics ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
               </div>
 
               {user && (
