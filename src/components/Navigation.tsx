@@ -705,7 +705,7 @@ export default function Navigation() {
               </div>
             </div>
 
-            {/* 멤버십 · 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
+            {/* 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
             <div className="ml-1 flex min-w-[14rem] shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 md:min-w-[15rem] lg:gap-2.5 lg:pl-5 lg:min-w-[16rem]">
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
@@ -1018,7 +1018,6 @@ export default function Navigation() {
                                 {[
                                   { name: "검사 기록", href: "/mypage?tab=records", description: "나의 심리검사 결과 확인", icon: "📊" },
                                   { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
-                                  { name: "멤버십 관리", href: "/mypage?tab=membership", description: "구독 플랜 및 결제 관리", icon: "⭐" },
                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
                                   { name: "삭제된 코드", href: "/mypage?tab=deleted", description: "삭제된 테스트 코드 복구", icon: "📋" },
                                   { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️", badge: counselorResultCount }
@@ -1255,13 +1254,6 @@ export default function Navigation() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     👤 기본 정보
-                  </Link>
-                  <Link
-                    href="/mypage?tab=membership"
-                    className="block px-4 py-2 text-sm text-yellow-300 hover:text-white hover:bg-yellow-700/30 rounded-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    ⭐ 멤버십 관리
                   </Link>
                   <Link
                     href="/mypage/counseling"

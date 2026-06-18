@@ -20,7 +20,6 @@ import { hasAuthenticatedTabSession, markInternalNavigation, pushWithAuthSession
 // 삭제코드 페이지 컴포넌트 import
 import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
-import MembershipTab from './components/MembershipTab';
 import InlineProfileBlocks, { applySavePatch } from './components/InlineProfileBlocks';
 import SubtleLoadingOverlay from '@/components/SubtleLoadingOverlay';
 import { getInProgressTests, clearTestProgress } from '@/utils/testResume';
@@ -221,6 +220,7 @@ function MyPageContent() {
   const normalizeMypageTab = (tab: string | null | undefined): string => {
     const t = (tab || 'profile').trim();
     if (t === 'deleted-codes') return 'deleted';
+    if (t === 'membership') return 'profile';
     return t;
   };
 
@@ -982,17 +982,6 @@ function MyPageContent() {
               </button>
               <button
                 type="button"
-                onClick={() => changeTab('membership')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
-                  activeTab === 'membership'
-                    ? 'text-yellow-300 bg-yellow-900/20 border border-b-0 border-yellow-500/30'
-                    : 'text-yellow-400/70 hover:text-yellow-300'
-                }`}
-              >
-                ⭐ 멤버십
-              </button>
-              <button
-                type="button"
                 onClick={() => changeTab('deleted')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'deleted'
@@ -1652,19 +1641,6 @@ function MyPageContent() {
 
             {activeTab === 'deleted' && (
               <DeletedCodesContent isEmbedded={true} />
-            )}
-
-            {activeTab === 'membership' && firebaseUser?.uid && (
-              <motion.div
-                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-lg border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm sm:p-5"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05, duration: 0.35 }}
-              >
-                <h2 className="text-lg font-semibold text-slate-100 mb-4">⭐ 멤버십 관리</h2>
-                <MembershipTab userId={firebaseUser.uid} />
-                <SubtleLoadingOverlay show={recordsSyncPending} />
-              </motion.div>
             )}
             </div>
           </>
