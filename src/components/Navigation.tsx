@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
@@ -11,6 +11,8 @@ import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorAp
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
 import { counselingMenuCategories, COUNSELING_MAIN_HREF } from '@/data/counselingMenu';
 import { aiMindAssistantMenuCategories, AI_MIND_ASSISTANT_MAIN_HREF } from '@/data/aiMindAssistantMenu';
+import { counselorMenuCategories, COUNSELOR_MAIN_HREF } from '@/data/counselorMenu';
+import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
 import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
@@ -35,6 +37,10 @@ export default function Navigation() {
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
   const [selectedCounselingMainCategory, setSelectedCounselingMainCategory] = useState<string | null>(null);
   const [selectedCounselingSubcategory, setSelectedCounselingSubcategory] = useState<string | null>(null);
+  const [selectedCounselorMainCategory, setSelectedCounselorMainCategory] = useState<string | null>(null);
+  const [selectedCounselorSubcategory, setSelectedCounselorSubcategory] = useState<string | null>(null);
+  const [selectedAdminMainCategory, setSelectedAdminMainCategory] = useState<string | null>(null);
+  const [selectedAdminSubcategory, setSelectedAdminSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const counselingTriggerRef = useRef<HTMLDivElement>(null);
   const counselingPanelRef = useRef<HTMLDivElement>(null);
@@ -48,6 +54,14 @@ export default function Navigation() {
   const psychologyTestsPanelRef = useRef<HTMLDivElement>(null);
   const psychologyTestsLeftColRef = useRef<HTMLDivElement>(null);
   const psychologyTestsSubColRef = useRef<HTMLDivElement>(null);
+  const counselorTriggerRef = useRef<HTMLDivElement>(null);
+  const counselorPanelRef = useRef<HTMLDivElement>(null);
+  const counselorLeftColRef = useRef<HTMLDivElement>(null);
+  const counselorSubColRef = useRef<HTMLDivElement>(null);
+  const adminTriggerRef = useRef<HTMLDivElement>(null);
+  const adminPanelRef = useRef<HTMLDivElement>(null);
+  const adminLeftColRef = useRef<HTMLDivElement>(null);
+  const adminSubColRef = useRef<HTMLDivElement>(null);
   // 드롭다운 닫기 지연 타이머 (grace period: 150ms)
   // onPointerLeave 즉시 닫으면 메뉴 이동/아래서 접근 시 깜빡임 발생
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,6 +106,24 @@ export default function Navigation() {
     aiAssistantLeftColRef,
     aiAssistantSubColRef,
     [selectedAiAssistantMainCategory, selectedAiAssistantSubcategory]
+  );
+
+  const counselorPlacement = useHorizontalMenuPlacement(
+    isCounselorOpen,
+    counselorTriggerRef,
+    counselorPanelRef,
+    counselorLeftColRef,
+    counselorSubColRef,
+    [selectedCounselorMainCategory, selectedCounselorSubcategory]
+  );
+
+  const adminPlacement = useHorizontalMenuPlacement(
+    isAdminOpen,
+    adminTriggerRef,
+    adminPanelRef,
+    adminLeftColRef,
+    adminSubColRef,
+    [selectedAdminMainCategory, selectedAdminSubcategory]
   );
 
   const openMenu = useCallback((menuId: string) => {
@@ -181,6 +213,12 @@ export default function Navigation() {
   const counselorResultCount = useCounselorApplicationNotificationCount(userUid, userRole);
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
   const showPsychologyTestsMenu = shouldShowPsychologyTestsMenu(userRole);
+  const showCounselorMenu = shouldShowCounselorMenu(userRole);
+  const showAdminMenu = shouldShowAdminMenu(userRole);
+  const visibleAdminMenuItems = useMemo(
+    () => withAdminMenuBadges(adminMenuCategories, pendingCounselorCount),
+    [pendingCounselorCount]
+  );
 
   useEffect(() => {
     if (!showPsychologyTestsMenu && activeMenu === 'psychology-tests') {
@@ -368,83 +406,6 @@ export default function Navigation() {
       setActiveMenu(null);
     }
   };
-
-  // 메뉴 데이터
-  // 상담사 메뉴 데이터 (심리검사 관리 그룹을 맨 위에 표시)
-  const counselorMenuItems = [
-    {
-      category: "심리검사 관리",
-      items: [
-        {
-          name: "검사코드 목록",
-          href: "/counselor/assessments",
-          description: "검사코드 발급·목록·진행현황 (신규 CVC+숫자, 기존 6자리 호환)",
-          icon: "📦",
-        },
-        { name: "새 검사코드 만들기", href: "/counselor/assessments/new", description: "내담자용 검사코드를 만들고 코드를 발급합니다", icon: "➕" },
-        { name: "검사 결과 분석", href: "/counselor/test-results", description: "내담자 검사 결과 분석", icon: "📊" },
-        { name: "검사 추천", href: "/counselor/test-recommendations", description: "맞춤 검사 추천", icon: "🎯" },
-        { name: "인증코드 관리", href: "/counselor/codes", description: "상담사 인증코드 관리", icon: "🔑" },
-      ],
-    },
-    {
-      category: "내담자 관리",
-      items: [
-        { name: "내담자 목록", href: "/counselor/clients", description: "담당 내담자 관리", icon: "👥" },
-        { name: "검사 할당", href: "/counselor/assign-tests", description: "내담자에게 검사 할당", icon: "📋" },
-        { name: "검사 관리", href: "/counselor/test-management", description: "신입생 통합 검사 관리", icon: "🎓" },
-        { name: "상담 일정", href: "/counselor/schedule", description: "상담 일정 관리", icon: "📅" },
-        { name: "상담 기록", href: "/counselor/sessions", description: "상담 세션 기록", icon: "📝" }
-      ]
-    },
-    {
-      category: "상담 도구",
-      items: [
-        { name: "1:1 채팅", href: "/chat", description: "내담자와 실시간 채팅", icon: "💬" },
-        { name: "상담 노트", href: "/counselor/notes", description: "상담 내용 기록", icon: "📋" },
-        { name: "치료 계획", href: "/counselor/treatment-plans", description: "치료 계획 수립", icon: "📋" },
-        { name: "진행 상황", href: "/counselor/progress", description: "치료 진행 상황 추적", icon: "📈" }
-      ]
-    },
-    {
-      category: "데이터 관리",
-      items: [
-        { name: "데이터 공유", href: "/counselor/data-sharing", description: "다른 상담사와 데이터 공유", icon: "🤝" },
-        { name: "일상 기록 관리", href: "/counselor/daily-records", description: "내담자 일상 기록 관리", icon: "📊" }
-      ]
-    }
-  ];
-
-  // 통합 관리자 메뉴 데이터
-  const adminMenuItems = [
-    {
-      category: "대시보드 & 모니터링",
-      items: [
-        { name: "시스템 대시보드", href: "/admin/system-dashboard", description: "전체 현황 한눈에 보기", icon: "📊" },
-        { name: "실시간 모니터링", href: "/admin/realtime-monitoring", description: "활성 사용자, 상담 진행 상황", icon: "⚡" },
-        { name: "알림 관리", href: "/admin/notification-management", description: "중요 알림 및 이벤트 관리", icon: "🔔" }
-      ]
-    },
-    {
-      category: "사용자 & 상담 관리",
-      items: [
-        { name: "사용자 관리", href: "/admin/user-management", description: "상담사/내담자 통합 관리", icon: "👥" },
-        { name: "상담사 관리", href: "/admin/counselor-management", description: "상담사 인증, 자격 검증, 프로필 관리", icon: "👨‍⚕️" },
-        { name: "상담사 인증 승인", href: "/admin/counselor-verification", description: "상담사 전환·지원 신청 검토", icon: "✅" },
-        { name: "상담 관리", href: "/admin/counseling-management", description: "상담 일정, 진행 상황, 결과 관리", icon: "💭" },
-        { name: "심리검사 관리", href: "/admin/psychological-tests", description: "검사 생성, 배포, 결과 분석", icon: "🧠" },
-        { name: "콘텐츠 관리", href: "/admin/content-management", description: "상담 프로그램, 공지사항, 자료 관리", icon: "📚" }
-      ]
-    },
-    {
-      category: "시스템 & 보안 관리",
-      items: [
-        { name: "시스템 설정", href: "/admin/system-settings", description: "기본 설정, 권한 관리", icon: "⚙️" },
-        { name: "데이터 관리", href: "/admin/data-management", description: "백업, 복원, 데이터 분석", icon: "💾" },
-        { name: "보안 관리", href: "/admin/security-management", description: "보안 설정, 로그 관리, 접근 제어", icon: "🔐" }
-      ]
-    }
-  ];
 
   return (
     <>
@@ -712,8 +673,8 @@ export default function Navigation() {
                 {isLoggedIn ? (
                   <>
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
-                    {shouldShowCounselorMenu(userRole) && (
-                      <div className="relative">
+                    {showCounselorMenu && (
+                      <div ref={counselorTriggerRef} className="relative">
                         <Link
                           href="/counselor"
                           className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -724,7 +685,10 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
-                          onMouseEnter={() => openMenu('counselor')}
+                          onMouseEnter={() => {
+                            openMenu('counselor');
+                            initTierMenuSelection(counselorMenuCategories, setSelectedCounselorMainCategory, setSelectedCounselorSubcategory);
+                          }}
                           onMouseLeave={scheduleClose}
                         >
                           👨‍⚕️ 상담사
@@ -742,86 +706,39 @@ export default function Navigation() {
                           </svg>
                         </Link>
 
-                        {/* 상담사 메가 메뉴 */}
                         {isCounselorOpen && (
-                          <div
-                            data-dropdown-menu="counselor"
-                            className="absolute right-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                            onMouseEnter={() => {
+                          <ThreeTierMegaMenuPanel
+                            panelRef={counselorPanelRef}
+                            leftColRef={counselorLeftColRef}
+                            subColRef={counselorSubColRef}
+                            dropdownAlign={counselorPlacement.dropdownAlign}
+                            menuDataAttribute="counselor"
+                            panelTitle="👨‍⚕️ 상담사"
+                            categories={counselorMenuCategories}
+                            selectedMainCategory={selectedCounselorMainCategory}
+                            selectedSubcategory={selectedCounselorSubcategory}
+                            isMenuOpen={isCounselorOpen}
+                            onSelectMainCategory={setSelectedCounselorMainCategory}
+                            onSelectSubcategory={setSelectedCounselorSubcategory}
+                            navigateTo={navigateTo}
+                            onMainCategoryClick={() => {
+                              navigateTo(COUNSELOR_MAIN_HREF);
+                              setActiveMenu(null);
+                            }}
+                            onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                            onCloseMenu={() => setActiveMenu(null)}
+                            onPanelMouseEnter={() => {
                               openMenu('counselor');
+                              initTierMenuSelection(counselorMenuCategories, setSelectedCounselorMainCategory, setSelectedCounselorSubcategory);
                             }}
-                            onMouseLeave={() => {
-                              scheduleClose();
-                              handleMouseLeave('counselor');
-                            }}
-                            onMouseMove={(e) => handleMouseMove('counselor', e)}
-                          >
-                            <div className="relative">
-                              {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
-                              {scrollStates.counselor?.canScrollUp && (
-                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-20">
-                                  <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-blue-400 shadow-lg animate-bounce"></div>
-                                </div>
-                              )}
-                              
-                              <div 
-                                className="scrollable-content px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
-                                onScroll={(e) => handleScroll('counselor', e)}
-                              >
-                                {counselorMenuItems.map((category) => (
-                                  <div key={category.category} className="mb-4 last:mb-0">
-                                    <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
-                                      {category.category}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {category.items.map((item) => (
-                                        <Link
-                                          key={item.name}
-                                          href={item.href}
-                                          className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
-                                            category === counselorMenuItems[0] && item === category.items[0]
-                                              ? 'border-white'
-                                              : 'border-white/20 hover:border-white'
-                                          }`}
-                                          onClick={() => setActiveMenu(null)}
-                                        >
-                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                            {item.icon || '👨‍⚕️'}
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                            </div>
-                                            <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                          </div>
-                                          <svg 
-                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                            fill="none" 
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                          </svg>
-                                        </Link>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              {/* 하단 화살표 */}
-                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-10">
-                                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-500/30"></div>
-                              </div>
-                            </div>
-                          </div>
+                            onPanelMouseLeave={scheduleClose}
+                          />
                         )}
                       </div>
                     )}
 
-                    {/* 관리자 메뉴 - 관리자만 표시 */}
-                    {shouldShowAdminMenu(userRole) && (
-                      <div className="relative">
+                    {showAdminMenu && (
+                      <div ref={adminTriggerRef} className="relative">
                         <Link
                           href="/admin"
                           className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -832,7 +749,10 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
-                          onMouseEnter={() => openMenu('admin')}
+                          onMouseEnter={() => {
+                            openMenu('admin');
+                            initTierMenuSelection(visibleAdminMenuItems, setSelectedAdminMainCategory, setSelectedAdminSubcategory);
+                          }}
                           onMouseLeave={scheduleClose}
                         >
                           🔧 관리자
@@ -855,86 +775,33 @@ export default function Navigation() {
                           </svg>
                         </Link>
 
-                        {/* 관리자 메가 메뉴 */}
                         {isAdminOpen && (
-                          <div
-                            data-dropdown-menu="admin"
-                            className="absolute right-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                            onMouseEnter={() => {
+                          <ThreeTierMegaMenuPanel
+                            panelRef={adminPanelRef}
+                            leftColRef={adminLeftColRef}
+                            subColRef={adminSubColRef}
+                            dropdownAlign={adminPlacement.dropdownAlign}
+                            menuDataAttribute="admin"
+                            panelTitle="🔧 관리자"
+                            categories={visibleAdminMenuItems}
+                            selectedMainCategory={selectedAdminMainCategory}
+                            selectedSubcategory={selectedAdminSubcategory}
+                            isMenuOpen={isAdminOpen}
+                            onSelectMainCategory={setSelectedAdminMainCategory}
+                            onSelectSubcategory={setSelectedAdminSubcategory}
+                            navigateTo={navigateTo}
+                            onMainCategoryClick={() => {
+                              navigateTo(ADMIN_MAIN_HREF);
+                              setActiveMenu(null);
+                            }}
+                            onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                            onCloseMenu={() => setActiveMenu(null)}
+                            onPanelMouseEnter={() => {
                               openMenu('admin');
+                              initTierMenuSelection(visibleAdminMenuItems, setSelectedAdminMainCategory, setSelectedAdminSubcategory);
                             }}
-                            onMouseLeave={() => {
-                              scheduleClose();
-                              handleMouseLeave('admin');
-                            }}
-                            onMouseMove={(e) => handleMouseMove('admin', e)}
-                          >
-                            <div className="relative">
-                              {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
-                              {scrollStates.admin?.canScrollUp && (
-                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-20">
-                                  <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-blue-400 shadow-lg animate-bounce"></div>
-                                </div>
-                              )}
-                              
-                              <div 
-                                className="scrollable-content px-6 py-4 space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900"
-                                onScroll={(e) => handleScroll('admin', e)}
-                              >
-                                {adminMenuItems.map((category) => (
-                                  <div key={category.category} className="mb-4 last:mb-0">
-                                    <div className="px-2 py-1 text-base font-bold text-blue-300 uppercase tracking-wide mb-2">
-                                      {category.category}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {category.items.map((item) => (
-                                        <Link
-                                          key={item.name}
-                                          href={item.href}
-                                          className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
-                                            category === adminMenuItems[0] && item === category.items[0]
-                                              ? 'border-white'
-                                              : 'border-white/20 hover:border-white'
-                                          }`}
-                                          onClick={() => setActiveMenu(null)}
-                                        >
-                                          <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                                            {item.icon || '🔧'}
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-base font-medium text-white truncate">{item.name}</span>
-                                              {item.href === '/admin/counselor-verification' && pendingCounselorCount > 0 && (
-                                                <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
-                                                  {pendingCounselorCount > 99 ? '99+' : pendingCounselorCount}
-                                                </span>
-                                              )}
-                                            </div>
-                                            <div className="text-sm text-blue-300 truncate">{item.description}</div>
-                                          </div>
-                                          <svg 
-                                            className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                          </svg>
-                                        </Link>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
-                              {scrollStates.admin?.canScrollDown && (
-                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-4 z-20">
-                                  <div className="w-0 h-0 border-l-10 border-r-10 border-t-10 border-transparent border-t-blue-400 shadow-lg animate-bounce"></div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            onPanelMouseLeave={scheduleClose}
+                          />
                         )}
                       </div>
                     )}
@@ -1229,6 +1096,36 @@ export default function Navigation() {
                 onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
                 onCloseMenu={() => setIsMobileMenuOpen(false)}
               />
+
+              {showCounselorMenu && (
+                <ThreeTierMobileMenuSection
+                  sectionTitle="👨‍⚕️ 상담사"
+                  categories={counselorMenuCategories}
+                  selectedMainCategory={selectedCounselorMainCategory}
+                  selectedSubcategory={selectedCounselorSubcategory}
+                  onToggleMainCategory={(category) =>
+                    setSelectedCounselorMainCategory(selectedCounselorMainCategory === category ? null : category)
+                  }
+                  onSelectSubcategory={setSelectedCounselorSubcategory}
+                  onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                  onCloseMenu={() => setIsMobileMenuOpen(false)}
+                />
+              )}
+
+              {showAdminMenu && (
+                <ThreeTierMobileMenuSection
+                  sectionTitle="🔧 관리자"
+                  categories={visibleAdminMenuItems}
+                  selectedMainCategory={selectedAdminMainCategory}
+                  selectedSubcategory={selectedAdminSubcategory}
+                  onToggleMainCategory={(category) =>
+                    setSelectedAdminMainCategory(selectedAdminMainCategory === category ? null : category)
+                  }
+                  onSelectSubcategory={setSelectedAdminSubcategory}
+                  onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                  onCloseMenu={() => setIsMobileMenuOpen(false)}
+                />
+              )}
 
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
