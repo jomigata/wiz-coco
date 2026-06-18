@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import CounselorSwitchPanel from './components/CounselorSwitchPanel';
@@ -16,15 +15,9 @@ interface User {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const { user: firebaseUser, authPending: firebaseLoading, showLoginRequired } = useAuthResolved();
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    marketing: false
-  });
   const [privacy, setPrivacy] = useState({
     profileVisibility: 'public',
   });
@@ -62,13 +55,6 @@ export default function SettingsPage() {
     checkAuthAndLoadUser();
   }, [firebaseUser, firebaseLoading]);
 
-  const handleNotificationChange = (type: keyof typeof notifications) => {
-    setNotifications(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
-  };
-
   const handlePrivacyChange = (type: keyof typeof privacy, value: any) => {
     setPrivacy(prev => ({
       ...prev,
@@ -79,7 +65,7 @@ export default function SettingsPage() {
   const saveSettings = async () => {
     try {
       // 설정 저장 로직 구현
-      console.log('설정 저장:', { notifications, privacy });
+      console.log('설정 저장:', { privacy });
       // TODO: API 호출로 설정 저장
     } catch (error) {
       console.error('설정 저장 오류:', error);
@@ -177,77 +163,7 @@ export default function SettingsPage() {
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 알림 설정 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z"/>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-              </svg>
-              알림 설정
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">이메일 알림</p>
-                  <p className="text-blue-300 text-sm">중요한 업데이트 및 검사 결과 알림</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationChange('email')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.email ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.email ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">푸시 알림</p>
-                  <p className="text-blue-300 text-sm">브라우저 푸시 알림</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationChange('push')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.push ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.push ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">마케팅 알림</p>
-                  <p className="text-blue-300 text-sm">새로운 서비스 및 이벤트 정보</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationChange('marketing')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.marketing ? 'bg-blue-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.marketing ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
+        <div className="max-w-2xl mx-auto">
           {/* 개인정보 설정 */}
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">

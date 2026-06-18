@@ -1020,7 +1020,7 @@ export default function Navigation() {
                                   { name: "기본 정보", href: "/mypage?tab=profile", description: "프로필 정보 수정", icon: "👤" },
                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
                                   { name: "삭제된 코드", href: "/mypage?tab=deleted", description: "삭제된 테스트 코드 복구", icon: "📋" },
-                                  { name: "설정", href: "/mypage/settings", description: "계정 및 알림 설정", icon: "⚙️", badge: counselorResultCount }
+                                  { name: "설정", href: "/mypage/settings", description: "계정 설정", icon: "⚙️", badge: counselorResultCount }
                                 ].map((item, index) => (
                                   <Link
                                     key={item.name}
