@@ -3,15 +3,24 @@ import uuid
 
 from flask import Blueprint, jsonify, request
 from firebase_admin.firestore import SERVER_TIMESTAMP
+from itsdangerous import URLSafeTimedSerializer
 
 from config import (
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
     JOIN_PARTICIPANTS_COLLECTION,
     NOTIFICATION_QUEUE_COLLECTION,
-    PUBLIC_SITE_URL,
     SECRET_KEY,
 )
+from firebase_init import get_firestore
+from rate_limit import limit_access_code
+from utils.access_code import (
+    generate_unique_portal_access_code,
+    is_valid_access_code,
+    normalize_access_code,
+)
+from utils.participant_auth import get_participant_session_from_request, issue_participant_token
+from utils.password import generate_four_digit_password, hash_password
 
 bp = Blueprint("join_flow", __name__, url_prefix="/api/join")
 

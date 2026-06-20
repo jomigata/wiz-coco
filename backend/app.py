@@ -4,6 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from config import FLASK_ENV, SECRET_KEY
+from utils.cors_config import CORS_ALLOW_HEADERS, get_cors_origins
 from routes.assessments import bp as assessments_bp
 from routes.auth import bp as auth_bp
 from routes.counselor_applications import bp as counselor_applications_bp
@@ -17,7 +18,13 @@ from routes.join_flow import bp as join_flow_bp
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = SECRET_KEY
-    CORS(app, origins=os.getenv("CORS_ORIGINS", "*").split(","), supports_credentials=True)
+    CORS(
+        app,
+        origins=get_cors_origins(),
+        supports_credentials=True,
+        allow_headers=CORS_ALLOW_HEADERS,
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    )
 
     app.register_blueprint(assessments_bp)
     app.register_blueprint(auth_bp)

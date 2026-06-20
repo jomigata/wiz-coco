@@ -103,6 +103,7 @@ jobs:
             ENV_VARS="${ENV_VARS},NOTIFICATION_CRON_SECRET=${{ secrets.NOTIFICATION_CRON_SECRET }}"
           fi
           ENV_VARS="${ENV_VARS},PUBLIC_SITE_URL=https://wizcoco.com"
+          ENV_VARS="${ENV_VARS},CORS_ORIGINS=https://wizcoco.com,https://www.wizcoco.com,https://wiz-coco.web.app,https://wiz-coco.firebaseapp.com"
 
           if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then
             echo "✅ SMTP 환경 변수가 Cloud Run에 주입됩니다 (상담사 승인 알림 메일 활성화)."
@@ -144,6 +145,7 @@ jobs:
           URL=$(gcloud run services describe "${{ env.SERVICE_NAME }}" --region "${{ env.REGION }}" --project "${PROJECT_ID}" --format 'value(status.url)')
           echo "Cloud Run URL: $URL"
           echo "CLOUD_RUN_URL=$URL" >> $GITHUB_ENV
+          curl -sf "${URL}/api/health" | grep -q ok && echo "✅ /api/health OK" || echo "⚠️ /api/health 확인 실패 — 로그 점검 필요"
 
       - name: 🧹 Clean up old container images (keep latest 5)
         run: |

@@ -192,7 +192,19 @@ jobs:
         
         echo "=================================="
       
+    - name: 🔐 Authenticate to Google Cloud (Flask API URL)
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: 🔧 Set up gcloud (Flask API URL)
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+
     - name: 🌍 환경 변수 설정
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       run: |
         echo "NODE_ENV=production" > .env
         echo "SKIP_DB_INIT=true" >> .env
@@ -214,9 +226,22 @@ jobs:
         echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
-        # Flask API URL (Cloud Run 등) - 선택 사항
-        if [ -n "${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" ]; then
-          echo "NEXT_PUBLIC_FLASK_API_URL=${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" >> .env
+        # Flask API URL — Cloud Run 실제 URL 우선 (Secret stale 방지)
+        FLASK_URL=""
+        if [ -n "${GCP_PROJECT_ID}" ]; then
+          FLASK_URL=$(gcloud run services describe wizcoco-api \
+            --region asia-northeast3 \
+            --project "${GCP_PROJECT_ID}" \
+            --format 'value(status.url)' 2>/dev/null || true)
+        fi
+        if [ -z "${FLASK_URL}" ] && [ -n "${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}" ]; then
+          FLASK_URL="${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}"
+        fi
+        if [ -n "${FLASK_URL}" ]; then
+          echo "NEXT_PUBLIC_FLASK_API_URL=${FLASK_URL}" >> .env
+          echo "✅ NEXT_PUBLIC_FLASK_API_URL=${FLASK_URL}"
+        else
+          echo "⚠️ Flask API URL을 확인하지 못했습니다."
         fi
         
     - name: 🏗️ 프로젝트 빌드
