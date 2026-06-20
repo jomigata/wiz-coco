@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache, useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { connectCounselorByCode } from '@/utils/counselorConnectionClient';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
 
 const LoadingRegister = () => (
@@ -26,10 +25,8 @@ const RegisterContent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [counselorCode, setCounselorCode] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showCounselorCode, setShowCounselorCode] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -73,19 +70,7 @@ const RegisterContent = () => {
         return;
       }
 
-      if (counselorCode.trim()) {
-        try {
-          await connectCounselorByCode(result.user.uid, counselorCode.trim());
-          primeFirebaseAuthSessionCache(result.user);
-          router.push('/mypage?connected=true');
-          return;
-        } catch {
-          // 상담사 연결 실패해도 가입은 완료
-        }
-        router.push('/login?registered=true&counselorConnectionFailed=true');
-        return;
-      }
-
+      primeFirebaseAuthSessionCache(result.user);
       router.push('/login?registered=true&emailVerification=sent');
     } catch {
       setRegisterError('회원가입 처리 중 오류가 발생했습니다.');
@@ -155,30 +140,6 @@ const RegisterContent = () => {
               className="w-full px-3 py-2.5 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
               placeholder="비밀번호 (6자 이상)"
             />
-
-            <div className="pt-1 space-y-1.5">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="hasCounselorCode"
-                  checked={showCounselorCode}
-                  onChange={(e) => setShowCounselorCode(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-emerald-700/60 bg-emerald-950/40 text-emerald-600"
-                />
-                <span className="text-xs text-emerald-500">상담사 인증코드 (선택)</span>
-              </label>
-              {showCounselorCode && (
-                <input
-                  id="counselorCode"
-                  name="counselorCode"
-                  type="text"
-                  value={counselorCode}
-                  onChange={(e) => setCounselorCode(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
-                  placeholder="인증코드"
-                />
-              )}
-            </div>
 
             <button
               type="submit"

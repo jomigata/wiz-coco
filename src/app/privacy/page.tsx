@@ -16,7 +16,7 @@ export default function PrivacyPage() {
               <h2 className="text-emerald-100 font-medium">1. 수집하는 개인정보 항목</h2>
               <ul className="list-disc pl-5 space-y-1 text-emerald-200/85">
                 <li>필수: 이메일, 이름(닉네임)</li>
-                <li>선택: 프로필 이미지, 상담사 인증코드(입력한 경우)</li>
+                <li>선택: 프로필 이미지</li>
                 <li>서비스 이용 과정에서 자동 생성: 접속 로그, 기기/브라우저 정보, 쿠키, 이용 기록</li>
               </ul>
             </section>

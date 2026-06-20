@@ -112,32 +112,9 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // 상담사 인증코드 - counselorCodes
-    // 상담사는 자신의 코드 CRUD. 활성 코드는 인증된 사용자가 코드명으로 조회 가능(중복 확인·연결).
+    // 상담사 인증코드 - counselorCodes (기능 종료, 클라이언트 접근 차단)
     match /counselorCodes/{codeId} {
-      function isOwner() {
-        return request.auth != null && resource.data.counselorId == request.auth.uid;
-      }
-
-      allow read: if request.auth != null && (
-        isOwner() || resource.data.isActive == true
-      );
-
-      allow create: if request.auth != null
-        && request.resource.data.counselorId == request.auth.uid
-        && request.resource.data.isActive == true
-        && request.resource.data.codeName is string
-        && request.resource.data.codeName.size() >= 1
-        && request.resource.data.codeName.size() <= 100
-        && request.resource.data.codeNumber is string
-        && request.resource.data.codeNumber.size() >= 8;
-
-      allow update: if request.auth != null
-        && resource.data.counselorId == request.auth.uid
-        && request.resource.data.counselorId == resource.data.counselorId
-        && request.resource.data.codeNumber == resource.data.codeNumber;
-
-      allow delete: if false;
+      allow read, write: if false;
     }
 
     // 내담자-상담사 연결 - clientCounselorRelations

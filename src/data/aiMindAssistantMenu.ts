@@ -223,18 +223,6 @@ export const aiMindAssistantMenuCategories: TestCategory[] = [
           },
         ],
       },
-      {
-        name: '5c. 상담사 연결',
-        icon: '🔗',
-        items: [
-          {
-            name: '상담사 연결',
-            href: '/mypage/connect-counselor',
-            description: '상담사 인증코드 입력',
-            icon: '🔗',
-          },
-        ],
-      },
     ],
   },
   {

@@ -1,4 +1,4 @@
-// 상담사 및 인증코드 관련 타입 정의
+// 상담사 관련 타입 정의
 
 export interface Counselor {
   id: string;
@@ -16,16 +16,6 @@ export interface Counselor {
     phoneNumber?: string;
     license?: string;
   };
-}
-
-export interface CounselorCode {
-  id: string;
-  counselorId: string;
-  codeName: string;
-  codeNumber: string;
-  isActive: boolean;
-  createdAt: string;
-  expiresAt?: string;
 }
 
 export interface ClientCounselorRelation {

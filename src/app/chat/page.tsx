@@ -130,13 +130,13 @@ export default function ChatPage() {
               </div>
               <h1 className="text-2xl font-bold text-blue-400 mb-2">상담사와 연결이 필요합니다</h1>
               <p className="text-gray-300 mb-4">
-                채팅을 이용하려면 먼저 상담사와 연결해야 합니다.
+                채팅을 이용하려면 담당 전문가와의 연결이 필요합니다. 검사 안내를 받으셨다면 검사실에서 시작해 주세요.
               </p>
               <a
-                href="/mypage/connect-counselor"
+                href="/join/"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
               >
-                상담사 연결하기
+                검사실로 이동
               </a>
             </motion.div>
           </div>

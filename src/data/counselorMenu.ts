@@ -42,18 +42,6 @@ export const counselorMenuCategories: TestCategory[] = [
           },
         ],
       },
-      {
-        name: '1c. 인증코드',
-        icon: '🔑',
-        items: [
-          {
-            name: '인증코드 관리',
-            href: '/counselor/codes',
-            description: '상담사 인증코드 관리',
-            icon: '🔑',
-          },
-        ],
-      },
     ],
   },
   {

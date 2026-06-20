@@ -3009,14 +3009,14 @@ function CounselorConnectionStatus({
             </svg>
           </div>
           <p className="text-xs text-slate-300 min-w-0">
-            상담사와 연결하면 기록 연동이 쉬워집니다.
+            담당 전문가가 안내한 검사는 검사실에서 코드+비밀번호로 시작할 수 있습니다.
           </p>
         </div>
         <Link
-          href="/mypage/connect-counselor"
+          href="/join/"
           className="shrink-0 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 transition-colors"
         >
-          연결
+          검사실
         </Link>
       </div>
     </motion.div>
