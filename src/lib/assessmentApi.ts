@@ -284,11 +284,14 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
+  /** 내담자 접속용 4자리 PIN (상담사 전달·목록 표시) */
+  joinPin?: string;
 }
 
 /** 검사코드 발급 직후 목록 상단 배너용(세션에서 전달) */
 export interface CreatedAssessmentBannerInfo {
   accessCode: string;
+  joinPin?: string;
 }
 
 export interface ProgressByClient {
@@ -304,7 +307,7 @@ export async function createAssessment(body: {
   welcomeMessage?: string;
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
-}): Promise<{ assessmentId: string; accessCode: string }> {
+}): Promise<{ assessmentId: string; accessCode: string; pin: string }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {

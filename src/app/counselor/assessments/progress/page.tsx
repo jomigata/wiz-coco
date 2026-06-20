@@ -13,6 +13,7 @@ export default function ProgressDashboardPage() {
   const [assessmentId, setAssessmentId] = useState('');
 
   const [accessCode, setAccessCode] = useState('');
+  const [joinPin, setJoinPin] = useState('');
   const [byClient, setByClient] = useState<ProgressByClient[]>([]);
   const [title, setTitle] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,10 @@ export default function ProgressDashboardPage() {
         setAccessCode(progress.accessCode || '');
         setByClient(progress.byClient || []);
         const found = (listData.assessments || []).find((a: { id: string }) => a.id === assessmentId);
-        if (found) setTitle(found.title);
+        if (found) {
+          setTitle(found.title);
+          setJoinPin(found.joinPin || '');
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : '진행 현황 조회 실패');
@@ -93,6 +97,7 @@ export default function ProgressDashboardPage() {
         <ProgressDashboard
           assessmentId={assessmentId}
           accessCode={accessCode}
+          joinPin={joinPin}
           byClient={byClient}
           assessmentTitle={title}
         />

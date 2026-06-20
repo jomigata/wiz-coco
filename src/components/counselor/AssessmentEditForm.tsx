@@ -123,10 +123,16 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <div className="rounded-lg bg-slate-800/80 border border-slate-600 p-4 text-sm text-slate-300">
-        <span className="text-slate-400">검사코드</span>{' '}
-        <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(initial.accessCode)}</span>
-        <p className="text-slate-500 text-xs mt-2">검사코드는 발급 후 변경할 수 없습니다.</p>
+      <div className="rounded-lg bg-slate-800/80 border border-slate-600 p-4 text-sm text-slate-300 space-y-2">
+        <div>
+          <span className="text-slate-400">검사코드</span>{' '}
+          <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(initial.accessCode)}</span>
+        </div>
+        <div>
+          <span className="text-slate-400">비밀번호</span>{' '}
+          <span className="font-mono text-amber-200 tracking-[0.3em]">{initial.joinPin || '—'}</span>
+        </div>
+        <p className="text-slate-500 text-xs">검사코드와 비밀번호는 발급 후 변경할 수 없습니다.</p>
       </div>
 
       <div>

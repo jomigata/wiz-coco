@@ -28,7 +28,7 @@ function AssessmentEditContent() {
         <h1 className="text-2xl font-bold text-white">검사코드 수정</h1>
       </div>
       <p className="text-slate-400 text-sm">
-        안내 제목·대상·메시지·포함 검사를 수정할 수 있습니다. 검사코드 문자열은 변경되지 않습니다.
+        안내 제목·대상·메시지·포함 검사를 수정할 수 있습니다. 검사코드와 비밀번호는 변경되지 않습니다.
       </p>
       <AssessmentEditForm assessmentId={id} />
     </div>

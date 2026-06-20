@@ -57,6 +57,7 @@ export default function AssessmentCreateForm() {
             JSON.stringify({
               assessmentId: result.assessmentId,
               accessCode: result.accessCode,
+              joinPin: result.pin,
             })
           );
         }
@@ -178,7 +179,7 @@ export default function AssessmentCreateForm() {
           ))}
         </div>
         <p className="text-slate-500 text-xs mt-1">
-          선택한 검사가 검사코드 입력 후 내담자 대시보드에 표시됩니다.
+          선택한 검사가 내담자 검사실에 표시됩니다. 비밀번호 4자리는 생성 시 자동 발급됩니다.
         </p>
       </div>
 
