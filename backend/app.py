@@ -10,6 +10,7 @@ from routes.counselor_applications import bp as counselor_applications_bp
 from routes.results import bp as results_bp
 from routes.client_portals import bp as client_portals_bp
 from routes.notifications import bp as notifications_bp
+from routes.admin_maintenance import bp as admin_maintenance_bp
 
 
 def create_app():
@@ -23,6 +24,7 @@ def create_app():
     app.register_blueprint(results_bp)
     app.register_blueprint(client_portals_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(admin_maintenance_bp)
 
     @app.route("/", methods=["GET"])
     def root():
@@ -36,6 +38,7 @@ def create_app():
                 "/api/results",
                 "/api/client-portals",
                 "/api/notifications/process",
+                "/api/admin/purge-assessment-data",
             ],
         }
 

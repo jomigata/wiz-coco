@@ -1,0 +1,60 @@
+name: 🗑 Purge assessment data
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PURGE to delete all assessment codes and client test records'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run only (count, no delete)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: purge-assessment-data
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🗑 Purge assessment platform data
+        env:
+          FLASK_URL: ${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}
+          CRON_SECRET: ${{ secrets.NOTIFICATION_CRON_SECRET }}
+          CONFIRM: ${{ github.event.inputs.confirm }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          if [ -z "${FLASK_URL}" ]; then
+            echo "❌ NEXT_PUBLIC_FLASK_API_URL secret 미설정"
+            exit 1
+          fi
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "❌ NOTIFICATION_CRON_SECRET 미설정"
+            exit 1
+          fi
+          if [ "${DRY_RUN}" != "true" ] && [ "${CONFIRM}" != "PURGE" ]; then
+            echo "❌ confirm 입력값이 PURGE 가 아닙니다."
+            exit 1
+          fi
+          URL="${FLASK_URL%/}/api/admin/purge-assessment-data"
+          PAYLOAD='{"dryRun":true,"includeAllTestResults":true}'
+          if [ "${DRY_RUN}" != "true" ]; then
+            PAYLOAD='{"dryRun":false,"includeAllTestResults":true,"confirm":"PURGE"}'
+          fi
+          echo "POST ${URL}"
+          HTTP=$(curl -sS -o /tmp/purge-out.json -w "%{http_code}" \
+            -X POST "${URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Notification-Cron-Secret: ${CRON_SECRET}" \
+            -d "${PAYLOAD}")
+          cat /tmp/purge-out.json
+          echo ""
+          if [ "${HTTP}" -lt 200 ] || [ "${HTTP}" -ge 300 ]; then
+            echo "❌ HTTP ${HTTP}"
+            exit 1
+          fi
+          echo "✅ purge completed"
