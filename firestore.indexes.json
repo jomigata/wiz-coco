@@ -52,6 +52,22 @@
       "collectionGroup": "testResults",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "accessCode", "order": "ASCENDING" },
+        { "fieldPath": "portalId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notificationQueue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "testResults",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "email", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]

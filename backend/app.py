@@ -9,6 +9,7 @@ from routes.auth import bp as auth_bp
 from routes.counselor_applications import bp as counselor_applications_bp
 from routes.results import bp as results_bp
 from routes.client_portals import bp as client_portals_bp
+from routes.notifications import bp as notifications_bp
 
 
 def create_app():
@@ -21,6 +22,7 @@ def create_app():
     app.register_blueprint(counselor_applications_bp)
     app.register_blueprint(results_bp)
     app.register_blueprint(client_portals_bp)
+    app.register_blueprint(notifications_bp)
 
     @app.route("/", methods=["GET"])
     def root():
@@ -29,7 +31,12 @@ def create_app():
             "service": "wizcoco-api",
             "status": "ok",
             "health": "/api/health",
-            "api": ["/api/assessments", "/api/results"],
+            "api": [
+                "/api/assessments",
+                "/api/results",
+                "/api/client-portals",
+                "/api/notifications/process",
+            ],
         }
 
     @app.route("/api/health", methods=["GET"])

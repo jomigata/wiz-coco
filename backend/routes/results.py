@@ -10,6 +10,7 @@ from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.password import verify_password
 from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
+from utils.portal_auth import get_portal_session_from_request
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
@@ -38,11 +39,19 @@ def _get_assessment_or_404(db, assessment_id, counselor_uid=None):
     return doc, None
 
 
-def _token_owns_result(token_uid: str | None, token_email: str | None, d: dict) -> bool:
+def _portal_owns_result(portal_id: str | None, d: dict) -> bool:
+    if not portal_id:
+        return False
+    return portal_id == (d.get("portalId") or "").strip()
+
+
+def _token_owns_result(token_uid: str | None, token_email: str | None, d: dict, portal_id: str | None = None) -> bool:
     """
-    신규: clientUid 기준 소유권 확인.
+    신규: clientUid 또는 portalId 기준 소유권 확인.
     레거시: clientUid 없는 문서에 한해 clientEmail로 소유권 확인(이메일 클레임이 있을 때만).
     """
+    if _portal_owns_result(portal_id, d):
+        return True
     if token_uid and token_uid == (d.get("clientUid") or "").strip():
         return True
     if not d.get("clientUid") and token_email:
@@ -62,21 +71,28 @@ def _legacy_password_valid(d: dict, password: str) -> bool:
 @limit_access_code
 def submit_result():
     """
-    내담자: Authorization(Firebase ID 토큰) 필수, accessCode, testId, responses.
-    소유권은 clientUid(토큰 uid) 기준으로 저장. email은 선택(있는 경우만 저장).
-    비밀번호 필드는 저장하지 않음(로그인으로만 수정·삭제).
+    내담자: Portal 세션 또는 Firebase ID 토큰.
+    Portal: accessCode, testId, responses — portalId로 소유권 저장.
+    Firebase: clientUid(토큰 uid) 기준 저장.
     """
     body = request.get_json() or {}
     access_code = normalize_access_code(body.get("accessCode") or "")
     test_id = (body.get("testId") or "").strip()
-    client_uid = get_bearer_uid()
-    client_email = get_bearer_email_optional()
+    portal_session = get_portal_session_from_request()
+    client_uid = get_bearer_uid() if not portal_session else None
+    client_email = get_bearer_email_optional() if not portal_session else None
     responses = body.get("responses")
-    if not client_uid:
+
+    if portal_session:
+        portal_id = (portal_session.get("portalId") or "").strip()
+        token_code = normalize_access_code(portal_session.get("accessCode") or "")
+        if not portal_id or token_code != access_code:
+            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+    elif not client_uid:
         return jsonify(
             {
                 "error": "Unauthorized",
-                "message": "Valid Firebase ID token required to submit results.",
+                "message": "검사실 로그인 또는 계정 로그인이 필요합니다.",
             }
         ), 401
     if not is_valid_access_code(access_code):
@@ -102,13 +118,17 @@ def submit_result():
         "accessCode": access_code,
         "assessmentId": assessment_id,
         "testId": test_id,
-        "clientUid": client_uid,
-        **({"clientEmail": client_email} if client_email else {}),
         "status": "completed",
         "responses": responses,
         "resultData": result_data,
         "completedAt": SERVER_TIMESTAMP,
     }
+    if portal_session:
+        data["portalId"] = (portal_session.get("portalId") or "").strip()
+    else:
+        data["clientUid"] = client_uid
+        if client_email:
+            data["clientEmail"] = client_email
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
     ref.set(data)
 
@@ -123,18 +143,44 @@ def submit_result():
 @bp.route("", methods=["GET"])
 @limit_access_code
 def list_results():
-    """accessCode + 로그인 사용자(토큰 uid)로 해당 testResults 목록 반환."""
+    """accessCode + Portal 세션 또는 Firebase uid로 testResults 목록."""
     access_code = normalize_access_code(request.args.get("accessCode") or "")
-    client_uid = get_bearer_uid()
-    token_email = get_bearer_email_optional()
-    if not client_uid:
+    portal_session = get_portal_session_from_request()
+    client_uid = get_bearer_uid() if not portal_session else None
+    token_email = get_bearer_email_optional() if not portal_session else None
+
+    if portal_session:
+        portal_id = (portal_session.get("portalId") or "").strip()
+        token_code = normalize_access_code(portal_session.get("accessCode") or "")
+        if token_code != access_code:
+            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+    elif not client_uid:
         return jsonify(
-            {"error": "Unauthorized", "message": "Valid Firebase ID token required."}
+            {"error": "Unauthorized", "message": "검사실 로그인 또는 계정 로그인이 필요합니다."}
         ), 401
     if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
 
     db = get_firestore()
+    if portal_session:
+        portal_id = (portal_session.get("portalId") or "").strip()
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("portalId", "==", portal_id)
+            .get()
+        )
+        items = []
+        for doc in refs or []:
+            d = doc.to_dict()
+            items.append({
+                "resultId": doc.id,
+                "testId": d.get("testId"),
+                "status": d.get("status"),
+                "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
+            })
+        return jsonify({"results": items})
+
     refs = db.collection(TEST_RESULTS_COLLECTION).where("accessCode", "==", access_code).where("clientUid", "==", client_uid).get()
     # 레거시(예전 제출분): clientUid가 없고 clientEmail만 있는 경우를 위해 email 클레임이 있으면 추가 조회 후 병합
     legacy_refs = []
@@ -254,8 +300,10 @@ def get_result(result_id):
     그 외: 구 데이터만 ?password= 로 조회(레거시).
     """
     password = (request.args.get("password") or "").strip()
-    token_uid = get_bearer_uid()
-    token_email = get_bearer_email_optional()
+    portal_session = get_portal_session_from_request()
+    token_uid = get_bearer_uid() if not portal_session else None
+    token_email = get_bearer_email_optional() if not portal_session else None
+    portal_id = (portal_session.get("portalId") or "").strip() if portal_session else None
 
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
@@ -264,7 +312,7 @@ def get_result(result_id):
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
 
-    if _token_owns_result(token_uid, token_email, d):
+    if _token_owns_result(token_uid, token_email, d, portal_id):
         return jsonify({
             "resultId": doc.id,
             "testId": d.get("testId"),
@@ -299,8 +347,10 @@ def update_result(result_id):
     body = request.get_json() or {}
     password = (body.get("password") or "").strip()
     responses = body.get("responses")
-    token_uid = get_bearer_uid()
-    token_email = get_bearer_email_optional()
+    portal_session = get_portal_session_from_request()
+    token_uid = get_bearer_uid() if not portal_session else None
+    token_email = get_bearer_email_optional() if not portal_session else None
+    portal_id = (portal_session.get("portalId") or "").strip() if portal_session else None
 
     if responses is None:
         return jsonify({"error": "Bad Request", "message": "responses required"}), 400
@@ -312,12 +362,12 @@ def update_result(result_id):
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
 
-    if _token_owns_result(token_uid, token_email, d):
+    if _token_owns_result(token_uid, token_email, d, portal_id):
         pass
     elif _legacy_password_valid(d, password):
         pass
     else:
-        if not _token_owns_result(token_uid, token_email, d) and d.get("passwordHash") and not password:
+        if not _token_owns_result(token_uid, token_email, d, portal_id) and d.get("passwordHash") and not password:
             return jsonify({"error": "Bad Request", "message": "password required"}), 400
         return jsonify({"error": "Forbidden", "message": "Invalid password or not owner"}), 403
 
@@ -337,8 +387,10 @@ def delete_result(result_id):
     """소유자(Bearer) 또는 레거시 password로 삭제."""
     body = request.get_json() or {} if request.is_json else {}
     password = (body.get("password") or "").strip()
-    token_uid = get_bearer_uid()
-    token_email = get_bearer_email_optional()
+    portal_session = get_portal_session_from_request()
+    token_uid = get_bearer_uid() if not portal_session else None
+    token_email = get_bearer_email_optional() if not portal_session else None
+    portal_id = (portal_session.get("portalId") or "").strip() if portal_session else None
 
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
@@ -347,7 +399,7 @@ def delete_result(result_id):
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = doc.to_dict()
 
-    if _token_owns_result(token_uid, token_email, d):
+    if _token_owns_result(token_uid, token_email, d, portal_id):
         ref.delete()
         return jsonify({"message": "Deleted"}), 200
     if _legacy_password_valid(d, password):

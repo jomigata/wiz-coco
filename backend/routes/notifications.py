@@ -1,0 +1,52 @@
+# 통지 큐 워커 — 관리자 또는 Cron Secret
+from functools import wraps
+
+from flask import Blueprint, jsonify, request
+
+from auth_middleware import get_bearer_uid, get_bearer_email_optional
+from config import NOTIFICATION_CRON_SECRET, USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS
+from firebase_init import get_firestore
+from utils.notification_worker import process_notification_queue
+
+bp = Blueprint("notifications", __name__, url_prefix="/api/notifications")
+
+
+def _cron_or_admin_authorized() -> bool:
+    secret = (request.headers.get("X-Notification-Cron-Secret") or "").strip()
+    if NOTIFICATION_CRON_SECRET and secret and secret == NOTIFICATION_CRON_SECRET:
+        return True
+
+    uid = get_bearer_uid()
+    if not uid:
+        return False
+    try:
+        db = get_firestore()
+        doc = db.collection(USERS_COLLECTION).document(uid).get()
+        role = (doc.to_dict() or {}).get("role") if doc.exists else None
+        if role == "admin":
+            return True
+        email = get_bearer_email_optional()
+        if email and email in BOOTSTRAP_ADMIN_EMAILS:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def require_cron_or_admin(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not _cron_or_admin_authorized():
+            return jsonify({"error": "Forbidden", "message": "Admin or cron secret required"}), 403
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+@bp.route("/process", methods=["POST"])
+@require_cron_or_admin
+def process_queue():
+    body = request.get_json(silent=True) or {}
+    limit = min(int(body.get("limit") or 50), 200)
+    result = process_notification_queue(limit=limit)
+    return jsonify(result)

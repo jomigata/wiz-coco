@@ -13,7 +13,9 @@ interface StoredAssessment {
 
 interface CompletedTestListProps {
   clientUid: string;
-  /** Firebase Auth 초기화·복원 완료 전에는 API 호출하지 않음 */
+  /** 포털 세션으로 결과 조회·삭제 */
+  usePortalSession?: boolean;
+  /** Firebase Auth 초기화·복원 완료 전에는 API 호출하지 않음 (포털 사용 시 무시) */
   authLoading?: boolean;
   onRefresh?: () => void;
   /** 대시보드「수행할 검사」정렬·상태용으로 완료 목록 동기화 */
@@ -29,6 +31,7 @@ type SortColumn = 'name' | 'date';
 
 export default function CompletedTestList({
   clientUid,
+  usePortalSession = false,
   authLoading = false,
   onRefresh,
   onResultsChange,
@@ -42,6 +45,8 @@ export default function CompletedTestList({
   const [deleteModal, setDeleteModal] = useState<{ resultId: string; testName: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+
+  const canLoad = usePortalSession || Boolean(clientUid?.trim());
 
   useEffect(() => {
     let raw: string | null = null;
@@ -61,7 +66,7 @@ export default function CompletedTestList({
   }, []);
 
   useEffect(() => {
-    if (authLoading) {
+    if (!usePortalSession && authLoading) {
       setLoading(true);
       return;
     }
@@ -71,7 +76,7 @@ export default function CompletedTestList({
       setLoading(false);
       return;
     }
-    if (!clientUid?.trim()) {
+    if (!canLoad) {
       setResults([]);
       onResultsChange?.([]);
       setError('');
@@ -92,7 +97,7 @@ export default function CompletedTestList({
         onResultsChange?.([]);
       })
       .finally(() => setLoading(false));
-  }, [stored?.accessCode, clientUid, authLoading, onResultsChange]);
+  }, [stored?.accessCode, clientUid, authLoading, usePortalSession, canLoad, onResultsChange]);
 
   const sortedResults = useMemo(() => {
     const tl = stored?.testList || [];
@@ -145,7 +150,7 @@ export default function CompletedTestList({
       .finally(() => setActionLoading(false));
   };
 
-  if (authLoading) {
+  if (!usePortalSession && authLoading) {
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
         <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
@@ -154,11 +159,11 @@ export default function CompletedTestList({
     );
   }
 
-  if (!clientUid?.trim()) {
+  if (!canLoad) {
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
         <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
-        <p className="text-slate-400 text-sm">로그인 후 완료 내역이 표시됩니다.</p>
+        <p className="text-slate-400 text-sm">검사실 로그인 후 완료 내역이 표시됩니다.</p>
       </div>
     );
   }
@@ -260,7 +265,7 @@ export default function CompletedTestList({
           >
             <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
             <p className="text-slate-300 text-sm mb-4">
-              「{deleteModal.testName}」 결과를 삭제할까요? 로그인한 계정으로만 삭제할 수 있습니다.
+              「{deleteModal.testName}」 결과를 삭제할까요?
             </p>
             {actionError && <p className="text-red-400 text-sm mb-2">{actionError}</p>}
             <div className="flex gap-2 justify-end">

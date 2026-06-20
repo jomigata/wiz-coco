@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify, g
 from firebase_admin.firestore import SERVER_TIMESTAMP
+from utils.portal_auth import get_portal_session_from_request
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from config import (
@@ -42,18 +43,6 @@ def _issue_portal_token(portal_id: str, access_code: str, remember: bool = False
         {"portalId": portal_id, "accessCode": access_code, "maxAge": max_age}
     )
 
-
-def _verify_portal_token(token: str):
-    raw = (token or "").strip()
-    if raw.lower().startswith("portal "):
-        raw = raw[7:].strip()
-    if not raw:
-        return None
-    try:
-        data = _serializer("portal-session").loads(raw, max_age=PORTAL_SESSION_REMEMBER_MAX_AGE)
-        return data
-    except (BadSignature, SignatureExpired):
-        return None
 
 
 def _find_portal_by_access_code(db, code: str):
@@ -176,8 +165,7 @@ def portal_login():
 
 @bp.route("/me", methods=["GET"])
 def portal_me():
-    auth = request.headers.get("Authorization") or ""
-    payload = _verify_portal_token(auth.replace("Bearer ", "").strip())
+    payload = get_portal_session_from_request()
     if not payload:
         return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
 

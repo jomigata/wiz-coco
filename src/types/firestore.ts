@@ -84,6 +84,10 @@ export interface TestResult {
   resultData?: Record<string, unknown>;
   /** 4자리 비밀번호 bcrypt 해시 (평문 저장 금지) */
   passwordHash: string;
+  /** 내담자 포털 ID (Portal 세션 제출) */
+  portalId?: string;
+  /** Firebase Auth uid (계정 로그인 제출) */
+  clientUid?: string;
   /** 완료 시각 (completed 시 설정) */
   completedAt?: Timestamp | { _seconds: number; _nanoseconds: number } | null;
 }

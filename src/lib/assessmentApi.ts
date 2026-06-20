@@ -4,6 +4,7 @@
  */
 
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
@@ -47,6 +48,21 @@ export async function getCounselorToken(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** 결과 API — 포털 세션 우선, 없으면 Firebase Bearer */
+export async function getClientResultAuthHeaders(): Promise<Record<string, string>> {
+  const portal = readClientPortalSession();
+  if (portal?.portalToken) {
+    return { Authorization: `Portal ${portal.portalToken}` };
+  }
+  const token = await getCounselorToken();
+  if (token) return { Authorization: `Bearer ${token}` };
+  return {};
+}
+
+export function hasPortalSessionForResults(): boolean {
+  return Boolean(readClientPortalSession()?.portalToken);
 }
 
 export interface PublicAssessment {
@@ -98,13 +114,13 @@ export async function submitResult(body: {
   resultId: string;
   message: string;
 }> {
-  const token = await getCounselorToken();
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const authHeaders = await getClientResultAuthHeaders();
+  if (!authHeaders.Authorization) throw new Error('검사실 로그인 또는 계정 로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/results`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      ...authHeaders,
     },
     body: JSON.stringify({
       accessCode: normalizeAccessCodeInput(body.accessCode || ''),
@@ -196,11 +212,11 @@ export async function listResults(accessCode: string): Promise<{ results: TestRe
   if (!isValidAccessCodeInput(code)) {
     throw new Error('검사 코드를 확인해 주세요.');
   }
-  const token = await getCounselorToken();
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const authHeaders = await getClientResultAuthHeaders();
+  if (!authHeaders.Authorization) throw new Error('검사실 로그인 또는 계정 로그인이 필요합니다.');
   const params = new URLSearchParams({ accessCode: code });
   const res = await fetch(`${getBaseUrl()}/api/results?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -233,13 +249,13 @@ export async function updateResult(
 
 /** DELETE /api/results/:resultId — 로그인 소유자는 password 생략, 레거시만 password */
 export async function deleteResult(resultId: string, legacyPassword?: string): Promise<void> {
-  const token = await getCounselorToken();
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const authHeaders = await getClientResultAuthHeaders();
+  if (!authHeaders.Authorization) throw new Error('검사실 로그인 또는 계정 로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      ...authHeaders,
     },
     body: JSON.stringify(legacyPassword ? { password: legacyPassword } : {}),
   });

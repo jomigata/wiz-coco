@@ -7,8 +7,8 @@ import { lookupPublicAssessment, submitResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
-import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { hasPortalSessionForResults } from '@/lib/assessmentApi';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -38,6 +38,7 @@ export default function TestRunnerPage() {
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
+  const hasPortal = hasPortalSessionForResults();
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
@@ -93,6 +94,7 @@ export default function TestRunnerPage() {
   }, [code]);
 
   const isLoggedIn = !authLoading && !!user;
+  const canSubmitAuth = hasPortal || isLoggedIn;
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
@@ -105,7 +107,7 @@ export default function TestRunnerPage() {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
-  const canSubmit = isLoggedIn && Object.keys(responses).length === questions.length;
+  const canSubmit = canSubmitAuth && Object.keys(responses).length === questions.length;
 
   const handleSubmitNew = async () => {
     if (!canSubmit) return;
@@ -121,8 +123,8 @@ export default function TestRunnerPage() {
     }
   };
 
-  const goToMyRecords = () => {
-    replaceWithAuthSession(router, '/mypage?tab=records');
+  const goBackAfterDone = () => {
+    navigateToJoinSelectionDashboard(code, router);
   };
 
   if (!hydrated) {
@@ -132,8 +134,7 @@ export default function TestRunnerPage() {
   if (!code || !isValidAccessCodeInput(code) || !testId) {
     return (
       <div className="min-h-screen bg-gray-900">
-        
-<div className="pt-24 px-4">
+        <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">잘못된 접근입니다.</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
@@ -148,8 +149,7 @@ export default function TestRunnerPage() {
   if (accessCheckLoading) {
     return (
       <div className="min-h-screen bg-gray-900">
-        
-<div className="pt-24 px-4">
+        <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-slate-300">검사코드 사용 가능 여부를 확인 중입니다…</p>
           </div>
@@ -161,8 +161,7 @@ export default function TestRunnerPage() {
   if (accessCheckError) {
     return (
       <div className="min-h-screen bg-gray-900">
-        
-<div className="pt-24 px-4">
+        <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{accessCheckError}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
@@ -177,8 +176,7 @@ export default function TestRunnerPage() {
   if (done) {
     return (
       <div className="min-h-screen bg-gray-900">
-        
-<div
+        <div
           className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 pt-24"
           role="dialog"
           aria-modal="true"
@@ -191,12 +189,14 @@ export default function TestRunnerPage() {
             <p className="text-slate-300 mb-6">검사가 완료되었습니다.</p>
             <button
               type="button"
-              onClick={goToMyRecords}
+              onClick={goBackAfterDone}
               className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
             >
-              닫기
+              검사 선택으로
             </button>
-            <p className="text-slate-500 text-xs mt-4">마이페이지의 검사 기록으로 이동합니다.</p>
+            <p className="text-slate-500 text-xs mt-4">
+              {hasPortal ? '내 검사실에서 다른 검사를 이어서 진행할 수 있습니다.' : '검사 선택 화면으로 돌아갑니다.'}
+            </p>
           </div>
         </div>
       </div>
@@ -208,8 +208,7 @@ export default function TestRunnerPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      
-<div className="pt-24 pb-12 px-4">
+      <div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
           <div className="mb-4">
             <button
@@ -223,15 +222,19 @@ export default function TestRunnerPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{title}</h1>
 
-            {authLoading ? (
+            {!hasPortal && authLoading ? (
               <p className="text-slate-400 text-sm mb-4">로그인 확인 중…</p>
-            ) : !isLoggedIn ? (
+            ) : !canSubmitAuth ? (
               <p className="text-amber-400/95 text-sm mb-4">
-                로그인한 뒤 다시 이 검사를 열어 주세요.{' '}
-                <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
-                  로그인
+                제출하려면{' '}
+                <Link href="/join/" className="text-blue-400 hover:text-blue-300 underline">
+                  검사실 로그인(코드+비밀번호)
                 </Link>
-                {' · '}
+                {' 또는 '}
+                <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
+                  계정 로그인
+                </Link>
+                이 필요합니다.{' '}
                 <button
                   type="button"
                   onClick={() => navigateToJoinSelectionDashboard(code, router)}
@@ -290,7 +293,7 @@ export default function TestRunnerPage() {
                 <button
                   type="button"
                   onClick={handleSubmitNew}
-                  disabled={authLoading || !isLoggedIn || submitting}
+                  disabled={(!hasPortal && authLoading) || !canSubmitAuth || submitting}
                   className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submitting ? '제출 중…' : '제출하기'}

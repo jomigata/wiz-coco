@@ -35,6 +35,14 @@ USERS_COLLECTION = "users"
 CLIENT_PORTALS_COLLECTION = "clientPortals"
 NOTIFICATION_QUEUE_COLLECTION = "notificationQueue"
 
+# 공개 사이트 URL (매직 링크·초대 메일)
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
+
+# Cron/스케줄러가 통지 큐 처리 API 호출 시 사용 (X-Notification-Cron-Secret 헤더)
+NOTIFICATION_CRON_SECRET = os.getenv("NOTIFICATION_CRON_SECRET", "").strip()
+
+# SMS (Twilio, 선택)
+
 # 내담자 포털 세션·매직 링크 (초)
 PORTAL_SESSION_MAX_AGE = int(os.getenv("PORTAL_SESSION_MAX_AGE", str(24 * 3600)))
 PORTAL_SESSION_REMEMBER_MAX_AGE = int(os.getenv("PORTAL_SESSION_REMEMBER_MAX_AGE", str(30 * 24 * 3600)))

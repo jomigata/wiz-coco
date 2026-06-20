@@ -99,6 +99,10 @@ jobs:
           else
             ENV_VARS="${ENV_VARS},COUNSELOR_ADMIN_NOTIFY_EMAIL=jomigata@gmail.com"
           fi
+          if [ -n "${{ secrets.NOTIFICATION_CRON_SECRET }}" ]; then
+            ENV_VARS="${ENV_VARS},NOTIFICATION_CRON_SECRET=${{ secrets.NOTIFICATION_CRON_SECRET }}"
+          fi
+          ENV_VARS="${ENV_VARS},PUBLIC_SITE_URL=https://wizcoco.com"
 
           if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then
             echo "✅ SMTP 환경 변수가 Cloud Run에 주입됩니다 (상담사 승인 알림 메일 활성화)."

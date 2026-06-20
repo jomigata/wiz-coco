@@ -1,0 +1,43 @@
+name: 📬 Process notification queue
+
+on:
+  schedule:
+    # 15분마다 pending 통지 처리 (SMTP/Twilio 설정 시)
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: notification-worker
+  cancel-in-progress: false
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📬 Call notification process API
+        env:
+          FLASK_URL: ${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}
+          CRON_SECRET: ${{ secrets.NOTIFICATION_CRON_SECRET }}
+        run: |
+          if [ -z "${FLASK_URL}" ]; then
+            echo "⚠️ NEXT_PUBLIC_FLASK_API_URL secret 미설정 — 건너뜀"
+            exit 0
+          fi
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "⚠️ NOTIFICATION_CRON_SECRET 미설정 — Cron API 호출 건너뜀"
+            exit 0
+          fi
+          URL="${FLASK_URL%/}/api/notifications/process"
+          echo "POST ${URL}"
+          HTTP=$(curl -sS -o /tmp/notify-out.json -w "%{http_code}" \
+            -X POST "${URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Notification-Cron-Secret: ${CRON_SECRET}" \
+            -d '{"limit":50}')
+          cat /tmp/notify-out.json
+          echo ""
+          if [ "${HTTP}" -lt 200 ] || [ "${HTTP}" -ge 300 ]; then
+            echo "❌ HTTP ${HTTP}"
+            exit 1
+          fi
+          echo "✅ notification queue processed"

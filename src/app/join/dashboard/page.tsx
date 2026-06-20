@@ -8,12 +8,13 @@ import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/
 import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
+import { hasPortalSessionForResults } from '@/lib/assessmentApi';
+import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 function DashboardLoading() {
   return (
     <div className="min-h-screen bg-gray-900">
-      
-<div className="pt-24 flex justify-center">
+      <div className="pt-24 flex justify-center">
         <p className="text-slate-400">불러오는 중…</p>
       </div>
     </div>
@@ -42,7 +43,10 @@ function JoinDashboardContent() {
     [accessCodeRaw]
   );
 
+  const portalSession = useMemo(() => readClientPortalSession(), []);
+  const hasPortal = hasPortalSessionForResults();
   const clientUid = useMemo(() => (user?.uid || '').trim(), [user?.uid]);
+  const canTrackResults = hasPortal || Boolean(clientUid);
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,8 +133,7 @@ function JoinDashboardContent() {
   if (error || !assessment) {
     return (
       <div className="min-h-screen bg-gray-900">
-        
-<div className="pt-24 px-4">
+        <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{error || '검사코드 정보를 불러올 수 없습니다.'}</p>
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
@@ -144,9 +147,19 @@ function JoinDashboardContent() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      
-<div className="pt-24 pb-12 px-4">
+      <div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto space-y-6">
+          {hasPortal ? (
+            <p className="text-sm text-slate-400">
+              <Link href="/portal/" className="text-blue-400 hover:text-blue-300">
+                ← 내 검사실
+              </Link>
+              {portalSession?.portal?.displayName ? (
+                <span className="ml-2">{portalSession.portal.displayName}님</span>
+              ) : null}
+            </p>
+          ) : null}
+
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{assessment.title}</h1>
             <div className="text-sm text-slate-300 mb-4">
@@ -167,8 +180,14 @@ function JoinDashboardContent() {
             )}
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
-            {!authLoading && !clientUid ? (
-              <p className="text-amber-200/90 text-sm mb-2">로그인하면 아래에 완료 여부가 표시됩니다.</p>
+            {!canTrackResults && !authLoading ? (
+              <p className="text-amber-200/90 text-sm mb-2">
+                완료 여부를 보려면{' '}
+                <Link href="/join/" className="text-blue-400 hover:text-blue-300 underline">
+                  검사실 로그인
+                </Link>
+                이 필요합니다.
+              </p>
             ) : null}
             {assessment.testList.length === 0 ? (
               <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>
@@ -197,19 +216,23 @@ function JoinDashboardContent() {
                           <span className="text-slate-400 text-sm">시작하기 →</span>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                          {done ? (
-                            <>
-                              <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
-                                검사 실시 완료
+                          {canTrackResults ? (
+                            done ? (
+                              <>
+                                <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
+                                  검사 실시 완료
+                                </span>
+                                {dateLabel ? (
+                                  <span className="text-slate-400">최근 제출: {dateLabel}</span>
+                                ) : null}
+                              </>
+                            ) : (
+                              <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
+                                미완료 · 제출 전
                               </span>
-                              {dateLabel ? (
-                                <span className="text-slate-400">최근 제출: {dateLabel}</span>
-                              ) : null}
-                            </>
+                            )
                           ) : (
-                            <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
-                              미완료 · 제출 전
-                            </span>
+                            <span className="text-slate-500">로그인 후 완료 여부 표시</span>
                           )}
                         </div>
                       </Link>
@@ -222,15 +245,16 @@ function JoinDashboardContent() {
 
           <CompletedTestList
             clientUid={clientUid}
-            authLoading={authLoading}
+            usePortalSession={hasPortal}
+            authLoading={authLoading && !hasPortal}
             onRefresh={loadAssessment}
             onResultsChange={setJoinResults}
           />
         </main>
 
         <p className="text-center mt-6">
-          <Link href="/join" className="text-blue-400 hover:text-blue-300 text-sm">
-            다른 검사 코드 입력
+          <Link href={hasPortal ? '/portal/' : '/join'} className="text-blue-400 hover:text-blue-300 text-sm">
+            {hasPortal ? '내 검사실로' : '다른 검사 코드 입력'}
           </Link>
         </p>
       </div>
