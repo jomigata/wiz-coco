@@ -103,7 +103,7 @@ jobs:
             ENV_VARS="${ENV_VARS},NOTIFICATION_CRON_SECRET=${{ secrets.NOTIFICATION_CRON_SECRET }}"
           fi
           ENV_VARS="${ENV_VARS},PUBLIC_SITE_URL=https://wizcoco.com"
-          ENV_VARS="${ENV_VARS},CORS_ORIGINS=https://wizcoco.com,https://www.wizcoco.com,https://wiz-coco.web.app,https://wiz-coco.firebaseapp.com"
+          # CORS_ORIGINS는 쉼표가 gcloud --update-env-vars 구분자와 충돌 → backend/utils/cors_config.py 기본값 사용
 
           if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then
             echo "✅ SMTP 환경 변수가 Cloud Run에 주입됩니다 (상담사 승인 알림 메일 활성화)."
