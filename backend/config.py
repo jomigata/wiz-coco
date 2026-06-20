@@ -34,6 +34,7 @@ TEST_RESULTS_COLLECTION = "testResults"
 USERS_COLLECTION = "users"
 CLIENT_PORTALS_COLLECTION = "clientPortals"
 NOTIFICATION_QUEUE_COLLECTION = "notificationQueue"
+JOIN_PARTICIPANTS_COLLECTION = "joinParticipants"
 
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")

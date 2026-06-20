@@ -10,7 +10,6 @@ type SortCol = 'testId' | 'status' | 'completedAt';
 interface ProgressDashboardProps {
   assessmentId: string;
   accessCode: string;
-  joinPin?: string;
   byClient: ProgressByClient[];
   assessmentTitle?: string;
 }
@@ -51,7 +50,6 @@ function latestCompletedLabel(client: ProgressByClient): string | null {
 export default function ProgressDashboard({
   assessmentId,
   accessCode,
-  joinPin,
   byClient,
   assessmentTitle,
 }: ProgressDashboardProps) {
@@ -133,24 +131,16 @@ export default function ProgressDashboard({
         {assessmentTitle && (
           <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
         )}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">검사코드:</span>
-            <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
-          </div>
-          {joinPin ? (
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">비밀번호:</span>
-              <span className="font-mono text-amber-200 tracking-[0.3em]">{joinPin}</span>
-            </div>
-          ) : null}
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400">검사코드:</span>
+          <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
         </div>
       </div>
 
       {byClient.length === 0 ? (
         <div className="bg-slate-800/80 rounded-xl border border-slate-600 p-8 text-center">
           <p className="text-slate-400">아직 제출된 결과가 없습니다.</p>
-          <p className="text-slate-500 text-sm mt-1">내담자가 코드+비밀번호로 검사실에 들어와 제출하면 여기에 표시됩니다.</p>
+          <p className="text-slate-500 text-sm mt-1">내담자가 코드로 검사실에 들어와 제출하면 여기에 표시됩니다.</p>
         </div>
       ) : (
         <div className="space-y-4">

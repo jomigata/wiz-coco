@@ -13,13 +13,13 @@ export const counselorMenuCategories: TestCategory[] = [
           {
             name: '검사코드 목록',
             href: '/counselor/assessments',
-            description: '검사코드·4자리 비밀번호 발급·목록·진행현황',
+            description: '검사코드 발급·목록·진행현황',
             icon: '📦',
           },
           {
             name: '새 검사코드 만들기',
             href: '/counselor/assessments/new',
-            description: '내담자용 검사코드와 4자리 비밀번호를 발급합니다',
+            description: '내담자용 검사코드를 발급합니다',
             icon: '➕',
           },
         ],

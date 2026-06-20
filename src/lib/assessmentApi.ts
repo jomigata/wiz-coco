@@ -5,6 +5,7 @@
 
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
+import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
@@ -50,8 +51,10 @@ export async function getCounselorToken(): Promise<string | null> {
   }
 }
 
-/** 결과 API — 포털 세션 우선, 없으면 Firebase Bearer */
+/** 결과 API — 참여 세션 · 포털 세션 · Firebase Bearer */
 export async function getClientResultAuthHeaders(): Promise<Record<string, string>> {
+  const participant = getJoinParticipantAuthHeader();
+  if (participant.Authorization) return participant;
   const portal = readClientPortalSession();
   if (portal?.portalToken) {
     return { Authorization: `Portal ${portal.portalToken}` };
@@ -61,8 +64,16 @@ export async function getClientResultAuthHeaders(): Promise<Record<string, strin
   return {};
 }
 
+export function hasParticipantSessionForResults(): boolean {
+  return Boolean(getJoinParticipantAuthHeader().Authorization);
+}
+
 export function hasPortalSessionForResults(): boolean {
   return Boolean(readClientPortalSession()?.portalToken);
+}
+
+export function canTrackJoinResults(): boolean {
+  return hasPortalSessionForResults() || hasParticipantSessionForResults();
 }
 
 export interface PublicAssessment {
@@ -115,7 +126,7 @@ export async function submitResult(body: {
   message: string;
 }> {
   const authHeaders = await getClientResultAuthHeaders();
-  if (!authHeaders.Authorization) throw new Error('검사실 로그인 또는 계정 로그인이 필요합니다.');
+  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 프로필 등록 후 다시 시도해 주세요.');
   const res = await fetch(`${getBaseUrl()}/api/results`, {
     method: 'POST',
     headers: {
@@ -213,7 +224,7 @@ export async function listResults(accessCode: string): Promise<{ results: TestRe
     throw new Error('검사 코드를 확인해 주세요.');
   }
   const authHeaders = await getClientResultAuthHeaders();
-  if (!authHeaders.Authorization) throw new Error('검사실 로그인 또는 계정 로그인이 필요합니다.');
+  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 프로필 등록 후 다시 시도해 주세요.');
   const params = new URLSearchParams({ accessCode: code });
   const res = await fetch(`${getBaseUrl()}/api/results?${params}`, {
     headers: authHeaders,
@@ -250,7 +261,7 @@ export async function updateResult(
 /** DELETE /api/results/:resultId — 로그인 소유자는 password 생략, 레거시만 password */
 export async function deleteResult(resultId: string, legacyPassword?: string): Promise<void> {
   const authHeaders = await getClientResultAuthHeaders();
-  if (!authHeaders.Authorization) throw new Error('검사실 로그인 또는 계정 로그인이 필요합니다.');
+  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 프로필 등록 후 다시 시도해 주세요.');
   const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
     method: 'DELETE',
     headers: {
@@ -284,14 +295,11 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
-  /** 내담자 접속용 4자리 PIN (상담사 전달·목록 표시) */
-  joinPin?: string;
 }
 
 /** 검사코드 발급 직후 목록 상단 배너용(세션에서 전달) */
 export interface CreatedAssessmentBannerInfo {
   accessCode: string;
-  joinPin?: string;
 }
 
 export interface ProgressByClient {
@@ -307,7 +315,7 @@ export async function createAssessment(body: {
   welcomeMessage?: string;
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
-}): Promise<{ assessmentId: string; accessCode: string; pin: string }> {
+}): Promise<{ assessmentId: string; accessCode: string }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {

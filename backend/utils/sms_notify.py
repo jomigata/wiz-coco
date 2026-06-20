@@ -13,6 +13,34 @@ def is_sms_configured() -> bool:
     return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER)
 
 
+def send_portal_credentials_sms(*, to_phone: str, access_code: str, pin: str, magic_url: str) -> tuple[bool, str]:
+    phone = (to_phone or "").strip()
+    if not phone:
+        return False, "no_phone"
+    if not is_sms_configured():
+        logger.info("SMS skipped (Twilio not configured) for %s", phone[:4] + "****")
+        return False, "sms_not_configured"
+
+    body = (
+        f"[WizCoCo] 검사 완료 — 내 검사실\n"
+        f"코드: {access_code} PIN: {pin}\n"
+        f"바로가기: {magic_url}"
+    )
+
+    try:
+        from twilio.rest import Client
+
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        client.messages.create(body=body, from_=TWILIO_FROM_NUMBER, to=phone)
+        return True, ""
+    except ImportError:
+        logger.warning("twilio package not installed")
+        return False, "twilio_not_installed"
+    except Exception as exc:
+        logger.exception("SMS send failed")
+        return False, str(exc)[:200]
+
+
 def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -> tuple[bool, str]:
     phone = (to_phone or "").strip()
     if not phone:

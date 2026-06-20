@@ -8,7 +8,6 @@ from auth_middleware import require_counselor
 from rate_limit import limit_access_code
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
 from utils.access_code import generate_unique_access_code, normalize_access_code, is_valid_access_code
-from utils.password import generate_four_digit_password, hash_password
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -56,15 +55,16 @@ def _serialize_doc(doc):
 
 
 def _strip_join_secrets_for_counselor_api(d: dict) -> None:
-    """상담사 API 응답에서 PIN 해시만 제거(joinPin 평문은 목록·전달용)."""
+    """상담사 API 응답에서 구 PIN 필드 제거."""
     d.pop("joinPinHash", None)
+    d.pop("joinPin", None)
     d.pop("joinPinConfigured", None)
 
 
 @bp.route("", methods=["POST"])
 @require_counselor
 def create_assessment():
-    """상담사: 검사코드(세트) + 4자리 PIN 생성. 내담자는 /join 에서 코드+PIN으로 접속."""
+    """상담사: 검사코드(세트) 생성. 내담자는 /join 에서 코드만으로 시작."""
     body = request.get_json() or {}
     title = (body.get("title") or "").strip()
     target_audience = body.get("targetAudience", "개인")
@@ -85,13 +85,9 @@ def create_assessment():
     if usage_end_date is None:
         return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
     access_code = generate_unique_access_code()
-    pin = generate_four_digit_password()
-    pin_hash = hash_password(pin)
     db = get_firestore()
     data = {
         "accessCode": access_code,
-        "joinPinHash": pin_hash,
-        "joinPin": pin,
         "counselorId": g.counselor_uid,
         "title": title,
         "targetAudience": target_audience,
@@ -103,7 +99,7 @@ def create_assessment():
     }
     ref = db.collection(ASSESSMENTS_COLLECTION).document()
     ref.set(data)
-    return jsonify({"assessmentId": ref.id, "accessCode": access_code, "pin": pin}), 201
+    return jsonify({"assessmentId": ref.id, "accessCode": access_code}), 201
 
 
 def _is_completed_result(d):

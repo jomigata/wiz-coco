@@ -122,6 +122,55 @@ WizCoCo 팀
     return True
 
 
+def send_portal_credentials_email(
+    *,
+    to_email: str,
+    access_code: str,
+    pin: str,
+    magic_url: str,
+    display_name: str = "",
+) -> bool:
+    """검사 완료 후 내 검사실 접속 정보(코드+PIN+링크) 발송."""
+    if not is_email_configured():
+        return False
+
+    email = (to_email or "").strip().lower()
+    if not email or "@" not in email:
+        return False
+
+    name = (display_name or "").strip() or "내담자"
+    body = f"""안녕하세요, {name}님.
+
+WizCoCo 심리검사를 모두 완료해 주셔서 감사합니다.
+아래 정보로 '내 검사실'에 들어가 결과를 확인하실 수 있습니다.
+
+▶ 바로 들어가기 (추천)
+{magic_url}
+
+▶ 검사코드·비밀번호로 접속
+검사코드: {access_code}
+비밀번호: {pin}
+접속: https://wizcoco.com/portal/login/
+
+링크는 72시간 동안 유효합니다.
+
+WizCoCo
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = MAIL_FROM
+    msg["To"] = email
+    msg["Subject"] = "[WizCoCo] 내 검사실 접속 안내"
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(MAIL_FROM, [email], msg.as_string())
+
+    return True
+
+
 def send_portal_invite_email(*, to_email: str, access_code: str, magic_url: str) -> bool:
     """내담자 포털 초대 — 검사코드·매직 링크 안내."""
     if not is_email_configured():

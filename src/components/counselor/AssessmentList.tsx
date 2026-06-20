@@ -96,9 +96,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             </div>
             <div className="bg-white/[0.06] rounded-xl p-4 mb-4 border border-white/10">
               <p className="text-cyan-400 font-mono font-bold tracking-wider">{formatAccessCodeDisplay(deleteTarget.accessCode)}</p>
-              {deleteTarget.joinPin ? (
-                <p className="text-amber-200/90 font-mono tracking-[0.3em] text-sm mt-1">PIN {deleteTarget.joinPin}</p>
-              ) : null}
               <p className="text-slate-300 mt-1">{deleteTarget.title}</p>
             </div>
             <p className="text-slate-400 mb-5 leading-relaxed">
@@ -133,21 +130,13 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 {formatAccessCodeDisplay(createdInfo.accessCode)}
               </span>
             </p>
-            {createdInfo.joinPin ? (
-              <p>
-                <span className="text-emerald-400/80">비밀번호 </span>
-                <span className="text-emerald-300 font-mono font-bold tracking-[0.3em]">
-                  {createdInfo.joinPin}
-                </span>
-              </p>
-            ) : null}
           </div>
           <p className="mt-2 text-sm text-emerald-400/80">
-            내담자에게 코드와 비밀번호를 전달하세요.{' '}
+            내담자에게 코드를 전달하세요.{' '}
             <AuthLink href="/join/" className="text-emerald-300 underline hover:text-emerald-200">
               검사 시작(/join)
             </AuthLink>
-            에서 입력하면 됩니다.
+            에서 코드만 입력하면 됩니다.
           </p>
         </div>
       )}
@@ -218,7 +207,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 <tr>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">생성 일시</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사코드</th>
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">비밀번호</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사명</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용최종일</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">진행</th>
@@ -241,9 +229,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       </td>
                       <td className="max-w-[10rem] truncate px-2 py-2 text-left font-mono text-sm font-semibold text-sky-300 tracking-wide">
                         {formatAccessCodeDisplay(a.accessCode)}
-                      </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-left font-mono text-sm font-semibold text-amber-200 tracking-[0.25em]">
-                        {a.joinPin || '—'}
                       </td>
                       <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200">
                         <span className="font-medium text-white">{a.title || '-'}</span>

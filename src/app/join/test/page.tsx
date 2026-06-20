@@ -8,7 +8,8 @@ import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCo
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { hasPortalSessionForResults } from '@/lib/assessmentApi';
+import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
+import { hasJoinParticipantSessionForCode } from '@/lib/joinParticipantSession';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -39,6 +40,8 @@ export default function TestRunnerPage() {
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
   const hasPortal = hasPortalSessionForResults();
+  const hasParticipant = hasJoinParticipantSessionForCode(code);
+  const canSubmitAuth = canTrackJoinResults();
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
@@ -92,9 +95,6 @@ export default function TestRunnerPage() {
     };
     void run();
   }, [code]);
-
-  const isLoggedIn = !authLoading && !!user;
-  const canSubmitAuth = hasPortal || isLoggedIn;
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
@@ -222,26 +222,15 @@ export default function TestRunnerPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{title}</h1>
 
-            {!hasPortal && authLoading ? (
-              <p className="text-slate-400 text-sm mb-4">로그인 확인 중…</p>
+            {!hasPortal && !hasParticipant && authLoading ? (
+              <p className="text-slate-400 text-sm mb-4">세션 확인 중…</p>
             ) : !canSubmitAuth ? (
               <p className="text-amber-400/95 text-sm mb-4">
-                제출하려면{' '}
-                <Link href="/join/" className="text-blue-400 hover:text-blue-300 underline">
-                  검사실 로그인(코드+비밀번호)
+                검사를 시작하려면{' '}
+                <Link href={`/join/profile?accessCode=${encodeURIComponent(code)}`} className="text-blue-400 hover:text-blue-300 underline">
+                  검사자 정보
                 </Link>
-                {' 또는 '}
-                <Link href="/login" className="text-blue-400 hover:text-blue-300 underline">
-                  계정 로그인
-                </Link>
-                이 필요합니다.{' '}
-                <button
-                  type="button"
-                  onClick={() => navigateToJoinSelectionDashboard(code, router)}
-                  className="text-blue-400 hover:text-blue-300 underline bg-transparent border-0 cursor-pointer p-0"
-                >
-                  검사 선택 현황
-                </button>
+                를 먼저 입력해 주세요.
               </p>
             ) : null}
 
@@ -293,7 +282,7 @@ export default function TestRunnerPage() {
                 <button
                   type="button"
                   onClick={handleSubmitNew}
-                  disabled={(!hasPortal && authLoading) || !canSubmitAuth || submitting}
+                  disabled={submitting || !canSubmitAuth}
                   className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submitting ? '제출 중…' : '제출하기'}

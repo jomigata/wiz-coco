@@ -6,11 +6,12 @@ from datetime import datetime, timezone
 from firebase_init import get_firestore
 from auth_middleware import get_bearer_uid, get_bearer_email_optional
 from rate_limit import limit_access_code, limit_password_api
-from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
+from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION, JOIN_PARTICIPANTS_COLLECTION
 from utils.password import verify_password
 from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
 from utils.portal_auth import get_portal_session_from_request
+from utils.participant_auth import get_participant_session_from_request
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
@@ -45,12 +46,20 @@ def _portal_owns_result(portal_id: str | None, d: dict) -> bool:
     return portal_id == (d.get("portalId") or "").strip()
 
 
-def _token_owns_result(token_uid: str | None, token_email: str | None, d: dict, portal_id: str | None = None) -> bool:
+def _participant_owns_result(participant_id: str | None, d: dict) -> bool:
+    if not participant_id:
+        return False
+    return participant_id == (d.get("participantId") or "").strip()
+
+
+def _token_owns_result(token_uid: str | None, token_email: str | None, d: dict, portal_id: str | None = None, participant_id: str | None = None) -> bool:
     """
     신규: clientUid 또는 portalId 기준 소유권 확인.
     레거시: clientUid 없는 문서에 한해 clientEmail로 소유권 확인(이메일 클레임이 있을 때만).
     """
     if _portal_owns_result(portal_id, d):
+        return True
+    if _participant_owns_result(participant_id, d):
         return True
     if token_uid and token_uid == (d.get("clientUid") or "").strip():
         return True
@@ -79,14 +88,19 @@ def submit_result():
     access_code = normalize_access_code(body.get("accessCode") or "")
     test_id = (body.get("testId") or "").strip()
     portal_session = get_portal_session_from_request()
-    client_uid = get_bearer_uid() if not portal_session else None
-    client_email = get_bearer_email_optional() if not portal_session else None
+    participant_session = get_participant_session_from_request()
+    client_uid = get_bearer_uid() if not portal_session and not participant_session else None
+    client_email = get_bearer_email_optional() if not portal_session and not participant_session else None
     responses = body.get("responses")
 
     if portal_session:
         portal_id = (portal_session.get("portalId") or "").strip()
         token_code = normalize_access_code(portal_session.get("accessCode") or "")
         if not portal_id or token_code != access_code:
+            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+    elif participant_session:
+        token_code = normalize_access_code(participant_session.get("accessCode") or "")
+        if token_code != access_code:
             return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
     elif not client_uid:
         return jsonify(
@@ -125,6 +139,19 @@ def submit_result():
     }
     if portal_session:
         data["portalId"] = (portal_session.get("portalId") or "").strip()
+    elif participant_session:
+        data["participantId"] = (participant_session.get("participantId") or "").strip()
+        pref = db.collection(JOIN_PARTICIPANTS_COLLECTION).document(data["participantId"]).get()
+        if pref.exists:
+            pd = pref.to_dict() or {}
+            data["clientEmail"] = pd.get("email", "")
+            data["clientProfile"] = {
+                "displayName": pd.get("displayName", ""),
+                "birthYear": pd.get("birthYear"),
+                "gender": pd.get("gender", ""),
+                "region": pd.get("region", ""),
+                "phone": pd.get("phone", ""),
+            }
     else:
         data["clientUid"] = client_uid
         if client_email:
@@ -143,20 +170,25 @@ def submit_result():
 @bp.route("", methods=["GET"])
 @limit_access_code
 def list_results():
-    """accessCode + Portal 세션 또는 Firebase uid로 testResults 목록."""
+    """accessCode + Participant/Portal 세션 또는 Firebase uid로 testResults 목록."""
     access_code = normalize_access_code(request.args.get("accessCode") or "")
     portal_session = get_portal_session_from_request()
-    client_uid = get_bearer_uid() if not portal_session else None
-    token_email = get_bearer_email_optional() if not portal_session else None
+    participant_session = get_participant_session_from_request()
+    client_uid = get_bearer_uid() if not portal_session and not participant_session else None
+    token_email = get_bearer_email_optional() if not portal_session and not participant_session else None
 
     if portal_session:
         portal_id = (portal_session.get("portalId") or "").strip()
         token_code = normalize_access_code(portal_session.get("accessCode") or "")
         if token_code != access_code:
             return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+    elif participant_session:
+        token_code = normalize_access_code(participant_session.get("accessCode") or "")
+        if token_code != access_code:
+            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
     elif not client_uid:
         return jsonify(
-            {"error": "Unauthorized", "message": "검사실 로그인 또는 계정 로그인이 필요합니다."}
+            {"error": "Unauthorized", "message": "참여 세션이 필요합니다."}
         ), 401
     if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
@@ -168,6 +200,25 @@ def list_results():
             db.collection(TEST_RESULTS_COLLECTION)
             .where("accessCode", "==", access_code)
             .where("portalId", "==", portal_id)
+            .get()
+        )
+        items = []
+        for doc in refs or []:
+            d = doc.to_dict()
+            items.append({
+                "resultId": doc.id,
+                "testId": d.get("testId"),
+                "status": d.get("status"),
+                "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
+            })
+        return jsonify({"results": items})
+
+    if participant_session:
+        participant_id = (participant_session.get("participantId") or "").strip()
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("participantId", "==", participant_id)
             .get()
         )
         items = []

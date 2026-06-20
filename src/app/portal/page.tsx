@@ -39,7 +39,7 @@ function ClientPortalContent() {
   const load = useCallback(async () => {
     const session = readClientPortalSession();
     if (!session?.portalToken) {
-      router.replace('/join/');
+      router.replace('/portal/login/');
       return;
     }
     setLoading(true);
@@ -101,7 +101,7 @@ function ClientPortalContent() {
                 type="button"
                 onClick={() => {
                   clearClientPortalSession();
-                  router.push('/join/');
+                  router.push('/portal/login/');
                 }}
                 className="text-xs text-slate-400 hover:text-slate-200 underline"
               >

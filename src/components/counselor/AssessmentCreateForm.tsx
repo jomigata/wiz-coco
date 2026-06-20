@@ -57,7 +57,6 @@ export default function AssessmentCreateForm() {
             JSON.stringify({
               assessmentId: result.assessmentId,
               accessCode: result.accessCode,
-              joinPin: result.pin,
             })
           );
         }

@@ -15,6 +15,7 @@ interface CompletedTestListProps {
   clientUid: string;
   /** 포털 세션으로 결과 조회·삭제 */
   usePortalSession?: boolean;
+  useParticipantSession?: boolean;
   /** Firebase Auth 초기화·복원 완료 전에는 API 호출하지 않음 (포털 사용 시 무시) */
   authLoading?: boolean;
   onRefresh?: () => void;
@@ -32,6 +33,7 @@ type SortColumn = 'name' | 'date';
 export default function CompletedTestList({
   clientUid,
   usePortalSession = false,
+  useParticipantSession = false,
   authLoading = false,
   onRefresh,
   onResultsChange,
@@ -46,7 +48,7 @@ export default function CompletedTestList({
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
-  const canLoad = usePortalSession || Boolean(clientUid?.trim());
+  const canLoad = usePortalSession || useParticipantSession || Boolean(clientUid?.trim());
 
   useEffect(() => {
     let raw: string | null = null;
@@ -66,7 +68,7 @@ export default function CompletedTestList({
   }, []);
 
   useEffect(() => {
-    if (!usePortalSession && authLoading) {
+    if (!usePortalSession && !useParticipantSession && authLoading) {
       setLoading(true);
       return;
     }
@@ -97,7 +99,7 @@ export default function CompletedTestList({
         onResultsChange?.([]);
       })
       .finally(() => setLoading(false));
-  }, [stored?.accessCode, clientUid, authLoading, usePortalSession, canLoad, onResultsChange]);
+  }, [stored?.accessCode, clientUid, authLoading, usePortalSession, useParticipantSession, canLoad, onResultsChange]);
 
   const sortedResults = useMemo(() => {
     const tl = stored?.testList || [];
@@ -150,7 +152,7 @@ export default function CompletedTestList({
       .finally(() => setActionLoading(false));
   };
 
-  if (!usePortalSession && authLoading) {
+  if (!usePortalSession && !useParticipantSession && authLoading) {
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
         <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
@@ -163,7 +165,7 @@ export default function CompletedTestList({
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
         <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
-        <p className="text-slate-400 text-sm">검사실 로그인 후 완료 내역이 표시됩니다.</p>
+        <p className="text-slate-400 text-sm">프로필 등록 후 완료 내역이 표시됩니다.</p>
       </div>
     );
   }

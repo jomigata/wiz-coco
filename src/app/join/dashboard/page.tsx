@@ -2,14 +2,19 @@
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
-import { hasPortalSessionForResults } from '@/lib/assessmentApi';
+import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
+import {
+  hasJoinParticipantSessionForCode,
+  readJoinParticipantSession,
+} from '@/lib/joinParticipantSession';
+import { finalizeJoinParticipant } from '@/lib/joinFlowApi';
 
 function DashboardLoading() {
   return (
@@ -34,8 +39,10 @@ function formatUsageEndDateLabel(raw?: string): string {
 }
 
 function JoinDashboardContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useFirebaseAuth();
+  const clientUid = useMemo(() => (user?.uid || '').trim(), [user?.uid]);
   const accessCodeRaw = searchParams.get('accessCode') ?? '';
 
   const code = useMemo(
@@ -44,14 +51,25 @@ function JoinDashboardContent() {
   );
 
   const portalSession = useMemo(() => readClientPortalSession(), []);
+  const participantSession = useMemo(() => readJoinParticipantSession(), []);
   const hasPortal = hasPortalSessionForResults();
-  const clientUid = useMemo(() => (user?.uid || '').trim(), [user?.uid]);
-  const canTrackResults = hasPortal || Boolean(clientUid);
+  const hasParticipant = hasJoinParticipantSessionForCode(code);
+  const canTrackResults = canTrackJoinResults();
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
+
+  const [finalizeMessage, setFinalizeMessage] = useState('');
+
+  useEffect(() => {
+    if (!isValidAccessCodeInput(code)) return;
+    if (hasPortal) return;
+    if (!hasParticipant) {
+      router.replace(`/join/profile?accessCode=${encodeURIComponent(code)}`);
+    }
+  }, [code, hasPortal, hasParticipant, router]);
 
   const loadAssessment = useCallback(() => {
     if (!isValidAccessCodeInput(code)) {
@@ -126,6 +144,30 @@ function JoinDashboardContent() {
     return withIdx;
   }, [assessment, latestCompletedByTestId, joinResults]);
 
+  useEffect(() => {
+    if (!hasParticipant || hasPortal || !assessment?.testList?.length) return;
+    const required = assessment.testList.map((t) => String(t.testId));
+    const done = required.filter((tid) =>
+      joinResults.some((r) => String(r.testId) === tid && r.status === 'completed')
+    );
+    if (done.length !== required.length) return;
+
+    let cancelled = false;
+    finalizeJoinParticipant()
+      .then((res) => {
+        if (cancelled) return;
+        if (res.credentialsSent || res.allCompleted) {
+          setFinalizeMessage(res.message);
+        }
+      })
+      .catch(() => {
+        /* ignore — may already be sent */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [joinResults, assessment, hasParticipant, hasPortal]);
+
   if (loading) {
     return <DashboardLoading />;
   }
@@ -160,6 +202,16 @@ function JoinDashboardContent() {
             </p>
           ) : null}
 
+          {participantSession?.displayName ? (
+            <p className="text-sm text-slate-400 mb-2">{participantSession.displayName}님</p>
+          ) : null}
+
+          {finalizeMessage ? (
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-200">
+              {finalizeMessage}
+            </div>
+          ) : null}
+
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{assessment.title}</h1>
             <div className="text-sm text-slate-300 mb-4">
@@ -182,11 +234,7 @@ function JoinDashboardContent() {
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
             {!canTrackResults && !authLoading ? (
               <p className="text-amber-200/90 text-sm mb-2">
-                완료 여부를 보려면{' '}
-                <Link href="/join/" className="text-blue-400 hover:text-blue-300 underline">
-                  검사실 로그인
-                </Link>
-                이 필요합니다.
+                프로필 등록 후 검사를 진행할 수 있습니다.
               </p>
             ) : null}
             {assessment.testList.length === 0 ? (
@@ -246,7 +294,8 @@ function JoinDashboardContent() {
           <CompletedTestList
             clientUid={clientUid}
             usePortalSession={hasPortal}
-            authLoading={authLoading && !hasPortal}
+            useParticipantSession={hasParticipant}
+            authLoading={authLoading && !hasPortal && !hasParticipant}
             onRefresh={loadAssessment}
             onResultsChange={setJoinResults}
           />

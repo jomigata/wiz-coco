@@ -127,40 +127,8 @@ def portal_login():
             }
         )
 
-    # 레거시: assessment 단독 코드 (PIN 없음) — 전환 기간 호환
-    refs = (
-        db.collection(ASSESSMENTS_COLLECTION)
-        .where("accessCode", "==", code)
-        .where("status", "==", "active")
-        .limit(1)
-        .get()
-    )
-    if not refs:
-        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
-    adoc = refs[0]
-    a = adoc.to_dict()
-    legacy_hash = a.get("joinPinHash") or ""
-    if legacy_hash:
-        if not verify_password(pin, legacy_hash):
-            return jsonify({"error": "Unauthorized", "message": MSG_INVALID_CREDENTIALS}), 401
-    elif pin:
-        pass  # PIN 입력했지만 레거시 무PIN — 허용
-
-    token = _issue_portal_token(f"legacy:{adoc.id}", code, remember)
-    return jsonify(
-        {
-            "portalToken": token,
-            "rememberDays": 30 if remember else 1,
-            "portal": {
-                "id": f"legacy:{adoc.id}",
-                "accessCode": code,
-                "displayName": a.get("title", ""),
-                "counselorId": a.get("counselorId", ""),
-                "assignedAssessments": [{"assessmentId": adoc.id, "title": a.get("title", "")}],
-            },
-            "legacyAssessment": True,
-        }
-    )
+    # 공유 검사코드는 검사 시작 전용 — 내 검사실은 개인 포털(코드+PIN)로만 접속
+    return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
 
 
 @bp.route("/me", methods=["GET"])

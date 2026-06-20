@@ -5,8 +5,8 @@ from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import NOTIFICATION_QUEUE_COLLECTION, PUBLIC_SITE_URL, is_email_configured
 from firebase_init import get_firestore
-from utils.email_notify import send_portal_invite_email
-from utils.sms_notify import send_portal_invite_sms
+from utils.email_notify import send_portal_invite_email, send_portal_credentials_email
+from utils.sms_notify import send_portal_invite_sms, send_portal_credentials_sms
 
 
 def process_notification_queue(*, limit: int = 50) -> dict:
@@ -35,6 +35,64 @@ def process_notification_queue(*, limit: int = 50) -> dict:
         magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
 
         try:
+            if item_type == "portal_credentials":
+                pin = str(data.get("pin") or "")
+                email_ok = False
+                sms_ok = False
+                errors = []
+
+                if email:
+                    if is_email_configured():
+                        email_ok = send_portal_credentials_email(
+                            to_email=email,
+                            access_code=access_code,
+                            pin=pin,
+                            magic_url=magic_url,
+                            display_name=data.get("displayName") or "",
+                        )
+                        if not email_ok:
+                            errors.append("email_send_failed")
+                    else:
+                        errors.append("smtp_not_configured")
+
+                if phone:
+                    sms_ok, sms_err = send_portal_credentials_sms(
+                        to_phone=phone,
+                        access_code=access_code,
+                        pin=pin,
+                        magic_url=magic_url,
+                    )
+                    if sms_err:
+                        errors.append(sms_err)
+
+                if email and email_ok:
+                    status = "sent"
+                    sent += 1
+                elif phone and sms_ok:
+                    status = "sent"
+                    sent += 1
+                elif not email and not phone:
+                    status = "skipped"
+                    skipped += 1
+                    errors.append("no_recipient")
+                elif errors:
+                    status = "failed"
+                    failed += 1
+                else:
+                    status = "skipped"
+                    skipped += 1
+
+                update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP}
+                if errors:
+                    update_payload["error"] = "; ".join(errors)
+                if email_ok:
+                    update_payload["sentVia"] = "email"
+                elif sms_ok:
+                    update_payload["sentVia"] = "sms"
+                doc.reference.update(update_payload)
+                details.append({"id": doc.id, "status": status, "errors": errors})
+                continue
+
             if item_type != "portal_invite":
                 doc.reference.update(
                     {

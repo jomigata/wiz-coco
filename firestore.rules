@@ -62,6 +62,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // 검사 참여자 프로필 — joinParticipants (백엔드 API 전용)
+    match /joinParticipants/{participantId} {
+      allow read, write: if false;
+    }
+
     // 검사 결과 - testResults
     // 1) 로그인 사용자(내담자)는 본인(uid) 결과를 읽고/생성 가능 (이메일 없이 앱/웹 내 조회 목적)
     // 2) 상담사는 assessment 기반 결과를 읽을 수 있음(기존 호환)
