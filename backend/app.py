@@ -8,6 +8,7 @@ from routes.assessments import bp as assessments_bp
 from routes.auth import bp as auth_bp
 from routes.counselor_applications import bp as counselor_applications_bp
 from routes.results import bp as results_bp
+from routes.client_portals import bp as client_portals_bp
 
 
 def create_app():
@@ -19,6 +20,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(counselor_applications_bp)
     app.register_blueprint(results_bp)
+    app.register_blueprint(client_portals_bp)
 
     @app.route("/", methods=["GET"])
     def root():

@@ -32,6 +32,13 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ASSESSMENTS_COLLECTION = "assessments"
 TEST_RESULTS_COLLECTION = "testResults"
 USERS_COLLECTION = "users"
+CLIENT_PORTALS_COLLECTION = "clientPortals"
+NOTIFICATION_QUEUE_COLLECTION = "notificationQueue"
+
+# 내담자 포털 세션·매직 링크 (초)
+PORTAL_SESSION_MAX_AGE = int(os.getenv("PORTAL_SESSION_MAX_AGE", str(24 * 3600)))
+PORTAL_SESSION_REMEMBER_MAX_AGE = int(os.getenv("PORTAL_SESSION_REMEMBER_MAX_AGE", str(30 * 24 * 3600)))
+PORTAL_MAGIC_LINK_MAX_AGE = int(os.getenv("PORTAL_MAGIC_LINK_MAX_AGE", str(72 * 3600)))
 
 # Role bootstrap (최초 운영자/상담사 계정)
 # Firestore users/{uid}.role 이 설정되지 않은 경우, 토큰의 email 클레임으로 1회 자동 승격합니다.

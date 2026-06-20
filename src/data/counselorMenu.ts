@@ -76,6 +76,12 @@ export const counselorMenuCategories: TestCategory[] = [
             description: '내담자에게 검사 할당',
             icon: '📋',
           },
+          {
+            name: '일괄 초대',
+            href: '/counselor/bulk-invite',
+            description: 'CSV로 다수 내담자 코드·PIN 일괄 생성',
+            icon: '📨',
+          },
         ],
       },
       {

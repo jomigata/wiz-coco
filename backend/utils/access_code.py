@@ -82,3 +82,28 @@ def generate_unique_access_code() -> str:
         _bump_numeric_length(db, n)
 
     raise RuntimeError("Could not generate unique access code; check MAX_NUMERIC_LENGTH")
+
+
+def _access_code_exists(db, candidate: str) -> bool:
+    if db.collection(ASSESSMENTS_COLLECTION).where("accessCode", "==", candidate).limit(1).get():
+        return True
+    try:
+        from config import CLIENT_PORTALS_COLLECTION
+        if db.collection(CLIENT_PORTALS_COLLECTION).where("accessCode", "==", candidate).limit(1).get():
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def generate_unique_portal_access_code() -> str:
+    """clientPortals + assessments 전역 유일 accessCode."""
+    db = get_firestore()
+    for _ in range(MAX_BUMP_STEPS):
+        n = _get_numeric_length(db)
+        for _ in range(MAX_TRIES_PER_LENGTH):
+            candidate = _random_cvc() + _random_numeric(n)
+            if not _access_code_exists(db, candidate):
+                return candidate
+        _bump_numeric_length(db, n)
+    raise RuntimeError("Could not generate unique portal access code")

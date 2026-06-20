@@ -99,8 +99,8 @@ const RegisterContent = () => {
       <div className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-emerald-100 mb-1">회원가입</h2>
-            <p className="text-sm text-emerald-500/90">이메일로 새 계정 만들기</p>
+            <h2 className="text-2xl font-semibold text-emerald-100 mb-1">전문가 계정 만들기</h2>
+            <p className="text-sm text-emerald-500/90">검사 코드 발급 및 내담자 관리용 계정을 생성합니다.</p>
           </div>
 
           {registerError && (

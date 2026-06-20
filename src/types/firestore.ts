@@ -105,4 +105,24 @@ export type TestResultCreateInput = Omit<TestResult, 'passwordHash' | 'completed
 export const FIRESTORE_COLLECTIONS = {
   ASSESSMENTS: 'assessments',
   TEST_RESULTS: 'testResults',
+  CLIENT_PORTALS: 'clientPortals',
+  NOTIFICATION_QUEUE: 'notificationQueue',
 } as const;
+
+/** clientPortals — 내담자 1인 1 accessCode+PIN (API 전용) */
+export type ClientPortalStatus = 'active' | 'archived';
+
+export interface ClientPortalDocument {
+  accessCode: string;
+  pinHash: string;
+  counselorId: string;
+  displayName: string;
+  email?: string;
+  phone?: string;
+  cohortId?: string;
+  cohortName?: string;
+  assignedAssessmentIds: string[];
+  status: ClientPortalStatus;
+  createdAt?: Timestamp | { _seconds: number; _nanoseconds: number };
+  lastLoginAt?: Timestamp | { _seconds: number; _nanoseconds: number };
+}

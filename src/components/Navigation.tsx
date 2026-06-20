@@ -21,6 +21,7 @@ import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSession
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
+import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 export default function Navigation() {
   const router = useRouter();
@@ -146,12 +147,20 @@ export default function Navigation() {
   const isLoggedIn = Boolean(sessionFirebaseUser) || Boolean(user);
   const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
   const [isTestInProgress, setIsTestInProgress] = useState(false);
+  const [hasClientPortalSession, setHasClientPortalSession] = useState(false);
 
   // 기존 완료 기능은 hidden으로 네비에서 숨김. NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 시 복원
   const visibleTestMenuItems = getVisibleTestMenuItems();
 
   // 심리검사 페이지인지 확인 (모든 /tests/ 경로)
   const isTestPage = pathname?.startsWith('/tests/') || pathname === '/tests';
+
+  useEffect(() => {
+    const checkPortal = () => setHasClientPortalSession(Boolean(readClientPortalSession()?.portalToken));
+    checkPortal();
+    window.addEventListener('storage', checkPortal);
+    return () => window.removeEventListener('storage', checkPortal);
+  }, [pathname]);
 
   // 진행중인 검사 수 가져오기 및 실제 검사 진행 중인지 확인
   useEffect(() => {
@@ -463,8 +472,24 @@ export default function Navigation() {
                 onClick={(e) => handleNavLinkClick('/join', e)}
               >
                 <span aria-hidden>⭐</span>
-                검사 하기
+                검사 시작
               </Link>
+              {hasClientPortalSession && (
+                <Link
+                  href="/portal/"
+                  className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
+                    activeItem === "/portal" || activeItem.startsWith("/portal/")
+                      ? "text-white bg-blue-600 border-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                  }`}
+                  onClick={(e) => handleNavLinkClick('/portal/', e)}
+                >
+                  <span aria-hidden>🏠</span>
+                  내 검사실
+                </Link>
+              )}
+              {isLoggedIn && (
+              <>
               {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
               {showPsychologyTestsMenu && (
               <div ref={psychologyTestsTriggerRef} className="relative">
@@ -664,6 +689,8 @@ export default function Navigation() {
                   />
                 )}
               </div>
+              </>
+              )}
             </div>
 
             {/* 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
@@ -963,26 +990,15 @@ export default function Navigation() {
                   </>
                 ) : (
                   <>
-                    {/* 로그인/회원가입 버튼 */}
                     <Link
                       href="/login"
-                      className="inline-flex h-10 min-w-[5.5rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-semibold tracking-wide text-slate-100 shadow-sm transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white whitespace-nowrap"
+                      className="inline-flex h-10 min-w-[6.5rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-semibold tracking-wide text-slate-100 shadow-sm transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white whitespace-nowrap"
                       onClick={(e) => handleAuthLinkClick("/login", e)}
                     >
                       <span className="text-base leading-none" aria-hidden>
                         🔑
                       </span>
-                      <span>로그인</span>
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="inline-flex h-10 min-w-[5.5rem] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-4 text-sm font-semibold tracking-wide text-white shadow-md shadow-indigo-950/40 transition-all duration-300 hover:from-sky-400 hover:to-blue-500 whitespace-nowrap border border-white/10"
-                      onClick={(e) => handleAuthLinkClick("/register", e)}
-                    >
-                      <span className="text-base leading-none" aria-hidden>
-                        ✨
-                      </span>
-                      <span>회원가입</span>
+                      <span>전문가 로그인</span>
                     </Link>
                   </>
                 )}
@@ -1040,16 +1056,25 @@ export default function Navigation() {
 
               {/* 검사 하기 */}
               <Link
-                href="/join"
+                href="/join/"
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span aria-hidden>⭐</span>
-                검사 하기
+                검사 시작
               </Link>
 
-              {/* 심리검사 — 상담사·관리자 전용 */}
-              {showPsychologyTestsMenu && (
+              {hasClientPortalSession && (
+                <Link
+                  href="/portal/"
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-slate-200 bg-slate-800/60 hover:bg-slate-700 border border-slate-600"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  🏠 내 검사실
+                </Link>
+              )}
+
+              {isLoggedIn && showPsychologyTestsMenu && (
                 <ThreeTierMobileMenuSection
                   sectionTitle="🧠 AI 심리검사"
                   categories={visibleTestMenuItems}
@@ -1071,6 +1096,8 @@ export default function Navigation() {
                 />
               )}
 
+              {isLoggedIn && (
+              <>
               <ThreeTierMobileMenuSection
                 sectionTitle="💬 상담 프로그램"
                 categories={counselingMenuCategories}
@@ -1127,6 +1154,9 @@ export default function Navigation() {
                 />
               )}
 
+              </>
+              )}
+
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
                 <div className="space-y-2 pt-4 border-t border-white/20">
@@ -1176,14 +1206,7 @@ export default function Navigation() {
                     className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    🔑 로그인
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    ✨ 회원가입
+                    🔑 전문가 로그인
                   </Link>
                 </div>
               )}

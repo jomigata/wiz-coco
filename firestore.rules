@@ -52,6 +52,16 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.counselorId == request.auth.uid;
     }
 
+    // 내담자 포털 — clientPortals (코드+PIN 로그인, 백엔드 API 전용)
+    match /clientPortals/{portalId} {
+      allow read, write: if false;
+    }
+
+    // 통지 큐 — notificationQueue (백엔드 워커 전용)
+    match /notificationQueue/{itemId} {
+      allow read, write: if false;
+    }
+
     // 검사 결과 - testResults
     // 1) 로그인 사용자(내담자)는 본인(uid) 결과를 읽고/생성 가능 (이메일 없이 앱/웹 내 조회 목적)
     // 2) 상담사는 assessment 기반 결과를 읽을 수 있음(기존 호환)
