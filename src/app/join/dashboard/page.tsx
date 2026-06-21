@@ -147,16 +147,16 @@ function JoinDashboardContent() {
   useEffect(() => {
     if (!hasParticipant || hasPortal || !assessment?.testList?.length) return;
     const required = assessment.testList.map((t) => String(t.testId));
-    const done = required.filter((tid) =>
+    const doneCount = required.filter((tid) =>
       joinResults.some((r) => String(r.testId) === tid && r.status === 'completed')
-    );
-    if (done.length !== required.length) return;
+    ).length;
+    if (doneCount < 1) return;
 
     let cancelled = false;
     finalizeJoinParticipant()
       .then((res) => {
         if (cancelled) return;
-        if (res.credentialsSent || res.allCompleted) {
+        if (res.credentialsSent || res.message) {
           setFinalizeMessage(res.message);
         }
       })

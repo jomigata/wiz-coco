@@ -222,6 +222,16 @@ def bulk_create():
     usage_end_date = (body.get("usageEndDate") or "").strip()
     test_list = body.get("testList") or []
     queue_notify = bool(body.get("queueNotify"))
+    scheduled_at_raw = (body.get("scheduledAt") or "").strip()
+
+    scheduled_at = None
+    if scheduled_at_raw:
+        try:
+            scheduled_at = datetime.fromisoformat(scheduled_at_raw.replace("Z", "+00:00"))
+            if scheduled_at.tzinfo is None:
+                scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+        except Exception:
+            return jsonify({"error": "Bad Request", "message": "scheduledAt 형식이 올바르지 않습니다."}), 400
 
     if not title:
         return jsonify({"error": "Bad Request", "message": "검사 세트 제목(title)이 필요합니다."}), 400
@@ -257,6 +267,7 @@ def bulk_create():
                 "accessCode": access_code,
                 "counselorId": counselor_uid,
                 "title": title,
+                "issueType": "individual",
                 "targetAudience": "개인",
                 "welcomeMessage": welcome_message,
                 "usageEndDate": usage_end_date,
@@ -285,22 +296,25 @@ def bulk_create():
         )
 
         magic = _create_magic_link_token(portal_ref.id, access_code)
-        magic_path = f"/go/?t={magic}"
+        magic_path = f"/go?t={magic}"
 
         if queue_notify and (email or phone):
-            notify_queue.add(
-                {
-                    "type": "portal_invite",
-                    "portalId": portal_ref.id,
-                    "email": email,
-                    "phone": phone,
-                    "accessCode": access_code,
-                    "magicPath": magic_path,
-                    "status": "pending",
-                    "createdAt": SERVER_TIMESTAMP,
-                    "counselorId": counselor_uid,
-                }
-            )
+            queue_item = {
+                "type": "portal_credentials",
+                "portalId": portal_ref.id,
+                "email": email,
+                "phone": phone,
+                "accessCode": access_code,
+                "pin": pin,
+                "magicPath": magic_path,
+                "displayName": display_name,
+                "status": "pending",
+                "createdAt": SERVER_TIMESTAMP,
+                "counselorId": counselor_uid,
+            }
+            if scheduled_at:
+                queue_item["scheduledAt"] = scheduled_at.isoformat()
+            notify_queue.add(queue_item)
 
         created.append(
             {

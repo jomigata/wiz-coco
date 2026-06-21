@@ -220,7 +220,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const total = incomplete + complete;
                   const progressPct = total > 0 ? Math.round((complete / total) * 100) : 0;
                   const expired = isExpired(a.usageEndDate);
-                  const isGroup = (a.targetAudience || '개인') !== '개인';
+                  const issueType = a.issueType || (a.targetAudience === '그룹' ? 'shared' : 'individual');
+                  const typeLabel = issueType === 'shared' ? '공동' : '개별';
+                  const typeClass =
+                    issueType === 'shared'
+                      ? 'border-purple-500/30 bg-purple-500/15 text-purple-200'
+                      : 'border-sky-500/30 bg-sky-500/15 text-sky-200';
 
                   return (
                     <tr key={a.id} className="group hover:bg-white/[0.04]">
@@ -232,12 +237,8 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       </td>
                       <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200">
                         <span className="font-medium text-white">{a.title || '-'}</span>
-                        <span className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 align-middle text-[10px] font-medium border ${
-                          isGroup
-                            ? 'border-purple-500/30 bg-purple-500/15 text-purple-200'
-                            : 'border-sky-500/30 bg-sky-500/15 text-sky-200'
-                        }`}>
-                          {a.targetAudience || '개인'}
+                        <span className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 align-middle text-[10px] font-medium border ${typeClass}`}>
+                          {typeLabel}
                         </span>
                         {expired && (
                           <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">

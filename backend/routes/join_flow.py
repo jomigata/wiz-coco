@@ -3,24 +3,19 @@ import uuid
 
 from flask import Blueprint, jsonify, request
 from firebase_admin.firestore import SERVER_TIMESTAMP
-from itsdangerous import URLSafeTimedSerializer
 
 from config import (
     ASSESSMENTS_COLLECTION,
-    CLIENT_PORTALS_COLLECTION,
     JOIN_PARTICIPANTS_COLLECTION,
-    NOTIFICATION_QUEUE_COLLECTION,
-    SECRET_KEY,
 )
 from firebase_init import get_firestore
 from rate_limit import limit_access_code
 from utils.access_code import (
-    generate_unique_portal_access_code,
     is_valid_access_code,
     normalize_access_code,
 )
 from utils.participant_auth import get_participant_session_from_request, issue_participant_token
-from utils.password import generate_four_digit_password, hash_password
+from utils.join_portal_issue import try_issue_portal_for_participant
 
 bp = Blueprint("join_flow", __name__, url_prefix="/api/join")
 
@@ -28,12 +23,6 @@ MSG_NOT_FOUND = (
     "요청하신 검사코드가 확인되지 않습니다. 검사 코드를 다시 확인해 주시기 바랍니다."
 )
 MSG_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
-
-
-def _create_magic_link_token(portal_id: str, access_code: str) -> str:
-    return URLSafeTimedSerializer(SECRET_KEY, salt="portal-magic").dumps(
-        {"portalId": portal_id, "accessCode": access_code}
-    )
 
 
 def _find_active_assessment(db, code: str):
@@ -154,97 +143,33 @@ def _completed_test_ids(db, assessment_id: str, participant_id: str) -> set[str]
 @bp.route("/finalize", methods=["POST"])
 @limit_access_code
 def finalize_participant():
-    """모든 검사 완료 시 개인 포털(코드+PIN) 생성 및 이메일/SMS 통지 큐 등록."""
+    """검사 1건 이상 완료 시 개인 포털(코드+PIN) 생성 및 이메일/SMS 통지 큐 등록."""
     session = get_participant_session_from_request()
     if not session:
         return jsonify({"error": "Unauthorized", "message": "참여 세션이 만료되었습니다."}), 401
 
     participant_id = (session.get("participantId") or "").strip()
     assessment_id = (session.get("assessmentId") or "").strip()
-    access_code = normalize_access_code(session.get("accessCode") or "")
 
     db = get_firestore()
-    pref = db.collection(JOIN_PARTICIPANTS_COLLECTION).document(participant_id).get()
-    if not pref.exists:
-        return jsonify({"error": "Not Found", "message": "참여 정보를 찾을 수 없습니다."}), 404
-    pdata = pref.to_dict() or {}
+    result = try_issue_portal_for_participant(db, participant_id, assessment_id)
+    if not result.get("ok"):
+        code = 404 if result.get("error") == "not_found" else 400
+        return jsonify({"error": "Not Found", "message": result.get("message", "")}), code
 
     ass_doc = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id).get()
-    if not ass_doc.exists:
-        return jsonify({"error": "Not Found", "message": MSG_NOT_FOUND}), 404
-    ass_data = ass_doc.to_dict() or {}
+    ass_data = ass_doc.to_dict() or {} if ass_doc.exists else {}
     test_list = ass_data.get("testList") or []
     required_ids = {str(t.get("testId") or "") for t in test_list if t and t.get("testId")}
-    if not required_ids:
-        return jsonify({"error": "Bad Request", "message": "등록된 검사가 없습니다."}), 400
-
     done_ids = _completed_test_ids(db, assessment_id, participant_id)
-    if not required_ids.issubset(done_ids):
-        missing = len(required_ids - done_ids)
-        return jsonify(
-            {
-                "allCompleted": False,
-                "completedCount": len(done_ids & required_ids),
-                "totalCount": len(required_ids),
-                "message": f"아직 {missing}개 검사가 남았습니다.",
-            }
-        ), 200
-
-    if pdata.get("credentialsSentAt") or pdata.get("portalId"):
-        return jsonify(
-            {
-                "allCompleted": True,
-                "credentialsSent": True,
-                "message": "내 검사실 접속 정보가 이미 발송되었습니다. 이메일·문자를 확인해 주세요.",
-            }
-        )
-
-    portal_access_code = generate_unique_portal_access_code()
-    pin = generate_four_digit_password()
-    pin_hash = hash_password(pin)
-
-    portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document()
-    portal_ref.set(
-        {
-            "accessCode": portal_access_code,
-            "pinHash": pin_hash,
-            "counselorId": ass_data.get("counselorId", ""),
-            "displayName": pdata.get("displayName", ""),
-            "email": pdata.get("email", ""),
-            "phone": pdata.get("phone", ""),
-            "birthYear": pdata.get("birthYear"),
-            "gender": pdata.get("gender", ""),
-            "region": pdata.get("region", ""),
-            "assignedAssessmentIds": [assessment_id],
-            "joinParticipantId": participant_id,
-            "status": "active",
-            "createdAt": SERVER_TIMESTAMP,
-        }
-    )
-
-    magic = _create_magic_link_token(portal_ref.id, portal_access_code)
-    magic_path = f"/go?t={magic}"
-
-    pref.reference.update({"portalId": portal_ref.id, "credentialsSentAt": SERVER_TIMESTAMP})
-
-    db.collection(NOTIFICATION_QUEUE_COLLECTION).add(
-        {
-            "type": "portal_credentials",
-            "email": pdata.get("email", ""),
-            "phone": pdata.get("phone", ""),
-            "accessCode": portal_access_code,
-            "pin": pin,
-            "magicPath": magic_path,
-            "displayName": pdata.get("displayName", ""),
-            "status": "pending",
-            "createdAt": SERVER_TIMESTAMP,
-        }
-    )
+    all_done = bool(required_ids) and required_ids.issubset(done_ids)
 
     return jsonify(
         {
-            "allCompleted": True,
-            "credentialsSent": True,
-            "message": "모든 검사가 완료되었습니다. 내 검사실 접속 정보를 이메일·문자로 보내드렸습니다.",
+            "allCompleted": all_done,
+            "credentialsSent": bool(result.get("credentialsSent")),
+            "completedCount": len(done_ids & required_ids) if required_ids else len(done_ids),
+            "totalCount": len(required_ids),
+            "message": result.get("message", ""),
         }
     )

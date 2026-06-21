@@ -283,6 +283,7 @@ export interface CounselorAssessment {
   accessCode: string;
   counselorId: string;
   title: string;
+  issueType?: 'shared' | 'individual';
   targetAudience: string;
   welcomeMessage: string;
   usageEndDate?: string;
@@ -308,14 +309,15 @@ export interface ProgressByClient {
   results: { resultId: string; testId: string; status: string; completedAt: string | null }[];
 }
 
-/** POST /api/assessments - 상담사: 검사코드(세트) 생성 */
+/** POST /api/assessments - 상담사: 공동 이용 검사코드(세트) 생성 */
 export async function createAssessment(body: {
   title: string;
+  issueType?: 'shared' | 'individual';
   targetAudience?: '개인' | '그룹';
   welcomeMessage?: string;
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
-}): Promise<{ assessmentId: string; accessCode: string }> {
+}): Promise<{ assessmentId: string; accessCode: string; issueType?: string }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {
@@ -326,7 +328,7 @@ export async function createAssessment(body: {
     },
     body: JSON.stringify({
       title: (body.title || '').trim(),
-      targetAudience: body.targetAudience || '개인',
+      issueType: body.issueType || 'shared',
       welcomeMessage: (body.welcomeMessage || '').trim(),
       usageEndDate: (body.usageEndDate || '').trim(),
       testList: body.testList || [],

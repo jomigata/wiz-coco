@@ -12,6 +12,7 @@ from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
 from utils.portal_auth import get_portal_session_from_request
 from utils.participant_auth import get_participant_session_from_request
+from utils.join_portal_issue import try_issue_portal_for_participant
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
@@ -159,12 +160,23 @@ def submit_result():
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
     ref.set(data)
 
-    return jsonify(
-        {
-            "resultId": ref.id,
-            "message": "Result submitted.",
-        }
-    ), 201
+    portal_issued = None
+    if participant_session:
+        portal_issued = try_issue_portal_for_participant(
+            db,
+            (participant_session.get("participantId") or "").strip(),
+            assessment_id,
+        )
+
+    payload = {
+        "resultId": ref.id,
+        "message": "Result submitted.",
+    }
+    if portal_issued and portal_issued.get("credentialsSent"):
+        payload["portalCredentialsSent"] = True
+        payload["portalMessage"] = portal_issued.get("message", "")
+
+    return jsonify(payload), 201
 
 
 @bp.route("", methods=["GET"])

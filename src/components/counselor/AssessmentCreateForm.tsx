@@ -12,7 +12,6 @@ export default function AssessmentCreateForm() {
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [title, setTitle] = useState('');
-  const [targetAudience, setTargetAudience] = useState<'개인' | '그룹'>('개인');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [usageEndDate, setUsageEndDate] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
@@ -45,7 +44,7 @@ export default function AssessmentCreateForm() {
     try {
       const result = await createAssessment({
         title: trimmedTitle,
-        targetAudience,
+        issueType: 'shared',
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
         testList,
@@ -103,34 +102,6 @@ export default function AssessmentCreateForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">대상</label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="targetAudience"
-              checked={targetAudience === '개인'}
-              onChange={() => setTargetAudience('개인')}
-              disabled={loading}
-              className="text-blue-500"
-            />
-            <span className="text-white">개인</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="targetAudience"
-              checked={targetAudience === '그룹'}
-              onChange={() => setTargetAudience('그룹')}
-              disabled={loading}
-              className="text-blue-500"
-            />
-            <span className="text-white">그룹</span>
-          </label>
-        </div>
-      </div>
-
-      <div>
         <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-300 mb-2">
           검사코드 사용최종일 (선택)
         </label>
@@ -178,7 +149,7 @@ export default function AssessmentCreateForm() {
           ))}
         </div>
         <p className="text-slate-500 text-xs mt-1">
-          선택한 검사가 내담자 검사실에 표시됩니다. 비밀번호 4자리는 생성 시 자동 발급됩니다.
+          선택한 검사가 내담자 검사실에 표시됩니다. 검사 1건 완료 시 개인 내 검사실 코드가 자동 발송됩니다.
         </p>
       </div>
 

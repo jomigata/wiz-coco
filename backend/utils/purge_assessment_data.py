@@ -4,6 +4,7 @@ from __future__ import annotations
 from config import (
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
+    JOIN_PARTICIPANTS_COLLECTION,
     NOTIFICATION_QUEUE_COLLECTION,
     TEST_RESULTS_COLLECTION,
 )
@@ -81,6 +82,7 @@ def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_tes
     counts = {
         "assessments": _delete_entire_collection(db, ASSESSMENTS_COLLECTION, dry_run),
         "clientPortals": _delete_entire_collection(db, CLIENT_PORTALS_COLLECTION, dry_run),
+        "joinParticipants": _delete_entire_collection(db, JOIN_PARTICIPANTS_COLLECTION, dry_run),
         "notificationQueue": _delete_entire_collection(db, NOTIFICATION_QUEUE_COLLECTION, dry_run),
     }
     if include_all_test_results:

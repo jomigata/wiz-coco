@@ -27,6 +27,18 @@ def process_notification_queue(*, limit: int = 50) -> dict:
     for doc in refs:
         processed += 1
         data = doc.to_dict() or {}
+        scheduled_raw = (data.get("scheduledAt") or "").strip()
+        if scheduled_raw:
+            try:
+                sched = datetime.fromisoformat(scheduled_raw.replace("Z", "+00:00"))
+                if sched.tzinfo is None:
+                    sched = sched.replace(tzinfo=timezone.utc)
+                if sched > datetime.now(timezone.utc):
+                    details.append({"id": doc.id, "status": "pending", "reason": "scheduled"})
+                    continue
+            except Exception:
+                pass
+
         item_type = data.get("type") or ""
         email = (data.get("email") or "").strip().lower()
         phone = (data.get("phone") or "").strip()

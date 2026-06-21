@@ -19,7 +19,7 @@ export const counselorMenuCategories: TestCategory[] = [
           {
             name: '새 검사코드 만들기',
             href: '/counselor/assessments/new',
-            description: '내담자용 검사코드를 발급합니다',
+            description: '공동 이용 또는 개별 발급 검사코드',
             icon: '➕',
           },
         ],
@@ -63,12 +63,6 @@ export const counselorMenuCategories: TestCategory[] = [
             href: '/counselor/assign-tests',
             description: '내담자에게 검사 할당',
             icon: '📋',
-          },
-          {
-            name: '일괄 초대',
-            href: '/counselor/bulk-invite',
-            description: 'CSV로 다수 내담자 코드·PIN 일괄 생성',
-            icon: '📨',
           },
         ],
       },

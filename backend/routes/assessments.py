@@ -64,12 +64,17 @@ def _strip_join_secrets_for_counselor_api(d: dict) -> None:
 @bp.route("", methods=["POST"])
 @require_counselor
 def create_assessment():
-    """상담사: 검사코드(세트) 생성. 내담자는 /join 에서 코드만으로 시작."""
+    """상담사: 공동 이용 검사코드(세트) 생성. 내담자는 /join 에서 코드만으로 시작."""
     body = request.get_json() or {}
     title = (body.get("title") or "").strip()
-    target_audience = body.get("targetAudience", "개인")
-    if target_audience not in ("개인", "그룹"):
-        target_audience = "개인"
+    issue_type = (body.get("issueType") or "shared").strip()
+    if issue_type not in ("shared", "individual"):
+        issue_type = "shared"
+    if issue_type != "shared":
+        return jsonify(
+            {"error": "Bad Request", "message": "개별 발급은 내담자 목록 일괄 생성 API를 사용하세요."}
+        ), 400
+    target_audience = "그룹"
     welcome_message = (body.get("welcomeMessage") or "").strip()
     usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
     test_list = body.get("testList") or []
@@ -90,6 +95,7 @@ def create_assessment():
         "accessCode": access_code,
         "counselorId": g.counselor_uid,
         "title": title,
+        "issueType": issue_type,
         "targetAudience": target_audience,
         "welcomeMessage": welcome_message,
         "usageEndDate": usage_end_date or "",
@@ -99,7 +105,7 @@ def create_assessment():
     }
     ref = db.collection(ASSESSMENTS_COLLECTION).document()
     ref.set(data)
-    return jsonify({"assessmentId": ref.id, "accessCode": access_code}), 201
+    return jsonify({"assessmentId": ref.id, "accessCode": access_code, "issueType": issue_type}), 201
 
 
 def _is_completed_result(d):

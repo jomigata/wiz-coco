@@ -87,6 +87,7 @@ export async function bulkCreateClientPortals(body: {
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
   queueNotify?: boolean;
+  scheduledAt?: string;
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가 로그인이 필요합니다.');

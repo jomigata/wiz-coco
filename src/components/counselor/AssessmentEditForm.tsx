@@ -21,7 +21,6 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   const [initial, setInitial] = useState<CounselorAssessment | null>(null);
 
   const [title, setTitle] = useState('');
-  const [targetAudience, setTargetAudience] = useState<'개인' | '그룹'>('개인');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [usageEndDate, setUsageEndDate] = useState('');
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
@@ -41,7 +40,6 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         if (cancelled) return;
         setInitial(data);
         setTitle(data.title || '');
-        setTargetAudience((data.targetAudience === '그룹' ? '그룹' : '개인') as '개인' | '그룹');
         setWelcomeMessage(data.welcomeMessage || '');
         setUsageEndDate((data.usageEndDate || '').trim());
         const ids = new Set((data.testList || []).map((t) => t.testId).filter(Boolean));
@@ -84,7 +82,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
     try {
       await updateAssessment(assessmentId, {
         title: trimmedTitle,
-        targetAudience,
+        targetAudience: initial.issueType === 'individual' ? '개인' : '그룹',
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
         testList,
@@ -148,31 +146,11 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">대상</label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="targetAudience"
-              checked={targetAudience === '개인'}
-              onChange={() => setTargetAudience('개인')}
-              disabled={loading}
-              className="text-blue-500"
-            />
-            <span className="text-white">개인</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="targetAudience"
-              checked={targetAudience === '그룹'}
-              onChange={() => setTargetAudience('그룹')}
-              disabled={loading}
-              className="text-blue-500"
-            />
-            <span className="text-white">그룹</span>
-          </label>
-        </div>
+        <span className="block text-sm font-medium text-slate-300 mb-2">유형</span>
+        <p className="text-white text-sm">
+          {initial.issueType === 'individual' ? '개별 발급' : '공동 이용'}
+        </p>
+        <p className="text-slate-500 text-xs mt-1">발급 유형은 변경할 수 없습니다.</p>
       </div>
 
       <div>
