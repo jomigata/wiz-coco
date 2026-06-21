@@ -38,7 +38,7 @@ export default function PortalLoginPage() {
         persistClientPortalSession(result);
         router.push('/portal/');
       } catch (err) {
-        setError(err instanceof Error ? err.message : '검사 코드 또는 비밀번호를 확인해 주세요.');
+        setError(err instanceof Error ? err.message : '나의코드 또는 비밀번호를 확인해 주세요.');
       } finally {
         setLoading(false);
       }
@@ -62,13 +62,13 @@ export default function PortalLoginPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">내 검사실 들어가기</h1>
             <p className="text-slate-300 text-sm mb-6">
-              검사 완료 후 받으신 <span className="text-slate-100">검사코드</span>와{' '}
+              검사 완료 후 받으신 <span className="text-slate-100">나의코드</span>와{' '}
               <span className="text-slate-100">비밀번호</span>를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
-                  검사코드
+                  나의코드
                 </label>
                 <input
                   id="accessCode"

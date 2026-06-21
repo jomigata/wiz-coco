@@ -13,7 +13,9 @@ def is_sms_configured() -> bool:
     return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER)
 
 
-def send_portal_credentials_sms(*, to_phone: str, access_code: str, pin: str, magic_url: str) -> tuple[bool, str]:
+def send_portal_credentials_sms(
+    *, to_phone: str, access_code: str, pin: str, magic_url: str, join_access_code: str = ""
+) -> tuple[bool, str]:
     phone = (to_phone or "").strip()
     if not phone:
         return False, "no_phone"
@@ -21,11 +23,20 @@ def send_portal_credentials_sms(*, to_phone: str, access_code: str, pin: str, ma
         logger.info("SMS skipped (Twilio not configured) for %s", phone[:4] + "****")
         return False, "sms_not_configured"
 
-    body = (
-        f"[WizCoCo] 검사 완료 — 내 검사실\n"
-        f"코드: {access_code} PIN: {pin}\n"
-        f"바로가기: {magic_url}"
-    )
+    join_code = (join_access_code or "").strip()
+    if join_code:
+        body = (
+            f"[WizCoCo] 심리검사 안내\n"
+            f"검사코드: {join_code}\n"
+            f"나의코드: {access_code} PIN: {pin}\n"
+            f"바로가기: {magic_url}"
+        )
+    else:
+        body = (
+            f"[WizCoCo] 내 검사실\n"
+            f"나의코드: {access_code} PIN: {pin}\n"
+            f"바로가기: {magic_url}"
+        )
 
     try:
         from twilio.rest import Client

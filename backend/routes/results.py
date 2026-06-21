@@ -13,6 +13,7 @@ from utils.access_code import normalize_access_code, is_valid_access_code
 from utils.portal_auth import get_portal_session_from_request
 from utils.participant_auth import get_participant_session_from_request
 from utils.join_portal_issue import try_issue_portal_for_participant
+from utils.portal_assessment_access import portal_can_use_assessment, get_portal_doc
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
@@ -94,11 +95,12 @@ def submit_result():
     client_email = get_bearer_email_optional() if not portal_session and not participant_session else None
     responses = body.get("responses")
 
+    db = get_firestore()
+
     if portal_session:
         portal_id = (portal_session.get("portalId") or "").strip()
-        token_code = normalize_access_code(portal_session.get("accessCode") or "")
-        if not portal_id or token_code != access_code:
-            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+        if not portal_id or not portal_can_use_assessment(db, portal_id, access_code):
+            return jsonify({"error": "Forbidden", "message": "이 검사에 접근할 수 없습니다."}), 403
     elif participant_session:
         token_code = normalize_access_code(participant_session.get("accessCode") or "")
         if token_code != access_code:
@@ -117,7 +119,6 @@ def submit_result():
     if responses is None:
         return jsonify({"error": "Bad Request", "message": "responses required"}), 400
 
-    db = get_firestore()
     ass_refs = db.collection(ASSESSMENTS_COLLECTION).where("accessCode", "==", access_code).where("status", "==", "active").limit(1).get()
     if not ass_refs:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
@@ -189,11 +190,12 @@ def list_results():
     client_uid = get_bearer_uid() if not portal_session and not participant_session else None
     token_email = get_bearer_email_optional() if not portal_session and not participant_session else None
 
+    db = get_firestore()
+
     if portal_session:
         portal_id = (portal_session.get("portalId") or "").strip()
-        token_code = normalize_access_code(portal_session.get("accessCode") or "")
-        if token_code != access_code:
-            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+        if not portal_can_use_assessment(db, portal_id, access_code):
+            return jsonify({"error": "Forbidden", "message": "이 검사에 접근할 수 없습니다."}), 403
     elif participant_session:
         token_code = normalize_access_code(participant_session.get("accessCode") or "")
         if token_code != access_code:
@@ -205,17 +207,20 @@ def list_results():
     if not is_valid_access_code(access_code):
         return jsonify({"error": "Bad Request", "message": "accessCode required"}), 400
 
-    db = get_firestore()
     if portal_session:
         portal_id = (portal_session.get("portalId") or "").strip()
-        refs = (
-            db.collection(TEST_RESULTS_COLLECTION)
-            .where("accessCode", "==", access_code)
-            .where("portalId", "==", portal_id)
-            .get()
-        )
+        portal_doc = get_portal_doc(db, portal_id)
+        join_participant_id = ""
+        if portal_doc:
+            join_participant_id = (portal_doc.to_dict() or {}).get("joinParticipantId") or ""
+
+        seen = set()
         items = []
-        for doc in refs or []:
+
+        def _append(doc):
+            if doc.id in seen:
+                return
+            seen.add(doc.id)
             d = doc.to_dict()
             items.append({
                 "resultId": doc.id,
@@ -223,6 +228,24 @@ def list_results():
                 "status": d.get("status"),
                 "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
             })
+
+        for doc in (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("portalId", "==", portal_id)
+            .get()
+        ):
+            _append(doc)
+
+        if join_participant_id:
+            for doc in (
+                db.collection(TEST_RESULTS_COLLECTION)
+                .where("accessCode", "==", access_code)
+                .where("participantId", "==", join_participant_id)
+                .get()
+            ):
+                _append(doc)
+
         return jsonify({"results": items})
 
     if participant_session:

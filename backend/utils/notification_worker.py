@@ -49,6 +49,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
         try:
             if item_type == "portal_credentials":
                 pin = str(data.get("pin") or "")
+                join_code = str(data.get("joinAccessCode") or "")
                 email_ok = False
                 sms_ok = False
                 errors = []
@@ -61,6 +62,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                             pin=pin,
                             magic_url=magic_url,
                             display_name=data.get("displayName") or "",
+                            join_access_code=join_code,
                         )
                         if not email_ok:
                             errors.append("email_send_failed")
@@ -73,6 +75,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                         access_code=access_code,
                         pin=pin,
                         magic_url=magic_url,
+                        join_access_code=join_code,
                     )
                     if sms_err:
                         errors.append(sms_err)

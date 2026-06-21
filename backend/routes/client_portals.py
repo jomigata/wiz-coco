@@ -24,13 +24,15 @@ from utils.access_code import (
     normalize_access_code,
     is_valid_access_code,
     generate_unique_portal_access_code,
+    generate_unique_access_code,
 )
+from utils.portal_assessment_access import link_shared_assessment_to_portal
 from utils.password import generate_four_digit_password, hash_password, verify_password
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
-MSG_INVALID_CREDENTIALS = "검사 코드 또는 비밀번호를 확인해 주세요."
-MSG_PORTAL_NOT_FOUND = "요청하신 검사 코드가 확인되지 않습니다."
+MSG_INVALID_CREDENTIALS = "나의코드 또는 비밀번호를 확인해 주세요."
+MSG_PORTAL_NOT_FOUND = "나의코드를 찾을 수 없습니다."
 
 
 def _serializer(salt: str):
@@ -58,7 +60,9 @@ def _find_portal_by_access_code(db, code: str):
 
 def _load_assessments_for_portal(db, portal_doc):
     d = portal_doc.to_dict()
-    ids = d.get("assignedAssessmentIds") or []
+    assigned = list(d.get("assignedAssessmentIds") or [])
+    linked = list(d.get("linkedAssessmentIds") or [])
+    ids = list(dict.fromkeys(assigned + linked))
     items = []
     for aid in ids:
         adoc = db.collection(ASSESSMENTS_COLLECTION).document(aid).get()
@@ -67,6 +71,8 @@ def _load_assessments_for_portal(db, portal_doc):
         a = adoc.to_dict()
         if a.get("status") != "active":
             continue
+        is_linked = aid in linked and aid not in assigned
+        issue_type = "shared" if is_linked else (a.get("issueType") or "individual")
         items.append(
             {
                 "assessmentId": adoc.id,
@@ -75,6 +81,8 @@ def _load_assessments_for_portal(db, portal_doc):
                 "usageEndDate": a.get("usageEndDate", ""),
                 "testList": a.get("testList", []),
                 "accessCode": a.get("accessCode", ""),
+                "issueType": issue_type,
+                "isLinkedShared": is_linked,
             }
         )
     return items
@@ -210,6 +218,38 @@ def _create_magic_link_token(portal_id: str, access_code: str) -> str:
     return _serializer("portal-magic").dumps({"portalId": portal_id, "accessCode": access_code})
 
 
+@bp.route("/link-assessment", methods=["POST"])
+@limit_access_code
+def link_shared_assessment():
+    """포털에 공유 검사코드(세트) 연결."""
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    body = request.get_json() or {}
+    shared_code = normalize_access_code(
+        body.get("sharedAccessCode") or body.get("accessCode") or ""
+    )
+    if not is_valid_access_code(shared_code):
+        return jsonify({"error": "Bad Request", "message": "공유 검사코드 형식이 올바르지 않습니다."}), 400
+
+    db = get_firestore()
+    portal_id = (payload.get("portalId") or "").strip()
+    ok, message, assessment_id = link_shared_assessment_to_portal(db, portal_id, shared_code)
+    if not ok:
+        return jsonify({"error": "Bad Request", "message": message}), 400
+
+    pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).get()
+    assessments = _load_assessments_for_portal(db, pdoc) if pdoc.exists else []
+    return jsonify(
+        {
+            "message": message,
+            "assessmentId": assessment_id,
+            "assessments": assessments,
+        }
+    )
+
+
 @bp.route("/bulk", methods=["POST"])
 @require_counselor
 def bulk_create():
@@ -222,16 +262,6 @@ def bulk_create():
     usage_end_date = (body.get("usageEndDate") or "").strip()
     test_list = body.get("testList") or []
     queue_notify = bool(body.get("queueNotify"))
-    scheduled_at_raw = (body.get("scheduledAt") or "").strip()
-
-    scheduled_at = None
-    if scheduled_at_raw:
-        try:
-            scheduled_at = datetime.fromisoformat(scheduled_at_raw.replace("Z", "+00:00"))
-            if scheduled_at.tzinfo is None:
-                scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
-        except Exception:
-            return jsonify({"error": "Bad Request", "message": "scheduledAt 형식이 올바르지 않습니다."}), 400
 
     if not title:
         return jsonify({"error": "Bad Request", "message": "검사 세트 제목(title)이 필요합니다."}), 400
@@ -257,14 +287,15 @@ def bulk_create():
         email = (row.get("email") or "").strip().lower()
         phone = (row.get("phone") or "").strip()
 
-        access_code = generate_unique_portal_access_code()
+        join_access_code = generate_unique_access_code()
+        portal_access_code = generate_unique_portal_access_code()
         pin = generate_four_digit_password()
         pin_hash = hash_password(pin)
 
         assessment_ref = db.collection(ASSESSMENTS_COLLECTION).document()
         assessment_ref.set(
             {
-                "accessCode": access_code,
+                "accessCode": join_access_code,
                 "counselorId": counselor_uid,
                 "title": title,
                 "issueType": "individual",
@@ -275,13 +306,14 @@ def bulk_create():
                 "createdAt": SERVER_TIMESTAMP,
                 "status": "active",
                 "clientPortalCohortId": cohort_id,
+                "portalAccessCode": portal_access_code,
             }
         )
 
         portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document()
         portal_ref.set(
             {
-                "accessCode": access_code,
+                "accessCode": portal_access_code,
                 "pinHash": pin_hash,
                 "counselorId": counselor_uid,
                 "displayName": display_name,
@@ -295,26 +327,26 @@ def bulk_create():
             }
         )
 
-        magic = _create_magic_link_token(portal_ref.id, access_code)
+        magic = _create_magic_link_token(portal_ref.id, portal_access_code)
         magic_path = f"/go?t={magic}"
 
         if queue_notify and (email or phone):
-            queue_item = {
-                "type": "portal_credentials",
-                "portalId": portal_ref.id,
-                "email": email,
-                "phone": phone,
-                "accessCode": access_code,
-                "pin": pin,
-                "magicPath": magic_path,
-                "displayName": display_name,
-                "status": "pending",
-                "createdAt": SERVER_TIMESTAMP,
-                "counselorId": counselor_uid,
-            }
-            if scheduled_at:
-                queue_item["scheduledAt"] = scheduled_at.isoformat()
-            notify_queue.add(queue_item)
+            notify_queue.add(
+                {
+                    "type": "portal_credentials",
+                    "portalId": portal_ref.id,
+                    "email": email,
+                    "phone": phone,
+                    "accessCode": portal_access_code,
+                    "joinAccessCode": join_access_code,
+                    "pin": pin,
+                    "magicPath": magic_path,
+                    "displayName": display_name,
+                    "status": "pending",
+                    "createdAt": SERVER_TIMESTAMP,
+                    "counselorId": counselor_uid,
+                }
+            )
 
         created.append(
             {
@@ -322,7 +354,9 @@ def bulk_create():
                 "displayName": display_name,
                 "email": email,
                 "phone": phone,
-                "accessCode": access_code,
+                "joinAccessCode": join_access_code,
+                "accessCode": portal_access_code,
+                "myCode": portal_access_code,
                 "pin": pin,
                 "magicPath": magic_path,
             }
@@ -346,14 +380,15 @@ def bulk_export_csv():
     rows = body.get("created") or []
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["이름", "이메일", "휴대폰", "검사코드", "비밀번호", "매직링크경로"])
+    writer.writerow(["이름", "이메일", "휴대폰", "검사코드", "나의코드", "비밀번호", "매직링크경로"])
     for r in rows:
         writer.writerow(
             [
                 r.get("displayName", ""),
                 r.get("email", ""),
                 r.get("phone", ""),
-                r.get("accessCode", ""),
+                r.get("joinAccessCode", r.get("accessCode", "")),
+                r.get("myCode", r.get("accessCode", "")),
                 r.get("pin", ""),
                 r.get("magicPath", ""),
             ]

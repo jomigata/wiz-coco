@@ -44,7 +44,11 @@ export interface ClientPortalBulkRow {
   displayName: string;
   email?: string;
   phone?: string;
+  /** 검사 시작용 공유 검사코드 */
+  joinAccessCode?: string;
+  /** 내 검사실 나의코드 */
   accessCode: string;
+  myCode?: string;
   pin: string;
   portalId: string;
   magicPath?: string;

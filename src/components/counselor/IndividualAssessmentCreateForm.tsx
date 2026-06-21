@@ -60,8 +60,6 @@ export default function IndividualAssessmentCreateForm() {
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
-  const [sendMode, setSendMode] = useState<'immediate' | 'scheduled'>('immediate');
-  const [scheduledAt, setScheduledAt] = useState('');
   const [queueNotify, setQueueNotify] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -131,21 +129,6 @@ export default function IndividualAssessmentCreateForm() {
       setError('포함할 검사를 1개 이상 선택해 주세요.');
       return;
     }
-    if (sendMode === 'scheduled' && !scheduledAt.trim()) {
-      setError('예약 발송 일시를 선택해 주세요.');
-      return;
-    }
-
-    let scheduledIso: string | undefined;
-    if (sendMode === 'scheduled' && scheduledAt.trim()) {
-      const d = new Date(scheduledAt);
-      if (Number.isNaN(d.getTime())) {
-        setError('예약 발송 일시 형식이 올바르지 않습니다.');
-        return;
-      }
-      scheduledIso = d.toISOString();
-    }
-
     setLoading(true);
     try {
       const result = await bulkCreateClientPortals({
@@ -160,7 +143,6 @@ export default function IndividualAssessmentCreateForm() {
           phone: r.phone.trim() || undefined,
         })),
         queueNotify,
-        scheduledAt: scheduledIso,
       });
       setCreated(result.created);
       setNotifyQueued(result.notifyQueued);
@@ -173,10 +155,18 @@ export default function IndividualAssessmentCreateForm() {
 
   const downloadCsv = () => {
     if (!created.length) return;
-    const header = '이름,이메일,휴대폰,검사코드,비밀번호,매직링크경로\n';
+    const header = '이름,이메일,휴대폰,검사코드,나의코드,비밀번호,매직링크경로\n';
     const body = created
       .map((r) =>
-        [r.displayName, r.email || '', r.phone || '', r.accessCode, r.pin, r.magicPath || ''].join(',')
+        [
+          r.displayName,
+          r.email || '',
+          r.phone || '',
+          r.joinAccessCode || '',
+          r.myCode || r.accessCode,
+          r.pin,
+          r.magicPath || '',
+        ].join(',')
       )
       .join('\n');
     const blob = new Blob(['\uFEFF' + header + body], { type: 'text/csv;charset=utf-8' });
@@ -204,11 +194,10 @@ export default function IndividualAssessmentCreateForm() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 p-4 text-emerald-200 text-sm">
-          <p className="font-medium">{created.length}명에게 개별 검사코드·비밀번호가 발급되었습니다.</p>
+          <p className="font-medium">{created.length}명에게 검사코드·나의코드·비밀번호가 발급되었습니다.</p>
           {queueNotify ? (
             <p className="mt-1 text-emerald-300/90">
-              {notifyQueued}건이 발송 대기열에 등록되었습니다.
-              {sendMode === 'scheduled' ? ' 예약 시각에 이메일·문자가 발송됩니다.' : ' 곧 이메일·문자로 발송됩니다.'}
+              {notifyQueued}건이 발송 대기열에 등록되었습니다. 곧 이메일·문자로 발송됩니다.
             </p>
           ) : (
             <p className="mt-1 text-emerald-300/90">아래 CSV에서 코드·비밀번호를 확인하세요.</p>
@@ -381,7 +370,7 @@ export default function IndividualAssessmentCreateForm() {
       </div>
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4 space-y-3">
-        <p className="text-sm font-medium text-slate-200">접속 정보 발송</p>
+        <p className="text-sm font-medium text-slate-200">접속 정보 즉시 발송</p>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -390,41 +379,10 @@ export default function IndividualAssessmentCreateForm() {
             disabled={loading}
             className="rounded text-blue-500"
           />
-          <span className="text-slate-300 text-sm">이메일·문자로 검사코드와 비밀번호 발송</span>
+          <span className="text-slate-300 text-sm">
+            이메일·문자로 검사코드·나의코드·비밀번호 즉시 발송
+          </span>
         </label>
-        {queueNotify ? (
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="sendMode"
-                checked={sendMode === 'immediate'}
-                onChange={() => setSendMode('immediate')}
-                disabled={loading}
-              />
-              <span className="text-white text-sm">즉시 발송</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="sendMode"
-                checked={sendMode === 'scheduled'}
-                onChange={() => setSendMode('scheduled')}
-                disabled={loading}
-              />
-              <span className="text-white text-sm">예약 발송</span>
-            </label>
-            {sendMode === 'scheduled' ? (
-              <input
-                type="datetime-local"
-                className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                disabled={loading}
-              />
-            ) : null}
-          </div>
-        ) : null}
       </div>
 
       {error ? (

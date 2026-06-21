@@ -38,7 +38,7 @@ export async function loginClientPortal(body: {
     throw new Error(
       typeof data?.message === 'string' && data.message.trim()
         ? data.message
-        : '검사 코드 또는 비밀번호를 확인해 주세요.'
+        : '나의코드 또는 비밀번호를 확인해 주세요.'
     );
   }
   return data as ClientPortalLoginResult;
@@ -79,6 +79,25 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
   return data;
 }
 
+export async function linkSharedAssessment(
+  portalToken: string,
+  sharedAccessCode: string
+): Promise<{ message: string; assessmentId?: string; assessments: unknown[] }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/link-assessment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Portal ${portalToken}`,
+    },
+    body: JSON.stringify({ sharedAccessCode: normalizeAccessCodeInput(sharedAccessCode) }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '공유 검사 연결에 실패했습니다.');
+  }
+  return data;
+}
+
 export async function bulkCreateClientPortals(body: {
   cohortName: string;
   rows: Array<{ displayName: string; email?: string; phone?: string }>;
@@ -87,7 +106,6 @@ export async function bulkCreateClientPortals(body: {
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
   queueNotify?: boolean;
-  scheduledAt?: string;
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가 로그인이 필요합니다.');
