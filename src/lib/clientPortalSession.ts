@@ -1,5 +1,5 @@
 /**
- * 내담자 포털 세션 (localStorage) — Firebase Auth와 별도
+ * 내담자 포털 세션 (sessionStorage) — 브라우저 탭/창 종료 시 자동 로그아웃
  */
 
 import type { ClientPortalLoginResult } from '@/types/clientPortal';
@@ -10,16 +10,27 @@ export type ClientPortalSession = ClientPortalLoginResult & {
   savedAt: number;
 };
 
+function clearLegacyLocalPortalSession(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(CLIENT_PORTAL_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function persistClientPortalSession(data: ClientPortalLoginResult): void {
   if (typeof window === 'undefined') return;
+  clearLegacyLocalPortalSession();
   const payload: ClientPortalSession = { ...data, savedAt: Date.now() };
-  localStorage.setItem(CLIENT_PORTAL_STORAGE_KEY, JSON.stringify(payload));
+  sessionStorage.setItem(CLIENT_PORTAL_STORAGE_KEY, JSON.stringify(payload));
 }
 
 export function readClientPortalSession(): ClientPortalSession | null {
   if (typeof window === 'undefined') return null;
+  clearLegacyLocalPortalSession();
   try {
-    const raw = localStorage.getItem(CLIENT_PORTAL_STORAGE_KEY);
+    const raw = sessionStorage.getItem(CLIENT_PORTAL_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ClientPortalSession;
     if (!parsed?.portalToken || !parsed?.portal?.accessCode) return null;
@@ -31,7 +42,8 @@ export function readClientPortalSession(): ClientPortalSession | null {
 
 export function clearClientPortalSession(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(CLIENT_PORTAL_STORAGE_KEY);
+  clearLegacyLocalPortalSession();
+  sessionStorage.removeItem(CLIENT_PORTAL_STORAGE_KEY);
 }
 
 export function getClientPortalAuthHeader(): Record<string, string> {

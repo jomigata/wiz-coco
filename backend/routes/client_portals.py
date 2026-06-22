@@ -206,12 +206,12 @@ def verify_magic_link():
     if not pdoc.exists:
         return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
     assessments = _load_assessments_for_portal(db, pdoc)
-    session_token = _issue_portal_token(portal_id, code, remember=True)
+    session_token = _issue_portal_token(portal_id, code, remember=False)
     pdoc.reference.update({"lastLoginAt": SERVER_TIMESTAMP})
     return jsonify(
         {
             "portalToken": session_token,
-            "rememberDays": 30,
+            "rememberDays": 1,
             "portal": _portal_public_json(pdoc, assessments),
         }
     )

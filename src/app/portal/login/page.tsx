@@ -36,7 +36,7 @@ export default function PortalLoginPage() {
         const result = await loginClientPortal({
           accessCode: normalizedCode,
           pin: normalizedPin,
-          remember: true,
+          remember: false,
         });
         persistClientPortalSession(result);
         clearJoinGuestSession();
