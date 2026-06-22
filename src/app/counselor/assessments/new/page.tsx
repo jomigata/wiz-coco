@@ -31,7 +31,7 @@ function NewAssessmentContent() {
               : 'text-slate-300 hover:bg-slate-700/80'
           }`}
         >
-          공동 이용
+          일반코드
         </Link>
         <Link
           href="/counselor/assessments/new?type=individual"
@@ -41,14 +41,14 @@ function NewAssessmentContent() {
               : 'text-slate-300 hover:bg-slate-700/80'
           }`}
         >
-          개별 발급
+          그룹코드
         </Link>
       </div>
 
       {mode === 'shared' ? (
         <>
           <p className="text-slate-400 text-sm max-w-2xl">
-            하나의 검사코드를 여러 내담자가 공유합니다.{' '}
+            하나의 <strong className="text-slate-200">일반코드</strong>를 여러 내담자가 공유합니다.{' '}
             <AuthLink href="/join/" className="text-sky-400 hover:text-sky-300 underline">
               검사 시작
             </AuthLink>
@@ -60,8 +60,9 @@ function NewAssessmentContent() {
       ) : (
         <>
           <p className="text-slate-400 text-sm max-w-2xl">
-            내담자마다 고유 검사코드·비밀번호를 발급합니다. 이름·이메일·휴대폰을 직접 입력하거나 CSV/텍스트 파일로
-            일괄 등록할 수 있으며, 즉시 또는 예약 시각에 이메일·문자로 발송됩니다. 내담자는{' '}
+            <strong className="text-slate-200">그룹코드</strong> 하나를 내담자 목록 전원에게 동일하게 발급합니다.
+            내담자마다 고유한 나의코드·비밀번호가 함께 발송되며, 이름·이메일·휴대폰을 직접 입력하거나 CSV/텍스트로
+            일괄 등록할 수 있습니다. 기존 그룹코드를 선택해 추가 초대도 가능합니다. 내담자는{' '}
             <AuthLink href="/portal/login" className="text-sky-400 hover:text-sky-300 underline">
               내 검사실
             </AuthLink>

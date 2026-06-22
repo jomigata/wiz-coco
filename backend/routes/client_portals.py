@@ -304,16 +304,30 @@ def bulk_create():
     notify_failed = 0
     notify_queued = 0
 
-    for row in rows:
-        display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
-        email = (row.get("email") or "").strip().lower()
-        phone = (row.get("phone") or "").strip()
+    existing_assessment_id = (body.get("assessmentId") or "").strip()
+    join_access_code = ""
+    assessment_ref_id = ""
 
+    if existing_assessment_id:
+        assessment_doc = db.collection(ASSESSMENTS_COLLECTION).document(existing_assessment_id).get()
+        if not assessment_doc.exists:
+            return jsonify({"error": "Not Found", "message": "선택한 검사코드를 찾을 수 없습니다."}), 404
+        ass_data = assessment_doc.to_dict() or {}
+        if ass_data.get("counselorId") != counselor_uid:
+            return jsonify({"error": "Forbidden", "message": "선택한 검사코드에 접근할 수 없습니다."}), 403
+        if (ass_data.get("status") or "active") != "active":
+            return jsonify({"error": "Bad Request", "message": "비활성화된 검사코드입니다."}), 400
+        if (ass_data.get("issueType") or "individual") != "individual":
+            return jsonify(
+                {"error": "Bad Request", "message": "그룹코드(개별 발급) 검사만 선택할 수 있습니다."}
+            ), 400
+        join_access_code = ass_data.get("accessCode", "")
+        assessment_ref_id = existing_assessment_id
+        cohort_id = ass_data.get("clientPortalCohortId") or cohort_id
+    else:
+        if not test_list:
+            return jsonify({"error": "Bad Request", "message": "포함할 검사(testList)가 필요합니다."}), 400
         join_access_code = generate_unique_access_code()
-        portal_access_code = generate_unique_portal_access_code()
-        pin = generate_four_digit_password()
-        pin_hash = hash_password(pin)
-
         assessment_ref = db.collection(ASSESSMENTS_COLLECTION).document()
         assessment_ref.set(
             {
@@ -321,16 +335,25 @@ def bulk_create():
                 "counselorId": counselor_uid,
                 "title": title,
                 "issueType": "individual",
-                "targetAudience": "개인",
+                "targetAudience": "그룹",
                 "welcomeMessage": welcome_message,
                 "usageEndDate": usage_end_date,
                 "testList": test_list,
                 "createdAt": SERVER_TIMESTAMP,
                 "status": "active",
                 "clientPortalCohortId": cohort_id,
-                "portalAccessCode": portal_access_code,
             }
         )
+        assessment_ref_id = assessment_ref.id
+
+    for row in rows:
+        display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
+        email = (row.get("email") or "").strip().lower()
+        phone = (row.get("phone") or "").strip()
+
+        portal_access_code = generate_unique_portal_access_code()
+        pin = generate_four_digit_password()
+        pin_hash = hash_password(pin)
 
         portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document()
         portal_ref.set(
@@ -343,7 +366,7 @@ def bulk_create():
                 "phone": phone,
                 "cohortId": cohort_id,
                 "cohortName": cohort_name,
-                "assignedAssessmentIds": [assessment_ref.id],
+                "assignedAssessmentIds": [assessment_ref_id],
                 "status": "active",
                 "createdAt": SERVER_TIMESTAMP,
             }
@@ -398,6 +421,7 @@ def bulk_create():
                 "myCode": portal_access_code,
                 "pin": pin,
                 "magicPath": magic_path,
+                "assessmentId": assessment_ref_id,
             }
         )
 
@@ -405,6 +429,8 @@ def bulk_create():
         {
             "cohortId": cohort_id,
             "cohortName": cohort_name,
+            "assessmentId": assessment_ref_id,
+            "joinAccessCode": join_access_code,
             "created": created,
             "notifySent": notify_sent,
             "notifyFailed": notify_failed,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -8,6 +8,8 @@ import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatu
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import type { ClientPortalBulkRow } from '@/types/clientPortal';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
 
@@ -47,10 +49,28 @@ function mergeRecipients(manual: RecipientRow[], fromFile: RecipientRow[]): Reci
   });
 }
 
+function applyAssessmentToForm(a: CounselorAssessment, setters: {
+  setTitle: (v: string) => void;
+  setWelcomeMessage: (v: string) => void;
+  setUsageEndDate: (v: string) => void;
+  setSelectedTestIds: (v: Set<string>) => void;
+}) {
+  setters.setTitle(a.title || '');
+  setters.setWelcomeMessage(a.welcomeMessage || '');
+  setters.setUsageEndDate((a.usageEndDate || '').trim());
+  setters.setSelectedTestIds(
+    new Set((a.testList || []).map((t) => String(t.testId)).filter(Boolean))
+  );
+}
+
 export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, authPending, showLoginRequired } = useAuthResolved();
+
+  const [groupAssessments, setGroupAssessments] = useState<CounselorAssessment[]>([]);
+  const [loadingAssessments, setLoadingAssessments] = useState(true);
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
 
   const [cohortName, setCohortName] = useState('');
   const [title, setTitle] = useState('');
@@ -66,10 +86,54 @@ export default function IndividualAssessmentCreateForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
+  const [sharedJoinCode, setSharedJoinCode] = useState('');
   const [notifySent, setNotifySent] = useState(0);
   const [notifyFailed, setNotifyFailed] = useState(0);
   const [notifyQueued, setNotifyQueued] = useState(0);
   const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
+
+  const usingExisting = Boolean(selectedAssessmentId.trim());
+  const selectedAssessment = useMemo(
+    () => groupAssessments.find((a) => a.id === selectedAssessmentId) ?? null,
+    [groupAssessments, selectedAssessmentId]
+  );
+
+  const loadGroupAssessments = useCallback(async () => {
+    setLoadingAssessments(true);
+    try {
+      const data = await listAssessments();
+      const items = (data.assessments || []).filter(
+        (a) => (a.issueType || 'shared') === 'individual'
+      );
+      setGroupAssessments(items);
+    } catch {
+      setGroupAssessments([]);
+    } finally {
+      setLoadingAssessments(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user || authPending) return;
+    void loadGroupAssessments();
+  }, [user, authPending, loadGroupAssessments]);
+
+  const populateFromAssessment = useCallback((a: CounselorAssessment) => {
+    applyAssessmentToForm(a, {
+      setTitle,
+      setWelcomeMessage,
+      setUsageEndDate,
+      setSelectedTestIds,
+    });
+  }, []);
+
+  const handleAssessmentSelect = (id: string) => {
+    setSelectedAssessmentId(id);
+    setError('');
+    if (!id) return;
+    const found = groupAssessments.find((a) => a.id === id);
+    if (found) populateFromAssessment(found);
+  };
 
   const recipients = useMemo(
     () => mergeRecipients(manualRows, fileRows),
@@ -79,6 +143,7 @@ export default function IndividualAssessmentCreateForm() {
   const canSubmit = Boolean(user) && !authPending && !loading;
 
   const toggleTest = (testId: string) => {
+    if (usingExisting) return;
     setSelectedTestIds((prev) => {
       const next = new Set(prev);
       if (next.has(testId)) next.delete(testId);
@@ -113,8 +178,9 @@ export default function IndividualAssessmentCreateForm() {
     e.preventDefault();
     setError('');
     setCreated([]);
+    setSharedJoinCode('');
 
-    if (!title.trim()) {
+    if (!usingExisting && !title.trim()) {
       setError('안내 제목을 입력해 주세요.');
       return;
     }
@@ -130,7 +196,7 @@ export default function IndividualAssessmentCreateForm() {
     const testList = counselorAssessmentTestOptions
       .filter((t) => selectedTestIds.has(t.testId))
       .map((t) => ({ testId: t.testId, name: t.name }));
-    if (testList.length === 0) {
+    if (!usingExisting && testList.length === 0) {
       setError('포함할 검사를 1개 이상 선택해 주세요.');
       return;
     }
@@ -153,10 +219,15 @@ export default function IndividualAssessmentCreateForm() {
           : undefined;
       const result = await bulkCreateClientPortals({
         cohortName: (cohortName.trim() || title.trim()).slice(0, 120),
-        title: title.trim(),
+        title: (title.trim() || selectedAssessment?.title || '그룹 검사').slice(0, 200),
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
-        testList,
+        testList: usingExisting
+          ? (selectedAssessment?.testList || []).map((t) => ({
+              testId: String(t.testId),
+              name: t.name || String(t.testId),
+            }))
+          : testList,
         rows: recipients.map((r) => ({
           displayName: r.displayName.trim(),
           email: r.email.trim() || undefined,
@@ -164,14 +235,16 @@ export default function IndividualAssessmentCreateForm() {
         })),
         queueNotify,
         scheduledAt,
+        assessmentId: usingExisting ? selectedAssessmentId : undefined,
       });
       setCreated(result.created);
+      setSharedJoinCode(result.joinAccessCode || result.created[0]?.joinAccessCode || '');
       setNotifySent(result.notifySent ?? 0);
       setNotifyFailed(result.notifyFailed ?? 0);
       setNotifyQueued(result.notifyQueued);
       setScheduledAtIso(result.scheduledAt ?? scheduledAt ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '개별 검사코드 발급에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '그룹코드 발급에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -186,7 +259,7 @@ export default function IndividualAssessmentCreateForm() {
           r.displayName,
           r.email || '',
           r.phone || '',
-          r.joinAccessCode || '',
+          r.joinAccessCode || sharedJoinCode || '',
           r.myCode || r.accessCode,
           r.pin,
           r.magicPath || '',
@@ -197,7 +270,7 @@ export default function IndividualAssessmentCreateForm() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `wizcoco-individual-${Date.now()}.csv`;
+    a.download = `wizcoco-group-${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -218,7 +291,15 @@ export default function IndividualAssessmentCreateForm() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 p-4 text-emerald-200 text-sm">
-          <p className="font-medium">{created.length}명에게 검사코드·나의코드·비밀번호가 발급되었습니다.</p>
+          <p className="font-medium">{created.length}명에게 나의코드·비밀번호가 발급되었습니다.</p>
+          {sharedJoinCode ? (
+            <p className="mt-2">
+              공통 검사코드:{' '}
+              <span className="font-mono font-bold text-emerald-100 tracking-wider">
+                {formatAccessCodeDisplay(sharedJoinCode)}
+              </span>
+            </p>
+          ) : null}
           {queueNotify ? (
             <p className="mt-1 text-emerald-300/90">
               {scheduledAtIso
@@ -253,6 +334,35 @@ export default function IndividualAssessmentCreateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-2">그룹코드 선택</label>
+        <select
+          value={selectedAssessmentId}
+          onChange={(e) => handleAssessmentSelect(e.target.value)}
+          disabled={loading || loadingAssessments}
+          className="w-full max-w-xl px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+        >
+          <option value="">+ 새 그룹코드 만들기</option>
+          {groupAssessments.map((a) => (
+            <option key={a.id} value={a.id}>
+              {formatAccessCodeDisplay(a.accessCode)} — {a.title || '제목 없음'}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-slate-500 text-xs">
+          기존 그룹코드를 선택하면 아래 설정이 채워지며, 목록의 모든 내담자에게{' '}
+          <strong className="text-slate-400">동일한 검사코드</strong>가 발송됩니다.
+        </p>
+        {usingExisting && selectedAssessment ? (
+          <p className="mt-2 text-sm text-cyan-300/90">
+            선택된 검사코드:{' '}
+            <span className="font-mono font-semibold">
+              {formatAccessCodeDisplay(selectedAssessment.accessCode)}
+            </span>
+          </p>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">그룹명 (선택)</label>
@@ -268,17 +378,17 @@ export default function IndividualAssessmentCreateForm() {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            안내 제목 <span className="text-red-400">*</span>
+            안내 제목 {!usingExisting ? <span className="text-red-400">*</span> : null}
           </label>
           <input
             type="text"
-            required
+            required={!usingExisting}
             maxLength={200}
-            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white disabled:opacity-70"
             placeholder="예: 개인 심리검사"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            disabled={loading}
+            disabled={loading || usingExisting}
           />
         </div>
       </div>
@@ -287,10 +397,10 @@ export default function IndividualAssessmentCreateForm() {
         <label className="block text-sm font-medium text-slate-300 mb-2">검사코드 사용최종일 (선택)</label>
         <input
           type="date"
-          className="w-full max-w-xs px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+          className="w-full max-w-xs px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white disabled:opacity-70"
           value={usageEndDate}
           onChange={(e) => setUsageEndDate(e.target.value)}
-          disabled={loading}
+          disabled={loading || usingExisting}
         />
       </div>
 
@@ -298,10 +408,10 @@ export default function IndividualAssessmentCreateForm() {
         <label className="block text-sm font-medium text-slate-300 mb-2">안내 메시지 (선택)</label>
         <textarea
           rows={3}
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white resize-y"
+          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white resize-y disabled:opacity-70"
           value={welcomeMessage}
           onChange={(e) => setWelcomeMessage(e.target.value)}
-          disabled={loading}
+          disabled={loading || usingExisting}
         />
       </div>
 
@@ -309,12 +419,17 @@ export default function IndividualAssessmentCreateForm() {
         <label className="block text-sm font-medium text-slate-300 mb-2">포함할 검사 선택</label>
         <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800/80 p-3 space-y-2">
           {counselorAssessmentTestOptions.map((t) => (
-            <label key={t.testId} className="flex items-center gap-3 p-2 rounded hover:bg-slate-700/50 cursor-pointer">
+            <label
+              key={t.testId}
+              className={`flex items-center gap-3 p-2 rounded ${
+                usingExisting ? 'opacity-70 cursor-default' : 'hover:bg-slate-700/50 cursor-pointer'
+              }`}
+            >
               <input
                 type="checkbox"
                 checked={selectedTestIds.has(t.testId)}
                 onChange={() => toggleTest(t.testId)}
-                disabled={loading}
+                disabled={loading || usingExisting}
                 className="rounded text-blue-500"
               />
               <span className="text-white">{t.name}</span>
@@ -393,7 +508,7 @@ export default function IndividualAssessmentCreateForm() {
           파일 형식: 이름, 이메일, 휴대폰 (쉼표·탭·세미콜론 구분). 수동 입력과 파일은 합쳐집니다. 최대 500명.
         </p>
         {recipients.length > 0 ? (
-          <p className="text-slate-400 text-sm">발급 대상: {recipients.length}명</p>
+          <p className="text-slate-400 text-sm">발급 대상: {recipients.length}명 (동일 검사코드)</p>
         ) : null}
       </div>
 
@@ -463,7 +578,7 @@ export default function IndividualAssessmentCreateForm() {
           disabled={!canSubmit}
           className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? '발급 중…' : `${recipients.length || 0}명 개별 코드 발급`}
+          {loading ? '발급 중…' : `${recipients.length || 0}명 그룹코드 발급`}
         </button>
         <button
           type="button"

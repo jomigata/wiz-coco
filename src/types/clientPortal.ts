@@ -57,6 +57,8 @@ export interface ClientPortalBulkRow {
 export interface ClientPortalBulkCreateResult {
   cohortId: string;
   cohortName: string;
+  assessmentId?: string;
+  joinAccessCode?: string;
   created: ClientPortalBulkRow[];
   notifySent?: number;
   notifyFailed?: number;

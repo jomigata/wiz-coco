@@ -107,6 +107,8 @@ export async function bulkCreateClientPortals(body: {
   testList: { testId: string; name: string }[];
   queueNotify?: boolean;
   scheduledAt?: string;
+  /** 기존 그룹코드(개별 발급) 검사 세트 재사용 */
+  assessmentId?: string;
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가 로그인이 필요합니다.');

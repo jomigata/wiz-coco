@@ -221,7 +221,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const progressPct = total > 0 ? Math.round((complete / total) * 100) : 0;
                   const expired = isExpired(a.usageEndDate);
                   const issueType = a.issueType || (a.targetAudience === '그룹' ? 'shared' : 'individual');
-                  const typeLabel = issueType === 'shared' ? '공동' : '개별';
+                  const typeLabel = issueType === 'shared' ? '일반' : '그룹';
                   const typeClass =
                     issueType === 'shared'
                       ? 'border-purple-500/30 bg-purple-500/15 text-purple-200'
