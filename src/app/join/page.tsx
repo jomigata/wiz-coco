@@ -9,10 +9,13 @@ import {
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
-import { persistJoinAssessmentSession, pushToJoinDashboard } from '@/lib/joinAssessmentSession';
+import {
+  JOIN_STORAGE_KEY,
+  persistJoinAssessmentSession,
+  pushToJoinDashboard,
+} from '@/lib/joinAssessmentSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
-import { resetJoinStartEnvironment } from '@/lib/joinStartReset';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';
@@ -24,16 +27,6 @@ export default function AccessCodeInputPage() {
   const [formatError, setFormatError] = useState('');
   const [loading, setLoading] = useState(false);
   const autoStartedRef = useRef(false);
-  const resetDoneRef = useRef(false);
-
-  useEffect(() => {
-    if (resetDoneRef.current) return;
-    resetDoneRef.current = true;
-    resetJoinStartEnvironment();
-    setCode('');
-    setError('');
-    setFormatError('');
-  }, []);
 
   const normalizedCode = normalizeAccessCodeInput(code);
   const canSubmit = isValidAccessCodeInput(normalizedCode) && !loading;
@@ -54,11 +47,16 @@ export default function AccessCodeInputPage() {
 
       setLoading(true);
       try {
-        const data = await lookupPublicAssessment(norm);
-        persistJoinAssessmentSession(norm, data);
-
         clearJoinGuestSession();
         clearJoinParticipantSession();
+        try {
+          sessionStorage.removeItem(JOIN_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+
+        const data = await lookupPublicAssessment(norm);
+        persistJoinAssessmentSession(norm, data);
 
         pushToJoinDashboard(router, norm);
         return true;
@@ -76,6 +74,14 @@ export default function AccessCodeInputPage() {
     e.preventDefault();
     await runStart(code);
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('accessCode')?.trim()) return;
+    clearJoinGuestSession();
+    clearJoinParticipantSession();
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

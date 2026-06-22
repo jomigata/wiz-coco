@@ -11,7 +11,9 @@ import {
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
-import { resolvePortalContinuePath } from '@/lib/portalTestNavigation';
+import { clearJoinGuestSession } from '@/lib/joinGuestSession';
+import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
+import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 export default function PortalLoginPage() {
   const router = useRouter();
@@ -37,8 +39,10 @@ export default function PortalLoginPage() {
           remember: true,
         });
         persistClientPortalSession(result);
-        const path = await resolvePortalContinuePath(result.portalToken);
-        router.push(path);
+        clearJoinGuestSession();
+        clearJoinParticipantSession();
+        setPortalReturnPath('/portal/');
+        router.push('/portal/');
       } catch (err) {
         setError(err instanceof Error ? err.message : '나의코드 또는 비밀번호를 확인해 주세요.');
       } finally {

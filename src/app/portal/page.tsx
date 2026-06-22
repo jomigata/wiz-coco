@@ -15,7 +15,8 @@ import {
   clearClientPortalSession,
   readClientPortalSession,
 } from '@/lib/clientPortalSession';
-import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
+import { persistJoinAssessmentSession, getJoinDashboardPath } from '@/lib/joinAssessmentSession';
+import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 type PortalAssessment = {
   assessmentId: string;
@@ -96,7 +97,12 @@ function ClientPortalContent() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    setPortalReturnPath('/portal/');
+  }, []);
+
   const openTest = (a: PortalAssessment, testId: string) => {
+    setPortalReturnPath('/portal/');
     const code = normalizeAccessCodeInput(a.accessCode);
     persistJoinAssessmentSession(code, {
       assessmentId: a.assessmentId,
@@ -235,15 +241,16 @@ function ClientPortalContent() {
                     </div>
                     <Link
                       href={`/join/dashboard?accessCode=${encodeURIComponent(code)}`}
-                      onClick={() =>
+                      onClick={() => {
+                        setPortalReturnPath(getJoinDashboardPath(code));
                         persistJoinAssessmentSession(code, {
                           assessmentId: a.assessmentId,
                           title: a.title,
                           welcomeMessage: a.welcomeMessage,
                           usageEndDate: a.usageEndDate || '',
                           testList: a.testList,
-                        })
-                      }
+                        });
+                      }}
                       className="text-sm text-blue-400 hover:text-blue-300 shrink-0"
                     >
                       검사실 열기 →

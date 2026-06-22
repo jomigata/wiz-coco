@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyPortalMagicToken } from '@/lib/clientPortalApi';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
-import { resolvePortalContinuePath } from '@/lib/portalTestNavigation';
+import { clearJoinGuestSession } from '@/lib/joinGuestSession';
+import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
+import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 function GoLoading() {
   return (
@@ -28,12 +30,13 @@ function GoContent() {
     }
     let cancelled = false;
     verifyPortalMagicToken(token)
-      .then(async (result) => {
+      .then((result) => {
         if (cancelled) return;
         persistClientPortalSession(result);
-        const path = await resolvePortalContinuePath(result.portalToken);
-        if (cancelled) return;
-        router.replace(path);
+        clearJoinGuestSession();
+        clearJoinParticipantSession();
+        setPortalReturnPath('/portal/');
+        router.replace('/portal/');
       })
       .catch((err) => {
         if (cancelled) return;

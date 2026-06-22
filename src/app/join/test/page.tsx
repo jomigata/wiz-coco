@@ -7,10 +7,14 @@ import { lookupPublicAssessment, submitResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
+import { getPortalReturnPath } from '@/lib/portalReturnPath';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
-import { hasJoinParticipantSessionForCode } from '@/lib/joinParticipantSession';
-import { ensureJoinGuestSession } from '@/lib/joinGuestSession';
+import {
+  clearJoinParticipantSession,
+  hasJoinParticipantSessionForCode,
+} from '@/lib/joinParticipantSession';
+import { clearJoinGuestSession, ensureJoinGuestSession } from '@/lib/joinGuestSession';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -87,7 +91,10 @@ export default function TestRunnerPage() {
       setAccessCheckError('');
       try {
         await lookupPublicAssessment(code);
-        if (!hasPortal && !hasJoinParticipantSessionForCode(code)) {
+        if (hasPortal) {
+          clearJoinGuestSession();
+          clearJoinParticipantSession();
+        } else if (!hasJoinParticipantSessionForCode(code)) {
           await ensureJoinGuestSession(code);
         }
       } catch (err) {
@@ -113,8 +120,20 @@ export default function TestRunnerPage() {
   const canSubmit = canSubmitAuth && Object.keys(responses).length === questions.length;
 
   const navigateAfterSubmit = () => {
-    if (!hasPortal && !hasParticipant) {
+    if (hasPortal) {
+      router.push(getPortalReturnPath());
+      return;
+    }
+    if (!hasParticipant) {
       router.push(`/join/profile?accessCode=${encodeURIComponent(code)}`);
+      return;
+    }
+    navigateToJoinSelectionDashboard(code, router);
+  };
+
+  const navigateBackFromTest = () => {
+    if (hasPortal) {
+      router.push(getPortalReturnPath());
       return;
     }
     navigateToJoinSelectionDashboard(code, router);
@@ -189,7 +208,7 @@ export default function TestRunnerPage() {
           <div className="mb-4">
             <button
               type="button"
-              onClick={() => navigateToJoinSelectionDashboard(code, router)}
+              onClick={() => navigateBackFromTest()}
               className="text-blue-400 hover:text-blue-300 text-sm bg-transparent border-0 cursor-pointer p-0 underline-offset-2 hover:underline text-left"
             >
               ← 검사 선택 현황

@@ -56,15 +56,21 @@ export function hasJoinGuestSessionForCode(accessCodeNorm: string): boolean {
   return session.accessCode === accessCodeNorm;
 }
 
-/** 해당 검사코드용 게스트 세션이 없으면 발급 */
-export async function ensureJoinGuestSession(accessCodeNorm: string): Promise<JoinGuestSession> {
+/** 해당 검사코드용 게스트 세션이 없으면 발급. forceNew 이면 항상 새 게스트 발급 */
+export async function ensureJoinGuestSession(
+  accessCodeNorm: string,
+  options?: { forceNew?: boolean },
+): Promise<JoinGuestSession> {
   const code = normalizeAccessCodeInput(accessCodeNorm);
   const participant = readJoinParticipantSession();
   if (participant && participant.accessCode !== code) {
     clearJoinParticipantSession();
   }
+  if (options?.forceNew) {
+    clearJoinGuestSession();
+  }
   const existing = readJoinGuestSession();
-  if (existing?.accessCode === code && existing.guestToken) {
+  if (!options?.forceNew && existing?.accessCode === code && existing.guestToken) {
     return existing;
   }
   const result = await startGuestJoin(code);

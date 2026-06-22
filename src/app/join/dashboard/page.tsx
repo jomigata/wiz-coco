@@ -4,10 +4,14 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
-import { lookupPublicAssessment, PublicAssessment, TestResultItem, listResults } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
+import {
+  JOIN_STORAGE_KEY,
+  getJoinDashboardPath,
+} from '@/lib/joinAssessmentSession';
+import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import {
@@ -18,7 +22,6 @@ import {
   ensureJoinGuestSession,
   hasJoinGuestSessionForCode,
 } from '@/lib/joinGuestSession';
-import { getJoinTestPath } from '@/lib/portalTestNavigation';
 
 function DashboardLoading() {
   return (
@@ -66,10 +69,15 @@ function JoinDashboardContent() {
   const [guestReady, setGuestReady] = useState(false);
   const [error, setError] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
-  const [resultsReady, setResultsReady] = useState(false);
 
   const hasCompletedTest = joinResults.some((r) => r.status === 'completed');
   const needsProfile = !hasPortal && !hasParticipant && hasCompletedTest;
+
+  useEffect(() => {
+    if (hasPortal && isValidAccessCodeInput(code)) {
+      setPortalReturnPath(getJoinDashboardPath(code));
+    }
+  }, [hasPortal, code]);
 
   useEffect(() => {
     if (!isValidAccessCodeInput(code) || hasPortal || hasParticipant) {
@@ -128,30 +136,6 @@ function JoinDashboardContent() {
     loadAssessment();
   }, [loadAssessment]);
 
-  useEffect(() => {
-    if (!hasPortal || !isValidAccessCodeInput(code)) {
-      setResultsReady(true);
-      return;
-    }
-    let cancelled = false;
-    setResultsReady(false);
-    listResults(code)
-      .then((data) => {
-        if (cancelled) return;
-        setJoinResults(data.results || []);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setJoinResults([]);
-      })
-      .finally(() => {
-        if (!cancelled) setResultsReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [hasPortal, code]);
-
   const latestCompletedByTestId = useMemo(() => {
     const m = new Map<string, string>();
     for (const r of joinResults) {
@@ -168,9 +152,7 @@ function JoinDashboardContent() {
     if (!assessment?.testList.length) return [];
     const withIdx = assessment.testList.map((t, i) => {
       const tid = String(t.testId);
-      const isDone = joinResults.some(
-        (r) => String(r.testId) === tid && r.status === 'completed',
-      );
+      const isDone = joinResults.some((r) => String(r.testId) === tid);
       return {
         ...t,
         _idx: i,
@@ -188,14 +170,7 @@ function JoinDashboardContent() {
     return withIdx;
   }, [assessment, latestCompletedByTestId, joinResults]);
 
-  useEffect(() => {
-    if (!hasPortal || loading || !guestReady || !resultsReady || !assessment) return;
-    const incomplete = sortedTestList.find((t) => !t.isDone);
-    if (!incomplete) return;
-    router.replace(getJoinTestPath(code, String(incomplete.testId)));
-  }, [hasPortal, loading, guestReady, resultsReady, assessment, sortedTestList, code, router]);
-
-  if (loading || !guestReady || (hasPortal && !resultsReady)) {
+  if (loading || !guestReady) {
     return <DashboardLoading />;
   }
 
