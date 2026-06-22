@@ -6,6 +6,7 @@
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
+import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
@@ -55,6 +56,8 @@ export async function getCounselorToken(): Promise<string | null> {
 export async function getClientResultAuthHeaders(): Promise<Record<string, string>> {
   const participant = getJoinParticipantAuthHeader();
   if (participant.Authorization) return participant;
+  const guest = getJoinGuestAuthHeader();
+  if (guest.Authorization) return guest;
   const portal = readClientPortalSession();
   if (portal?.portalToken) {
     return { Authorization: `Portal ${portal.portalToken}` };
@@ -68,12 +71,20 @@ export function hasParticipantSessionForResults(): boolean {
   return Boolean(getJoinParticipantAuthHeader().Authorization);
 }
 
+export function hasGuestSessionForResults(): boolean {
+  return Boolean(getJoinGuestAuthHeader().Authorization);
+}
+
 export function hasPortalSessionForResults(): boolean {
   return Boolean(readClientPortalSession()?.portalToken);
 }
 
 export function canTrackJoinResults(): boolean {
-  return hasPortalSessionForResults() || hasParticipantSessionForResults();
+  return (
+    hasPortalSessionForResults() ||
+    hasParticipantSessionForResults() ||
+    hasGuestSessionForResults()
+  );
 }
 
 export interface PublicAssessment {

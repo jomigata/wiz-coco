@@ -1,12 +1,14 @@
-# 내담자 검사 시작: 프로필 등록 · 참여 세션 · 완료 후 포털 발급
+# 내담자 검사 시작: 게스트 검사 선행 · 프로필 등록 · 나의코드 즉시 발송
 import uuid
 
 from flask import Blueprint, jsonify, request
+from firebase_admin import firestore
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import (
     ASSESSMENTS_COLLECTION,
     JOIN_PARTICIPANTS_COLLECTION,
+    TEST_RESULTS_COLLECTION,
 )
 from firebase_init import get_firestore
 from rate_limit import limit_access_code
@@ -14,7 +16,8 @@ from utils.access_code import (
     is_valid_access_code,
     normalize_access_code,
 )
-from utils.participant_auth import get_participant_session_from_request, issue_participant_token
+from utils.guest_auth import get_guest_session_from_request, issue_guest_token
+from utils.participant_auth import issue_participant_token
 from utils.join_portal_issue import try_issue_portal_for_participant
 
 bp = Blueprint("join_flow", __name__, url_prefix="/api/join")
@@ -23,6 +26,7 @@ MSG_NOT_FOUND = (
     "요청하신 검사코드가 확인되지 않습니다. 검사 코드를 다시 확인해 주시기 바랍니다."
 )
 MSG_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+MSG_COMPLETE_TEST_FIRST = "검사를 1건 이상 완료한 후 정보를 입력해 주세요."
 
 
 def _find_active_assessment(db, code: str):
@@ -53,10 +57,84 @@ def _normalize_phone(raw: str) -> str:
     return "".join(c for c in str(raw or "") if c.isdigit() or c == "+")
 
 
+def _completed_test_ids_for_guest(db, assessment_id: str, guest_id: str) -> set[str]:
+    refs = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("assessmentId", "==", assessment_id)
+        .where("guestId", "==", guest_id)
+        .where("status", "==", "completed")
+        .get()
+    )
+    return {str(d.to_dict().get("testId") or "") for d in refs if d.to_dict().get("testId")}
+
+
+def _completed_test_ids(db, assessment_id: str, participant_id: str) -> set[str]:
+    refs = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("assessmentId", "==", assessment_id)
+        .where("participantId", "==", participant_id)
+        .where("status", "==", "completed")
+        .get()
+    )
+    return {str(d.to_dict().get("testId") or "") for d in refs if d.to_dict().get("testId")}
+
+
+def _link_guest_results(db, guest_id: str, participant_id: str, assessment_id: str) -> int:
+    refs = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("guestId", "==", guest_id)
+        .where("assessmentId", "==", assessment_id)
+        .get()
+    )
+    linked = 0
+    for doc in refs:
+        doc.reference.update(
+            {
+                "participantId": participant_id,
+                "guestId": firestore.DELETE_FIELD,
+            }
+        )
+        linked += 1
+    return linked
+
+
+@bp.route("/guest-start", methods=["POST"])
+@limit_access_code
+def guest_start():
+    """검사코드 확인 후 프로필 등록 전 게스트 세션 발급."""
+    body = request.get_json() or {}
+    code = normalize_access_code(body.get("accessCode") or "")
+    if not is_valid_access_code(code):
+        return jsonify({"error": "Bad Request", "message": MSG_NOT_FOUND}), 400
+
+    db = get_firestore()
+    ass_doc = _find_active_assessment(db, code)
+    if not ass_doc:
+        return jsonify({"error": "Not Found", "message": MSG_NOT_FOUND}), 404
+    ass_data = ass_doc.to_dict() or {}
+    if _is_assessment_expired(ass_data):
+        return jsonify({"error": "Gone", "message": MSG_EXPIRED}), 410
+
+    guest_id = str(uuid.uuid4())
+    token = issue_guest_token(
+        guest_id=guest_id,
+        assessment_id=ass_doc.id,
+        access_code=code,
+    )
+    return jsonify(
+        {
+            "guestId": guest_id,
+            "guestToken": token,
+            "assessmentId": ass_doc.id,
+            "accessCode": code,
+        }
+    ), 201
+
+
 @bp.route("/register", methods=["POST"])
 @limit_access_code
 def register_participant():
-    """검사코드 + 프로필 → 참여 세션 토큰 발급."""
+    """검사 완료(게스트) 후 프로필 등록 → 나의코드 즉시 발송."""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or "")
     display_name = (body.get("displayName") or body.get("name") or "").strip()
@@ -65,6 +143,8 @@ def register_participant():
     region = (body.get("region") or "").strip()
     email = (body.get("email") or "").strip().lower()
     phone = _normalize_phone(body.get("phone") or "")
+
+    guest_session = get_guest_session_from_request()
 
     if not is_valid_access_code(code):
         return jsonify({"error": "Bad Request", "message": MSG_NOT_FOUND}), 400
@@ -91,6 +171,18 @@ def register_participant():
     if _is_assessment_expired(ass_data):
         return jsonify({"error": "Gone", "message": MSG_EXPIRED}), 410
 
+    issue_type = (ass_data.get("issueType") or "shared").strip()
+    guest_id = ""
+    if issue_type == "shared":
+        if not guest_session:
+            return jsonify({"error": "Bad Request", "message": "검사를 먼저 진행해 주세요."}), 400
+        token_code = normalize_access_code(guest_session.get("accessCode") or "")
+        if token_code != code or guest_session.get("assessmentId") != ass_doc.id:
+            return jsonify({"error": "Forbidden", "message": "검사 세션이 일치하지 않습니다."}), 403
+        guest_id = (guest_session.get("guestId") or "").strip()
+        if not _completed_test_ids_for_guest(db, ass_doc.id, guest_id):
+            return jsonify({"error": "Bad Request", "message": MSG_COMPLETE_TEST_FIRST}), 400
+
     participant_id = str(uuid.uuid4())
     ref = db.collection(JOIN_PARTICIPANTS_COLLECTION).document(participant_id)
     ref.set(
@@ -107,9 +199,15 @@ def register_participant():
             "status": "active",
             "portalId": "",
             "credentialsSentAt": None,
+            "guestId": guest_id or None,
             "createdAt": SERVER_TIMESTAMP,
         }
     )
+
+    if guest_id:
+        _link_guest_results(db, guest_id, participant_id, ass_doc.id)
+
+    portal_result = try_issue_portal_for_participant(db, participant_id, ass_doc.id)
 
     token = issue_participant_token(
         participant_id=participant_id,
@@ -123,27 +221,18 @@ def register_participant():
             "assessmentId": ass_doc.id,
             "accessCode": code,
             "displayName": display_name,
+            "credentialsSent": bool(portal_result.get("credentialsSent")),
+            "message": portal_result.get("message", ""),
         }
     ), 201
-
-
-def _completed_test_ids(db, assessment_id: str, participant_id: str) -> set[str]:
-    from config import TEST_RESULTS_COLLECTION
-
-    refs = (
-        db.collection(TEST_RESULTS_COLLECTION)
-        .where("assessmentId", "==", assessment_id)
-        .where("participantId", "==", participant_id)
-        .where("status", "==", "completed")
-        .get()
-    )
-    return {str(d.to_dict().get("testId") or "") for d in refs if d.to_dict().get("testId")}
 
 
 @bp.route("/finalize", methods=["POST"])
 @limit_access_code
 def finalize_participant():
-    """검사 1건 이상 완료 시 개인 포털(코드+PIN) 생성 및 이메일/SMS 통지 큐 등록."""
+    """레거시: 참여 세션으로 포털 재발급 시도."""
+    from utils.participant_auth import get_participant_session_from_request
+
     session = get_participant_session_from_request()
     if not session:
         return jsonify({"error": "Unauthorized", "message": "참여 세션이 만료되었습니다."}), 401

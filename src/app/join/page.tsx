@@ -10,7 +10,6 @@ import {
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
 import { persistJoinAssessmentSession, pushToJoinDashboard } from '@/lib/joinAssessmentSession';
-import { readJoinParticipantSession } from '@/lib/joinParticipantSession';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';
@@ -44,14 +43,7 @@ export default function AccessCodeInputPage() {
       try {
         const data = await lookupPublicAssessment(norm);
         persistJoinAssessmentSession(norm, data);
-
-        const existing = readJoinParticipantSession();
-        if (existing?.accessCode === norm) {
-          pushToJoinDashboard(router, norm);
-          return true;
-        }
-
-        router.push(`/join/profile?accessCode=${encodeURIComponent(norm)}`);
+        pushToJoinDashboard(router, norm);
         return true;
       } catch (err) {
         setError(err instanceof Error ? err.message : MSG_LOOKUP_DEFAULT);

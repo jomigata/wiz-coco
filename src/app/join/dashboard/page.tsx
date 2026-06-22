@@ -4,7 +4,6 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CompletedTestList from '@/components/join/CompletedTestList';
-import SharedMyCodeGuidance from '@/components/join/SharedMyCodeGuidance';
 import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
@@ -15,7 +14,10 @@ import {
   hasJoinParticipantSessionForCode,
   readJoinParticipantSession,
 } from '@/lib/joinParticipantSession';
-import { finalizeJoinParticipant } from '@/lib/joinFlowApi';
+import {
+  ensureJoinGuestSession,
+  hasJoinGuestSessionForCode,
+} from '@/lib/joinGuestSession';
 
 function DashboardLoading() {
   return (
@@ -55,28 +57,35 @@ function JoinDashboardContent() {
   const participantSession = useMemo(() => readJoinParticipantSession(), []);
   const hasPortal = hasPortalSessionForResults();
   const hasParticipant = hasJoinParticipantSessionForCode(code);
+  const hasGuest = hasJoinGuestSessionForCode(code);
   const canTrackResults = canTrackJoinResults();
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [guestReady, setGuestReady] = useState(false);
   const [error, setError] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
 
-  const [finalizeMessage, setFinalizeMessage] = useState('');
-  const [credentialsSent, setCredentialsSent] = useState(false);
-
-  const isSharedAssessment = assessment?.issueType !== 'individual';
   const hasCompletedTest = joinResults.some((r) => r.status === 'completed');
-  const showSharedMyCodeGuidance =
-    Boolean(assessment) && isSharedAssessment && (hasCompletedTest || credentialsSent || Boolean(finalizeMessage));
+  const needsProfile = !hasPortal && !hasParticipant && hasCompletedTest;
 
   useEffect(() => {
-    if (!isValidAccessCodeInput(code)) return;
-    if (hasPortal) return;
-    if (!hasParticipant) {
-      router.replace(`/join/profile?accessCode=${encodeURIComponent(code)}`);
+    if (!isValidAccessCodeInput(code) || hasPortal || hasParticipant) {
+      setGuestReady(true);
+      return;
     }
-  }, [code, hasPortal, hasParticipant, router]);
+    let cancelled = false;
+    ensureJoinGuestSession(code)
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : '검사 세션 시작에 실패했습니다.');
+      })
+      .finally(() => {
+        if (!cancelled) setGuestReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [code, hasPortal, hasParticipant]);
 
   const loadAssessment = useCallback(() => {
     if (!isValidAccessCodeInput(code)) {
@@ -151,32 +160,7 @@ function JoinDashboardContent() {
     return withIdx;
   }, [assessment, latestCompletedByTestId, joinResults]);
 
-  useEffect(() => {
-    if (!hasParticipant || hasPortal || !assessment?.testList?.length) return;
-    const required = assessment.testList.map((t) => String(t.testId));
-    const doneCount = required.filter((tid) =>
-      joinResults.some((r) => String(r.testId) === tid && r.status === 'completed')
-    ).length;
-    if (doneCount < 1) return;
-
-    let cancelled = false;
-    finalizeJoinParticipant()
-      .then((res) => {
-        if (cancelled) return;
-        if (res.credentialsSent) setCredentialsSent(true);
-        if (res.credentialsSent || res.message) {
-          setFinalizeMessage(res.message);
-        }
-      })
-      .catch(() => {
-        /* ignore — may already be sent */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [joinResults, assessment, hasParticipant, hasPortal]);
-
-  if (loading) {
+  if (loading || !guestReady) {
     return <DashboardLoading />;
   }
 
@@ -214,9 +198,17 @@ function JoinDashboardContent() {
             <p className="text-sm text-slate-400 mb-2">{participantSession.displayName}님</p>
           ) : null}
 
-          {finalizeMessage && !showSharedMyCodeGuidance ? (
-            <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-200">
-              {finalizeMessage}
+          {needsProfile ? (
+            <div className="rounded-lg border border-cyan-500/40 bg-cyan-950/30 p-4 space-y-3">
+              <p className="text-cyan-100 text-sm">
+                검사를 완료하셨습니다. 나의코드 발급을 위해 검사자 정보를 입력해 주세요.
+              </p>
+              <Link
+                href={`/join/profile?accessCode=${encodeURIComponent(code)}`}
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 text-sm"
+              >
+                검사완료 및 나의코드 생성하기
+              </Link>
             </div>
           ) : null}
 
@@ -239,84 +231,72 @@ function JoinDashboardContent() {
               <p className="text-slate-300 whitespace-pre-wrap mb-6">{assessment.welcomeMessage}</p>
             )}
 
-            {showSharedMyCodeGuidance ? (
-              <SharedMyCodeGuidance
-                finalizeMessage={finalizeMessage}
-                hasPortalSession={hasPortal}
-                myCode={portalSession?.portal?.accessCode}
-              />
+            <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
+            {!canTrackResults && !authLoading && !hasGuest ? (
+              <p className="text-amber-200/90 text-sm mb-2">검사 세션을 준비하는 중…</p>
+            ) : null}
+            {assessment.testList.length === 0 ? (
+              <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>
             ) : (
-              <>
-                <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
-                {!canTrackResults && !authLoading ? (
-                  <p className="text-amber-200/90 text-sm mb-2">
-                    프로필 등록 후 검사를 진행할 수 있습니다.
-                  </p>
-                ) : null}
-                {assessment.testList.length === 0 ? (
-                  <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {sortedTestList.map((t) => {
-                      const done = t.isDone;
-                      const dateLabel =
-                        t.latestAt != null
-                          ? new Date(t.latestAt).toLocaleString('ko-KR', {
-                              year: 'numeric',
-                              month: 'numeric',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : null;
-                      return (
-                        <li key={t.testId}>
-                          <Link
-                            href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
-                            className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="font-medium">{t.name || t.testId}</span>
-                              <span className="text-slate-400 text-sm">시작하기 →</span>
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                              {canTrackResults ? (
-                                done ? (
-                                  <>
-                                    <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
-                                      검사 실시 완료
-                                    </span>
-                                    {dateLabel ? (
-                                      <span className="text-slate-400">최근 제출: {dateLabel}</span>
-                                    ) : null}
-                                  </>
-                                ) : (
-                                  <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
-                                    미완료 · 제출 전
-                                  </span>
-                                )
-                              ) : (
-                                <span className="text-slate-500">로그인 후 완료 여부 표시</span>
-                              )}
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </>
+              <ul className="space-y-2">
+                {sortedTestList.map((t) => {
+                  const done = t.isDone;
+                  const dateLabel =
+                    t.latestAt != null
+                      ? new Date(t.latestAt).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : null;
+                  return (
+                    <li key={t.testId}>
+                      <Link
+                        href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
+                        className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium">{t.name || t.testId}</span>
+                          <span className="text-slate-400 text-sm">시작하기 →</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          {canTrackResults ? (
+                            done ? (
+                              <>
+                                <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
+                                  검사 실시 완료
+                                </span>
+                                {dateLabel ? (
+                                  <span className="text-slate-400">최근 제출: {dateLabel}</span>
+                                ) : null}
+                              </>
+                            ) : (
+                              <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
+                                미완료 · 제출 전
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-slate-500">세션 준비 중…</span>
+                          )}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
 
           <CompletedTestList
             clientUid={clientUid}
-            usePortalSession={hasPortal && !isSharedAssessment}
+            usePortalSession={hasPortal}
+            useGuestSession={hasGuest && !hasParticipant}
             useParticipantSession={hasParticipant}
-            authLoading={authLoading && !hasPortal && !hasParticipant}
+            authLoading={authLoading && !hasPortal && !hasParticipant && !hasGuest}
             onRefresh={loadAssessment}
             onResultsChange={setJoinResults}
-            hidden={showSharedMyCodeGuidance}
           />
         </main>
 

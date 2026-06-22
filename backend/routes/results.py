@@ -10,8 +10,9 @@ from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION, JOIN_PARTICI
 from utils.password import verify_password
 from utils.scoring import compute_result_data
 from utils.access_code import normalize_access_code, is_valid_access_code
-from utils.portal_auth import get_portal_session_from_request
+from utils.guest_auth import get_guest_session_from_request
 from utils.participant_auth import get_participant_session_from_request
+from utils.portal_auth import get_portal_session_from_request
 from utils.join_portal_issue import try_issue_portal_for_participant
 from utils.portal_assessment_access import portal_can_use_assessment, get_portal_doc
 
@@ -91,8 +92,9 @@ def submit_result():
     test_id = (body.get("testId") or "").strip()
     portal_session = get_portal_session_from_request()
     participant_session = get_participant_session_from_request()
-    client_uid = get_bearer_uid() if not portal_session and not participant_session else None
-    client_email = get_bearer_email_optional() if not portal_session and not participant_session else None
+    guest_session = get_guest_session_from_request()
+    client_uid = get_bearer_uid() if not portal_session and not participant_session and not guest_session else None
+    client_email = get_bearer_email_optional() if not portal_session and not participant_session and not guest_session else None
     responses = body.get("responses")
 
     db = get_firestore()
@@ -105,11 +107,15 @@ def submit_result():
         token_code = normalize_access_code(participant_session.get("accessCode") or "")
         if token_code != access_code:
             return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+    elif guest_session:
+        token_code = normalize_access_code(guest_session.get("accessCode") or "")
+        if token_code != access_code:
+            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
     elif not client_uid:
         return jsonify(
             {
                 "error": "Unauthorized",
-                "message": "검사실 로그인 또는 계정 로그인이 필요합니다.",
+                "message": "검사를 시작하려면 검사코드를 다시 입력해 주세요.",
             }
         ), 401
     if not is_valid_access_code(access_code):
@@ -154,6 +160,8 @@ def submit_result():
                 "region": pd.get("region", ""),
                 "phone": pd.get("phone", ""),
             }
+    elif guest_session:
+        data["guestId"] = (guest_session.get("guestId") or "").strip()
     else:
         data["clientUid"] = client_uid
         if client_email:
@@ -187,8 +195,9 @@ def list_results():
     access_code = normalize_access_code(request.args.get("accessCode") or "")
     portal_session = get_portal_session_from_request()
     participant_session = get_participant_session_from_request()
-    client_uid = get_bearer_uid() if not portal_session and not participant_session else None
-    token_email = get_bearer_email_optional() if not portal_session and not participant_session else None
+    guest_session = get_guest_session_from_request()
+    client_uid = get_bearer_uid() if not portal_session and not participant_session and not guest_session else None
+    token_email = get_bearer_email_optional() if not portal_session and not participant_session and not guest_session else None
 
     db = get_firestore()
 
@@ -198,6 +207,10 @@ def list_results():
             return jsonify({"error": "Forbidden", "message": "이 검사에 접근할 수 없습니다."}), 403
     elif participant_session:
         token_code = normalize_access_code(participant_session.get("accessCode") or "")
+        if token_code != access_code:
+            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+    elif guest_session:
+        token_code = normalize_access_code(guest_session.get("accessCode") or "")
         if token_code != access_code:
             return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
     elif not client_uid:
@@ -246,6 +259,25 @@ def list_results():
             ):
                 _append(doc)
 
+        return jsonify({"results": items})
+
+    if guest_session:
+        guest_id = (guest_session.get("guestId") or "").strip()
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("guestId", "==", guest_id)
+            .get()
+        )
+        items = []
+        for doc in refs or []:
+            d = doc.to_dict()
+            items.append({
+                "resultId": doc.id,
+                "testId": d.get("testId"),
+                "status": d.get("status"),
+                "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
+            })
         return jsonify({"results": items})
 
     if participant_session:

@@ -10,6 +10,7 @@ import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAs
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
 import { hasJoinParticipantSessionForCode } from '@/lib/joinParticipantSession';
+import { ensureJoinGuestSession } from '@/lib/joinGuestSession';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -87,6 +88,9 @@ export default function TestRunnerPage() {
       setAccessCheckError('');
       try {
         await lookupPublicAssessment(code);
+        if (!hasPortal && !hasJoinParticipantSessionForCode(code)) {
+          await ensureJoinGuestSession(code);
+        }
       } catch (err) {
         setAccessCheckError(err instanceof Error ? err.message : '검사코드를 사용할 수 없습니다.');
       } finally {
@@ -94,7 +98,7 @@ export default function TestRunnerPage() {
       }
     };
     void run();
-  }, [code]);
+  }, [code, hasPortal]);
 
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
@@ -124,6 +128,10 @@ export default function TestRunnerPage() {
   };
 
   const goBackAfterDone = () => {
+    if (!hasPortal && !hasParticipant) {
+      router.push(`/join/profile?accessCode=${encodeURIComponent(code)}`);
+      return;
+    }
     navigateToJoinSelectionDashboard(code, router);
   };
 
@@ -192,10 +200,14 @@ export default function TestRunnerPage() {
               onClick={goBackAfterDone}
               className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
             >
-              검사 선택으로
+              {!hasPortal && !hasParticipant ? '검사완료 및 나의코드 생성하기' : '검사 선택으로'}
             </button>
             <p className="text-slate-500 text-xs mt-4">
-              {hasPortal ? '내 검사실에서 다른 검사를 이어서 진행할 수 있습니다.' : '검사 선택 화면으로 돌아갑니다.'}
+              {!hasPortal && !hasParticipant
+                ? '나의코드 발급을 위해 검사자 정보를 입력합니다.'
+                : hasPortal
+                  ? '내 검사실에서 다른 검사를 이어서 진행할 수 있습니다.'
+                  : '검사 선택 화면으로 돌아갑니다.'}
             </p>
           </div>
         </div>
@@ -222,16 +234,10 @@ export default function TestRunnerPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <h1 className="text-xl font-bold text-white mb-2">{title}</h1>
 
-            {!hasPortal && !hasParticipant && authLoading ? (
-              <p className="text-slate-400 text-sm mb-4">세션 확인 중…</p>
+            {!hasPortal && !hasParticipant && accessCheckLoading ? (
+              <p className="text-slate-400 text-sm mb-4">검사 세션 준비 중…</p>
             ) : !canSubmitAuth ? (
-              <p className="text-amber-400/95 text-sm mb-4">
-                검사를 시작하려면{' '}
-                <Link href={`/join/profile?accessCode=${encodeURIComponent(code)}`} className="text-blue-400 hover:text-blue-300 underline">
-                  검사자 정보
-                </Link>
-                를 먼저 입력해 주세요.
-              </p>
+              <p className="text-amber-400/95 text-sm mb-4">검사 세션을 시작할 수 없습니다. 검사 코드 입력부터 다시 시도해 주세요.</p>
             ) : null}
 
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-6">

@@ -1,8 +1,9 @@
 /**
- * 검사 시작 플로우 API — 프로필 등록 · 완료 후 포털 발급
+ * 검사 시작 플로우 API — 게스트 검사 선행 · 프로필 등록 · 나의코드 발송
  */
 
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 
 const getBaseUrl = (): string => {
@@ -21,16 +22,37 @@ export type RegisterParticipantBody = {
   phone: string;
 };
 
+export async function startGuestJoin(accessCode: string): Promise<{
+  guestId: string;
+  guestToken: string;
+  assessmentId: string;
+  accessCode: string;
+}> {
+  const res = await fetch(`${getBaseUrl()}/api/join/guest-start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessCode: normalizeAccessCodeInput(accessCode) }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '검사 시작에 실패했습니다.');
+  }
+  return data;
+}
+
 export async function registerJoinParticipant(body: RegisterParticipantBody): Promise<{
   participantId: string;
   participantToken: string;
   assessmentId: string;
   accessCode: string;
   displayName: string;
+  credentialsSent?: boolean;
+  message?: string;
 }> {
+  const guestHeaders = getJoinGuestAuthHeader();
   const res = await fetch(`${getBaseUrl()}/api/join/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...guestHeaders },
     body: JSON.stringify({
       ...body,
       accessCode: normalizeAccessCodeInput(body.accessCode),

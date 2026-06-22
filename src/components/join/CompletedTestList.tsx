@@ -15,6 +15,7 @@ interface CompletedTestListProps {
   clientUid: string;
   /** 포털 세션으로 결과 조회·삭제 */
   usePortalSession?: boolean;
+  useGuestSession?: boolean;
   useParticipantSession?: boolean;
   /** Firebase Auth 초기화·복원 완료 전에는 API 호출하지 않음 (포털 사용 시 무시) */
   authLoading?: boolean;
@@ -35,6 +36,7 @@ type SortColumn = 'name' | 'date';
 export default function CompletedTestList({
   clientUid,
   usePortalSession = false,
+  useGuestSession = false,
   useParticipantSession = false,
   authLoading = false,
   onRefresh,
@@ -51,7 +53,7 @@ export default function CompletedTestList({
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
-  const canLoad = usePortalSession || useParticipantSession || Boolean(clientUid?.trim());
+  const canLoad = usePortalSession || useGuestSession || useParticipantSession || Boolean(clientUid?.trim());
 
   useEffect(() => {
     let raw: string | null = null;
@@ -71,7 +73,7 @@ export default function CompletedTestList({
   }, []);
 
   useEffect(() => {
-    if (!usePortalSession && !useParticipantSession && authLoading) {
+    if (!usePortalSession && !useGuestSession && !useParticipantSession && authLoading) {
       setLoading(true);
       return;
     }
@@ -102,7 +104,7 @@ export default function CompletedTestList({
         onResultsChange?.([]);
       })
       .finally(() => setLoading(false));
-  }, [stored?.accessCode, clientUid, authLoading, usePortalSession, useParticipantSession, canLoad, onResultsChange]);
+  }, [stored?.accessCode, clientUid, authLoading, usePortalSession, useGuestSession, useParticipantSession, canLoad, onResultsChange]);
 
   const sortedResults = useMemo(() => {
     const tl = stored?.testList || [];
