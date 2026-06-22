@@ -17,6 +17,7 @@ from config import (
     PORTAL_MAGIC_LINK_MAX_AGE,
     PORTAL_SESSION_MAX_AGE,
     PORTAL_SESSION_REMEMBER_MAX_AGE,
+    BULK_PORTAL_MAX_ROWS,
 )
 from firebase_init import get_firestore
 from auth_middleware import require_counselor
@@ -286,8 +287,16 @@ def bulk_create():
         return jsonify({"error": "Bad Request", "message": "검사 세트 제목(title)이 필요합니다."}), 400
     if not isinstance(rows, list) or not rows:
         return jsonify({"error": "Bad Request", "message": "초대할 내담자 목록(rows)이 필요합니다."}), 400
-    if len(rows) > 500:
-        return jsonify({"error": "Bad Request", "message": "한 번에 최대 500명까지 생성할 수 있습니다."}), 400
+    if len(rows) > BULK_PORTAL_MAX_ROWS:
+        return (
+            jsonify(
+                {
+                    "error": "Bad Request",
+                    "message": f"한 번에 최대 {BULK_PORTAL_MAX_ROWS}명까지 생성할 수 있습니다.",
+                }
+            ),
+            400,
+        )
 
     test_list = [
         {"testId": str(t.get("testId", "")), "name": str(t.get("name", ""))}

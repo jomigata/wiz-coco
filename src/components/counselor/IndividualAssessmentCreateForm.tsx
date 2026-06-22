@@ -10,6 +10,11 @@ import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests'
 import type { ClientPortalBulkRow } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
+import {
+  GROUP_RECIPIENT_MAX,
+  GROUP_RECIPIENT_SAMPLE_CSV,
+  GROUP_RECIPIENT_SAMPLE_TXT,
+} from '@/lib/groupRecipientLimits';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
 
@@ -140,7 +145,11 @@ export default function IndividualAssessmentCreateForm() {
     [manualRows, fileRows]
   );
 
-  const canSubmit = Boolean(user) && !authPending && !loading;
+  const canSubmit =
+    Boolean(user) &&
+    !authPending &&
+    !loading &&
+    recipients.length <= GROUP_RECIPIENT_MAX;
 
   const toggleTest = (testId: string) => {
     if (usingExisting) return;
@@ -186,6 +195,10 @@ export default function IndividualAssessmentCreateForm() {
     }
     if (recipients.length === 0) {
       setError('내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 파일을 첨부해 주세요.');
+      return;
+    }
+    if (recipients.length > GROUP_RECIPIENT_MAX) {
+      setError(`한 번에 최대 ${GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명까지 발급할 수 있습니다.`);
       return;
     }
     const invalid = recipients.find((r) => !r.email.trim() && !r.phone.trim());
@@ -502,13 +515,34 @@ export default function IndividualAssessmentCreateForm() {
           >
             CSV/텍스트 파일 첨부
           </button>
+          <a
+            href={GROUP_RECIPIENT_SAMPLE_CSV}
+            download="wizcoco-group-recipients-sample.csv"
+            className="px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-blue-200 border border-slate-600 hover:border-slate-500"
+          >
+            엑셀 샘플(CSV)
+          </a>
+          <a
+            href={GROUP_RECIPIENT_SAMPLE_TXT}
+            download="wizcoco-group-recipients-sample.txt"
+            className="px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-blue-200 border border-slate-600 hover:border-slate-500"
+          >
+            텍스트 샘플
+          </a>
           {fileLabel ? <span className="text-slate-400 text-sm">{fileLabel} ({fileRows.length}명)</span> : null}
         </div>
         <p className="text-slate-500 text-xs">
-          파일 형식: 이름, 이메일, 휴대폰 (쉼표·탭·세미콜론 구분). 수동 입력과 파일은 합쳐집니다. 최대 500명.
+          파일 형식: 이름, 이메일, 휴대폰 (쉼표·탭·세미콜론 구분). 수동 입력과 파일은 합쳐집니다. 최대{' '}
+          {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명.
         </p>
         {recipients.length > 0 ? (
-          <p className="text-slate-400 text-sm">발급 대상: {recipients.length}명 (동일 검사코드)</p>
+          <p
+            className={`text-sm ${
+              recipients.length > GROUP_RECIPIENT_MAX ? 'text-red-400' : 'text-slate-400'
+            }`}
+          >
+            발급 대상: {recipients.length.toLocaleString('ko-KR')}명 (동일 검사코드)
+          </p>
         ) : null}
       </div>
 

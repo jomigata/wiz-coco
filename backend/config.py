@@ -36,6 +36,9 @@ CLIENT_PORTALS_COLLECTION = "clientPortals"
 NOTIFICATION_QUEUE_COLLECTION = "notificationQueue"
 JOIN_PARTICIPANTS_COLLECTION = "joinParticipants"
 
+# 그룹코드 일괄 발급 시 내담자 수 상한
+BULK_PORTAL_MAX_ROWS = int(os.getenv("BULK_PORTAL_MAX_ROWS", "2000"))
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 
