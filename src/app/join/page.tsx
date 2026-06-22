@@ -10,7 +10,9 @@ import {
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
 import { persistJoinAssessmentSession, pushToJoinDashboard } from '@/lib/joinAssessmentSession';
-import { clearJoinParticipantSession, readJoinParticipantSession } from '@/lib/joinParticipantSession';
+import { clearJoinGuestSession } from '@/lib/joinGuestSession';
+import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
+import { resetJoinStartEnvironment } from '@/lib/joinStartReset';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';
@@ -22,6 +24,16 @@ export default function AccessCodeInputPage() {
   const [formatError, setFormatError] = useState('');
   const [loading, setLoading] = useState(false);
   const autoStartedRef = useRef(false);
+  const resetDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (resetDoneRef.current) return;
+    resetDoneRef.current = true;
+    resetJoinStartEnvironment();
+    setCode('');
+    setError('');
+    setFormatError('');
+  }, []);
 
   const normalizedCode = normalizeAccessCodeInput(code);
   const canSubmit = isValidAccessCodeInput(normalizedCode) && !loading;
@@ -44,6 +56,10 @@ export default function AccessCodeInputPage() {
       try {
         const data = await lookupPublicAssessment(norm);
         persistJoinAssessmentSession(norm, data);
+
+        clearJoinGuestSession();
+        clearJoinParticipantSession();
+
         pushToJoinDashboard(router, norm);
         return true;
       } catch (err) {

@@ -35,6 +35,11 @@ export function persistJoinAssessmentSession(
   );
 }
 
+export function clearJoinAssessmentSession(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(JOIN_STORAGE_KEY);
+}
+
 /** 검사하기(/join) 진입 URL — accessCode 쿼리·자동 진행 옵션 */
 export function getJoinEntryPath(accessCodeNorm: string, autoStart = false): string {
   const code = normalizeAccessCodeInput(accessCodeNorm);
