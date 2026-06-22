@@ -7,7 +7,7 @@ import { lookupPublicAssessment, submitResult, getClientResult, updateClientResu
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
-import { getPortalReturnPath } from '@/lib/portalReturnPath';
+import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
 import {
@@ -32,6 +32,7 @@ export default function TestRunnerPage() {
   const [accessCode, setAccessCode] = useState('');
   const [testId, setTestId] = useState('');
   const [editResultId, setEditResultId] = useState('');
+  const [fromPortal, setFromPortal] = useState(false);
 
   const [title, setTitle] = useState('');
   const [hydrated, setHydrated] = useState(false);
@@ -56,6 +57,7 @@ export default function TestRunnerPage() {
       setAccessCode((params.get('accessCode') || '').trim());
       setTestId((params.get('testId') || '').trim());
       setEditResultId((params.get('resultId') || '').trim());
+      setFromPortal((params.get('from') || '').trim() === 'portal');
     } catch {
       setAccessCode('');
       setTestId('');
@@ -150,10 +152,26 @@ export default function TestRunnerPage() {
   };
 
   const canSubmit = canSubmitAuth && Object.keys(responses).length === questions.length;
+  const returnToPortalProgress = hasPortal || fromPortal;
+
+  const buildPortalProgressUrl = () => {
+    let assessmentId = '';
+    try {
+      const raw = sessionStorage.getItem(JOIN_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { assessmentId?: string };
+        assessmentId = (parsed.assessmentId || '').trim();
+      }
+    } catch {
+      // ignore
+    }
+    const expandKey = assessmentId && testId ? `${assessmentId}:${testId}` : '';
+    return buildPortalProgressReturnUrl(expandKey || undefined);
+  };
 
   const navigateAfterSubmit = () => {
-    if (hasPortal) {
-      router.push('/portal/');
+    if (returnToPortalProgress) {
+      router.replace(buildPortalProgressUrl());
       return;
     }
     if (!hasParticipant) {
@@ -164,8 +182,8 @@ export default function TestRunnerPage() {
   };
 
   const navigateBackFromTest = () => {
-    if (hasPortal) {
-      router.push(getPortalReturnPath());
+    if (returnToPortalProgress) {
+      router.replace(buildPortalProgressUrl());
       return;
     }
     navigateToJoinSelectionDashboard(code, router);

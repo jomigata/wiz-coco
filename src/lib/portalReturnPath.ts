@@ -4,6 +4,13 @@ export const PORTAL_RETURN_PATH_KEY = 'wizcoco_portal_return_path';
 
 const DEFAULT_PORTAL_RETURN = '/portal/';
 
+export const PORTAL_PROGRESS_PATH = DEFAULT_PORTAL_RETURN;
+
+export function buildPortalProgressReturnUrl(expandKey?: string): string {
+  if (!expandKey?.trim()) return PORTAL_PROGRESS_PATH;
+  return `${PORTAL_PROGRESS_PATH}?expand=${encodeURIComponent(expandKey.trim())}`;
+}
+
 export function setPortalReturnPath(path: string): void {
   if (typeof window === 'undefined') return;
   const trimmed = (path || '').trim();

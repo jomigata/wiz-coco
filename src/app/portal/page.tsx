@@ -2,7 +2,7 @@
 
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, linkSharedAssessment } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, TestResultItem } from '@/lib/assessmentApi';
 import {
@@ -15,7 +15,7 @@ import {
   clearClientPortalSession,
   readClientPortalSession,
 } from '@/lib/clientPortalSession';
-import { persistJoinAssessmentSession, getJoinDashboardPath } from '@/lib/joinAssessmentSession';
+import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 type PortalAssessment = {
@@ -39,6 +39,7 @@ function PortalLoading() {
 
 function ClientPortalContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -110,6 +111,15 @@ function ClientPortalContent() {
     setPortalReturnPath('/portal/');
   }, []);
 
+  useEffect(() => {
+    const expand = (searchParams.get('expand') || '').trim();
+    if (!expand) return;
+    setExpandedTestKey(expand);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', '/portal/');
+    }
+  }, [searchParams]);
+
   const openTest = (a: PortalAssessment, testId: string, resultId?: string) => {
     setPortalReturnPath('/portal/');
     const code = normalizeAccessCodeInput(a.accessCode);
@@ -123,6 +133,7 @@ function ClientPortalContent() {
     const params = new URLSearchParams({
       accessCode: code,
       testId: String(testId),
+      from: 'portal',
     });
     if (resultId) params.set('resultId', resultId);
     router.push(`/join/test?${params.toString()}`);
@@ -279,7 +290,7 @@ function ClientPortalContent() {
                     <Link
                       href={`/join/dashboard?accessCode=${encodeURIComponent(code)}`}
                       onClick={() => {
-                        setPortalReturnPath(getJoinDashboardPath(code));
+                        setPortalReturnPath('/portal/');
                         persistJoinAssessmentSession(code, {
                           assessmentId: a.assessmentId,
                           title: a.title,

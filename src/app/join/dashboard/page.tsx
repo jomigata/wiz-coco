@@ -9,7 +9,6 @@ import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInp
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import {
   JOIN_STORAGE_KEY,
-  getJoinDashboardPath,
 } from '@/lib/joinAssessmentSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
@@ -74,10 +73,10 @@ function JoinDashboardContent() {
   const needsProfile = !hasPortal && !hasParticipant && hasCompletedTest;
 
   useEffect(() => {
-    if (hasPortal && isValidAccessCodeInput(code)) {
-      setPortalReturnPath(getJoinDashboardPath(code));
+    if (hasPortal) {
+      setPortalReturnPath('/portal/');
     }
-  }, [hasPortal, code]);
+  }, [hasPortal]);
 
   useEffect(() => {
     if (!isValidAccessCodeInput(code) || hasPortal || hasParticipant) {
@@ -263,6 +262,43 @@ function JoinDashboardContent() {
                       : null;
                   return (
                     <li key={t.testId}>
+                      {hasPortal ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPortalReturnPath('/portal/');
+                            router.push(
+                              `/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}&from=portal`
+                            );
+                          }}
+                          className="block w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-medium">{t.name || t.testId}</span>
+                            <span className="text-slate-400 text-sm">시작하기 →</span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            {canTrackResults ? (
+                              done ? (
+                                <>
+                                  <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
+                                    검사 실시 완료
+                                  </span>
+                                  {dateLabel ? (
+                                    <span className="text-slate-400">최근 제출: {dateLabel}</span>
+                                  ) : null}
+                                </>
+                              ) : (
+                                <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
+                                  미완료 · 제출 전
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-slate-500">세션 준비 중…</span>
+                            )}
+                          </div>
+                        </button>
+                      ) : (
                       <Link
                         href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
                         className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
@@ -292,6 +328,7 @@ function JoinDashboardContent() {
                           )}
                         </div>
                       </Link>
+                      )}
                     </li>
                   );
                 })}
