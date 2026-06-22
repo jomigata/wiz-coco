@@ -6,8 +6,9 @@ from datetime import datetime, timezone
 from firebase_init import get_firestore
 from auth_middleware import require_counselor
 from rate_limit import limit_access_code
-from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION
+from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION, CLIENT_PORTALS_COLLECTION
 from utils.access_code import generate_unique_access_code, normalize_access_code, is_valid_access_code
+from utils.result_actor import result_actor_key, result_actor_email, result_actor_display
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -114,7 +115,8 @@ def _is_completed_result(d):
 
 def _aggregate_completed_testids_by_email(db, assessment_ids):
     """
-    완료된 testResults만: assessmentId -> {clientUid: (email, set(완료한 testId))}.
+    완료된 testResults: assessmentId -> {actorKey: {clientUid, clientEmail, testIds}}.
+    portal / participant / guest / clientUid / email 모두 포함.
     """
     per_testids = {aid: {} for aid in assessment_ids}
     if not assessment_ids:
@@ -128,17 +130,25 @@ def _aggregate_completed_testids_by_email(db, assessment_ids):
             d = doc.to_dict()
             if not _is_completed_result(d):
                 continue
-            uid = str(d.get("clientUid") or "").strip()
-            email = (d.get("clientEmail") or "").strip().lower()
             aid = d.get("assessmentId")
-            if not uid or not aid or aid not in per_testids:
+            if not aid or aid not in per_testids:
+                continue
+            key = result_actor_key(d, result_id=doc.id)
+            if not key:
                 continue
             tid = str(d.get("testId") or "").strip()
-            if tid:
-                tmap = per_testids[aid]
-                if uid not in tmap:
-                    tmap[uid] = {"clientUid": uid, "clientEmail": email or None, "testIds": set()}
-                tmap[uid]["testIds"].add(tid)
+            if not tid:
+                continue
+            tmap = per_testids[aid]
+            if key not in tmap:
+                tmap[key] = {
+                    "clientUid": key,
+                    "clientEmail": result_actor_email(d),
+                    "testIds": set(),
+                }
+            elif not tmap[key].get("clientEmail") and result_actor_email(d):
+                tmap[key]["clientEmail"] = result_actor_email(d)
+            tmap[key]["testIds"].add(tid)
     return per_testids
 
 
@@ -281,23 +291,41 @@ def get_progress(assessment_id):
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     access_code = ass.to_dict().get("accessCode", "")
     results_refs = db.collection(TEST_RESULTS_COLLECTION).where("assessmentId", "==", assessment_id).get()
-    by_client = {}
+
+    portal_ids: set[str] = set()
+    raw_rows = []
     for doc in results_refs:
         d = doc.to_dict()
-        uid = str(d.get("clientUid") or "").strip()
-        email = (d.get("clientEmail") or "").strip().lower()
-        if not uid:
-            # 레거시 문서: uid가 없으면 email로 대체(가능한 경우만)
-            uid = f"legacy-email:{email}" if email else ""
-        if not uid:
+        portal_id = str(d.get("portalId") or "").strip()
+        if portal_id:
+            portal_ids.add(portal_id)
+        raw_rows.append((doc.id, d))
+
+    portal_labels: dict[str, str] = {}
+    for pid in portal_ids:
+        pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+        if not pdoc.exists:
             continue
-        if uid not in by_client:
-            by_client[uid] = {"clientUid": uid, "clientEmail": email or None, "results": []}
-        r = {"resultId": doc.id, "testId": d.get("testId"), "status": d.get("status"), "completedAt": None}
+        pd = pdoc.to_dict() or {}
+        label = str(pd.get("displayName") or pd.get("email") or "").strip()
+        if label:
+            portal_labels[pid] = label
+
+    by_client = {}
+    for result_id, d in raw_rows:
+        key = result_actor_key(d, result_id=result_id)
+        if not key:
+            continue
+        email = result_actor_display(d, key, portal_labels) or result_actor_email(d)
+        if key not in by_client:
+            by_client[key] = {"clientUid": key, "clientEmail": email, "results": []}
+        elif not by_client[key].get("clientEmail") and email:
+            by_client[key]["clientEmail"] = email
+        r = {"resultId": result_id, "testId": d.get("testId"), "status": d.get("status"), "completedAt": None}
         if d.get("completedAt"):
             ct = d["completedAt"]
             r["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
-        by_client[uid]["results"].append(r)
+        by_client[key]["results"].append(r)
     return jsonify({"accessCode": access_code, "byClient": list(by_client.values())})
 
 
@@ -328,6 +356,18 @@ def get_assessment_result(assessment_id, result_id):
         "resultData": d.get("resultData"),
         "completedAt": None,
     }
+    if not out.get("clientEmail"):
+        profile = d.get("clientProfile") or {}
+        display = str(profile.get("displayName") or "").strip()
+        if display:
+            out["clientEmail"] = display
+        else:
+            portal_id = str(d.get("portalId") or "").strip()
+            if portal_id:
+                pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).get()
+                if pdoc.exists:
+                    pd = pdoc.to_dict() or {}
+                    out["clientEmail"] = pd.get("displayName") or pd.get("email") or out.get("clientEmail")
     if d.get("completedAt"):
         ct = d["completedAt"]
         out["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
