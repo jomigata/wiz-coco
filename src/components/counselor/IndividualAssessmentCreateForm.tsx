@@ -17,11 +17,13 @@ import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 import {
   GROUP_RECIPIENT_MAX,
-  GROUP_RECIPIENT_SAMPLE_CSV,
-  GROUP_RECIPIENT_SAMPLE_TXT,
   GROUP_BULK_ASYNC_THRESHOLD,
   GROUP_NOTIFY_WARN_THRESHOLD,
 } from '@/lib/groupRecipientLimits';
+import {
+  downloadGroupRecipientSampleCsv,
+  downloadGroupRecipientSampleTxt,
+} from '@/lib/groupRecipientSampleDownload';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
 
@@ -664,20 +666,20 @@ export default function IndividualAssessmentCreateForm() {
           >
             CSV/텍스트 파일 첨부
           </button>
-          <a
-            href={GROUP_RECIPIENT_SAMPLE_CSV}
-            download="wizcoco-group-recipients-sample.csv"
+          <button
+            type="button"
+            onClick={downloadGroupRecipientSampleCsv}
             className="px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-blue-200 border border-slate-600 hover:border-slate-500"
           >
             엑셀 샘플(CSV)
-          </a>
-          <a
-            href={GROUP_RECIPIENT_SAMPLE_TXT}
-            download="wizcoco-group-recipients-sample.txt"
+          </button>
+          <button
+            type="button"
+            onClick={downloadGroupRecipientSampleTxt}
             className="px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-blue-200 border border-slate-600 hover:border-slate-500"
           >
             텍스트 샘플
-          </a>
+          </button>
           {fileLabel ? <span className="text-slate-400 text-sm">{fileLabel} ({fileRows.length}명)</span> : null}
         </div>
         <p className="text-slate-500 text-xs">
