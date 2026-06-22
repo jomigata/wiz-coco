@@ -34,7 +34,6 @@ export default function TestRunnerPage() {
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
   const [accessCheckLoading, setAccessCheckLoading] = useState(true);
   const [accessCheckError, setAccessCheckError] = useState('');
 
@@ -113,26 +112,25 @@ export default function TestRunnerPage() {
 
   const canSubmit = canSubmitAuth && Object.keys(responses).length === questions.length;
 
+  const navigateAfterSubmit = () => {
+    if (!hasPortal && !hasParticipant) {
+      router.push(`/join/profile?accessCode=${encodeURIComponent(code)}`);
+      return;
+    }
+    navigateToJoinSelectionDashboard(code, router);
+  };
+
   const handleSubmitNew = async () => {
     if (!canSubmit) return;
     setError('');
     setSubmitting(true);
     try {
       await submitResult({ accessCode: code, testId, responses });
-      setDone(true);
+      navigateAfterSubmit();
     } catch (err) {
       setError(err instanceof Error ? err.message : '제출에 실패했습니다.');
-    } finally {
       setSubmitting(false);
     }
-  };
-
-  const goBackAfterDone = () => {
-    if (!hasPortal && !hasParticipant) {
-      router.push(`/join/profile?accessCode=${encodeURIComponent(code)}`);
-      return;
-    }
-    navigateToJoinSelectionDashboard(code, router);
   };
 
   if (!hydrated) {
@@ -175,40 +173,6 @@ export default function TestRunnerPage() {
             <Link href="/join" className="text-blue-400 hover:text-blue-300">
               검사 코드 다시 입력
             </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen bg-gray-900">
-        <div
-          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 pt-24"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="join-submit-done-title"
-        >
-          <div className="max-w-lg w-full text-center bg-slate-800/95 rounded-2xl border border-slate-600 p-8 shadow-xl">
-            <h2 id="join-submit-done-title" className="text-xl font-bold text-white mb-2">
-              검사 완료
-            </h2>
-            <p className="text-slate-300 mb-6">검사가 완료되었습니다.</p>
-            <button
-              type="button"
-              onClick={goBackAfterDone}
-              className="inline-block px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {!hasPortal && !hasParticipant ? '검사완료 및 나의코드 생성하기' : '검사 선택으로'}
-            </button>
-            <p className="text-slate-500 text-xs mt-4">
-              {!hasPortal && !hasParticipant
-                ? '나의코드 발급을 위해 검사자 정보를 입력합니다.'
-                : hasPortal
-                  ? '내 검사실에서 다른 검사를 이어서 진행할 수 있습니다.'
-                  : '검사 선택 화면으로 돌아갑니다.'}
-            </p>
           </div>
         </div>
       </div>
