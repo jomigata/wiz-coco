@@ -1,4 +1,4 @@
-"""나의코드(포털 accessCode) 생성·검증 — YY(2자리 연도) + 숫자(3자리~, 2~9만)."""
+"""나의코드(포털 accessCode) 생성·검증 — 연도 알파벳(a~z, 2026=a) + 숫자(3자리~, 2~9만)."""
 from __future__ import annotations
 
 import random
@@ -11,10 +11,12 @@ from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION
 from firebase_init import get_firestore
 
 NUMERIC_CHARS = "23456789"
+YEAR_BASE = 2026
+YEAR_ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 SYSTEM_META_COLLECTION = "system_meta"
 MY_CODE_CONFIG_DOC = "my_code_generation"
 
-MY_CODE_RE = re.compile(rf"^\d{{2}}[{NUMERIC_CHARS}]{{3,}}$")
+MY_CODE_RE = re.compile(rf"^[A-Z]+[{NUMERIC_CHARS}]{{3,}}$")
 
 MAX_TRIES_PER_LENGTH = 150
 MAX_NUMERIC_LENGTH = 24
@@ -22,22 +24,58 @@ MAX_BUMP_STEPS = 26
 
 
 def normalize_my_code(raw: str) -> str:
-    """숫자만 추출 (나의코드 입력 정규화)."""
-    return "".join(c for c in (raw or "").strip() if c.isdigit())
+    """영문·숫자(2~9)만 추출 후 대문자 통일 (대소문자 구분 없음)."""
+    out = []
+    for c in (raw or "").strip().upper():
+        if c.isalpha():
+            out.append(c)
+        elif c in NUMERIC_CHARS:
+            out.append(c)
+    return "".join(out)
+
+
+def encode_year_offset(offset: int) -> str:
+    """
+    2026년=0 → a, … 2051년=25 → z, 2052년=26 → aa …
+    z 이후 연도는 알파벳 자릿수를 1씩 늘려 표현.
+    """
+    if offset < 0:
+        offset = 0
+    if offset < 26:
+        return YEAR_ALPHABET[offset]
+    length = 2
+    base = 26
+    while offset >= base + (26**length):
+        base += 26**length
+        length += 1
+    remaining = offset - base
+    chars = []
+    for _ in range(length):
+        remaining, idx = divmod(remaining, 26)
+        chars.append(YEAR_ALPHABET[idx])
+    return "".join(reversed(chars))
+
+
+def year_prefix_for(year: int | None = None) -> str:
+    y = year if year is not None else datetime.now(timezone.utc).year
+    return encode_year_offset(y - YEAR_BASE).upper()
 
 
 def is_valid_my_code(code: str) -> bool:
     if not code:
         return False
-    return bool(MY_CODE_RE.match(code))
+    normalized = normalize_my_code(code)
+    if not MY_CODE_RE.match(normalized):
+        return False
+    # 앞쪽 연도 알파벳 + 뒤쪽 숫자(최소 3자리) 경계 확인
+    i = 0
+    while i < len(normalized) and normalized[i].isalpha():
+        i += 1
+    return i >= 1 and (len(normalized) - i) >= 3
 
 
 def _random_numeric(n: int) -> str:
     return "".join(random.choices(NUMERIC_CHARS, k=n))
-
-
-def _year_prefix() -> str:
-    return f"{datetime.now(timezone.utc).year % 100:02d}"
 
 
 def _get_numeric_length(db) -> int:
@@ -83,14 +121,14 @@ def _my_code_exists(db, candidate: str) -> bool:
 
 
 def generate_unique_my_code() -> str:
-    """Firestore 전역 유일 나의코드 (YY + 숫자 3자리~)."""
+    """Firestore 전역 유일 나의코드 (연도 알파벳 + 숫자 3자리~)."""
     db = get_firestore()
-    yy = _year_prefix()
+    prefix = year_prefix_for()
 
     for _ in range(MAX_BUMP_STEPS):
         n = _get_numeric_length(db)
         for _ in range(MAX_TRIES_PER_LENGTH):
-            candidate = yy + _random_numeric(n)
+            candidate = prefix + _random_numeric(n)
             if not _my_code_exists(db, candidate):
                 return candidate
         _bump_numeric_length(db, n)

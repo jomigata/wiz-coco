@@ -31,7 +31,7 @@ export default function SharedMyCodeGuidance({
 
       <ul className="list-disc pl-5 space-y-2 text-sm text-slate-300">
         <li>
-          <strong className="text-slate-100">나의코드</strong>는 연도 2자리 + 숫자 형태입니다. (예: 26234)
+          <strong className="text-slate-100">나의코드</strong>는 연도 알파벳(2026년=a) + 숫자 형태입니다. (예: A234)
         </li>
         <li>
           <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 underline">

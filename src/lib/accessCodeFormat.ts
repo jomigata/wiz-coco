@@ -17,20 +17,28 @@ const NEW_RE = new RegExp(
 );
 const OLD_RE = /^[0-9A-Z]{6}$/i;
 
-/** 나의코드: YY(2자리) + 숫자 2~9만 3자리 이상 */
-const MY_CODE_RE = new RegExp(`^\\d{2}[${DIGITS}]{3,}$`);
+/** 나의코드: 연도 알파벳(a=2026~, z 이후 aa…) + 숫자 2~9만 3자리 이상 (0·1 제외) */
+const MY_CODE_RE = new RegExp(`^[A-Z]+[${DIGITS}]{3,}$`);
 
 export function normalizeMyCodeInput(raw: string): string {
-  return (raw || '').replace(/\D/g, '');
+  const out: string[] = [];
+  for (const ch of (raw || '').toUpperCase()) {
+    if (/[A-Z]/.test(ch)) out.push(ch);
+    else if (DIGITS.includes(ch)) out.push(ch);
+  }
+  return out.join('');
 }
 
 export function isValidMyCodeInput(normalized: string): boolean {
   if (!normalized) return false;
-  return MY_CODE_RE.test(normalized);
+  if (!MY_CODE_RE.test(normalized)) return false;
+  let i = 0;
+  while (i < normalized.length && /[A-Z]/.test(normalized[i])) i += 1;
+  return i >= 1 && normalized.length - i >= 3;
 }
 
 export function formatMyCodeWhileTyping(raw: string): string {
-  return normalizeMyCodeInput(raw).slice(0, 16);
+  return normalizeMyCodeInput(raw).slice(0, 20);
 }
 
 export function normalizeAccessCodeInput(raw: string): string {

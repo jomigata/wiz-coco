@@ -62,7 +62,7 @@ export default function PortalLoginPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">내 검사실 들어가기</h1>
             <p className="text-slate-300 text-sm mb-6">
-              검사 완료 후 받으신 <span className="text-slate-100">나의코드</span>(연도 2자리+숫자)와{' '}
+              검사 완료 후 받으신 <span className="text-slate-100">나의코드</span>(연도 알파벳+숫자)와{' '}
               <span className="text-slate-100">비밀번호</span>를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,8 +73,8 @@ export default function PortalLoginPage() {
                 <input
                   id="accessCode"
                   type="text"
-                  inputMode="numeric"
-                  maxLength={16}
+                  inputMode="text"
+                  maxLength={20}
                   autoComplete="off"
                   className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={code}
