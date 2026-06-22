@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { loginClientPortal } from '@/lib/clientPortalApi';
 import {
-  formatJoinAccessCodeWhileTyping,
-  isValidAccessCodeInput,
-  normalizeAccessCodeInput,
+  formatMyCodeWhileTyping,
+  isValidMyCodeInput,
+  normalizeMyCodeInput,
   normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
@@ -19,10 +19,10 @@ export default function PortalLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const normalizedCode = normalizeAccessCodeInput(code);
+  const normalizedCode = normalizeMyCodeInput(code);
   const normalizedPin = normalizeJoinPinDigits(pin);
   const canSubmit =
-    isValidAccessCodeInput(normalizedCode) && normalizedPin.length === 4 && !loading;
+    isValidMyCodeInput(normalizedCode) && normalizedPin.length === 4 && !loading;
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -50,7 +50,7 @@ export default function PortalLoginPage() {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const raw = (params.get('accessCode') || '').trim();
-    if (raw) setCode(formatJoinAccessCodeWhileTyping(raw));
+    if (raw) setCode(formatMyCodeWhileTyping(raw));
     const rawPin = (params.get('pin') || '').trim();
     if (rawPin) setPin(normalizeJoinPinDigits(rawPin));
   }, []);
@@ -62,7 +62,7 @@ export default function PortalLoginPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">내 검사실 들어가기</h1>
             <p className="text-slate-300 text-sm mb-6">
-              검사 완료 후 받으신 <span className="text-slate-100">나의코드</span>와{' '}
+              검사 완료 후 받으신 <span className="text-slate-100">나의코드</span>(연도 2자리+숫자)와{' '}
               <span className="text-slate-100">비밀번호</span>를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,11 +73,12 @@ export default function PortalLoginPage() {
                 <input
                   id="accessCode"
                   type="text"
-                  maxLength={40}
+                  inputMode="numeric"
+                  maxLength={16}
                   autoComplete="off"
                   className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={code}
-                  onChange={(e) => setCode(formatJoinAccessCodeWhileTyping(e.target.value))}
+                  onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}
                 />
               </div>

@@ -8,6 +8,8 @@ from config import (
     NOTIFICATION_QUEUE_COLLECTION,
     TEST_RESULTS_COLLECTION,
 )
+from utils.access_code import reset_access_code_generation_meta
+from utils.my_code import reset_my_code_generation_meta
 
 BATCH_SIZE = 400
 LEGACY_TEST_RESULTS_COLLECTION = "test_results"
@@ -96,6 +98,10 @@ def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_tes
     except Exception:
         legacy = 0
     counts["test_results_legacy"] = legacy
+    counts["accessCodeMetaReset"] = reset_access_code_generation_meta(db, dry_run=dry_run)
+    counts["myCodeMetaReset"] = reset_my_code_generation_meta(db, dry_run=dry_run)
     counts["dryRun"] = dry_run
-    counts["totalDeleted"] = sum(v for k, v in counts.items() if k not in ("dryRun", "totalDeleted"))
+    counts["totalDeleted"] = sum(
+        v for k, v in counts.items() if k not in ("dryRun", "totalDeleted", "accessCodeMetaReset", "myCodeMetaReset")
+    )
     return counts

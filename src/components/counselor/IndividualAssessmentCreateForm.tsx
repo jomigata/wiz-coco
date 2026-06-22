@@ -61,10 +61,13 @@ export default function IndividualAssessmentCreateForm() {
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
   const [queueNotify, setQueueNotify] = useState(true);
+  const [notifyTiming, setNotifyTiming] = useState<'immediate' | 'scheduled'>('immediate');
+  const [scheduledAtLocal, setScheduledAtLocal] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
   const [notifyQueued, setNotifyQueued] = useState(0);
+  const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
 
   const recipients = useMemo(
     () => mergeRecipients(manualRows, fileRows),
@@ -129,8 +132,23 @@ export default function IndividualAssessmentCreateForm() {
       setError('포함할 검사를 1개 이상 선택해 주세요.');
       return;
     }
+    if (queueNotify && notifyTiming === 'scheduled') {
+      if (!scheduledAtLocal.trim()) {
+        setError('예약 발송 시각을 선택해 주세요.');
+        return;
+      }
+      const sched = new Date(scheduledAtLocal);
+      if (Number.isNaN(sched.getTime()) || sched.getTime() <= Date.now()) {
+        setError('예약 발송 시각은 현재 이후여야 합니다.');
+        return;
+      }
+    }
     setLoading(true);
     try {
+      const scheduledAt =
+        queueNotify && notifyTiming === 'scheduled' && scheduledAtLocal
+          ? new Date(scheduledAtLocal).toISOString()
+          : undefined;
       const result = await bulkCreateClientPortals({
         cohortName: (cohortName.trim() || title.trim()).slice(0, 120),
         title: title.trim(),
@@ -143,9 +161,11 @@ export default function IndividualAssessmentCreateForm() {
           phone: r.phone.trim() || undefined,
         })),
         queueNotify,
+        scheduledAt,
       });
       setCreated(result.created);
       setNotifyQueued(result.notifyQueued);
+      setScheduledAtIso(result.scheduledAt ?? scheduledAt ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : '개별 검사코드 발급에 실패했습니다.');
     } finally {
@@ -197,7 +217,9 @@ export default function IndividualAssessmentCreateForm() {
           <p className="font-medium">{created.length}명에게 검사코드·나의코드·비밀번호가 발급되었습니다.</p>
           {queueNotify ? (
             <p className="mt-1 text-emerald-300/90">
-              {notifyQueued}건이 발송 대기열에 등록되었습니다. 곧 이메일·문자로 발송됩니다.
+              {scheduledAtIso
+                ? `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
+                : `${notifyQueued}건이 발송 대기열에 등록되었습니다. 곧 이메일·문자로 발송됩니다.`}
             </p>
           ) : (
             <p className="mt-1 text-emerald-300/90">아래 CSV에서 코드·비밀번호를 확인하세요.</p>
@@ -370,7 +392,7 @@ export default function IndividualAssessmentCreateForm() {
       </div>
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4 space-y-3">
-        <p className="text-sm font-medium text-slate-200">접속 정보 즉시 발송</p>
+        <p className="text-sm font-medium text-slate-200">접속 정보 발송</p>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -380,9 +402,47 @@ export default function IndividualAssessmentCreateForm() {
             className="rounded text-blue-500"
           />
           <span className="text-slate-300 text-sm">
-            이메일·문자로 검사코드·나의코드·비밀번호 즉시 발송
+            이메일·문자로 검사코드·나의코드·비밀번호 발송
           </span>
         </label>
+        {queueNotify ? (
+          <div className="space-y-3 pl-1 border-l-2 border-slate-600 ml-1">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="notifyTiming"
+                checked={notifyTiming === 'immediate'}
+                onChange={() => setNotifyTiming('immediate')}
+                disabled={loading}
+                className="text-blue-500"
+              />
+              <span className="text-slate-300 text-sm">즉시 발송</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="notifyTiming"
+                checked={notifyTiming === 'scheduled'}
+                onChange={() => setNotifyTiming('scheduled')}
+                disabled={loading}
+                className="text-blue-500"
+              />
+              <span className="text-slate-300 text-sm">예약 발송</span>
+            </label>
+            {notifyTiming === 'scheduled' ? (
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">발송 예정 시각</label>
+                <input
+                  type="datetime-local"
+                  value={scheduledAtLocal}
+                  onChange={(e) => setScheduledAtLocal(e.target.value)}
+                  disabled={loading}
+                  className="w-full max-w-xs px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {error ? (

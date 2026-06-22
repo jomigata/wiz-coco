@@ -67,6 +67,17 @@ def _bump_numeric_length(db, current: int) -> int:
     return new_n
 
 
+def reset_access_code_generation_meta(db, *, dry_run: bool = False) -> bool:
+    """검사코드 숫자 자릿수를 3자리로 초기화."""
+    if dry_run:
+        return True
+    db.collection(SYSTEM_META_COLLECTION).document(ACCESS_CODE_CONFIG_DOC).set(
+        {"numeric_length": 3, "updatedAt": SERVER_TIMESTAMP},
+        merge=True,
+    )
+    return True
+
+
 def generate_unique_access_code() -> str:
     """Firestore에 없는 accessCode 생성 (신규 규칙)."""
     db = get_firestore()
@@ -97,13 +108,7 @@ def _access_code_exists(db, candidate: str) -> bool:
 
 
 def generate_unique_portal_access_code() -> str:
-    """clientPortals + assessments 전역 유일 accessCode."""
-    db = get_firestore()
-    for _ in range(MAX_BUMP_STEPS):
-        n = _get_numeric_length(db)
-        for _ in range(MAX_TRIES_PER_LENGTH):
-            candidate = _random_cvc() + _random_numeric(n)
-            if not _access_code_exists(db, candidate):
-                return candidate
-        _bump_numeric_length(db, n)
-    raise RuntimeError("Could not generate unique portal access code")
+    """clientPortals 나의코드 — YY + 숫자(3자리~)."""
+    from utils.my_code import generate_unique_my_code
+
+    return generate_unique_my_code()

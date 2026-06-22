@@ -7,7 +7,7 @@ import type {
   ClientPortalLoginResult,
 } from '@/types/clientPortal';
 import { getCounselorToken } from '@/lib/assessmentApi';
-import { normalizeAccessCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
+import { normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 
 const getBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -28,7 +28,7 @@ export async function loginClientPortal(body: {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      accessCode: normalizeAccessCodeInput(body.accessCode),
+      accessCode: normalizeMyCodeInput(body.accessCode),
       pin: normalizeJoinPinDigits(body.pin),
       remember: Boolean(body.remember),
     }),
@@ -106,6 +106,7 @@ export async function bulkCreateClientPortals(body: {
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
   queueNotify?: boolean;
+  scheduledAt?: string;
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가 로그인이 필요합니다.');

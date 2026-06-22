@@ -59,4 +59,5 @@ export interface ClientPortalBulkCreateResult {
   cohortName: string;
   created: ClientPortalBulkRow[];
   notifyQueued: number;
+  scheduledAt?: string | null;
 }

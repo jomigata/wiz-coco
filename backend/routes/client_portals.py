@@ -26,6 +26,7 @@ from utils.access_code import (
     generate_unique_portal_access_code,
     generate_unique_access_code,
 )
+from utils.my_code import normalize_my_code, is_valid_my_code
 from utils.portal_assessment_access import link_shared_assessment_to_portal
 from utils.password import generate_four_digit_password, hash_password, verify_password
 
@@ -109,11 +110,11 @@ def _portal_public_json(portal_doc, assessments=None):
 @limit_access_code
 def portal_login():
     body = request.get_json() or {}
-    code = normalize_access_code(body.get("accessCode") or "")
+    code = normalize_my_code(body.get("accessCode") or "")
     pin = "".join(c for c in str(body.get("pin") or "") if c.isdigit())[:4]
     remember = bool(body.get("remember"))
 
-    if not is_valid_access_code(code):
+    if not is_valid_my_code(code):
         return jsonify({"error": "Bad Request", "message": MSG_INVALID_CREDENTIALS}), 400
 
     db = get_firestore()
@@ -262,6 +263,22 @@ def bulk_create():
     usage_end_date = (body.get("usageEndDate") or "").strip()
     test_list = body.get("testList") or []
     queue_notify = bool(body.get("queueNotify"))
+    scheduled_at_raw = (body.get("scheduledAt") or "").strip()
+    scheduled_at_iso = ""
+
+    if scheduled_at_raw and queue_notify:
+        try:
+            sched = datetime.fromisoformat(scheduled_at_raw.replace("Z", "+00:00"))
+            if sched.tzinfo is None:
+                sched = sched.replace(tzinfo=timezone.utc)
+            if sched <= datetime.now(timezone.utc):
+                return (
+                    jsonify({"error": "Bad Request", "message": "예약 발송 시각은 현재 이후여야 합니다."}),
+                    400,
+                )
+            scheduled_at_iso = sched.astimezone(timezone.utc).isoformat()
+        except ValueError:
+            return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
     if not title:
         return jsonify({"error": "Bad Request", "message": "검사 세트 제목(title)이 필요합니다."}), 400
@@ -331,22 +348,23 @@ def bulk_create():
         magic_path = f"/go?t={magic}"
 
         if queue_notify and (email or phone):
-            notify_queue.add(
-                {
-                    "type": "portal_credentials",
-                    "portalId": portal_ref.id,
-                    "email": email,
-                    "phone": phone,
-                    "accessCode": portal_access_code,
-                    "joinAccessCode": join_access_code,
-                    "pin": pin,
-                    "magicPath": magic_path,
-                    "displayName": display_name,
-                    "status": "pending",
-                    "createdAt": SERVER_TIMESTAMP,
-                    "counselorId": counselor_uid,
-                }
-            )
+            queue_item = {
+                "type": "portal_credentials",
+                "portalId": portal_ref.id,
+                "email": email,
+                "phone": phone,
+                "accessCode": portal_access_code,
+                "joinAccessCode": join_access_code,
+                "pin": pin,
+                "magicPath": magic_path,
+                "displayName": display_name,
+                "status": "pending",
+                "createdAt": SERVER_TIMESTAMP,
+                "counselorId": counselor_uid,
+            }
+            if scheduled_at_iso:
+                queue_item["scheduledAt"] = scheduled_at_iso
+            notify_queue.add(queue_item)
 
         created.append(
             {
@@ -368,6 +386,7 @@ def bulk_create():
             "cohortName": cohort_name,
             "created": created,
             "notifyQueued": sum(1 for c in created if queue_notify and (c.get("email") or c.get("phone"))),
+            "scheduledAt": scheduled_at_iso or None,
         }
     ), 201
 
