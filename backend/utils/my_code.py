@@ -1,4 +1,4 @@
-"""나의코드(포털 accessCode) 생성·검증 — 연도 알파벳(a~z, 2026=a) + 숫자(3자리~, 2~9만)."""
+"""나의코드(포털 accessCode) 생성·검증 — 연도 알파벳(2026=A) + 숫자(3자리~, 2~9만)."""
 from __future__ import annotations
 
 import random
@@ -12,11 +12,15 @@ from firebase_init import get_firestore
 
 NUMERIC_CHARS = "23456789"
 YEAR_BASE = 2026
-YEAR_ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+# 숫자와 혼동되는 알파벳 제외: I/L↔1, O↔0, S↔5, Z↔2, B↔8, G↔6, Q↔9
+CONFUSABLE_LETTERS = frozenset("ILOSZBGQ")
+YEAR_ALPHABET = "".join(c for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if c not in CONFUSABLE_LETTERS)
+YEAR_BASE_RADIX = len(YEAR_ALPHABET)  # 18
+
 SYSTEM_META_COLLECTION = "system_meta"
 MY_CODE_CONFIG_DOC = "my_code_generation"
 
-MY_CODE_RE = re.compile(rf"^[A-Z]+[{NUMERIC_CHARS}]{{3,}}$")
+MY_CODE_RE = re.compile(rf"^[{YEAR_ALPHABET}]+[{NUMERIC_CHARS}]{{3,}}$")
 
 MAX_TRIES_PER_LENGTH = 150
 MAX_NUMERIC_LENGTH = 24
@@ -24,10 +28,10 @@ MAX_BUMP_STEPS = 26
 
 
 def normalize_my_code(raw: str) -> str:
-    """영문·숫자(2~9)만 추출 후 대문자 통일 (대소문자 구분 없음)."""
+    """허용 영문·숫자(2~9)만 추출 후 대문자 통일 (대소문자 구분 없음)."""
     out = []
     for c in (raw or "").strip().upper():
-        if c.isalpha():
+        if c in YEAR_ALPHABET:
             out.append(c)
         elif c in NUMERIC_CHARS:
             out.append(c)
@@ -36,29 +40,29 @@ def normalize_my_code(raw: str) -> str:
 
 def encode_year_offset(offset: int) -> str:
     """
-    2026년=0 → a, … 2051년=25 → z, 2052년=26 → aa …
-    z 이후 연도는 알파벳 자릿수를 1씩 늘려 표현.
+    2026년=0 → A, … 18년 주기 후 2자리(A A…)로 확장.
+    연도 알파벳 풀(18자)을 다 쓰면 자릿수를 1씩 늘림.
     """
     if offset < 0:
         offset = 0
-    if offset < 26:
+    if offset < YEAR_BASE_RADIX:
         return YEAR_ALPHABET[offset]
     length = 2
-    base = 26
-    while offset >= base + (26**length):
-        base += 26**length
+    base = YEAR_BASE_RADIX
+    while offset >= base + (YEAR_BASE_RADIX**length):
+        base += YEAR_BASE_RADIX**length
         length += 1
     remaining = offset - base
     chars = []
     for _ in range(length):
-        remaining, idx = divmod(remaining, 26)
+        remaining, idx = divmod(remaining, YEAR_BASE_RADIX)
         chars.append(YEAR_ALPHABET[idx])
     return "".join(reversed(chars))
 
 
 def year_prefix_for(year: int | None = None) -> str:
     y = year if year is not None else datetime.now(timezone.utc).year
-    return encode_year_offset(y - YEAR_BASE).upper()
+    return encode_year_offset(y - YEAR_BASE)
 
 
 def is_valid_my_code(code: str) -> bool:
@@ -67,9 +71,8 @@ def is_valid_my_code(code: str) -> bool:
     normalized = normalize_my_code(code)
     if not MY_CODE_RE.match(normalized):
         return False
-    # 앞쪽 연도 알파벳 + 뒤쪽 숫자(최소 3자리) 경계 확인
     i = 0
-    while i < len(normalized) and normalized[i].isalpha():
+    while i < len(normalized) and normalized[i] in YEAR_ALPHABET:
         i += 1
     return i >= 1 and (len(normalized) - i) >= 3
 

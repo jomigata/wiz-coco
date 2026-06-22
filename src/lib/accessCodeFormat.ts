@@ -17,13 +17,14 @@ const NEW_RE = new RegExp(
 );
 const OLD_RE = /^[0-9A-Z]{6}$/i;
 
-/** 나의코드: 연도 알파벳(a=2026~, z 이후 aa…) + 숫자 2~9만 3자리 이상 (0·1 제외) */
-const MY_CODE_RE = new RegExp(`^[A-Z]+[${DIGITS}]{3,}$`);
+/** 나의코드: 연도 알파벳(2026=A, I/L/O/S/Z/B/G/Q 제외) + 숫자 2~9만 3자리 이상 */
+const MY_CODE_LETTERS = 'ACDEFGHJKMNPRSTUVWXYZ';
+const MY_CODE_RE = new RegExp(`^[${MY_CODE_LETTERS}]+[${DIGITS}]{3,}$`);
 
 export function normalizeMyCodeInput(raw: string): string {
   const out: string[] = [];
   for (const ch of (raw || '').toUpperCase()) {
-    if (/[A-Z]/.test(ch)) out.push(ch);
+    if (MY_CODE_LETTERS.includes(ch)) out.push(ch);
     else if (DIGITS.includes(ch)) out.push(ch);
   }
   return out.join('');
@@ -33,7 +34,7 @@ export function isValidMyCodeInput(normalized: string): boolean {
   if (!normalized) return false;
   if (!MY_CODE_RE.test(normalized)) return false;
   let i = 0;
-  while (i < normalized.length && /[A-Z]/.test(normalized[i])) i += 1;
+  while (i < normalized.length && MY_CODE_LETTERS.includes(normalized[i])) i += 1;
   return i >= 1 && normalized.length - i >= 3;
 }
 
