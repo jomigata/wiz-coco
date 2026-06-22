@@ -131,7 +131,7 @@ def send_portal_credentials_email(
     display_name: str = "",
     join_access_code: str = "",
 ) -> bool:
-    """내 검사실 접속 정보(나의코드+PIN+링크) 발송. 개별 발급 시 join_access_code(검사코드) 포함."""
+    """내 검사실 접속 정보(나의코드+PIN+링크) 발송."""
     if not is_email_configured():
         return False
 
@@ -140,29 +140,15 @@ def send_portal_credentials_email(
         return False
 
     name = (display_name or "").strip() or "내담자"
-    join_code = (join_access_code or "").strip()
-    if join_code:
-        intro = (
-            f"WizCoCo 심리검사 안내입니다.\n"
-            f"아래 검사코드로 검사를 시작하거나, 나의코드로 내 검사실에 들어가 진행 상황을 확인할 수 있습니다.\n"
-        )
-    else:
-        intro = (
-            f"WizCoCo 심리검사를 진행해 주셔서 감사합니다.\n"
-            f"아래 정보로 '내 검사실'에 들어가 결과와 진행 상황을 확인하실 수 있습니다.\n"
-        )
+    intro = (
+        f"WizCoCo 심리검사를 진행해 주셔서 감사합니다.\n"
+        f"아래 정보로 '내 검사실'에 들어가 결과와 진행 상황을 확인하실 수 있습니다.\n"
+    )
 
     body = f"""안녕하세요, {name}님.
 
 {intro}
-"""
-    if join_code:
-        body += f"""▶ 검사 시작 (검사코드)
-검사코드: {join_code}
-시작: https://wizcoco.com/join/
-
-"""
-    body += f"""▶ 바로 들어가기 (추천)
+▶ 바로 들어가기 (추천)
 {magic_url}
 
 ▶ 나의코드·비밀번호로 접속

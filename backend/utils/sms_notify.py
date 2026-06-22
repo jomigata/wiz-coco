@@ -23,20 +23,11 @@ def send_portal_credentials_sms(
         logger.info("SMS skipped (Twilio not configured) for %s", phone[:4] + "****")
         return False, "sms_not_configured"
 
-    join_code = (join_access_code or "").strip()
-    if join_code:
-        body = (
-            f"[WizCoCo] 심리검사 안내\n"
-            f"검사코드: {join_code}\n"
-            f"나의코드: {access_code} PIN: {pin}\n"
-            f"바로가기: {magic_url}"
-        )
-    else:
-        body = (
-            f"[WizCoCo] 내 검사실\n"
-            f"나의코드: {access_code} PIN: {pin}\n"
-            f"바로가기: {magic_url}"
-        )
+    body = (
+        f"[WizCoCo] 내 검사실\n"
+        f"나의코드: {access_code} PIN: {pin}\n"
+        f"바로가기: {magic_url}"
+    )
 
     try:
         from twilio.rest import Client
