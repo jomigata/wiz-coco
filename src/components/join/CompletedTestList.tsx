@@ -142,7 +142,7 @@ export default function CompletedTestList({
     if (!deleteModal) return;
     setActionLoading(true);
     setActionError('');
-    deleteResult(deleteModal.resultId)
+    deleteResult(deleteModal.resultId, undefined, stored?.accessCode)
       .then(() => {
         const rid = deleteModal.resultId;
         setDeleteModal(null);

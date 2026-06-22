@@ -49,7 +49,7 @@ export async function registerJoinParticipant(body: RegisterParticipantBody): Pr
   credentialsSent?: boolean;
   message?: string;
 }> {
-  const guestHeaders = getJoinGuestAuthHeader();
+  const guestHeaders = getJoinGuestAuthHeader(body.accessCode);
   const res = await fetch(`${getBaseUrl()}/api/join/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...guestHeaders },

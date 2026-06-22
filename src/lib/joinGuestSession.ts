@@ -4,6 +4,7 @@
 
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { startGuestJoin } from '@/lib/joinFlowApi';
+import { clearJoinParticipantSession, readJoinParticipantSession } from '@/lib/joinParticipantSession';
 
 export const JOIN_GUEST_STORAGE_KEY = 'wizcoco_join_guest';
 
@@ -39,9 +40,13 @@ export function clearJoinGuestSession(): void {
   sessionStorage.removeItem(JOIN_GUEST_STORAGE_KEY);
 }
 
-export function getJoinGuestAuthHeader(): Record<string, string> {
+export function getJoinGuestAuthHeader(accessCodeNorm?: string): Record<string, string> {
   const session = readJoinGuestSession();
   if (!session?.guestToken) return {};
+  if (accessCodeNorm) {
+    const norm = normalizeAccessCodeInput(accessCodeNorm);
+    if (session.accessCode !== norm) return {};
+  }
   return { Authorization: `Guest ${session.guestToken}` };
 }
 
@@ -54,6 +59,10 @@ export function hasJoinGuestSessionForCode(accessCodeNorm: string): boolean {
 /** 해당 검사코드용 게스트 세션이 없으면 발급 */
 export async function ensureJoinGuestSession(accessCodeNorm: string): Promise<JoinGuestSession> {
   const code = normalizeAccessCodeInput(accessCodeNorm);
+  const participant = readJoinParticipantSession();
+  if (participant && participant.accessCode !== code) {
+    clearJoinParticipantSession();
+  }
   const existing = readJoinGuestSession();
   if (existing?.accessCode === code && existing.guestToken) {
     return existing;

@@ -52,11 +52,13 @@ export async function getCounselorToken(): Promise<string | null> {
   }
 }
 
-/** 결과 API — 참여 세션 · 포털 세션 · Firebase Bearer */
-export async function getClientResultAuthHeaders(): Promise<Record<string, string>> {
-  const participant = getJoinParticipantAuthHeader();
+/** 결과 API — 참여·게스트·포털 세션 (accessCode 와 일치하는 세션만 사용) */
+export async function getClientResultAuthHeaders(
+  accessCodeNorm?: string
+): Promise<Record<string, string>> {
+  const participant = getJoinParticipantAuthHeader(accessCodeNorm);
   if (participant.Authorization) return participant;
-  const guest = getJoinGuestAuthHeader();
+  const guest = getJoinGuestAuthHeader(accessCodeNorm);
   if (guest.Authorization) return guest;
   const portal = readClientPortalSession();
   if (portal?.portalToken) {
@@ -67,23 +69,23 @@ export async function getClientResultAuthHeaders(): Promise<Record<string, strin
   return {};
 }
 
-export function hasParticipantSessionForResults(): boolean {
-  return Boolean(getJoinParticipantAuthHeader().Authorization);
+export function hasParticipantSessionForResults(accessCodeNorm?: string): boolean {
+  return Boolean(getJoinParticipantAuthHeader(accessCodeNorm).Authorization);
 }
 
-export function hasGuestSessionForResults(): boolean {
-  return Boolean(getJoinGuestAuthHeader().Authorization);
+export function hasGuestSessionForResults(accessCodeNorm?: string): boolean {
+  return Boolean(getJoinGuestAuthHeader(accessCodeNorm).Authorization);
 }
 
 export function hasPortalSessionForResults(): boolean {
   return Boolean(readClientPortalSession()?.portalToken);
 }
 
-export function canTrackJoinResults(): boolean {
+export function canTrackJoinResults(accessCodeNorm?: string): boolean {
   return (
     hasPortalSessionForResults() ||
-    hasParticipantSessionForResults() ||
-    hasGuestSessionForResults()
+    hasParticipantSessionForResults(accessCodeNorm) ||
+    hasGuestSessionForResults(accessCodeNorm)
   );
 }
 
@@ -137,8 +139,11 @@ export async function submitResult(body: {
   resultId: string;
   message: string;
 }> {
-  const authHeaders = await getClientResultAuthHeaders();
-  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 프로필 등록 후 다시 시도해 주세요.');
+  const code = normalizeAccessCodeInput(body.accessCode || '');
+  const authHeaders = await getClientResultAuthHeaders(code);
+  if (!authHeaders.Authorization) {
+    throw new Error('검사 세션이 없습니다. 검사 코드 입력부터 다시 시작해 주세요.');
+  }
   const res = await fetch(`${getBaseUrl()}/api/results`, {
     method: 'POST',
     headers: {
@@ -146,7 +151,7 @@ export async function submitResult(body: {
       ...authHeaders,
     },
     body: JSON.stringify({
-      accessCode: normalizeAccessCodeInput(body.accessCode || ''),
+      accessCode: code,
       testId: (body.testId || '').trim(),
       responses: body.responses,
     }),
@@ -235,8 +240,8 @@ export async function listResults(accessCode: string): Promise<{ results: TestRe
   if (!isValidAccessCodeInput(code)) {
     throw new Error('검사 코드를 확인해 주세요.');
   }
-  const authHeaders = await getClientResultAuthHeaders();
-  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 프로필 등록 후 다시 시도해 주세요.');
+  const authHeaders = await getClientResultAuthHeaders(code);
+  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 검사 코드 입력부터 다시 시도해 주세요.');
   const params = new URLSearchParams({ accessCode: code });
   const res = await fetch(`${getBaseUrl()}/api/results?${params}`, {
     headers: authHeaders,
@@ -271,8 +276,13 @@ export async function updateResult(
 }
 
 /** DELETE /api/results/:resultId — 로그인 소유자는 password 생략, 레거시만 password */
-export async function deleteResult(resultId: string, legacyPassword?: string): Promise<void> {
-  const authHeaders = await getClientResultAuthHeaders();
+export async function deleteResult(
+  resultId: string,
+  legacyPassword?: string,
+  accessCode?: string
+): Promise<void> {
+  const code = accessCode ? normalizeAccessCodeInput(accessCode) : undefined;
+  const authHeaders = await getClientResultAuthHeaders(code);
   if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 프로필 등록 후 다시 시도해 주세요.');
   const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
     method: 'DELETE',

@@ -42,7 +42,7 @@ export default function TestRunnerPage() {
   const questions = genericJoinQuestions;
   const hasPortal = hasPortalSessionForResults();
   const hasParticipant = hasJoinParticipantSessionForCode(code);
-  const canSubmitAuth = canTrackJoinResults();
+  const canSubmitAuth = canTrackJoinResults(code);
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;

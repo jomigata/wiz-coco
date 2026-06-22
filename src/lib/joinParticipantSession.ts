@@ -1,7 +1,6 @@
-/**
- * 검사 참여 세션 (코드 입력 → 프로필 등록 후 검사 진행)
- */
+import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 
+/** 검사 참여 세션 (프로필 등록 후) */
 export const JOIN_PARTICIPANT_STORAGE_KEY = 'wizcoco_join_participant';
 
 export type JoinParticipantSession = {
@@ -37,9 +36,13 @@ export function clearJoinParticipantSession(): void {
   sessionStorage.removeItem(JOIN_PARTICIPANT_STORAGE_KEY);
 }
 
-export function getJoinParticipantAuthHeader(): Record<string, string> {
+export function getJoinParticipantAuthHeader(accessCodeNorm?: string): Record<string, string> {
   const session = readJoinParticipantSession();
   if (!session?.participantToken) return {};
+  if (accessCodeNorm) {
+    const norm = normalizeAccessCodeInput(accessCodeNorm);
+    if (session.accessCode !== norm) return {};
+  }
   return { Authorization: `Participant ${session.participantToken}` };
 }
 

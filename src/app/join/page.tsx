@@ -10,6 +10,7 @@ import {
   normalizeAccessCodeInput,
 } from '@/lib/accessCodeFormat';
 import { persistJoinAssessmentSession, pushToJoinDashboard } from '@/lib/joinAssessmentSession';
+import { clearJoinParticipantSession, readJoinParticipantSession } from '@/lib/joinParticipantSession';
 
 const MSG_LOOKUP_DEFAULT =
   '요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다.';

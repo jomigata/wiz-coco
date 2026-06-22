@@ -58,7 +58,7 @@ function JoinDashboardContent() {
   const hasPortal = hasPortalSessionForResults();
   const hasParticipant = hasJoinParticipantSessionForCode(code);
   const hasGuest = hasJoinGuestSessionForCode(code);
-  const canTrackResults = canTrackJoinResults();
+  const canTrackResults = canTrackJoinResults(code);
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [loading, setLoading] = useState(true);
