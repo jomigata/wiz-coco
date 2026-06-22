@@ -297,6 +297,7 @@ function JoinDashboardContent() {
             authLoading={authLoading && !hasPortal && !hasParticipant && !hasGuest}
             onRefresh={loadAssessment}
             onResultsChange={setJoinResults}
+            hidden
           />
         </main>
 
