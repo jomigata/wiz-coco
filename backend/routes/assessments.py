@@ -335,12 +335,16 @@ def get_assessment_result(assessment_id, result_id):
 
 
 def _public_json(doc, d):
+    issue_type = (d.get("issueType") or "shared").strip()
+    if issue_type not in ("shared", "individual"):
+        issue_type = "shared"
     return {
         "assessmentId": doc.id,
         "title": d.get("title", ""),
         "welcomeMessage": d.get("welcomeMessage", ""),
         "usageEndDate": d.get("usageEndDate", ""),
         "testList": d.get("testList", []),
+        "issueType": issue_type,
     }
 
 

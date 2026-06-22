@@ -82,6 +82,7 @@ export interface PublicAssessment {
   welcomeMessage: string;
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
+  issueType?: 'shared' | 'individual';
 }
 
 const MSG_LOOKUP_DEFAULT =

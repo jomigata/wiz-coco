@@ -21,6 +21,8 @@ interface CompletedTestListProps {
   onRefresh?: () => void;
   /** 대시보드「수행할 검사」정렬·상태용으로 완료 목록 동기화 */
   onResultsChange?: (items: TestResultItem[]) => void;
+  /** true 이면 데이터만 로드하고 UI는 렌더하지 않음 */
+  hidden?: boolean;
 }
 
 function getTestName(testId: string, testList: { testId: string; name: string }[]): string {
@@ -37,6 +39,7 @@ export default function CompletedTestList({
   authLoading = false,
   onRefresh,
   onResultsChange,
+  hidden = false,
 }: CompletedTestListProps) {
   const [results, setResults] = useState<TestResultItem[]>([]);
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
@@ -151,6 +154,10 @@ export default function CompletedTestList({
       .catch((err) => setActionError(err instanceof Error ? err.message : '삭제 실패'))
       .finally(() => setActionLoading(false));
   };
+
+  if (hidden) {
+    return null;
+  }
 
   if (!usePortalSession && !useParticipantSession && authLoading) {
     return (
