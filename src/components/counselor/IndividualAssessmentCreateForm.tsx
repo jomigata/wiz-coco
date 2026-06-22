@@ -66,6 +66,8 @@ export default function IndividualAssessmentCreateForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
+  const [notifySent, setNotifySent] = useState(0);
+  const [notifyFailed, setNotifyFailed] = useState(0);
   const [notifyQueued, setNotifyQueued] = useState(0);
   const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
 
@@ -164,6 +166,8 @@ export default function IndividualAssessmentCreateForm() {
         scheduledAt,
       });
       setCreated(result.created);
+      setNotifySent(result.notifySent ?? 0);
+      setNotifyFailed(result.notifyFailed ?? 0);
       setNotifyQueued(result.notifyQueued);
       setScheduledAtIso(result.scheduledAt ?? scheduledAt ?? null);
     } catch (err) {
@@ -219,7 +223,9 @@ export default function IndividualAssessmentCreateForm() {
             <p className="mt-1 text-emerald-300/90">
               {scheduledAtIso
                 ? `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
-                : `${notifyQueued}건이 발송 대기열에 등록되었습니다. 곧 이메일·문자로 발송됩니다.`}
+                : `${notifySent}건이 이메일·문자로 즉시 발송되었습니다.${
+                    notifyFailed > 0 ? ` (${notifyFailed}건 발송 실패 — CSV에서 코드를 확인해 주세요.)` : ''
+                  }`}
             </p>
           ) : (
             <p className="mt-1 text-emerald-300/90">아래 CSV에서 코드·비밀번호를 확인하세요.</p>

@@ -6,12 +6,12 @@ from config import (
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
     JOIN_PARTICIPANTS_COLLECTION,
-    NOTIFICATION_QUEUE_COLLECTION,
     SECRET_KEY,
     TEST_RESULTS_COLLECTION,
 )
 from utils.access_code import generate_unique_portal_access_code
 from utils.password import generate_four_digit_password, hash_password
+from utils.notification_worker import deliver_portal_credentials
 
 
 def _completed_test_ids(db, assessment_id: str, participant_id: str) -> set[str]:
@@ -101,18 +101,14 @@ def try_issue_portal_for_participant(db, participant_id: str, assessment_id: str
 
     pref.reference.update({"portalId": portal_ref.id, "credentialsSentAt": SERVER_TIMESTAMP})
 
-    db.collection(NOTIFICATION_QUEUE_COLLECTION).add(
-        {
-            "type": "portal_credentials",
-            "email": pdata.get("email", ""),
-            "phone": pdata.get("phone", ""),
-            "accessCode": portal_access_code,
-            "pin": pin,
-            "magicPath": magic_path,
-            "displayName": pdata.get("displayName", ""),
-            "status": "pending",
-            "createdAt": SERVER_TIMESTAMP,
-        }
+    deliver_portal_credentials(
+        email=pdata.get("email", ""),
+        phone=pdata.get("phone", ""),
+        access_code=portal_access_code,
+        pin=pin,
+        magic_path=magic_path,
+        display_name=pdata.get("displayName", ""),
+        join_access_code=pdata.get("sharedAccessCode", ass_data.get("accessCode", "")),
     )
 
     return {

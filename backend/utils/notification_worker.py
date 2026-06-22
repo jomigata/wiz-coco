@@ -9,6 +9,71 @@ from utils.email_notify import send_portal_invite_email, send_portal_credentials
 from utils.sms_notify import send_portal_invite_sms, send_portal_credentials_sms
 
 
+def deliver_portal_credentials(
+    *,
+    email: str = "",
+    phone: str = "",
+    access_code: str,
+    pin: str,
+    magic_path: str = "",
+    display_name: str = "",
+    join_access_code: str = "",
+) -> dict:
+    """나의코드·PIN 등 포털 접속 정보를 이메일·문자로 즉시 발송."""
+    email = (email or "").strip().lower()
+    phone = (phone or "").strip()
+    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+
+    email_ok = False
+    sms_ok = False
+    errors = []
+
+    if email:
+        if is_email_configured():
+            email_ok = send_portal_credentials_email(
+                to_email=email,
+                access_code=access_code,
+                pin=pin,
+                magic_url=magic_url,
+                display_name=display_name,
+                join_access_code=join_access_code,
+            )
+            if not email_ok:
+                errors.append("email_send_failed")
+        else:
+            errors.append("smtp_not_configured")
+
+    if phone:
+        sms_ok, sms_err = send_portal_credentials_sms(
+            to_phone=phone,
+            access_code=access_code,
+            pin=pin,
+            magic_url=magic_url,
+            join_access_code=join_access_code,
+        )
+        if sms_err:
+            errors.append(sms_err)
+
+    if email and email_ok:
+        status = "sent"
+        sent_via = "email"
+    elif phone and sms_ok:
+        status = "sent"
+        sent_via = "sms"
+    elif not email and not phone:
+        status = "skipped"
+        sent_via = None
+        errors.append("no_recipient")
+    elif errors:
+        status = "failed"
+        sent_via = None
+    else:
+        status = "skipped"
+        sent_via = None
+
+    return {"status": status, "errors": errors, "sentVia": sent_via}
+
+
 def process_notification_queue(*, limit: int = 50) -> dict:
     db = get_firestore()
     refs = (
@@ -50,51 +115,25 @@ def process_notification_queue(*, limit: int = 50) -> dict:
             if item_type == "portal_credentials":
                 pin = str(data.get("pin") or "")
                 join_code = str(data.get("joinAccessCode") or "")
-                email_ok = False
-                sms_ok = False
-                errors = []
+                result = deliver_portal_credentials(
+                    email=email,
+                    phone=phone,
+                    access_code=access_code,
+                    pin=pin,
+                    magic_path=magic_path,
+                    display_name=data.get("displayName") or "",
+                    join_access_code=join_code,
+                )
+                status = result["status"]
+                errors = result["errors"]
+                email_ok = result.get("sentVia") == "email"
+                sms_ok = result.get("sentVia") == "sms"
 
-                if email:
-                    if is_email_configured():
-                        email_ok = send_portal_credentials_email(
-                            to_email=email,
-                            access_code=access_code,
-                            pin=pin,
-                            magic_url=magic_url,
-                            display_name=data.get("displayName") or "",
-                            join_access_code=join_code,
-                        )
-                        if not email_ok:
-                            errors.append("email_send_failed")
-                    else:
-                        errors.append("smtp_not_configured")
-
-                if phone:
-                    sms_ok, sms_err = send_portal_credentials_sms(
-                        to_phone=phone,
-                        access_code=access_code,
-                        pin=pin,
-                        magic_url=magic_url,
-                        join_access_code=join_code,
-                    )
-                    if sms_err:
-                        errors.append(sms_err)
-
-                if email and email_ok:
-                    status = "sent"
+                if status == "sent":
                     sent += 1
-                elif phone and sms_ok:
-                    status = "sent"
-                    sent += 1
-                elif not email and not phone:
-                    status = "skipped"
-                    skipped += 1
-                    errors.append("no_recipient")
-                elif errors:
-                    status = "failed"
+                elif status == "failed":
                     failed += 1
-                else:
-                    status = "skipped"
+                elif status == "skipped":
                     skipped += 1
 
                 update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP}

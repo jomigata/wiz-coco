@@ -13,6 +13,7 @@ from config import (
     SECRET_KEY,
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
+    NOTIFICATION_QUEUE_COLLECTION,
     PORTAL_MAGIC_LINK_MAX_AGE,
     PORTAL_SESSION_MAX_AGE,
     PORTAL_SESSION_REMEMBER_MAX_AGE,
@@ -29,6 +30,7 @@ from utils.access_code import (
 from utils.my_code import normalize_my_code, is_valid_my_code
 from utils.portal_assessment_access import link_shared_assessment_to_portal
 from utils.password import generate_four_digit_password, hash_password, verify_password
+from utils.notification_worker import deliver_portal_credentials
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -297,7 +299,10 @@ def bulk_create():
     cohort_id = str(uuid.uuid4())
     counselor_uid = g.counselor_uid
     created = []
-    notify_queue = db.collection("notificationQueue")
+    notify_queue = db.collection(NOTIFICATION_QUEUE_COLLECTION)
+    notify_sent = 0
+    notify_failed = 0
+    notify_queued = 0
 
     for row in rows:
         display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
@@ -348,23 +353,39 @@ def bulk_create():
         magic_path = f"/go?t={magic}"
 
         if queue_notify and (email or phone):
-            queue_item = {
-                "type": "portal_credentials",
-                "portalId": portal_ref.id,
-                "email": email,
-                "phone": phone,
-                "accessCode": portal_access_code,
-                "joinAccessCode": join_access_code,
-                "pin": pin,
-                "magicPath": magic_path,
-                "displayName": display_name,
-                "status": "pending",
-                "createdAt": SERVER_TIMESTAMP,
-                "counselorId": counselor_uid,
-            }
             if scheduled_at_iso:
-                queue_item["scheduledAt"] = scheduled_at_iso
-            notify_queue.add(queue_item)
+                notify_queue.add(
+                    {
+                        "type": "portal_credentials",
+                        "portalId": portal_ref.id,
+                        "email": email,
+                        "phone": phone,
+                        "accessCode": portal_access_code,
+                        "joinAccessCode": join_access_code,
+                        "pin": pin,
+                        "magicPath": magic_path,
+                        "displayName": display_name,
+                        "status": "pending",
+                        "createdAt": SERVER_TIMESTAMP,
+                        "counselorId": counselor_uid,
+                        "scheduledAt": scheduled_at_iso,
+                    }
+                )
+                notify_queued += 1
+            else:
+                result = deliver_portal_credentials(
+                    email=email,
+                    phone=phone,
+                    access_code=portal_access_code,
+                    pin=pin,
+                    magic_path=magic_path,
+                    display_name=display_name,
+                    join_access_code=join_access_code,
+                )
+                if result["status"] == "sent":
+                    notify_sent += 1
+                elif result["status"] == "failed":
+                    notify_failed += 1
 
         created.append(
             {
@@ -385,7 +406,9 @@ def bulk_create():
             "cohortId": cohort_id,
             "cohortName": cohort_name,
             "created": created,
-            "notifyQueued": sum(1 for c in created if queue_notify and (c.get("email") or c.get("phone"))),
+            "notifySent": notify_sent,
+            "notifyFailed": notify_failed,
+            "notifyQueued": notify_queued,
             "scheduledAt": scheduled_at_iso or None,
         }
     ), 201
