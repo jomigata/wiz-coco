@@ -204,6 +204,60 @@ export async function listMyAssessmentResults(): Promise<{ results: MyAssessment
   return data as { results: MyAssessmentResultRow[] };
 }
 
+/** GET /api/results/:id + Participant/Guest/Portal 세션 — 소유자 응답 조회 */
+export async function getClientResult(
+  resultId: string,
+  accessCode?: string
+): Promise<{
+  resultId: string;
+  testId: string;
+  responses: unknown;
+  clientEmail?: string;
+  resultData?: Record<string, unknown> | null;
+  accessCode?: string;
+  assessmentId?: string;
+}> {
+  const code = accessCode ? normalizeAccessCodeInput(accessCode) : undefined;
+  const authHeaders = await getClientResultAuthHeaders(code);
+  if (!authHeaders.Authorization) {
+    throw new Error('검사 참여 세션이 필요합니다.');
+  }
+  const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
+    headers: authHeaders,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || '조회에 실패했습니다.');
+  }
+  return data;
+}
+
+/** PUT /api/results/:id + Participant/Guest/Portal 세션 — 소유자 응답 수정 */
+export async function updateClientResult(
+  resultId: string,
+  body: { responses: Record<string, unknown> | unknown[] },
+  accessCode?: string
+): Promise<{ resultId: string; message: string }> {
+  const code = accessCode ? normalizeAccessCodeInput(accessCode) : undefined;
+  const authHeaders = await getClientResultAuthHeaders(code);
+  if (!authHeaders.Authorization) {
+    throw new Error('검사 참여 세션이 필요합니다.');
+  }
+  const res = await fetch(`${getBaseUrl()}/api/results/${encodeURIComponent(resultId)}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || '수정에 실패했습니다.');
+  }
+  return data;
+}
+
 /** GET /api/results/:id + Bearer — 소유자만 요약·응답 조회 */
 export async function getResultAsAuthenticatedOwner(resultId: string): Promise<{
   resultId: string;

@@ -4,7 +4,7 @@ import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchPortalDashboard, linkSharedAssessment } from '@/lib/clientPortalApi';
-import { listResults, TestResultItem } from '@/lib/assessmentApi';
+import { listResults, deleteResult, TestResultItem } from '@/lib/assessmentApi';
 import {
   formatAccessCodeDisplay,
   formatJoinAccessCodeWhileTyping,
@@ -50,6 +50,15 @@ function ClientPortalContent() {
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkMessage, setLinkMessage] = useState('');
   const [linkError, setLinkError] = useState('');
+
+  const [expandedTestKey, setExpandedTestKey] = useState<string | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
+    resultId: string;
+    testName: string;
+    accessCode: string;
+  } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   const loadResults = useCallback(async (items: PortalAssessment[]) => {
     const session = readClientPortalSession();
@@ -101,7 +110,7 @@ function ClientPortalContent() {
     setPortalReturnPath('/portal/');
   }, []);
 
-  const openTest = (a: PortalAssessment, testId: string) => {
+  const openTest = (a: PortalAssessment, testId: string, resultId?: string) => {
     setPortalReturnPath('/portal/');
     const code = normalizeAccessCodeInput(a.accessCode);
     persistJoinAssessmentSession(code, {
@@ -111,9 +120,40 @@ function ClientPortalContent() {
       usageEndDate: a.usageEndDate || '',
       testList: a.testList,
     });
-    router.push(
-      `/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(testId)}`
-    );
+    const params = new URLSearchParams({
+      accessCode: code,
+      testId: String(testId),
+    });
+    if (resultId) params.set('resultId', resultId);
+    router.push(`/join/test?${params.toString()}`);
+  };
+
+  const formatCompletedAt = (iso: string | null) => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const testExpandKey = (assessmentId: string, testId: string) => `${assessmentId}:${testId}`;
+
+  const handleDeleteResult = async () => {
+    if (!deleteModal) return;
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await deleteResult(deleteModal.resultId, undefined, deleteModal.accessCode);
+      setDeleteModal(null);
+      await loadResults(assessments);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleLinkShared = async (e: React.FormEvent) => {
@@ -217,9 +257,6 @@ function ClientPortalContent() {
             assessments.map((a) => {
               const code = normalizeAccessCodeInput(a.accessCode);
               const results = resultsByCode[code] || [];
-              const doneIds = new Set(
-                results.filter((r) => r.status === 'completed').map((r) => String(r.testId))
-              );
 
               return (
                 <section
@@ -266,30 +303,104 @@ function ClientPortalContent() {
                   ) : (
                     <ul className="space-y-2">
                       {a.testList.map((t) => {
-                        const done = doneIds.has(String(t.testId));
+                        const testName = t.name || t.testId;
+                        const completedResults = results
+                          .filter(
+                            (r) =>
+                              r.status === 'completed' && String(r.testId) === String(t.testId)
+                          )
+                          .sort((x, y) => {
+                            const ta = x.completedAt ? new Date(x.completedAt).getTime() : 0;
+                            const tb = y.completedAt ? new Date(y.completedAt).getTime() : 0;
+                            return tb - ta;
+                          });
+                        const hasCompleted = completedResults.length > 0;
+                        const expandKey = testExpandKey(a.assessmentId, String(t.testId));
+                        const isExpanded = expandedTestKey === expandKey;
+
                         return (
                           <li key={t.testId}>
                             <button
                               type="button"
-                              onClick={() => openTest(a, t.testId)}
+                              onClick={() => {
+                                if (!hasCompleted) {
+                                  openTest(a, t.testId);
+                                  return;
+                                }
+                                setExpandedTestKey((prev) => (prev === expandKey ? null : expandKey));
+                              }}
                               className="w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 hover:bg-slate-700 transition-colors"
                             >
                               <div className="flex flex-wrap items-center justify-between gap-2">
-                                <span className="text-white font-medium">{t.name || t.testId}</span>
+                                <span className="text-white font-medium">{testName}</span>
                                 <span className="text-slate-400 text-sm">
-                                  {done ? '완료 · 다시 보기' : '미완료 · 시작하기'} →
+                                  {hasCompleted
+                                    ? `${completedResults.length}회 완료 · ${isExpanded ? '접기' : '내역 보기'}`
+                                    : '미완료 · 시작하기'}{' '}
+                                  →
                                 </span>
                               </div>
                               <span
                                 className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
-                                  done
+                                  hasCompleted
                                     ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40'
                                     : 'bg-amber-900/40 text-amber-200 border border-amber-700/30'
                                 }`}
                               >
-                                {done ? '검사 실시 완료' : '미실시'}
+                                {hasCompleted ? '검사 실시 완료' : '미실시'}
                               </span>
                             </button>
+
+                            {hasCompleted && isExpanded ? (
+                              <div className="mt-2 ml-2 pl-3 border-l-2 border-slate-600 space-y-2">
+                                {completedResults.map((r, idx) => (
+                                  <div
+                                    key={r.resultId}
+                                    className="rounded-lg bg-slate-800/80 border border-slate-600 px-3 py-2.5 text-sm"
+                                  >
+                                    <div className="flex flex-wrap items-start justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <p className="text-white font-medium">{testName}</p>
+                                        <p className="text-slate-400 text-xs mt-0.5">
+                                          {completedResults.length - idx}회차 · 제출{' '}
+                                          {formatCompletedAt(r.completedAt)}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={() => openTest(a, t.testId, r.resultId)}
+                                          className="text-blue-400 hover:text-blue-300 text-xs"
+                                        >
+                                          수정
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setActionError('');
+                                            setDeleteModal({
+                                              resultId: r.resultId,
+                                              testName,
+                                              accessCode: code,
+                                            });
+                                          }}
+                                          className="text-red-400 hover:text-red-300 text-xs"
+                                        >
+                                          삭제
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => openTest(a, t.testId)}
+                                  className="text-xs text-cyan-400 hover:text-cyan-300 px-1 py-1"
+                                >
+                                  + 새 검사 시작
+                                </button>
+                              </div>
+                            ) : null}
                           </li>
                         );
                       })}
@@ -309,6 +420,41 @@ function ClientPortalContent() {
           </div>
         </main>
       </div>
+
+      {deleteModal ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => !actionLoading && setDeleteModal(null)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
+            <p className="text-slate-300 text-sm mb-4">
+              「{deleteModal.testName}」 결과를 삭제할까요?
+            </p>
+            {actionError ? <p className="text-red-400 text-sm mb-2">{actionError}</p> : null}
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => !actionLoading && setDeleteModal(null)}
+                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-700"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteResult()}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {actionLoading ? '처리 중…' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

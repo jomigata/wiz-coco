@@ -3,7 +3,7 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { lookupPublicAssessment, submitResult } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, submitResult, getClientResult, updateClientResult } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
@@ -31,9 +31,11 @@ export default function TestRunnerPage() {
   const { user, loading: authLoading } = useFirebaseAuth();
   const [accessCode, setAccessCode] = useState('');
   const [testId, setTestId] = useState('');
+  const [editResultId, setEditResultId] = useState('');
 
   const [title, setTitle] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [loadingResult, setLoadingResult] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -53,6 +55,7 @@ export default function TestRunnerPage() {
       const params = new URLSearchParams(window.location.search);
       setAccessCode((params.get('accessCode') || '').trim());
       setTestId((params.get('testId') || '').trim());
+      setEditResultId((params.get('resultId') || '').trim());
     } catch {
       setAccessCode('');
       setTestId('');
@@ -106,6 +109,35 @@ export default function TestRunnerPage() {
     void run();
   }, [code, hasPortal]);
 
+  useEffect(() => {
+    if (!editResultId || !code || accessCheckLoading || accessCheckError) return;
+    let cancelled = false;
+    setLoadingResult(true);
+    getClientResult(editResultId, code)
+      .then((data) => {
+        if (cancelled) return;
+        const raw = data.responses;
+        if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+          const next: Record<string, number> = {};
+          for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
+            if (typeof val === 'number') next[key] = val;
+          }
+          setResponses(next);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : '기존 응답을 불러오지 못했습니다.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingResult(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editResultId, code, accessCheckLoading, accessCheckError]);
+
   const handleAnswer = (value: number) => {
     const q = questions[currentIndex];
     if (!q) return;
@@ -121,7 +153,7 @@ export default function TestRunnerPage() {
 
   const navigateAfterSubmit = () => {
     if (hasPortal) {
-      router.push(getPortalReturnPath());
+      router.push('/portal/');
       return;
     }
     if (!hasParticipant) {
@@ -144,7 +176,11 @@ export default function TestRunnerPage() {
     setError('');
     setSubmitting(true);
     try {
-      await submitResult({ accessCode: code, testId, responses });
+      if (editResultId) {
+        await updateClientResult(editResultId, { responses }, code);
+      } else {
+        await submitResult({ accessCode: code, testId, responses });
+      }
       navigateAfterSubmit();
     } catch (err) {
       setError(err instanceof Error ? err.message : '제출에 실패했습니다.');
@@ -171,12 +207,14 @@ export default function TestRunnerPage() {
     );
   }
 
-  if (accessCheckLoading) {
+  if (accessCheckLoading || (editResultId && loadingResult)) {
     return (
       <div className="min-h-screen bg-gray-900">
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
-            <p className="text-slate-300">검사코드 사용 가능 여부를 확인 중입니다…</p>
+            <p className="text-slate-300">
+              {editResultId ? '기존 응답을 불러오는 중…' : '검사코드 사용 가능 여부를 확인 중입니다…'}
+            </p>
           </div>
         </div>
       </div>
@@ -211,7 +249,7 @@ export default function TestRunnerPage() {
               onClick={() => navigateBackFromTest()}
               className="text-blue-400 hover:text-blue-300 text-sm bg-transparent border-0 cursor-pointer p-0 underline-offset-2 hover:underline text-left"
             >
-              ← 검사 선택 현황
+              {hasPortal ? '← 내 검사실' : '← 검사 선택 현황'}
             </button>
           </div>
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
@@ -274,7 +312,7 @@ export default function TestRunnerPage() {
                   disabled={submitting || !canSubmitAuth}
                   className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {submitting ? '제출 중…' : '제출하기'}
+                  {submitting ? '제출 중…' : editResultId ? '수정 완료' : '제출하기'}
                 </button>
               ) : (
                 <button
