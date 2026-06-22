@@ -1,7 +1,6 @@
 # 내담자 포털: 1인 1 accessCode+PIN, 매직 링크, 일괄 초대
 import csv
 import io
-import uuid
 from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify, g
@@ -13,11 +12,12 @@ from config import (
     SECRET_KEY,
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
-    NOTIFICATION_QUEUE_COLLECTION,
     PORTAL_MAGIC_LINK_MAX_AGE,
     PORTAL_SESSION_MAX_AGE,
     PORTAL_SESSION_REMEMBER_MAX_AGE,
     BULK_PORTAL_MAX_ROWS,
+    BULK_PORTAL_SYNC_MAX,
+    BULK_PORTAL_BATCH_SIZE,
 )
 from firebase_init import get_firestore
 from auth_middleware import require_counselor
@@ -25,13 +25,22 @@ from rate_limit import limit_access_code
 from utils.access_code import (
     normalize_access_code,
     is_valid_access_code,
-    generate_unique_portal_access_code,
-    generate_unique_access_code,
 )
 from utils.my_code import normalize_my_code, is_valid_my_code
 from utils.portal_assessment_access import link_shared_assessment_to_portal
-from utils.password import generate_four_digit_password, hash_password, verify_password
-from utils.notification_worker import deliver_portal_credentials
+from utils.password import hash_password, verify_password
+from utils.portal_magic import create_portal_magic_link_token, verify_portal_magic_link_token
+from utils.bulk_portal_worker import (
+    create_bulk_job,
+    create_portal_for_row,
+    get_bulk_job_status,
+    load_bulk_job_created_rows,
+    new_cohort_id,
+    prepare_bulk_assessment,
+    process_bulk_job_batch,
+    resend_job_notifications,
+    resend_cohort_notifications,
+)
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -194,7 +203,7 @@ def verify_magic_link():
     if not token:
         return jsonify({"error": "Bad Request", "message": "링크가 유효하지 않습니다."}), 400
     try:
-        data = _serializer("portal-magic").loads(token, max_age=PORTAL_MAGIC_LINK_MAX_AGE)
+        data = verify_portal_magic_link_token(token)
     except SignatureExpired:
         return jsonify({"error": "Gone", "message": "링크가 만료되었습니다. 담당자에게 새 링크를 요청해 주세요."}), 410
     except BadSignature:
@@ -219,7 +228,7 @@ def verify_magic_link():
 
 
 def _create_magic_link_token(portal_id: str, access_code: str) -> str:
-    return _serializer("portal-magic").dumps({"portalId": portal_id, "accessCode": access_code})
+    return create_portal_magic_link_token(portal_id, access_code)
 
 
 @bp.route("/link-assessment", methods=["POST"])
@@ -305,148 +314,189 @@ def bulk_create():
     ]
 
     db = get_firestore()
-    cohort_id = str(uuid.uuid4())
+    cohort_id = new_cohort_id()
     counselor_uid = g.counselor_uid
-    created = []
-    notify_queue = db.collection(NOTIFICATION_QUEUE_COLLECTION)
-    notify_sent = 0
-    notify_failed = 0
-    notify_queued = 0
-
     existing_assessment_id = (body.get("assessmentId") or "").strip()
-    join_access_code = ""
-    assessment_ref_id = ""
 
-    if existing_assessment_id:
-        assessment_doc = db.collection(ASSESSMENTS_COLLECTION).document(existing_assessment_id).get()
-        if not assessment_doc.exists:
-            return jsonify({"error": "Not Found", "message": "선택한 검사코드를 찾을 수 없습니다."}), 404
-        ass_data = assessment_doc.to_dict() or {}
-        if ass_data.get("counselorId") != counselor_uid:
-            return jsonify({"error": "Forbidden", "message": "선택한 검사코드에 접근할 수 없습니다."}), 403
-        if (ass_data.get("status") or "active") != "active":
-            return jsonify({"error": "Bad Request", "message": "비활성화된 검사코드입니다."}), 400
-        if (ass_data.get("issueType") or "individual") != "individual":
-            return jsonify(
-                {"error": "Bad Request", "message": "그룹코드(개별 발급) 검사만 선택할 수 있습니다."}
-            ), 400
-        join_access_code = ass_data.get("accessCode", "")
-        assessment_ref_id = existing_assessment_id
-        cohort_id = ass_data.get("clientPortalCohortId") or cohort_id
-    else:
-        if not test_list:
-            return jsonify({"error": "Bad Request", "message": "포함할 검사(testList)가 필요합니다."}), 400
-        join_access_code = generate_unique_access_code()
-        assessment_ref = db.collection(ASSESSMENTS_COLLECTION).document()
-        assessment_ref.set(
-            {
-                "accessCode": join_access_code,
-                "counselorId": counselor_uid,
-                "title": title,
-                "issueType": "individual",
-                "targetAudience": "그룹",
-                "welcomeMessage": welcome_message,
-                "usageEndDate": usage_end_date,
-                "testList": test_list,
-                "createdAt": SERVER_TIMESTAMP,
-                "status": "active",
-                "clientPortalCohortId": cohort_id,
-            }
+    try:
+        assessment_ref_id, join_access_code, cohort_id = prepare_bulk_assessment(
+            db,
+            counselor_uid=counselor_uid,
+            title=title,
+            welcome_message=welcome_message,
+            usage_end_date=usage_end_date,
+            test_list=test_list,
+            existing_assessment_id=existing_assessment_id,
+            cohort_id=cohort_id,
         )
-        assessment_ref_id = assessment_ref.id
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        msg = str(exc)
+        code = 404 if "찾을 수 없" in msg else 400
+        return jsonify({"error": "Bad Request" if code == 400 else "Not Found", "message": msg}), code
 
-    for row in rows:
-        display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
-        email = (row.get("email") or "").strip().lower()
-        phone = (row.get("phone") or "").strip()
+    normalized_rows = [
+        {
+            "displayName": (row.get("displayName") or row.get("name") or "").strip() or "내담자",
+            "email": (row.get("email") or "").strip().lower(),
+            "phone": (row.get("phone") or "").strip(),
+        }
+        for row in rows
+    ]
 
-        portal_access_code = generate_unique_portal_access_code()
-        pin = generate_four_digit_password()
-        pin_hash = hash_password(pin)
-
-        portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document()
-        portal_ref.set(
-            {
-                "accessCode": portal_access_code,
-                "pinHash": pin_hash,
-                "counselorId": counselor_uid,
-                "displayName": display_name,
-                "email": email,
-                "phone": phone,
-                "cohortId": cohort_id,
-                "cohortName": cohort_name,
-                "assignedAssessmentIds": [assessment_ref_id],
-                "status": "active",
-                "createdAt": SERVER_TIMESTAMP,
-            }
+    if len(normalized_rows) > BULK_PORTAL_SYNC_MAX:
+        job_id = create_bulk_job(
+            db,
+            counselor_uid=counselor_uid,
+            cohort_name=cohort_name,
+            cohort_id=cohort_id,
+            assessment_id=assessment_ref_id,
+            join_access_code=join_access_code,
+            rows=normalized_rows,
+            queue_notify=queue_notify,
+            scheduled_at_iso=scheduled_at_iso,
+        )
+        process_bulk_job_batch(
+            db,
+            job_id,
+            batch_size=BULK_PORTAL_BATCH_SIZE,
+            max_seconds=20.0,
+            create_magic_link=_create_magic_link_token,
+        )
+        status = get_bulk_job_status(db, job_id, counselor_uid=counselor_uid) or {}
+        return (
+            jsonify(
+                {
+                    "async": True,
+                    "jobId": job_id,
+                    "cohortId": cohort_id,
+                    "cohortName": cohort_name,
+                    "assessmentId": assessment_ref_id,
+                    "joinAccessCode": join_access_code,
+                    "notifyQueued": status.get("notifyQueued", 0),
+                    "scheduledAt": scheduled_at_iso or None,
+                    **status,
+                }
+            ),
+            202,
         )
 
-        magic = _create_magic_link_token(portal_ref.id, portal_access_code)
-        magic_path = f"/go?t={magic}"
-
-        if queue_notify and (email or phone):
-            if scheduled_at_iso:
-                notify_queue.add(
-                    {
-                        "type": "portal_credentials",
-                        "portalId": portal_ref.id,
-                        "email": email,
-                        "phone": phone,
-                        "accessCode": portal_access_code,
-                        "joinAccessCode": join_access_code,
-                        "pin": pin,
-                        "magicPath": magic_path,
-                        "displayName": display_name,
-                        "status": "pending",
-                        "createdAt": SERVER_TIMESTAMP,
-                        "counselorId": counselor_uid,
-                        "scheduledAt": scheduled_at_iso,
-                    }
-                )
-                notify_queued += 1
-            else:
-                result = deliver_portal_credentials(
-                    email=email,
-                    phone=phone,
-                    access_code=portal_access_code,
-                    pin=pin,
-                    magic_path=magic_path,
-                    display_name=display_name,
-                    join_access_code=join_access_code,
-                )
-                if result["status"] == "sent":
-                    notify_sent += 1
-                elif result["status"] == "failed":
-                    notify_failed += 1
-
-        created.append(
-            {
-                "portalId": portal_ref.id,
-                "displayName": display_name,
-                "email": email,
-                "phone": phone,
-                "joinAccessCode": join_access_code,
-                "accessCode": portal_access_code,
-                "myCode": portal_access_code,
-                "pin": pin,
-                "magicPath": magic_path,
-                "assessmentId": assessment_ref_id,
-            }
+    created = []
+    notify_queued = 0
+    for row in normalized_rows:
+        created_row, queued = create_portal_for_row(
+            db,
+            row=row,
+            counselor_uid=counselor_uid,
+            cohort_id=cohort_id,
+            cohort_name=cohort_name,
+            assessment_ref_id=assessment_ref_id,
+            join_access_code=join_access_code,
+            queue_notify=queue_notify,
+            scheduled_at_iso=scheduled_at_iso,
+            bulk_job_id="",
+            create_magic_link=_create_magic_link_token,
         )
+        created.append(created_row)
+        if queued:
+            notify_queued += 1
 
     return jsonify(
         {
+            "async": False,
             "cohortId": cohort_id,
             "cohortName": cohort_name,
             "assessmentId": assessment_ref_id,
             "joinAccessCode": join_access_code,
             "created": created,
-            "notifySent": notify_sent,
-            "notifyFailed": notify_failed,
+            "notifySent": 0,
+            "notifyFailed": 0,
             "notifyQueued": notify_queued,
             "scheduledAt": scheduled_at_iso or None,
         }
     ), 201
+
+
+@bp.route("/bulk/jobs/<job_id>", methods=["GET"])
+@require_counselor
+def get_bulk_job(job_id):
+    """대량 발급 job 진행률 — 폴링 시 배치 처리도 함께 진행."""
+    db = get_firestore()
+    counselor_uid = g.counselor_uid
+    status = get_bulk_job_status(db, job_id, counselor_uid=counselor_uid)
+    if not status:
+        return jsonify({"error": "Not Found", "message": "작업을 찾을 수 없습니다."}), 404
+
+    if status.get("status") in ("pending", "running"):
+        process_bulk_job_batch(
+            db,
+            job_id,
+            batch_size=BULK_PORTAL_BATCH_SIZE,
+            max_seconds=25.0,
+            create_magic_link=_create_magic_link_token,
+        )
+        status = get_bulk_job_status(db, job_id, counselor_uid=counselor_uid) or status
+
+    return jsonify(status)
+
+
+@bp.route("/bulk/jobs/<job_id>/result", methods=["GET"])
+@require_counselor
+def get_bulk_job_result(job_id):
+    db = get_firestore()
+    counselor_uid = g.counselor_uid
+    status = get_bulk_job_status(db, job_id, counselor_uid=counselor_uid)
+    if not status:
+        return jsonify({"error": "Not Found", "message": "작업을 찾을 수 없습니다."}), 404
+    if status.get("status") != "completed":
+        return jsonify({"error": "Conflict", "message": "아직 발급이 완료되지 않았습니다.", "status": status}), 409
+
+    created = load_bulk_job_created_rows(db, job_id, counselor_uid=counselor_uid)
+    return jsonify(
+        {
+            **status,
+            "created": created,
+            "cohortId": status.get("cohortId"),
+            "cohortName": status.get("cohortName"),
+            "joinAccessCode": status.get("joinAccessCode"),
+            "notifyQueued": status.get("notifyQueued", 0),
+        }
+    )
+
+
+@bp.route("/bulk/jobs/<job_id>/resend-notifications", methods=["POST"])
+@require_counselor
+def resend_bulk_job_notifications(job_id):
+    db = get_firestore()
+    try:
+        result = resend_job_notifications(db, job_id, counselor_uid=g.counselor_uid)
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
+
+
+@bp.route("/bulk/resend-notifications", methods=["POST"])
+@require_counselor
+def resend_bulk_notifications():
+    body = request.get_json(silent=True) or {}
+    job_id = (body.get("jobId") or "").strip()
+    cohort_id = (body.get("cohortId") or "").strip()
+    db = get_firestore()
+    try:
+        if job_id:
+            result = resend_job_notifications(db, job_id, counselor_uid=g.counselor_uid)
+        elif cohort_id:
+            result = resend_cohort_notifications(db, cohort_id, counselor_uid=g.counselor_uid)
+        else:
+            return jsonify({"error": "Bad Request", "message": "jobId 또는 cohortId가 필요합니다."}), 400
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
 
 
 @bp.route("/bulk/export-csv", methods=["POST"])

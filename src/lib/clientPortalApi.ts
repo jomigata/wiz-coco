@@ -4,7 +4,9 @@
 
 import type {
   ClientPortalBulkCreateResult,
+  ClientPortalBulkJobResult,
   ClientPortalLoginResult,
+  BulkPortalJobStatus,
 } from '@/types/clientPortal';
 import { getCounselorToken } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
@@ -125,4 +127,52 @@ export async function bulkCreateClientPortals(body: {
     throw new Error(typeof data?.message === 'string' ? data.message : '일괄 생성에 실패했습니다.');
   }
   return data as ClientPortalBulkCreateResult;
+}
+
+export async function fetchBulkPortalJob(jobId: string): Promise<BulkPortalJobStatus> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/bulk/jobs/${encodeURIComponent(jobId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '작업 상태 조회에 실패했습니다.');
+  }
+  return data as BulkPortalJobStatus;
+}
+
+export async function fetchBulkPortalJobResult(jobId: string): Promise<ClientPortalBulkJobResult> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/bulk/jobs/${encodeURIComponent(jobId)}/result`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '발급 결과 조회에 실패했습니다.');
+  }
+  return data as ClientPortalBulkJobResult;
+}
+
+export async function resendBulkPortalNotifications(body: {
+  jobId?: string;
+  cohortId?: string;
+}): Promise<{ resetFailed: number; requeued: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/bulk/resend-notifications`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '알림 재발송 요청에 실패했습니다.');
+  }
+  return data as { resetFailed: number; requeued: number };
 }

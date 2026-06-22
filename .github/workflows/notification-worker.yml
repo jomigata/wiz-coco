@@ -2,8 +2,8 @@ name: 📬 Process notification queue
 
 on:
   schedule:
-    # 15분마다 pending 통지 처리 (SMTP/Twilio 설정 시)
-    - cron: '*/15 * * * *'
+    # 5분마다 pending 통지·대량 발급 job 처리
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 concurrency:
@@ -33,7 +33,7 @@ jobs:
             -X POST "${URL}" \
             -H "Content-Type: application/json" \
             -H "X-Notification-Cron-Secret: ${CRON_SECRET}" \
-            -d '{"limit":50}')
+            -d '{"limit":200,"bulkJobLimit":5}')
           cat /tmp/notify-out.json
           echo ""
           if [ "${HTTP}" -lt 200 ] || [ "${HTTP}" -ge 300 ]; then

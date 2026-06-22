@@ -55,13 +55,37 @@ export interface ClientPortalBulkRow {
 }
 
 export interface ClientPortalBulkCreateResult {
+  async?: boolean;
+  jobId?: string;
   cohortId: string;
   cohortName: string;
   assessmentId?: string;
   joinAccessCode?: string;
-  created: ClientPortalBulkRow[];
+  created?: ClientPortalBulkRow[];
   notifySent?: number;
   notifyFailed?: number;
   notifyQueued: number;
   scheduledAt?: string | null;
+}
+
+export type BulkPortalJobStatus = {
+  jobId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  totalRows: number;
+  processedRows: number;
+  createdCount: number;
+  notifyQueued: number;
+  progressPct: number;
+  cohortId?: string;
+  cohortName?: string;
+  assessmentId?: string;
+  joinAccessCode?: string;
+  queueNotify?: boolean;
+  scheduledAt?: string | null;
+  error?: string | null;
+  completedAt?: string | null;
+};
+
+export interface ClientPortalBulkJobResult extends BulkPortalJobStatus {
+  created: ClientPortalBulkRow[];
 }

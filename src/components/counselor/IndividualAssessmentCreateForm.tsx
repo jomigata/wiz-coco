@@ -5,15 +5,22 @@ import { useRouter } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
-import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
+import {
+  bulkCreateClientPortals,
+  fetchBulkPortalJob,
+  fetchBulkPortalJobResult,
+  resendBulkPortalNotifications,
+} from '@/lib/clientPortalApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
-import type { ClientPortalBulkRow } from '@/types/clientPortal';
+import type { BulkPortalJobStatus, ClientPortalBulkRow } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 import {
   GROUP_RECIPIENT_MAX,
   GROUP_RECIPIENT_SAMPLE_CSV,
   GROUP_RECIPIENT_SAMPLE_TXT,
+  GROUP_BULK_ASYNC_THRESHOLD,
+  GROUP_NOTIFY_WARN_THRESHOLD,
 } from '@/lib/groupRecipientLimits';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
@@ -96,6 +103,12 @@ export default function IndividualAssessmentCreateForm() {
   const [notifyFailed, setNotifyFailed] = useState(0);
   const [notifyQueued, setNotifyQueued] = useState(0);
   const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
+  const [resultCohortId, setResultCohortId] = useState('');
+  const [resultJobId, setResultJobId] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   const usingExisting = Boolean(selectedAssessmentId.trim());
   const selectedAssessment = useMemo(
@@ -123,6 +136,51 @@ export default function IndividualAssessmentCreateForm() {
     void loadGroupAssessments();
   }, [user, authPending, loadGroupAssessments]);
 
+  useEffect(() => {
+    if (!activeJobId) return undefined;
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const status = await fetchBulkPortalJob(activeJobId);
+        if (cancelled) return;
+        setJobProgress(status);
+        setSharedJoinCode(status.joinAccessCode || '');
+        setNotifyQueued(status.notifyQueued);
+
+        if (status.status === 'completed') {
+          const full = await fetchBulkPortalJobResult(activeJobId);
+          if (cancelled) return;
+          setCreated(full.created || []);
+          setResultCohortId(full.cohortId || status.cohortId || '');
+          setResultJobId(activeJobId);
+          setNotifyQueued(full.notifyQueued);
+          setSharedJoinCode(full.joinAccessCode || '');
+          setScheduledAtIso(full.scheduledAt ?? null);
+          setActiveJobId(null);
+          setJobProgress(null);
+        } else if (status.status === 'failed') {
+          setError(status.error || '대량 발급 작업이 실패했습니다.');
+          setActiveJobId(null);
+          setJobProgress(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : '작업 상태 조회에 실패했습니다.');
+          setActiveJobId(null);
+          setJobProgress(null);
+        }
+      }
+    };
+
+    void poll();
+    const timer = window.setInterval(() => void poll(), 2000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [activeJobId]);
+
   const populateFromAssessment = useCallback((a: CounselorAssessment) => {
     applyAssessmentToForm(a, {
       setTitle,
@@ -149,6 +207,7 @@ export default function IndividualAssessmentCreateForm() {
     Boolean(user) &&
     !authPending &&
     !loading &&
+    !activeJobId &&
     recipients.length <= GROUP_RECIPIENT_MAX;
 
   const toggleTest = (testId: string) => {
@@ -188,6 +247,9 @@ export default function IndividualAssessmentCreateForm() {
     setError('');
     setCreated([]);
     setSharedJoinCode('');
+    setResendMessage('');
+    setResultCohortId('');
+    setResultJobId('');
 
     if (!usingExisting && !title.trim()) {
       setError('안내 제목을 입력해 주세요.');
@@ -250,8 +312,31 @@ export default function IndividualAssessmentCreateForm() {
         scheduledAt,
         assessmentId: usingExisting ? selectedAssessmentId : undefined,
       });
-      setCreated(result.created);
-      setSharedJoinCode(result.joinAccessCode || result.created[0]?.joinAccessCode || '');
+
+      if (result.async && result.jobId) {
+        setActiveJobId(result.jobId);
+        setJobProgress({
+          jobId: result.jobId,
+          status: (result as BulkPortalJobStatus).status || 'pending',
+          totalRows: (result as BulkPortalJobStatus).totalRows || recipients.length,
+          processedRows: (result as BulkPortalJobStatus).processedRows || 0,
+          createdCount: (result as BulkPortalJobStatus).createdCount || 0,
+          notifyQueued: result.notifyQueued,
+          progressPct: (result as BulkPortalJobStatus).progressPct || 0,
+          cohortId: result.cohortId,
+          cohortName: result.cohortName,
+          joinAccessCode: result.joinAccessCode,
+          scheduledAt: result.scheduledAt,
+        });
+        setSharedJoinCode(result.joinAccessCode || '');
+        setNotifyQueued(result.notifyQueued);
+        setScheduledAtIso(result.scheduledAt ?? scheduledAt ?? null);
+        return;
+      }
+
+      setCreated(result.created || []);
+      setResultCohortId(result.cohortId);
+      setSharedJoinCode(result.joinAccessCode || result.created?.[0]?.joinAccessCode || '');
       setNotifySent(result.notifySent ?? 0);
       setNotifyFailed(result.notifyFailed ?? 0);
       setNotifyQueued(result.notifyQueued);
@@ -260,6 +345,27 @@ export default function IndividualAssessmentCreateForm() {
       setError(err instanceof Error ? err.message : '그룹코드 발급에 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendNotifications = async () => {
+    setResendLoading(true);
+    setResendMessage('');
+    try {
+      const result = await resendBulkPortalNotifications({
+        jobId: resultJobId || undefined,
+        cohortId: resultCohortId || undefined,
+      });
+      const total = result.resetFailed + result.requeued;
+      setResendMessage(
+        total > 0
+          ? `알림 ${total}건을 다시 큐에 등록했습니다. 몇 분 내 순차 발송됩니다.`
+          : '재발송할 실패 알림이 없습니다. CSV로 코드를 확인해 주세요.'
+      );
+    } catch (err) {
+      setResendMessage(err instanceof Error ? err.message : '알림 재발송에 실패했습니다.');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -300,6 +406,36 @@ export default function IndividualAssessmentCreateForm() {
     );
   }
 
+  if (activeJobId && jobProgress) {
+    return (
+      <div className="space-y-6 max-w-2xl">
+        <div className="rounded-lg border border-blue-500/40 bg-blue-950/30 p-5 text-blue-100">
+          <p className="font-medium">그룹코드 대량 발급 진행 중…</p>
+          <p className="mt-2 text-sm text-blue-200/90">
+            {jobProgress.processedRows.toLocaleString('ko-KR')} /{' '}
+            {jobProgress.totalRows.toLocaleString('ko-KR')}명 처리됨 ({jobProgress.progressPct}%)
+          </p>
+          <div className="mt-4 h-2 rounded-full bg-slate-700 overflow-hidden">
+            <div
+              className="h-full bg-blue-500 transition-all duration-500"
+              style={{ width: `${Math.min(100, jobProgress.progressPct)}%` }}
+            />
+          </div>
+          {sharedJoinCode ? (
+            <p className="mt-3 text-sm">
+              공통 검사코드:{' '}
+              <span className="font-mono font-semibold">{formatAccessCodeDisplay(sharedJoinCode)}</span>
+            </p>
+          ) : null}
+          <p className="mt-2 text-xs text-blue-200/70">
+            이 화면을 닫지 마세요. {GROUP_BULK_ASYNC_THRESHOLD}명 초과 발급은 백그라운드에서 배치 처리됩니다.
+            알림은 발급 완료 후 큐를 통해 순차 발송됩니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (created.length > 0) {
     return (
       <div className="space-y-6 max-w-2xl">
@@ -317,15 +453,18 @@ export default function IndividualAssessmentCreateForm() {
             <p className="mt-1 text-emerald-300/90">
               {scheduledAtIso
                 ? `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
-                : `${notifySent}건이 이메일·문자로 즉시 발송되었습니다.${
-                    notifyFailed > 0 ? ` (${notifyFailed}건 발송 실패 — CSV에서 코드를 확인해 주세요.)` : ''
-                  }`}
+                : `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다. 발송 실패 시 CSV를 저장한 뒤 아래 「알림 재발송」을 사용하세요.`}
             </p>
           ) : (
             <p className="mt-1 text-emerald-300/90">아래 CSV에서 코드·비밀번호를 확인하세요.</p>
           )}
         </div>
-        <div className="flex gap-3">
+        {resendMessage ? (
+          <p className="text-sm text-slate-300" role="status">
+            {resendMessage}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={downloadCsv}
@@ -333,6 +472,16 @@ export default function IndividualAssessmentCreateForm() {
           >
             CSV 다운로드
           </button>
+          {queueNotify ? (
+            <button
+              type="button"
+              onClick={() => void handleResendNotifications()}
+              disabled={resendLoading}
+              className="px-5 py-2.5 rounded-lg font-medium text-slate-100 bg-slate-600 hover:bg-slate-500 disabled:opacity-50"
+            >
+              {resendLoading ? '재발송 요청 중…' : '알림 재발송'}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
@@ -544,10 +693,25 @@ export default function IndividualAssessmentCreateForm() {
             발급 대상: {recipients.length.toLocaleString('ko-KR')}명 (동일 검사코드)
           </p>
         ) : null}
+        {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD && queueNotify ? (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-amber-200/90 text-xs">
+            {GROUP_NOTIFY_WARN_THRESHOLD.toLocaleString('ko-KR')}명 이상 발급 시{' '}
+            <strong>예약 발송</strong> 또는 <strong>발송 없이 CSV만 받기</strong>를 권장합니다.
+            즉시 발송을 선택해도 서버는 알림을 큐에 넣어 순차 처리합니다.
+          </p>
+        ) : null}
+        {recipients.length > GROUP_BULK_ASYNC_THRESHOLD ? (
+          <p className="text-slate-500 text-xs">
+            {GROUP_BULK_ASYNC_THRESHOLD}명 초과 시 발급은 백그라운드 job으로 처리되며 진행률이 표시됩니다.
+          </p>
+        ) : null}
       </div>
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4 space-y-3">
         <p className="text-sm font-medium text-slate-200">접속 정보 발송</p>
+        <p className="text-xs text-slate-500">
+          모든 알림은 큐에 등록된 뒤 순차 발송됩니다(HTTP 타임아웃 방지). 대량 발급 후 CSV를 반드시 저장해 두세요.
+        </p>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"

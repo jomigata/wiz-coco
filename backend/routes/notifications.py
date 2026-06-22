@@ -7,6 +7,9 @@ from auth_middleware import get_bearer_uid, get_bearer_email_optional
 from config import NOTIFICATION_CRON_SECRET, USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS
 from firebase_init import get_firestore
 from utils.notification_worker import process_notification_queue
+from utils.bulk_portal_worker import process_pending_bulk_jobs
+from utils.portal_magic import create_portal_magic_link_token
+from config import BULK_PORTAL_BATCH_SIZE
 
 bp = Blueprint("notifications", __name__, url_prefix="/api/notifications")
 
@@ -48,5 +51,12 @@ def require_cron_or_admin(f):
 def process_queue():
     body = request.get_json(silent=True) or {}
     limit = min(int(body.get("limit") or 50), 200)
-    result = process_notification_queue(limit=limit)
-    return jsonify(result)
+    notify_result = process_notification_queue(limit=limit)
+    bulk_result = process_pending_bulk_jobs(
+        get_firestore(),
+        limit=min(int(body.get("bulkJobLimit") or 3), 10),
+        batch_size=BULK_PORTAL_BATCH_SIZE,
+        max_seconds=25.0,
+        create_magic_link=create_portal_magic_link_token,
+    )
+    return jsonify({"notifications": notify_result, "bulkPortalJobs": bulk_result})

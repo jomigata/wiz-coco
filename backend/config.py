@@ -38,6 +38,11 @@ JOIN_PARTICIPANTS_COLLECTION = "joinParticipants"
 
 # 그룹코드 일괄 발급 시 내담자 수 상한
 BULK_PORTAL_MAX_ROWS = int(os.getenv("BULK_PORTAL_MAX_ROWS", "2000"))
+# 이 인원 이하는 HTTP 요청에서 동기 처리, 초과 시 job + 폴링
+BULK_PORTAL_SYNC_MAX = int(os.getenv("BULK_PORTAL_SYNC_MAX", "50"))
+# job/cron 배치당 처리 행 수
+BULK_PORTAL_BATCH_SIZE = int(os.getenv("BULK_PORTAL_BATCH_SIZE", "50"))
+BULK_PORTAL_JOBS_COLLECTION = "bulkPortalJobs"
 
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
