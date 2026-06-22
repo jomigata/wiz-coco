@@ -70,6 +70,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!initial) return;
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
       setError('안내 제목을 입력해 주세요.');

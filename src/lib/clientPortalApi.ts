@@ -7,7 +7,7 @@ import type {
   ClientPortalLoginResult,
 } from '@/types/clientPortal';
 import { getCounselorToken } from '@/lib/assessmentApi';
-import { normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
+import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 
 const getBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
