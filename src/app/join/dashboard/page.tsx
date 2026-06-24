@@ -269,7 +269,7 @@ function JoinDashboardContent() {
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="font-medium">{t.name || t.testId}</span>
-                            <span className="text-slate-400 text-sm">시작하기 →</span>
+                            <span className="text-slate-400 text-sm">{done ? '재검사하기 →' : '시작하기 →'}</span>
                           </div>
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                             {canTrackResults ? (
@@ -299,7 +299,7 @@ function JoinDashboardContent() {
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-medium">{t.name || t.testId}</span>
-                          <span className="text-slate-400 text-sm">시작하기 →</span>
+                          <span className="text-slate-400 text-sm">{done ? '재검사하기 →' : '시작하기 →'}</span>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                           {canTrackResults ? (
