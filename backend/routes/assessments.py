@@ -9,6 +9,7 @@ from rate_limit import limit_access_code
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION, CLIENT_PORTALS_COLLECTION
 from utils.access_code import generate_unique_access_code, normalize_access_code, is_valid_access_code
 from utils.result_actor import result_actor_key, result_actor_email, result_actor_display
+from utils.test_result_queries import query_results_shared_to_assessment
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -284,67 +285,78 @@ def delete_assessment(assessment_id):
 @require_counselor
 def get_progress(assessment_id):
     """상담사: 해당 assessment의 진행 현황 (testResults를 clientUid 기준 그룹화)."""
-    db = get_firestore()
-    ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
-    ass = ass_ref.get()
-    if not ass.exists or ass.to_dict().get("counselorId") != g.counselor_uid:
-        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
-    access_code = ass.to_dict().get("accessCode", "")
-    results_refs = db.collection(TEST_RESULTS_COLLECTION).where("assessmentId", "==", assessment_id).get()
-    shared_refs = (
-        db.collection(TEST_RESULTS_COLLECTION)
-        .where("sharedToAssessmentIds", "array-contains", assessment_id)
-        .get()
-    )
+    try:
+        db = get_firestore()
+        ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
+        ass = ass_ref.get()
+        ass_data = ass.to_dict() or {} if ass.exists else {}
+        if not ass.exists or ass_data.get("counselorId") != g.counselor_uid:
+            return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+        access_code = ass_data.get("accessCode", "")
 
-    portal_ids: set[str] = set()
-    raw_rows = []
-    seen_result_ids: set[str] = set()
-    for doc in list(results_refs) + list(shared_refs):
-        if doc.id in seen_result_ids:
-            continue
-        seen_result_ids.add(doc.id)
-        d = doc.to_dict()
-        portal_id = str(d.get("portalId") or "").strip()
-        if portal_id:
-            portal_ids.add(portal_id)
-        row = {"resultId": doc.id, "data": d, "isShared": assessment_id in (d.get("sharedToAssessmentIds") or []) and d.get("assessmentId") != assessment_id}
-        raw_rows.append(row)
+        result_docs = list(
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("assessmentId", "==", assessment_id)
+            .stream()
+        )
+        shared_docs = query_results_shared_to_assessment(db, assessment_id)
 
-    portal_labels: dict[str, str] = {}
-    for pid in portal_ids:
-        pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
-        if not pdoc.exists:
-            continue
-        pd = pdoc.to_dict() or {}
-        label = str(pd.get("displayName") or pd.get("email") or "").strip()
-        if label:
-            portal_labels[pid] = label
+        portal_ids: set[str] = set()
+        raw_rows = []
+        seen_result_ids: set[str] = set()
+        for doc in result_docs + shared_docs:
+            if doc.id in seen_result_ids:
+                continue
+            seen_result_ids.add(doc.id)
+            d = doc.to_dict() or {}
+            portal_id = str(d.get("portalId") or "").strip()
+            if portal_id:
+                portal_ids.add(portal_id)
+            shared_ids = d.get("sharedToAssessmentIds") or []
+            is_shared = assessment_id in shared_ids and d.get("assessmentId") != assessment_id
+            raw_rows.append({"resultId": doc.id, "data": d, "isShared": is_shared})
 
-    by_client = {}
-    for row in raw_rows:
-        result_id = row["resultId"]
-        d = row["data"]
-        key = result_actor_key(d, result_id=result_id)
-        if not key:
-            continue
-        email = result_actor_display(d, key, portal_labels) or result_actor_email(d)
-        if key not in by_client:
-            by_client[key] = {"clientUid": key, "clientEmail": email, "results": []}
-        elif not by_client[key].get("clientEmail") and email:
-            by_client[key]["clientEmail"] = email
-        r = {
-            "resultId": result_id,
-            "testId": d.get("testId"),
-            "status": d.get("status"),
-            "completedAt": None,
-            "isShared": bool(row.get("isShared")),
-        }
-        if d.get("completedAt"):
-            ct = d["completedAt"]
-            r["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
-        by_client[key]["results"].append(r)
-    return jsonify({"accessCode": access_code, "byClient": list(by_client.values())})
+        portal_labels: dict[str, str] = {}
+        for pid in portal_ids:
+            pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+            if not pdoc.exists:
+                continue
+            pd = pdoc.to_dict() or {}
+            label = str(pd.get("displayName") or pd.get("email") or "").strip()
+            if label:
+                portal_labels[pid] = label
+
+        by_client = {}
+        for row in raw_rows:
+            result_id = row["resultId"]
+            d = row["data"]
+            key = result_actor_key(d, result_id=result_id)
+            if not key:
+                continue
+            email = result_actor_display(d, key, portal_labels) or result_actor_email(d)
+            if key not in by_client:
+                by_client[key] = {"clientUid": key, "clientEmail": email, "results": []}
+            elif not by_client[key].get("clientEmail") and email:
+                by_client[key]["clientEmail"] = email
+            r = {
+                "resultId": result_id,
+                "testId": d.get("testId"),
+                "status": d.get("status"),
+                "completedAt": None,
+                "isShared": bool(row.get("isShared")),
+            }
+            if d.get("completedAt"):
+                ct = d["completedAt"]
+                r["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
+            by_client[key]["results"].append(r)
+        return jsonify({"accessCode": access_code, "byClient": list(by_client.values())})
+    except Exception:
+        return jsonify(
+            {
+                "error": "Internal Server Error",
+                "message": "진행 현황을 불러오는 중 오류가 발생했습니다.",
+            }
+        ), 500
 
 
 @bp.route("/<assessment_id>/results/<result_id>", methods=["GET"])

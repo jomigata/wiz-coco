@@ -506,7 +506,14 @@ export async function getProgress(
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.message || data?.error || '진행 현황 조회에 실패했습니다.');
+    const fallback = '진행 현황 조회에 실패했습니다.';
+    const msg =
+      typeof data?.message === 'string' && data.message.trim()
+        ? data.message.trim()
+        : typeof data?.error === 'string' && data.error.trim()
+          ? data.error.trim()
+          : fallback;
+    throw new Error(msg);
   }
   return data;
 }

@@ -16,6 +16,7 @@ from utils.portal_auth import get_portal_session_from_request
 from utils.join_portal_issue import try_issue_portal_for_participant
 from utils.portal_assessment_access import portal_can_use_assessment, get_portal_doc
 from utils.portal_linking import get_portal_ecosystem_ids, result_visible_to_portal_ecosystem
+from utils.test_result_queries import query_results_shared_to_assessment
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
@@ -286,18 +287,11 @@ def list_results():
                 _append(doc)
 
         if assessment_id:
-            try:
-                for doc in (
-                    db.collection(TEST_RESULTS_COLLECTION)
-                    .where("sharedToAssessmentIds", "array-contains", assessment_id)
-                    .get()
-                ):
-                    d = doc.to_dict() or {}
-                    if not result_visible_to_portal_ecosystem(db, portal_id, d):
-                        continue
-                    _append(doc, is_shared=True, source_access_code=d.get("accessCode", ""))
-            except Exception:
-                pass
+            for doc in query_results_shared_to_assessment(db, assessment_id):
+                d = doc.to_dict() or {}
+                if not result_visible_to_portal_ecosystem(db, portal_id, d):
+                    continue
+                _append(doc, is_shared=True, source_access_code=d.get("accessCode", ""))
 
         return jsonify({"results": items})
 

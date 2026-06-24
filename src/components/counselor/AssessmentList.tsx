@@ -250,7 +250,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-300">
-                        <span className="font-semibold text-orange-400">-{incomplete}</span>
+                        <span className="font-semibold text-orange-400">{incomplete}</span>
                         <span className="text-slate-600"> / </span>
                         <span className="font-semibold text-emerald-400">{complete}</span>
                         {total > 0 && <span className="ml-1 text-slate-500">({progressPct}%)</span>}
