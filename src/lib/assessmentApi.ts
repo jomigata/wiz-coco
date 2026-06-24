@@ -8,6 +8,35 @@ import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 
+const FORCE_GUEST_ACCESS_CODE_KEY = 'wizcoco_force_guest_access_code';
+
+export function setForceGuestForAccessCode(accessCodeNorm: string): void {
+  if (typeof window === 'undefined') return;
+  const code = normalizeAccessCodeInput(accessCodeNorm);
+  if (!code) return;
+  sessionStorage.setItem(FORCE_GUEST_ACCESS_CODE_KEY, code);
+}
+
+export function clearForceGuestForAccessCode(accessCodeNorm?: string): void {
+  if (typeof window === 'undefined') return;
+  if (!accessCodeNorm) {
+    sessionStorage.removeItem(FORCE_GUEST_ACCESS_CODE_KEY);
+    return;
+  }
+  const code = normalizeAccessCodeInput(accessCodeNorm);
+  const stored = sessionStorage.getItem(FORCE_GUEST_ACCESS_CODE_KEY);
+  if (stored === code) {
+    sessionStorage.removeItem(FORCE_GUEST_ACCESS_CODE_KEY);
+  }
+}
+
+function shouldForceGuestForAccessCode(accessCodeNorm?: string): boolean {
+  if (typeof window === 'undefined' || !accessCodeNorm) return false;
+  const stored = sessionStorage.getItem(FORCE_GUEST_ACCESS_CODE_KEY);
+  if (!stored) return false;
+  return stored === normalizeAccessCodeInput(accessCodeNorm);
+}
+
 const getBaseUrl = (): string => {
   // 1순위: 환경 변수(NEXT_PUBLIC_FLASK_API_URL)
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -56,13 +85,18 @@ export async function getCounselorToken(): Promise<string | null> {
 export async function getClientResultAuthHeaders(
   accessCodeNorm?: string
 ): Promise<Record<string, string>> {
+  const code = accessCodeNorm ? normalizeAccessCodeInput(accessCodeNorm) : undefined;
+  if (code && shouldForceGuestForAccessCode(code)) {
+    const guest = getJoinGuestAuthHeader(code);
+    if (guest.Authorization) return guest;
+  }
   const portal = readClientPortalSession();
   if (portal?.portalToken) {
     return { Authorization: `Portal ${portal.portalToken}` };
   }
-  const participant = getJoinParticipantAuthHeader(accessCodeNorm);
+  const participant = getJoinParticipantAuthHeader(code);
   if (participant.Authorization) return participant;
-  const guest = getJoinGuestAuthHeader(accessCodeNorm);
+  const guest = getJoinGuestAuthHeader(code);
   if (guest.Authorization) return guest;
   const token = await getCounselorToken();
   if (token) return { Authorization: `Bearer ${token}` };

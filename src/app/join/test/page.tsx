@@ -3,7 +3,7 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { lookupPublicAssessment, submitResult, getClientResult, updateClientResult } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, submitResult, getClientResult, updateClientResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
@@ -99,6 +99,17 @@ export default function TestRunnerPage() {
         if (hasPortal) {
           clearJoinGuestSession();
           clearJoinParticipantSession();
+          try {
+            await listResults(code);
+            clearForceGuestForAccessCode(code);
+          } catch {
+            if (fromPortal) {
+              await ensureJoinGuestSession(code);
+              setForceGuestForAccessCode(code);
+            } else {
+              throw new Error('이 검사코드는 현재 로그인한 나의코드에 연결되어 있지 않습니다.');
+            }
+          }
         } else if (!hasJoinParticipantSessionForCode(code)) {
           await ensureJoinGuestSession(code);
         }
@@ -109,7 +120,7 @@ export default function TestRunnerPage() {
       }
     };
     void run();
-  }, [code, hasPortal]);
+  }, [code, hasPortal, fromPortal]);
 
   useEffect(() => {
     if (!editResultId || !code || accessCheckLoading || accessCheckError) return;

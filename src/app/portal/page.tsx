@@ -4,7 +4,7 @@ import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, linkSharedAssessment, linkMyCodeToPortal, sharePortalResult, type LinkedPortalSummary, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
-import { listResults, deleteResult, TestResultItem } from '@/lib/assessmentApi';
+import { listResults, deleteResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import {
   formatAccessCodeDisplay,
   formatJoinAccessCodeWhileTyping,
@@ -160,6 +160,7 @@ function ClientPortalContent() {
     clearJoinGuestSession();
     clearJoinParticipantSession();
     const code = normalizeAccessCodeInput(a.accessCode);
+    clearForceGuestForAccessCode(code);
     persistJoinAssessmentSession(code, {
       assessmentId: a.assessmentId,
       title: a.title,

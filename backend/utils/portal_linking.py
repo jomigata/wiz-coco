@@ -46,19 +46,57 @@ def _find_portal_by_my_code(db, my_code: str):
 def portal_ecosystem_can_use_assessment(db, portal_id: str, access_code: str):
     """연결된 나의코드 포함 — 해당 검사코드 사용 가능 여부."""
     code = normalize_access_code(access_code or "")
+    if not code or not portal_id:
+        return None
+
     ass_doc = find_active_assessment_by_code(db, code)
     if not ass_doc:
         return None
 
+    ass_data = ass_doc.to_dict() or {}
+    ass_cohort = str(ass_data.get("clientPortalCohortId") or "").strip()
+
+    # legacy:assessmentId 포털 (내 검사실 /me 호환)
+    if str(portal_id).startswith("legacy:"):
+        legacy_aid = portal_id.split(":", 1)[1].strip()
+        if legacy_aid and legacy_aid == ass_doc.id:
+            return ass_doc
+        return None
+
+    seen_aids: set[str] = set()
     for pid in get_portal_ecosystem_ids(db, portal_id):
+        if str(pid).startswith("legacy:"):
+            legacy_aid = pid.split(":", 1)[1].strip()
+            if legacy_aid and legacy_aid == ass_doc.id:
+                return ass_doc
+            continue
+
         portal_doc = get_portal_doc(db, pid)
         if not portal_doc:
             continue
         pdata = _portal_data(portal_doc)
-        assigned = set(pdata.get("assignedAssessmentIds") or [])
-        linked = set(pdata.get("linkedAssessmentIds") or [])
-        if ass_doc.id in assigned or ass_doc.id in linked:
+
+        if ass_cohort and str(pdata.get("cohortId") or "").strip() == ass_cohort:
             return ass_doc
+
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        linked = list(pdata.get("linkedAssessmentIds") or [])
+        for aid in dict.fromkeys(assigned + linked):
+            aid = str(aid or "").strip()
+            if not aid or aid in seen_aids:
+                continue
+            seen_aids.add(aid)
+            if aid == ass_doc.id:
+                return ass_doc
+            adoc = db.collection(ASSESSMENTS_COLLECTION).document(aid).get()
+            if not adoc.exists:
+                continue
+            ad = adoc.to_dict() or {}
+            if (ad.get("status") or "active") != "active":
+                continue
+            if normalize_access_code(ad.get("accessCode") or "") == code:
+                return ass_doc
+
     return None
 
 
