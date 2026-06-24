@@ -68,8 +68,7 @@ export default function PortalLoginPage() {
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
             <h1 className="text-2xl font-bold text-white mb-2">내 검사실 들어가기</h1>
             <p className="text-slate-300 text-sm mb-6">
-              검사 완료 후 받으신 <span className="text-slate-100">나의코드</span>와{' '}
-              <span className="text-slate-100">비밀번호</span>를 입력해 주세요.
+              검사 완료후 이메일/핸드폰 으로 받으신 나의코드/비밀번호를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
