@@ -18,6 +18,8 @@ import {
   readClientPortalSession,
 } from '@/lib/clientPortalSession';
 import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
+import { clearJoinGuestSession } from '@/lib/joinGuestSession';
+import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 type PortalAssessment = PortalDashboardAssessment;
@@ -69,6 +71,7 @@ function ClientPortalContent() {
     const session = readClientPortalSession();
     if (!session?.portalToken) return;
     const map: Record<string, TestResultItem[]> = {};
+    const errors: string[] = [];
     await Promise.all(
       items.map(async (a) => {
         const code = normalizeAccessCodeInput(a.accessCode);
@@ -76,12 +79,19 @@ function ClientPortalContent() {
         try {
           const data = await listResults(code);
           map[code] = data.results || [];
-        } catch {
+        } catch (err) {
           map[code] = [];
+          const label = a.title || code;
+          errors.push(
+            err instanceof Error ? err.message : `${label} 결과를 불러오지 못했습니다.`
+          );
         }
       })
     );
     setResultsByCode(map);
+    if (errors.length) {
+      setError((prev) => prev || errors[0]);
+    }
   }, []);
 
   const load = useCallback(async () => {
@@ -109,6 +119,10 @@ function ClientPortalContent() {
   }, [router, loadResults]);
 
   useEffect(() => {
+    if (readClientPortalSession()?.portalToken) {
+      clearJoinGuestSession();
+      clearJoinParticipantSession();
+    }
     void load();
   }, [load]);
 
@@ -123,10 +137,28 @@ function ClientPortalContent() {
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', '/portal/');
     }
-  }, [searchParams]);
+    if (assessments.length) {
+      void loadResults(assessments);
+    }
+  }, [searchParams, assessments, loadResults]);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || !assessments.length) return;
+      void loadResults(assessments);
+    };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('pageshow', refresh);
+    };
+  }, [assessments, loadResults]);
 
   const openTest = (a: PortalAssessment, testId: string, resultId?: string) => {
     setPortalReturnPath('/portal/');
+    clearJoinGuestSession();
+    clearJoinParticipantSession();
     const code = normalizeAccessCodeInput(a.accessCode);
     persistJoinAssessmentSession(code, {
       assessmentId: a.assessmentId,

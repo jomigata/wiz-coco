@@ -286,15 +286,18 @@ def list_results():
                 _append(doc)
 
         if assessment_id:
-            for doc in (
-                db.collection(TEST_RESULTS_COLLECTION)
-                .where("sharedToAssessmentIds", "array-contains", assessment_id)
-                .get()
-            ):
-                d = doc.to_dict() or {}
-                if not result_visible_to_portal_ecosystem(db, portal_id, d):
-                    continue
-                _append(doc, is_shared=True, source_access_code=d.get("accessCode", ""))
+            try:
+                for doc in (
+                    db.collection(TEST_RESULTS_COLLECTION)
+                    .where("sharedToAssessmentIds", "array-contains", assessment_id)
+                    .get()
+                ):
+                    d = doc.to_dict() or {}
+                    if not result_visible_to_portal_ecosystem(db, portal_id, d):
+                        continue
+                    _append(doc, is_shared=True, source_access_code=d.get("accessCode", ""))
+            except Exception:
+                pass
 
         return jsonify({"results": items})
 

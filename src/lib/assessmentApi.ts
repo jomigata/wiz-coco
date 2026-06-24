@@ -52,18 +52,18 @@ export async function getCounselorToken(): Promise<string | null> {
   }
 }
 
-/** 결과 API — 참여·게스트·포털 세션 (accessCode 와 일치하는 세션만 사용) */
+/** 결과 API — 포털 세션 우선, 이후 참여·게스트 (accessCode 와 일치하는 세션만 사용) */
 export async function getClientResultAuthHeaders(
   accessCodeNorm?: string
 ): Promise<Record<string, string>> {
-  const participant = getJoinParticipantAuthHeader(accessCodeNorm);
-  if (participant.Authorization) return participant;
-  const guest = getJoinGuestAuthHeader(accessCodeNorm);
-  if (guest.Authorization) return guest;
   const portal = readClientPortalSession();
   if (portal?.portalToken) {
     return { Authorization: `Portal ${portal.portalToken}` };
   }
+  const participant = getJoinParticipantAuthHeader(accessCodeNorm);
+  if (participant.Authorization) return participant;
+  const guest = getJoinGuestAuthHeader(accessCodeNorm);
+  if (guest.Authorization) return guest;
   const token = await getCounselorToken();
   if (token) return { Authorization: `Bearer ${token}` };
   return {};

@@ -14,13 +14,15 @@ import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import {
-  hasJoinParticipantSessionForCode,
-  readJoinParticipantSession,
-} from '@/lib/joinParticipantSession';
-import {
+  clearJoinGuestSession,
   ensureJoinGuestSession,
   hasJoinGuestSessionForCode,
 } from '@/lib/joinGuestSession';
+import {
+  clearJoinParticipantSession,
+  hasJoinParticipantSessionForCode,
+  readJoinParticipantSession,
+} from '@/lib/joinParticipantSession';
 
 function DashboardLoading() {
   return (
@@ -75,6 +77,8 @@ function JoinDashboardContent() {
   useEffect(() => {
     if (hasPortal) {
       setPortalReturnPath('/portal/');
+      clearJoinGuestSession();
+      clearJoinParticipantSession();
     }
   }, [hasPortal]);
 
