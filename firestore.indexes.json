@@ -81,13 +81,6 @@
       ]
     },
     {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "sharedToAssessmentIds", "arrayConfig": "CONTAINS" }
-      ]
-    },
-    {
       "collectionGroup": "clientCounselorRelations",
       "queryScope": "COLLECTION",
       "fields": [
