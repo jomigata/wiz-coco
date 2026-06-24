@@ -384,6 +384,7 @@ export interface CreatedAssessmentBannerInfo {
 export interface ProgressByClient {
   clientUid: string;
   clientEmail?: string | null;
+  clientDisplayName?: string | null;
   results: { resultId: string; testId: string; status: string; completedAt: string | null }[];
 }
 
@@ -525,6 +526,7 @@ export interface CounselorResultDetail {
   accessCode: string;
   testId: string;
   clientEmail: string;
+  clientDisplayName?: string;
   status: string;
   responses: Record<string, unknown> | unknown[];
   resultData: Record<string, unknown> | null;

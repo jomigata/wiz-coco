@@ -47,6 +47,17 @@ function latestCompletedLabel(client: ProgressByClient): string | null {
   return best ? formatCompletedAt(best) : null;
 }
 
+function clientDisplayLabel(client: ProgressByClient): string {
+  const name = (client.clientDisplayName || client.clientEmail || '').trim();
+  if (name) return name;
+  const key = client.clientUid || '';
+  if (key.startsWith('portal:')) return '내 검사실 사용자';
+  if (key.startsWith('participant:')) return '검사 참여자';
+  if (key.startsWith('guest:')) return '게스트 (미등록)';
+  if (key.startsWith('legacy-email:')) return key.slice('legacy-email:'.length);
+  return key || '내담자';
+}
+
 export default function ProgressDashboard({
   assessmentId,
   accessCode,
@@ -146,7 +157,7 @@ export default function ProgressDashboard({
         <div className="space-y-4">
           {sortedClients.map((client) => {
             const clientKey = client.clientUid;
-            const displayClient = client.clientEmail && client.clientEmail.includes('@') ? client.clientEmail : client.clientUid;
+            const displayClient = clientDisplayLabel(client);
             const isOpen = expandedClients.has(clientKey);
             const completed = client.results.filter((r) => r.status === 'completed').length;
             const inProgress = client.results.length - completed;
@@ -304,7 +315,7 @@ export default function ProgressDashboard({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <span className="text-slate-400">내담자</span>
-                    <span className="text-white">{detail.clientEmail}</span>
+                    <span className="text-white">{detail.clientDisplayName || detail.clientEmail || '—'}</span>
                     <span className="text-slate-400">검사 ID</span>
                     <span className="text-white">{detail.testId}</span>
                     <span className="text-slate-400">완료일시</span>

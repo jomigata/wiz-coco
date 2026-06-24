@@ -1,5 +1,58 @@
 """testResults 문서 — 응시자(액터) 식별·표시 (clientUid / portal / participant / guest)."""
 
+from config import CLIENT_PORTALS_COLLECTION, JOIN_PARTICIPANTS_COLLECTION
+
+
+def portal_doc_label(pd: dict) -> str:
+    return str(pd.get("displayName") or pd.get("email") or pd.get("accessCode") or "").strip()
+
+
+def participant_doc_label(pd: dict) -> str:
+    return str(pd.get("displayName") or pd.get("email") or "").strip()
+
+
+def build_portal_labels(db, portal_ids: set[str]) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for pid in portal_ids:
+        pid = str(pid or "").strip()
+        if not pid or pid in labels:
+            continue
+        pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+        if not pdoc.exists:
+            continue
+        label = portal_doc_label(pdoc.to_dict() or {})
+        if label:
+            labels[pid] = label
+    return labels
+
+
+def build_participant_labels(db, participant_ids: set[str]) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for pid in participant_ids:
+        pid = str(pid or "").strip()
+        if not pid or pid in labels:
+            continue
+        pdoc = db.collection(JOIN_PARTICIPANTS_COLLECTION).document(pid).get()
+        if not pdoc.exists:
+            continue
+        label = participant_doc_label(pdoc.to_dict() or {})
+        if label:
+            labels[pid] = label
+    return labels
+
+
+def fallback_actor_label(actor_key: str) -> str:
+    key = (actor_key or "").strip()
+    if key.startswith("portal:"):
+        return "내 검사실 사용자"
+    if key.startswith("participant:"):
+        return "검사 참여자"
+    if key.startswith("guest:"):
+        return "게스트 (미등록)"
+    if key.startswith("legacy-email:"):
+        return key.split(":", 1)[1]
+    return key or "내담자"
+
 
 def result_actor_key(d: dict, *, result_id: str = "") -> str:
     """결과를 그룹화할 고유 키."""
@@ -38,6 +91,7 @@ def result_actor_display(
     d: dict,
     actor_key: str,
     portal_labels: dict[str, str] | None = None,
+    participant_labels: dict[str, str] | None = None,
 ) -> str | None:
     """상담사 UI용 내담자 표시 문자열."""
     profile = d.get("clientProfile") or {}
@@ -55,11 +109,25 @@ def result_actor_display(
         if label:
             return label
 
+    participant_id = str(d.get("participantId") or "").strip()
+    if participant_id and participant_labels:
+        label = participant_labels.get(participant_id)
+        if label:
+            return label
+
     if actor_key.startswith("portal:"):
-        return "내 검사실 사용자"
+        pid = actor_key.split(":", 1)[1]
+        if portal_labels and portal_labels.get(pid):
+            return portal_labels[pid]
+        return fallback_actor_label(actor_key)
+
     if actor_key.startswith("participant:"):
-        return "검사 참여자"
-    if actor_key.startswith("guest:"):
-        return "게스트 (미등록)"
+        pid = actor_key.split(":", 1)[1]
+        if participant_labels and participant_labels.get(pid):
+            return participant_labels[pid]
+        return fallback_actor_label(actor_key)
+
+    if actor_key.startswith("guest:") or actor_key.startswith("legacy-email:"):
+        return fallback_actor_label(actor_key)
 
     return None

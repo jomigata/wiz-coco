@@ -8,7 +8,14 @@ from auth_middleware import require_counselor
 from rate_limit import limit_access_code
 from config import ASSESSMENTS_COLLECTION, TEST_RESULTS_COLLECTION, CLIENT_PORTALS_COLLECTION
 from utils.access_code import generate_unique_access_code, normalize_access_code, is_valid_access_code
-from utils.result_actor import result_actor_key, result_actor_email, result_actor_display
+from utils.result_actor import (
+    result_actor_key,
+    result_actor_email,
+    result_actor_display,
+    build_portal_labels,
+    build_participant_labels,
+    fallback_actor_label,
+)
 from utils.test_result_queries import query_results_shared_to_assessment
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
@@ -302,6 +309,7 @@ def get_progress(assessment_id):
         shared_docs = query_results_shared_to_assessment(db, assessment_id)
 
         portal_ids: set[str] = set()
+        participant_ids: set[str] = set()
         raw_rows = []
         seen_result_ids: set[str] = set()
         for doc in result_docs + shared_docs:
@@ -312,32 +320,44 @@ def get_progress(assessment_id):
             portal_id = str(d.get("portalId") or "").strip()
             if portal_id:
                 portal_ids.add(portal_id)
+            participant_id = str(d.get("participantId") or "").strip()
+            if participant_id:
+                participant_ids.add(participant_id)
             shared_ids = d.get("sharedToAssessmentIds") or []
             is_shared = assessment_id in shared_ids and d.get("assessmentId") != assessment_id
-            raw_rows.append({"resultId": doc.id, "data": d, "isShared": is_shared})
+            key = result_actor_key(d, result_id=doc.id)
+            if key.startswith("participant:"):
+                participant_ids.add(key.split(":", 1)[1])
+            elif key.startswith("portal:"):
+                portal_ids.add(key.split(":", 1)[1])
+            raw_rows.append({"resultId": doc.id, "data": d, "isShared": is_shared, "actorKey": key})
 
-        portal_labels: dict[str, str] = {}
-        for pid in portal_ids:
-            pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
-            if not pdoc.exists:
-                continue
-            pd = pdoc.to_dict() or {}
-            label = str(pd.get("displayName") or pd.get("email") or "").strip()
-            if label:
-                portal_labels[pid] = label
+        portal_labels = build_portal_labels(db, portal_ids)
+        participant_labels = build_participant_labels(db, participant_ids)
 
         by_client = {}
         for row in raw_rows:
             result_id = row["resultId"]
             d = row["data"]
-            key = result_actor_key(d, result_id=result_id)
+            key = row.get("actorKey") or result_actor_key(d, result_id=result_id)
             if not key:
                 continue
-            email = result_actor_display(d, key, portal_labels) or result_actor_email(d)
+            display_name = (
+                result_actor_display(d, key, portal_labels, participant_labels)
+                or result_actor_email(d)
+                or fallback_actor_label(key)
+            )
             if key not in by_client:
-                by_client[key] = {"clientUid": key, "clientEmail": email, "results": []}
-            elif not by_client[key].get("clientEmail") and email:
-                by_client[key]["clientEmail"] = email
+                by_client[key] = {
+                    "clientUid": key,
+                    "clientEmail": result_actor_email(d),
+                    "clientDisplayName": display_name,
+                    "results": [],
+                }
+            elif not by_client[key].get("clientDisplayName") and display_name:
+                by_client[key]["clientDisplayName"] = display_name
+            elif not by_client[key].get("clientEmail") and result_actor_email(d):
+                by_client[key]["clientEmail"] = result_actor_email(d)
             r = {
                 "resultId": result_id,
                 "testId": d.get("testId"),
@@ -372,16 +392,29 @@ def get_assessment_result(assessment_id, result_id):
     result_doc = result_ref.get()
     if not result_doc.exists:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
-    d = result_doc.to_dict()
+    d = result_doc.to_dict() or {}
     shared_ids = list(d.get("sharedToAssessmentIds") or [])
     if d.get("assessmentId") != assessment_id and assessment_id not in shared_ids:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
+
+    portal_id = str(d.get("portalId") or "").strip()
+    participant_id = str(d.get("participantId") or "").strip()
+    actor_key = result_actor_key(d, result_id=result_doc.id)
+    portal_labels = build_portal_labels(db, {portal_id} if portal_id else set())
+    participant_labels = build_participant_labels(db, {participant_id} if participant_id else set())
+    client_display = (
+        result_actor_display(d, actor_key, portal_labels, participant_labels)
+        or result_actor_email(d)
+        or fallback_actor_label(actor_key)
+    )
+
     out = {
         "resultId": result_doc.id,
         "assessmentId": d.get("assessmentId"),
         "accessCode": d.get("accessCode"),
         "testId": d.get("testId"),
-        "clientEmail": d.get("clientEmail"),
+        "clientEmail": client_display,
+        "clientDisplayName": client_display,
         "status": d.get("status"),
         "responses": d.get("responses"),
         "resultData": d.get("resultData"),
@@ -389,18 +422,6 @@ def get_assessment_result(assessment_id, result_id):
         "isShared": assessment_id in shared_ids and d.get("assessmentId") != assessment_id,
         "sharedToAssessmentIds": shared_ids,
     }
-    if not out.get("clientEmail"):
-        profile = d.get("clientProfile") or {}
-        display = str(profile.get("displayName") or "").strip()
-        if display:
-            out["clientEmail"] = display
-        else:
-            portal_id = str(d.get("portalId") or "").strip()
-            if portal_id:
-                pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).get()
-                if pdoc.exists:
-                    pd = pdoc.to_dict() or {}
-                    out["clientEmail"] = pd.get("displayName") or pd.get("email") or out.get("clientEmail")
     if d.get("completedAt"):
         ct = d["completedAt"]
         out["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
