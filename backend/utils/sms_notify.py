@@ -2,6 +2,8 @@
 import logging
 import os
 
+from config import PUBLIC_SITE_URL
+
 logger = logging.getLogger(__name__)
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
@@ -11,6 +13,11 @@ TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "")
 
 def is_sms_configured() -> bool:
     return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER)
+
+
+def _format_pin_display(pin: str) -> str:
+    digits = "".join(c for c in str(pin or "") if c.isdigit())
+    return digits.zfill(4)[-4:] if digits else str(pin or "")
 
 
 def send_portal_credentials_sms(
@@ -23,11 +30,22 @@ def send_portal_credentials_sms(
         logger.info("SMS skipped (Twilio not configured) for %s", phone[:4] + "****")
         return False, "sms_not_configured"
 
-    body = (
-        f"[WizCoCo] 내 검사실\n"
-        f"나의코드: {access_code} PIN: {pin}\n"
-        f"바로가기: {magic_url}"
+    join_code = (join_access_code or "").strip().upper()
+    my_code = (access_code or "").strip().upper()
+    pin_display = _format_pin_display(pin)
+    login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
+
+    lines = ["[WizCoCo] 검사시작"]
+    if join_code:
+        lines.append(f"검사코드: {join_code}")
+    lines.extend(
+        [
+            f"나의코드: {my_code} 비밀번호: {pin_display}",
+            f"접속: {login_url}",
+            f"바로가기: {magic_url}",
+        ]
     )
+    body = "\n".join(lines)
 
     try:
         from twilio.rest import Client
