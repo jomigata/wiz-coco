@@ -14,15 +14,11 @@ function NewAssessmentContent() {
         <h1 className="text-2xl font-bold text-white">새 검사코드 만들기</h1>
       </div>
 
-      <p className="text-slate-400 text-sm max-w-2xl">
-        <strong className="text-slate-200">검사코드</strong>를 내담자 목록에 발급합니다. 내담자마다 고유한
-        나의코드·비밀번호가 함께 발송되며, 이름·이메일·휴대폰을 직접 입력하거나 CSV/텍스트로 일괄 등록할 수
-        있습니다. 기존 검사코드를 선택해 추가 초대도 가능합니다. 내담자는{' '}
-        <AuthLink href="/portal/login" className="text-sky-400 hover:text-sky-300 underline">
-          검사시작
-        </AuthLink>
-        에서 나의코드로 검사를 진행합니다.
-      </p>
+      <ul className="text-slate-400 text-sm max-w-2xl space-y-1.5 list-disc pl-5">
+        <li>검사코드는 각 내담자에게 각각의 고유한 나의코드·비밀번호가 함께 발송됩니다.</li>
+        <li>내담자 명단은 이름·이메일·휴대폰을 직접 입력하거나 CSV/텍스트 파일로 일괄 등록할 수 있습니다.</li>
+        <li>기존 검사코드를 선택하여 내담자 추가도 가능합니다.</li>
+      </ul>
 
       <IndividualAssessmentCreateForm />
     </div>
