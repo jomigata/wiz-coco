@@ -258,7 +258,6 @@ export default function IndividualAssessmentCreateForm() {
     setError('');
     setCreated([]);
     setSharedJoinCode('');
-    setResultAssessmentId('');
 
     if (!cohortName.trim()) {
       setError('기관/단체/그룹명을 입력해 주세요.');
@@ -348,7 +347,6 @@ export default function IndividualAssessmentCreateForm() {
       }
 
       setCreated(result.created || []);
-      setResultAssessmentId(result.assessmentId || (usingExisting ? selectedAssessmentId : ''));
       setSharedJoinCode(result.joinAccessCode || result.created?.[0]?.joinAccessCode || '');
       setNotifySent(result.notifySent ?? 0);
       setNotifyFailed(result.notifyFailed ?? 0);

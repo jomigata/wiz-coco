@@ -109,7 +109,7 @@ export default function DispatchStatusPage() {
     setResendLoading(true);
     setMessage('');
     try {
-      const result = await resendDispatchCredentials(assessmentId, [...selected]);
+      const result = await resendDispatchCredentials(assessmentId, Array.from(selected));
       setMessage(
         `재발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 연락처 없음 ${result.skipped}명 (비밀번호는 새로 발급됩니다)`
       );

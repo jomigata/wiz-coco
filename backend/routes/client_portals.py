@@ -505,6 +505,15 @@ def bulk_create():
         notify_sent += sent
         notify_failed += failed
 
+    if notify_queued > 0 and not scheduled_at_iso:
+        from utils.notification_worker import process_notification_queue
+
+        flush = process_notification_queue(limit=max(notify_queued, len(normalized_rows)) + 10)
+        notify_sent += int(flush.get("sent") or 0)
+        notify_failed += int(flush.get("failed") or 0)
+        processed = int(flush.get("processed") or 0)
+        notify_queued = max(0, notify_queued - processed)
+
     return jsonify(
         {
             "async": False,
