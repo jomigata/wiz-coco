@@ -133,8 +133,9 @@ def create_portal_for_row(
     scheduled_at_iso: str,
     bulk_job_id: str,
     create_magic_link: Callable[[str, str], str],
-) -> tuple[dict, bool]:
-    """Returns (created_row_dict, notify_queued)."""
+    immediate_notify: bool = False,
+) -> tuple[dict, bool, int, int]:
+    """Returns (created_row_dict, notify_queued, notify_sent, notify_failed)."""
     display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
     email = (row.get("email") or "").strip().lower()
     phone = (row.get("phone") or "").strip()
@@ -163,25 +164,49 @@ def create_portal_for_row(
 
     magic = create_magic_link(portal_ref.id, portal_access_code)
     magic_path = f"/go?t={magic}"
+    from config import PUBLIC_SITE_URL
+
+    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
 
     notify_queued = False
+    notify_sent = 0
+    notify_failed = 0
     if queue_notify and (email or phone):
-        _enqueue_portal_notification(
-            db.collection(NOTIFICATION_QUEUE_COLLECTION),
-            portal_id=portal_ref.id,
-            email=email,
-            phone=phone,
-            portal_access_code=portal_access_code,
-            join_access_code=join_access_code,
-            pin=pin,
-            magic_path=magic_path,
-            display_name=display_name,
-            counselor_uid=counselor_uid,
-            scheduled_at_iso=scheduled_at_iso,
-            bulk_job_id=bulk_job_id,
-            cohort_id=cohort_id,
-        )
-        notify_queued = True
+        if immediate_notify and not scheduled_at_iso:
+            from utils.notification_worker import deliver_portal_credentials
+
+            result = deliver_portal_credentials(
+                email=email,
+                phone=phone,
+                access_code=portal_access_code,
+                pin=pin,
+                magic_path=magic_path,
+                display_name=display_name,
+                join_access_code=join_access_code,
+            )
+            status = result.get("status") or "failed"
+            portal_ref.update({"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP})
+            if status == "sent":
+                notify_sent = 1
+            else:
+                notify_failed = 1
+        else:
+            _enqueue_portal_notification(
+                db.collection(NOTIFICATION_QUEUE_COLLECTION),
+                portal_id=portal_ref.id,
+                email=email,
+                phone=phone,
+                portal_access_code=portal_access_code,
+                join_access_code=join_access_code,
+                pin=pin,
+                magic_path=magic_path,
+                display_name=display_name,
+                counselor_uid=counselor_uid,
+                scheduled_at_iso=scheduled_at_iso,
+                bulk_job_id=bulk_job_id,
+                cohort_id=cohort_id,
+            )
+            notify_queued = True
 
     created = {
         "portalId": portal_ref.id,
@@ -193,9 +218,10 @@ def create_portal_for_row(
         "myCode": portal_access_code,
         "pin": pin,
         "magicPath": magic_path,
+        "magicUrl": magic_url,
         "assessmentId": assessment_ref_id,
     }
-    return created, notify_queued
+    return created, notify_queued, notify_sent, notify_failed
 
 
 def create_bulk_job(
@@ -338,7 +364,7 @@ def process_bulk_job_batch(
                 break
 
             row = input_rows[idx]
-            created, queued = create_portal_for_row(
+            created, queued, sent, failed = create_portal_for_row(
                 db,
                 row=row,
                 counselor_uid=counselor_uid,
@@ -350,6 +376,7 @@ def process_bulk_job_batch(
                 scheduled_at_iso=scheduled_at_iso,
                 bulk_job_id=job_id,
                 create_magic_link=create_magic_link,
+                immediate_notify=False,
             )
             _job_created_rows_ref(db, job_id).document(created["portalId"]).set(created)
             processed_now += 1

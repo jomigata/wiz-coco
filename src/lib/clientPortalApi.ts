@@ -214,6 +214,68 @@ export async function fetchBulkPortalJobResult(jobId: string): Promise<ClientPor
   return data as ClientPortalBulkJobResult;
 }
 
+export type DispatchRecipient = {
+  portalId: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  myCode: string;
+  joinAccessCode: string;
+  notifyStatus: string;
+  notifyError?: string | null;
+  testStatus: 'completed' | 'in_progress' | 'not_started';
+  completedCount: number;
+  requiredCount: number;
+};
+
+export type AssessmentDispatchStatus = {
+  assessmentId: string;
+  title: string;
+  cohortName: string;
+  joinAccessCode: string;
+  recipients: DispatchRecipient[];
+};
+
+export async function fetchAssessmentDispatchStatus(
+  assessmentId: string
+): Promise<AssessmentDispatchStatus> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '발송 현황 조회에 실패했습니다.');
+  }
+  return data as AssessmentDispatchStatus;
+}
+
+export async function resendDispatchCredentials(
+  assessmentId: string,
+  portalIds: string[]
+): Promise<{ sent: number; failed: number; skipped: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/resend`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ portalIds }),
+    }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '재발송에 실패했습니다.');
+  }
+  return data as { sent: number; failed: number; skipped: number };
+}
+
 export async function resendBulkPortalNotifications(body: {
   jobId?: string;
   cohortId?: string;

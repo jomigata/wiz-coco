@@ -9,8 +9,8 @@ import {
   bulkCreateClientPortals,
   fetchBulkPortalJob,
   fetchBulkPortalJobResult,
-  resendBulkPortalNotifications,
 } from '@/lib/clientPortalApi';
+import { downloadBulkPortalExcel } from '@/lib/bulkPortalExcelDownload';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import type { BulkPortalJobStatus, ClientPortalBulkRow } from '@/types/clientPortal';
 import {
@@ -114,10 +114,6 @@ export default function IndividualAssessmentCreateForm() {
   const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
-  const [resultCohortId, setResultCohortId] = useState('');
-  const [resultJobId, setResultJobId] = useState('');
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
 
   const sortedGroupAssessments = useMemo(
     () => sortCounselorAssessments(groupAssessments, listSortKey),
@@ -166,8 +162,6 @@ export default function IndividualAssessmentCreateForm() {
           const full = await fetchBulkPortalJobResult(activeJobId);
           if (cancelled) return;
           setCreated(full.created || []);
-          setResultCohortId(full.cohortId || status.cohortId || '');
-          setResultJobId(activeJobId);
           setNotifyQueued(full.notifyQueued);
           setSharedJoinCode(full.joinAccessCode || '');
           setScheduledAtIso(full.scheduledAt ?? null);
@@ -264,9 +258,7 @@ export default function IndividualAssessmentCreateForm() {
     setError('');
     setCreated([]);
     setSharedJoinCode('');
-    setResendMessage('');
-    setResultCohortId('');
-    setResultJobId('');
+    setResultAssessmentId('');
 
     if (!cohortName.trim()) {
       setError('기관/단체/그룹명을 입력해 주세요.');
@@ -356,7 +348,7 @@ export default function IndividualAssessmentCreateForm() {
       }
 
       setCreated(result.created || []);
-      setResultCohortId(result.cohortId);
+      setResultAssessmentId(result.assessmentId || (usingExisting ? selectedAssessmentId : ''));
       setSharedJoinCode(result.joinAccessCode || result.created?.[0]?.joinAccessCode || '');
       setNotifySent(result.notifySent ?? 0);
       setNotifyFailed(result.notifyFailed ?? 0);
@@ -369,50 +361,8 @@ export default function IndividualAssessmentCreateForm() {
     }
   };
 
-  const handleResendNotifications = async () => {
-    setResendLoading(true);
-    setResendMessage('');
-    try {
-      const result = await resendBulkPortalNotifications({
-        jobId: resultJobId || undefined,
-        cohortId: resultCohortId || undefined,
-      });
-      const total = result.resetFailed + result.requeued;
-      setResendMessage(
-        total > 0
-          ? `알림 ${total}건을 다시 큐에 등록했습니다. 몇 분 내 순차 발송됩니다.`
-          : '재발송할 실패 알림이 없습니다. CSV로 코드를 확인해 주세요.'
-      );
-    } catch (err) {
-      setResendMessage(err instanceof Error ? err.message : '알림 재발송에 실패했습니다.');
-    } finally {
-      setResendLoading(false);
-    }
-  };
-
-  const downloadCsv = () => {
-    if (!created.length) return;
-    const header = '이름,이메일,휴대폰,검사코드,나의코드,비밀번호,매직링크경로\n';
-    const body = created
-      .map((r) =>
-        [
-          r.displayName,
-          r.email || '',
-          r.phone || '',
-          r.joinAccessCode || sharedJoinCode || '',
-          r.myCode || r.accessCode,
-          r.pin,
-          r.magicPath || '',
-        ].join(',')
-      )
-      .join('\n');
-    const blob = new Blob(['\uFEFF' + header + body], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `wizcoco-group-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const downloadExcel = () => {
+    downloadBulkPortalExcel(created, sharedJoinCode);
   };
 
   if (authPending) {
@@ -472,43 +422,37 @@ export default function IndividualAssessmentCreateForm() {
           ) : null}
           {queueNotify ? (
             <p className="mt-1 text-emerald-300/90">
-              {scheduledAtIso
-                ? `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
-                : `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다. 발송 실패 시 CSV를 저장한 뒤 아래 「알림 재발송」을 사용하세요.`}
+              {scheduledAtIso ? (
+                `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
+              ) : notifySent > 0 ? (
+                <>
+                  {notifySent}명에게 즉시 이메일·문자로 발송되었습니다.
+                  {notifyFailed > 0 ? ` (${notifyFailed}명 발송 실패 — Excel 저장 후 코드발송현황에서 재발송)` : null}
+                </>
+              ) : notifyQueued > 0 ? (
+                `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다.`
+              ) : (
+                '발송 설정이 없거나 연락처가 없습니다.'
+              )}
             </p>
           ) : (
-            <p className="mt-1 text-emerald-300/90">아래 CSV에서 코드·비밀번호를 확인하세요.</p>
+            <p className="mt-1 text-emerald-300/90">아래 Excel에서 코드·비밀번호를 확인하세요.</p>
           )}
         </div>
-        {resendMessage ? (
-          <p className="text-sm text-slate-300" role="status">
-            {resendMessage}
-          </p>
-        ) : null}
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={downloadCsv}
+            onClick={downloadExcel}
             className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700"
           >
-            CSV 다운로드
+            Excel 다운로드
           </button>
-          {queueNotify ? (
-            <button
-              type="button"
-              onClick={() => void handleResendNotifications()}
-              disabled={resendLoading}
-              className="px-5 py-2.5 rounded-lg font-medium text-slate-100 bg-slate-600 hover:bg-slate-500 disabled:opacity-50"
-            >
-              {resendLoading ? '재발송 요청 중…' : '알림 재발송'}
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
             className="px-5 py-2.5 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600"
           >
-            목록으로
+            발송목록
           </button>
         </div>
       </div>
@@ -754,7 +698,7 @@ export default function IndividualAssessmentCreateForm() {
       <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4 space-y-3">
         <p className="text-sm font-medium text-slate-200">접속 정보 발송</p>
         <p className="text-xs text-slate-500">
-          모든 알림은 큐에 등록된 뒤 순차 발송됩니다(HTTP 타임아웃 방지). 대량 발급 후 CSV를 반드시 저장해 두세요.
+          모든 알림은 큐에 등록된 뒤 순차 발송됩니다(51명 이상). 50명 이하는 즉시 발송됩니다. Excel 파일을 반드시 저장해 두세요.
         </p>
         <label className="flex items-center gap-2 cursor-pointer">
           <input

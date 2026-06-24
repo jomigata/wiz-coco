@@ -254,6 +254,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           <AuthLink
+                            href={`/counselor/assessments/dispatch?assessmentId=${encodeURIComponent(a.id)}`}
+                            className="rounded bg-violet-800/50 px-2 py-0.5 text-xs font-medium text-violet-100 hover:bg-violet-700/60 transition-colors"
+                          >
+                            코드발송현황
+                          </AuthLink>
+                          <AuthLink
                             href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
                             className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
                           >

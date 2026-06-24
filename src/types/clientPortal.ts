@@ -52,6 +52,7 @@ export interface ClientPortalBulkRow {
   pin: string;
   portalId: string;
   magicPath?: string;
+  magicUrl?: string;
 }
 
 export interface ClientPortalBulkCreateResult {

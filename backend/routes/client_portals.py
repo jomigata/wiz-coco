@@ -47,6 +47,7 @@ from utils.bulk_portal_worker import (
     resend_job_notifications,
     resend_cohort_notifications,
 )
+from utils.assessment_dispatch import get_assessment_dispatch_status, resend_portal_credentials
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -480,8 +481,11 @@ def bulk_create():
 
     created = []
     notify_queued = 0
+    notify_sent = 0
+    notify_failed = 0
+    immediate = queue_notify and not scheduled_at_iso and len(normalized_rows) <= BULK_PORTAL_SYNC_MAX
     for row in normalized_rows:
-        created_row, queued = create_portal_for_row(
+        created_row, queued, sent, failed = create_portal_for_row(
             db,
             row=row,
             counselor_uid=counselor_uid,
@@ -493,10 +497,13 @@ def bulk_create():
             scheduled_at_iso=scheduled_at_iso,
             bulk_job_id="",
             create_magic_link=_create_magic_link_token,
+            immediate_notify=immediate,
         )
         created.append(created_row)
         if queued:
             notify_queued += 1
+        notify_sent += sent
+        notify_failed += failed
 
     return jsonify(
         {
@@ -506,8 +513,8 @@ def bulk_create():
             "assessmentId": assessment_ref_id,
             "joinAccessCode": join_access_code,
             "created": created,
-            "notifySent": 0,
-            "notifyFailed": 0,
+            "notifySent": notify_sent,
+            "notifyFailed": notify_failed,
             "notifyQueued": notify_queued,
             "scheduledAt": scheduled_at_iso or None,
         }
@@ -588,6 +595,40 @@ def resend_bulk_notifications():
             result = resend_cohort_notifications(db, cohort_id, counselor_uid=g.counselor_uid)
         else:
             return jsonify({"error": "Bad Request", "message": "jobId 또는 cohortId가 필요합니다."}), 400
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
+
+
+@bp.route("/assessments/<assessment_id>/dispatch", methods=["GET"])
+@require_counselor
+def get_dispatch_status(assessment_id):
+    """검사코드별 내담자 발송·검사 완료 현황."""
+    db = get_firestore()
+    data = get_assessment_dispatch_status(db, assessment_id, g.counselor_uid)
+    if not data:
+        return jsonify({"error": "Not Found", "message": "검사코드를 찾을 수 없습니다."}), 404
+    return jsonify(data)
+
+
+@bp.route("/assessments/<assessment_id>/dispatch/resend", methods=["POST"])
+@require_counselor
+def resend_dispatch(assessment_id):
+    """선택 내담자에게 검사코드·나의코드·비밀번호 재발송 (비밀번호 재발급)."""
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    db = get_firestore()
+    try:
+        result = resend_portal_credentials(
+            db,
+            assessment_id=assessment_id,
+            counselor_uid=g.counselor_uid,
+            portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+        )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403
     except ValueError as exc:
