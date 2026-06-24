@@ -21,6 +21,7 @@ import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
+import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 
 type PortalAssessment = PortalDashboardAssessment;
 
@@ -161,6 +162,7 @@ function ClientPortalContent() {
     clearJoinParticipantSession();
     const code = normalizeAccessCodeInput(a.accessCode);
     clearForceGuestForAccessCode(code);
+    clearJoinFreshParticipantFlow(code);
     persistJoinAssessmentSession(code, {
       assessmentId: a.assessmentId,
       title: a.title,

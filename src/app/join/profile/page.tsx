@@ -14,6 +14,7 @@ import {
 } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { getJoinDashboardPath } from '@/lib/joinAssessmentSession';
+import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 
 function ProfileFormContent() {
   const router = useRouter();
@@ -90,6 +91,7 @@ function ProfileFormContent() {
       });
       clearJoinGuestSession();
       clearJoinParticipantSession();
+      clearJoinFreshParticipantFlow(code);
       setSuccessMessage(
         result.message ||
           (result.credentialsSent

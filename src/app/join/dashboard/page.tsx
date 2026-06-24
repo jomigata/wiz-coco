@@ -11,7 +11,8 @@ import {
   JOIN_STORAGE_KEY,
 } from '@/lib/joinAssessmentSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
-import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
+import { canTrackJoinResults } from '@/lib/assessmentApi';
+import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import {
   clearJoinGuestSession,
@@ -60,7 +61,7 @@ function JoinDashboardContent() {
 
   const portalSession = useMemo(() => readClientPortalSession(), []);
   const participantSession = useMemo(() => readJoinParticipantSession(), []);
-  const hasPortal = hasPortalSessionForResults();
+  const hasPortal = isPortalModeForAccessCode(code);
   const hasParticipant = hasJoinParticipantSessionForCode(code);
   const hasGuest = hasJoinGuestSessionForCode(code);
   const canTrackResults = canTrackJoinResults(code);

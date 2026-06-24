@@ -7,6 +7,7 @@ import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCo
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
+import { isJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 
 const FORCE_GUEST_ACCESS_CODE_KEY = 'wizcoco_force_guest_access_code';
 
@@ -86,13 +87,16 @@ export async function getClientResultAuthHeaders(
   accessCodeNorm?: string
 ): Promise<Record<string, string>> {
   const code = accessCodeNorm ? normalizeAccessCodeInput(accessCodeNorm) : undefined;
+  const skipPortal = Boolean(code && isJoinFreshParticipantFlow(code));
   if (code && shouldForceGuestForAccessCode(code)) {
     const guest = getJoinGuestAuthHeader(code);
     if (guest.Authorization) return guest;
   }
-  const portal = readClientPortalSession();
-  if (portal?.portalToken) {
-    return { Authorization: `Portal ${portal.portalToken}` };
+  if (!skipPortal) {
+    const portal = readClientPortalSession();
+    if (portal?.portalToken) {
+      return { Authorization: `Portal ${portal.portalToken}` };
+    }
   }
   const participant = getJoinParticipantAuthHeader(code);
   if (participant.Authorization) return participant;
@@ -116,6 +120,12 @@ export function hasPortalSessionForResults(): boolean {
 }
 
 export function canTrackJoinResults(accessCodeNorm?: string): boolean {
+  if (accessCodeNorm && isJoinFreshParticipantFlow(accessCodeNorm)) {
+    return (
+      hasParticipantSessionForResults(accessCodeNorm) ||
+      hasGuestSessionForResults(accessCodeNorm)
+    );
+  }
   return (
     hasPortalSessionForResults() ||
     hasParticipantSessionForResults(accessCodeNorm) ||

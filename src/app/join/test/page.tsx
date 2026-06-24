@@ -9,7 +9,8 @@ import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { hasPortalSessionForResults, canTrackJoinResults } from '@/lib/assessmentApi';
+import { canTrackJoinResults } from '@/lib/assessmentApi';
+import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import {
   clearJoinParticipantSession,
   hasJoinParticipantSessionForCode,
@@ -46,7 +47,7 @@ export default function TestRunnerPage() {
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
-  const hasPortal = hasPortalSessionForResults();
+  const hasPortal = isPortalModeForAccessCode(code);
   const hasParticipant = hasJoinParticipantSessionForCode(code);
   const canSubmitAuth = canTrackJoinResults(code);
 

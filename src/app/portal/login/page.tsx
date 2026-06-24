@@ -14,6 +14,7 @@ import { persistClientPortalSession } from '@/lib/clientPortalSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
+import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 
 export default function PortalLoginPage() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function PortalLoginPage() {
         persistClientPortalSession(result);
         clearJoinGuestSession();
         clearJoinParticipantSession();
+        clearJoinFreshParticipantFlow();
         setPortalReturnPath('/portal/');
         router.push('/portal/');
       } catch (err) {
