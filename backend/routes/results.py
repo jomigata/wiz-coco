@@ -15,6 +15,7 @@ from utils.participant_auth import get_participant_session_from_request
 from utils.portal_auth import get_portal_session_from_request
 from utils.join_portal_issue import try_issue_portal_for_participant
 from utils.portal_assessment_access import portal_can_use_assessment, get_portal_doc
+from utils.portal_linking import get_portal_ecosystem_ids, result_visible_to_portal_ecosystem
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
@@ -230,17 +231,30 @@ def list_results():
         seen = set()
         items = []
 
-        def _append(doc):
+        def _append(doc, *, is_shared: bool = False, source_access_code: str = ""):
             if doc.id in seen:
                 return
             seen.add(doc.id)
             d = doc.to_dict()
-            items.append({
+            item = {
                 "resultId": doc.id,
                 "testId": d.get("testId"),
                 "status": d.get("status"),
                 "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
-            })
+            }
+            if is_shared:
+                item["isShared"] = True
+                item["sourceAccessCode"] = source_access_code or d.get("accessCode", "")
+            items.append(item)
+
+        ass_refs = (
+            db.collection(ASSESSMENTS_COLLECTION)
+            .where("accessCode", "==", access_code)
+            .where("status", "==", "active")
+            .limit(1)
+            .get()
+        )
+        assessment_id = ass_refs[0].id if ass_refs else ""
 
         for doc in (
             db.collection(TEST_RESULTS_COLLECTION)
@@ -250,6 +264,18 @@ def list_results():
         ):
             _append(doc)
 
+        ecosystem = get_portal_ecosystem_ids(db, portal_id)
+        for pid in ecosystem:
+            if pid == portal_id:
+                continue
+            for doc in (
+                db.collection(TEST_RESULTS_COLLECTION)
+                .where("accessCode", "==", access_code)
+                .where("portalId", "==", pid)
+                .get()
+            ):
+                _append(doc)
+
         if join_participant_id:
             for doc in (
                 db.collection(TEST_RESULTS_COLLECTION)
@@ -258,6 +284,17 @@ def list_results():
                 .get()
             ):
                 _append(doc)
+
+        if assessment_id:
+            for doc in (
+                db.collection(TEST_RESULTS_COLLECTION)
+                .where("sharedToAssessmentIds", "array-contains", assessment_id)
+                .get()
+            ):
+                d = doc.to_dict() or {}
+                if not result_visible_to_portal_ecosystem(db, portal_id, d):
+                    continue
+                _append(doc, is_shared=True, source_access_code=d.get("accessCode", ""))
 
         return jsonify({"results": items})
 
@@ -440,6 +477,18 @@ def get_result(result_id):
             "resultData": d.get("resultData"),
             "accessCode": d.get("accessCode"),
             "assessmentId": d.get("assessmentId"),
+        })
+
+    if portal_id and result_visible_to_portal_ecosystem(db, portal_id, d):
+        return jsonify({
+            "resultId": doc.id,
+            "testId": d.get("testId"),
+            "responses": d.get("responses"),
+            "clientEmail": d.get("clientEmail"),
+            "resultData": d.get("resultData"),
+            "accessCode": d.get("accessCode"),
+            "assessmentId": d.get("assessmentId"),
+            "isShared": True,
         })
 
     if _legacy_password_valid(d, password):

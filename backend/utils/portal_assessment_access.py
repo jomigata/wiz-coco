@@ -26,24 +26,11 @@ def find_active_assessment_by_code(db, access_code: str):
 
 def portal_can_use_assessment(db, portal_id: str, access_code: str):
     """
-    포털에 배정된 검사이거나, 활성 공유(issueType=shared) 검사를 연결한 경우 True.
-    반환: assessment DocumentSnapshot 또는 None
+    포털(및 연결된 나의코드)에 배정·연결된 검사인 경우 True.
     """
-    ass_doc = find_active_assessment_by_code(db, access_code)
-    if not ass_doc:
-        return None
+    from utils.portal_linking import portal_ecosystem_can_use_assessment
 
-    portal_doc = get_portal_doc(db, portal_id)
-    if not portal_doc:
-        return None
-
-    pdata = portal_doc.to_dict() or {}
-    assigned = set(pdata.get("assignedAssessmentIds") or [])
-    linked = set(pdata.get("linkedAssessmentIds") or [])
-    if ass_doc.id in assigned or ass_doc.id in linked:
-        return ass_doc
-
-    return None
+    return portal_ecosystem_can_use_assessment(db, portal_id, access_code)
 
 
 def link_shared_assessment_to_portal(db, portal_id: str, shared_access_code: str) -> tuple[bool, str, str | None]:
@@ -53,8 +40,9 @@ def link_shared_assessment_to_portal(db, portal_id: str, shared_access_code: str
         return False, "공유 검사코드를 찾을 수 없습니다.", None
 
     ass_data = ass_doc.to_dict() or {}
-    if (ass_data.get("issueType") or "shared") != "shared":
-        return False, "공유 검사코드만 연결할 수 있습니다.", None
+    issue_type = (ass_data.get("issueType") or "shared").strip()
+    if issue_type not in ("shared", "individual"):
+        return False, "연결할 수 없는 검사코드입니다.", None
 
     portal_doc = get_portal_doc(db, portal_id)
     if not portal_doc:

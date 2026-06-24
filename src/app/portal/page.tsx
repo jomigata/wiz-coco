@@ -3,13 +3,15 @@
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchPortalDashboard, linkSharedAssessment } from '@/lib/clientPortalApi';
+import { fetchPortalDashboard, linkSharedAssessment, linkMyCodeToPortal, sharePortalResult, type LinkedPortalSummary, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, TestResultItem } from '@/lib/assessmentApi';
 import {
   formatAccessCodeDisplay,
   formatJoinAccessCodeWhileTyping,
+  formatMyCodeWhileTyping,
   isValidAccessCodeInput,
   normalizeAccessCodeInput,
+  normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
 import {
   clearClientPortalSession,
@@ -18,16 +20,7 @@ import {
 import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
-type PortalAssessment = {
-  assessmentId: string;
-  title: string;
-  welcomeMessage: string;
-  usageEndDate?: string;
-  testList: { testId: string; name: string }[];
-  accessCode: string;
-  issueType?: string;
-  isLinkedShared?: boolean;
-};
+type PortalAssessment = PortalDashboardAssessment;
 
 function PortalLoading() {
   return (
@@ -45,12 +38,23 @@ function ClientPortalContent() {
   const [displayName, setDisplayName] = useState('');
   const [myCode, setMyCode] = useState('');
   const [assessments, setAssessments] = useState<PortalAssessment[]>([]);
+  const [linkedPortals, setLinkedPortals] = useState<LinkedPortalSummary[]>([]);
   const [resultsByCode, setResultsByCode] = useState<Record<string, TestResultItem[]>>({});
 
   const [linkInput, setLinkInput] = useState('');
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkMessage, setLinkMessage] = useState('');
   const [linkError, setLinkError] = useState('');
+
+  const [linkMyCode, setLinkMyCode] = useState('');
+  const [linkMyPin, setLinkMyPin] = useState('');
+  const [linkMyLoading, setLinkMyLoading] = useState(false);
+  const [linkMyMessage, setLinkMyMessage] = useState('');
+  const [linkMyError, setLinkMyError] = useState('');
+
+  const [shareInputs, setShareInputs] = useState<Record<string, string>>({});
+  const [shareLoadingId, setShareLoadingId] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
 
   const [expandedTestKey, setExpandedTestKey] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
@@ -94,6 +98,7 @@ function ClientPortalContent() {
       setDisplayName(data.displayName || '내담자');
       setMyCode(data.accessCode || session.portal.accessCode);
       setAssessments(items);
+      setLinkedPortals(data.linkedPortals || []);
       await loadResults(items);
     } catch (err) {
       clearClientPortalSession();
@@ -182,13 +187,61 @@ function ClientPortalContent() {
       if (!session?.portalToken) throw new Error('로그인이 필요합니다.');
       const res = await linkSharedAssessment(session.portalToken, code);
       setAssessments((res.assessments || []) as PortalAssessment[]);
+      setLinkedPortals((res as { linkedPortals?: LinkedPortalSummary[] }).linkedPortals || linkedPortals);
       await loadResults((res.assessments || []) as PortalAssessment[]);
-      setLinkMessage(res.message || '공유 검사가 연결되었습니다.');
+      setLinkMessage(res.message || '검사코드가 연결되었습니다.');
       setLinkInput('');
     } catch (err) {
       setLinkError(err instanceof Error ? err.message : '연결에 실패했습니다.');
     } finally {
       setLinkLoading(false);
+    }
+  };
+
+  const handleLinkMyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinkMyError('');
+    setLinkMyMessage('');
+    setLinkMyLoading(true);
+    try {
+      const session = readClientPortalSession();
+      if (!session?.portalToken) throw new Error('로그인이 필요합니다.');
+      const res = await linkMyCodeToPortal(session.portalToken, {
+        accessCode: linkMyCode,
+        pin: linkMyPin,
+      });
+      setAssessments(res.assessments || []);
+      setLinkedPortals(res.linkedPortals || []);
+      await loadResults(res.assessments || []);
+      setLinkMyMessage(res.message);
+      setLinkMyCode('');
+      setLinkMyPin('');
+    } catch (err) {
+      setLinkMyError(err instanceof Error ? err.message : '나의코드 연결에 실패했습니다.');
+    } finally {
+      setLinkMyLoading(false);
+    }
+  };
+
+  const handleShareResult = async (resultId: string) => {
+    const target = normalizeAccessCodeInput(shareInputs[resultId] || '');
+    if (!isValidAccessCodeInput(target)) {
+      setShareMessage('공유할 검사코드 형식을 확인해 주세요.');
+      return;
+    }
+    setShareLoadingId(resultId);
+    setShareMessage('');
+    try {
+      const session = readClientPortalSession();
+      if (!session?.portalToken) throw new Error('로그인이 필요합니다.');
+      const res = await sharePortalResult(session.portalToken, { resultId, targetAccessCode: target });
+      setShareMessage(res.message);
+      setShareInputs((prev) => ({ ...prev, [resultId]: '' }));
+      await loadResults(assessments);
+    } catch (err) {
+      setShareMessage(err instanceof Error ? err.message : '공유에 실패했습니다.');
+    } finally {
+      setShareLoadingId('');
     }
   };
 
@@ -235,16 +288,62 @@ function ClientPortalContent() {
           </div>
 
           <div className="bg-slate-800/60 rounded-xl border border-slate-600 p-5">
-            <h2 className="text-base font-semibold text-white mb-2">공유 검사코드 연결</h2>
+            <h2 className="text-base font-semibold text-white mb-2">나의코드 공유</h2>
             <p className="text-slate-400 text-sm mb-3">
-              상담사가 안내한 공유 검사코드를 입력하면 검사 목록에 추가됩니다.
+              다른 나의코드·비밀번호를 연결하면 검사코드별 자료를 한 화면에서 관리할 수 있습니다.
+            </p>
+            {linkedPortals.length > 0 ? (
+              <ul className="mb-3 space-y-1 text-sm text-slate-300">
+                {linkedPortals.map((p) => (
+                  <li key={p.portalId}>
+                    연결됨: {p.displayName || '내담자'} ·{' '}
+                    <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(p.accessCode)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <form onSubmit={handleLinkMyCode} className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={linkMyCode}
+                onChange={(e) => setLinkMyCode(formatMyCodeWhileTyping(e.target.value))}
+                placeholder="나의코드"
+                className="flex-1 min-w-[8rem] px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+                disabled={linkMyLoading}
+              />
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                value={linkMyPin}
+                onChange={(e) => setLinkMyPin(normalizeJoinPinDigits(e.target.value))}
+                placeholder="비밀번호"
+                className="w-28 px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+                disabled={linkMyLoading}
+              />
+              <button
+                type="submit"
+                disabled={linkMyLoading}
+                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {linkMyLoading ? '연결 중…' : '나의코드 연결'}
+              </button>
+            </form>
+            {linkMyMessage ? <p className="text-emerald-300 text-sm mt-2">{linkMyMessage}</p> : null}
+            {linkMyError ? <p className="text-red-400 text-sm mt-2">{linkMyError}</p> : null}
+          </div>
+
+          <div className="bg-slate-800/60 rounded-xl border border-slate-600 p-5">
+            <h2 className="text-base font-semibold text-white mb-2">검사코드 연결</h2>
+            <p className="text-slate-400 text-sm mb-3">
+              일반·그룹 검사코드를 입력하면 검사 목록에 추가됩니다.
             </p>
             <form onSubmit={handleLinkShared} className="flex flex-wrap gap-2">
               <input
                 type="text"
                 value={linkInput}
                 onChange={(e) => setLinkInput(formatJoinAccessCodeWhileTyping(e.target.value))}
-                placeholder="공유 검사코드"
+                placeholder="검사코드"
                 className="flex-1 min-w-[10rem] px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
                 disabled={linkLoading}
               />
@@ -282,7 +381,12 @@ function ClientPortalContent() {
                         <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
                         {a.isLinkedShared ? (
                           <span className="ml-2 text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
-                            공유 연결
+                            수동 연결
+                          </span>
+                        ) : null}
+                        {a.isFromLinkedPortal ? (
+                          <span className="ml-2 text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5">
+                            연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
                           </span>
                         ) : null}
                       </p>
@@ -375,34 +479,74 @@ function ClientPortalContent() {
                                         <p className="text-slate-400 text-xs mt-0.5">
                                           {completedResults.length - idx}회차 · 제출{' '}
                                           {formatCompletedAt(r.completedAt)}
+                                          {r.isShared ? (
+                                            <span className="ml-2 text-purple-300">
+                                              · 공유됨
+                                              {r.sourceAccessCode
+                                                ? ` (${formatAccessCodeDisplay(r.sourceAccessCode)}에서)`
+                                                : ''}
+                                            </span>
+                                          ) : null}
                                         </p>
                                       </div>
                                       <div className="flex items-center gap-2 shrink-0">
-                                        <button
-                                          type="button"
-                                          onClick={() => openTest(a, t.testId, r.resultId)}
-                                          className="text-blue-400 hover:text-blue-300 text-xs"
-                                        >
-                                          수정
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setActionError('');
-                                            setDeleteModal({
-                                              resultId: r.resultId,
-                                              testName,
-                                              accessCode: code,
-                                            });
-                                          }}
-                                          className="text-red-400 hover:text-red-300 text-xs"
-                                        >
-                                          삭제
-                                        </button>
+                                        {!r.isShared ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => openTest(a, t.testId, r.resultId)}
+                                            className="text-blue-400 hover:text-blue-300 text-xs"
+                                          >
+                                            수정
+                                          </button>
+                                        ) : null}
+                                        {!r.isShared ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setActionError('');
+                                              setDeleteModal({
+                                                resultId: r.resultId,
+                                                testName,
+                                                accessCode: code,
+                                              });
+                                            }}
+                                            className="text-red-400 hover:text-red-300 text-xs"
+                                          >
+                                            삭제
+                                          </button>
+                                        ) : null}
                                       </div>
                                     </div>
+                                    {!r.isShared ? (
+                                      <div className="mt-2 flex flex-wrap gap-2 items-center">
+                                        <input
+                                          type="text"
+                                          value={shareInputs[r.resultId] || ''}
+                                          onChange={(e) =>
+                                            setShareInputs((prev) => ({
+                                              ...prev,
+                                              [r.resultId]: formatJoinAccessCodeWhileTyping(e.target.value),
+                                            }))
+                                          }
+                                          placeholder="공유할 검사코드"
+                                          className="flex-1 min-w-[10rem] px-2 py-1.5 rounded bg-slate-900/60 border border-slate-600 text-white text-xs"
+                                          disabled={shareLoadingId === r.resultId}
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => void handleShareResult(r.resultId)}
+                                          disabled={shareLoadingId === r.resultId}
+                                          className="px-2 py-1.5 rounded bg-purple-700/80 text-white text-xs hover:bg-purple-700 disabled:opacity-50"
+                                        >
+                                          {shareLoadingId === r.resultId ? '공유 중…' : '결과 공유'}
+                                        </button>
+                                      </div>
+                                    ) : null}
                                   </div>
                                 ))}
+                                {shareMessage ? (
+                                  <p className="text-purple-200/90 text-xs px-1">{shareMessage}</p>
+                                ) : null}
                                 <button
                                   type="button"
                                   onClick={() => openTest(a, t.testId)}
@@ -426,7 +570,8 @@ function ClientPortalContent() {
             <p className="font-medium text-slate-300 mb-1">안내</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>검사는 <strong className="text-slate-200">검사코드</strong>로 시작하고, 진행·관리는 <strong className="text-slate-200">나의코드</strong>로 내 검사실에서 확인합니다.</li>
-              <li>새 공유 검사가 있으면 위에서 검사코드를 추가하세요.</li>
+              <li>나의코드가 여러 개면 위에서 연결해 한곳에서 관리하세요.</li>
+              <li>완료된 검사는 다른 검사코드로 <strong className="text-slate-200">결과 공유</strong>할 수 있으며, 담당 상담사도 확인할 수 있습니다.</li>
             </ul>
           </div>
         </main>

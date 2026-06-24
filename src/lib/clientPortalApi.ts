@@ -61,15 +61,29 @@ export async function verifyPortalMagicToken(token: string): Promise<ClientPorta
   return data as ClientPortalLoginResult;
 }
 
+export type PortalDashboardAssessment = {
+  assessmentId: string;
+  title: string;
+  welcomeMessage: string;
+  usageEndDate?: string;
+  testList: { testId: string; name: string }[];
+  accessCode: string;
+  issueType?: string;
+  isLinkedShared?: boolean;
+  isFromLinkedPortal?: boolean;
+  sourceMyCode?: string;
+  sourcePortalId?: string;
+};
+
+export type LinkedPortalSummary = {
+  portalId: string;
+  accessCode: string;
+  displayName?: string;
+};
+
 export async function fetchPortalDashboard(portalToken: string): Promise<ClientPortalLoginResult['portal'] & {
-  assessments: Array<{
-    assessmentId: string;
-    title: string;
-    welcomeMessage: string;
-    usageEndDate?: string;
-    testList: { testId: string; name: string }[];
-    accessCode: string;
-  }>;
+  assessments: PortalDashboardAssessment[];
+  linkedPortals?: LinkedPortalSummary[];
 }> {
   const res = await fetch(`${getBaseUrl()}/api/client-portals/me`, {
     headers: { Authorization: `Portal ${portalToken}` },
@@ -77,6 +91,50 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '세션이 만료되었습니다.');
+  }
+  return data;
+}
+
+export async function linkMyCodeToPortal(
+  portalToken: string,
+  body: { accessCode: string; pin: string }
+): Promise<{ message: string; assessments: PortalDashboardAssessment[]; linkedPortals: LinkedPortalSummary[] }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/link-my-code`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Portal ${portalToken}`,
+    },
+    body: JSON.stringify({
+      accessCode: normalizeMyCodeInput(body.accessCode),
+      pin: normalizeJoinPinDigits(body.pin),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '나의코드 연결에 실패했습니다.');
+  }
+  return data;
+}
+
+export async function sharePortalResult(
+  portalToken: string,
+  body: { resultId: string; targetAccessCode: string }
+): Promise<{ message: string }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/share-result`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Portal ${portalToken}`,
+    },
+    body: JSON.stringify({
+      resultId: body.resultId,
+      targetAccessCode: normalizeAccessCodeInput(body.targetAccessCode),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '검사 결과 공유에 실패했습니다.');
   }
   return data;
 }

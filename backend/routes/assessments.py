@@ -291,15 +291,25 @@ def get_progress(assessment_id):
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     access_code = ass.to_dict().get("accessCode", "")
     results_refs = db.collection(TEST_RESULTS_COLLECTION).where("assessmentId", "==", assessment_id).get()
+    shared_refs = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("sharedToAssessmentIds", "array-contains", assessment_id)
+        .get()
+    )
 
     portal_ids: set[str] = set()
     raw_rows = []
-    for doc in results_refs:
+    seen_result_ids: set[str] = set()
+    for doc in list(results_refs) + list(shared_refs):
+        if doc.id in seen_result_ids:
+            continue
+        seen_result_ids.add(doc.id)
         d = doc.to_dict()
         portal_id = str(d.get("portalId") or "").strip()
         if portal_id:
             portal_ids.add(portal_id)
-        raw_rows.append((doc.id, d))
+        row = {"resultId": doc.id, "data": d, "isShared": assessment_id in (d.get("sharedToAssessmentIds") or []) and d.get("assessmentId") != assessment_id}
+        raw_rows.append(row)
 
     portal_labels: dict[str, str] = {}
     for pid in portal_ids:
@@ -312,7 +322,9 @@ def get_progress(assessment_id):
             portal_labels[pid] = label
 
     by_client = {}
-    for result_id, d in raw_rows:
+    for row in raw_rows:
+        result_id = row["resultId"]
+        d = row["data"]
         key = result_actor_key(d, result_id=result_id)
         if not key:
             continue
@@ -321,7 +333,13 @@ def get_progress(assessment_id):
             by_client[key] = {"clientUid": key, "clientEmail": email, "results": []}
         elif not by_client[key].get("clientEmail") and email:
             by_client[key]["clientEmail"] = email
-        r = {"resultId": result_id, "testId": d.get("testId"), "status": d.get("status"), "completedAt": None}
+        r = {
+            "resultId": result_id,
+            "testId": d.get("testId"),
+            "status": d.get("status"),
+            "completedAt": None,
+            "isShared": bool(row.get("isShared")),
+        }
         if d.get("completedAt"):
             ct = d["completedAt"]
             r["completedAt"] = ct.isoformat() if hasattr(ct, "isoformat") else str(ct)
@@ -343,7 +361,8 @@ def get_assessment_result(assessment_id, result_id):
     if not result_doc.exists:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     d = result_doc.to_dict()
-    if d.get("assessmentId") != assessment_id:
+    shared_ids = list(d.get("sharedToAssessmentIds") or [])
+    if d.get("assessmentId") != assessment_id and assessment_id not in shared_ids:
         return jsonify({"error": "Not Found", "message": "Result not found"}), 404
     out = {
         "resultId": result_doc.id,
@@ -355,6 +374,8 @@ def get_assessment_result(assessment_id, result_id):
         "responses": d.get("responses"),
         "resultData": d.get("resultData"),
         "completedAt": None,
+        "isShared": assessment_id in shared_ids and d.get("assessmentId") != assessment_id,
+        "sharedToAssessmentIds": shared_ids,
     }
     if not out.get("clientEmail"):
         profile = d.get("clientProfile") or {}

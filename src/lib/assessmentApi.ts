@@ -106,6 +106,8 @@ export interface TestResultItem {
   testId: string;
   status: string;
   completedAt: string | null;
+  isShared?: boolean;
+  sourceAccessCode?: string;
 }
 
 /** POST /api/assessments/public/lookup — 활성 검사코드만으로 세트 정보 조회 */

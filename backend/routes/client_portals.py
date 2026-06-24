@@ -26,8 +26,14 @@ from utils.access_code import (
     normalize_access_code,
     is_valid_access_code,
 )
+from utils.portal_linking import (
+    link_my_code_to_portal,
+    list_linked_portal_summaries,
+    share_result_to_assessment,
+    get_portal_ecosystem_ids,
+)
 from utils.my_code import normalize_my_code, is_valid_my_code
-from utils.portal_assessment_access import link_shared_assessment_to_portal
+from utils.portal_assessment_access import link_shared_assessment_to_portal, get_portal_doc
 from utils.password import hash_password, verify_password
 from utils.portal_magic import create_portal_magic_link_token, verify_portal_magic_link_token
 from utils.bulk_portal_worker import (
@@ -98,6 +104,29 @@ def _load_assessments_for_portal(db, portal_doc):
                 "isLinkedShared": is_linked,
             }
         )
+    return items
+
+
+def _load_assessments_for_portal_ecosystem(db, primary_portal_id: str):
+    """현재 + 연결된 나의코드의 검사코드 목록(중복 assessment 제거)."""
+    items = []
+    seen = set()
+    for pid in get_portal_ecosystem_ids(db, primary_portal_id):
+        pdoc = get_portal_doc(db, pid)
+        if not pdoc:
+            continue
+        pd = pdoc.to_dict() or {}
+        source_code = pd.get("accessCode", "")
+        for item in _load_assessments_for_portal(db, pdoc):
+            aid = item.get("assessmentId")
+            if not aid or aid in seen:
+                continue
+            seen.add(aid)
+            enriched = dict(item)
+            enriched["sourcePortalId"] = pid
+            enriched["sourceMyCode"] = source_code
+            enriched["isFromLinkedPortal"] = pid != primary_portal_id
+            items.append(enriched)
     return items
 
 
@@ -191,8 +220,15 @@ def portal_me():
     pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).get()
     if not pdoc.exists:
         return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
-    assessments = _load_assessments_for_portal(db, pdoc)
-    return jsonify({**_portal_public_json(pdoc, assessments), "assessments": assessments})
+    assessments = _load_assessments_for_portal_ecosystem(db, portal_id)
+    linked_portals = list_linked_portal_summaries(db, portal_id)
+    return jsonify(
+        {
+            **_portal_public_json(pdoc, assessments),
+            "assessments": assessments,
+            "linkedPortals": linked_portals,
+        }
+    )
 
 
 @bp.route("/magic-link/verify", methods=["POST"])
@@ -253,14 +289,71 @@ def link_shared_assessment():
         return jsonify({"error": "Bad Request", "message": message}), 400
 
     pdoc = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id).get()
-    assessments = _load_assessments_for_portal(db, pdoc) if pdoc.exists else []
+    assessments = _load_assessments_for_portal_ecosystem(db, portal_id) if pdoc.exists else []
     return jsonify(
         {
             "message": message,
             "assessmentId": assessment_id,
             "assessments": assessments,
+            "linkedPortals": list_linked_portal_summaries(db, portal_id),
         }
     )
+
+
+@bp.route("/link-my-code", methods=["POST"])
+@limit_access_code
+def link_my_code():
+    """다른 나의코드+PIN을 현재 세션 포털에 연결."""
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    body = request.get_json() or {}
+    my_code = normalize_my_code(body.get("accessCode") or body.get("myCode") or "")
+    pin = "".join(c for c in str(body.get("pin") or "") if c.isdigit())[:4]
+    if not is_valid_my_code(my_code):
+        return jsonify({"error": "Bad Request", "message": "나의코드 형식을 확인해 주세요."}), 400
+
+    db = get_firestore()
+    portal_id = (payload.get("portalId") or "").strip()
+    ok, message = link_my_code_to_portal(db, portal_id, my_code, pin)
+    if not ok:
+        return jsonify({"error": "Bad Request", "message": message}), 400
+
+    assessments = _load_assessments_for_portal_ecosystem(db, portal_id)
+    return jsonify(
+        {
+            "message": message,
+            "assessments": assessments,
+            "linkedPortals": list_linked_portal_summaries(db, portal_id),
+        }
+    )
+
+
+@bp.route("/share-result", methods=["POST"])
+@limit_access_code
+def share_result():
+    """완료된 검사 결과를 다른 검사코드(assessment)에 공유."""
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    body = request.get_json() or {}
+    result_id = (body.get("resultId") or "").strip()
+    target_code = normalize_access_code(
+        body.get("targetAccessCode") or body.get("sharedAccessCode") or body.get("accessCode") or ""
+    )
+    if not result_id:
+        return jsonify({"error": "Bad Request", "message": "resultId가 필요합니다."}), 400
+    if not target_code:
+        return jsonify({"error": "Bad Request", "message": "공유할 검사코드를 입력해 주세요."}), 400
+
+    db = get_firestore()
+    portal_id = (payload.get("portalId") or "").strip()
+    ok, message = share_result_to_assessment(db, portal_id, result_id, target_code)
+    if not ok:
+        return jsonify({"error": "Bad Request", "message": message}), 400
+    return jsonify({"message": message, "resultId": result_id, "targetAccessCode": target_code})
 
 
 @bp.route("/bulk", methods=["POST"])
