@@ -132,11 +132,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             </p>
           </div>
           <p className="mt-2 text-sm text-emerald-400/80">
-            내담자에게 코드를 전달하세요.{' '}
-            <AuthLink href="/join/" className="text-emerald-300 underline hover:text-emerald-200">
-              검사 시작(/join)
+            내담자에게 나의코드·비밀번호를 전달하세요.{' '}
+            <AuthLink href="/portal/login" className="text-emerald-300 underline hover:text-emerald-200">
+              검사시작
             </AuthLink>
-            에서 코드만 입력하면 됩니다.
+            에서 로그인하면 검사를 진행할 수 있습니다.
           </p>
         </div>
       )}
@@ -207,6 +207,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 <tr>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">생성 일시</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사코드</th>
+                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">기관/단체/그룹명</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사명</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용최종일</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">진행</th>
@@ -220,12 +221,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const total = incomplete + complete;
                   const progressPct = total > 0 ? Math.round((complete / total) * 100) : 0;
                   const expired = isExpired(a.usageEndDate);
-                  const issueType = a.issueType || (a.targetAudience === '그룹' ? 'shared' : 'individual');
-                  const typeLabel = issueType === 'shared' ? '일반' : '그룹';
-                  const typeClass =
-                    issueType === 'shared'
-                      ? 'border-purple-500/30 bg-purple-500/15 text-purple-200'
-                      : 'border-sky-500/30 bg-sky-500/15 text-sky-200';
+                  const orgLabel = (a.cohortName || a.title || '-').trim();
 
                   return (
                     <tr key={a.id} className="group hover:bg-white/[0.04]">
@@ -235,11 +231,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <td className="max-w-[10rem] truncate px-2 py-2 text-left font-mono text-sm font-semibold text-sky-300 tracking-wide">
                         {formatAccessCodeDisplay(a.accessCode)}
                       </td>
+                      <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200">
+                        {orgLabel}
+                      </td>
                       <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200">
                         <span className="font-medium text-white">{a.title || '-'}</span>
-                        <span className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 align-middle text-[10px] font-medium border ${typeClass}`}>
-                          {typeLabel}
-                        </span>
                         {expired && (
                           <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
                             만료

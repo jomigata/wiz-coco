@@ -1,4 +1,4 @@
-"""그룹코드 대량 발급 — Firestore job + 배치 처리."""
+"""검사코드 대량 발급 — Firestore job + 배치 처리."""
 from __future__ import annotations
 
 import time
@@ -39,6 +39,7 @@ def prepare_bulk_assessment(
     test_list: list,
     existing_assessment_id: str,
     cohort_id: str,
+    cohort_name: str = "",
 ) -> tuple[str, str, str]:
     """Returns (assessment_id, join_access_code, cohort_id)."""
     if existing_assessment_id:
@@ -51,7 +52,7 @@ def prepare_bulk_assessment(
         if (ass_data.get("status") or "active") != "active":
             raise ValueError("비활성화된 검사코드입니다.")
         if (ass_data.get("issueType") or "individual") != "individual":
-            raise ValueError("그룹코드(개별 발급) 검사만 선택할 수 있습니다.")
+            raise ValueError("검사코드(개별 발급) 검사만 선택할 수 있습니다.")
         join_access_code = ass_data.get("accessCode", "")
         cohort_id = ass_data.get("clientPortalCohortId") or cohort_id
         return existing_assessment_id, join_access_code, cohort_id
@@ -74,6 +75,7 @@ def prepare_bulk_assessment(
             "createdAt": SERVER_TIMESTAMP,
             "status": "active",
             "clientPortalCohortId": cohort_id,
+            "cohortName": cohort_name,
         }
     )
     return assessment_ref.id, join_access_code, cohort_id

@@ -161,7 +161,7 @@ export default function CounselingAppointmentsPage() {
                 상담 예약을 이용하려면 담당 전문가와의 연결이 필요합니다. 검사 안내를 받으셨다면 검사실에서 시작해 주세요.
               </p>
               <a
-                href="/join/"
+                href="/portal/login/"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
               >
                 검사실로 이동

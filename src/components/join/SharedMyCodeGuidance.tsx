@@ -36,7 +36,7 @@ export default function SharedMyCodeGuidance({
         </li>
         <li>
           <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 underline">
-            내 검사실 들어가기
+            검사시작
           </Link>
           에서 나의코드와 비밀번호로 로그인하면 검사 결과를 확인할 수 있습니다.
         </li>
@@ -64,7 +64,7 @@ export default function SharedMyCodeGuidance({
           href="/portal/login/"
           className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 text-sm"
         >
-          내 검사실 들어가기
+          검사시작
         </Link>
       )}
     </div>

@@ -70,7 +70,7 @@ export default function PublicTestPortalSections() {
             ))}
           </div>
           <p className="text-center mt-8">
-            <Link href="/join/" className="text-blue-400 hover:text-blue-300 font-medium">
+            <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 font-medium">
               검사 시작하기 →
             </Link>
           </p>

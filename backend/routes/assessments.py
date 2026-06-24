@@ -73,48 +73,19 @@ def _strip_join_secrets_for_counselor_api(d: dict) -> None:
 @bp.route("", methods=["POST"])
 @require_counselor
 def create_assessment():
-    """상담사: 공동 이용 검사코드(세트) 생성. 내담자는 /join 에서 코드만으로 시작."""
+    """상담사: 공동 이용(일반) 검사코드 생성 — 지원 종료. 검사코드 일괄 발급 API 사용."""
     body = request.get_json() or {}
-    title = (body.get("title") or "").strip()
     issue_type = (body.get("issueType") or "shared").strip()
-    if issue_type not in ("shared", "individual"):
-        issue_type = "shared"
-    if issue_type != "shared":
+    if issue_type != "individual":
         return jsonify(
-            {"error": "Bad Request", "message": "개별 발급은 내담자 목록 일괄 생성 API를 사용하세요."}
-        ), 400
-    target_audience = "그룹"
-    welcome_message = (body.get("welcomeMessage") or "").strip()
-    usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
-    test_list = body.get("testList") or []
-    if not isinstance(test_list, list):
-        test_list = []
-    test_list = [
-        {"testId": str(t.get("testId", "")), "name": str(t.get("name", ""))}
-        for t in test_list
-        if t
-    ]
-    if not title:
-        return jsonify({"error": "Bad Request", "message": "title required"}), 400
-    if usage_end_date is None:
-        return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
-    access_code = generate_unique_access_code()
-    db = get_firestore()
-    data = {
-        "accessCode": access_code,
-        "counselorId": g.counselor_uid,
-        "title": title,
-        "issueType": issue_type,
-        "targetAudience": target_audience,
-        "welcomeMessage": welcome_message,
-        "usageEndDate": usage_end_date or "",
-        "testList": test_list,
-        "createdAt": SERVER_TIMESTAMP,
-        "status": "active",
-    }
-    ref = db.collection(ASSESSMENTS_COLLECTION).document()
-    ref.set(data)
-    return jsonify({"assessmentId": ref.id, "accessCode": access_code, "issueType": issue_type}), 201
+            {
+                "error": "Gone",
+                "message": "일반코드(공유 검사코드) 생성은 지원하지 않습니다. 새 검사코드 만들기에서 내담자 목록을 등록해 주세요.",
+            }
+        ), 410
+    return jsonify(
+        {"error": "Bad Request", "message": "개별 발급은 내담자 목록 일괄 생성 API를 사용하세요."}
+    ), 400
 
 
 def _is_completed_result(d):

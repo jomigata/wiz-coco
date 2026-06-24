@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { loginClientPortal } from '@/lib/clientPortalApi';
 import {
@@ -68,9 +67,9 @@ export default function PortalLoginPage() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-8 shadow-xl">
-            <h1 className="text-2xl font-bold text-white mb-2">내 검사실 들어가기</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">검사시작</h1>
             <p className="text-slate-300 text-sm mb-6">
-              검사 완료후 이메일/핸드폰 으로 받으신 나의코드/비밀번호를 입력해 주세요.
+              안내 받으신 나의코드/비밀번호를 입력해 주세요.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -111,15 +110,9 @@ export default function PortalLoginPage() {
                 disabled={!canSubmit}
                 className="w-full py-3 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? '확인 중…' : '내 검사실 들어가기'}
+                {loading ? '확인 중…' : '검사시작'}
               </button>
             </form>
-            <p className="mt-6 text-center text-slate-500 text-xs">
-              새 검사를 시작하려면{' '}
-              <Link href="/join/" className="text-blue-400 hover:text-blue-300">
-                검사 시작하기
-              </Link>
-            </p>
           </div>
         </main>
       </div>

@@ -418,6 +418,8 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
+  /** 기관/단체/그룹명 (검사코드 세트) */
+  cohortName?: string;
 }
 
 /** 검사코드 발급 직후 목록 상단 배너용(세션에서 전달) */

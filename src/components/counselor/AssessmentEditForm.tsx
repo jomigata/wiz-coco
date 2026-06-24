@@ -149,7 +149,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       <div>
         <span className="block text-sm font-medium text-slate-300 mb-2">유형</span>
         <p className="text-white text-sm">
-          {initial.issueType === 'individual' ? '그룹코드' : '일반코드'}
+          {initial.issueType === 'individual' ? '검사코드(개별 발급)' : '일반코드(지원 종료)'}
         </p>
         <p className="text-slate-500 text-xs mt-1">발급 유형은 변경할 수 없습니다.</p>
       </div>

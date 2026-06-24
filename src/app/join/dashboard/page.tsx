@@ -72,8 +72,11 @@ function JoinDashboardContent() {
   const [error, setError] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
 
-  const hasCompletedTest = joinResults.some((r) => r.status === 'completed');
-  const needsProfile = !hasPortal && !hasParticipant && hasCompletedTest;
+  useEffect(() => {
+    if (!hasPortal) {
+      router.replace('/portal/login/');
+    }
+  }, [hasPortal, router]);
 
   useEffect(() => {
     if (hasPortal) {
@@ -174,7 +177,7 @@ function JoinDashboardContent() {
     return withIdx;
   }, [assessment, latestCompletedByTestId, joinResults]);
 
-  if (loading || !guestReady) {
+  if (!hasPortal || loading || !guestReady) {
     return <DashboardLoading />;
   }
 
@@ -184,8 +187,8 @@ function JoinDashboardContent() {
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{error || '검사코드 정보를 불러올 수 없습니다.'}</p>
-            <Link href="/join" className="text-blue-400 hover:text-blue-300">
-              검사 코드 다시 입력
+            <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300">
+              검사시작
             </Link>
           </div>
         </div>
@@ -210,20 +213,6 @@ function JoinDashboardContent() {
 
           {participantSession?.displayName ? (
             <p className="text-sm text-slate-400 mb-2">{participantSession.displayName}님</p>
-          ) : null}
-
-          {needsProfile ? (
-            <div className="rounded-lg border border-cyan-500/40 bg-cyan-950/30 p-4 space-y-3">
-              <p className="text-cyan-100 text-sm">
-                검사를 완료하셨습니다. 나의코드 발급을 위해 검사자 정보를 입력해 주세요.
-              </p>
-              <Link
-                href={`/join/profile?accessCode=${encodeURIComponent(code)}`}
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 text-sm"
-              >
-                검사완료 및 나의코드 생성하기
-              </Link>
-            </div>
           ) : null}
 
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
@@ -354,8 +343,8 @@ function JoinDashboardContent() {
         </main>
 
         <p className="text-center mt-6">
-          <Link href={hasPortal ? '/portal/' : '/join'} className="text-blue-400 hover:text-blue-300 text-sm">
-            {hasPortal ? '내 검사실로' : '다른 검사 코드 입력'}
+          <Link href={hasPortal ? '/portal/' : '/portal/login/'} className="text-blue-400 hover:text-blue-300 text-sm">
+            {hasPortal ? '내 검사실로' : '검사시작'}
           </Link>
         </p>
       </div>

@@ -13,6 +13,12 @@ import {
 } from '@/lib/clientPortalApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import type { BulkPortalJobStatus, ClientPortalBulkRow } from '@/types/clientPortal';
+import {
+  ASSESSMENT_LIST_SORT_OPTIONS,
+  formatAssessmentSelectLabel,
+  sortCounselorAssessments,
+  type AssessmentListSortKey,
+} from '@/lib/assessmentSortOptions';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 import {
@@ -85,6 +91,7 @@ export default function IndividualAssessmentCreateForm() {
   const [groupAssessments, setGroupAssessments] = useState<CounselorAssessment[]>([]);
   const [loadingAssessments, setLoadingAssessments] = useState(true);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
+  const [listSortKey, setListSortKey] = useState<AssessmentListSortKey>('createdDesc');
 
   const [cohortName, setCohortName] = useState('');
   const [title, setTitle] = useState('');
@@ -111,6 +118,11 @@ export default function IndividualAssessmentCreateForm() {
   const [resultJobId, setResultJobId] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
+
+  const sortedGroupAssessments = useMemo(
+    () => sortCounselorAssessments(groupAssessments, listSortKey),
+    [groupAssessments, listSortKey]
+  );
 
   const usingExisting = Boolean(selectedAssessmentId.trim());
   const selectedAssessment = useMemo(
@@ -197,7 +209,10 @@ export default function IndividualAssessmentCreateForm() {
     setError('');
     if (!id) return;
     const found = groupAssessments.find((a) => a.id === id);
-    if (found) populateFromAssessment(found);
+    if (found) {
+      populateFromAssessment(found);
+      if (found.cohortName) setCohortName(found.cohortName);
+    }
   };
 
   const recipients = useMemo(
@@ -253,6 +268,10 @@ export default function IndividualAssessmentCreateForm() {
     setResultCohortId('');
     setResultJobId('');
 
+    if (!cohortName.trim()) {
+      setError('기관/단체/그룹명을 입력해 주세요.');
+      return;
+    }
     if (!usingExisting && !title.trim()) {
       setError('안내 제목을 입력해 주세요.');
       return;
@@ -295,8 +314,8 @@ export default function IndividualAssessmentCreateForm() {
           ? new Date(scheduledAtLocal).toISOString()
           : undefined;
       const result = await bulkCreateClientPortals({
-        cohortName: (cohortName.trim() || title.trim()).slice(0, 120),
-        title: (title.trim() || selectedAssessment?.title || '그룹 검사').slice(0, 200),
+        cohortName: cohortName.trim().slice(0, 120),
+        title: (title.trim() || selectedAssessment?.title || cohortName.trim() || '검사').slice(0, 200),
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
         testList: usingExisting
@@ -344,7 +363,7 @@ export default function IndividualAssessmentCreateForm() {
       setNotifyQueued(result.notifyQueued);
       setScheduledAtIso(result.scheduledAt ?? scheduledAt ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '그룹코드 발급에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '검사코드 발급에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -412,7 +431,7 @@ export default function IndividualAssessmentCreateForm() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="rounded-lg border border-blue-500/40 bg-blue-950/30 p-5 text-blue-100">
-          <p className="font-medium">그룹코드 대량 발급 진행 중…</p>
+          <p className="font-medium">검사코드 대량 발급 진행 중…</p>
           <p className="mt-2 text-sm text-blue-200/90">
             {jobProgress.processedRows.toLocaleString('ko-KR')} /{' '}
             {jobProgress.totalRows.toLocaleString('ko-KR')}명 처리됨 ({jobProgress.progressPct}%)
@@ -499,22 +518,42 @@ export default function IndividualAssessmentCreateForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">그룹코드 선택</label>
+        <div className="flex flex-wrap items-end gap-3 mb-2">
+          <label className="block text-sm font-medium text-slate-300">검사코드 선택</label>
+          <div className="ml-auto flex items-center gap-2">
+            <label htmlFor="assessment-sort" className="text-xs text-slate-500 whitespace-nowrap">
+              정렬
+            </label>
+            <select
+              id="assessment-sort"
+              value={listSortKey}
+              onChange={(e) => setListSortKey(e.target.value as AssessmentListSortKey)}
+              disabled={loading || loadingAssessments}
+              className="px-2 py-1 rounded-lg bg-slate-700 border border-slate-600 text-white text-xs"
+            >
+              {ASSESSMENT_LIST_SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <select
           value={selectedAssessmentId}
           onChange={(e) => handleAssessmentSelect(e.target.value)}
           disabled={loading || loadingAssessments}
           className="w-full max-w-xl px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
         >
-          <option value="">+ 새 그룹코드 만들기</option>
-          {groupAssessments.map((a) => (
+          <option value="">+ 새 검사코드 만들기</option>
+          {sortedGroupAssessments.map((a) => (
             <option key={a.id} value={a.id}>
-              {formatAccessCodeDisplay(a.accessCode)} — {a.title || '제목 없음'}
+              {formatAssessmentSelectLabel(a)}
             </option>
           ))}
         </select>
         <p className="mt-1 text-slate-500 text-xs">
-          기존 그룹코드를 선택하면 아래 설정이 채워지며, 목록의 모든 내담자에게{' '}
+          기존 검사코드를 선택하면 아래 설정이 채워지며, 목록의 모든 내담자에게{' '}
           <strong className="text-slate-400">동일한 검사코드</strong>가 발송됩니다.
         </p>
         {usingExisting && selectedAssessment ? (
@@ -529,9 +568,12 @@ export default function IndividualAssessmentCreateForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">그룹명 (선택)</label>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            기관/단체/그룹명 <span className="text-red-400">*</span>
+          </label>
           <input
             type="text"
+            required
             maxLength={120}
             className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
             placeholder="예: 2025 OO고 3학년"
@@ -778,7 +820,7 @@ export default function IndividualAssessmentCreateForm() {
           disabled={!canSubmit}
           className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? '발급 중…' : `${recipients.length || 0}명 그룹코드 발급`}
+          {loading ? '발급 중…' : `${recipients.length || 0}명 검사코드 발급`}
         </button>
         <button
           type="button"

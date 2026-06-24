@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { lookupPublicAssessment, submitResult, getClientResult, updateClientResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode } from '@/lib/assessmentApi';
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
-import { JOIN_STORAGE_KEY, navigateToJoinSelectionDashboard } from '@/lib/joinAssessmentSession';
+import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { canTrackJoinResults } from '@/lib/assessmentApi';
@@ -182,23 +182,11 @@ export default function TestRunnerPage() {
   };
 
   const navigateAfterSubmit = () => {
-    if (returnToPortalProgress) {
-      router.replace(buildPortalProgressUrl());
-      return;
-    }
-    if (!hasParticipant) {
-      router.push(`/join/profile?accessCode=${encodeURIComponent(code)}`);
-      return;
-    }
-    navigateToJoinSelectionDashboard(code, router);
+    router.replace(buildPortalProgressUrl());
   };
 
   const navigateBackFromTest = () => {
-    if (returnToPortalProgress) {
-      router.replace(buildPortalProgressUrl());
-      return;
-    }
-    navigateToJoinSelectionDashboard(code, router);
+    router.replace(buildPortalProgressUrl());
   };
 
   const handleSubmitNew = async () => {
@@ -228,8 +216,8 @@ export default function TestRunnerPage() {
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">잘못된 접근입니다.</p>
-            <Link href="/join" className="text-blue-400 hover:text-blue-300">
-              검사 코드 다시 입력
+            <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300">
+              검사시작
             </Link>
           </div>
         </div>
@@ -257,8 +245,8 @@ export default function TestRunnerPage() {
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{accessCheckError}</p>
-            <Link href="/join" className="text-blue-400 hover:text-blue-300">
-              검사 코드 다시 입력
+            <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300">
+              검사시작
             </Link>
           </div>
         </div>

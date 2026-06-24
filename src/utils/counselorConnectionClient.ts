@@ -1,6 +1,6 @@
 /**
  * 내담자–상담사 연결 조회 (기존 clientCounselorRelations 레거시)
- * 신규 내담자는 검사 포털(/join) 코드+PIN으로 접속합니다.
+ * 신규 내담자는 검사시작(/portal/login)에서 나의코드+비밀번호로 접속합니다.
  */
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { initializeFirebase } from '@/lib/firebase';

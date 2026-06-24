@@ -461,33 +461,24 @@ export default function Navigation() {
                해결: 모든 래퍼에 overflow: visible(기본값) 유지 */}
           <div className="hidden min-h-0 md:flex min-w-0 flex-1 items-center justify-end gap-3 xl:gap-5">
             <div className="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-0.5 sm:gap-1 lg:gap-1.5">
-              {/* 검사 코드 입력 (상담사 발급 코드로 검사 시작) */}
+              {/* 검사시작 — 나의코드 로그인 또는 내 검사실 */}
               <Link
-                href="/join"
+                href={hasClientPortalSession ? '/portal/' : '/portal/login/'}
                 className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
-                  activeItem === "/join" || activeItem.startsWith("/join/")
-                    ? "text-white bg-blue-600 border-white"
-                    : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                  activeItem === '/portal/login' ||
+                  activeItem === '/portal' ||
+                  activeItem.startsWith('/portal/') ||
+                  activeItem.startsWith('/join/')
+                    ? 'text-white bg-blue-600 border-white'
+                    : 'text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white'
                 }`}
-                onClick={(e) => handleNavLinkClick('/join', e)}
+                onClick={(e) =>
+                  handleNavLinkClick(hasClientPortalSession ? '/portal/' : '/portal/login/', e)
+                }
               >
                 <span aria-hidden>⭐</span>
-                검사 시작
+                검사시작
               </Link>
-              {hasClientPortalSession && (
-                <Link
-                  href="/portal/"
-                  className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
-                    activeItem === "/portal" || activeItem.startsWith("/portal/")
-                      ? "text-white bg-blue-600 border-white"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
-                  }`}
-                  onClick={(e) => handleNavLinkClick('/portal/', e)}
-                >
-                  <span aria-hidden>🏠</span>
-                  내 검사실
-                </Link>
-              )}
               {isLoggedIn && (
               <>
               {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
@@ -1054,25 +1045,14 @@ export default function Navigation() {
           <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
             <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
 
-              {/* 검사 하기 */}
               <Link
-                href="/join/"
+                href={hasClientPortalSession ? '/portal/' : '/portal/login/'}
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span aria-hidden>⭐</span>
-                검사 시작
+                검사시작
               </Link>
-
-              {hasClientPortalSession && (
-                <Link
-                  href="/portal/"
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-slate-200 bg-slate-800/60 hover:bg-slate-700 border border-slate-600"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  🏠 내 검사실
-                </Link>
-              )}
 
               {isLoggedIn && showPsychologyTestsMenu && (
                 <ThreeTierMobileMenuSection

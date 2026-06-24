@@ -19,7 +19,7 @@ export const counselorMenuCategories: TestCategory[] = [
           {
             name: '새 검사코드 만들기',
             href: '/counselor/assessments/new',
-            description: '일반코드 또는 그룹코드 검사코드',
+            description: '내담자별 나의코드 검사코드 발급',
             icon: '➕',
           },
         ],

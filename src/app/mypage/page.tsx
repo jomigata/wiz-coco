@@ -1915,13 +1915,13 @@ function TestRecordsTabContent({
   };
 
   const handleAddTestClick = () => {
-    pushWithAuthSession(router, '/join');
+    pushWithAuthSession(router, '/portal/login/');
   };
 
   const handleNotStartedCounselorTest = async (record: TestRecord) => {
     const normalized = resolveRecordAccessCode(record);
     if (!normalized) {
-      pushWithAuthSession(router, '/join');
+      pushWithAuthSession(router, '/portal/login/');
       return;
     }
     const { getJoinEntryPath, startJoinAssessmentFromAccessCode } = await import(
@@ -1946,7 +1946,7 @@ function TestRecordsTabContent({
     }
 
     if (!normalized) {
-      pushWithAuthSession(router, '/join');
+      pushWithAuthSession(router, '/portal/login/');
       return;
     }
     pushWithAuthSession(router, `/join/dashboard?accessCode=${encodeURIComponent(normalized)}`);
@@ -3013,7 +3013,7 @@ function CounselorConnectionStatus({
           </p>
         </div>
         <Link
-          href="/join/"
+          href="/portal/login/"
           className="shrink-0 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 transition-colors"
         >
           검사실

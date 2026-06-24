@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
+  const [examHref, setExamHref] = useState('/portal/login/');
 
   useEffect(() => {
     setIsVisible(true);
+    const portal = readClientPortalSession();
+    if (portal?.portalToken) setExamHref('/portal/');
   }, []);
 
   return (
@@ -36,30 +40,24 @@ export default function HeroSection() {
             Wizcoco 심리검사
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
-            검사 코드로 시작하는
+            나의코드로 시작하는
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">
               마음 건강 검사
             </span>
           </h1>
           <p className="text-lg md:text-xl text-blue-100/90 mb-10 leading-relaxed max-w-2xl mx-auto">
-            안내 받은 검사 코드와 비밀번호를 입력하면
+            안내 받으신 나의코드와 비밀번호를 입력하면
             <br className="hidden sm:block" />
             배정된 심리검사를 바로 진행할 수 있습니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/join/"
+              href={examHref}
               className="inline-flex items-center justify-center gap-2 bg-gradient-to-br from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl hover:shadow-blue-500/20 transition-all border border-blue-400/30"
             >
               <span aria-hidden>⭐</span>
-              검사 시작하기
-            </Link>
-            <Link
-              href="/portal/"
-              className="inline-flex items-center justify-center bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-xl text-lg font-medium border border-white/20 hover:bg-white/20 transition-all"
-            >
-              내 검사실
+              검사시작
             </Link>
           </div>
         </div>

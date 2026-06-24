@@ -361,7 +361,7 @@ def share_result():
 def bulk_create():
     """상담사: CSV/행 목록으로 내담자 포털 + 검사 세트 일괄 생성."""
     body = request.get_json() or {}
-    cohort_name = (body.get("cohortName") or body.get("cohort_name") or "일괄 초대").strip()
+    cohort_name = (body.get("cohortName") or body.get("cohort_name") or "").strip()
     rows = body.get("rows") or []
     title = (body.get("title") or "").strip()
     welcome_message = (body.get("welcomeMessage") or "").strip()
@@ -385,6 +385,8 @@ def bulk_create():
         except ValueError:
             return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
+    if not cohort_name:
+        return jsonify({"error": "Bad Request", "message": "기관/단체/그룹명(cohortName)이 필요합니다."}), 400
     if not title:
         return jsonify({"error": "Bad Request", "message": "검사 세트 제목(title)이 필요합니다."}), 400
     if not isinstance(rows, list) or not rows:
@@ -421,6 +423,7 @@ def bulk_create():
             test_list=test_list,
             existing_assessment_id=existing_assessment_id,
             cohort_id=cohort_id,
+            cohort_name=cohort_name,
         )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403

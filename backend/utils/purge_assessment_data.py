@@ -7,6 +7,7 @@ from config import (
     JOIN_PARTICIPANTS_COLLECTION,
     NOTIFICATION_QUEUE_COLLECTION,
     TEST_RESULTS_COLLECTION,
+    BULK_PORTAL_JOBS_COLLECTION,
 )
 from utils.access_code import reset_access_code_generation_meta
 from utils.my_code import reset_my_code_generation_meta
@@ -86,6 +87,7 @@ def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_tes
         "clientPortals": _delete_entire_collection(db, CLIENT_PORTALS_COLLECTION, dry_run),
         "joinParticipants": _delete_entire_collection(db, JOIN_PARTICIPANTS_COLLECTION, dry_run),
         "notificationQueue": _delete_entire_collection(db, NOTIFICATION_QUEUE_COLLECTION, dry_run),
+        "bulkPortalJobs": _delete_entire_collection(db, BULK_PORTAL_JOBS_COLLECTION, dry_run),
     }
     if include_all_test_results:
         counts["testResults"] = _delete_entire_collection(db, TEST_RESULTS_COLLECTION, dry_run)

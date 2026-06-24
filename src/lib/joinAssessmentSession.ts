@@ -40,18 +40,16 @@ export function clearJoinAssessmentSession(): void {
   sessionStorage.removeItem(JOIN_STORAGE_KEY);
 }
 
-/** 검사하기(/join) 진입 URL — accessCode 쿼리·자동 진행 옵션 */
+/** @deprecated 검사코드 직접 입력 제거 — 검사시작(포털 로그인) */
 export function getJoinEntryPath(accessCodeNorm: string, autoStart = false): string {
-  const code = normalizeAccessCodeInput(accessCodeNorm);
-  if (!code) return '/join';
-  const params = new URLSearchParams({ accessCode: code });
-  if (autoStart) params.set('auto', '1');
-  return `/join?${params.toString()}`;
+  void accessCodeNorm;
+  void autoStart;
+  return '/portal/login/';
 }
 
 export function getJoinDashboardPath(accessCodeNorm: string): string {
   const code = normalizeAccessCodeInput(accessCodeNorm);
-  if (!code) return '/join';
+  if (!code) return '/portal/';
   return `/join/dashboard?accessCode=${encodeURIComponent(code)}`;
 }
 

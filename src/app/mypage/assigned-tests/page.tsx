@@ -80,7 +80,7 @@ export default function AssignedTestsPage() {
                 할당된 검사를 확인하려면 담당 전문가가 안내한 검사 코드로 검사실에 접속해 주세요.
               </p>
               <a
-                href="/join/"
+                href="/portal/login/"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block"
               >
                 검사실로 이동

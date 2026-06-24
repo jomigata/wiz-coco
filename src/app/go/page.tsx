@@ -52,7 +52,7 @@ function GoContent() {
       <div className="min-h-screen bg-gray-900 pt-24 px-4">
         <div className="max-w-md mx-auto text-center bg-slate-800/80 rounded-2xl border border-slate-600 p-8">
           <p className="text-red-400 mb-4">{error}</p>
-          <Link href="/join/" className="text-blue-400 hover:text-blue-300 text-sm">
+          <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 text-sm">
             검사 코드로 직접 들어가기
           </Link>
         </div>
