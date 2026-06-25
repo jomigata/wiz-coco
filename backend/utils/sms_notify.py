@@ -21,7 +21,13 @@ def _format_pin_display(pin: str) -> str:
 
 
 def send_portal_credentials_sms(
-    *, to_phone: str, access_code: str, pin: str, magic_url: str, join_access_code: str = ""
+    *,
+    to_phone: str,
+    access_code: str,
+    pin: str,
+    magic_url: str,
+    join_access_code: str = "",
+    display_name: str = "",
 ) -> tuple[bool, str]:
     phone = (to_phone or "").strip()
     if not phone:
@@ -30,22 +36,17 @@ def send_portal_credentials_sms(
         logger.info("SMS skipped (Twilio not configured) for %s", phone[:4] + "****")
         return False, "sms_not_configured"
 
+    name = (display_name or "").strip() or "내담자"
     join_code = (join_access_code or "").strip().upper()
     my_code = (access_code or "").strip().upper()
     pin_display = _format_pin_display(pin)
-    login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
-    lines = ["[WizCoCo] 검사시작"]
+    parts = [f"[WizCoCo] {name}님 검사시작"]
     if join_code:
-        lines.append(f"검사코드: {join_code}")
-    lines.extend(
-        [
-            f"나의코드: {my_code} 비밀번호: {pin_display}",
-            f"접속: {login_url}",
-            f"바로가기: {magic_url}",
-        ]
-    )
-    body = "\n".join(lines)
+        parts.append(f"검사코드 {join_code}")
+    parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
+    parts.append(magic_url)
+    body = "\n".join(parts)
 
     try:
         from twilio.rest import Client

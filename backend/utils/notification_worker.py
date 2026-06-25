@@ -50,6 +50,7 @@ def deliver_portal_credentials(
             pin=pin,
             magic_url=magic_url,
             join_access_code=join_access_code,
+            display_name=display_name,
         )
         if sms_err:
             errors.append(sms_err)

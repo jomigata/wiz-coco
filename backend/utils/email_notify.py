@@ -151,32 +151,21 @@ def send_portal_credentials_email(
     pin_display = _format_pin_display(pin)
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
-    intro = (
-        "WizCoCo 심리검사를 진행해 주셔서 감사합니다.\n"
-        "아래 정보로 검사를 시작하고, 결과와 진행 상황을 확인하실 수 있습니다.\n"
-    )
-
-    join_section = ""
+    cred_lines = [f"나의코드: {my_code}  비밀번호: {pin_display}"]
     if join_code:
-        join_section = f"""
-▶ 검사코드 (기관·그룹 공통)
-검사코드: {join_code}
-※ 검사코드는 담당 기관·그룹에서 부여한 공통 식별 코드입니다.
-   로그인·검사 진행에는 아래 「나의코드」와 「비밀번호」를 사용합니다.
-"""
+        cred_lines.insert(0, f"검사코드: {join_code}")
 
     body = f"""안녕하세요, {name}님.
 
-{intro}{join_section}
-▶ 바로 들어가기 (추천)
+WizCoCo 심리검사 접속 정보입니다.
+
+{chr(10).join(cred_lines)}
+
+▶ 바로 시작 (추천)
 {magic_url}
 
-▶ 검사시작 — 나의코드·비밀번호로 접속
-나의코드: {my_code}
-비밀번호: {pin_display}
-접속: {login_url}
-
-나의코드와 비밀번호는 본인만 사용하는 개인 접속 정보입니다.
+▶ 검사시작
+{login_url}
 
 링크는 72시간 동안 유효합니다.
 
@@ -186,7 +175,7 @@ WizCoCo
     msg = MIMEMultipart()
     msg["From"] = MAIL_FROM
     msg["To"] = email
-    msg["Subject"] = "[WizCoCo] 검사시작 접속 안내 (검사코드·나의코드)"
+    msg["Subject"] = f"[WizCoCo] 검사시작 접속 안내 ({name})"
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
