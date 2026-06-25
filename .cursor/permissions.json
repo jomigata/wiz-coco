@@ -1,4 +1,5 @@
 {
+  "mcpAllowlist": ["*:*"],
   "terminalAllowlist": [
     "git",
     "gh",
@@ -32,5 +33,16 @@
     "Test-Path",
     "Write-Output",
     "echo"
-  ]
+  ],
+  "autoRun": {
+    "allow_instructions": [
+      "Allow read-only git, gh, npm, and npx commands that inspect repo state, run linters, typecheck, or tests in this project.",
+      "Allow git add, git commit, and git push for routine WizCoCo workflow after code changes.",
+      "Allow read-only MCP, WebFetch, and WebSearch calls that retrieve data without destructive side effects."
+    ],
+    "block_instructions": [
+      "Block destructive commands outside the project directory, force push to main, hard reset, and database or production deploy mutations unless explicitly requested.",
+      "Block commands that read or write secrets such as .env or credentials files."
+    ]
+  }
 }
