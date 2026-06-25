@@ -425,7 +425,7 @@ export default function IndividualAssessmentCreateForm() {
               ) : notifySent > 0 ? (
                 <>
                   {notifySent}명에게 즉시 이메일·문자로 발송되었습니다.
-                  {notifyFailed > 0 ? ` (${notifyFailed}명 발송 실패 — Excel 저장 후 코드발송현황에서 재발송)` : null}
+                  {notifyFailed > 0 ? ` (${notifyFailed}명 발송 실패 — Excel 저장 후 진행현황에서 재발송)` : null}
                 </>
               ) : notifyQueued > 0 ? (
                 `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다.`

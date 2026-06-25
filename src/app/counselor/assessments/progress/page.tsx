@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
+import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
 import ProgressDashboard from '@/components/counselor/ProgressDashboard';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -74,7 +75,12 @@ export default function ProgressDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <ProgressBackLink />
+      <div className="flex flex-wrap items-center gap-4">
+        <AuthLink href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
+          ← 검사코드 목록
+        </AuthLink>
+        <h1 className="text-2xl font-bold text-white">진행현황</h1>
+      </div>
 
       {authPending || loading ? (
         <AuthLoadingState className="py-8" />
@@ -90,23 +96,21 @@ export default function ProgressDashboardPage() {
           </div>
         </div>
       ) : (
-        <ProgressDashboard
-          assessmentId={assessmentId}
-          accessCode={accessCode}
-          byClient={byClient}
-          assessmentTitle={title}
-        />
-      )}
-    </div>
-  );
-}
+        <>
+          <AssessmentDispatchPanel assessmentId={assessmentId} />
 
-function ProgressBackLink() {
-  return (
-    <div className="flex items-center gap-4">
-      <AuthLink href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
-        ← 목록
-      </AuthLink>
+          <div className="border-t border-white/10 pt-6 space-y-4">
+            <h2 className="text-lg font-semibold text-white">검사 결과</h2>
+            <ProgressDashboard
+              assessmentId={assessmentId}
+              accessCode={accessCode}
+              byClient={byClient}
+              assessmentTitle={title}
+              hideHeader
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ interface ProgressDashboardProps {
   accessCode: string;
   byClient: ProgressByClient[];
   assessmentTitle?: string;
+  hideHeader?: boolean;
 }
 
 function formatCompletedAt(iso: string | null | undefined): string {
@@ -63,6 +64,7 @@ export default function ProgressDashboard({
   accessCode,
   byClient,
   assessmentTitle,
+  hideHeader = false,
 }: ProgressDashboardProps) {
   const [expandedClients, setExpandedClients] = useState<Set<string>>(() => new Set());
   const [sortCol, setSortCol] = useState<SortCol>('completedAt');
@@ -138,15 +140,17 @@ export default function ProgressDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        {assessmentTitle && (
-          <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
-        )}
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400">검사코드:</span>
-          <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
+      {!hideHeader ? (
+        <div className="flex flex-wrap items-center gap-4">
+          {assessmentTitle && (
+            <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400">검사코드:</span>
+            <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {byClient.length === 0 ? (
         <div className="bg-slate-800/80 rounded-xl border border-slate-600 p-8 text-center">

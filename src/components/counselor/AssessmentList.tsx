@@ -219,7 +219,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const incomplete = a.emailsNotCompletedAllTestsCount ?? 0;
                   const complete = a.emailsCompletedAllTestsCount ?? 0;
                   const total = incomplete + complete;
-                  const progressPct = total > 0 ? Math.round((complete / total) * 100) : 0;
                   const expired = isExpired(a.usageEndDate);
                   const orgLabel = (a.cohortName || a.title || '-').trim();
 
@@ -246,24 +245,17 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-300">
-                        <span className="font-semibold text-orange-400">{incomplete}</span>
-                        <span className="text-slate-600"> / </span>
                         <span className="font-semibold text-emerald-400">{complete}</span>
-                        {total > 0 && <span className="ml-1 text-slate-500">({progressPct}%)</span>}
+                        <span className="text-slate-600"> / </span>
+                        <span className="font-semibold text-slate-200">{total}</span>
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           <AuthLink
-                            href={`/counselor/assessments/dispatch?assessmentId=${encodeURIComponent(a.id)}`}
-                            className="rounded bg-violet-800/50 px-2 py-0.5 text-xs font-medium text-violet-100 hover:bg-violet-700/60 transition-colors"
-                          >
-                            코드발송현황
-                          </AuthLink>
-                          <AuthLink
                             href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
                             className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
                           >
-                            진행 현황
+                            진행현황
                           </AuthLink>
                           <AuthLink
                             href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
