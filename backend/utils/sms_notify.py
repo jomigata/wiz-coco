@@ -2,8 +2,6 @@
 import logging
 import os
 
-from config import PUBLIC_SITE_URL
-
 logger = logging.getLogger(__name__)
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
