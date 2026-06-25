@@ -1,4 +1,5 @@
 {
+  "approvalMode": "unrestricted",
   "mcpAllowlist": ["*:*"],
   "terminalAllowlist": [
     "git",

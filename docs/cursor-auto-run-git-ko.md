@@ -14,14 +14,18 @@
 화면에 **Run in Sandbox / Run Everything이 안 보이는 것이 정상**입니다.  
 설명 문구: *「Run Everything is disabled while that file defines allowlists…」*
 
-이때 드롭다운은 보통 다음 **두 가지만** 표시됩니다.
+이때 드롭다운은 보통 다음 **세 가지**가 표시됩니다.
 
 | UI 표시 | 의미 |
 |--------|------|
-| **Use Allowlist** | allowlist에 있는 명령(`git`, `gh`, `npm` …)은 **승인 없이 자동 실행** |
+| **Auto-review** | allowlist → sandbox → 분류기 순으로 자동 실행 (권장) |
+| **Allowlist** | allowlist에 있는 명령만 **승인 없이** 실행 |
 | **Ask Every Time** | 매번 Run/Allow 확인 (allowlist **무시**) |
 
-→ **`Use Allowlist`를 선택**하면 됩니다. 별도로 Sandbox/Run Everything을 찾을 필요 없습니다.
+→ **Auto-review**를 쓰려면 `permissions.json`에 **`"approvalMode": "unrestricted"`** 를 넣어야 합니다.  
+`terminalAllowlist`만 있고 `approvalMode`가 없으면 Cursor가 **Allowlist로 고정**됩니다.
+
+→ **Allowlist만** 쓰려면 **Allowlist**를 선택하면 됩니다.
 
 Command Allowlist에 `git`, `gh`, `npm` 등이 보이고 *「configured via `~/.cursor/permissions.json`」* 이면 설정이 적용된 상태입니다.
 
