@@ -2,6 +2,8 @@
 import logging
 import os
 
+from config import PUBLIC_SITE_URL
+
 logger = logging.getLogger(__name__)
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
@@ -38,11 +40,13 @@ def send_portal_credentials_sms(
     join_code = (join_access_code or "").strip().upper()
     my_code = (access_code or "").strip().upper()
     pin_display = _format_pin_display(pin)
+    login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
     parts = [f"[WizCoCo] {name}님 검사시작"]
     if join_code:
         parts.append(f"검사코드 {join_code}")
     parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
+    parts.append(login_url)
     parts.append(magic_url)
     body = "\n".join(parts)
 

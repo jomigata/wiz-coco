@@ -161,11 +161,11 @@ WizCoCo 심리검사 접속 정보입니다.
 
 {chr(10).join(cred_lines)}
 
-▶ 바로 시작 (추천)
-{magic_url}
-
 ▶ 검사시작
 {login_url}
+
+▶ 바로 시작 (추천)
+{magic_url}
 
 링크는 72시간 동안 유효합니다.
 
