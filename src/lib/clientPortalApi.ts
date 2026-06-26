@@ -214,6 +214,14 @@ export async function fetchBulkPortalJobResult(jobId: string): Promise<ClientPor
   return data as ClientPortalBulkJobResult;
 }
 
+export type DispatchTestResult = {
+  testId: string;
+  testName: string;
+  status: 'completed' | 'in_progress' | 'not_started';
+  completedAt: string | null;
+  resultId: string | null;
+};
+
 export type DispatchRecipient = {
   portalId: string;
   displayName: string;
@@ -226,6 +234,7 @@ export type DispatchRecipient = {
   testStatus: 'completed' | 'in_progress' | 'not_started';
   completedCount: number;
   requiredCount: number;
+  tests: DispatchTestResult[];
 };
 
 export type AssessmentDispatchStatus = {
@@ -233,6 +242,7 @@ export type AssessmentDispatchStatus = {
   title: string;
   cohortName: string;
   joinAccessCode: string;
+  testList: { testId: string; name: string }[];
   recipients: DispatchRecipient[];
 };
 

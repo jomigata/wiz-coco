@@ -1,13 +1,24 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import {
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
   type AssessmentDispatchStatus,
   type DispatchRecipient,
+  type DispatchTestResult,
 } from '@/lib/clientPortalApi';
+
+function formatCompletedAt(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('ko-KR');
+  } catch {
+    return String(iso);
+  }
+}
 
 function notifyLabel(status: string): { text: string; className: string } {
   switch (status) {
@@ -26,7 +37,7 @@ function notifyLabel(status: string): { text: string; className: string } {
   }
 }
 
-function testLabel(r: DispatchRecipient): { text: string; className: string } {
+function testSummary(r: DispatchRecipient): { text: string; className: string } {
   if (r.testStatus === 'completed') {
     return { text: '검사 완료', className: 'text-emerald-300' };
   }
@@ -39,6 +50,17 @@ function testLabel(r: DispatchRecipient): { text: string; className: string } {
   return { text: '미실시', className: 'text-slate-500' };
 }
 
+function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
+  switch (status) {
+    case 'completed':
+      return { text: '완료', className: 'text-emerald-300' };
+    case 'in_progress':
+      return { text: '진행 중', className: 'text-amber-300' };
+    default:
+      return { text: '미실시', className: 'text-slate-500' };
+  }
+}
+
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
 }
@@ -48,8 +70,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [resendLoading, setResendLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
 
   const load = useCallback(async () => {
     if (!assessmentId) return;
@@ -96,6 +123,15 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     });
   };
 
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleResend = async () => {
     if (!assessmentId || selected.size === 0) return;
     setResendLoading(true);
@@ -113,8 +149,23 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     }
   };
 
+  const openResultDetail = (resultId: string) => {
+    setDetail(null);
+    setDetailError('');
+    setDetailLoading(true);
+    getCounselorResult(assessmentId, resultId)
+      .then(setDetail)
+      .catch((err) => setDetailError(err instanceof Error ? err.message : '조회 실패'))
+      .finally(() => setDetailLoading(false));
+  };
+
+  const closeModal = () => {
+    setDetail(null);
+    setDetailError('');
+  };
+
   if (loading) {
-    return <p className="text-slate-400 text-sm py-4">내담자·발송 현황을 불러오는 중…</p>;
+    return <p className="text-slate-400 text-sm py-4">발송목록을 불러오는 중…</p>;
   }
 
   if (error) {
@@ -122,6 +173,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   }
 
   if (!data) return null;
+
+  const colCount = 8;
 
   return (
     <section className="space-y-4">
@@ -153,29 +206,32 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={toggleAll}
-          className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
-        >
-          {allSelected ? '전체 해제' : '전체 선택'}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleResend()}
-          disabled={resendLoading || selected.size === 0}
-          className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-        >
-          {resendLoading ? '재발송 중…' : `선택 재발송 (${selected.size})`}
-        </button>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
-        >
-          새로고침
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold text-white">발송목록</h2>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
+          >
+            {allSelected ? '전체 해제' : '전체 선택'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleResend()}
+            disabled={resendLoading || selected.size === 0}
+            className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          >
+            {resendLoading ? '재발송 중…' : `선택 재발송 (${selected.size})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
+          >
+            새로고침
+          </button>
+        </div>
       </div>
 
       {data.recipients.length === 0 ? (
@@ -186,6 +242,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <thead className="bg-slate-800 text-slate-400">
               <tr>
                 <th className="px-3 py-2 text-left w-10">선택</th>
+                <th className="px-3 py-2 text-left w-8" aria-label="펼치기" />
                 <th className="px-3 py-2 text-left">이름</th>
                 <th className="px-3 py-2 text-left">이메일</th>
                 <th className="px-3 py-2 text-left">휴대폰</th>
@@ -197,26 +254,89 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <tbody className="divide-y divide-slate-700">
               {data.recipients.map((r) => {
                 const notify = notifyLabel(r.notifyStatus);
-                const test = testLabel(r);
+                const summary = testSummary(r);
+                const isOpen = expanded.has(r.portalId);
+                const tests = r.tests ?? [];
+
                 return (
-                  <tr key={r.portalId} className="hover:bg-slate-800/50">
-                    <td className="px-3 py-2">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(r.portalId)}
-                        onChange={() => toggleOne(r.portalId)}
-                        className="rounded text-blue-500"
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-white">{r.displayName || '—'}</td>
-                    <td className="px-3 py-2 text-slate-300">{r.email || '—'}</td>
-                    <td className="px-3 py-2 text-slate-300">{r.phone || '—'}</td>
-                    <td className="px-3 py-2 font-mono text-cyan-300">
-                      {formatAccessCodeDisplay(r.myCode)}
-                    </td>
-                    <td className={`px-3 py-2 ${notify.className}`}>{notify.text}</td>
-                    <td className={`px-3 py-2 ${test.className}`}>{test.text}</td>
-                  </tr>
+                  <React.Fragment key={r.portalId}>
+                    <tr className="hover:bg-slate-800/50">
+                      <td className="px-3 py-2 align-top">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(r.portalId)}
+                          onChange={() => toggleOne(r.portalId)}
+                          className="rounded text-blue-500"
+                        />
+                      </td>
+                      <td className="px-3 py-2 align-top">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(r.portalId)}
+                          className="text-slate-400 hover:text-white"
+                          aria-expanded={isOpen}
+                          aria-label={isOpen ? '검사 결과 접기' : '검사 결과 펼치기'}
+                        >
+                          {isOpen ? '▼' : '▶'}
+                        </button>
+                      </td>
+                      <td className="px-3 py-2 text-white align-top">{r.displayName || '—'}</td>
+                      <td className="px-3 py-2 text-slate-300 align-top">{r.email || '—'}</td>
+                      <td className="px-3 py-2 text-slate-300 align-top">{r.phone || '—'}</td>
+                      <td className="px-3 py-2 font-mono text-cyan-300 align-top">
+                        {formatAccessCodeDisplay(r.myCode)}
+                      </td>
+                      <td className={`px-3 py-2 align-top ${notify.className}`}>{notify.text}</td>
+                      <td className={`px-3 py-2 align-top ${summary.className}`}>{summary.text}</td>
+                    </tr>
+                    {isOpen ? (
+                      <tr className="bg-slate-900/40">
+                        <td colSpan={colCount} className="px-3 py-3">
+                          {tests.length === 0 ? (
+                            <p className="text-slate-500 text-sm pl-6">등록된 검사 항목이 없습니다.</p>
+                          ) : (
+                            <table className="w-full text-sm ml-6 max-w-3xl">
+                              <thead>
+                                <tr className="text-slate-400 border-b border-slate-700">
+                                  <th className="py-1.5 pr-4 text-left font-medium">검사</th>
+                                  <th className="py-1.5 pr-4 text-left font-medium w-24">상태</th>
+                                  <th className="py-1.5 pr-4 text-left font-medium">완료일시</th>
+                                  <th className="py-1.5 text-left font-medium w-24">열람</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {tests.map((t) => {
+                                  const st = testStatusLabel(t.status);
+                                  return (
+                                    <tr key={t.testId} className="border-b border-slate-800 last:border-0">
+                                      <td className="py-2 pr-4 text-white">{t.testName || t.testId}</td>
+                                      <td className={`py-2 pr-4 ${st.className}`}>{st.text}</td>
+                                      <td className="py-2 pr-4 text-slate-400">
+                                        {formatCompletedAt(t.completedAt)}
+                                      </td>
+                                      <td className="py-2">
+                                        {t.status === 'completed' && t.resultId ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => openResultDetail(t.resultId!)}
+                                            className="text-blue-400 hover:text-blue-300"
+                                          >
+                                            결과 보기
+                                          </button>
+                                        ) : (
+                                          <span className="text-slate-600">—</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          )}
+                        </td>
+                      </tr>
+                    ) : null}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -225,8 +345,63 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       )}
 
       <p className="text-xs text-slate-500">
-        재발송 시 비밀번호가 새로 발급되며, 검사코드·나의코드·비밀번호가 이메일·문자로 전송됩니다.
+        행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 재발송 시 비밀번호가 새로 발급됩니다.
       </p>
+
+      {(detail !== null || detailLoading || detailError) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => !detailLoading && closeModal()}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-600 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">검사 결과 상세</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="text-slate-400 hover:text-white text-sm"
+              >
+                닫기
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              {detailLoading && <p className="text-slate-400">불러오는 중…</p>}
+              {detailError && <p className="text-red-400 text-sm">{detailError}</p>}
+              {detail && !detailLoading && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <span className="text-slate-400">내담자</span>
+                    <span className="text-white">{detail.clientDisplayName || detail.clientEmail || '—'}</span>
+                    <span className="text-slate-400">검사</span>
+                    <span className="text-white">{detail.testId}</span>
+                    <span className="text-slate-400">완료일시</span>
+                    <span className="text-slate-300">{formatCompletedAt(detail.completedAt)}</span>
+                  </div>
+                  {detail.resultData && Object.keys(detail.resultData).length > 0 && (
+                    <div>
+                      <h4 className="text-slate-400 text-sm font-medium mb-2">채점/요약</h4>
+                      <pre className="bg-slate-900/80 rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
+                        {JSON.stringify(detail.resultData, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                  {detail.responses != null && (
+                    <div>
+                      <h4 className="text-slate-400 text-sm font-medium mb-2">응답</h4>
+                      <pre className="bg-slate-900/80 rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
+                        {JSON.stringify(detail.responses, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

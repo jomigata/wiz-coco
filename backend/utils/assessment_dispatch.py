@@ -48,6 +48,82 @@ def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
     return out
 
 
+def _iso_timestamp(value) -> str | None:
+    if not value:
+        return None
+    return value.isoformat() if hasattr(value, "isoformat") else str(value)
+
+
+def _test_detail_rows(db, portal_id: str, assessment_id: str, test_list: list) -> list[dict]:
+    refs = list(
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("portalId", "==", portal_id)
+        .where("assessmentId", "==", assessment_id)
+        .stream()
+    )
+    by_test: dict[str, dict] = {}
+    for doc in refs:
+        data = doc.to_dict() or {}
+        test_id = str(data.get("testId") or "").strip()
+        if not test_id:
+            continue
+        status = (data.get("status") or "").strip() or "in_progress"
+        candidate = {
+            "resultId": doc.id,
+            "status": status,
+            "completedAt": _iso_timestamp(data.get("completedAt")),
+        }
+        prev = by_test.get(test_id)
+        if not prev:
+            by_test[test_id] = candidate
+            continue
+        if candidate["status"] == "completed" and prev.get("status") != "completed":
+            by_test[test_id] = candidate
+            continue
+        if candidate["status"] == "completed" and prev.get("status") == "completed":
+            if (candidate.get("completedAt") or "") >= (prev.get("completedAt") or ""):
+                by_test[test_id] = candidate
+
+    rows: list[dict] = []
+    for item in test_list or []:
+        test_id = str(item.get("testId") or "").strip()
+        if not test_id:
+            continue
+        test_name = (item.get("name") or test_id).strip()
+        info = by_test.get(test_id)
+        if info and info.get("status") == "completed":
+            rows.append(
+                {
+                    "testId": test_id,
+                    "testName": test_name,
+                    "status": "completed",
+                    "completedAt": info.get("completedAt"),
+                    "resultId": info.get("resultId"),
+                }
+            )
+        elif info:
+            rows.append(
+                {
+                    "testId": test_id,
+                    "testName": test_name,
+                    "status": "in_progress",
+                    "completedAt": info.get("completedAt"),
+                    "resultId": info.get("resultId"),
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "testId": test_id,
+                    "testName": test_name,
+                    "status": "not_started",
+                    "completedAt": None,
+                    "resultId": None,
+                }
+            )
+    return rows
+
+
 def _test_status_for_portal(db, portal_id: str, assessment_id: str, required: set[str]) -> dict:
     if not required:
         return {"testStatus": "not_started", "completedCount": 0, "requiredCount": 0}
@@ -91,9 +167,10 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
         return None
 
     join_access_code = (ass.get("accessCode") or "").strip()
+    test_list = ass.get("testList") or []
     required = {
         str(t.get("testId") or "").strip()
-        for t in (ass.get("testList") or [])
+        for t in test_list
         if t and str(t.get("testId") or "").strip()
     }
 
@@ -130,6 +207,7 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
                 "joinAccessCode": join_access_code,
                 "notifyStatus": notify_status,
                 "notifyError": notify.get("error"),
+                "tests": _test_detail_rows(db, portal_id, assessment_id, test_list),
                 **test_info,
             }
         )
@@ -140,6 +218,7 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
         "title": ass.get("title") or "",
         "cohortName": ass.get("cohortName") or "",
         "joinAccessCode": join_access_code,
+        "testList": test_list,
         "recipients": recipients,
     }
 

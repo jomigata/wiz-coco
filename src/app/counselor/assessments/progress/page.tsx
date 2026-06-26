@@ -3,21 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
-import ProgressDashboard from '@/components/counselor/ProgressDashboard';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
-import { getProgress, listAssessments } from '@/lib/assessmentApi';
-import type { ProgressByClient } from '@/lib/assessmentApi';
 
 export default function ProgressDashboardPage() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [assessmentId, setAssessmentId] = useState('');
-
-  const [accessCode, setAccessCode] = useState('');
-  const [byClient, setByClient] = useState<ProgressByClient[]>([]);
-  const [title, setTitle] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -28,39 +19,6 @@ export default function ProgressDashboardPage() {
       setAssessmentId('');
     }
   }, []);
-
-  useEffect(() => {
-    if (authPending || !user) {
-      if (showLoginRequired) setLoading(false);
-      return;
-    }
-    if (!assessmentId) {
-      setLoading(false);
-      setError('검사코드 식별 정보가 없습니다.');
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    setError('');
-    Promise.all([getProgress(assessmentId), listAssessments().catch(() => ({ assessments: [] }))])
-      .then(([progress, listData]) => {
-        if (cancelled) return;
-        setAccessCode(progress.accessCode || '');
-        setByClient(progress.byClient || []);
-        const found = (listData.assessments || []).find((a: { id: string }) => a.id === assessmentId);
-        if (found) setTitle(found.title);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : '진행 현황 조회 실패');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [authPending, user, showLoginRequired, assessmentId]);
 
   if (!assessmentId) {
     return (
@@ -82,34 +40,12 @@ export default function ProgressDashboardPage() {
         <h1 className="text-2xl font-bold text-white">진행현황</h1>
       </div>
 
-      {authPending || loading ? (
+      {authPending ? (
         <AuthLoadingState className="py-8" />
       ) : showLoginRequired ? (
         <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />
-      ) : error ? (
-        <div className="rounded-lg bg-red-900/20 border border-red-600/50 p-4 text-red-300">
-          {error}
-          <div className="mt-2">
-            <AuthLink href="/counselor/assessments" className="text-blue-400 hover:text-blue-300 text-sm">
-              검사코드 목록으로
-            </AuthLink>
-          </div>
-        </div>
       ) : (
-        <>
-          <AssessmentDispatchPanel assessmentId={assessmentId} />
-
-          <div className="border-t border-white/10 pt-6 space-y-4">
-            <h2 className="text-lg font-semibold text-white">검사 결과</h2>
-            <ProgressDashboard
-              assessmentId={assessmentId}
-              accessCode={accessCode}
-              byClient={byClient}
-              assessmentTitle={title}
-              hideHeader
-            />
-          </div>
-        </>
+        <AssessmentDispatchPanel assessmentId={assessmentId} />
       )}
     </div>
   );
