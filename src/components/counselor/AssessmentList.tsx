@@ -222,7 +222,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사코드</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">기관/단체/그룹명</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사명</th>
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용최종일</th>
+                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용 마감일</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
