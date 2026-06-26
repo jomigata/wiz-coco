@@ -44,7 +44,8 @@ function resultStatusCounts(a: CounselorAssessment) {
   const dispatchFailed = a.dispatchFailedCount ?? 0;
   const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
   const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
-  return { dispatchSent, dispatchFailed, testComplete, testIncomplete };
+  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
+  return { dispatchSent, dispatchFailed, testComplete, testIncomplete, dispatchTotal };
 }
 
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
@@ -225,9 +226,9 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
-                      (<span className="text-emerald-400">발송성공</span>/<span className="text-red-400">실패</span>
-                      ),(
-                      <span className="text-emerald-400">검사완료</span>/<span className="text-red-400">미완료</span>)
+                      (<span className="text-emerald-400">발송성공</span>/<span className="text-slate-300">총발송수</span>)
+                      {' - '}
+                      (<span className="text-slate-400">검사미완료</span>)
                     </span>
                   </th>
                   <th scope="col" className="px-2 py-2 text-center text-xs font-medium text-slate-400">작업</th>
@@ -235,8 +236,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
                 {filtered.map((a) => {
-                  const { dispatchSent, dispatchFailed, testComplete, testIncomplete } =
-                    resultStatusCounts(a);
+                  const { dispatchSent, testIncomplete, dispatchTotal } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const orgLabel = (a.cohortName || a.title || '-').trim();
 
@@ -266,11 +266,17 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         (
                         <span className="font-medium text-emerald-400">{dispatchSent}</span>
                         <span className="text-slate-500">/</span>
-                        <span className="font-medium text-red-400">{dispatchFailed}</span>
-                        ),(
-                        <span className="font-medium text-emerald-400">{testComplete}</span>
-                        <span className="text-slate-500">/</span>
-                        <span className="font-medium text-red-400">{testIncomplete}</span>
+                        <span className="font-medium text-slate-300">{dispatchTotal}</span>
+                        )
+                        <span className="text-slate-500"> - </span>
+                        (
+                        <span
+                          className={`font-medium ${
+                            testIncomplete === 0 ? 'text-emerald-400' : 'text-red-400'
+                          }`}
+                        >
+                          {testIncomplete}
+                        </span>
                         )
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
