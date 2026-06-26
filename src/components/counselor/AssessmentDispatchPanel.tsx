@@ -88,6 +88,7 @@ function skipRemindReason(r: DispatchRecipient): string {
 }
 
 type BulkConfirmAction = 'remind' | 'resend' | null;
+type DispatchProgress = { kind: 'remind' | 'resend'; count: number };
 
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
@@ -103,25 +104,26 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindOneId, setRemindOneId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
+  const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [message, setMessage] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId) return;
-    setLoading(true);
+    if (!opts?.silent) setLoading(true);
     setError('');
     try {
       const result = await fetchAssessmentDispatchStatus(assessmentId);
       setData(result);
       setSelected(new Set());
     } catch (err) {
-      setData(null);
+      if (!opts?.silent) setData(null);
       setError(err instanceof Error ? err.message : '불러오기 실패');
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, [assessmentId]);
 
@@ -195,6 +197,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const handleResend = async () => {
     if (!assessmentId || selected.size === 0) return;
+    const count = resendEligibleSelected.length || selected.size;
+    setDispatchProgress({ kind: 'resend', count });
     setResendLoading(true);
     setMessage('');
     try {
@@ -202,31 +206,33 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       setMessage(
         `재발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 연락처 없음 ${result.skipped}명 (비밀번호는 새로 발급됩니다)`,
       );
-      await load();
+      await load({ silent: true });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '재발송에 실패했습니다.');
     } finally {
       setResendLoading(false);
+      setDispatchProgress(null);
     }
   };
 
   const handleRemind = async (portalIds: string[]) => {
     if (!assessmentId || portalIds.length === 0) return;
-    const isBulk = portalIds.length > 1;
-    if (isBulk) setRemindLoading(true);
-    else setRemindOneId(portalIds[0] ?? null);
+    setDispatchProgress({ kind: 'remind', count: portalIds.length });
+    setRemindLoading(true);
+    setRemindOneId(portalIds.length === 1 ? (portalIds[0] ?? null) : null);
     setMessage('');
     try {
       const result = await sendDispatchTestReminders(assessmentId, portalIds);
       setMessage(
         `미실시 알림 발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
       );
-      await load();
+      await load({ silent: true });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '미실시 알림 발송에 실패했습니다.');
     } finally {
       setRemindLoading(false);
       setRemindOneId(null);
+      setDispatchProgress(null);
     }
   };
 
@@ -479,6 +485,34 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 미실시 알림은 미완료 검사 현황과 검사
         링크만 발송하며 비밀번호는 변경되지 않습니다. 재발송 시 비밀번호가 새로 발급됩니다.
       </p>
+
+      {dispatchProgress ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dispatch-progress-title"
+          aria-busy="true"
+        >
+          <div className="bg-slate-800 rounded-xl border border-slate-600 max-w-md w-full p-6 shadow-xl text-center">
+            <div
+              className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-slate-600 border-t-cyan-400 animate-spin"
+              aria-hidden="true"
+            />
+            <h3 id="dispatch-progress-title" className="text-lg font-semibold text-white">
+              발송 진행 중
+            </h3>
+            <p className="mt-2 text-sm text-slate-300">
+              {dispatchProgress.kind === 'remind'
+                ? `미실시 알림 ${dispatchProgress.count}명에게 발송하고 있습니다.`
+                : `코드 재발송 ${dispatchProgress.count}명을 처리하고 있습니다.`}
+            </p>
+            <p className="mt-3 text-xs text-slate-500">
+              이메일·SMS 발송 및 목록 갱신 중입니다. 잠시만 기다려 주세요.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {confirmAction ? (
         <div
