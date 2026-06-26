@@ -70,7 +70,7 @@ function canSendReminder(r: DispatchRecipient): boolean {
 }
 
 function testLetterLabel(index: number): string {
-  return `${String.fromCharCode(97 + index)}. `;
+  return `${String.fromCharCode(97 + index)}.`;
 }
 
 function contactChannels(r: DispatchRecipient): string {
@@ -442,13 +442,21 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           {tests.length === 0 ? (
                             <p className="text-slate-500 text-sm pl-6">등록된 검사 항목이 없습니다.</p>
                           ) : (
-                            <table className="w-full text-sm ml-6 max-w-3xl">
+                            <table className="w-full text-sm ml-6 table-fixed">
+                              <colgroup>
+                                <col className="w-10" />
+                                <col />
+                                <col className="w-24" />
+                                <col className="w-44" />
+                                <col className="w-24" />
+                              </colgroup>
                               <thead>
                                 <tr className="text-slate-400 border-b border-slate-700">
-                                  <th className="py-1.5 pr-4 text-left font-medium w-8" aria-hidden="true" />
-                                  <th className="py-1.5 pr-4 text-left font-medium w-24">상태</th>
+                                  <th className="py-1.5 pr-2 text-left font-medium" aria-hidden="true" />
+                                  <th className="py-1.5 pr-4 text-left font-medium" aria-hidden="true" />
+                                  <th className="py-1.5 pr-4 text-left font-medium">상태</th>
                                   <th className="py-1.5 pr-4 text-left font-medium">완료일시</th>
-                                  <th className="py-1.5 text-left font-medium w-24">결과 확인</th>
+                                  <th className="py-1.5 text-left font-medium">결과 확인</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -456,9 +464,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                                   const st = testStatusLabel(t.status);
                                   return (
                                     <tr key={t.testId} className="border-b border-slate-800 last:border-0">
-                                      <td className="py-2 pr-4 text-white">
+                                      <td className="py-2 pr-2 text-slate-400 align-top tabular-nums">
                                         {testLetterLabel(testIndex)}
-                                        {t.testName || t.testId}
+                                      </td>
+                                      <td className="py-2 pr-4 text-white align-top min-w-0">
+                                        <span className="block truncate" title={t.testName || t.testId}>
+                                          {t.testName || t.testId}
+                                        </span>
                                       </td>
                                       <td className={`py-2 pr-4 ${st.className}`}>{st.text}</td>
                                       <td className="py-2 pr-4 text-slate-400">
