@@ -733,35 +733,15 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       발송 대상 {remindEligibleSelected.length}명
                     </p>
                     <ul className="space-y-3 max-h-48 overflow-y-auto">
-                      {remindEligibleSelected.map((r) => {
-                        const pending = pendingTestsFor(r);
-                        return (
+                      {remindEligibleSelected.map((r) => (
                           <li
                             key={r.portalId}
                             className="rounded-lg border border-slate-700 bg-slate-900/40 p-3"
                           >
                             <p className="text-white font-medium">{r.displayName || '—'}</p>
                             <p className="text-slate-400 text-xs mt-1">{contactChannels(r)}</p>
-                            <p className="text-slate-400 text-xs mt-1">
-                              진행 {r.completedCount}/{r.requiredCount} · 나의코드{' '}
-                              {formatAccessCodeDisplay(r.myCode)}
-                            </p>
-                            <p className="text-amber-200/90 text-xs mt-2">
-                              미완료:{' '}
-                              {pending.length > 0
-                                ? pending
-                                    .map((t) => {
-                                      const label = t.testName || t.testId;
-                                      return t.status === 'in_progress'
-                                        ? `${label}(진행 중)`
-                                        : `${label}(미실시)`;
-                                    })
-                                    .join(', ')
-                                : '—'}
-                            </p>
                           </li>
-                        );
-                      })}
+                      ))}
                     </ul>
                   </div>
                   {remindSkippedSelected.length > 0 ? (
@@ -802,9 +782,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                         >
                           <p className="text-white font-medium">{r.displayName || '—'}</p>
                           <p className="text-slate-400 text-xs mt-1">{contactChannels(r)}</p>
-                          <p className="text-slate-400 text-xs mt-1">
-                            나의코드 {formatAccessCodeDisplay(r.myCode)}
-                          </p>
                         </li>
                       ))}
                     </ul>
