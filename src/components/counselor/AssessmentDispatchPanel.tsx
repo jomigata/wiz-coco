@@ -582,10 +582,10 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                             return (
                               <tr key={t.testId} className="bg-slate-900/40 border-b border-slate-800/80 last:border-0">
                                 <td className="px-3 py-2" />
+                                <td className="px-3 py-2" />
                                 <td className="px-3 py-2 text-slate-500 tabular-nums align-top">
                                   {testLetterLabel(testIndex)}
                                 </td>
-                                <td className="px-3 py-2" />
                                 <td
                                   colSpan={3}
                                   className="px-3 py-2 text-white align-top break-words min-w-[14rem]"
