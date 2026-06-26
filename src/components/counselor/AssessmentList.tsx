@@ -226,9 +226,13 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
-                      (<span className="text-emerald-400">발송성공</span>/<span className="text-slate-300">총발송수</span>)
-                      {' - '}
-                      (<span className="text-slate-400">검사미완료</span>)
+                      (
+                      <span className="text-emerald-400">발송성공</span>
+                      <span> / </span>
+                      <span className="text-slate-300">총발송수</span>
+                      <span> / </span>
+                      <span className="text-slate-400">검사미완료</span>
+                      )
                     </span>
                   </th>
                   <th scope="col" className="px-2 py-2 text-center text-xs font-medium text-slate-400">작업</th>
@@ -262,16 +266,14 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <td className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}>
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-200">
+                      <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500">
                         (
-                        <span className="font-medium text-emerald-400">{dispatchSent}</span>
-                        <span className="text-slate-500">/</span>
-                        <span className="font-medium text-slate-300">{dispatchTotal}</span>
-                        )
-                        <span className="text-slate-500"> - </span>
-                        (
+                        <span className="px-2 font-medium tabular-nums text-emerald-400">{dispatchSent}</span>
+                        /
+                        <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
+                        /
                         <span
-                          className={`font-medium ${
+                          className={`px-2 font-medium tabular-nums ${
                             testIncomplete === 0 ? 'text-emerald-400' : 'text-red-400'
                           }`}
                         >
