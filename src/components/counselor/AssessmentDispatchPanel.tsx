@@ -69,6 +69,26 @@ function canSendReminder(r: DispatchRecipient): boolean {
   return Boolean(r.email || r.phone);
 }
 
+function contactChannels(r: DispatchRecipient): string {
+  const parts: string[] = [];
+  if (r.email) parts.push(`이메일 (${r.email})`);
+  if (r.phone) parts.push(`SMS (${r.phone})`);
+  return parts.length > 0 ? parts.join(', ') : '없음';
+}
+
+function pendingTestsFor(r: DispatchRecipient): DispatchTestResult[] {
+  return (r.tests ?? []).filter((t) => t.status !== 'completed');
+}
+
+function skipRemindReason(r: DispatchRecipient): string {
+  if (r.testStatus === 'completed') return '검사 완료';
+  if (!pendingTestsFor(r).length && r.requiredCount > 0) return '미완료 검사 없음';
+  if (!r.email && !r.phone) return '연락처 없음';
+  return '발송 불가';
+}
+
+type BulkConfirmAction = 'remind' | 'resend' | null;
+
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
 }
@@ -82,6 +102,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindOneId, setRemindOneId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [message, setMessage] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
@@ -123,6 +144,31 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     () => (data?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
     [data?.recipients, selected],
   );
+
+  const selectedRecipients = useMemo(
+    () => (data?.recipients || []).filter((r) => selected.has(r.portalId)),
+    [data?.recipients, selected],
+  );
+
+  const resendEligibleSelected = useMemo(
+    () => selectedRecipients.filter((r) => r.email || r.phone),
+    [selectedRecipients],
+  );
+
+  const resendSkippedSelected = useMemo(
+    () => selectedRecipients.filter((r) => !r.email && !r.phone),
+    [selectedRecipients],
+  );
+
+  const remindSkippedSelected = useMemo(
+    () => selectedRecipients.filter((r) => !canSendReminder(r)),
+    [selectedRecipients],
+  );
+
+  const loginUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/portal/login/`
+      : 'https://wizcoco.com/portal/login/';
 
   const toggleAll = () => {
     if (allSelected) setSelected(new Set());
@@ -181,6 +227,21 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     } finally {
       setRemindLoading(false);
       setRemindOneId(null);
+    }
+  };
+
+  const closeConfirm = () => {
+    if (!remindLoading && !resendLoading) setConfirmAction(null);
+  };
+
+  const confirmBulkAction = async () => {
+    if (confirmAction === 'remind') {
+      const ids = remindEligibleSelected.map((r) => r.portalId);
+      setConfirmAction(null);
+      await handleRemind(ids);
+    } else if (confirmAction === 'resend') {
+      setConfirmAction(null);
+      await handleResend();
     }
   };
 
@@ -253,7 +314,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           </button>
           <button
             type="button"
-            onClick={() => void handleRemind(remindEligibleSelected.map((r) => r.portalId))}
+            onClick={() => setConfirmAction('remind')}
             disabled={
               remindLoading ||
               resendLoading ||
@@ -268,7 +329,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           </button>
           <button
             type="button"
-            onClick={() => void handleResend()}
+            onClick={() => setConfirmAction('resend')}
             disabled={resendLoading || selected.size === 0}
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
@@ -418,6 +479,168 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 미실시 알림은 미완료 검사 현황과 검사
         링크만 발송하며 비밀번호는 변경되지 않습니다. 재발송 시 비밀번호가 새로 발급됩니다.
       </p>
+
+      {confirmAction ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={closeConfirm}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-600">
+              <h3 className="text-lg font-semibold text-white">
+                {confirmAction === 'remind' ? '미실시 알림통보 확인' : '코드 재발송 확인'}
+              </h3>
+              <p className="text-sm text-slate-400 mt-1">
+                {confirmAction === 'remind'
+                  ? '아래 내용으로 이메일·SMS 알림을 발송합니다. 비밀번호는 변경되지 않습니다.'
+                  : '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'}
+              </p>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
+              <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
+                <p>
+                  <span className="text-slate-500">검사코드 </span>
+                  <span className="font-mono text-cyan-300">
+                    {formatAccessCodeDisplay(data.joinAccessCode)}
+                  </span>
+                </p>
+                <p>
+                  <span className="text-slate-500">검사명 </span>
+                  <span className="text-white">{data.title || '—'}</span>
+                </p>
+              </div>
+
+              {confirmAction === 'remind' ? (
+                <>
+                  <div>
+                    <p className="text-slate-300 font-medium mb-2">
+                      발송 대상 {remindEligibleSelected.length}명
+                    </p>
+                    <ul className="space-y-3 max-h-48 overflow-y-auto">
+                      {remindEligibleSelected.map((r) => {
+                        const pending = pendingTestsFor(r);
+                        return (
+                          <li
+                            key={r.portalId}
+                            className="rounded-lg border border-slate-700 bg-slate-900/40 p-3"
+                          >
+                            <p className="text-white font-medium">{r.displayName || '—'}</p>
+                            <p className="text-slate-400 text-xs mt-1">{contactChannels(r)}</p>
+                            <p className="text-slate-400 text-xs mt-1">
+                              진행 {r.completedCount}/{r.requiredCount} · 나의코드{' '}
+                              {formatAccessCodeDisplay(r.myCode)}
+                            </p>
+                            <p className="text-amber-200/90 text-xs mt-2">
+                              미완료:{' '}
+                              {pending.length > 0
+                                ? pending
+                                    .map((t) => {
+                                      const label = t.testName || t.testId;
+                                      return t.status === 'in_progress'
+                                        ? `${label}(진행 중)`
+                                        : `${label}(미실시)`;
+                                    })
+                                    .join(', ')
+                                : '—'}
+                            </p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                  {remindSkippedSelected.length > 0 ? (
+                    <p className="text-slate-500 text-xs">
+                      선택했으나 제외 {remindSkippedSelected.length}명:{' '}
+                      {remindSkippedSelected
+                        .map((r) => `${r.displayName || '—'}(${skipRemindReason(r)})`)
+                        .join(', ')}
+                    </p>
+                  ) : null}
+                  <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-slate-300">
+                    <p className="text-amber-200 font-medium mb-2">발송 내용 (이메일/SMS)</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
+                      <li>제목: [WizCoCo] 미실시 알림 (수신자 이름)</li>
+                      <li>검사명, 진행 현황, 미완료 검사 목록</li>
+                      <li>
+                        검사코드 {formatAccessCodeDisplay(data.joinAccessCode)}, 나의코드(개인별)
+                      </li>
+                      <li>검사시작 URL: {loginUrl}</li>
+                      <li>바로 시작 매직링크 (72시간 유효, 개인별 발급)</li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-slate-300 font-medium mb-2">
+                      발송 대상 {resendEligibleSelected.length}명
+                      {resendSkippedSelected.length > 0
+                        ? ` · 제외 ${resendSkippedSelected.length}명(연락처 없음)`
+                        : ''}
+                    </p>
+                    <ul className="space-y-3 max-h-48 overflow-y-auto">
+                      {resendEligibleSelected.map((r) => (
+                        <li
+                          key={r.portalId}
+                          className="rounded-lg border border-slate-700 bg-slate-900/40 p-3"
+                        >
+                          <p className="text-white font-medium">{r.displayName || '—'}</p>
+                          <p className="text-slate-400 text-xs mt-1">{contactChannels(r)}</p>
+                          <p className="text-slate-400 text-xs mt-1">
+                            나의코드 {formatAccessCodeDisplay(r.myCode)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-lg border border-blue-700/40 bg-blue-950/30 p-3 text-slate-300">
+                    <p className="text-blue-200 font-medium mb-2">발송 내용 (이메일/SMS)</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
+                      <li>제목: [WizCoCo] 검사시작 접속 안내 (수신자 이름)</li>
+                      <li>
+                        검사코드 {formatAccessCodeDisplay(data.joinAccessCode)}, 나의코드(개인별)
+                      </li>
+                      <li className="text-amber-200">새 4자리 비밀번호 (기존 비밀번호 무효화)</li>
+                      <li>검사시작 URL: {loginUrl}</li>
+                      <li>바로 시작 매직링크 (72시간 유효, 개인별 발급)</li>
+                    </ul>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="px-4 py-3 border-t border-slate-600 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeConfirm}
+                disabled={remindLoading || resendLoading}
+                className="px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmBulkAction()}
+                disabled={
+                  remindLoading ||
+                  resendLoading ||
+                  (confirmAction === 'remind' && remindEligibleSelected.length === 0) ||
+                  (confirmAction === 'resend' && resendEligibleSelected.length === 0)
+                }
+                className={`px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 ${
+                  confirmAction === 'remind'
+                    ? 'bg-amber-600 hover:bg-amber-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {confirmAction === 'remind' ? '알림 발송' : '재발송'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {(detail !== null || detailLoading || detailError) && (
         <div
