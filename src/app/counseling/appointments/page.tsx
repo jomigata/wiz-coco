@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { motion } from 'framer-motion';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { useCounselorConnection } from '@/hooks/useCounselorConnection';
 import { CounselingAppointment } from '@/app/api/counseling-appointments/route';
+import { formatPhoneDisplay } from '@/lib/phoneFormat';
 
 export default function CounselingAppointmentsPage() {
   const { user, loading } = useFirebaseAuth();
@@ -144,7 +146,8 @@ export default function CounselingAppointmentsPage() {
 
   if (!counselorConnection.isConnected) {
     return (
-      <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
+      <div className="min-h-screen bg-gray-900">
+<div className="pt-16 p-6">
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -174,7 +177,8 @@ export default function CounselingAppointmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
+    <div className="min-h-screen bg-gray-900">
+<div className="pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">
@@ -556,7 +560,7 @@ function AppointmentCard({ appointment }: { appointment: CounselingAppointment }
           {appointment.location === 'phone' && appointment.phoneNumber && (
             <div className="mb-4">
               <p className="text-gray-300 text-sm">
-                <span className="font-medium">연락처:</span> {appointment.phoneNumber}
+                <span className="font-medium">연락처:</span> {formatPhoneDisplay(appointment.phoneNumber)}
               </p>
             </div>
           )}

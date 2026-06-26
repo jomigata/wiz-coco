@@ -3,6 +3,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from utils.phone_format import format_phone_display
+
 from config import (
     COUNSELOR_ADMIN_NOTIFY_EMAIL,
     MAIL_FROM,
@@ -35,7 +37,7 @@ def send_counselor_application_admin_email(
 신청 ID: {application_id}
 이름: {applicant_name}
 이메일: {applicant_email}
-전화: {phone or '-'}
+전화: {format_phone_display(phone) if phone else '-'}
 운영 형태: {practice_type or '-'}
 기관명: {org}
 전문 분야: {specs}

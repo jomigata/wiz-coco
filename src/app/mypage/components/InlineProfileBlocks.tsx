@@ -6,6 +6,7 @@ import { updateProfile } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import { markAuthenticatedTabSession, touchAuthHeartbeat } from '@/utils/authSessionLifecycle';
 import { isCounselor } from '@/utils/roleUtils';
+import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { FaUser, FaHeart, FaBuilding, FaComment, FaKey } from 'react-icons/fa';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
@@ -502,7 +503,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
       ) : (
         <div className="space-y-3">
           <div className={rowCls}><span className={keySpan}>이름</span><span className={valSpan}>{displayUser.name || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{displayUser.phoneNumber || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{formatPhoneDisplayOr(displayUser.phoneNumber, '정보 없음')}</span></div>
           <div className={rowCls}><span className={keySpan}>이메일(개인)</span><span className={valSpan}>{displayUser.email || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>생년월일</span><span className={valSpan}>{displayUser.birthDate || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>성별</span><span className={valSpan}>{genderLabel(displayUser.gender)}</span></div>
@@ -575,8 +576,8 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
           <div className={rowCls}><span className={keySpan}>운영 형태</span><span className={valSpan}>{practiceLabel(displayUser.practiceType)}</span></div>
           <div className={rowCls}><span className={keySpan}>회사/기관명</span><span className={valSpan}>{displayUser.organizationName?.trim() || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>담당자</span><span className={valSpan}>{displayUser.organizationManager?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{displayUser.organizationTel?.trim() || '정보 없음'}</span></div>
-          <div className={rowCls}><span className={keySpan}>핸드폰번호</span><span className={valSpan}>{displayUser.organizationMobile?.trim() || '정보 없음'}</span></div>
+          <div className={rowCls}><span className={keySpan}>전화번호</span><span className={valSpan}>{formatPhoneDisplayOr(displayUser.organizationTel?.trim(), '정보 없음')}</span></div>
+          <div className={rowCls}><span className={keySpan}>핸드폰번호</span><span className={valSpan}>{formatPhoneDisplayOr(displayUser.organizationMobile?.trim(), '정보 없음')}</span></div>
           <div className={rowCls}><span className={keySpan}>팩스번호</span><span className={valSpan}>{displayUser.organizationFax?.trim() || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>이메일</span><span className={valSpan}>{displayUser.organizationEmail?.trim() || '정보 없음'}</span></div>
           <div className={rowCls}><span className={keySpan}>주소</span><span className={valSpan}>{displayUser.organizationAddress?.trim() || '정보 없음'}</span></div>

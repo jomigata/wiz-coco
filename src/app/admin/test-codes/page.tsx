@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { reloadWithAuthSession } from '@/utils/authSessionLifecycle';
 
 interface TestRecord {
@@ -189,7 +190,7 @@ export default function TestCodesPage() {
                   {record.userData?.gender ? ` / ${record.userData.gender}` : ''}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  {record.userData?.phone || '-'}
+                  {formatPhoneDisplayOr(record.userData?.phone, '-')}
                 </td>
               </tr>
             ))}

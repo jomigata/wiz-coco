@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { formatPhoneDisplay, formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
@@ -142,7 +143,7 @@ function SortableColumnHeader({
 function contactChannels(r: DispatchRecipient): string {
   const parts: string[] = [];
   if (r.email) parts.push(`이메일 (${r.email})`);
-  if (r.phone) parts.push(`SMS (${r.phone})`);
+  if (r.phone) parts.push(`SMS (${formatPhoneDisplay(r.phone)})`);
   return parts.length > 0 ? parts.join(', ') : '없음';
 }
 
@@ -550,7 +551,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                         {r.displayName || '—'}
                       </td>
                       <td className="px-3 py-2 text-slate-300 align-top truncate">{r.email || '—'}</td>
-                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap">{r.phone || '—'}</td>
+                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap">
+                        {formatPhoneDisplayOr(r.phone)}
+                      </td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
                       </td>

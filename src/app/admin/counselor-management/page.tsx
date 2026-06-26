@@ -8,6 +8,7 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import CounselorApplicationReviewModal from '@/app/admin/components/CounselorApplicationReviewModal';
 import CounselorApplicationAttachmentList from '@/app/admin/components/CounselorApplicationAttachmentList';
 import SortableTableHeader, { type SortOrder } from '@/app/admin/components/SortableTableHeader';
+import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
   approveCounselorApplication,
   listAllCounselorApplications,
@@ -655,7 +656,7 @@ function CounselorManagementPageContent() {
                   </div>
                   <div>
                     <label className="text-slate-300 text-sm">전화번호</label>
-                    <p className="text-white">{selectedApplication.phone}</p>
+                    <p className="text-white">{formatPhoneDisplayOr(selectedApplication.phone, '-')}</p>
                   </div>
                   <div>
                     <label className="text-slate-300 text-sm">기관명/회사명</label>

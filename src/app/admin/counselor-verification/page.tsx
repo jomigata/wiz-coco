@@ -23,6 +23,7 @@ import {
   groupCounselorApplicationsByApplicant,
   type GroupedCounselorApplicationRow,
 } from '@/lib/firestore/counselorApplicationGrouping';
+import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 
 type SortKey =
   | 'appliedDate'
@@ -528,7 +529,7 @@ function CounselorVerificationPageContent() {
                   </div>
                   <div>
                     <p className="text-slate-400 text-xs mb-0.5">전화번호</p>
-                    <p className="text-white">{selectedApplication.phone || '-'}</p>
+                    <p className="text-white">{formatPhoneDisplayOr(selectedApplication.phone, '-')}</p>
                   </div>
                   <div>
                     <p className="text-slate-400 text-xs mb-0.5">신청자 UID</p>

@@ -35,6 +35,7 @@ from utils.portal_linking import (
 from utils.my_code import normalize_my_code, is_valid_my_code
 from utils.portal_assessment_access import link_shared_assessment_to_portal, get_portal_doc
 from utils.password import hash_password, verify_password
+from utils.phone_format import format_phone_display
 from utils.portal_magic import create_portal_magic_link_token, verify_portal_magic_link_token
 from utils.bulk_portal_worker import (
     create_bulk_job,
@@ -686,7 +687,7 @@ def bulk_export_csv():
             [
                 r.get("displayName", ""),
                 r.get("email", ""),
-                r.get("phone", ""),
+                format_phone_display(r.get("phone", "")),
                 r.get("joinAccessCode", r.get("accessCode", "")),
                 r.get("myCode", r.get("accessCode", "")),
                 r.get("pin", ""),

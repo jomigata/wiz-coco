@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { formatPhoneDisplay } from '@/lib/phoneFormat';
 import type { ClientPortalBulkRow } from '@/types/clientPortal';
 
 function textCell(value: string): XLSX.CellObject {
@@ -16,15 +17,6 @@ function linkCell(url: string): XLSX.CellObject {
 function formatPin(pin: string): string {
   const digits = String(pin || '').replace(/\D/g, '');
   return digits.padStart(4, '0').slice(-4);
-}
-
-function formatPhone(phone: string): string {
-  const raw = String(phone || '').trim();
-  if (!raw) return '';
-  const digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('0')) return digits;
-  if (digits.length === 10 || digits.length === 11) return `0${digits}`;
-  return raw;
 }
 
 function resolveMagicUrl(row: ClientPortalBulkRow): string {
@@ -55,7 +47,7 @@ export function downloadBulkPortalExcel(
     const cells = [
       r.displayName || '',
       r.email || '',
-      formatPhone(r.phone || ''),
+      formatPhoneDisplay(r.phone || ''),
       r.joinAccessCode || joinAccessCode || '',
       r.myCode || r.accessCode || '',
       formatPin(r.pin),
