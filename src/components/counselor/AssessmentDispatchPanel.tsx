@@ -647,7 +647,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           <li className="flex gap-2.5">
             <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">2.</span>
             <span className="text-slate-400">
-              <span className="text-amber-200/90">미실시 알림통보</span>는 미완료 검사 현황과 검사
+              상단 우측의{' '}
+              <span className="text-amber-200/90">미실시 알림통보</span> 버튼은 미완료 검사 현황과 검사
               링크만 이메일/SMS로 발송합니다.{' '}
               <span className="text-slate-300">비밀번호는 변경되지 않습니다.</span>
             </span>
@@ -655,7 +656,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           <li className="flex gap-2.5">
             <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">3.</span>
             <span className="text-slate-400">
-              <span className="text-blue-300/90">코드 재발송</span>은 검사 코드와 비밀번호를 다시
+              상단 우측의 <span className="text-blue-300/90">코드 재발송</span> 버튼은 검사 코드와 비밀번호를 다시
               보냅니다.{' '}
               <span className="text-slate-300">재발송 시 비밀번호가 새로 발급</span>되며, 기존
               비밀번호는 더 이상 사용할 수 없습니다.
