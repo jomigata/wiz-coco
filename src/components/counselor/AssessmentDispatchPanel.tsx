@@ -364,8 +364,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   if (!data) return null;
 
-  const colCount = 10;
-
   return (
     <section className="space-y-4">
       <div className="rounded-lg border border-slate-600 bg-slate-800/60 p-4 text-sm text-slate-300 space-y-1">
@@ -397,7 +395,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-white">발송 및 검사결과 현황</h2>
+        <h2 className="text-lg font-semibold text-white">발송 및 검사 현황</h2>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -448,7 +446,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               <tr>
                 <th className="px-3 py-2 text-left w-10 text-xs font-medium">No.</th>
                 <th className="px-3 py-2 text-left w-10 text-xs font-medium">선택</th>
-                <th className="px-3 py-2 text-left w-12 text-xs font-medium">결과보기</th>
+                <th className="px-3 py-2 text-left w-12 text-xs font-medium">검사현황</th>
                 <SortableColumnHeader
                   label="이름"
                   sortKey="displayName"
@@ -505,7 +503,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
                 return (
                   <React.Fragment key={r.portalId}>
-                    <tr className="hover:bg-slate-800/50">
+                    <tr
+                      className={`hover:bg-slate-800/50 ${isOpen ? 'bg-slate-800/40 border-b border-slate-700/60' : ''}`}
+                    >
                       <td className="px-3 py-2 text-slate-400 align-top tabular-nums">{rowIndex + 1}</td>
                       <td className="px-3 py-2 align-top">
                         <input
@@ -524,7 +524,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           aria-label={
                             isOpen
                               ? `${r.displayName || '내담자'} 검사 결과 접기`
-                              : `${r.displayName || '내담자'} 검사 결과보기`
+                              : `${r.displayName || '내담자'} 검사 현황 펼치기`
                           }
                         >
                           {isOpen ? '▼' : '▶'}
@@ -557,66 +557,86 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       </td>
                     </tr>
                     {isOpen ? (
-                      tests.length === 0 ? (
-                        <tr className="bg-slate-900/40">
-                          <td colSpan={colCount} className="px-3 py-3 text-slate-500 text-sm">
-                            등록된 검사 항목이 없습니다.
-                          </td>
-                        </tr>
-                      ) : (
-                        <>
-                          <tr className="bg-slate-900/40 text-slate-400 text-xs border-b border-slate-800">
-                            <td className="px-3 py-1.5" />
-                            <td className="px-3 py-1.5" />
-                            <td className="px-3 py-1.5" />
-                            <td colSpan={3} className="px-3 py-1.5 font-medium">
-                              검사명
-                            </td>
-                            <td className="px-3 py-1.5 font-medium w-24">상태</td>
-                            <td className="px-3 py-1.5 font-medium whitespace-nowrap">완료일시</td>
-                            <td className="px-3 py-1.5 font-medium w-24">결과 확인</td>
-                            <td className="px-3 py-1.5" />
-                          </tr>
-                          {tests.map((t, testIndex) => {
-                            const st = testStatusLabel(t.status);
-                            return (
-                              <tr key={t.testId} className="bg-slate-900/40 border-b border-slate-800/80 last:border-0">
-                                <td className="px-3 py-2" />
-                                <td className="px-3 py-2" />
-                                <td className="px-3 py-2 text-slate-500 tabular-nums align-top">
-                                  {testLetterLabel(testIndex)}
-                                </td>
-                                <td
-                                  colSpan={3}
-                                  className="px-3 py-2 text-white align-top break-words min-w-[14rem]"
-                                >
-                                  {t.testName || t.testId}
-                                </td>
-                                <td className={`px-3 py-2 align-top ${st.className}`}>{st.text}</td>
-                                <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap">
-                                  {formatCompletedAt(t.completedAt)}
-                                </td>
-                                <td className="px-3 py-2 align-top">
-                                  {t.status === 'completed' && t.resultId ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => openResultDetail(t.resultId!)}
-                                      className="text-blue-400 hover:text-blue-300"
-                                    >
-                                      결과 보기
-                                    </button>
-                                  ) : t.status === 'in_progress' ? (
-                                    <span className="text-amber-300">진행 중</span>
-                                  ) : (
-                                    <span className="text-slate-500">미실시</span>
-                                  )}
-                                </td>
-                                <td className="px-3 py-2" />
-                              </tr>
-                            );
-                          })}
-                        </>
-                      )
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="p-0 border-b border-slate-700/60 bg-slate-900/20"
+                          aria-hidden="true"
+                        />
+                        <td
+                          colSpan={6}
+                          className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20"
+                        >
+                          {tests.length === 0 ? (
+                            <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2">
+                              등록된 검사 항목이 없습니다.
+                            </p>
+                          ) : (
+                            <div className="rounded-lg border border-slate-600/80 bg-slate-950/55 overflow-hidden shadow-inner">
+                              <p className="px-3 py-1.5 text-xs font-medium text-slate-500 border-b border-slate-700/70 bg-slate-900/60">
+                                {r.displayName || '내담자'} · 검사별 현황
+                              </p>
+                              <table className="w-full text-sm table-fixed">
+                                <colgroup>
+                                  <col className="w-10" />
+                                  <col />
+                                  <col className="w-[5.5rem]" />
+                                  <col className="w-[10.5rem]" />
+                                  <col className="w-[5.5rem]" />
+                                </colgroup>
+                                <thead>
+                                  <tr className="text-slate-400 text-xs border-b border-slate-700/70 bg-slate-900/40">
+                                    <th className="px-3 py-2" aria-hidden="true" />
+                                    <th className="px-3 py-2 text-left font-medium">검사명</th>
+                                    <th className="px-3 py-2 text-left font-medium">상태</th>
+                                    <th className="px-3 py-2 text-left font-medium">완료일시</th>
+                                    <th className="px-3 py-2 text-left font-medium">결과 확인</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {tests.map((t, testIndex) => {
+                                    const st = testStatusLabel(t.status);
+                                    return (
+                                      <tr
+                                        key={t.testId}
+                                        className="border-b border-slate-800/80 last:border-0 hover:bg-slate-900/30"
+                                      >
+                                        <td className="px-3 py-2.5 text-slate-500 tabular-nums align-top">
+                                          {testLetterLabel(testIndex)}
+                                        </td>
+                                        <td className="px-3 py-2.5 text-white align-top break-words">
+                                          {t.testName || t.testId}
+                                        </td>
+                                        <td className={`px-3 py-2.5 align-top ${st.className}`}>
+                                          {st.text}
+                                        </td>
+                                        <td className="px-3 py-2.5 text-slate-400 align-top text-xs leading-relaxed">
+                                          {formatCompletedAt(t.completedAt)}
+                                        </td>
+                                        <td className="px-3 py-2.5 align-top">
+                                          {t.status === 'completed' && t.resultId ? (
+                                            <button
+                                              type="button"
+                                              onClick={() => openResultDetail(t.resultId!)}
+                                              className="text-blue-400 hover:text-blue-300 whitespace-nowrap"
+                                            >
+                                              결과 보기
+                                            </button>
+                                          ) : t.status === 'in_progress' ? (
+                                            <span className="text-amber-300">진행 중</span>
+                                          ) : (
+                                            <span className="text-slate-500">미실시</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
                     ) : null}
                   </React.Fragment>
                 );
@@ -627,7 +647,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       )}
 
       <p className="text-xs text-slate-500">
-        행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 미실시 알림은 미완료 검사 현황과 검사
+        검사현황 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 미실시 알림은 미완료 검사 현황과 검사
         링크만 발송하며 비밀번호는 변경되지 않습니다. 재발송 시 비밀번호가 새로 발급됩니다.
       </p>
 
