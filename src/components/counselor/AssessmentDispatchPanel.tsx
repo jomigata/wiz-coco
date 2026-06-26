@@ -397,7 +397,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-white">발송목록</h2>
+        <h2 className="text-lg font-semibold text-white">발송 및 검사결과 현황</h2>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -557,63 +557,66 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       </td>
                     </tr>
                     {isOpen ? (
-                      <tr className="bg-slate-900/40">
-                        <td colSpan={colCount} className="px-3 py-3">
-                          {tests.length === 0 ? (
-                            <p className="text-slate-500 text-sm pl-6">등록된 검사 항목이 없습니다.</p>
-                          ) : (
-                            <table className="w-full max-w-4xl text-sm ml-6">
-                              <thead>
-                                <tr className="text-slate-400 border-b border-slate-700">
-                                  <th className="py-1.5 pr-2 text-left font-medium w-10" aria-hidden="true" />
-                                  <th className="py-1.5 pr-4 text-left font-medium min-w-[14rem] w-[45%]">
-                                    검사명
-                                  </th>
-                                  <th className="py-1.5 pr-4 text-left font-medium w-24">상태</th>
-                                  <th className="py-1.5 pr-4 text-left font-medium w-40 whitespace-nowrap">
-                                    완료일시
-                                  </th>
-                                  <th className="py-1.5 text-left font-medium w-24">결과 확인</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {tests.map((t, testIndex) => {
-                                  const st = testStatusLabel(t.status);
-                                  return (
-                                    <tr key={t.testId} className="border-b border-slate-800 last:border-0">
-                                      <td className="py-2 pr-2 text-slate-500 tabular-nums align-top">
-                                        {testLetterLabel(testIndex)}
-                                      </td>
-                                      <td className="py-2 pr-4 text-white align-top break-words">
-                                        {t.testName || t.testId}
-                                      </td>
-                                      <td className={`py-2 pr-4 ${st.className}`}>{st.text}</td>
-                                      <td className="py-2 pr-4 text-slate-400">
-                                        {formatCompletedAt(t.completedAt)}
-                                      </td>
-                                      <td className="py-2">
-                                        {t.status === 'completed' && t.resultId ? (
-                                          <button
-                                            type="button"
-                                            onClick={() => openResultDetail(t.resultId!)}
-                                            className="text-blue-400 hover:text-blue-300"
-                                          >
-                                            결과 보기
-                                          </button>
-                                        ) : t.status === 'in_progress' ? (
-                                          <span className="text-amber-300">진행 중</span>
-                                        ) : (
-                                          <span className="text-slate-500">미실시</span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          )}
-                        </td>
-                      </tr>
+                      tests.length === 0 ? (
+                        <tr className="bg-slate-900/40">
+                          <td colSpan={colCount} className="px-3 py-3 text-slate-500 text-sm">
+                            등록된 검사 항목이 없습니다.
+                          </td>
+                        </tr>
+                      ) : (
+                        <>
+                          <tr className="bg-slate-900/40 text-slate-400 text-xs border-b border-slate-800">
+                            <td className="px-3 py-1.5" />
+                            <td className="px-3 py-1.5" />
+                            <td className="px-3 py-1.5" />
+                            <td colSpan={3} className="px-3 py-1.5 font-medium">
+                              검사명
+                            </td>
+                            <td className="px-3 py-1.5 font-medium w-24">상태</td>
+                            <td className="px-3 py-1.5 font-medium whitespace-nowrap">완료일시</td>
+                            <td className="px-3 py-1.5 font-medium w-24">결과 확인</td>
+                            <td className="px-3 py-1.5" />
+                          </tr>
+                          {tests.map((t, testIndex) => {
+                            const st = testStatusLabel(t.status);
+                            return (
+                              <tr key={t.testId} className="bg-slate-900/40 border-b border-slate-800/80 last:border-0">
+                                <td className="px-3 py-2" />
+                                <td className="px-3 py-2 text-slate-500 tabular-nums align-top">
+                                  {testLetterLabel(testIndex)}
+                                </td>
+                                <td className="px-3 py-2" />
+                                <td
+                                  colSpan={3}
+                                  className="px-3 py-2 text-white align-top break-words min-w-[14rem]"
+                                >
+                                  {t.testName || t.testId}
+                                </td>
+                                <td className={`px-3 py-2 align-top ${st.className}`}>{st.text}</td>
+                                <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap">
+                                  {formatCompletedAt(t.completedAt)}
+                                </td>
+                                <td className="px-3 py-2 align-top">
+                                  {t.status === 'completed' && t.resultId ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openResultDetail(t.resultId!)}
+                                      className="text-blue-400 hover:text-blue-300"
+                                    >
+                                      결과 보기
+                                    </button>
+                                  ) : t.status === 'in_progress' ? (
+                                    <span className="text-amber-300">진행 중</span>
+                                  ) : (
+                                    <span className="text-slate-500">미실시</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2" />
+                              </tr>
+                            );
+                          })}
+                        </>
+                      )
                     ) : null}
                   </React.Fragment>
                 );
