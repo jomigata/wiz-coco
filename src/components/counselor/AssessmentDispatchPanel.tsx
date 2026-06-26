@@ -73,6 +73,72 @@ function testLetterLabel(index: number): string {
   return `${String.fromCharCode(97 + index)}.`;
 }
 
+type RecipientSortKey = 'displayName' | 'email' | 'phone' | 'myCode' | 'notifyStatus' | 'testStatus';
+type SortDirection = 'asc' | 'desc';
+
+function testStatusOrder(status: DispatchRecipient['testStatus']): number {
+  if (status === 'completed') return 2;
+  if (status === 'in_progress') return 1;
+  return 0;
+}
+
+function compareRecipients(
+  a: DispatchRecipient,
+  b: DispatchRecipient,
+  key: RecipientSortKey,
+  dir: SortDirection,
+): number {
+  const mult = dir === 'asc' ? 1 : -1;
+  switch (key) {
+    case 'displayName':
+      return mult * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
+    case 'email':
+      return mult * (a.email || '').localeCompare(b.email || '', 'ko');
+    case 'phone':
+      return mult * (a.phone || '').localeCompare(b.phone || '', 'ko');
+    case 'myCode':
+      return mult * (a.myCode || '').localeCompare(b.myCode || '', 'ko');
+    case 'notifyStatus':
+      return mult * (a.notifyStatus || '').localeCompare(b.notifyStatus || '', 'ko');
+    case 'testStatus':
+      return mult * (testStatusOrder(a.testStatus) - testStatusOrder(b.testStatus));
+    default:
+      return 0;
+  }
+}
+
+function SortableColumnHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+  className = '',
+}: {
+  label: string;
+  sortKey: RecipientSortKey;
+  activeKey: RecipientSortKey | null;
+  direction: SortDirection;
+  onSort: (key: RecipientSortKey) => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  return (
+    <th className={`px-3 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors"
+      >
+        <span>{label}</span>
+        <span className={`text-[10px] ${active ? 'text-cyan-400' : 'text-slate-600'}`} aria-hidden="true">
+          {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 function contactChannels(r: DispatchRecipient): string {
   const parts: string[] = [];
   if (r.email) parts.push(`이메일 (${r.email})`);
@@ -109,6 +175,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [remindOneId, setRemindOneId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
+  const [sortKey, setSortKey] = useState<RecipientSortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
   const [message, setMessage] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
@@ -175,6 +243,22 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     typeof window !== 'undefined'
       ? `${window.location.origin}/portal/login/`
       : 'https://wizcoco.com/portal/login/';
+
+  const sortedRecipients = useMemo(() => {
+    const list = [...(data?.recipients || [])];
+    if (!sortKey) return list;
+    list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
+    return list;
+  }, [data?.recipients, sortKey, sortDir]);
+
+  const toggleSort = (key: RecipientSortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
 
   const toggleAll = () => {
     if (allSelected) setSelected(new Set());
@@ -280,7 +364,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   if (!data) return null;
 
-  const colCount = 9;
+  const colCount = 10;
 
   return (
     <section className="space-y-4">
@@ -362,19 +446,56 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           <table className="min-w-full text-sm">
             <thead className="bg-slate-800 text-slate-400">
               <tr>
-                <th className="px-3 py-2 text-left w-10">No.</th>
-                <th className="px-3 py-2 text-left w-10">선택</th>
-                <th className="px-3 py-2 text-left">결과보기</th>
-                <th className="px-3 py-2 text-left">이메일</th>
-                <th className="px-3 py-2 text-left">휴대폰</th>
-                <th className="px-3 py-2 text-left">나의코드</th>
-                <th className="px-3 py-2 text-left">발송</th>
-                <th className="px-3 py-2 text-left">검사</th>
-                <th className="px-3 py-2 text-left w-24">미실시 알림</th>
+                <th className="px-3 py-2 text-left w-10 text-xs font-medium">No.</th>
+                <th className="px-3 py-2 text-left w-10 text-xs font-medium">선택</th>
+                <th className="px-3 py-2 text-left w-12 text-xs font-medium">결과보기</th>
+                <SortableColumnHeader
+                  label="이름"
+                  sortKey="displayName"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortableColumnHeader
+                  label="이메일"
+                  sortKey="email"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortableColumnHeader
+                  label="휴대폰"
+                  sortKey="phone"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortableColumnHeader
+                  label="나의코드"
+                  sortKey="myCode"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortableColumnHeader
+                  label="발송"
+                  sortKey="notifyStatus"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortableColumnHeader
+                  label="검사"
+                  sortKey="testStatus"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                />
+                <th className="px-3 py-2 text-left w-24 text-xs font-medium">미실시 알림</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
-              {data.recipients.map((r, rowIndex) => {
+              {sortedRecipients.map((r, rowIndex) => {
                 const notify = notifyLabel(r.notifyStatus);
                 const summary = testSummary(r);
                 const isOpen = expanded.has(r.portalId);
@@ -394,11 +515,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 text-white align-top">
+                      <td className="px-3 py-2 align-top">
                         <button
                           type="button"
                           onClick={() => toggleExpand(r.portalId)}
-                          className="inline-flex items-center gap-1.5 text-left hover:text-cyan-200"
+                          className="text-slate-400 hover:text-white"
                           aria-expanded={isOpen}
                           aria-label={
                             isOpen
@@ -406,11 +527,10 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                               : `${r.displayName || '내담자'} 검사 결과보기`
                           }
                         >
-                          <span className="text-slate-400 shrink-0">{isOpen ? '▼' : '▶'}</span>
-                          <span className="text-slate-500 shrink-0">결과보기</span>
-                          <span>{r.displayName || '—'}</span>
+                          {isOpen ? '▼' : '▶'}
                         </button>
                       </td>
+                      <td className="px-3 py-2 text-white align-top">{r.displayName || '—'}</td>
                       <td className="px-3 py-2 text-slate-300 align-top">{r.email || '—'}</td>
                       <td className="px-3 py-2 text-slate-300 align-top">{r.phone || '—'}</td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top">
@@ -442,21 +562,18 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           {tests.length === 0 ? (
                             <p className="text-slate-500 text-sm pl-6">등록된 검사 항목이 없습니다.</p>
                           ) : (
-                            <table className="w-full text-sm ml-6 table-fixed">
-                              <colgroup>
-                                <col className="w-10" />
-                                <col />
-                                <col className="w-24" />
-                                <col className="w-44" />
-                                <col className="w-24" />
-                              </colgroup>
+                            <table className="w-full max-w-4xl text-sm ml-6">
                               <thead>
                                 <tr className="text-slate-400 border-b border-slate-700">
-                                  <th className="py-1.5 pr-2 text-left font-medium" aria-hidden="true" />
-                                  <th className="py-1.5 pr-4 text-left font-medium" aria-hidden="true" />
-                                  <th className="py-1.5 pr-4 text-left font-medium">상태</th>
-                                  <th className="py-1.5 pr-4 text-left font-medium">완료일시</th>
-                                  <th className="py-1.5 text-left font-medium">결과 확인</th>
+                                  <th className="py-1.5 pr-2 text-left font-medium w-10" aria-hidden="true" />
+                                  <th className="py-1.5 pr-4 text-left font-medium min-w-[14rem] w-[45%]">
+                                    검사명
+                                  </th>
+                                  <th className="py-1.5 pr-4 text-left font-medium w-24">상태</th>
+                                  <th className="py-1.5 pr-4 text-left font-medium w-40 whitespace-nowrap">
+                                    완료일시
+                                  </th>
+                                  <th className="py-1.5 text-left font-medium w-24">결과 확인</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -464,13 +581,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                                   const st = testStatusLabel(t.status);
                                   return (
                                     <tr key={t.testId} className="border-b border-slate-800 last:border-0">
-                                      <td className="py-2 pr-2 text-slate-400 align-top tabular-nums">
+                                      <td className="py-2 pr-2 text-slate-500 tabular-nums align-top">
                                         {testLetterLabel(testIndex)}
                                       </td>
-                                      <td className="py-2 pr-4 text-white align-top min-w-0">
-                                        <span className="block truncate" title={t.testName || t.testId}>
-                                          {t.testName || t.testId}
-                                        </span>
+                                      <td className="py-2 pr-4 text-white align-top break-words">
+                                        {t.testName || t.testId}
                                       </td>
                                       <td className={`py-2 pr-4 ${st.className}`}>{st.text}</td>
                                       <td className="py-2 pr-4 text-slate-400">
