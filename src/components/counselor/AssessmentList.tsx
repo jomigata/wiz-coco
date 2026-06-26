@@ -39,6 +39,14 @@ function isExpired(iso: string | undefined): boolean {
   try { return new Date(`${s}T23:59:59`) < new Date(); } catch { return false; }
 }
 
+function resultStatusCounts(a: CounselorAssessment) {
+  const dispatchSent = a.dispatchSentCount ?? 0;
+  const dispatchFailed = a.dispatchFailedCount ?? 0;
+  const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
+  const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
+  return { dispatchSent, dispatchFailed, testComplete, testIncomplete };
+}
+
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
   const router = useRouter();
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
@@ -46,10 +54,14 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [deleteError, setDeleteError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const totalParticipants = assessments.reduce(
-    (sum, a) => sum + (a.emailsCompletedAllTestsCount ?? 0) + (a.emailsNotCompletedAllTestsCount ?? 0), 0,
+  const totalParticipants = assessments.reduce((sum, a) => {
+    const { testComplete, testIncomplete } = resultStatusCounts(a);
+    return sum + testComplete + testIncomplete;
+  }, 0);
+  const totalCompleted = assessments.reduce(
+    (sum, a) => sum + resultStatusCounts(a).testComplete,
+    0,
   );
-  const totalCompleted = assessments.reduce((sum, a) => sum + (a.emailsCompletedAllTestsCount ?? 0), 0);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -210,15 +222,19 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">기관/단체/그룹명</th>
                   <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사명</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용최종일</th>
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">진행</th>
+                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
+                    <span className="block">결과현황</span>
+                    <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
+                      (발송성공/실패),(검사완료/미완료)
+                    </span>
+                  </th>
                   <th scope="col" className="px-2 py-2 text-center text-xs font-medium text-slate-400">작업</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
                 {filtered.map((a) => {
-                  const incomplete = a.emailsNotCompletedAllTestsCount ?? 0;
-                  const complete = a.emailsCompletedAllTestsCount ?? 0;
-                  const total = incomplete + complete;
+                  const { dispatchSent, dispatchFailed, testComplete, testIncomplete } =
+                    resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const orgLabel = (a.cohortName || a.title || '-').trim();
 
@@ -244,10 +260,16 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <td className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}>
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-300">
-                        <span className="font-semibold text-emerald-400">{complete}</span>
-                        <span className="text-slate-600"> / </span>
-                        <span className="font-semibold text-slate-200">{total}</span>
+                      <td className="whitespace-nowrap px-2 py-2 text-center text-xs font-mono text-slate-300">
+                        (
+                        <span className="font-semibold text-emerald-400">{dispatchSent}</span>
+                        <span className="text-slate-600">/</span>
+                        <span className="font-semibold text-red-400">{dispatchFailed}</span>
+                        ),(
+                        <span className="font-semibold text-emerald-400">{testComplete}</span>
+                        <span className="text-slate-600">/</span>
+                        <span className="font-semibold text-red-400">{testIncomplete}</span>
+                        )
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-wrap items-center justify-center gap-1">

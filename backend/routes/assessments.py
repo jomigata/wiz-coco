@@ -17,6 +17,7 @@ from utils.result_actor import (
     fallback_actor_label,
 )
 from utils.test_result_queries import query_results_shared_to_assessment
+from utils.assessment_dispatch import aggregate_assessment_list_stats
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -152,6 +153,7 @@ def list_assessments():
     items = [x for x in items if (x.get("status") or "active") == "active"]
     ids = [x["id"] for x in items]
     per_testids = _aggregate_completed_testids_by_email(db, ids)
+    portal_stats = aggregate_assessment_list_stats(db, counselor_uid=g.counselor_uid, items=items)
     for x in items:
         aid = x["id"]
         required = {
@@ -173,6 +175,11 @@ def list_assessments():
             emails_not_all = 0
         x["emailsNotCompletedAllTestsCount"] = emails_not_all
         x["emailsCompletedAllTestsCount"] = emails_all
+        pstats = portal_stats.get(aid) or {}
+        x["dispatchSentCount"] = int(pstats.get("dispatchSentCount") or 0)
+        x["dispatchFailedCount"] = int(pstats.get("dispatchFailedCount") or 0)
+        x["testCompleteCount"] = int(pstats.get("testCompleteCount") or 0)
+        x["testIncompleteCount"] = int(pstats.get("testIncompleteCount") or 0)
         _strip_join_secrets_for_counselor_api(x)
     return jsonify({"assessments": items})
 

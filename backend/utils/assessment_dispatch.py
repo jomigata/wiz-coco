@@ -155,6 +155,74 @@ def _test_status_for_portal(db, portal_id: str, assessment_id: str, required: se
     }
 
 
+def aggregate_assessment_list_stats(
+    db,
+    *,
+    counselor_uid: str,
+    items: list[dict],
+) -> dict[str, dict]:
+    """검사코드 목록용 — 포털별 발송·검사 완료 집계."""
+    if not items:
+        return {}
+
+    stats: dict[str, dict] = {
+        x["id"]: {
+            "dispatchSentCount": 0,
+            "dispatchFailedCount": 0,
+            "testCompleteCount": 0,
+            "testIncompleteCount": 0,
+        }
+        for x in items
+    }
+    required_by_assessment: dict[str, set[str]] = {}
+    for x in items:
+        aid = x["id"]
+        required_by_assessment[aid] = {
+            str(t.get("testId") or "").strip()
+            for t in (x.get("testList") or [])
+            if t and str(t.get("testId") or "").strip()
+        }
+
+    portal_rows: list[tuple[str, dict, list]] = []
+    portal_refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("counselorId", "==", counselor_uid)
+        .stream()
+    )
+    for doc in portal_refs:
+        pdata = doc.to_dict() or {}
+        if (pdata.get("status") or "active") != "active":
+            continue
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        if not assigned:
+            continue
+        portal_rows.append((doc.id, pdata, assigned))
+
+    portal_ids = {row[0] for row in portal_rows}
+    notify_map = _latest_notify_by_portal(db, portal_ids)
+
+    for portal_id, pdata, assigned in portal_rows:
+        notify = notify_map.get(portal_id) or {}
+        notify_status = (notify.get("status") or pdata.get("lastNotifyStatus") or "not_sent").strip()
+
+        for aid in assigned:
+            if aid not in stats:
+                continue
+            if notify_status == "sent":
+                stats[aid]["dispatchSentCount"] += 1
+            elif notify_status == "failed":
+                stats[aid]["dispatchFailedCount"] += 1
+
+            required = required_by_assessment.get(aid, set())
+            test_info = _test_status_for_portal(db, portal_id, aid, required)
+            if test_info.get("testStatus") == "completed":
+                stats[aid]["testCompleteCount"] += 1
+            else:
+                stats[aid]["testIncompleteCount"] += 1
+
+    return stats
+
+
 def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -> dict | None:
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()

@@ -418,6 +418,11 @@ export interface CounselorAssessment {
   emailsNotCompletedAllTestsCount?: number;
   /** 포함된 검사를 모두 완료 제출한 서로 다른 이메일 수 */
   emailsCompletedAllTestsCount?: number;
+  /** 발송목록 기준 발송 성공·실패·검사 완료·미완료 인원 */
+  dispatchSentCount?: number;
+  dispatchFailedCount?: number;
+  testCompleteCount?: number;
+  testIncompleteCount?: number;
   /** 기관/단체/그룹명 (검사코드 세트) */
   cohortName?: string;
 }
