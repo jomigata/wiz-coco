@@ -634,10 +634,36 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
-        검사현황 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 미실시 알림은 미완료 검사 현황과 검사
-        링크만 발송하며 비밀번호는 변경되지 않습니다. 재발송 시 비밀번호가 새로 발급됩니다.
-      </p>
+      <div className="rounded-lg border border-slate-600/80 bg-slate-800/40 px-4 py-3">
+        <p className="text-xs font-medium text-slate-400 mb-2.5">이용 안내</p>
+        <ol className="space-y-2.5 text-xs leading-relaxed">
+          <li className="flex gap-2.5">
+            <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">1.</span>
+            <span className="text-slate-400">
+              <span className="text-slate-300">검사현황 ▶</span>를 누르면 해당 내담자의 검사별
+              상태·완료일·결과를 확인할 수 있습니다. 다른 내담자를 선택하면 이전에 열린 목록은
+              자동으로 닫힙니다.
+            </span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">2.</span>
+            <span className="text-slate-400">
+              <span className="text-amber-200/90">미실시 알림통보</span>는 미완료 검사 현황과 검사
+              링크만 이메일/SMS로 발송합니다.{' '}
+              <span className="text-slate-300">비밀번호는 변경되지 않습니다.</span>
+            </span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">3.</span>
+            <span className="text-slate-400">
+              <span className="text-blue-300/90">코드 재발송</span>은 검사 코드와 비밀번호를 다시
+              보냅니다.{' '}
+              <span className="text-slate-300">재발송 시 비밀번호가 새로 발급</span>되며, 기존
+              비밀번호는 더 이상 사용할 수 없습니다.
+            </span>
+          </li>
+        </ol>
+      </div>
 
       {dispatchProgress ? (
         <div
