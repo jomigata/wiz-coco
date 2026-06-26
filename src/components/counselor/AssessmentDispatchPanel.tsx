@@ -263,8 +263,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
           >
             {remindLoading
-              ? '미실시 알림 발송 중…'
-              : `선택 미실시 알림 (${remindEligibleSelected.length})`}
+              ? '미실시 알림통보 중…'
+              : `미실시 알림통보 (${remindEligibleSelected.length})`}
           </button>
           <button
             type="button"
@@ -272,7 +272,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             disabled={resendLoading || selected.size === 0}
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
-            {resendLoading ? '재발송 중…' : `선택 재발송 (${selected.size})`}
+            {resendLoading ? '코드 재발송 중…' : `코드 재발송 (${selected.size})`}
           </button>
           <button
             type="button"
