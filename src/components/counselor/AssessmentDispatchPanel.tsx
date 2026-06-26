@@ -146,6 +146,16 @@ function contactChannels(r: DispatchRecipient): string {
   return parts.length > 0 ? parts.join(', ') : '없음';
 }
 
+function RecipientTargetLine({ recipient }: { recipient: DispatchRecipient }) {
+  return (
+    <p className="text-sm text-slate-400 leading-relaxed">
+      <span className="font-medium text-white">{recipient.displayName || '—'}</span>
+      <span className="text-slate-500"> · </span>
+      {contactChannels(recipient)}
+    </p>
+  );
+}
+
 function pendingTestsFor(r: DispatchRecipient): DispatchTestResult[] {
   return (r.tests ?? []).filter((t) => t.status !== 'completed');
 }
@@ -732,15 +742,14 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     <p className="text-slate-300 font-medium mb-2">
                       발송 대상 {remindEligibleSelected.length}명
                     </p>
-                    <ul className="space-y-3 max-h-48 overflow-y-auto">
+                    <ul className="space-y-2 max-h-48 overflow-y-auto">
                       {remindEligibleSelected.map((r) => (
-                          <li
-                            key={r.portalId}
-                            className="rounded-lg border border-slate-700 bg-slate-900/40 p-3"
-                          >
-                            <p className="text-white font-medium">{r.displayName || '—'}</p>
-                            <p className="text-slate-400 text-xs mt-1">{contactChannels(r)}</p>
-                          </li>
+                        <li
+                          key={r.portalId}
+                          className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
+                        >
+                          <RecipientTargetLine recipient={r} />
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -774,14 +783,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                         ? ` · 제외 ${resendSkippedSelected.length}명(연락처 없음)`
                         : ''}
                     </p>
-                    <ul className="space-y-3 max-h-48 overflow-y-auto">
+                    <ul className="space-y-2 max-h-48 overflow-y-auto">
                       {resendEligibleSelected.map((r) => (
                         <li
                           key={r.portalId}
-                          className="rounded-lg border border-slate-700 bg-slate-900/40 p-3"
+                          className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
                         >
-                          <p className="text-white font-medium">{r.displayName || '—'}</p>
-                          <p className="text-slate-400 text-xs mt-1">{contactChannels(r)}</p>
+                          <RecipientTargetLine recipient={r} />
                         </li>
                       ))}
                     </ul>
