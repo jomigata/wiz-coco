@@ -169,7 +169,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
@@ -274,12 +274,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   };
 
   const toggleExpand = (id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   const handleResend = async () => {
@@ -509,7 +504,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               {sortedRecipients.map((r, rowIndex) => {
                 const notify = notifyLabel(r.notifyStatus);
                 const summary = testSummary(r);
-                const isOpen = expanded.has(r.portalId);
+                const isOpen = expandedId === r.portalId;
                 const tests = r.tests ?? [];
 
                 return (
@@ -569,9 +564,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                             </p>
                           ) : (
                             <div className="max-w-2xl rounded-lg border border-slate-600/80 bg-slate-950/55 overflow-hidden shadow-inner">
-                              <p className="px-3 py-1.5 text-xs font-medium text-slate-500 border-b border-slate-700/70 bg-slate-900/60">
-                                {r.displayName || '내담자'} · 검사별 현황
-                              </p>
                               <table className="w-full text-sm table-fixed">
                                 <colgroup>
                                   <col className="w-10" />
