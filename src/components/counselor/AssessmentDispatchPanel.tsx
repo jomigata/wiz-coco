@@ -172,7 +172,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
-  const [remindOneId, setRemindOneId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>(null);
@@ -307,7 +306,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     if (!assessmentId || portalIds.length === 0) return;
     setDispatchProgress({ kind: 'remind', count: portalIds.length });
     setRemindLoading(true);
-    setRemindOneId(portalIds.length === 1 ? (portalIds[0] ?? null) : null);
     setMessage('');
     try {
       const result = await sendDispatchTestReminders(assessmentId, portalIds);
@@ -319,7 +317,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       setMessage(err instanceof Error ? err.message : '미실시 알림 발송에 실패했습니다.');
     } finally {
       setRemindLoading(false);
-      setRemindOneId(null);
       setDispatchProgress(null);
     }
   };
@@ -441,18 +438,30 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         <p className="text-slate-400">발송된 내담자가 없습니다.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-slate-600">
-          <table className="min-w-full text-sm">
+          <table className="w-max max-w-full text-sm table-fixed">
+            <colgroup>
+              <col className="w-10" />
+              <col className="w-10" />
+              <col className="w-12" />
+              <col className="w-28" />
+              <col className="w-52" />
+              <col className="w-32" />
+              <col className="w-24" />
+              <col className="w-24" />
+              <col className="w-24" />
+            </colgroup>
             <thead className="bg-slate-800 text-slate-400">
               <tr>
-                <th className="px-3 py-2 text-left w-10 text-xs font-medium">No.</th>
-                <th className="px-3 py-2 text-left w-10 text-xs font-medium">선택</th>
-                <th className="px-3 py-2 text-left w-12 text-xs font-medium">검사현황</th>
+                <th className="px-3 py-2 text-left text-xs font-medium">No.</th>
+                <th className="px-3 py-2 text-left text-xs font-medium">선택</th>
+                <th className="px-3 py-2 text-left text-xs font-medium">검사현황</th>
                 <SortableColumnHeader
                   label="이름"
                   sortKey="displayName"
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
+                  className="w-28"
                 />
                 <SortableColumnHeader
                   label="이메일"
@@ -460,6 +469,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
+                  className="w-52"
                 />
                 <SortableColumnHeader
                   label="휴대폰"
@@ -467,6 +477,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
+                  className="w-32"
                 />
                 <SortableColumnHeader
                   label="나의코드"
@@ -474,6 +485,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
+                  className="w-24"
                 />
                 <SortableColumnHeader
                   label="발송"
@@ -481,6 +493,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
+                  className="w-24"
                 />
                 <SortableColumnHeader
                   label="검사"
@@ -488,8 +501,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
+                  className="w-24"
                 />
-                <th className="px-3 py-2 text-left w-24 text-xs font-medium">미실시 알림</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
@@ -498,8 +511,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 const summary = testSummary(r);
                 const isOpen = expanded.has(r.portalId);
                 const tests = r.tests ?? [];
-                const remindOk = canSendReminder(r);
-                const remindingThis = remindOneId === r.portalId;
 
                 return (
                   <React.Fragment key={r.portalId}>
@@ -530,49 +541,34 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           {isOpen ? '▼' : '▶'}
                         </button>
                       </td>
-                      <td className="px-3 py-2 text-white align-top">{r.displayName || '—'}</td>
-                      <td className="px-3 py-2 text-slate-300 align-top">{r.email || '—'}</td>
-                      <td className="px-3 py-2 text-slate-300 align-top">{r.phone || '—'}</td>
-                      <td className="px-3 py-2 font-mono text-cyan-300 align-top">
+                      <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
+                        {r.displayName || '—'}
+                      </td>
+                      <td className="px-3 py-2 text-slate-300 align-top truncate">{r.email || '—'}</td>
+                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap">{r.phone || '—'}</td>
+                      <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
                       </td>
-                      <td className={`px-3 py-2 align-top ${notify.className}`}>{notify.text}</td>
-                      <td className={`px-3 py-2 align-top ${summary.className}`}>{summary.text}</td>
-                      <td className="px-3 py-2 align-top">
-                        {remindOk ? (
-                          <button
-                            type="button"
-                            onClick={() => void handleRemind([r.portalId])}
-                            disabled={remindLoading || resendLoading || remindingThis}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-amber-200 bg-amber-900/40 hover:bg-amber-900/60 disabled:opacity-50"
-                            title="미실시 검사 현황·링크를 이메일/SMS로 발송"
-                          >
-                            {remindingThis ? '…' : '🔔'}
-                          </button>
-                        ) : (
-                          <span className="text-slate-600 text-xs" title="검사 완료 또는 연락처 없음">
-                            —
-                          </span>
-                        )}
-                      </td>
+                      <td className={`px-3 py-2 align-top whitespace-nowrap ${notify.className}`}>{notify.text}</td>
+                      <td className={`px-3 py-2 align-top whitespace-nowrap ${summary.className}`}>{summary.text}</td>
                     </tr>
                     {isOpen ? (
                       <tr>
                         <td
-                          colSpan={4}
+                          colSpan={2}
                           className="p-0 border-b border-slate-700/60 bg-slate-900/20"
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={6}
-                          className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20"
+                          colSpan={7}
+                          className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20 align-top"
                         >
                           {tests.length === 0 ? (
                             <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2">
                               등록된 검사 항목이 없습니다.
                             </p>
                           ) : (
-                            <div className="rounded-lg border border-slate-600/80 bg-slate-950/55 overflow-hidden shadow-inner">
+                            <div className="max-w-2xl rounded-lg border border-slate-600/80 bg-slate-950/55 overflow-hidden shadow-inner">
                               <p className="px-3 py-1.5 text-xs font-medium text-slate-500 border-b border-slate-700/70 bg-slate-900/60">
                                 {r.displayName || '내담자'} · 검사별 현황
                               </p>
