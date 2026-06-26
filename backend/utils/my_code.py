@@ -1,4 +1,4 @@
-"""나의코드(포털 accessCode) 생성·검증 — 연도 알파벳(2026=A) + 숫자(3자리~, 2~9만)."""
+"""나의코드(포털 accessCode) 생성·검증 — 연도 알파벳(2026=A) + 숫자 블록(4·8·12…) + 구분 알파벳."""
 from __future__ import annotations
 
 import random
@@ -11,6 +11,7 @@ from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION
 from firebase_init import get_firestore
 
 NUMERIC_CHARS = "23456789"
+DIGIT_SEGMENT = 4
 YEAR_BASE = 2026
 # 숫자와 혼동되는 알파벳 제외: I/L↔1, O↔0, S↔5, Z↔2, B↔8, G↔6, Q↔9
 CONFUSABLE_LETTERS = frozenset("ILOSZBGQ")
@@ -20,11 +21,18 @@ YEAR_BASE_RADIX = len(YEAR_ALPHABET)  # 18
 SYSTEM_META_COLLECTION = "system_meta"
 MY_CODE_CONFIG_DOC = "my_code_generation"
 
-MY_CODE_RE = re.compile(rf"^[{YEAR_ALPHABET}]+[{NUMERIC_CHARS}]{{3,}}$")
+MAX_TRIES_PER_TIER = 150
+MAX_SUFFIX_TIER = 40
 
-MAX_TRIES_PER_LENGTH = 150
-MAX_NUMERIC_LENGTH = 24
-MAX_BUMP_STEPS = 26
+# 신규: 9999 | 2222A | 2222A3333 | 2222A3333C4444 …
+_NEW_SUFFIX_RE = re.compile(
+    rf"^[{NUMERIC_CHARS}]{{{DIGIT_SEGMENT}}}"
+    rf"(?:[{YEAR_ALPHABET}](?:[{NUMERIC_CHARS}]{{{DIGIT_SEGMENT}}}(?:[{YEAR_ALPHABET}][{NUMERIC_CHARS}]{{{DIGIT_SEGMENT}}})*)?)?$"
+)
+_NEW_SUFFIX_ODD_RE = re.compile(
+    rf"^[{NUMERIC_CHARS}]{{{DIGIT_SEGMENT}}}(?:[{YEAR_ALPHABET}][{NUMERIC_CHARS}]{{{DIGIT_SEGMENT}}})*[{YEAR_ALPHABET}]$"
+)
+_LEGACY_SUFFIX_RE = re.compile(rf"^[{NUMERIC_CHARS}]{{3,}}$")
 
 
 def normalize_my_code(raw: str) -> str:
@@ -65,46 +73,95 @@ def year_prefix_for(year: int | None = None) -> str:
     return encode_year_offset(y - YEAR_BASE)
 
 
+def _is_valid_suffix(body: str) -> bool:
+    if not body:
+        return False
+    if _LEGACY_SUFFIX_RE.fullmatch(body):
+        return True
+    if _NEW_SUFFIX_RE.fullmatch(body):
+        return True
+    return bool(_NEW_SUFFIX_ODD_RE.fullmatch(body))
+
+
 def is_valid_my_code(code: str) -> bool:
     if not code:
         return False
     normalized = normalize_my_code(code)
-    if not MY_CODE_RE.match(normalized):
+    if len(normalized) < 4:
         return False
-    i = 0
-    while i < len(normalized) and normalized[i] in YEAR_ALPHABET:
-        i += 1
-    return i >= 1 and (len(normalized) - i) >= 3
+    for prefix_len in range(1, len(normalized)):
+        prefix = normalized[:prefix_len]
+        body = normalized[prefix_len:]
+        if not all(c in YEAR_ALPHABET for c in prefix):
+            continue
+        if _is_valid_suffix(body):
+            return True
+    return False
 
 
 def _random_numeric(n: int) -> str:
     return "".join(random.choices(NUMERIC_CHARS, k=n))
 
 
-def _get_numeric_length(db) -> int:
+def _random_separator() -> str:
+    return random.choice(YEAR_ALPHABET)
+
+
+def _tier_shape(tier: int) -> tuple[int, int]:
+    """Returns (digit_group_count, separator_count) for suffix tier."""
+    if tier < 0:
+        tier = 0
+    digit_groups = (tier // 2) + 1
+    if tier % 2 == 0:
+        separators = digit_groups - 1
+    else:
+        separators = digit_groups
+    return digit_groups, separators
+
+
+def _build_suffix_for_tier(tier: int) -> str:
+    """
+    tier 0: dddd (4자리)
+    tier 1: ddddL
+    tier 2: ddddLdddd (8자리 + 구분 1)
+    tier 3: ddddLddddL
+    tier 4: ddddLddddLdddd (12자리 + 구분 2)
+    """
+    digit_groups, separators = _tier_shape(tier)
+    parts: list[str] = []
+    for group_idx in range(digit_groups):
+        parts.append(_random_numeric(DIGIT_SEGMENT))
+        if group_idx < separators:
+            parts.append(_random_separator())
+    return "".join(parts)
+
+
+def _get_suffix_tier(db) -> int:
     doc = db.collection(SYSTEM_META_COLLECTION).document(MY_CODE_CONFIG_DOC).get()
     if doc.exists:
-        n = doc.to_dict().get("numeric_length")
-        if isinstance(n, int) and n >= 3:
-            return min(n, MAX_NUMERIC_LENGTH)
-    return 3
+        data = doc.to_dict() or {}
+        tier = data.get("suffix_tier")
+        if isinstance(tier, int) and tier >= 0:
+            return min(tier, MAX_SUFFIX_TIER)
+        # 구 설정(numeric_length)은 신규 tier 0(4자리)부터 다시 시작
+    return 0
 
 
-def _bump_numeric_length(db, current: int) -> int:
-    new_n = min(current + 1, MAX_NUMERIC_LENGTH)
+def _bump_suffix_tier(db, current: int) -> int:
+    new_tier = min(current + 1, MAX_SUFFIX_TIER)
     db.collection(SYSTEM_META_COLLECTION).document(MY_CODE_CONFIG_DOC).set(
-        {"numeric_length": new_n, "updatedAt": SERVER_TIMESTAMP},
+        {"suffix_tier": new_tier, "updatedAt": SERVER_TIMESTAMP},
         merge=True,
     )
-    return new_n
+    return new_tier
 
 
 def reset_my_code_generation_meta(db, *, dry_run: bool = False) -> bool:
-    """나의코드 순번 자릿수를 3자리로 초기화."""
+    """나의코드 suffix tier를 0(4자리)으로 초기화."""
     if dry_run:
         return True
     db.collection(SYSTEM_META_COLLECTION).document(MY_CODE_CONFIG_DOC).set(
-        {"numeric_length": 3, "updatedAt": SERVER_TIMESTAMP},
+        {"suffix_tier": 0, "updatedAt": SERVER_TIMESTAMP},
         merge=True,
     )
     return True
@@ -124,16 +181,16 @@ def _my_code_exists(db, candidate: str) -> bool:
 
 
 def generate_unique_my_code() -> str:
-    """Firestore 전역 유일 나의코드 (연도 알파벳 + 숫자 3자리~)."""
+    """Firestore 전역 유일 나의코드 (연도 알파벳 + 4자리 블록·구분 알파벳 확장)."""
     db = get_firestore()
     prefix = year_prefix_for()
 
-    for _ in range(MAX_BUMP_STEPS):
-        n = _get_numeric_length(db)
-        for _ in range(MAX_TRIES_PER_LENGTH):
-            candidate = prefix + _random_numeric(n)
-            if not _my_code_exists(db, candidate):
+    for _ in range(MAX_SUFFIX_TIER + 1):
+        tier = _get_suffix_tier(db)
+        for _ in range(MAX_TRIES_PER_TIER):
+            candidate = prefix + _build_suffix_for_tier(tier)
+            if is_valid_my_code(candidate) and not _my_code_exists(db, candidate):
                 return candidate
-        _bump_numeric_length(db, n)
+        _bump_suffix_tier(db, tier)
 
-    raise RuntimeError("Could not generate unique my code; check MAX_NUMERIC_LENGTH")
+    raise RuntimeError("Could not generate unique my code; check MAX_SUFFIX_TIER")

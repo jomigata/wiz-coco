@@ -108,7 +108,7 @@ def _access_code_exists(db, candidate: str) -> bool:
 
 
 def generate_unique_portal_access_code() -> str:
-    """clientPortals 나의코드 — YY + 숫자(3자리~)."""
+    """clientPortals 나의코드 — 연도 알파벳 + 4자리 블록·구분 알파벳 확장."""
     from utils.my_code import generate_unique_my_code
 
     return generate_unique_my_code()

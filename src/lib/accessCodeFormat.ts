@@ -17,9 +17,22 @@ const NEW_RE = new RegExp(
 );
 const OLD_RE = /^[0-9A-Z]{6}$/i;
 
-/** 나의코드: 연도 알파벳(2026=A, I/L/O/S/Z/B/G/Q 제외) + 숫자 2~9만 3자리 이상 */
+/** 나의코드: 연도 알파벳 + 4자리 숫자 블록(8·12…) 사이 구분 알파벳. 구형 3자리 숫자 호환 */
 const MY_CODE_LETTERS = 'ACDEFGHJKMNPRSTUVWXYZ';
-const MY_CODE_RE = new RegExp(`^[${MY_CODE_LETTERS}]+[${DIGITS}]{3,}$`);
+const MY_DIGIT_SEGMENT = 4;
+const NEW_MY_SUFFIX_RE = new RegExp(
+  `^[${DIGITS}]{${MY_DIGIT_SEGMENT}}(?:[${MY_CODE_LETTERS}](?:[${DIGITS}]{${MY_DIGIT_SEGMENT}}(?:[${MY_CODE_LETTERS}][${DIGITS}]{${MY_DIGIT_SEGMENT}})*)?)?$`
+);
+const NEW_MY_SUFFIX_ODD_RE = new RegExp(
+  `^[${DIGITS}]{${MY_DIGIT_SEGMENT}}(?:[${MY_CODE_LETTERS}][${DIGITS}]{${MY_DIGIT_SEGMENT}})*[${MY_CODE_LETTERS}]$`
+);
+const LEGACY_MY_SUFFIX_RE = new RegExp(`^[${DIGITS}]{3,}$`);
+
+function isValidMyCodeSuffix(body: string): boolean {
+  if (LEGACY_MY_SUFFIX_RE.test(body)) return true;
+  if (NEW_MY_SUFFIX_RE.test(body)) return true;
+  return NEW_MY_SUFFIX_ODD_RE.test(body);
+}
 
 export function normalizeMyCodeInput(raw: string): string {
   const out: string[] = [];
@@ -31,15 +44,18 @@ export function normalizeMyCodeInput(raw: string): string {
 }
 
 export function isValidMyCodeInput(normalized: string): boolean {
-  if (!normalized) return false;
-  if (!MY_CODE_RE.test(normalized)) return false;
-  let i = 0;
-  while (i < normalized.length && MY_CODE_LETTERS.includes(normalized[i])) i += 1;
-  return i >= 1 && normalized.length - i >= 3;
+  if (!normalized || normalized.length < 4) return false;
+  for (let prefixLen = 1; prefixLen < normalized.length; prefixLen += 1) {
+    const prefix = normalized.slice(0, prefixLen);
+    const body = normalized.slice(prefixLen);
+    if (!prefix.split('').every((ch) => MY_CODE_LETTERS.includes(ch))) continue;
+    if (isValidMyCodeSuffix(body)) return true;
+  }
+  return false;
 }
 
 export function formatMyCodeWhileTyping(raw: string): string {
-  return normalizeMyCodeInput(raw).slice(0, 20);
+  return normalizeMyCodeInput(raw).slice(0, 32);
 }
 
 export function normalizeAccessCodeInput(raw: string): string {
