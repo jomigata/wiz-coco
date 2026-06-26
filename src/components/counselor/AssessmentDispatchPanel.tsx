@@ -69,6 +69,10 @@ function canSendReminder(r: DispatchRecipient): boolean {
   return Boolean(r.email || r.phone);
 }
 
+function testLetterLabel(index: number): string {
+  return `${String.fromCharCode(97 + index)}. `;
+}
+
 function contactChannels(r: DispatchRecipient): string {
   const parts: string[] = [];
   if (r.email) parts.push(`이메일 (${r.email})`);
@@ -358,9 +362,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           <table className="min-w-full text-sm">
             <thead className="bg-slate-800 text-slate-400">
               <tr>
+                <th className="px-3 py-2 text-left w-10">No.</th>
                 <th className="px-3 py-2 text-left w-10">선택</th>
-                <th className="px-3 py-2 text-left w-8" aria-label="펼치기" />
-                <th className="px-3 py-2 text-left">이름</th>
+                <th className="px-3 py-2 text-left">결과보기</th>
                 <th className="px-3 py-2 text-left">이메일</th>
                 <th className="px-3 py-2 text-left">휴대폰</th>
                 <th className="px-3 py-2 text-left">나의코드</th>
@@ -370,7 +374,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
-              {data.recipients.map((r) => {
+              {data.recipients.map((r, rowIndex) => {
                 const notify = notifyLabel(r.notifyStatus);
                 const summary = testSummary(r);
                 const isOpen = expanded.has(r.portalId);
@@ -381,6 +385,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 return (
                   <React.Fragment key={r.portalId}>
                     <tr className="hover:bg-slate-800/50">
+                      <td className="px-3 py-2 text-slate-400 align-top tabular-nums">{rowIndex + 1}</td>
                       <td className="px-3 py-2 align-top">
                         <input
                           type="checkbox"
@@ -389,18 +394,23 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 align-top">
+                      <td className="px-3 py-2 text-white align-top">
                         <button
                           type="button"
                           onClick={() => toggleExpand(r.portalId)}
-                          className="text-slate-400 hover:text-white"
+                          className="inline-flex items-center gap-1.5 text-left hover:text-cyan-200"
                           aria-expanded={isOpen}
-                          aria-label={isOpen ? '검사 결과 접기' : '검사 결과 펼치기'}
+                          aria-label={
+                            isOpen
+                              ? `${r.displayName || '내담자'} 검사 결과 접기`
+                              : `${r.displayName || '내담자'} 검사 결과보기`
+                          }
                         >
-                          {isOpen ? '▼' : '▶'}
+                          <span className="text-slate-400 shrink-0">{isOpen ? '▼' : '▶'}</span>
+                          <span className="text-slate-500 shrink-0">결과보기</span>
+                          <span>{r.displayName || '—'}</span>
                         </button>
                       </td>
-                      <td className="px-3 py-2 text-white align-top">{r.displayName || '—'}</td>
                       <td className="px-3 py-2 text-slate-300 align-top">{r.email || '—'}</td>
                       <td className="px-3 py-2 text-slate-300 align-top">{r.phone || '—'}</td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top">
@@ -435,18 +445,21 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                             <table className="w-full text-sm ml-6 max-w-3xl">
                               <thead>
                                 <tr className="text-slate-400 border-b border-slate-700">
-                                  <th className="py-1.5 pr-4 text-left font-medium">검사</th>
+                                  <th className="py-1.5 pr-4 text-left font-medium w-8" aria-hidden="true" />
                                   <th className="py-1.5 pr-4 text-left font-medium w-24">상태</th>
                                   <th className="py-1.5 pr-4 text-left font-medium">완료일시</th>
-                                  <th className="py-1.5 text-left font-medium w-24">열람</th>
+                                  <th className="py-1.5 text-left font-medium w-24">결과 확인</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {tests.map((t) => {
+                                {tests.map((t, testIndex) => {
                                   const st = testStatusLabel(t.status);
                                   return (
                                     <tr key={t.testId} className="border-b border-slate-800 last:border-0">
-                                      <td className="py-2 pr-4 text-white">{t.testName || t.testId}</td>
+                                      <td className="py-2 pr-4 text-white">
+                                        {testLetterLabel(testIndex)}
+                                        {t.testName || t.testId}
+                                      </td>
                                       <td className={`py-2 pr-4 ${st.className}`}>{st.text}</td>
                                       <td className="py-2 pr-4 text-slate-400">
                                         {formatCompletedAt(t.completedAt)}
@@ -460,8 +473,10 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                                           >
                                             결과 보기
                                           </button>
+                                        ) : t.status === 'in_progress' ? (
+                                          <span className="text-amber-300">진행 중</span>
                                         ) : (
-                                          <span className="text-slate-600">—</span>
+                                          <span className="text-slate-500">미실시</span>
                                         )}
                                       </td>
                                     </tr>
