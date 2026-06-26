@@ -5,8 +5,16 @@ from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import NOTIFICATION_QUEUE_COLLECTION, PUBLIC_SITE_URL, is_email_configured
 from firebase_init import get_firestore
-from utils.email_notify import send_portal_invite_email, send_portal_credentials_email
-from utils.sms_notify import send_portal_invite_sms, send_portal_credentials_sms
+from utils.email_notify import (
+    send_portal_invite_email,
+    send_portal_credentials_email,
+    send_test_reminder_email,
+)
+from utils.sms_notify import (
+    send_portal_invite_sms,
+    send_portal_credentials_sms,
+    send_test_reminder_sms,
+)
 
 
 def deliver_portal_credentials(
@@ -51,6 +59,81 @@ def deliver_portal_credentials(
             magic_url=magic_url,
             join_access_code=join_access_code,
             display_name=display_name,
+        )
+        if sms_err:
+            errors.append(sms_err)
+
+    if email and email_ok:
+        status = "sent"
+        sent_via = "email"
+    elif phone and sms_ok:
+        status = "sent"
+        sent_via = "sms"
+    elif not email and not phone:
+        status = "skipped"
+        sent_via = None
+        errors.append("no_recipient")
+    elif errors:
+        status = "failed"
+        sent_via = None
+    else:
+        status = "skipped"
+        sent_via = None
+
+    return {"status": status, "errors": errors, "sentVia": sent_via}
+
+
+def deliver_test_reminder(
+    *,
+    email: str = "",
+    phone: str = "",
+    display_name: str = "",
+    assessment_title: str = "",
+    join_access_code: str = "",
+    my_code: str = "",
+    pending_tests: list[dict] | None = None,
+    completed_count: int = 0,
+    required_count: int = 0,
+    magic_path: str = "",
+) -> dict:
+    """미실시·미완료 검사 현황과 검사 연결 링크를 이메일·문자로 즉시 발송."""
+    email = (email or "").strip().lower()
+    phone = (phone or "").strip()
+    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+
+    email_ok = False
+    sms_ok = False
+    errors = []
+
+    if email:
+        if is_email_configured():
+            email_ok = send_test_reminder_email(
+                to_email=email,
+                display_name=display_name,
+                assessment_title=assessment_title,
+                join_access_code=join_access_code,
+                my_code=my_code,
+                pending_tests=pending_tests,
+                completed_count=completed_count,
+                required_count=required_count,
+                magic_url=magic_url,
+            )
+            if not email_ok:
+                errors.append("email_send_failed")
+        else:
+            errors.append("smtp_not_configured")
+
+    if phone:
+        sms_ok, sms_err = send_test_reminder_sms(
+            to_phone=phone,
+            display_name=display_name,
+            assessment_title=assessment_title,
+            join_access_code=join_access_code,
+            my_code=my_code,
+            pending_tests=pending_tests,
+            completed_count=completed_count,
+            required_count=required_count,
+            magic_url=magic_url,
         )
         if sms_err:
             errors.append(sms_err)

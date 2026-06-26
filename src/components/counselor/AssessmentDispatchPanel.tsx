@@ -6,6 +6,7 @@ import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import {
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
+  sendDispatchTestReminders,
   type AssessmentDispatchStatus,
   type DispatchRecipient,
   type DispatchTestResult,
@@ -61,6 +62,13 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
   }
 }
 
+function canSendReminder(r: DispatchRecipient): boolean {
+  if (r.testStatus === 'completed') return false;
+  const pending = (r.tests ?? []).some((t) => t.status !== 'completed');
+  if (!pending && r.requiredCount > 0) return false;
+  return Boolean(r.email || r.phone);
+}
+
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
 }
@@ -72,6 +80,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [resendLoading, setResendLoading] = useState(false);
+  const [remindLoading, setRemindLoading] = useState(false);
+  const [remindOneId, setRemindOneId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
@@ -107,6 +117,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const completedCount = useMemo(
     () => (data?.recipients || []).filter((r) => r.testStatus === 'completed').length,
     [data?.recipients],
+  );
+
+  const remindEligibleSelected = useMemo(
+    () => (data?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
+    [data?.recipients, selected],
   );
 
   const toggleAll = () => {
@@ -149,6 +164,26 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     }
   };
 
+  const handleRemind = async (portalIds: string[]) => {
+    if (!assessmentId || portalIds.length === 0) return;
+    const isBulk = portalIds.length > 1;
+    if (isBulk) setRemindLoading(true);
+    else setRemindOneId(portalIds[0] ?? null);
+    setMessage('');
+    try {
+      const result = await sendDispatchTestReminders(assessmentId, portalIds);
+      setMessage(
+        `알림 발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
+      );
+      await load();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '알림 발송에 실패했습니다.');
+    } finally {
+      setRemindLoading(false);
+      setRemindOneId(null);
+    }
+  };
+
   const openResultDetail = (resultId: string) => {
     setDetail(null);
     setDetailError('');
@@ -174,7 +209,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   if (!data) return null;
 
-  const colCount = 8;
+  const colCount = 9;
 
   return (
     <section className="space-y-4">
@@ -218,6 +253,21 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           </button>
           <button
             type="button"
+            onClick={() => void handleRemind(remindEligibleSelected.map((r) => r.portalId))}
+            disabled={
+              remindLoading ||
+              resendLoading ||
+              remindEligibleSelected.length === 0
+            }
+            className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+            title="미완료 검사자에게 현황·검사 링크 알림 (비밀번호 유지)"
+          >
+            {remindLoading
+              ? '알림 발송 중…'
+              : `선택 알림 (${remindEligibleSelected.length})`}
+          </button>
+          <button
+            type="button"
             onClick={() => void handleResend()}
             disabled={resendLoading || selected.size === 0}
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
@@ -249,6 +299,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 <th className="px-3 py-2 text-left">나의코드</th>
                 <th className="px-3 py-2 text-left">발송</th>
                 <th className="px-3 py-2 text-left">검사</th>
+                <th className="px-3 py-2 text-left w-20">알림</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
@@ -257,6 +308,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 const summary = testSummary(r);
                 const isOpen = expanded.has(r.portalId);
                 const tests = r.tests ?? [];
+                const remindOk = canSendReminder(r);
+                const remindingThis = remindOneId === r.portalId;
 
                 return (
                   <React.Fragment key={r.portalId}>
@@ -288,6 +341,23 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       </td>
                       <td className={`px-3 py-2 align-top ${notify.className}`}>{notify.text}</td>
                       <td className={`px-3 py-2 align-top ${summary.className}`}>{summary.text}</td>
+                      <td className="px-3 py-2 align-top">
+                        {remindOk ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleRemind([r.portalId])}
+                            disabled={remindLoading || resendLoading || remindingThis}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-amber-200 bg-amber-900/40 hover:bg-amber-900/60 disabled:opacity-50"
+                            title="미완료 검사 현황·링크를 이메일/SMS로 발송"
+                          >
+                            {remindingThis ? '…' : '🔔'}
+                          </button>
+                        ) : (
+                          <span className="text-slate-600 text-xs" title="검사 완료 또는 연락처 없음">
+                            —
+                          </span>
+                        )}
+                      </td>
                     </tr>
                     {isOpen ? (
                       <tr className="bg-slate-900/40">
@@ -345,7 +415,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       )}
 
       <p className="text-xs text-slate-500">
-        행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 재발송 시 비밀번호가 새로 발급됩니다.
+        행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 🔔 알림은 미완료 검사 현황과 검사
+        링크만 발송하며 비밀번호는 변경되지 않습니다. 재발송 시 비밀번호가 새로 발급됩니다.
       </p>
 
       {(detail !== null || detailLoading || detailError) && (

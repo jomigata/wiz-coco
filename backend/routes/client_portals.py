@@ -47,7 +47,11 @@ from utils.bulk_portal_worker import (
     resend_job_notifications,
     resend_cohort_notifications,
 )
-from utils.assessment_dispatch import get_assessment_dispatch_status, resend_portal_credentials
+from utils.assessment_dispatch import (
+    get_assessment_dispatch_status,
+    resend_portal_credentials,
+    send_test_reminders,
+)
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -633,6 +637,29 @@ def resend_dispatch(assessment_id):
     db = get_firestore()
     try:
         result = resend_portal_credentials(
+            db,
+            assessment_id=assessment_id,
+            counselor_uid=g.counselor_uid,
+            portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+        )
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
+
+
+@bp.route("/assessments/<assessment_id>/dispatch/remind", methods=["POST"])
+@require_counselor
+def remind_dispatch(assessment_id):
+    """선택 내담자에게 미완료 검사 현황·검사 링크 알림 (이메일/SMS, 비밀번호 유지)."""
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    db = get_firestore()
+    try:
+        result = send_test_reminders(
             db,
             assessment_id=assessment_id,
             counselor_uid=g.counselor_uid,

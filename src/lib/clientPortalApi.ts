@@ -286,6 +286,30 @@ export async function resendDispatchCredentials(
   return data as { sent: number; failed: number; skipped: number };
 }
 
+export async function sendDispatchTestReminders(
+  assessmentId: string,
+  portalIds: string[]
+): Promise<{ sent: number; failed: number; skipped: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/remind`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ portalIds }),
+    }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '알림 발송에 실패했습니다.');
+  }
+  return data as { sent: number; failed: number; skipped: number };
+}
+
 export async function resendBulkPortalNotifications(body: {
   jobId?: string;
   cohortId?: string;

@@ -10,7 +10,7 @@ from config import (
     PUBLIC_SITE_URL,
     TEST_RESULTS_COLLECTION,
 )
-from utils.notification_worker import deliver_portal_credentials
+from utils.notification_worker import deliver_portal_credentials, deliver_test_reminder
 from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
 
@@ -301,6 +301,113 @@ def resend_portal_credentials(
                 "status": status,
                 "myCode": portal_access_code,
                 "pin": new_pin,
+                "magicUrl": magic_url,
+            }
+        )
+
+    return {"sent": sent, "failed": failed, "skipped": skipped, "details": details}
+
+
+def _pending_tests_from_rows(test_rows: list[dict]) -> list[dict]:
+    return [t for t in (test_rows or []) if (t.get("status") or "") != "completed"]
+
+
+def send_test_reminders(
+    db,
+    *,
+    assessment_id: str,
+    counselor_uid: str,
+    portal_ids: list[str],
+) -> dict:
+    """미완료 검사자에게 미실시 현황·검사 링크 알림 (비밀번호 재발급 없음)."""
+    ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
+    ass_doc = ass_ref.get()
+    if not ass_doc.exists:
+        raise ValueError("검사코드를 찾을 수 없습니다.")
+    ass = ass_doc.to_dict() or {}
+    if ass.get("counselorId") != counselor_uid:
+        raise PermissionError("접근 권한이 없습니다.")
+
+    join_access_code = (ass.get("accessCode") or "").strip()
+    assessment_title = (ass.get("title") or "").strip()
+    test_list = ass.get("testList") or []
+    required = {
+        str(t.get("testId") or "").strip()
+        for t in test_list
+        if t and str(t.get("testId") or "").strip()
+    }
+
+    sent = 0
+    failed = 0
+    skipped = 0
+    details: list[dict] = []
+
+    for portal_id in portal_ids:
+        pid = (portal_id or "").strip()
+        if not pid:
+            continue
+        pref = db.collection(CLIENT_PORTALS_COLLECTION).document(pid)
+        pdoc = pref.get()
+        if not pdoc.exists:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "not_found"})
+            continue
+        pdata = pdoc.to_dict() or {}
+        if pdata.get("counselorId") != counselor_uid:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
+            continue
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        if assessment_id not in assigned:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "not_assigned"})
+            continue
+
+        test_rows = _test_detail_rows(db, pid, assessment_id, test_list)
+        pending = _pending_tests_from_rows(test_rows)
+        test_info = _test_status_for_portal(db, pid, assessment_id, required)
+        if test_info.get("testStatus") == "completed" or not pending:
+            skipped += 1
+            details.append({"portalId": pid, "status": "skipped", "message": "all_completed"})
+            continue
+
+        email = (pdata.get("email") or "").strip().lower()
+        phone = (pdata.get("phone") or "").strip()
+        if not email and not phone:
+            skipped += 1
+            details.append({"portalId": pid, "status": "skipped", "message": "no_contact"})
+            continue
+
+        portal_access_code = (pdata.get("accessCode") or "").strip()
+        magic = create_portal_magic_link_token(pid, portal_access_code)
+        magic_path = f"/go?t={magic}"
+        magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
+
+        result = deliver_test_reminder(
+            email=email,
+            phone=phone,
+            display_name=(pdata.get("displayName") or "").strip(),
+            assessment_title=assessment_title,
+            join_access_code=join_access_code,
+            my_code=portal_access_code,
+            pending_tests=pending,
+            completed_count=int(test_info.get("completedCount") or 0),
+            required_count=int(test_info.get("requiredCount") or 0),
+            magic_path=magic_path,
+        )
+        status = result.get("status") or "failed"
+        pref.update({"lastRemindStatus": status, "lastRemindAt": SERVER_TIMESTAMP})
+        if status == "sent":
+            sent += 1
+        elif status == "skipped":
+            skipped += 1
+        else:
+            failed += 1
+        details.append(
+            {
+                "portalId": pid,
+                "status": status,
+                "pendingCount": len(pending),
                 "magicUrl": magic_url,
             }
         )
