@@ -641,8 +641,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">1.</span>
             <span className="text-slate-400">
               <span className="text-slate-300">검사현황 ▶</span>를 누르면 해당 내담자의 검사별
-              상태·완료일·결과를 확인할 수 있습니다. 다른 내담자를 선택하면 이전에 열린 목록은
-              자동으로 닫힙니다.
+              상태·완료일·결과를 확인할 수 있습니다.
             </span>
           </li>
           <li className="flex gap-2.5">
