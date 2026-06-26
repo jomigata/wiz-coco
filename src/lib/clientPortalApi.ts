@@ -305,7 +305,7 @@ export async function sendDispatchTestReminders(
   );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(typeof data?.message === 'string' ? data.message : '알림 발송에 실패했습니다.');
+    throw new Error(typeof data?.message === 'string' ? data.message : '미실시 알림 발송에 실패했습니다.');
   }
   return data as { sent: number; failed: number; skipped: number };
 }

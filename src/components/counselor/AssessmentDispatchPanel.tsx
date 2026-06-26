@@ -173,11 +173,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     try {
       const result = await sendDispatchTestReminders(assessmentId, portalIds);
       setMessage(
-        `알림 발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
+        `미실시 알림 발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
       );
       await load();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : '알림 발송에 실패했습니다.');
+      setMessage(err instanceof Error ? err.message : '미실시 알림 발송에 실패했습니다.');
     } finally {
       setRemindLoading(false);
       setRemindOneId(null);
@@ -260,11 +260,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               remindEligibleSelected.length === 0
             }
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
-            title="미완료 검사자에게 현황·검사 링크 알림 (비밀번호 유지)"
+            title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
           >
             {remindLoading
-              ? '알림 발송 중…'
-              : `선택 알림 (${remindEligibleSelected.length})`}
+              ? '미실시 알림 발송 중…'
+              : `선택 미실시 알림 (${remindEligibleSelected.length})`}
           </button>
           <button
             type="button"
@@ -299,7 +299,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 <th className="px-3 py-2 text-left">나의코드</th>
                 <th className="px-3 py-2 text-left">발송</th>
                 <th className="px-3 py-2 text-left">검사</th>
-                <th className="px-3 py-2 text-left w-20">알림</th>
+                <th className="px-3 py-2 text-left w-24">미실시 알림</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
@@ -348,7 +348,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                             onClick={() => void handleRemind([r.portalId])}
                             disabled={remindLoading || resendLoading || remindingThis}
                             className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-amber-200 bg-amber-900/40 hover:bg-amber-900/60 disabled:opacity-50"
-                            title="미완료 검사 현황·링크를 이메일/SMS로 발송"
+                            title="미실시 검사 현황·링크를 이메일/SMS로 발송"
                           >
                             {remindingThis ? '…' : '🔔'}
                           </button>
@@ -415,7 +415,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       )}
 
       <p className="text-xs text-slate-500">
-        행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 🔔 알림은 미완료 검사 현황과 검사
+        행 왼쪽 ▶ 를 눌러 검사별 결과를 확인할 수 있습니다. 미실시 알림은 미완료 검사 현황과 검사
         링크만 발송하며 비밀번호는 변경되지 않습니다. 재발송 시 비밀번호가 새로 발급됩니다.
       </p>
 

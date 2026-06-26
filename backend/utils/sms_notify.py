@@ -104,7 +104,7 @@ def send_test_reminder_sms(
         else "진행중"
     )
 
-    parts = [f"[WizCoCo] {name}님 미완료 검사 안내"]
+    parts = [f"[WizCoCo] {name}님 미실시 알림"]
     parts.append(title)
     parts.append(f"진행 {progress}")
     if pending_names:

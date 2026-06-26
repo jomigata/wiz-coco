@@ -267,7 +267,7 @@ WizCoCo
     msg = MIMEMultipart()
     msg["From"] = MAIL_FROM
     msg["To"] = email
-    msg["Subject"] = f"[WizCoCo] 미완료 검사 안내 ({name})"
+    msg["Subject"] = f"[WizCoCo] 미실시 알림 ({name})"
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
