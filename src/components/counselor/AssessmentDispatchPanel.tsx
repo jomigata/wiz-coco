@@ -630,10 +630,21 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 return (
                   <React.Fragment key={r.portalId}>
                     <tr
-                      className={`hover:bg-slate-800/50 ${isOpen ? 'bg-slate-800/40 border-b border-slate-700/60' : ''}`}
+                      onClick={() => toggleExpand(r.portalId)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleExpand(r.portalId);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-expanded={isOpen}
+                      aria-label={`${r.displayName || '내담자'} 검사 현황 ${isOpen ? '접기' : '펼치기'}`}
+                      className={`cursor-pointer hover:bg-slate-800/50 ${isOpen ? 'bg-slate-800/40 border-b border-slate-700/60' : ''}`}
                     >
                       <td className="px-3 py-2 text-slate-400 align-top tabular-nums">{rowIndex + 1}</td>
-                      <td className="px-3 py-2 align-top">
+                      <td className="px-3 py-2 align-top" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selected.has(r.portalId)}
@@ -641,20 +652,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 align-top">
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(r.portalId)}
-                          className="text-slate-400 hover:text-white"
-                          aria-expanded={isOpen}
-                          aria-label={
-                            isOpen
-                              ? `${r.displayName || '내담자'} 검사 결과 접기`
-                              : `${r.displayName || '내담자'} 검사 현황 펼치기`
-                          }
-                        >
-                          {isOpen ? '▼' : '▶'}
-                        </button>
+                      <td className="px-3 py-2 align-top text-slate-400" aria-hidden="true">
+                        {isOpen ? '▼' : '▶'}
                       </td>
                       <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
                         {r.displayName || '—'}
