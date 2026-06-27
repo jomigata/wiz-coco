@@ -22,6 +22,109 @@ function formatCompletedAt(iso: string | null | undefined): string {
   }
 }
 
+function formatNotifyDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('ko-KR');
+  } catch {
+    return '—';
+  }
+}
+
+function formatNotifyTime(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  } catch {
+    return '—';
+  }
+}
+
+function notifyErrorHint(error: string | null | undefined): string | undefined {
+  const err = (error || '').trim();
+  if (!err) return undefined;
+  if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
+  if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
+  if (err.includes('smtp_not_configured')) return '이메일 서버가 설정되지 않았습니다.';
+  return err;
+}
+
+function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className: string; title?: string } {
+  const hasEmail = Boolean(r.email?.trim());
+  const hasPhone = Boolean(r.phone?.trim());
+
+  if (!hasEmail && !hasPhone) {
+    return {
+      text: '연락처 없음',
+      className: 'text-red-400',
+      title: '이메일·휴대폰 정보가 없어 발송할 수 없습니다.',
+    };
+  }
+
+  const status = r.notifyStatus || 'not_sent';
+
+  if (status === 'failed') {
+    return {
+      text: '발송 실패',
+      className: 'text-red-400',
+      title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
+    };
+  }
+
+  if (status === 'skipped') {
+    if (!hasEmail && hasPhone) {
+      return {
+        text: '발송 생략',
+        className: 'text-amber-300',
+        title: notifyErrorHint(r.notifyError) || '이메일 없음 · SMS만 등록됨',
+      };
+    }
+    return {
+      text: '발송 생략',
+      className: 'text-slate-400',
+      title: notifyErrorHint(r.notifyError),
+    };
+  }
+
+  if (status === 'sent') {
+    if (!hasEmail && hasPhone) {
+      return {
+        text: '발송 성공(SMS)',
+        className: 'text-emerald-300',
+        title: '이메일 없음 · SMS로 발송됨',
+      };
+    }
+    if (hasEmail && !hasPhone) {
+      return {
+        text: '발송 성공(이메일)',
+        className: 'text-emerald-300',
+        title: '이메일로 발송됨',
+      };
+    }
+    const via =
+      r.notifySentVia === 'sms' ? '(SMS)' : r.notifySentVia === 'email' ? '(이메일)' : '';
+    return {
+      text: via ? `발송 성공 ${via}` : '발송 성공',
+      className: 'text-emerald-300',
+      title: !hasEmail ? '이메일 없음' : undefined,
+    };
+  }
+
+  if (status === 'not_sent' && !hasEmail) {
+    return {
+      text: '미발송',
+      className: 'text-slate-500',
+      title: '이메일 없음 · 휴대폰만 등록됨',
+    };
+  }
+
+  return notifyLabel(status);
+}
+
 function notifyLabel(status: string): { text: string; className: string } {
   switch (status) {
     case 'sent':
@@ -454,6 +557,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               <col className="w-32" />
               <col className="w-24" />
               <col className="w-24" />
+              <col className="w-28" />
+              <col className="w-24" />
               <col className="w-24" />
             </colgroup>
             <thead className="bg-slate-800 text-slate-400">
@@ -493,6 +598,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   onSort={toggleSort}
                   className="w-24"
                 />
+                <th className="px-3 py-2 text-left text-xs font-medium w-24">발송일</th>
+                <th className="px-3 py-2 text-left text-xs font-medium w-28">발송시간</th>
                 <SortableColumnHeader
                   label="발송"
                   sortKey="notifyStatus"
@@ -513,7 +620,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             </thead>
             <tbody className="divide-y divide-slate-700">
               {sortedRecipients.map((r, rowIndex) => {
-                const notify = notifyLabel(r.notifyStatus);
+                const notify = dispatchStatusDisplay(r);
                 const summary = testSummary(r);
                 const isOpen = expandedId === r.portalId;
                 const tests = r.tests ?? [];
@@ -550,14 +657,33 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
                         {r.displayName || '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-300 align-top truncate">{r.email || '—'}</td>
+                      <td className="px-3 py-2 text-slate-300 align-top truncate">
+                        {r.email?.trim() ? (
+                          r.email
+                        ) : (
+                          <span className="text-amber-300/90" title="이메일 주소 없음">
+                            없음
+                          </span>
+                        )}
+                      </td>
                       <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap">
                         {formatPhoneDisplayOr(r.phone)}
                       </td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
                       </td>
-                      <td className={`px-3 py-2 align-top whitespace-nowrap ${notify.className}`}>{notify.text}</td>
+                      <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs">
+                        {formatNotifyDate(r.notifyAt)}
+                      </td>
+                      <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs tabular-nums">
+                        {formatNotifyTime(r.notifyAt)}
+                      </td>
+                      <td
+                        className={`px-3 py-2 align-top whitespace-nowrap ${notify.className}`}
+                        title={notify.title}
+                      >
+                        {notify.text}
+                      </td>
                       <td className={`px-3 py-2 align-top whitespace-nowrap ${summary.className}`}>{summary.text}</td>
                     </tr>
                     {isOpen ? (
@@ -568,7 +694,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={7}
+                          colSpan={9}
                           className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20 align-top"
                         >
                           {tests.length === 0 ? (

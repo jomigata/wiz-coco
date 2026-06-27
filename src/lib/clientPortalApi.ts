@@ -231,6 +231,8 @@ export type DispatchRecipient = {
   joinAccessCode: string;
   notifyStatus: string;
   notifyError?: string | null;
+  notifyAt?: string | null;
+  notifySentVia?: string | null;
   testStatus: 'completed' | 'in_progress' | 'not_started';
   completedCount: number;
   requiredCount: number;

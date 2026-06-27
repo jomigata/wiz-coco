@@ -44,8 +44,32 @@ def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
                 "status": (latest.get("status") or "pending").strip(),
                 "error": latest.get("error"),
                 "sentVia": latest.get("sentVia"),
+                "processedAt": _iso_timestamp(latest.get("processedAt")),
+                "createdAt": _iso_timestamp(latest.get("createdAt")),
             }
     return out
+
+
+def _resolve_notify_at(notify: dict, pdata: dict, status: str) -> str | None:
+    processed = notify.get("processedAt")
+    if processed:
+        return processed
+    last_at = pdata.get("lastNotifyAt")
+    if last_at:
+        return _iso_timestamp(last_at)
+    if status in ("pending", "not_sent") and notify.get("createdAt"):
+        return notify.get("createdAt")
+    return None
+
+
+def _resolve_notify_status(
+    notify: dict, pdata: dict, *, email: str, phone: str
+) -> tuple[str, str | None]:
+    status = (notify.get("status") or pdata.get("lastNotifyStatus") or "not_sent").strip()
+    error = notify.get("error")
+    if not email and not phone:
+        return "skipped", error or "no_recipient"
+    return status, error
 
 
 def _iso_timestamp(value) -> str | None:
@@ -203,7 +227,9 @@ def aggregate_assessment_list_stats(
 
     for portal_id, pdata, assigned in portal_rows:
         notify = notify_map.get(portal_id) or {}
-        notify_status = (notify.get("status") or pdata.get("lastNotifyStatus") or "not_sent").strip()
+        email = (pdata.get("email") or "").strip()
+        phone = (pdata.get("phone") or "").strip()
+        notify_status, _ = _resolve_notify_status(notify, pdata, email=email, phone=phone)
 
         for aid in assigned:
             if aid not in stats:
@@ -263,18 +289,25 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
     recipients = []
     for portal_id, pdata in rows:
         notify = notify_map.get(portal_id) or {}
-        notify_status = (notify.get("status") or pdata.get("lastNotifyStatus") or "not_sent").strip()
+        email = (pdata.get("email") or "").strip()
+        phone = (pdata.get("phone") or "").strip()
+        notify_status, notify_error = _resolve_notify_status(
+            notify, pdata, email=email, phone=phone
+        )
+        notify_at = _resolve_notify_at(notify, pdata, notify_status)
         test_info = _test_status_for_portal(db, portal_id, assessment_id, required)
         recipients.append(
             {
                 "portalId": portal_id,
                 "displayName": pdata.get("displayName") or "",
-                "email": pdata.get("email") or "",
-                "phone": pdata.get("phone") or "",
+                "email": email,
+                "phone": phone,
                 "myCode": pdata.get("accessCode") or "",
                 "joinAccessCode": join_access_code,
                 "notifyStatus": notify_status,
-                "notifyError": notify.get("error"),
+                "notifyError": notify_error,
+                "notifyAt": notify_at,
+                "notifySentVia": notify.get("sentVia") or "",
                 "tests": _test_detail_rows(db, portal_id, assessment_id, test_list),
                 **test_info,
             }
