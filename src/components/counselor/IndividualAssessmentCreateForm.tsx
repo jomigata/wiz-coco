@@ -86,6 +86,7 @@ function applyAssessmentToForm(a: CounselorAssessment, setters: {
 export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
   const [groupAssessments, setGroupAssessments] = useState<CounselorAssessment[]>([]);
@@ -239,7 +240,22 @@ export default function IndividualAssessmentCreateForm() {
     });
   };
 
-  const addRow = () => setManualRows((prev) => [...prev, { ...EMPTY_ROW }]);
+  const addRow = (focusNewRow = false) => {
+    setManualRows((prev) => {
+      const next = [...prev, { ...EMPTY_ROW }];
+      if (focusNewRow) {
+        const newIdx = next.length - 1;
+        setTimeout(() => recipientNameRefs.current[newIdx]?.focus(), 0);
+      }
+      return next;
+    });
+  };
+
+  const handleRecipientFieldKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || loading) return;
+    e.preventDefault();
+    addRow(true);
+  };
 
   const removeRow = (index: number) => {
     setManualRows((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
@@ -564,9 +580,17 @@ export default function IndividualAssessmentCreateForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">포함할 검사 선택</label>
+        <label className="block text-sm font-medium text-slate-300 mb-2">
+          포함할 검사 선택
+          {usingExisting ? (
+            <span className="ml-1 font-normal text-slate-500">(검사선택 및 수정 불가)</span>
+          ) : null}
+        </label>
         <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800/80 p-3 space-y-2">
-          {counselorAssessmentTestOptions.map((t) => (
+          {counselorAssessmentTestOptions.map((t) => {
+            const checked = selectedTestIds.has(t.testId);
+            const lockedChecked = usingExisting && checked;
+            return (
             <label
               key={t.testId}
               className={`flex items-center gap-3 p-2 rounded ${
@@ -575,14 +599,17 @@ export default function IndividualAssessmentCreateForm() {
             >
               <input
                 type="checkbox"
-                checked={selectedTestIds.has(t.testId)}
+                checked={checked}
                 onChange={() => toggleTest(t.testId)}
                 disabled={loading || usingExisting}
-                className="rounded text-blue-500"
+                className={`rounded ${
+                  lockedChecked ? 'accent-red-500 text-red-500' : 'accent-blue-500 text-blue-500'
+                }`}
               />
-              <span className="text-white">{t.name}</span>
+              <span className={lockedChecked ? 'text-red-300' : 'text-white'}>{t.name}</span>
             </label>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -591,7 +618,7 @@ export default function IndividualAssessmentCreateForm() {
           <label className="block text-sm font-medium text-slate-300">내담자 목록</label>
           <button
             type="button"
-            onClick={addRow}
+            onClick={() => addRow()}
             className="text-sm text-blue-400 hover:text-blue-300"
             disabled={loading}
           >
@@ -602,10 +629,14 @@ export default function IndividualAssessmentCreateForm() {
           {manualRows.map((row, idx) => (
             <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
               <input
+                ref={(el) => {
+                  recipientNameRefs.current[idx] = el;
+                }}
                 placeholder="이름 *"
                 className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
                 value={row.displayName}
                 onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
+                onKeyDown={handleRecipientFieldKeyDown}
                 disabled={loading}
               />
               <input
@@ -614,6 +645,7 @@ export default function IndividualAssessmentCreateForm() {
                 className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
                 value={row.email}
                 onChange={(e) => updateRow(idx, 'email', e.target.value)}
+                onKeyDown={handleRecipientFieldKeyDown}
                 disabled={loading}
               />
               <input
@@ -621,6 +653,7 @@ export default function IndividualAssessmentCreateForm() {
                 className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
                 value={row.phone}
                 onChange={(e) => updateRow(idx, 'phone', e.target.value)}
+                onKeyDown={handleRecipientFieldKeyDown}
                 disabled={loading}
               />
               <button
