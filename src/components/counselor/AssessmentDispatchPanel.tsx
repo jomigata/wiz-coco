@@ -23,25 +23,7 @@ function formatCompletedAt(iso: string | null | undefined): string {
 }
 
 function formatNotifyDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString('ko-KR');
-  } catch {
-    return '—';
-  }
-}
-
-function formatNotifyTime(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  } catch {
-    return '—';
-  }
+  return formatCompletedAt(iso);
 }
 
 function notifyErrorHint(error: string | null | undefined): string | undefined {
@@ -177,7 +159,14 @@ function testLetterLabel(index: number): string {
   return `${String.fromCharCode(97 + index)}.`;
 }
 
-type RecipientSortKey = 'displayName' | 'email' | 'phone' | 'myCode' | 'notifyStatus' | 'testStatus';
+type RecipientSortKey =
+  | 'displayName'
+  | 'email'
+  | 'phone'
+  | 'myCode'
+  | 'notifyAt'
+  | 'notifyStatus'
+  | 'testStatus';
 type SortDirection = 'asc' | 'desc';
 
 function testStatusOrder(status: DispatchRecipient['testStatus']): number {
@@ -202,6 +191,14 @@ function compareRecipients(
       return mult * (a.phone || '').localeCompare(b.phone || '', 'ko');
     case 'myCode':
       return mult * (a.myCode || '').localeCompare(b.myCode || '', 'ko');
+    case 'notifyAt': {
+      const ta = a.notifyAt ? new Date(a.notifyAt).getTime() : 0;
+      const tb = b.notifyAt ? new Date(b.notifyAt).getTime() : 0;
+      if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
+      if (Number.isNaN(ta)) return mult;
+      if (Number.isNaN(tb)) return -mult;
+      return mult * (ta - tb);
+    }
     case 'notifyStatus':
       return mult * (a.notifyStatus || '').localeCompare(b.notifyStatus || '', 'ko');
     case 'testStatus':
@@ -556,8 +553,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               <col className="w-52" />
               <col className="w-32" />
               <col className="w-24" />
-              <col className="w-24" />
-              <col className="w-28" />
+              <col className="w-36" />
               <col className="w-24" />
               <col className="w-24" />
             </colgroup>
@@ -598,8 +594,14 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   onSort={toggleSort}
                   className="w-24"
                 />
-                <th className="px-3 py-2 text-left text-xs font-medium w-24">발송일</th>
-                <th className="px-3 py-2 text-left text-xs font-medium w-28">발송시간</th>
+                <SortableColumnHeader
+                  label="발송일시"
+                  sortKey="notifyAt"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                  className="w-36"
+                />
                 <SortableColumnHeader
                   label="발송"
                   sortKey="notifyStatus"
@@ -672,11 +674,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
                       </td>
-                      <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs">
-                        {formatNotifyDate(r.notifyAt)}
-                      </td>
                       <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs tabular-nums">
-                        {formatNotifyTime(r.notifyAt)}
+                        {formatNotifyDate(r.notifyAt)}
                       </td>
                       <td
                         className={`px-3 py-2 align-top whitespace-nowrap ${notify.className}`}
@@ -694,7 +693,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={9}
+                          colSpan={8}
                           className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20 align-top"
                         >
                           {tests.length === 0 ? (
