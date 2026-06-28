@@ -510,12 +510,11 @@ function ClientPortalContent() {
                                   >
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                       <div className="min-w-0">
-                                        <p className="text-white font-medium">{testName}</p>
-                                        <p className="text-slate-400 text-xs mt-0.5">
+                                        <p className="text-white font-medium">
                                           {completedResults.length - idx}회차 · 제출{' '}
                                           {formatCompletedAt(r.completedAt)}
                                           {r.isShared ? (
-                                            <span className="ml-2 text-purple-300">
+                                            <span className="ml-2 text-sm font-normal text-purple-300">
                                               · 공유됨
                                               {r.sourceAccessCode
                                                 ? ` (${formatAccessCodeDisplay(r.sourceAccessCode)}에서)`
