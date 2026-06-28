@@ -34,6 +34,7 @@ export default function TestRunnerPage() {
   const [testId, setTestId] = useState('');
   const [editResultId, setEditResultId] = useState('');
   const [fromPortal, setFromPortal] = useState(false);
+  const [viewOnly, setViewOnly] = useState(false);
 
   const [title, setTitle] = useState('');
   const [hydrated, setHydrated] = useState(false);
@@ -59,6 +60,7 @@ export default function TestRunnerPage() {
       setTestId((params.get('testId') || '').trim());
       setEditResultId((params.get('resultId') || '').trim());
       setFromPortal((params.get('from') || '').trim() === 'portal');
+      setViewOnly((params.get('view') || '').trim() === '1');
     } catch {
       setAccessCode('');
       setTestId('');
@@ -153,6 +155,7 @@ export default function TestRunnerPage() {
   }, [editResultId, code, accessCheckLoading, accessCheckError]);
 
   const handleAnswer = (value: number) => {
+    if (viewOnly) return;
     const q = questions[currentIndex];
     if (!q) return;
     setResponses((prev) => ({ ...prev, [q.id]: value }));
@@ -271,7 +274,14 @@ export default function TestRunnerPage() {
             </button>
           </div>
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <h1 className="text-xl font-bold text-white mb-2">{title}</h1>
+            <h1 className="text-xl font-bold text-white mb-2">
+              {title}
+              {viewOnly ? <span className="text-slate-400 font-normal text-base ml-2">· 결과 보기</span> : null}
+            </h1>
+
+            {viewOnly ? (
+              <p className="text-slate-400 text-sm mb-4">제출한 응답을 확인하는 화면입니다. 수정은 진행 현황의 「수정」에서 할 수 있습니다.</p>
+            ) : null}
 
             {!hasPortal && !hasParticipant && accessCheckLoading ? (
               <p className="text-slate-400 text-sm mb-4">검사 세션 준비 중…</p>
@@ -295,11 +305,12 @@ export default function TestRunnerPage() {
                       key={v}
                       type="button"
                       onClick={() => handleAnswer(v)}
+                      disabled={viewOnly}
                       className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
                         responses[currentQuestion.id] === v
                           ? 'bg-blue-600 border-blue-500 text-white'
                           : 'bg-slate-700 border-slate-600 text-slate-300 hover:border-slate-500'
-                      }`}
+                      } ${viewOnly ? 'cursor-default opacity-90' : ''}`}
                     >
                       {v}
                     </button>
@@ -323,7 +334,26 @@ export default function TestRunnerPage() {
                 이전
               </button>
 
-              {currentIndex === questions.length - 1 && Object.keys(responses).length === questions.length ? (
+              {viewOnly ? (
+                currentIndex === questions.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => navigateBackFromTest()}
+                    className="px-6 py-2 rounded-lg bg-slate-600 text-white hover:bg-slate-500"
+                  >
+                    목록으로
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentIndex((i) => Math.min(i + 1, questions.length - 1))}
+                    disabled={currentIndex >= questions.length - 1}
+                    className="px-4 py-2 rounded-lg bg-slate-600 text-white hover:bg-slate-500 disabled:opacity-50"
+                  >
+                    다음
+                  </button>
+                )
+              ) : currentIndex === questions.length - 1 && Object.keys(responses).length === questions.length ? (
                 <button
                   type="button"
                   onClick={handleSubmitNew}

@@ -50,6 +50,21 @@ function resultSubmittedLabel(r: TestResultItem): string | null {
   return r.submittedAt || r.completedAt;
 }
 
+function submissionTimestamp(r: TestResultItem): number {
+  const iso = resultSubmittedLabel(r);
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** 제출일시 기준 회차 — 생성 후 submittedAt 불변이므로 고정 */
+function assignRoundNumbers(results: TestResultItem[]): Map<string, number> {
+  const sorted = [...results].sort((a, b) => submissionTimestamp(a) - submissionTimestamp(b));
+  const map = new Map<string, number>();
+  sorted.forEach((r, i) => map.set(r.resultId, i + 1));
+  return map;
+}
+
 function PortalLoading() {
   return (
     <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
@@ -201,6 +216,30 @@ function ClientPortalContent() {
       from: 'portal',
     });
     if (resultId) params.set('resultId', resultId);
+    router.push(`/join/test?${params.toString()}`);
+  };
+
+  const openResultView = (a: PortalAssessment, testId: string, resultId: string) => {
+    setPortalReturnPath('/portal/');
+    clearJoinGuestSession();
+    clearJoinParticipantSession();
+    const code = normalizeAccessCodeInput(a.accessCode);
+    clearForceGuestForAccessCode(code);
+    clearJoinFreshParticipantFlow(code);
+    persistJoinAssessmentSession(code, {
+      assessmentId: a.assessmentId,
+      title: a.title,
+      welcomeMessage: a.welcomeMessage,
+      usageEndDate: a.usageEndDate || '',
+      testList: a.testList,
+    });
+    const params = new URLSearchParams({
+      accessCode: code,
+      testId: String(testId),
+      resultId,
+      from: 'portal',
+      view: '1',
+    });
     router.push(`/join/test?${params.toString()}`);
   };
 
@@ -483,8 +522,11 @@ function ClientPortalContent() {
                           .filter(
                             (r) =>
                               r.status === 'completed' && String(r.testId) === String(t.testId)
-                          )
-                          .sort((x, y) => resultEffectiveTimestamp(y) - resultEffectiveTimestamp(x));
+                          );
+                        const roundById = assignRoundNumbers(completedResults);
+                        const completedResultsForDisplay = [...completedResults].sort(
+                          (x, y) => submissionTimestamp(y) - submissionTimestamp(x)
+                        );
                         const hasCompleted = completedResults.length > 0;
                         const expandKey = testExpandKey(a.assessmentId, String(t.testId));
                         const isExpanded = expandedTestKey === expandKey;
@@ -525,7 +567,7 @@ function ClientPortalContent() {
 
                             {hasCompleted && isExpanded ? (
                               <div className="mt-2 ml-2 pl-3 border-l-2 border-slate-600 space-y-2">
-                                {completedResults.map((r, idx) => (
+                                {completedResultsForDisplay.map((r) => (
                                   <div
                                     key={r.resultId}
                                     className="rounded-lg bg-slate-800/80 border border-slate-600 px-3 py-2.5 text-sm"
@@ -534,7 +576,7 @@ function ClientPortalContent() {
                                       <div className="min-w-0">
                                         <p className="text-white font-medium">
                                           <span>
-                                            {completedResults.length - idx}회차
+                                            {roundById.get(r.resultId) ?? '—'}회차
                                             {finalResultId && r.resultId === finalResultId ? (
                                               <span className="ml-1.5 text-red-400 font-semibold">
                                                 ✓ 최종
@@ -547,7 +589,7 @@ function ClientPortalContent() {
                                             {r.updatedAt ? (
                                               <span className="text-slate-400">
                                                 {' '}
-                                                (최신수정일 {formatCompletedAt(r.updatedAt)})
+                                                (수정 {formatCompletedAt(r.updatedAt)})
                                               </span>
                                             ) : null}
                                           </span>
@@ -562,6 +604,13 @@ function ClientPortalContent() {
                                         </p>
                                       </div>
                                       <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={() => openResultView(a, t.testId, r.resultId)}
+                                          className="text-emerald-400 hover:text-emerald-300 text-xs"
+                                        >
+                                          결과보기
+                                        </button>
                                         {!r.isShared ? (
                                           <button
                                             type="button"
