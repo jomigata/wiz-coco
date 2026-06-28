@@ -426,7 +426,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       await load({ silent: true });
       setDispatchComplete({
         kind: 'remind',
-        summary: `성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
+        summary: `성공 ${result.sent}명, 실패 ${result.failed}명`,
       });
     } catch (err) {
       setDispatchComplete({
