@@ -375,8 +375,6 @@ def resend_portal_credentials(
 
         portal_access_code = (pdata.get("accessCode") or "").strip()
         new_pin = generate_four_digit_password()
-        pref.update({"pinHash": hash_password(new_pin), "updatedAt": SERVER_TIMESTAMP})
-
         magic = create_portal_magic_link_token(pid, portal_access_code)
         magic_path = f"/go?t={magic}"
         magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
@@ -391,11 +389,13 @@ def resend_portal_credentials(
             join_access_code=join_access_code,
         )
         status = result.get("status") or "failed"
-        pref.update({"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP})
+        notify_update: dict = {"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP}
         if status == "sent":
+            notify_update["pinHash"] = hash_password(new_pin)
             sent += 1
         else:
             failed += 1
+        pref.update(notify_update)
         details.append(
             {
                 "portalId": pid,

@@ -32,6 +32,7 @@ from utils.portal_linking import (
     get_portal_ecosystem_ids,
 )
 from utils.portal_assessment_access import get_portal_doc
+from utils.my_code import normalize_my_code, is_valid_my_code
 from utils.password import hash_password, verify_password
 from utils.phone_format import format_phone_display
 from utils.portal_magic import create_portal_magic_link_token, verify_portal_magic_link_token

@@ -37,10 +37,14 @@ export async function loginClientPortal(body: {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    const fallback =
+      res.status >= 500
+        ? '로그인 서버 오류가 발생했습니다. 잠시 후 다시 시도하거나 이메일의 「바로 시작」 링크를 이용해 주세요.'
+        : '나의코드 또는 비밀번호를 확인해 주세요.';
     throw new Error(
       typeof data?.message === 'string' && data.message.trim()
         ? data.message
-        : '나의코드 또는 비밀번호를 확인해 주세요.'
+        : fallback,
     );
   }
   return data as ClientPortalLoginResult;
