@@ -25,6 +25,31 @@ import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 
 type PortalAssessment = PortalDashboardAssessment;
 
+function resultEffectiveTimestamp(r: TestResultItem): number {
+  const iso = r.updatedAt || r.completedAt;
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+function pickFinalResultId(results: TestResultItem[]): string | null {
+  if (results.length < 2) return null;
+  let finalId = results[0]?.resultId ?? null;
+  let best = resultEffectiveTimestamp(results[0]);
+  for (const r of results.slice(1)) {
+    const t = resultEffectiveTimestamp(r);
+    if (t >= best) {
+      best = t;
+      finalId = r.resultId;
+    }
+  }
+  return finalId;
+}
+
+function resultSubmittedLabel(r: TestResultItem): string | null {
+  return r.submittedAt || r.completedAt;
+}
+
 function PortalLoading() {
   return (
     <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
@@ -459,14 +484,11 @@ function ClientPortalContent() {
                             (r) =>
                               r.status === 'completed' && String(r.testId) === String(t.testId)
                           )
-                          .sort((x, y) => {
-                            const ta = x.completedAt ? new Date(x.completedAt).getTime() : 0;
-                            const tb = y.completedAt ? new Date(y.completedAt).getTime() : 0;
-                            return tb - ta;
-                          });
+                          .sort((x, y) => resultEffectiveTimestamp(y) - resultEffectiveTimestamp(x));
                         const hasCompleted = completedResults.length > 0;
                         const expandKey = testExpandKey(a.assessmentId, String(t.testId));
                         const isExpanded = expandedTestKey === expandKey;
+                        const finalResultId = pickFinalResultId(completedResults);
 
                         return (
                           <li key={t.testId}>
@@ -511,8 +533,24 @@ function ClientPortalContent() {
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                       <div className="min-w-0">
                                         <p className="text-white font-medium">
-                                          {completedResults.length - idx}회차 · 제출{' '}
-                                          {formatCompletedAt(r.completedAt)}
+                                          <span>
+                                            {completedResults.length - idx}회차
+                                            {finalResultId && r.resultId === finalResultId ? (
+                                              <span className="ml-1.5 text-red-400 font-semibold">
+                                                ✓ 최종
+                                              </span>
+                                            ) : null}
+                                          </span>
+                                          <span className="text-slate-300 font-normal">
+                                            {' '}
+                                            · 제출 {formatCompletedAt(resultSubmittedLabel(r))}
+                                            {r.updatedAt ? (
+                                              <span className="text-slate-400">
+                                                {' '}
+                                                (최신수정일 {formatCompletedAt(r.updatedAt)})
+                                              </span>
+                                            ) : null}
+                                          </span>
                                           {r.isShared ? (
                                             <span className="ml-2 text-sm font-normal text-purple-300">
                                               · 공유됨

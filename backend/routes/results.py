@@ -22,6 +22,12 @@ bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
 
 
+def _iso_timestamp(value) -> str | None:
+    if value is None:
+        return None
+    return value.isoformat() if hasattr(value, "isoformat") else str(value)
+
+
 def _is_assessment_expired(d: dict) -> bool:
     usage_end = str(d.get("usageEndDate") or "").strip()
     if not usage_end:
@@ -146,6 +152,7 @@ def submit_result():
         "responses": responses,
         "resultData": result_data,
         "completedAt": SERVER_TIMESTAMP,
+        "submittedAt": SERVER_TIMESTAMP,
     }
     if portal_session:
         data["portalId"] = (portal_session.get("portalId") or "").strip()
@@ -241,7 +248,9 @@ def list_results():
                 "resultId": doc.id,
                 "testId": d.get("testId"),
                 "status": d.get("status"),
-                "completedAt": d.get("completedAt").isoformat() if d.get("completedAt") and hasattr(d["completedAt"], "isoformat") else None,
+                "completedAt": _iso_timestamp(d.get("completedAt")),
+                "submittedAt": _iso_timestamp(d.get("submittedAt") or d.get("completedAt")),
+                "updatedAt": _iso_timestamp(d.get("updatedAt")),
             }
             if is_shared:
                 item["isShared"] = True
@@ -536,12 +545,16 @@ def update_result(result_id):
         return jsonify({"error": "Forbidden", "message": "Invalid password or not owner"}), 403
 
     result_data = compute_result_data(d.get("testId", ""), responses if isinstance(responses, (dict, list)) else {})
-    ref.update({
+    update_payload = {
         "responses": responses,
         "resultData": result_data,
         "status": "completed",
         "completedAt": SERVER_TIMESTAMP,
-    })
+        "updatedAt": SERVER_TIMESTAMP,
+    }
+    if not d.get("submittedAt"):
+        update_payload["submittedAt"] = d.get("completedAt") or SERVER_TIMESTAMP
+    ref.update(update_payload)
     return jsonify({"resultId": result_id, "message": "Updated"})
 
 

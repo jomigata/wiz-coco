@@ -150,6 +150,8 @@ export interface TestResultItem {
   testId: string;
   status: string;
   completedAt: string | null;
+  submittedAt?: string | null;
+  updatedAt?: string | null;
   isShared?: boolean;
   sourceAccessCode?: string;
 }
