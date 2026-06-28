@@ -403,7 +403,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       await load({ silent: true });
       setDispatchComplete({
         kind: 'resend',
-        summary: `성공 ${result.sent}명, 실패 ${result.failed}명, 연락처 없음 ${result.skipped}명 · 비밀번호는 새로 발급되었습니다.`,
+        summary: `성공 ${result.sent}명, 실패 ${result.failed}명`,
       });
     } catch (err) {
       setDispatchComplete({
