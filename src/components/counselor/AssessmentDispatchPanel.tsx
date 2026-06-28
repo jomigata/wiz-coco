@@ -270,6 +270,11 @@ function skipRemindReason(r: DispatchRecipient): string {
 
 type BulkConfirmAction = 'remind' | 'resend' | null;
 type DispatchProgress = { kind: 'remind' | 'resend'; count: number };
+type DispatchComplete = {
+  kind: 'remind' | 'resend';
+  error?: boolean;
+  summary: string;
+};
 
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
@@ -285,9 +290,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [remindLoading, setRemindLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
+  const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
-  const [message, setMessage] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -393,15 +398,19 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     const count = resendEligibleSelected.length || selected.size;
     setDispatchProgress({ kind: 'resend', count });
     setResendLoading(true);
-    setMessage('');
     try {
       const result = await resendDispatchCredentials(assessmentId, Array.from(selected));
-      setMessage(
-        `재발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 연락처 없음 ${result.skipped}명 (비밀번호는 새로 발급됩니다)`,
-      );
       await load({ silent: true });
+      setDispatchComplete({
+        kind: 'resend',
+        summary: `성공 ${result.sent}명, 실패 ${result.failed}명, 연락처 없음 ${result.skipped}명 · 비밀번호는 새로 발급되었습니다.`,
+      });
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : '재발송에 실패했습니다.');
+      setDispatchComplete({
+        kind: 'resend',
+        error: true,
+        summary: err instanceof Error ? err.message : '재발송에 실패했습니다.',
+      });
     } finally {
       setResendLoading(false);
       setDispatchProgress(null);
@@ -412,15 +421,19 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     if (!assessmentId || portalIds.length === 0) return;
     setDispatchProgress({ kind: 'remind', count: portalIds.length });
     setRemindLoading(true);
-    setMessage('');
     try {
       const result = await sendDispatchTestReminders(assessmentId, portalIds);
-      setMessage(
-        `미실시 알림 발송 완료: 성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
-      );
       await load({ silent: true });
+      setDispatchComplete({
+        kind: 'remind',
+        summary: `성공 ${result.sent}명, 실패 ${result.failed}명, 생략 ${result.skipped}명 (검사 완료·연락처 없음 등)`,
+      });
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : '미실시 알림 발송에 실패했습니다.');
+      setDispatchComplete({
+        kind: 'remind',
+        error: true,
+        summary: err instanceof Error ? err.message : '미실시 알림 발송에 실패했습니다.',
+      });
     } finally {
       setRemindLoading(false);
       setDispatchProgress(null);
@@ -491,12 +504,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         </p>
       </div>
 
-      {message ? (
-        <p className="text-sm text-slate-300" role="status">
-          {message}
-        </p>
-      ) : null}
-
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-white">발송 및 검사 현황</h2>
         <div className="flex flex-wrap gap-2">
@@ -519,7 +526,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
           >
             {remindLoading
-              ? '미실시 알림통보 중…'
+              ? '발송 진행 중…'
               : `미실시 알림통보 (${remindEligibleSelected.length})`}
           </button>
           <button
@@ -528,7 +535,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             disabled={resendLoading || selected.size === 0}
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
-            {resendLoading ? '코드 재발송 중…' : `코드 재발송 (${selected.size})`}
+            {resendLoading ? '발송 진행 중…' : `코드 재발송 (${selected.size})`}
           </button>
           <button
             type="button"
@@ -816,7 +823,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               aria-hidden="true"
             />
             <h3 id="dispatch-progress-title" className="text-lg font-semibold text-white">
-              발송 진행 중
+              발송 진행 중…
             </h3>
             <p className="mt-2 text-sm text-slate-300">
               {dispatchProgress.kind === 'remind'
@@ -824,8 +831,60 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 : `코드 재발송 ${dispatchProgress.count}명을 처리하고 있습니다.`}
             </p>
             <p className="mt-3 text-xs text-slate-500">
-              이메일·SMS 발송 및 목록 갱신 중입니다. 잠시만 기다려 주세요.
+              이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.
             </p>
+          </div>
+        </div>
+      ) : null}
+
+      {dispatchComplete ? (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dispatch-complete-title"
+          onClick={() => setDispatchComplete(null)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 max-w-md w-full p-6 shadow-xl text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${
+                dispatchComplete.error
+                  ? 'bg-red-900/40 text-red-400'
+                  : 'bg-emerald-900/40 text-emerald-400'
+              }`}
+              aria-hidden="true"
+            >
+              {dispatchComplete.error ? (
+                <span className="text-2xl font-bold">!</span>
+              ) : (
+                <span className="text-2xl">✓</span>
+              )}
+            </div>
+            <h3 id="dispatch-complete-title" className="text-lg font-semibold text-white">
+              {dispatchComplete.error
+                ? '발송 실패'
+                : dispatchComplete.kind === 'remind'
+                  ? '미실시 알림 발송 완료'
+                  : '코드 재발송 완료'}
+            </h3>
+            <p className="mt-2 text-sm text-slate-300">
+              {dispatchComplete.error
+                ? dispatchComplete.summary
+                : '발송이 완료되었습니다.'}
+            </p>
+            {!dispatchComplete.error ? (
+              <p className="mt-2 text-xs text-slate-400">{dispatchComplete.summary}</p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setDispatchComplete(null)}
+              className="mt-5 px-6 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
+              확인
+            </button>
           </div>
         </div>
       ) : null}
