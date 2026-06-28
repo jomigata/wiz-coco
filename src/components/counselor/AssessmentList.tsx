@@ -8,6 +8,73 @@ import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
+
+type ListSortKey = 'createdAt' | 'accessCode' | 'orgName' | 'title';
+type SortDirection = 'asc' | 'desc';
+
+function parseCreatedAt(iso?: string): number {
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+function compareAssessments(
+  a: CounselorAssessment,
+  b: CounselorAssessment,
+  key: ListSortKey,
+  dir: SortDirection,
+): number {
+  const mult = dir === 'asc' ? 1 : -1;
+  switch (key) {
+    case 'createdAt':
+      return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
+    case 'accessCode':
+      return mult * (a.accessCode || '').localeCompare(b.accessCode || '');
+    case 'orgName':
+      return mult * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
+    case 'title':
+      return mult * (a.title || '').localeCompare(b.title || '', 'ko');
+    default:
+      return 0;
+  }
+}
+
+function progressHref(assessmentId: string): string {
+  return `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`;
+}
+
+function SortableColumnHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+  className = '',
+}: {
+  label: string;
+  sortKey: ListSortKey;
+  activeKey: ListSortKey;
+  direction: SortDirection;
+  onSort: (key: ListSortKey) => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  return (
+    <th scope="col" className={`px-2 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors"
+      >
+        <span>{label}</span>
+        <span className={`text-[10px] ${active ? 'text-sky-400' : 'text-slate-600'}`} aria-hidden="true">
+          {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
@@ -54,6 +121,24 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
+
+  const goToProgress = (assessmentId: string) => {
+    router.push(progressHref(assessmentId));
+  };
+
+  const toggleSort = (key: ListSortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'createdAt' ? 'desc' : 'asc');
+    }
+  };
+
+  const cellLinkClass =
+    'cursor-pointer text-left hover:text-sky-200 hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const totalParticipants = assessments.reduce((sum, a) => {
     const { testComplete, testIncomplete } = resultStatusCounts(a);
@@ -71,9 +156,16 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       (a) =>
         (a.title || '').toLowerCase().includes(q) ||
         (a.accessCode || '').toLowerCase().includes(q) ||
-        (a.targetAudience || '').toLowerCase().includes(q),
+        (a.targetAudience || '').toLowerCase().includes(q) ||
+        getAssessmentOrgLabel(a).toLowerCase().includes(q),
     );
   }, [assessments, searchQuery]);
+
+  const sortedFiltered = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => compareAssessments(a, b, sortKey, sortDir));
+    return list;
+  }, [filtered, sortKey, sortDir]);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -218,10 +310,35 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             <table className="min-w-full divide-y divide-white/10 text-sm">
               <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                 <tr>
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">생성 일시</th>
-                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사코드</th>
-                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">기관/단체/그룹명</th>
-                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-slate-400">검사명</th>
+                  <SortableColumnHeader
+                    label="생성 일시"
+                    sortKey="createdAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap"
+                  />
+                  <SortableColumnHeader
+                    label="검사코드"
+                    sortKey="accessCode"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                  />
+                  <SortableColumnHeader
+                    label="기관/단체/그룹명"
+                    sortKey="orgName"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                  />
+                  <SortableColumnHeader
+                    label="검사명"
+                    sortKey="title"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                  />
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용 마감일</th>
                   <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
                     <span className="block">결과현황</span>
@@ -239,29 +356,55 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
-                {filtered.map((a) => {
+                {sortedFiltered.map((a) => {
                   const { dispatchSent, testComplete, dispatchTotal } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
-                  const orgLabel = (a.cohortName || a.title || '-').trim();
+                  const orgLabel = getAssessmentOrgLabel(a);
 
                   return (
                     <tr key={a.id} className="group hover:bg-white/[0.04]">
                       <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
-                        {formatDate(a.createdAt)}
+                        <button
+                          type="button"
+                          onClick={() => goToProgress(a.id)}
+                          className={`${cellLinkClass} text-slate-200`}
+                        >
+                          {formatDate(a.createdAt)}
+                        </button>
                       </td>
-                      <td className="max-w-[10rem] truncate px-2 py-2 text-left font-mono text-sm font-semibold text-sky-300 tracking-wide">
-                        {formatAccessCodeDisplay(a.accessCode)}
+                      <td className="max-w-[10rem] truncate px-2 py-2 text-left text-sm">
+                        <button
+                          type="button"
+                          onClick={() => goToProgress(a.id)}
+                          className={`${cellLinkClass} font-mono font-semibold text-sky-300 tracking-wide`}
+                        >
+                          {formatAccessCodeDisplay(a.accessCode)}
+                        </button>
                       </td>
                       <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200">
-                        {orgLabel}
+                        <button
+                          type="button"
+                          onClick={() => goToProgress(a.id)}
+                          className={`${cellLinkClass} text-slate-200 truncate max-w-full block`}
+                          title={orgLabel}
+                        >
+                          {orgLabel}
+                        </button>
                       </td>
                       <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200">
-                        <span className="font-medium text-white">{a.title || '-'}</span>
-                        {expired && (
-                          <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
-                            만료
-                          </span>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => goToProgress(a.id)}
+                          className={`${cellLinkClass} truncate max-w-full block`}
+                          title={a.title || '-'}
+                        >
+                          <span className="font-medium text-white">{a.title || '-'}</span>
+                          {expired ? (
+                            <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
+                              만료
+                            </span>
+                          ) : null}
+                        </button>
                       </td>
                       <td className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}>
                         {formatUsageEndDate(a.usageEndDate)}
@@ -278,7 +421,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           <AuthLink
-                            href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(a.id)}`}
+                            href={progressHref(a.id)}
                             className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
                           >
                             진행현황
