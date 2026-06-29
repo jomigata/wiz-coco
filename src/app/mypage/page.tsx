@@ -1949,7 +1949,7 @@ function TestRecordsTabContent({
       pushWithAuthSession(router, '/portal/login/');
       return;
     }
-    pushWithAuthSession(router, `/join/dashboard?accessCode=${encodeURIComponent(normalized)}`);
+    pushWithAuthSession(router, '/portal/');
   };
 
   const getDisplayTestName = (record: TestRecord): string => {

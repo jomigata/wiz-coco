@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { loginClientPortal } from '@/lib/clientPortalApi';
 import {
   formatMyCodeWhileTyping,
+  getMyCodeInputPlaceholder,
   isValidMyCodeInput,
   normalizeMyCodeInput,
   normalizeJoinPinDigits,
@@ -62,6 +63,8 @@ export default function PortalLoginPage() {
     if (rawPin) setPin(normalizeJoinPinDigits(rawPin));
   }, []);
 
+  const myCodePlaceholder = getMyCodeInputPlaceholder();
+
   return (
     <div className="min-h-screen bg-gray-900">
       <div className="pt-24 pb-12 px-4">
@@ -73,16 +76,20 @@ export default function PortalLoginPage() {
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="accessCode" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="myCode" className="block text-sm font-medium text-slate-300 mb-2">
                   나의코드
                 </label>
                 <input
-                  id="accessCode"
+                  id="myCode"
+                  name="wizcoco-my-code"
                   type="text"
                   inputMode="text"
                   maxLength={20}
                   autoComplete="off"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder={myCodePlaceholder}
+                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center text-lg tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={code}
                   onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}

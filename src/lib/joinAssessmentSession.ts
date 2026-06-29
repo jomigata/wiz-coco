@@ -48,9 +48,8 @@ export function getJoinEntryPath(accessCodeNorm: string, autoStart = false): str
 }
 
 export function getJoinDashboardPath(accessCodeNorm: string): string {
-  const code = normalizeAccessCodeInput(accessCodeNorm);
-  if (!code) return '/portal/';
-  return `/join/dashboard?accessCode=${encodeURIComponent(code)}`;
+  void accessCodeNorm;
+  return '/portal/';
 }
 
 /** 검사 선택 현황으로 이동 (Next router — 세션 유지) */

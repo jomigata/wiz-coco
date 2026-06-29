@@ -311,40 +311,22 @@ function ClientPortalContent() {
                   key={a.assessmentId}
                   className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-lg font-medium text-white">{a.title}</h3>
-                      <p className="text-sm text-slate-400 mt-1">
-                        검사코드{' '}
-                        <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
-                        {a.isLinkedShared ? (
-                          <span className="ml-2 text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
-                            수동 연결
-                          </span>
-                        ) : null}
-                        {a.isFromLinkedPortal ? (
-                          <span className="ml-2 text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5">
-                            연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
-                          </span>
-                        ) : null}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/join/dashboard?accessCode=${encodeURIComponent(code)}`}
-                      onClick={() => {
-                        setPortalReturnPath('/portal/');
-                        persistJoinAssessmentSession(code, {
-                          assessmentId: a.assessmentId,
-                          title: a.title,
-                          welcomeMessage: a.welcomeMessage,
-                          usageEndDate: a.usageEndDate || '',
-                          testList: a.testList,
-                        });
-                      }}
-                      className="text-sm text-blue-400 hover:text-blue-300 shrink-0"
-                    >
-                      검사실 열기 →
-                    </Link>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">{a.title}</h3>
+                    <p className="text-sm text-slate-400 mt-1">
+                      검사코드{' '}
+                      <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
+                      {a.isLinkedShared ? (
+                        <span className="ml-2 text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
+                          수동 연결
+                        </span>
+                      ) : null}
+                      {a.isFromLinkedPortal ? (
+                        <span className="ml-2 text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5">
+                          연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
+                        </span>
+                      ) : null}
+                    </p>
                   </div>
 
                   {a.welcomeMessage ? (

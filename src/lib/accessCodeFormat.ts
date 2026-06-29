@@ -28,6 +28,42 @@ const NEW_MY_SUFFIX_ODD_RE = new RegExp(
 );
 const LEGACY_MY_SUFFIX_RE = new RegExp(`^[${DIGITS}]{3,}$`);
 
+const MY_CODE_YEAR_BASE = 2026;
+const MY_CODE_YEAR_BASE_RADIX = MY_CODE_LETTERS.length;
+
+function encodeMyCodeYearOffset(offset: number): string {
+  let safe = offset;
+  if (safe < 0) safe = 0;
+  if (safe < MY_CODE_YEAR_BASE_RADIX) {
+    return MY_CODE_LETTERS[safe];
+  }
+  let length = 2;
+  let base = MY_CODE_YEAR_BASE_RADIX;
+  while (safe >= base + MY_CODE_YEAR_BASE_RADIX ** length) {
+    base += MY_CODE_YEAR_BASE_RADIX ** length;
+    length += 1;
+  }
+  let remaining = safe - base;
+  const chars: string[] = [];
+  for (let i = 0; i < length; i += 1) {
+    const idx = remaining % MY_CODE_YEAR_BASE_RADIX;
+    remaining = Math.floor(remaining / MY_CODE_YEAR_BASE_RADIX);
+    chars.push(MY_CODE_LETTERS[idx]);
+  }
+  return chars.reverse().join('');
+}
+
+/** 나의코드 연도 접두 알파벳 (2026=A, 백엔드 my_code.year_prefix_for 와 동일) */
+export function myCodeYearPrefixFor(year?: number): string {
+  const y = year ?? new Date().getFullYear();
+  return encodeMyCodeYearOffset(y - MY_CODE_YEAR_BASE);
+}
+
+/** 검사시작 입력란 placeholder — 연도 알파벳 + 000 */
+export function getMyCodeInputPlaceholder(): string {
+  return `${myCodeYearPrefixFor()}000`;
+}
+
 function isValidMyCodeSuffix(body: string): boolean {
   if (LEGACY_MY_SUFFIX_RE.test(body)) return true;
   if (NEW_MY_SUFFIX_RE.test(body)) return true;
