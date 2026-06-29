@@ -99,28 +99,6 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
   return data;
 }
 
-export async function sharePortalResult(
-  portalToken: string,
-  body: { resultId: string; targetAccessCode: string }
-): Promise<{ message: string }> {
-  const res = await fetch(`${getBaseUrl()}/api/client-portals/share-result`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Portal ${portalToken}`,
-    },
-    body: JSON.stringify({
-      resultId: body.resultId,
-      targetAccessCode: normalizeAccessCodeInput(body.targetAccessCode),
-    }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(typeof data?.message === 'string' ? data.message : '검사 결과 공유에 실패했습니다.');
-  }
-  return data;
-}
-
 export async function bulkCreateClientPortals(body: {
   cohortName: string;
   rows: Array<{ displayName: string; email?: string; phone?: string }>;

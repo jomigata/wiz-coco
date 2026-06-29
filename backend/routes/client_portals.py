@@ -28,7 +28,6 @@ from utils.access_code import (
 )
 from utils.portal_linking import (
     list_linked_portal_summaries,
-    share_result_to_assessment,
     get_portal_ecosystem_ids,
 )
 from utils.portal_assessment_access import get_portal_doc
@@ -270,32 +269,6 @@ def verify_magic_link():
 
 def _create_magic_link_token(portal_id: str, access_code: str) -> str:
     return create_portal_magic_link_token(portal_id, access_code    )
-
-
-@bp.route("/share-result", methods=["POST"])
-@limit_access_code
-def share_result():
-    """완료된 검사 결과를 다른 검사코드(assessment)에 공유."""
-    payload = get_portal_session_from_request()
-    if not payload:
-        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
-
-    body = request.get_json() or {}
-    result_id = (body.get("resultId") or "").strip()
-    target_code = normalize_access_code(
-        body.get("targetAccessCode") or body.get("sharedAccessCode") or body.get("accessCode") or ""
-    )
-    if not result_id:
-        return jsonify({"error": "Bad Request", "message": "resultId가 필요합니다."}), 400
-    if not target_code:
-        return jsonify({"error": "Bad Request", "message": "공유할 검사코드를 입력해 주세요."}), 400
-
-    db = get_firestore()
-    portal_id = (payload.get("portalId") or "").strip()
-    ok, message = share_result_to_assessment(db, portal_id, result_id, target_code)
-    if not ok:
-        return jsonify({"error": "Bad Request", "message": message}), 400
-    return jsonify({"message": message, "resultId": result_id, "targetAccessCode": target_code})
 
 
 @bp.route("/bulk", methods=["POST"])

@@ -1,17 +1,22 @@
 'use client';
 
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import CompletedTestList from '@/components/join/CompletedTestList';
-import { lookupPublicAssessment, PublicAssessment, TestResultItem } from '@/lib/assessmentApi';
-import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import PortalTestList from '@/components/portal/PortalTestList';
+import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
-  JOIN_STORAGE_KEY,
-} from '@/lib/joinAssessmentSession';
+  deleteResult,
+  getClientResult,
+  listResults,
+  lookupPublicAssessment,
+  PublicAssessment,
+  TestResultItem,
+} from '@/lib/assessmentApi';
+import { formatAccessCodeDisplay, isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { findFirstCompletedExpandKey, resultSubmittedLabel } from '@/lib/portalTestResults';
+import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
-import { canTrackJoinResults } from '@/lib/assessmentApi';
 import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import {
@@ -50,27 +55,37 @@ function formatUsageEndDateLabel(raw?: string): string {
 function JoinDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading: authLoading } = useFirebaseAuth();
-  const clientUid = useMemo(() => (user?.uid || '').trim(), [user?.uid]);
   const accessCodeRaw = searchParams.get('accessCode') ?? '';
+  const code = normalizeAccessCodeInput((accessCodeRaw || '').trim());
 
-  const code = useMemo(
-    () => normalizeAccessCodeInput((accessCodeRaw || '').trim()),
-    [accessCodeRaw]
-  );
-
-  const portalSession = useMemo(() => readClientPortalSession(), []);
-  const participantSession = useMemo(() => readJoinParticipantSession(), []);
+  const portalSession = readClientPortalSession();
+  const participantSession = readJoinParticipantSession();
   const hasPortal = isPortalModeForAccessCode(code);
   const hasParticipant = hasJoinParticipantSessionForCode(code);
   const hasGuest = hasJoinGuestSessionForCode(code);
-  const canTrackResults = canTrackJoinResults(code);
 
   const [assessment, setAssessment] = useState<PublicAssessment | null>(null);
   const [loading, setLoading] = useState(true);
   const [guestReady, setGuestReady] = useState(false);
   const [error, setError] = useState('');
   const [joinResults, setJoinResults] = useState<TestResultItem[]>([]);
+  const [resultsLoading, setResultsLoading] = useState(false);
+
+  const [expandedTestKey, setExpandedTestKey] = useState<string | null>(null);
+  const autoExpandDoneRef = useRef(false);
+
+  const [deleteModal, setDeleteModal] = useState<{
+    resultId: string;
+    testName: string;
+    accessCode: string;
+  } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
+
+  const [resultView, setResultView] = useState<PortalResultViewState | null>(null);
+  const [resultDetail, setResultDetail] = useState<Awaited<ReturnType<typeof getClientResult>> | null>(null);
+  const [resultViewLoading, setResultViewLoading] = useState(false);
+  const [resultViewError, setResultViewError] = useState('');
 
   useEffect(() => {
     if (!hasPortal) {
@@ -139,43 +154,136 @@ function JoinDashboardContent() {
       .finally(() => setLoading(false));
   }, [code]);
 
+  const loadResults = useCallback(async () => {
+    if (!isValidAccessCodeInput(code)) return;
+    setResultsLoading(true);
+    try {
+      const data = await listResults(code);
+      setJoinResults(data.results || []);
+    } catch (err) {
+      setError((prev) => prev || (err instanceof Error ? err.message : '검사 결과를 불러오지 못했습니다.'));
+      setJoinResults([]);
+    } finally {
+      setResultsLoading(false);
+    }
+  }, [code]);
+
   useEffect(() => {
     loadAssessment();
   }, [loadAssessment]);
 
-  const latestCompletedByTestId = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const r of joinResults) {
-      const tid = String(r.testId);
-      if (!r.completedAt) continue;
-      const prev = m.get(tid);
-      const t = new Date(r.completedAt).getTime();
-      if (!prev || t > new Date(prev).getTime()) m.set(tid, r.completedAt);
-    }
-    return m;
-  }, [joinResults]);
+  useEffect(() => {
+    if (!assessment || !isValidAccessCodeInput(code)) return;
+    void loadResults();
+  }, [assessment, code, loadResults]);
 
-  const sortedTestList = useMemo(() => {
-    if (!assessment?.testList.length) return [];
-    const withIdx = assessment.testList.map((t, i) => {
-      const tid = String(t.testId);
-      const isDone = joinResults.some((r) => String(r.testId) === tid);
-      return {
-        ...t,
-        _idx: i,
-        latestAt: latestCompletedByTestId.get(tid) ?? null,
-        isDone,
-      };
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || !assessment) return;
+      void loadResults();
+    };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('pageshow', refresh);
+    };
+  }, [assessment, loadResults]);
+
+  useEffect(() => {
+    if (!resultView) {
+      setResultDetail(null);
+      setResultViewError('');
+      return;
+    }
+    let cancelled = false;
+    setResultViewLoading(true);
+    setResultViewError('');
+    setResultDetail(null);
+    getClientResult(resultView.resultId, resultView.accessCode)
+      .then((data) => {
+        if (!cancelled) setResultDetail(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setResultViewError(err instanceof Error ? err.message : '결과를 불러오지 못했습니다.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setResultViewLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [resultView]);
+
+  useEffect(() => {
+    if (autoExpandDoneRef.current || expandedTestKey || !assessment) return;
+    if (resultsLoading) return;
+    const key = findFirstCompletedExpandKey(
+      [
+        {
+          assessmentId: assessment.assessmentId,
+          accessCode: code,
+          testList: assessment.testList || [],
+        },
+      ],
+      { [code]: joinResults },
+      normalizeAccessCodeInput,
+    );
+    if (key) {
+      setExpandedTestKey(key);
+      autoExpandDoneRef.current = true;
+    }
+  }, [assessment, code, joinResults, resultsLoading, expandedTestKey]);
+
+  const openTest = (testId: string, resultId?: string) => {
+    setPortalReturnPath('/portal/');
+    const params = new URLSearchParams({
+      accessCode: code,
+      testId: String(testId),
+      from: 'portal',
     });
-    withIdx.sort((a, b) => {
-      if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
-      if (!a.isDone) return a._idx - b._idx;
-      const ta = a.latestAt ? new Date(a.latestAt).getTime() : 0;
-      const tb = b.latestAt ? new Date(b.latestAt).getTime() : 0;
-      return tb - ta;
+    if (resultId) params.set('resultId', resultId);
+    router.push(`/join/test?${params.toString()}`);
+  };
+
+  const openResultView = (
+    testName: string,
+    resultId: string,
+    roundNumber: number | null,
+    resultItem: TestResultItem,
+  ) => {
+    setResultView({
+      testName,
+      roundNumber,
+      accessCode: code,
+      resultId,
+      submittedAt: resultSubmittedLabel(resultItem),
+      updatedAt: resultItem.updatedAt ?? null,
     });
-    return withIdx;
-  }, [assessment, latestCompletedByTestId, joinResults]);
+  };
+
+  const closeResultView = () => {
+    setResultView(null);
+    setResultDetail(null);
+    setResultViewError('');
+  };
+
+  const handleDeleteResult = async () => {
+    if (!deleteModal) return;
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await deleteResult(deleteModal.resultId, undefined, deleteModal.accessCode);
+      setDeleteModal(null);
+      await loadResults();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (!hasPortal || loading || !guestReady) {
     return <DashboardLoading />;
@@ -200,16 +308,14 @@ function JoinDashboardContent() {
     <div className="min-h-screen bg-gray-900">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto space-y-6">
-          {hasPortal ? (
-            <p className="text-sm text-slate-400">
-              <Link href="/portal/" className="text-blue-400 hover:text-blue-300">
-                ← 내 검사실
-              </Link>
-              {portalSession?.portal?.displayName ? (
-                <span className="ml-2">{portalSession.portal.displayName}님</span>
-              ) : null}
-            </p>
-          ) : null}
+          <p className="text-sm text-slate-400">
+            <Link href="/portal/" className="text-blue-400 hover:text-blue-300">
+              ← 내 검사실
+            </Link>
+            {portalSession?.portal?.displayName ? (
+              <span className="ml-2">{portalSession.portal.displayName}님</span>
+            ) : null}
+          </p>
 
           {participantSession?.displayName ? (
             <p className="text-sm text-slate-400 mb-2">{participantSession.displayName}님</p>
@@ -230,124 +336,84 @@ function JoinDashboardContent() {
                 <span className="ml-2 text-slate-500">(비워두면 무기한 사용)</span>
               ) : null}
             </div>
-            {assessment.welcomeMessage && (
+            {assessment.welcomeMessage ? (
               <p className="text-slate-300 whitespace-pre-wrap mb-6">{assessment.welcomeMessage}</p>
-            )}
+            ) : null}
 
             <h2 className="text-lg font-semibold text-white mb-3">수행할 검사</h2>
-            {!canTrackResults && !authLoading && !hasGuest ? (
-              <p className="text-amber-200/90 text-sm mb-2">검사 세션을 준비하는 중…</p>
+            {!hasGuest && !hasParticipant && resultsLoading ? (
+              <p className="text-amber-200/90 text-sm mb-2">검사 결과를 불러오는 중…</p>
             ) : null}
-            {assessment.testList.length === 0 ? (
-              <p className="text-slate-400 text-sm">등록된 검사가 없습니다.</p>
-            ) : (
-              <ul className="space-y-2">
-                {sortedTestList.map((t) => {
-                  const done = t.isDone;
-                  const dateLabel =
-                    t.latestAt != null
-                      ? new Date(t.latestAt).toLocaleString('ko-KR', {
-                          year: 'numeric',
-                          month: 'numeric',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : null;
-                  return (
-                    <li key={t.testId}>
-                      {hasPortal ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPortalReturnPath('/portal/');
-                            router.push(
-                              `/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}&from=portal`
-                            );
-                          }}
-                          className="block w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-medium">{t.name || t.testId}</span>
-                            <span className="text-slate-400 text-sm">{done ? '재검사하기 →' : '시작하기 →'}</span>
-                          </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                            {canTrackResults ? (
-                              done ? (
-                                <>
-                                  <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
-                                    검사 실시 완료
-                                  </span>
-                                  {dateLabel ? (
-                                    <span className="text-slate-400">최근 제출: {dateLabel}</span>
-                                  ) : null}
-                                </>
-                              ) : (
-                                <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
-                                  미완료 · 제출 전
-                                </span>
-                              )
-                            ) : (
-                              <span className="text-slate-500">세션 준비 중…</span>
-                            )}
-                          </div>
-                        </button>
-                      ) : (
-                      <Link
-                        href={`/join/test?accessCode=${encodeURIComponent(code)}&testId=${encodeURIComponent(t.testId)}`}
-                        className="block py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 text-white hover:bg-slate-700 hover:border-slate-500 transition-colors"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium">{t.name || t.testId}</span>
-                          <span className="text-slate-400 text-sm">{done ? '재검사하기 →' : '시작하기 →'}</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                          {canTrackResults ? (
-                            done ? (
-                              <>
-                                <span className="rounded bg-emerald-900/60 text-emerald-300 px-2 py-0.5 border border-emerald-700/50">
-                                  검사 실시 완료
-                                </span>
-                                {dateLabel ? (
-                                  <span className="text-slate-400">최근 제출: {dateLabel}</span>
-                                ) : null}
-                              </>
-                            ) : (
-                              <span className="rounded bg-amber-900/50 text-amber-200 px-2 py-0.5 border border-amber-700/40">
-                                미완료 · 제출 전
-                              </span>
-                            )
-                          ) : (
-                            <span className="text-slate-500">세션 준비 중…</span>
-                          )}
-                        </div>
-                      </Link>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <PortalTestList
+              accessCode={code}
+              assessmentId={assessment.assessmentId}
+              testList={assessment.testList}
+              results={joinResults}
+              expandedTestKey={expandedTestKey}
+              onExpandedChange={setExpandedTestKey}
+              onStartTest={openTest}
+              onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
+                openResultView(testName, resultId, roundNumber, resultItem)
+              }
+              onDeleteResult={({ resultId, testName, accessCode: resultCode }) => {
+                setActionError('');
+                setDeleteModal({ resultId, testName, accessCode: resultCode });
+              }}
+            />
           </div>
-
-          <CompletedTestList
-            clientUid={clientUid}
-            usePortalSession={hasPortal}
-            useGuestSession={hasGuest && !hasParticipant}
-            useParticipantSession={hasParticipant}
-            authLoading={authLoading && !hasPortal && !hasParticipant && !hasGuest}
-            onRefresh={loadAssessment}
-            onResultsChange={setJoinResults}
-            hidden
-          />
         </main>
 
         <p className="text-center mt-6">
-          <Link href={hasPortal ? '/portal/' : '/portal/login/'} className="text-blue-400 hover:text-blue-300 text-sm">
-            {hasPortal ? '내 검사실로' : '검사시작'}
+          <Link href="/portal/" className="text-blue-400 hover:text-blue-300 text-sm">
+            내 검사실로
           </Link>
         </p>
       </div>
+
+      {resultView ? (
+        <PortalResultViewModal
+          resultView={resultView}
+          resultDetail={resultDetail}
+          loading={resultViewLoading}
+          error={resultViewError}
+          onClose={closeResultView}
+        />
+      ) : null}
+
+      {deleteModal ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => !actionLoading && setDeleteModal(null)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
+            <p className="text-slate-300 text-sm mb-4">
+              「{deleteModal.testName}」 결과를 삭제할까요?
+            </p>
+            {actionError ? <p className="text-red-400 text-sm mb-2">{actionError}</p> : null}
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => !actionLoading && setDeleteModal(null)}
+                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-700"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteResult()}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {actionLoading ? '처리 중…' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

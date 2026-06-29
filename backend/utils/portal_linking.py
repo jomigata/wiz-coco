@@ -166,59 +166,6 @@ def link_my_code_to_portal(db, primary_portal_id: str, my_code: str, pin: str) -
     return True, f"「{label}」 나의코드가 연결되었습니다."
 
 
-def share_result_to_assessment(
-    db,
-    primary_portal_id: str,
-    result_id: str,
-    target_access_code: str,
-) -> tuple[bool, str]:
-    result_ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
-    result_doc = result_ref.get()
-    if not result_doc.exists:
-        return False, "검사 결과를 찾을 수 없습니다."
-
-    result_data = result_doc.to_dict() or {}
-    if result_data.get("status") != "completed":
-        return False, "완료된 검사만 공유할 수 있습니다."
-
-    if not _result_visible_to_ecosystem(db, primary_portal_id, result_data):
-        return False, "이 검사 결과에 접근할 수 없습니다."
-
-    target_ass = portal_ecosystem_can_use_assessment(db, primary_portal_id, target_access_code)
-    if not target_ass:
-        return False, "공유할 검사코드를 찾을 수 없거나 연결·배정되지 않았습니다."
-
-    target_data = target_ass.to_dict() or {}
-    target_id = target_ass.id
-    source_test_id = str(result_data.get("testId") or "").strip()
-    target_tests = {str(t.get("testId") or "") for t in (target_data.get("testList") or []) if t}
-    if source_test_id not in target_tests:
-        return False, "동일한 검사 항목이 대상 검사코드에 포함되어 있지 않습니다."
-
-    if target_id == str(result_data.get("assessmentId") or ""):
-        return False, "같은 검사코드에는 공유할 필요가 없습니다."
-
-    shared_ids = list(result_data.get("sharedToAssessmentIds") or [])
-    if target_id in shared_ids:
-        return True, "이미 해당 검사코드에 공유된 결과입니다."
-
-    target_code = target_data.get("accessCode", "")
-    share_entry = {
-        "assessmentId": target_id,
-        "accessCode": target_code,
-        "sharedAt": datetime.now(timezone.utc).isoformat(),
-        "sharedByPortalId": primary_portal_id,
-    }
-    result_ref.update(
-        {
-            "sharedToAssessmentIds": ArrayUnion([target_id]),
-            "sharedToAssessments": ArrayUnion([share_entry]),
-            "sharedByPortalId": primary_portal_id,
-        }
-    )
-    return True, f"검사 결과가 검사코드 {target_code}에 공유되었습니다. 담당 상담사도 확인할 수 있습니다."
-
-
 def list_linked_portal_summaries(db, portal_id: str) -> list[dict]:
     portal_doc = get_portal_doc(db, portal_id)
     if not portal_doc:
