@@ -1,8 +1,11 @@
 ﻿'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { buildLoginRedirectUrl } from '@/lib/authRedirect';
+import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 
 type AuthLoadingProps = {
   message?: string;
@@ -31,6 +34,8 @@ type AuthRequiredProps = {
   description?: string;
   loginHref?: string;
   className?: string;
+  /** true면 로그인 페이지로 자동 이동 (기본) */
+  autoRedirect?: boolean;
 };
 
 export function AuthRequiredState({
@@ -38,7 +43,21 @@ export function AuthRequiredState({
   description = '로그인한 상태에서 다시 시도해 주세요.',
   loginHref = '/login',
   className = '',
+  autoRedirect = true,
 }: AuthRequiredProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!autoRedirect) return;
+    const target =
+      loginHref === '/login' ? buildLoginRedirectUrl() : loginHref;
+    replaceWithAuthSession(router, target);
+  }, [autoRedirect, loginHref, router]);
+
+  if (autoRedirect) {
+    return <AuthLoadingState message="로그인 페이지로 이동 중…" className={className} />;
+  }
+
   return (
     <div className={`rounded-xl border border-amber-600/30 bg-amber-900/20 p-5 ${className}`.trim()}>
       <div className="flex items-center gap-3">

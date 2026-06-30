@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { formatPhoneDisplay, formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
   fetchAssessmentDispatchStatus,
@@ -297,6 +298,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
+
+  useRedirectOnLoginRequiredError(error);
+  useRedirectOnLoginRequiredError(detailError);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId) return;

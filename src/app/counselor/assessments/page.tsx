@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   listAssessments,
   type CounselorAssessment,
@@ -64,6 +65,8 @@ export default function AssessmentListPage() {
       cancelled = true;
     };
   }, [authPending, user, showLoginRequired]);
+
+  useRedirectOnLoginRequiredError(error);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  useRequireLoginRedirect();
   const [activeSection, setActiveSection] = useState<string>('');
   const [pageTitle, setPageTitle] = useState<string>('상담사 대시보드');
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);

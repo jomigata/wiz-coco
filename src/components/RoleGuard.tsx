@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import { pushWithAuthSession, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { buildLoginRedirectUrl } from '@/lib/authRedirect';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 
 interface RoleGuardProps {
@@ -30,6 +31,7 @@ export default function RoleGuard({
     if (showLoginRequired || !user) {
       setIsAuthorized(false);
       setIsChecking(false);
+      replaceWithAuthSession(router, buildLoginRedirectUrl());
       return;
     }
 
