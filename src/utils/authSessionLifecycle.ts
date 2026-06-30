@@ -469,6 +469,13 @@ export function evaluateAuthSessionOnStartup(): boolean {
   if (path.startsWith('/login') || path.startsWith('/register')) {
     return false;
   }
+  /** 내담자 포털은 별도 세션 — 전문가 Firebase 세션을 여기서 삭제하지 않음 */
+  if (path.startsWith('/portal')) {
+    if (!hasAuthenticatedTabSession()) {
+      tryRestoreAuthenticatedTabSession();
+    }
+    return false;
+  }
   if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
   if (isAuthLoginInProgress()) return false;
 
@@ -489,6 +496,11 @@ export function evaluateAuthSessionOnStartup(): boolean {
   const heartbeatFresh = isAuthHeartbeatFresh();
 
   if (hasTabSession && !wasClosed && heartbeatFresh) return false;
+
+  /** 다른 탭에서 로그인 중이면 이 탭에 세션 마커만 복구 (sessionStorage는 탭별) */
+  if (!hasTabSession && !wasClosed && heartbeatFresh) {
+    if (tryRestoreAuthenticatedTabSession()) return false;
+  }
 
   if (wasClosed) localStorage.removeItem(AUTH_CLEARED_FLAG);
   clearAuthStorageSync();
@@ -518,17 +530,6 @@ export function subscribeAuthClearEvents(onClear: () => void): () => void {
 export function initAuthSessionLifecycle(): () => void {
   if (typeof window === 'undefined') return () => {};
 
-  let keyboardRefresh = false;
-  const markKeyboardRefresh = (event: KeyboardEvent) => {
-    if (event.key === 'F5') {
-      keyboardRefresh = true;
-      return;
-    }
-    if ((event.ctrlKey || event.metaKey) && (event.key === 'r' || event.key === 'R')) {
-      keyboardRefresh = true;
-    }
-  };
-
   const handleBeforeUnload = () => {
     if (shouldSkipAuthClear()) return;
     sessionStorage.setItem(PAGE_REFRESHING_KEY, 'true');
@@ -537,16 +538,13 @@ export function initAuthSessionLifecycle(): () => void {
   const handlePageHide = (event: PageTransitionEvent) => {
     if (event.persisted) {
       markInternalNavigation();
-      return;
     }
-    if (shouldSkipAuthClear()) return;
-    if (keyboardRefresh || sessionStorage.getItem(PAGE_REFRESHING_KEY) === 'true') {
-      return;
-    }
-    clearAuthOnClose();
+    // 탭 전환 시에도 pagehide가 발생하며, beforeunload는 호출되지 않습니다.
+    // 여기서 clearAuthOnClose를 호출하면 다른 탭의 전문가 로그인까지 지워져
+    // 검사코드 목록 ↔ 로그인 페이지 리다이렉트 루프가 발생합니다.
+    // 탭/브라우저 종료 후 재접속 검증은 evaluateAuthSessionOnStartup(탭 마커·heartbeat)이 담당합니다.
   };
 
-  window.addEventListener('keydown', markKeyboardRefresh, true);
   window.addEventListener('beforeunload', handleBeforeUnload);
   window.addEventListener('pagehide', handlePageHide);
   const cleanupHistoryMarkers = bindHistoryNavigationMarkers();
@@ -559,7 +557,6 @@ export function initAuthSessionLifecycle(): () => void {
 
   return () => {
     window.clearTimeout(refreshFlagTimer);
-    window.removeEventListener('keydown', markKeyboardRefresh, true);
     window.removeEventListener('beforeunload', handleBeforeUnload);
     window.removeEventListener('pagehide', handlePageHide);
     cleanupHistoryMarkers();
