@@ -30,10 +30,39 @@ import {
   downloadGroupRecipientSampleCsv,
   downloadGroupRecipientSampleTxt,
 } from '@/lib/groupRecipientSampleDownload';
+import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
+import * as XLSX from 'xlsx';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
 
 const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
+
+function recipientPhoneFromRaw(raw: unknown): string {
+  const normalized = normalizeRecipientPhone(raw);
+  return normalized ? formatPhoneDisplay(normalized) : '';
+}
+
+function parseRecipientSheetRows(rows: unknown[][]): RecipientRow[] {
+  if (!rows.length) return [];
+
+  const firstCell = String(rows[0]?.[0] ?? '').trim();
+  const hasHeader = firstCell.includes('이름') || firstCell.toLowerCase().includes('name');
+  const startIdx = hasHeader ? 1 : 0;
+
+  const parsed: RecipientRow[] = [];
+  for (let i = startIdx; i < rows.length; i += 1) {
+    const row = rows[i];
+    if (!row?.length) continue;
+    const displayName = String(row[0] ?? '').trim();
+    if (!displayName) continue;
+    parsed.push({
+      displayName,
+      email: String(row[1] ?? '').trim(),
+      phone: recipientPhoneFromRaw(row[2]),
+    });
+  }
+  return parsed;
+}
 
 function parseRecipientText(text: string): RecipientRow[] {
   const lines = text
@@ -52,7 +81,7 @@ function parseRecipientText(text: string): RecipientRow[] {
     rows.push({
       displayName: parts[0],
       email: parts[1] || '',
-      phone: parts[2] || '',
+      phone: recipientPhoneFromRaw(parts[2] || ''),
     });
   }
   return rows;
@@ -265,8 +294,22 @@ export default function IndividualAssessmentCreateForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileLabel(file.name);
-    const text = await file.text();
-    setFileRows(parseRecipientText(text));
+    const lowerName = file.name.toLowerCase();
+    try {
+      if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
+        setFileRows(parseRecipientSheetRows(rows));
+      } else {
+        const text = await file.text();
+        setFileRows(parseRecipientText(text));
+      }
+    } catch {
+      setError('파일을 읽지 못했습니다. CSV·텍스트·엑셀 형식을 확인해 주세요.');
+      setFileRows([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -334,7 +377,7 @@ export default function IndividualAssessmentCreateForm() {
         rows: recipients.map((r) => ({
           displayName: r.displayName.trim(),
           email: r.email.trim() || undefined,
-          phone: r.phone.trim() || undefined,
+          phone: normalizeRecipientPhone(r.phone) || undefined,
         })),
         queueNotify,
         scheduledAt,
@@ -671,7 +714,7 @@ export default function IndividualAssessmentCreateForm() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.txt,.tsv,text/plain"
+            accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -681,7 +724,7 @@ export default function IndividualAssessmentCreateForm() {
             className="px-4 py-2 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
             disabled={loading}
           >
-            CSV/텍스트 파일 첨부
+            CSV/엑셀 파일 첨부
           </button>
           <button
             type="button"
@@ -700,7 +743,7 @@ export default function IndividualAssessmentCreateForm() {
           {fileLabel ? <span className="text-slate-400 text-sm">{fileLabel} ({fileRows.length}명)</span> : null}
         </div>
         <p className="text-slate-500 text-xs">
-          파일 형식: 이름, 이메일, 휴대폰 (쉼표·탭·세미콜론 구분). 수동 입력과 파일은 합쳐집니다. 최대{' '}
+          파일 형식: 이름, 이메일, 휴대폰 (쉼표·탭·세미콜론 구분 또는 .xlsx). 휴대폰 앞 0이 빠진 경우(10…) 자동 보정. 수동 입력과 파일은 합쳐집니다. 최대{' '}
           {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명.
         </p>
         {recipients.length > 0 ? (

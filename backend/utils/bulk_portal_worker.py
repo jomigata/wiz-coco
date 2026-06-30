@@ -17,6 +17,7 @@ from config import (
 )
 from utils.access_code import generate_unique_access_code, generate_unique_portal_access_code
 from utils.password import generate_four_digit_password, hash_password
+from utils.phone_format import normalize_recipient_phone
 
 CREATED_ROWS_SUBCOLLECTION = "createdRows"
 
@@ -138,7 +139,7 @@ def create_portal_for_row(
     """Returns (created_row_dict, notify_queued, notify_sent, notify_failed)."""
     display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
     email = (row.get("email") or "").strip().lower()
-    phone = (row.get("phone") or "").strip()
+    phone = normalize_recipient_phone((row.get("phone") or "").strip())
 
     portal_access_code = generate_unique_portal_access_code()
     pin = generate_four_digit_password()
@@ -505,7 +506,7 @@ def _resend_notifications_for_job(db, job_id: str, data: dict, counselor_uid: st
         for row_doc in _job_created_rows_ref(db, job_id).stream():
             row = row_doc.to_dict() or {}
             email = (row.get("email") or "").strip().lower()
-            phone = (row.get("phone") or "").strip()
+            phone = normalize_recipient_phone((row.get("phone") or "").strip())
             if not email and not phone:
                 continue
             _enqueue_portal_notification(

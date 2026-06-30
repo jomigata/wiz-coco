@@ -33,6 +33,18 @@ export function normalizePhoneDigits(raw: unknown): string {
   return digits;
 }
 
+/**
+ * 내담자 일괄 등록(CSV/엑셀)용 — Excel이 선행 0을 제거한 10xxxxxxxx → 010xxxxxxxx
+ */
+export function normalizeRecipientPhone(raw: unknown): string {
+  let digits = normalizePhoneDigits(raw);
+  if (!digits) return '';
+  if (digits.length === 10 && digits.startsWith('10')) {
+    digits = `0${digits}`;
+  }
+  return digits;
+}
+
 function formatDigitsWithDashes(digits: string): string | null {
   if (!digits) return null;
 

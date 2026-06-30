@@ -23,6 +23,14 @@ def normalize_phone_digits(raw: str) -> str:
     return result
 
 
+def normalize_recipient_phone(raw: str) -> str:
+    """일괄 등록(CSV/엑셀) — Excel 선행 0 제거(10xxxxxxxx) 보정."""
+    digits = normalize_phone_digits(raw)
+    if len(digits) == 10 and digits.startswith("10"):
+        digits = f"0{digits}"
+    return digits
+
+
 def format_phone_display(raw: str) -> str:
     trimmed = (raw or "").strip()
     if not trimmed:
