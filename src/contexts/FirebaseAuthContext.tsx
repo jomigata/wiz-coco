@@ -75,17 +75,26 @@ function readCachedAuthUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
   if (!hasAuthenticatedTabSession()) return null;
 
+  try {
+    const { auth } = initializeFirebase();
+    if (auth?.currentUser) {
+      return authUserFromSdkUser(auth.currentUser);
+    }
+  } catch {
+    // ignore
+  }
+
+  // Firebase 세션 없이 SWR 캐시만 남은 경우 — 만료된 UI 상태 방지
+  if (!isAuthLoginInProgress()) {
+    sessionStorage.removeItem('wizcoco:auth-tab-session');
+    return null;
+  }
+
   const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
     scope: 'session',
     maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
   });
   if (cached.data) return cached.data;
-  try {
-    const { auth } = initializeFirebase();
-    if (auth?.currentUser) return authUserFromSdkUser(auth.currentUser);
-  } catch {
-    // ignore
-  }
   return null;
 }
 
@@ -285,16 +294,6 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             finishLoading();
             return;
           }
-        }
-
-        const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
-          scope: 'session',
-          maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
-        });
-        if (cached.data && hasAuthenticatedTabSession()) {
-          setUser((prev) => prev ?? cached.data);
-          finishLoading();
-          return;
         }
 
         setUser(null);

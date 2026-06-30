@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import { isLoginRequiredError } from '@/lib/authRedirect';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   listAssessments,
@@ -72,7 +73,7 @@ export default function AssessmentListPage() {
     <div className="flex min-h-0 flex-1 flex-col">
       {authPending || (user && loading) ? (
         <AuthLoadingState />
-      ) : showLoginRequired ? (
+      ) : showLoginRequired || (error && isLoginRequiredError(error)) ? (
         <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />
       ) : error ? (
         <div className="rounded-xl bg-red-900/20 border border-red-600/30 p-5">

@@ -32,18 +32,24 @@ export function useRequireLoginRedirect(enabled = true): void {
   }, [enabled, authPending, showLoginRequired, router]);
 }
 
-/** API/폼 오류 메시지가 인증 필요면 — 실제 미로그인일 때만 로그인 페이지로 이동 */
+/** API/폼 오류 메시지가 인증 필요면 로그인 페이지로 이동 (React user 캐시와 무관) */
 export function useRedirectOnLoginRequiredError(error: string, enabled = true): void {
   const router = useRouter();
-  const { authPending, showLoginRequired } = useAuthResolved();
+  const { authPending } = useAuthResolved();
   const redirectedRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled || authPending || !showLoginRequired || !error) return;
+    if (!enabled || authPending || !error) return;
     if (!isLoginRequiredError(error)) return;
     if (redirectedRef.current) return;
 
-    redirectedRef.current = true;
-    replaceWithAuthSession(router, buildLoginRedirectUrl());
-  }, [enabled, authPending, showLoginRequired, error, router]);
+    const timer = window.setTimeout(() => {
+      if (isAuthLoginInProgress()) return;
+      if (redirectedRef.current) return;
+      redirectedRef.current = true;
+      replaceWithAuthSession(router, buildLoginRedirectUrl());
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [enabled, authPending, error, router]);
 }

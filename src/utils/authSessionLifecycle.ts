@@ -486,8 +486,9 @@ export function evaluateAuthSessionOnStartup(): boolean {
     } catch {
       // ignore
     }
-    tryRestoreAuthenticatedTabSession();
-    touchAuthHeartbeat();
+    if (tryRestoreAuthenticatedTabSession()) {
+      touchAuthHeartbeat();
+    }
     return false;
   }
 
