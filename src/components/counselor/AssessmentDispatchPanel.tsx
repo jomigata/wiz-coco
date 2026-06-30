@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { formatPhoneDisplay, formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
   fetchAssessmentDispatchStatus,
@@ -282,6 +283,7 @@ interface AssessmentDispatchPanelProps {
 }
 
 export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDispatchPanelProps) {
+  const { authPending, isAuthenticated } = useAuthResolved();
   const [data, setData] = useState<AssessmentDispatchStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -319,8 +321,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   }, [assessmentId]);
 
   useEffect(() => {
+    if (authPending || !isAuthenticated) return;
     void load();
-  }, [load]);
+  }, [load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
     () => (data?.recipients || []).map((r) => r.portalId),

@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation, hasAuthenticatedTabSession } from '@/utils/authSessionLifecycle';
+import { markInternalNavigation, hasAuthenticatedTabSession, beginAuthLoginAttempt, endAuthLoginAttempt, isAuthLoginInProgress } from '@/utils/authSessionLifecycle';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
@@ -45,7 +45,7 @@ const LoginContent = () => {
   }, [emailVerification]);
 
   useEffect(() => {
-    if (!loading && user && hasAuthenticatedTabSession()) {
+    if (!loading && user && (hasAuthenticatedTabSession() || isAuthLoginInProgress())) {
       markInternalNavigation();
       router.replace(redirectUrl);
     }
@@ -72,9 +72,11 @@ const LoginContent = () => {
       const result = await AccountIntegrationManager.unifiedSignIn(email, password);
 
       if (result.success && result.user) {
+        beginAuthLoginAttempt();
         primeFirebaseAuthSessionCache(result.user);
         markInternalNavigation();
         router.replace(redirectUrl);
+        window.setTimeout(() => endAuthLoginAttempt(), 3000);
       } else {
         setLoginError(result.error || '로그인 처리 중 오류가 발생했습니다.');
       }

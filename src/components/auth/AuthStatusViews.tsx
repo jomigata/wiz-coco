@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { buildLoginRedirectUrl } from '@/lib/authRedirect';
-import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
+import {
+  isAuthLoginInProgress,
+  replaceWithAuthSession,
+  tryRestoreAuthenticatedTabSession,
+} from '@/utils/authSessionLifecycle';
 
 type AuthLoadingProps = {
   message?: string;
@@ -49,9 +53,17 @@ export function AuthRequiredState({
 
   useEffect(() => {
     if (!autoRedirect) return;
-    const target =
-      loginHref === '/login' ? buildLoginRedirectUrl() : loginHref;
-    replaceWithAuthSession(router, target);
+    if (isAuthLoginInProgress()) return;
+
+    const timer = window.setTimeout(() => {
+      if (isAuthLoginInProgress()) return;
+      tryRestoreAuthenticatedTabSession();
+      const target =
+        loginHref === '/login' ? buildLoginRedirectUrl() : loginHref;
+      replaceWithAuthSession(router, target);
+    }, 400);
+
+    return () => window.clearTimeout(timer);
   }, [autoRedirect, loginHref, router]);
 
   if (autoRedirect) {

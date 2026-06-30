@@ -2,9 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { pushWithAuthSession, replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { buildLoginRedirectUrl } from '@/lib/authRedirect';
+import {
+  isAuthLoginInProgress,
+  pushWithAuthSession,
+  replaceWithAuthSession,
+  tryRestoreAuthenticatedTabSession,
+} from '@/utils/authSessionLifecycle';
 import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
 
 interface RoleGuardProps {
@@ -14,11 +19,11 @@ interface RoleGuardProps {
   redirectTo?: string;
 }
 
-export default function RoleGuard({ 
-  children, 
-  allowedRoles, 
+export default function RoleGuard({
+  children,
+  allowedRoles,
   fallback,
-  redirectTo = '/' 
+  redirectTo = '/',
 }: RoleGuardProps) {
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const router = useRouter();
@@ -31,8 +36,16 @@ export default function RoleGuard({
     if (showLoginRequired || !user) {
       setIsAuthorized(false);
       setIsChecking(false);
-      replaceWithAuthSession(router, buildLoginRedirectUrl());
-      return;
+
+      if (isAuthLoginInProgress()) return;
+
+      tryRestoreAuthenticatedTabSession();
+      const timer = window.setTimeout(() => {
+        if (isAuthLoginInProgress()) return;
+        replaceWithAuthSession(router, buildLoginRedirectUrl());
+      }, 400);
+
+      return () => window.clearTimeout(timer);
     }
 
     const role = user.role || 'user';
@@ -47,7 +60,7 @@ export default function RoleGuard({
     setIsAuthorized(hasAccess);
     setIsChecking(false);
 
-    if (!hasAccess && !authPending) {
+    if (!hasAccess) {
       pushWithAuthSession(router, redirectTo);
     }
   }, [user, authPending, showLoginRequired, allowedRoles, router, redirectTo]);
