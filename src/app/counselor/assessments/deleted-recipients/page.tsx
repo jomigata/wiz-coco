@@ -106,11 +106,16 @@ export default function DeletedRecipientsPage() {
     return <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />;
   }
 
+  const backHref = filterAssessmentId
+    ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(filterAssessmentId)}`
+    : '/counselor/assessments';
+  const backLabel = filterAssessmentId ? '← 진행현황' : '← 검사코드 목록';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
-        <AuthLink href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
-          ← 검사코드 목록
+        <AuthLink href={backHref} className="text-slate-400 hover:text-white text-sm">
+          {backLabel}
         </AuthLink>
         <h1 className="text-2xl font-bold text-white">삭제된 검사자 목록</h1>
       </div>

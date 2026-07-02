@@ -157,10 +157,59 @@ export function printDispatchRecipients(
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'noopener,noreferrer');
-  if (!win) return;
-  win.document.write(html);
-  win.document.close();
+  printHtmlDocument(html);
+}
+
+function printHtmlDocument(html: string): void {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win) {
+    URL.revokeObjectURL(url);
+    printHtmlViaIframe(html);
+    return;
+  }
+
+  const revoke = () => URL.revokeObjectURL(url);
+  const triggerPrint = () => {
+    try {
+      win.focus();
+      win.print();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  win.addEventListener('load', triggerPrint, { once: true });
+  win.addEventListener('beforeunload', revoke, { once: true });
+  setTimeout(revoke, 120_000);
+}
+
+function printHtmlViaIframe(html: string): void {
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('title', '발송 및 검사 현황 인쇄');
+  iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+  if (!doc) {
+    iframe.remove();
+    return;
+  }
+
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  const win = iframe.contentWindow;
+  if (!win) {
+    iframe.remove();
+    return;
+  }
+
+  const cleanup = () => iframe.remove();
+  win.addEventListener('afterprint', cleanup, { once: true });
+  setTimeout(cleanup, 120_000);
   win.focus();
   win.print();
 }
