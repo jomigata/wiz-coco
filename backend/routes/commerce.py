@@ -15,7 +15,7 @@ from config import (
 )
 from data.commerce_products import get_product, public_catalog
 from utils.counselor_credits import get_balance, grant_credits, list_ledger
-from utils.commerce_orders import create_pending_order, get_order, mark_order_paid
+from utils.commerce_orders import create_pending_order, get_order, mark_order_paid, order_buyer_uid
 from utils.toss_payments import (
     confirm_payment,
     is_toss_configured,
@@ -56,8 +56,8 @@ def _complete_order_flow(
     order = get_order(db, order_id)
     if not order:
         raise ValueError("order_not_found")
-    if order.get("counselorUid") != actor_uid and actor_uid:
-        pass  # webhook uses order owner
+    if order_buyer_uid(order) != actor_uid and actor_uid:
+        raise ValueError("forbidden")
     expected_amount = int(order.get("amount") or 0)
     if order.get("status") != "paid":
         mark_order_paid(
@@ -73,7 +73,7 @@ def _complete_order_flow(
         payment_key=payment_key,
         payment_method=payment_method,
         provider=provider,
-        actor_uid=actor_uid or order.get("counselorUid"),
+        actor_uid=actor_uid or order_buyer_uid(order),
     )
     return fulfillment
 
@@ -84,7 +84,7 @@ def get_catalog():
         {
             "pilotFreeCredits": PILOT_FREE_CREDITS,
             "channels": ["b2b2c", "b2b", "b2c"],
-            "products": public_catalog(),
+            "products": public_catalog("b2b2c"),
             "creditUnit": "1 credit = 1 client portal (one recipient)",
             "payments": {
                 "tossConfigured": is_toss_configured(),
@@ -200,8 +200,11 @@ def checkout_prepare():
     if not product:
         return jsonify({"error": "Bad Request", "message": "유효하지 않은 상품입니다."}), 400
 
+    if product.channel != "b2b2c":
+        return jsonify({"error": "Bad Request", "message": "상담사 상품만 구매할 수 있습니다."}), 400
+
     db = get_firestore()
-    order = create_pending_order(db, counselor_uid=g.counselor_uid, product=product)
+    order = create_pending_order(db, buyer_uid=g.counselor_uid, product=product, channel="b2b2c")
     return jsonify(
         {
             "ok": True,
@@ -235,7 +238,7 @@ def checkout_confirm():
     order = get_order(db, order_id)
     if not order:
         return jsonify({"error": "Not Found", "message": "주문을 찾을 수 없습니다."}), 404
-    if order.get("counselorUid") != g.counselor_uid:
+    if order_buyer_uid(order) != g.counselor_uid:
         return jsonify({"error": "Forbidden", "message": "본인 주문만 결제할 수 있습니다."}), 403
     if int(order.get("amount") or 0) != amount:
         return jsonify({"error": "Bad Request", "message": "결제 금액이 일치하지 않습니다."}), 400
@@ -283,7 +286,7 @@ def checkout_mock_complete():
     order = get_order(db, order_id)
     if not order:
         return jsonify({"error": "Not Found", "message": "주문을 찾을 수 없습니다."}), 404
-    if order.get("counselorUid") != g.counselor_uid:
+    if order_buyer_uid(order) != g.counselor_uid:
         return jsonify({"error": "Forbidden", "message": "본인 주문만 결제할 수 있습니다."}), 403
 
     mock_key = f"mock_{order_id}"
@@ -343,7 +346,7 @@ def toss_webhook():
             payment_key=payment_key,
             payment_method=event.get("method") or "toss",
             provider="toss",
-            actor_uid=order.get("counselorUid"),
+            actor_uid=order_buyer_uid(order),
         )
     except Exception as exc:
         logger.exception("Webhook fulfillment failed orderId=%s", order_id)

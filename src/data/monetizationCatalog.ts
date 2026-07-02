@@ -119,6 +119,44 @@ export const orgMonetizationProducts: MonetizationProduct[] = [
 
 export const PILOT_FREE_CREDITS = 50;
 
+/** B2C Discover 개인 이용권 (4단계) */
+export const b2cMonetizationProducts: MonetizationProduct[] = [
+  {
+    id: 'b2c-basic',
+    channel: 'b2c',
+    name: 'Basic 리포트',
+    description: '미니 검사 후 요약·패턴 정리',
+    priceLabel: '5,000원',
+    priceNote: '1년 이용 · Discover 경로',
+    features: ['요약 PDF', '6문항 확장 해석', 'No-Name Policy'],
+    ctaLabel: '구매하기',
+    ctaHref: '/discover/shop/?tier=basic',
+  },
+  {
+    id: 'b2c-premium',
+    channel: 'b2c',
+    name: 'Premium 심층',
+    description: '스트레스·정서 패턴 심층 분석',
+    priceLabel: '15,000원',
+    priceNote: '1년 이용',
+    features: ['심층 리포트', '대처 전략 제안', 'Premium 등급 유지'],
+    highlighted: true,
+    ctaLabel: '구매하기',
+    ctaHref: '/discover/shop/?tier=premium',
+  },
+  {
+    id: 'b2c-pro',
+    channel: 'b2c',
+    name: 'Pro + 상담 연결',
+    description: '리포트 + 협회 상담사 매칭 (파일럿)',
+    priceLabel: '50,000원',
+    priceNote: '1년 · 상담 별도',
+    features: ['Pro 등급', '상담 연결 안내', '우선 지원'],
+    ctaLabel: '구매하기',
+    ctaHref: '/discover/shop/?tier=pro',
+  },
+];
+
 export const privacyTrustPoints = [
   {
     title: '회원가입 없이 시작',

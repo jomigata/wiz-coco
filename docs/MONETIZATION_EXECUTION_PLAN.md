@@ -80,12 +80,16 @@
 
 ## 4단계 — B2C·확장 (선택)
 
-| # | 작업 |
-|---|------|
-| 4.1 | Freemium 미니검사 1종 |
-| 4.2 | Basic/Premium/Pro 티어 결제 |
-| 4.3 | SNS 캠페인 (협회 브랜드와 분리 검토) |
-| 4.4 | API·화이트라벨 |
+| # | 작업 | 상태 |
+|---|------|------|
+| 4.1 | Freemium 미니검사 1종 | 완료 |
+| 4.2 | Basic/Premium/Pro 티어 결제 | 완료 |
+| 4.3 | SNS 캠페인 (협회 브랜드 분리) | 완료 (공유·UTM 파일럿) |
+| 4.4 | API·화이트라벨 | 완료 |
+
+경로: `/discover/`, `/discover/mini-check/`, `/discover/shop/`, `/admin/developer/`
+
+설정: [B2C_DISCOVER_SETUP.md](./B2C_DISCOVER_SETUP.md)
 
 ---
 
@@ -104,5 +108,6 @@
 ## 관련 파일
 
 - 가격 카탈로그: `src/data/monetizationCatalog.ts`
-- API: `backend/routes/commerce.py`, `backend/utils/counselor_credits.py`
+- API: `backend/routes/commerce.py`, `backend/routes/b2c.py`, `backend/routes/public_api.py`
+- B2C: `docs/B2C_DISCOVER_SETUP.md`, `src/lib/b2cApi.ts`, `src/app/discover/`
 - 프론트 API: `src/lib/commerceApi.ts`

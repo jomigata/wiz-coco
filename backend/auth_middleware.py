@@ -127,6 +127,19 @@ def require_admin(f):
     return decorated
 
 
+def require_auth(f):
+    """로그인 사용자 (B2C 결제 등)."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        uid = get_bearer_uid()
+        if not uid:
+            return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
+        from flask import g
+        g.auth_uid = uid
+        return f(*args, **kwargs)
+    return decorated
+
+
 def require_org_admin(f):
     """기관 담당자(org_admin) — organizationId·liaisonCounselorUid 설정."""
     @wraps(f)

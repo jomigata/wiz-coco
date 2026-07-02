@@ -16,6 +16,8 @@ from routes.join_flow import bp as join_flow_bp
 from routes.commerce import bp as commerce_bp
 from routes.admin_organizations import bp as admin_organizations_bp
 from routes.organizations import bp as organizations_bp
+from routes.b2c import bp as b2c_bp
+from routes.public_api import bp as public_api_bp, admin_bp as developer_admin_bp
 
 
 def create_app():
@@ -39,6 +41,9 @@ def create_app():
     app.register_blueprint(join_flow_bp)
     app.register_blueprint(commerce_bp)
     app.register_blueprint(organizations_bp)
+    app.register_blueprint(b2c_bp)
+    app.register_blueprint(public_api_bp)
+    app.register_blueprint(developer_admin_bp)
     app.register_blueprint(admin_organizations_bp)
 
     @app.route("/", methods=["GET"])
@@ -59,6 +64,11 @@ def create_app():
                 "/api/commerce/checkout",
                 "/api/commerce/webhooks/toss",
                 "/api/commerce/settlement",
+                "/api/b2c/catalog",
+                "/api/b2c/mini-check",
+                "/api/b2c/checkout",
+                "/api/v1/public/catalog",
+                "/api/admin/developer/api-keys",
             ],
         }
 

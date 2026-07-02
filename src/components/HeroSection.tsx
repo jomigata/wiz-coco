@@ -60,6 +60,12 @@ export default function HeroSection() {
               검사시작
             </Link>
             <Link
+              href="/discover/mini-check/"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold text-violet-100 border border-violet-400/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all"
+            >
+              무료 3분 체크
+            </Link>
+            <Link
               href="/partners/"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold text-white border border-white/25 hover:bg-white/10 transition-all"
             >

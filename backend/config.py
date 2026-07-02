@@ -74,6 +74,10 @@ ORGANIZATIONS_COLLECTION = "organizations"
 ORG_CREDITS_COLLECTION = "orgCredits"
 ORG_CREDIT_LEDGER_COLLECTION = "orgCreditLedger"
 
+# 4단계 — B2C · 공개 API
+B2C_ENTITLEMENTS_COLLECTION = "b2cEntitlements"
+API_KEYS_COLLECTION = "apiKeys"
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 

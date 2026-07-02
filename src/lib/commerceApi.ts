@@ -51,7 +51,9 @@ export interface CommerceProduct {
   name: string;
   amount: number;
   credits: number;
-  type: 'one_time' | 'subscription';
+  type: 'one_time' | 'subscription' | 'b2c_tier';
+  channel?: string;
+  entitlementTier?: string | null;
   planId?: string | null;
   overagePerCredit?: number | null;
 }
