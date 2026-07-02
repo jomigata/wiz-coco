@@ -4,10 +4,12 @@
  */
 
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { getCounselorToken } from '@/lib/counselorAuth';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 import { isJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
+import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 const FORCE_GUEST_ACCESS_CODE_KEY = 'wizcoco_force_guest_access_code';
 
@@ -54,33 +56,8 @@ const getBaseUrl = (): string => {
   return 'http://localhost:5000';
 };
 
-/** 상담사 API 호출 시 Firebase ID 토큰 반환. 로그인 안 되어 있으면 null */
-export async function getCounselorToken(): Promise<string | null> {
-  if (typeof window === 'undefined') return null;
-  try {
-    const { initializeFirebase } = await import('@/lib/firebase');
-    const { hasAuthenticatedTabSession } = await import('@/utils/authSessionLifecycle');
-    const { auth } = initializeFirebase();
-    if (!auth) return null;
-
-    await auth.authStateReady();
-
-    let user = auth.currentUser;
-    if (!user && hasAuthenticatedTabSession()) {
-      // 정적 페이지 이동 직후 Firebase persistence 복원 대기
-      for (let i = 0; i < 5 && !user; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 120));
-        await auth.authStateReady();
-        user = auth.currentUser;
-      }
-    }
-
-    if (!user) return null;
-    return await user.getIdToken();
-  } catch {
-    return null;
-  }
-}
+/** @deprecated import from @/lib/counselorAuth */
+export { getCounselorToken } from '@/lib/counselorAuth';
 
 /** 결과 API — 포털 세션 우선, 이후 참여·게스트 (accessCode 와 일치하는 세션만 사용) */
 export async function getClientResultAuthHeaders(
@@ -536,6 +513,18 @@ export async function deleteAssessment(assessmentId: string): Promise<void> {
 }
 
 /** GET /api/assessments - 상담사: 내 검사코드 목록 */
+const ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
+const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 5 * 60 * 1000;
+
+export function readCachedAssessmentsList(): CounselorAssessment[] | null {
+  if (typeof window === 'undefined') return null;
+  const cached = readSWRCache<{ assessments: CounselorAssessment[] }>(ASSESSMENTS_LIST_CACHE_KEY, {
+    scope: 'session',
+    maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
+  });
+  return cached.data?.assessments ?? null;
+}
+
 export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
@@ -546,7 +535,9 @@ export async function listAssessments(): Promise<{ assessments: CounselorAssessm
   if (!res.ok) {
     throw new Error(data?.message || data?.error || '목록 조회에 실패했습니다.');
   }
-  return data;
+  const payload = data as { assessments: CounselorAssessment[] };
+  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, payload, { scope: 'session' });
+  return payload;
 }
 
 /** GET /api/assessments/:id/progress - 상담사: 해당 검사코드 진행 현황 */

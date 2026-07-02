@@ -16,38 +16,87 @@ from utils.portal_magic import create_portal_magic_link_token
 
 
 def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
+    """포털별 최신 알림 — portalId IN 배치 쿼리 (N+1 방지)."""
     if not portal_ids:
         return {}
     out: dict[str, dict] = {}
-    for pid in portal_ids:
+    ids_list = list(portal_ids)
+    chunk_size = 30
+    for i in range(0, len(ids_list), chunk_size):
+        chunk = ids_list[i : i + chunk_size]
         refs = (
             db.collection(NOTIFICATION_QUEUE_COLLECTION)
-            .where("portalId", "==", pid)
-            .limit(20)
+            .where("portalId", "in", chunk)
             .stream()
         )
-        latest = None
         for doc in refs:
             data = doc.to_dict() or {}
+            pid = (data.get("portalId") or "").strip()
+            if not pid:
+                continue
+            latest = out.get(pid)
             if latest is None:
-                latest = data
+                out[pid] = {
+                    "status": (data.get("status") or "pending").strip(),
+                    "error": data.get("error"),
+                    "sentVia": data.get("sentVia"),
+                    "processedAt": _iso_timestamp(data.get("processedAt")),
+                    "createdAt": _iso_timestamp(data.get("createdAt")),
+                    "_createdAtRaw": data.get("createdAt"),
+                }
                 continue
             ca = data.get("createdAt")
-            la = latest.get("createdAt")
+            la = latest.get("_createdAtRaw")
             if ca and la and hasattr(ca, "timestamp") and hasattr(la, "timestamp"):
                 if ca.timestamp() > la.timestamp():
-                    latest = data
+                    replace = True
+                else:
+                    replace = False
             elif ca and not la:
-                latest = data
-        if latest:
-            out[pid] = {
-                "status": (latest.get("status") or "pending").strip(),
-                "error": latest.get("error"),
-                "sentVia": latest.get("sentVia"),
-                "processedAt": _iso_timestamp(latest.get("processedAt")),
-                "createdAt": _iso_timestamp(latest.get("createdAt")),
-            }
+                replace = True
+            else:
+                replace = False
+            if replace:
+                out[pid] = {
+                    "status": (data.get("status") or "pending").strip(),
+                    "error": data.get("error"),
+                    "sentVia": data.get("sentVia"),
+                    "processedAt": _iso_timestamp(data.get("processedAt")),
+                    "createdAt": _iso_timestamp(data.get("createdAt")),
+                    "_createdAtRaw": ca,
+                }
+    for pid in list(out.keys()):
+        out[pid].pop("_createdAtRaw", None)
     return out
+
+
+def _bulk_completed_tests_by_portal_assessment(
+    db, portal_ids: list[str], assessment_ids: set[str]
+) -> dict[tuple[str, str], set[str]]:
+    """(portalId, assessmentId) → 완료된 testId 집합 — portalId IN 배치 쿼리."""
+    result: dict[tuple[str, str], set[str]] = {}
+    if not portal_ids or not assessment_ids:
+        return result
+    chunk_size = 30
+    for i in range(0, len(portal_ids), chunk_size):
+        chunk = portal_ids[i : i + chunk_size]
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("portalId", "in", chunk)
+            .stream()
+        )
+        for doc in refs:
+            d = doc.to_dict() or {}
+            if (d.get("status") or "").strip() != "completed":
+                continue
+            pid = (d.get("portalId") or "").strip()
+            aid = (d.get("assessmentId") or "").strip()
+            tid = str(d.get("testId") or "").strip()
+            if not pid or not aid or not tid or aid not in assessment_ids:
+                continue
+            key = (pid, aid)
+            result.setdefault(key, set()).add(tid)
+    return result
 
 
 def _resolve_notify_at(notify: dict, pdata: dict, status: str) -> str | None:
@@ -224,6 +273,11 @@ def aggregate_assessment_list_stats(
 
     portal_ids = {row[0] for row in portal_rows}
     notify_map = _latest_notify_by_portal(db, portal_ids)
+    all_assessment_ids = set(stats.keys())
+    portal_id_list = [row[0] for row in portal_rows]
+    completion_map = _bulk_completed_tests_by_portal_assessment(
+        db, portal_id_list, all_assessment_ids
+    )
 
     for portal_id, pdata, assigned in portal_rows:
         notify = notify_map.get(portal_id) or {}
@@ -240,8 +294,8 @@ def aggregate_assessment_list_stats(
                 stats[aid]["dispatchFailedCount"] += 1
 
             required = required_by_assessment.get(aid, set())
-            test_info = _test_status_for_portal(db, portal_id, aid, required)
-            if test_info.get("testStatus") == "completed":
+            completed = completion_map.get((portal_id, aid), set())
+            if required and required <= completed:
                 stats[aid]["testCompleteCount"] += 1
             else:
                 stats[aid]["testIncompleteCount"] += 1

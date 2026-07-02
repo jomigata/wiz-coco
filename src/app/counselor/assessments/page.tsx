@@ -8,14 +8,17 @@ import { isLoginRequiredError } from '@/lib/authRedirect';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   listAssessments,
+  readCachedAssessmentsList,
   type CounselorAssessment,
   type CreatedAssessmentBannerInfo,
 } from '@/lib/assessmentApi';
 
 export default function AssessmentListPage() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
-  const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assessments, setAssessments] = useState<CounselorAssessment[]>(
+    () => readCachedAssessmentsList() ?? [],
+  );
+  const [loading, setLoading] = useState(() => !readCachedAssessmentsList()?.length);
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
 
@@ -50,7 +53,8 @@ export default function AssessmentListPage() {
       return;
     }
     let cancelled = false;
-    setLoading(true);
+    const hasCache = assessments.length > 0;
+    if (!hasCache) setLoading(true);
     setError('');
     listAssessments()
       .then((data) => {
@@ -69,9 +73,11 @@ export default function AssessmentListPage() {
 
   useRedirectOnLoginRequiredError(error);
 
+  const showInitialLoader = authPending || (loading && assessments.length === 0);
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {authPending || (user && loading) ? (
+      {showInitialLoader ? (
         <AuthLoadingState />
       ) : showLoginRequired || (error && isLoginRequiredError(error)) ? (
         <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />

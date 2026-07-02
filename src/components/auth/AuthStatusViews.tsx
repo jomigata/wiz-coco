@@ -61,7 +61,7 @@ export function AuthRequiredState({
       const target =
         loginHref === '/login' ? buildLoginRedirectUrl() : loginHref;
       replaceWithAuthSession(router, target);
-    }, 400);
+    }, 150);
 
     return () => window.clearTimeout(timer);
   }, [autoRedirect, loginHref, router]);

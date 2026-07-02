@@ -34,10 +34,13 @@ import {
   touchAuthHeartbeat,
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
+import { primeCounselorIdToken, clearCounselorIdTokenCache } from '@/lib/counselorAuth';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
 const AUTH_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
 const LOGOUT_DEFER_MS = 120;
+const LOADING_SAFETY_MS = 2000;
+const LOGIN_LOGOUT_DEFER_MS = 400;
 
 const getFlaskApiBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) return process.env.NEXT_PUBLIC_FLASK_API_URL;
@@ -102,6 +105,7 @@ function readCachedAuthUser(): AuthUser | null {
 export function primeFirebaseAuthSessionCache(firebaseUser: FirebaseSdkUser): void {
   markAuthenticatedTabSession();
   writeSWRCache(AUTH_CACHE_KEY, authUserFromSdkUser(firebaseUser), { scope: 'session' });
+  void firebaseUser.getIdToken().then((token) => primeCounselorIdToken(token)).catch(() => null);
 }
 
 type FirebaseAuthContextValue = {
@@ -130,12 +134,19 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     authExpiredOnStartupRef.current = evaluateAuthSessionOnStartup();
     if (authExpiredOnStartupRef.current) {
       setUser(null);
+      setLoading(false);
       return;
     }
 
     const primed = readCachedAuthUser();
     if (primed) {
       setUser((prev) => prev ?? primed);
+      setLoading(false);
+      return;
+    }
+
+    if (isAuthLoginInProgress() && hasAuthenticatedTabSession()) {
+      setLoading(false);
     }
   }, []);
 
@@ -190,36 +201,43 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(quickUser);
       writeSWRCache(AUTH_CACHE_KEY, quickUser, { scope: 'session' });
       finishLoading();
+      void firebaseUser.getIdToken().then((token) => primeCounselorIdToken(token)).catch(() => null);
 
       if (!db) return;
 
       void (async () => {
         try {
           let resolvedRole = quickRole;
-          try {
-            const token = await firebaseUser.getIdToken();
+          const tokenPromise = firebaseUser.getIdToken();
+          const ref = doc(db, 'users', firebaseUser.uid);
+          const snapPromise = getDoc(ref);
+
+          const roleFromApiPromise = tokenPromise.then(async (token) => {
             const baseUrl = getFlaskApiBaseUrl();
             const headers = { Authorization: `Bearer ${token}` };
             void fetch(`${baseUrl}/api/auth/link-legacy-data`, {
               method: 'POST',
               headers,
             }).catch(() => null);
-            const bootstrapRes = await fetch(`${baseUrl}/api/auth/bootstrap-role`, {
-              method: 'POST',
-              headers,
-            });
-            if (bootstrapRes.ok) {
-              const boot = (await bootstrapRes.json().catch(() => ({}))) as { role?: AppRole };
-              if (boot.role === 'admin' || boot.role === 'counselor' || boot.role === 'user') {
-                resolvedRole = boot.role;
+            try {
+              const bootstrapRes = await fetch(`${baseUrl}/api/auth/bootstrap-role`, {
+                method: 'POST',
+                headers,
+              });
+              if (bootstrapRes.ok) {
+                const boot = (await bootstrapRes.json().catch(() => ({}))) as { role?: AppRole };
+                if (boot.role === 'admin' || boot.role === 'counselor' || boot.role === 'user') {
+                  return boot.role;
+                }
               }
+            } catch {
+              // ignore
             }
-          } catch {
-            // ignore
-          }
+            return quickRole;
+          });
 
-          const ref = doc(db, 'users', firebaseUser.uid);
-          const snap = await getDoc(ref);
+          const [snap, roleFromApi] = await Promise.all([snapPromise, roleFromApiPromise]);
+          resolvedRole = roleFromApi;
           if (!snap.exists()) {
             await setDoc(
               ref,
@@ -271,7 +289,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
     const scheduleLogoutCheck = () => {
       if (deferredLogoutTimer) clearTimeout(deferredLogoutTimer);
-      const deferMs = isAuthLoginInProgress() ? 10_000 : LOGOUT_DEFER_MS;
+      const loginGrace =
+        isAuthLoginInProgress() && (hasAuthenticatedTabSession() || Boolean(readCachedAuthUser()));
+      const deferMs = loginGrace ? LOGIN_LOGOUT_DEFER_MS : LOGOUT_DEFER_MS;
       deferredLogoutTimer = setTimeout(async () => {
         deferredLogoutTimer = null;
         if (cancelled) return;
@@ -298,17 +318,39 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
         setUser(null);
         writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+        clearCounselorIdTokenCache();
         finishLoading();
       }, deferMs);
     };
 
     const loadingSafetyTimer = setTimeout(() => {
       if (!cancelled) finishLoading();
-    }, 8000);
+    }, LOADING_SAFETY_MS);
 
     const unsubscribeAuthClear = subscribeAuthClearEvents(() => {
       setUser(null);
       writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+      clearCounselorIdTokenCache();
+    });
+
+    unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
+          if (authExpiredOnStartupRef.current) {
+            void clearAllAuthStorage().then(() => {
+              setUser(null);
+              writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+              clearCounselorIdTokenCache();
+              finishLoading();
+            });
+            return;
+          }
+          tryRestoreAuthenticatedTabSession();
+        }
+        void applyFirebaseUser(firebaseUser);
+        return;
+      }
+      scheduleLogoutCheck();
     });
 
     void (async () => {
@@ -329,29 +371,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           }
         }
         writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+        clearCounselorIdTokenCache();
         setUser(null);
+        finishLoading();
       }
-
-      if (cancelled) return;
-
-      unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-        if (firebaseUser) {
-          if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
-            if (authExpiredOnStartupRef.current) {
-              void clearAllAuthStorage().then(() => {
-                setUser(null);
-                writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
-                finishLoading();
-              });
-              return;
-            }
-            tryRestoreAuthenticatedTabSession();
-          }
-          void applyFirebaseUser(firebaseUser);
-          return;
-        }
-        scheduleLogoutCheck();
-      });
     })();
 
     return () => {
@@ -394,6 +417,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       await clearAllAuthStorage({ fullReset: true });
       setUser(null);
       writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+      clearCounselorIdTokenCache();
       return { success: true };
     } catch (error: unknown) {
       return { success: false, error: error instanceof Error ? error.message : String(error) };

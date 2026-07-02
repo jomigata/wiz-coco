@@ -26,7 +26,7 @@ export function useRequireLoginRedirect(enabled = true): void {
       if (redirectedRef.current) return;
       redirectedRef.current = true;
       replaceWithAuthSession(router, buildLoginRedirectUrl());
-    }, 400);
+    }, 150);
 
     return () => window.clearTimeout(timer);
   }, [enabled, authPending, showLoginRequired, router]);
@@ -48,7 +48,7 @@ export function useRedirectOnLoginRequiredError(error: string, enabled = true): 
       if (redirectedRef.current) return;
       redirectedRef.current = true;
       replaceWithAuthSession(router, buildLoginRedirectUrl());
-    }, 400);
+    }, 150);
 
     return () => window.clearTimeout(timer);
   }, [enabled, authPending, error, router]);

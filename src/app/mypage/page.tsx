@@ -332,15 +332,6 @@ function MyPageContent() {
         return;
       }
 
-      const { auth: authed } = initializeFirebase();
-      if (authed && typeof authed.authStateReady === 'function') {
-        await authed.authStateReady();
-      }
-
-      if (!firebaseUser && authed?.currentUser) {
-        return;
-      }
-
       if (firebaseUser) {
         const userData: User = {
           id: firebaseUser.uid,

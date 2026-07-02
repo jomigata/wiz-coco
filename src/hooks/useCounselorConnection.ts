@@ -51,10 +51,7 @@ export const useCounselorConnection = () => {
         setLoading(false);
       }
     }
-    const t = setTimeout(() => {
-      void checkConnection();
-    }, 1200);
-    return () => clearTimeout(t);
+    void checkConnection();
   }, [user?.uid]);
 
   return {
