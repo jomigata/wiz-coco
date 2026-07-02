@@ -133,6 +133,7 @@ function applyAssessmentToForm(a: CounselorAssessment, setters: {
 export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scheduledInputRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
@@ -268,6 +269,28 @@ export default function IndividualAssessmentCreateForm() {
     !loading &&
     !activeJobId &&
     recipients.length <= GROUP_RECIPIENT_MAX;
+
+  const minScheduledLocal = useMemo(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 1);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }, []);
+
+  const openScheduledPicker = () => {
+    const el = scheduledInputRef.current;
+    if (!el || loading) return;
+    if (typeof el.showPicker === 'function') {
+      try {
+        el.showPicker();
+        return;
+      } catch {
+        /* fall through */
+      }
+    }
+    el.focus();
+    el.click();
+  };
 
   const toggleTest = (testId: string) => {
     if (usingExisting) return;
@@ -867,13 +890,46 @@ export default function IndividualAssessmentCreateForm() {
                   </label>
                 </div>
                 {notifyTiming === 'scheduled' ? (
-                  <input
-                    type="datetime-local"
-                    value={scheduledAtLocal}
-                    onChange={(e) => setScheduledAtLocal(e.target.value)}
-                    disabled={loading}
-                    className={`${FORM_INPUT} text-xs`}
-                  />
+                  <div>
+                    <label htmlFor="scheduled-at-local" className="mb-1 block text-[11px] text-slate-500">
+                      예약 일시
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={openScheduledPicker}
+                        disabled={loading}
+                        className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label="예약 일시 달력 열기"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      <input
+                        id="scheduled-at-local"
+                        ref={scheduledInputRef}
+                        type="datetime-local"
+                        value={scheduledAtLocal}
+                        min={minScheduledLocal}
+                        onChange={(e) => setScheduledAtLocal(e.target.value)}
+                        onClick={openScheduledPicker}
+                        disabled={loading}
+                        className={`${FORM_INPUT} w-full py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                      />
+                    </div>
+                  </div>
                 ) : null}
               </div>
             ) : (
