@@ -119,14 +119,14 @@ export function printDispatchRecipients(
     .map(
       (r, i) => `
     <tr>
-      <td class="col-no">${i + 1}</td>
-      <td class="col-clamp">${escapeHtml(r.displayName || '—')}</td>
-      <td class="col-clamp">${escapeHtml(r.email || '—')}</td>
-      <td class="col-nowrap">${escapeHtml(formatPhoneDisplay(r.phone || '') || '—')}</td>
-      <td class="col-nowrap">${escapeHtml(r.myCode || '—')}</td>
-      <td class="col-nowrap">${escapeHtml(formatNotifyDate(r.notifyAt) || '—')}</td>
-      <td class="col-nowrap">${escapeHtml(testStatusText(r))}</td>
-      <td class="col-remarks"></td>
+      <td class="col-no"><span class="cell-1">${i + 1}</span></td>
+      <td class="col-name"><span class="cell-1">${escapeHtml(r.displayName || '—')}</span></td>
+      <td class="col-email"><span class="cell-2">${escapeHtml(r.email || '—')}</span></td>
+      <td class="col-phone"><span class="cell-1">${escapeHtml(formatPhoneDisplay(r.phone || '') || '—')}</span></td>
+      <td class="col-code"><span class="cell-1">${escapeHtml(r.myCode || '—')}</span></td>
+      <td class="col-date"><span class="cell-1">${escapeHtml(formatNotifyDate(r.notifyAt) || '—')}</span></td>
+      <td class="col-status"><span class="cell-1">${escapeHtml(testStatusText(r))}</span></td>
+      <td class="col-remarks"><span class="cell-remarks">&nbsp;</span></td>
     </tr>`,
     )
     .join('');
@@ -137,27 +137,48 @@ export function printDispatchRecipients(
   <meta charset="utf-8" />
   <title>검사 현황</title>
   <style>
+    * { box-sizing: border-box; }
     body { font-family: 'Malgun Gothic', sans-serif; font-size: 11px; padding: 12px; color: #111; }
     h1 { font-size: 15px; margin: 0 0 6px; }
     .meta { margin-bottom: 10px; color: #444; line-height: 1.5; font-size: 11px; }
     table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-    th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; vertical-align: middle; }
-    th { background: #f0f0f0; font-size: 10px; white-space: nowrap; }
-    .col-no { width: 4%; text-align: center; }
-    .col-nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .col-clamp {
+    th, td {
+      border: 1px solid #666;
+      padding: 4px 5px;
+      text-align: left;
+      vertical-align: middle;
       overflow: hidden;
+    }
+    th { background: #f0f0f0; font-size: 10px; font-weight: 600; white-space: nowrap; }
+    th.col-no, td.col-no { text-align: center; }
+    .cell-1 {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.35;
+    }
+    .cell-2 {
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
+      overflow: hidden;
       word-break: break-all;
       line-height: 1.35;
       max-height: 2.7em;
     }
-    th.col-remarks, td.col-remarks { width: 7%; min-width: 2.5rem; }
+    .cell-remarks {
+      display: block;
+      min-height: 1.35em;
+      line-height: 1.35;
+    }
+    td.col-remarks, th.col-remarks {
+      border: 1px solid #666;
+    }
     @media print {
       body { padding: 0; }
       @page { margin: 12mm; }
+      th, td { border-color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
@@ -170,15 +191,25 @@ export function printDispatchRecipients(
     <div>출력: ${escapeHtml(new Date().toLocaleString('ko-KR'))} · ${recipients.length}명</div>
   </div>
   <table>
+    <colgroup>
+      <col style="width:4%" />
+      <col style="width:9%" />
+      <col style="width:24%" />
+      <col style="width:12%" />
+      <col style="width:9%" />
+      <col style="width:11%" />
+      <col style="width:11%" />
+      <col style="width:8%" />
+    </colgroup>
     <thead>
       <tr>
         <th class="col-no">No.</th>
-        <th>이름</th>
-        <th>이메일</th>
-        <th>휴대폰</th>
-        <th>나의코드</th>
-        <th>발송일</th>
-        <th>검사</th>
+        <th class="col-name">이름</th>
+        <th class="col-email">이메일</th>
+        <th class="col-phone">휴대폰</th>
+        <th class="col-code">나의코드</th>
+        <th class="col-date">발송일</th>
+        <th class="col-status">검사현황</th>
         <th class="col-remarks">비고</th>
       </tr>
     </thead>
