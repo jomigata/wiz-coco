@@ -14,6 +14,8 @@ from routes.notifications import bp as notifications_bp
 from routes.admin_maintenance import bp as admin_maintenance_bp
 from routes.join_flow import bp as join_flow_bp
 from routes.commerce import bp as commerce_bp
+from routes.admin_organizations import bp as admin_organizations_bp
+from routes.organizations import bp as organizations_bp
 
 
 def create_app():
@@ -36,6 +38,8 @@ def create_app():
     app.register_blueprint(admin_maintenance_bp)
     app.register_blueprint(join_flow_bp)
     app.register_blueprint(commerce_bp)
+    app.register_blueprint(organizations_bp)
+    app.register_blueprint(admin_organizations_bp)
 
     @app.route("/", methods=["GET"])
     def root():

@@ -50,7 +50,7 @@ def bootstrap_role():
         )
         return jsonify({"uid": uid, "role": desired, "upgraded": True}), 200
 
-    if role in ("admin", "counselor", "user"):
+    if role in ("admin", "counselor", "user", "org_admin"):
         return jsonify({"uid": uid, "role": role}), 200
 
     bootstrap_role_value = desired or "user"

@@ -41,6 +41,8 @@ def prepare_bulk_assessment(
     existing_assessment_id: str,
     cohort_id: str,
     cohort_name: str = "",
+    organization_id: str = "",
+    prepaid_by_org: bool = False,
 ) -> tuple[str, str, str]:
     """Returns (assessment_id, join_access_code, cohort_id)."""
     if existing_assessment_id:
@@ -77,6 +79,11 @@ def prepare_bulk_assessment(
             "status": "active",
             "clientPortalCohortId": cohort_id,
             "cohortName": cohort_name,
+            **(
+                {"organizationId": organization_id, "prepaidByOrg": True}
+                if organization_id
+                else {}
+            ),
         }
     )
     return assessment_ref.id, join_access_code, cohort_id
@@ -135,6 +142,7 @@ def create_portal_for_row(
     bulk_job_id: str,
     create_magic_link: Callable[[str, str], str],
     immediate_notify: bool = False,
+    organization_id: str = "",
 ) -> tuple[dict, bool, int, int]:
     """Returns (created_row_dict, notify_queued, notify_sent, notify_failed)."""
     display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
@@ -146,22 +154,24 @@ def create_portal_for_row(
     pin_hash = hash_password(pin)
 
     portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document()
-    portal_ref.set(
-        {
-            "accessCode": portal_access_code,
-            "pinHash": pin_hash,
-            "counselorId": counselor_uid,
-            "displayName": display_name,
-            "email": email,
-            "phone": phone,
-            "cohortId": cohort_id,
-            "cohortName": cohort_name,
-            "assignedAssessmentIds": [assessment_ref_id],
-            "status": "active",
-            "createdAt": SERVER_TIMESTAMP,
-            "bulkJobId": bulk_job_id or None,
-        }
-    )
+    portal_payload = {
+        "accessCode": portal_access_code,
+        "pinHash": pin_hash,
+        "counselorId": counselor_uid,
+        "displayName": display_name,
+        "email": email,
+        "phone": phone,
+        "cohortId": cohort_id,
+        "cohortName": cohort_name,
+        "assignedAssessmentIds": [assessment_ref_id],
+        "status": "active",
+        "createdAt": SERVER_TIMESTAMP,
+        "bulkJobId": bulk_job_id or None,
+    }
+    if organization_id:
+        portal_payload["organizationId"] = organization_id
+        portal_payload["prepaidByOrg"] = True
+    portal_ref.set(portal_payload)
 
     magic = create_magic_link(portal_ref.id, portal_access_code)
     magic_path = f"/go?t={magic}"
@@ -236,28 +246,30 @@ def create_bulk_job(
     rows: list,
     queue_notify: bool,
     scheduled_at_iso: str,
+    organization_id: str = "",
 ) -> str:
     job_ref = db.collection(BULK_PORTAL_JOBS_COLLECTION).document()
-    job_ref.set(
-        {
-            "counselorId": counselor_uid,
-            "status": "pending",
-            "totalRows": len(rows),
-            "processedRows": 0,
-            "createdCount": 0,
-            "notifyQueued": 0,
-            "cohortId": cohort_id,
-            "cohortName": cohort_name,
-            "assessmentId": assessment_id,
-            "joinAccessCode": join_access_code,
-            "queueNotify": queue_notify,
-            "scheduledAt": scheduled_at_iso or None,
-            "inputRows": rows,
-            "error": None,
-            "createdAt": SERVER_TIMESTAMP,
-            "updatedAt": SERVER_TIMESTAMP,
-        }
-    )
+    payload = {
+        "counselorId": counselor_uid,
+        "status": "pending",
+        "totalRows": len(rows),
+        "processedRows": 0,
+        "createdCount": 0,
+        "notifyQueued": 0,
+        "cohortId": cohort_id,
+        "cohortName": cohort_name,
+        "assessmentId": assessment_id,
+        "joinAccessCode": join_access_code,
+        "queueNotify": queue_notify,
+        "scheduledAt": scheduled_at_iso or None,
+        "inputRows": rows,
+        "error": None,
+        "createdAt": SERVER_TIMESTAMP,
+        "updatedAt": SERVER_TIMESTAMP,
+    }
+    if organization_id:
+        payload["organizationId"] = organization_id
+    job_ref.set(payload)
     return job_ref.id
 
 
@@ -351,6 +363,7 @@ def process_bulk_job_batch(
     join_access_code = data.get("joinAccessCode") or ""
     queue_notify = bool(data.get("queueNotify"))
     scheduled_at_iso = (data.get("scheduledAt") or "").strip()
+    organization_id = (data.get("organizationId") or "").strip()
 
     processed_now = 0
     notify_queued_now = 0
@@ -378,6 +391,7 @@ def process_bulk_job_batch(
                 bulk_job_id=job_id,
                 create_magic_link=create_magic_link,
                 immediate_notify=False,
+                organization_id=organization_id,
             )
             _job_created_rows_ref(db, job_id).document(created["portalId"]).set(created)
             processed_now += 1

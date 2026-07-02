@@ -88,6 +88,12 @@ export const adminMenuCategories: TestCategory[] = [
             description: '상담사 파일럿 크레딧 지급·조회',
             icon: '💰',
           },
+          {
+            name: 'B2B 기관 관리',
+            href: '/admin/organizations',
+            description: '학교·기업 POC · org_admin · 선결제',
+            icon: '🏫',
+          },
         ],
       },
       {

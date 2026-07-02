@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
-import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu } from '@/utils/roleUtils';
+import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
@@ -224,6 +224,7 @@ export default function Navigation() {
   const showPsychologyTestsMenu = shouldShowPsychologyTestsMenu(userRole);
   const showCounselorMenu = shouldShowCounselorMenu(userRole);
   const showAdminMenu = shouldShowAdminMenu(userRole);
+  const showOrgMenu = shouldShowOrgMenu(userRole) && userRole === 'org_admin';
   const visibleAdminMenuItems = useMemo(
     () => withAdminMenuBadges(adminMenuCategories, pendingCounselorCount),
     [pendingCounselorCount]
@@ -690,6 +691,20 @@ export default function Navigation() {
               <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
                 {isLoggedIn ? (
                   <>
+                    {/* 기관(B2B) 메뉴 — org_admin */}
+                    {showOrgMenu && (
+                      <Link
+                        href="/org/dashboard/"
+                        className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center rounded-lg text-sm lg:text-[15px] font-semibold border-2 whitespace-nowrap ${
+                          activeItem.startsWith('/org/')
+                            ? 'text-white bg-emerald-700 border-white'
+                            : 'text-gray-300 hover:text-white border-transparent hover:border-white hover:bg-emerald-900/40'
+                        }`}
+                        onClick={(e) => handleNavLinkClick('/org/dashboard/', e)}
+                      >
+                        🏫 기관
+                      </Link>
+                    )}
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
                     {showCounselorMenu && (
                       <div ref={counselorTriggerRef} className="relative">

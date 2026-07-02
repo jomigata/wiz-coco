@@ -117,6 +117,7 @@ const AdminSetRole: React.FC<AdminSetRoleProps> = ({ defaultUid = '' }) => {
         >
           <option value="user">user</option>
           <option value="counselor">counselor</option>
+          <option value="org_admin">org_admin</option>
           <option value="admin">admin</option>
         </select>
       </div>

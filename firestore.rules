@@ -209,6 +209,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /organizations/{orgId} {
+      allow read, write: if false;
+    }
+
+    match /orgCredits/{orgId} {
+      allow read, write: if false;
+    }
+
+    match /orgCreditLedger/{entryId} {
+      allow read, write: if false;
+    }
+
     // 서버(Admin SDK) 전용 메타 — 클라이언트 직접 접근 차단
     match /system_meta/{docId} {
       allow read, write: if false;

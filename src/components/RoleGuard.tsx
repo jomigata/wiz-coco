@@ -10,11 +10,11 @@ import {
   replaceWithAuthSession,
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
-import { shouldShowCounselorMenu, shouldShowAdminMenu } from '@/utils/roleUtils';
+import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
 
 interface RoleGuardProps {
   children: React.ReactNode;
-  allowedRoles: ('counselor' | 'admin')[];
+  allowedRoles: ('counselor' | 'admin' | 'org_admin')[];
   fallback?: React.ReactNode;
   redirectTo?: string;
 }
@@ -54,6 +54,10 @@ export default function RoleGuard({
     if (allowedRoles.includes('admin') && shouldShowAdminMenu(role)) {
       hasAccess = true;
     } else if (allowedRoles.includes('counselor') && shouldShowCounselorMenu(role)) {
+      hasAccess = true;
+    } else if (allowedRoles.includes('org_admin') && shouldShowOrgMenu(role) && role === 'org_admin') {
+      hasAccess = true;
+    } else if (allowedRoles.includes('org_admin') && shouldShowAdminMenu(role)) {
       hasAccess = true;
     }
 

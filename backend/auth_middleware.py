@@ -6,7 +6,7 @@ from flask import request, jsonify
 
 from firebase_init import verify_id_token, verify_id_token_claims
 from firebase_init import get_firestore
-from config import USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS, BOOTSTRAP_COUNSELOR_EMAILS
+from config import ORGANIZATIONS_COLLECTION, USERS_COLLECTION, BOOTSTRAP_ADMIN_EMAILS, BOOTSTRAP_COUNSELOR_EMAILS
 
 _ROLE_CACHE: dict[str, tuple[str | None, float]] = {}
 _ROLE_CACHE_TTL_SEC = 300
@@ -124,4 +124,43 @@ def require_admin(f):
         from flask import g
         g.admin_uid = uid
         return f(*args, **kwargs)
+    return decorated
+
+
+def require_org_admin(f):
+    """기관 담당자(org_admin) — organizationId·liaisonCounselorUid 설정."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        uid = get_bearer_uid()
+        if not uid:
+            return jsonify({"error": "Unauthorized", "message": "Valid Firebase ID token required"}), 401
+        try:
+            db = get_firestore()
+            user_doc = db.collection(USERS_COLLECTION).document(uid).get()
+            data = user_doc.to_dict() or {} if user_doc.exists else {}
+            role = data.get("role")
+            org_id = (data.get("organizationId") or "").strip()
+
+            if role == "admin" and not org_id:
+                org_id = (request.headers.get("X-Organization-Id") or "").strip()
+
+            if role not in ("org_admin", "admin") or not org_id:
+                return jsonify({"error": "Forbidden", "message": "Org admin role required"}), 403
+
+            org_doc = db.collection(ORGANIZATIONS_COLLECTION).document(org_id).get()
+            if not org_doc.exists:
+                return jsonify({"error": "Forbidden", "message": "Organization not found"}), 403
+            org_data = org_doc.to_dict() or {}
+            liaison = (org_data.get("liaisonCounselorUid") or "").strip()
+            if not liaison:
+                return jsonify({"error": "Forbidden", "message": "Organization liaison not configured"}), 403
+        except Exception:
+            return jsonify({"error": "Forbidden", "message": "Org admin check failed"}), 403
+
+        from flask import g
+        g.org_admin_uid = uid
+        g.organization_id = org_id
+        g.liaison_counselor_uid = liaison
+        return f(*args, **kwargs)
+
     return decorated

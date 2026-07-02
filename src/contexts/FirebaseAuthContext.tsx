@@ -226,7 +226,12 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
               });
               if (bootstrapRes.ok) {
                 const boot = (await bootstrapRes.json().catch(() => ({}))) as { role?: AppRole };
-                if (boot.role === 'admin' || boot.role === 'counselor' || boot.role === 'user') {
+                if (
+                  boot.role === 'admin' ||
+                  boot.role === 'counselor' ||
+                  boot.role === 'org_admin' ||
+                  boot.role === 'user'
+                ) {
                   return boot.role;
                 }
               }

@@ -69,6 +69,11 @@ COMMERCE_MOCK_PAYMENTS = os.getenv("COMMERCE_MOCK_PAYMENTS", "false").lower() in
 )
 PLATFORM_FEE_RATE = float(os.getenv("PLATFORM_FEE_RATE", "0.25"))
 
+# 3단계 — B2B 기관
+ORGANIZATIONS_COLLECTION = "organizations"
+ORG_CREDITS_COLLECTION = "orgCredits"
+ORG_CREDIT_LEDGER_COLLECTION = "orgCreditLedger"
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 
