@@ -576,11 +576,11 @@ export default function IndividualAssessmentCreateForm() {
             type="text"
             required
             maxLength={120}
-            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white disabled:opacity-70"
             placeholder="예: 2025 OO고 3학년"
             value={cohortName}
             onChange={(e) => setCohortName(e.target.value)}
-            disabled={loading}
+            disabled={loading || usingExisting}
           />
         </div>
         <div>
