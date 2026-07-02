@@ -30,7 +30,6 @@ import {
   downloadGroupRecipientSampleCsv,
   downloadGroupRecipientSampleTxt,
 } from '@/lib/groupRecipientSampleDownload';
-import ScheduledNotifyDatetimeField from '@/components/counselor/ScheduledNotifyDatetimeField';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import * as XLSX from 'xlsx';
 
@@ -134,6 +133,8 @@ function applyAssessmentToForm(a: CounselorAssessment, setters: {
 export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scheduledDateRef = useRef<HTMLInputElement>(null);
+  const scheduledTimeRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
@@ -152,7 +153,8 @@ export default function IndividualAssessmentCreateForm() {
   const [fileLabel, setFileLabel] = useState('');
   const [queueNotify, setQueueNotify] = useState(true);
   const [notifyTiming, setNotifyTiming] = useState<'immediate' | 'scheduled'>('immediate');
-  const [scheduledAtLocal, setScheduledAtLocal] = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
@@ -270,17 +272,39 @@ export default function IndividualAssessmentCreateForm() {
     !activeJobId &&
     recipients.length <= GROUP_RECIPIENT_MAX;
 
-  const minScheduledLocal = useMemo(() => {
+  const minScheduledDate = useMemo(() => {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }, []);
+
+  const minScheduledTime = useMemo(() => {
+    if (scheduledDate !== minScheduledDate) return '00:00';
     const d = new Date();
     d.setMinutes(d.getMinutes() + 1);
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }, []);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }, [scheduledDate, minScheduledDate]);
 
-  useEffect(() => {
-    if (!queueNotify || notifyTiming !== 'scheduled' || scheduledAtLocal.trim()) return;
-    setScheduledAtLocal(minScheduledLocal);
-  }, [queueNotify, notifyTiming, scheduledAtLocal, minScheduledLocal]);
+  const scheduledAtLocal = useMemo(() => {
+    if (!scheduledDate.trim() || !scheduledTime.trim()) return '';
+    return `${scheduledDate}T${scheduledTime}`;
+  }, [scheduledDate, scheduledTime]);
+
+  const openDatePicker = (ref: React.RefObject<HTMLInputElement | null>) => {
+    const el = ref.current;
+    if (!el || loading) return;
+    if (typeof el.showPicker === 'function') {
+      try {
+        el.showPicker();
+        return;
+      } catch {
+        /* fall through */
+      }
+    }
+    el.focus();
+    el.click();
+  };
 
   const toggleTest = (testId: string) => {
     if (usingExisting) return;
@@ -378,8 +402,8 @@ export default function IndividualAssessmentCreateForm() {
       return;
     }
     if (queueNotify && notifyTiming === 'scheduled') {
-      if (!scheduledAtLocal.trim()) {
-        setError('예약 발송 시각을 선택해 주세요.');
+      if (!scheduledDate.trim() || !scheduledTime.trim()) {
+        setError('예약 발송 날짜와 시간(시·분)을 선택해 주세요.');
         return;
       }
       const sched = new Date(scheduledAtLocal);
@@ -600,11 +624,10 @@ export default function IndividualAssessmentCreateForm() {
         )}
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[1fr_252px] xl:grid-cols-[minmax(300px,340px)_minmax(300px,340px)_252px]">
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden lg:col-span-1 xl:contents">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_252px]">
           {/* 검사 정보 */}
           <section
-            className={`${FORM_CARD} flex shrink-0 flex-col gap-2.5 p-3 xl:col-start-1 xl:row-start-1`}
+            className={`${FORM_CARD} flex min-h-0 shrink-0 flex-col gap-2.5 p-3 lg:col-start-1 lg:row-start-1`}
           >
             <SectionHeading>검사 정보</SectionHeading>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -711,7 +734,7 @@ export default function IndividualAssessmentCreateForm() {
 
           {/* 내담자 목록 */}
           <section
-            className={`${FORM_CARD} flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3 lg:min-h-0 xl:col-start-2 xl:row-start-1`}
+            className={`${FORM_CARD} flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3 lg:col-start-2 lg:row-start-1`}
           >
             <div className="flex shrink-0 items-center justify-between gap-2">
               <SectionHeading>내담자 목록</SectionHeading>
@@ -737,7 +760,7 @@ export default function IndividualAssessmentCreateForm() {
                 </button>
               </div>
             </div>
-            <div className="hidden shrink-0 gap-1 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 xl:grid xl:grid-cols-[1fr_1fr_1fr_2.5rem]">
+            <div className="hidden shrink-0 gap-2 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[1fr_1fr_1fr_2.5rem]">
               <span>이름 *</span>
               <span>이메일</span>
               <span>휴대폰</span>
@@ -747,7 +770,7 @@ export default function IndividualAssessmentCreateForm() {
               {manualRows.map((row, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] xl:grid-cols-[1fr_1fr_1fr_2.5rem] xl:px-1 xl:py-0.5"
+                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] md:grid-cols-[1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5"
                 >
                   <input
                     ref={(el) => {
@@ -833,11 +856,10 @@ export default function IndividualAssessmentCreateForm() {
               </p>
             ) : null}
           </section>
-        </div>
 
         {/* 발송 설정 + 실행 */}
         <section
-          className={`${FORM_CARD} flex shrink-0 flex-col gap-2.5 p-3 lg:col-start-2 lg:row-start-1 xl:col-start-3 xl:self-stretch xl:justify-between`}
+          className={`${FORM_CARD} flex shrink-0 flex-col gap-2.5 p-3 lg:col-start-3 lg:row-start-1 lg:self-stretch lg:justify-between`}
         >
           <div className="space-y-3">
             <SectionHeading>접속 정보 발송</SectionHeading>
@@ -872,10 +894,7 @@ export default function IndividualAssessmentCreateForm() {
                       type="radio"
                       name="notifyTiming"
                       checked={notifyTiming === 'scheduled'}
-                      onChange={() => {
-                        setNotifyTiming('scheduled');
-                        if (!scheduledAtLocal.trim()) setScheduledAtLocal(minScheduledLocal);
-                      }}
+                      onChange={() => setNotifyTiming('scheduled')}
                       disabled={loading}
                       className="accent-blue-500"
                     />
@@ -883,15 +902,78 @@ export default function IndividualAssessmentCreateForm() {
                   </label>
                 </div>
                 {notifyTiming === 'scheduled' ? (
-                  <div>
-                    <label className="mb-1 block text-[11px] text-slate-500">예약 일시</label>
-                    <ScheduledNotifyDatetimeField
-                      value={scheduledAtLocal}
-                      onChange={setScheduledAtLocal}
-                      disabled={loading}
-                      min={minScheduledLocal}
-                      inputClassName={FORM_INPUT}
-                    />
+                  <div className="space-y-2">
+                    <div>
+                      <label htmlFor="scheduled-date" className="mb-1 block text-[11px] text-slate-500">
+                        예약 날짜
+                      </label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => openDatePicker(scheduledDateRef)}
+                          disabled={loading}
+                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="예약 날짜 달력 열기"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path
+                              d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <input
+                          id="scheduled-date"
+                          ref={scheduledDateRef}
+                          type="date"
+                          value={scheduledDate}
+                          min={minScheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          onClick={() => openDatePicker(scheduledDateRef)}
+                          disabled={loading}
+                          className={`${FORM_INPUT} w-full py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="scheduled-time" className="mb-1 block text-[11px] text-slate-500">
+                        예약 시간 (시·분)
+                      </label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => openDatePicker(scheduledTimeRef)}
+                          disabled={loading}
+                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="예약 시간 선택 열기"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path
+                              d="M10 5.5v4.25l2.75 1.6M10 3a7 7 0 100 14 7 7 0 000-14z"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <input
+                          id="scheduled-time"
+                          ref={scheduledTimeRef}
+                          type="time"
+                          value={scheduledTime}
+                          min={scheduledDate === minScheduledDate ? minScheduledTime : undefined}
+                          step={60}
+                          onChange={(e) => setScheduledTime(e.target.value)}
+                          onClick={() => openDatePicker(scheduledTimeRef)}
+                          disabled={loading}
+                          className={`${FORM_INPUT} w-full py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                        />
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </div>
