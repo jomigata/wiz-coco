@@ -32,6 +32,15 @@ function formatNotifyAt(iso: string | null | undefined): string {
   }
 }
 
+function formatNotifyDate(iso: string | null | undefined): string {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('ko-KR');
+  } catch {
+    return String(iso);
+  }
+}
+
 export type DispatchExportMeta = {
   title: string;
   cohortName: string;
@@ -98,7 +107,7 @@ export function downloadDispatchRecipientsExcel(
   XLSX.writeFile(wb, `wizcoco-dispatch-${code || 'list'}-${Date.now()}.xlsx`);
 }
 
-/** 선택 내담자 발송·검사 현황 인쇄 */
+/** 선택 내담자 검사 현황 인쇄 (미리보기 탭 없이 인쇄 대화상자만) */
 export function printDispatchRecipients(
   recipients: DispatchRecipient[],
   meta: DispatchExportMeta,
@@ -110,13 +119,13 @@ export function printDispatchRecipients(
     .map(
       (r, i) => `
     <tr>
-      <td>${i + 1}</td>
-      <td>${escapeHtml(r.displayName || '—')}</td>
-      <td>${escapeHtml(r.email || '—')}</td>
-      <td>${escapeHtml(formatPhoneDisplay(r.phone || '') || '—')}</td>
-      <td>${escapeHtml(r.myCode || '—')}</td>
-      <td>${escapeHtml(formatNotifyAt(r.notifyAt) || '—')}</td>
-      <td>${escapeHtml(testStatusText(r))}</td>
+      <td class="col-no">${i + 1}</td>
+      <td class="col-clamp">${escapeHtml(r.displayName || '—')}</td>
+      <td class="col-clamp">${escapeHtml(r.email || '—')}</td>
+      <td class="col-nowrap">${escapeHtml(formatPhoneDisplay(r.phone || '') || '—')}</td>
+      <td class="col-nowrap">${escapeHtml(r.myCode || '—')}</td>
+      <td class="col-nowrap">${escapeHtml(formatNotifyDate(r.notifyAt) || '—')}</td>
+      <td class="col-nowrap">${escapeHtml(testStatusText(r))}</td>
       <td class="col-remarks"></td>
     </tr>`,
     )
@@ -126,20 +135,34 @@ export function printDispatchRecipients(
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>발송 및 검사 현황</title>
+  <title>검사 현황</title>
   <style>
-    body { font-family: 'Malgun Gothic', sans-serif; font-size: 12px; padding: 16px; color: #111; }
-    h1 { font-size: 16px; margin: 0 0 8px; }
-    .meta { margin-bottom: 16px; color: #444; line-height: 1.6; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-    th { background: #f0f0f0; }
-    th.col-remarks, td.col-remarks { min-width: 6rem; width: 18%; }
-    @media print { body { padding: 0; } }
+    body { font-family: 'Malgun Gothic', sans-serif; font-size: 11px; padding: 12px; color: #111; }
+    h1 { font-size: 15px; margin: 0 0 6px; }
+    .meta { margin-bottom: 10px; color: #444; line-height: 1.5; font-size: 11px; }
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; vertical-align: middle; }
+    th { background: #f0f0f0; font-size: 10px; white-space: nowrap; }
+    .col-no { width: 4%; text-align: center; }
+    .col-nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .col-clamp {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      word-break: break-all;
+      line-height: 1.35;
+      max-height: 2.7em;
+    }
+    th.col-remarks, td.col-remarks { width: 7%; min-width: 2.5rem; }
+    @media print {
+      body { padding: 0; }
+      @page { margin: 12mm; }
+    }
   </style>
 </head>
 <body>
-  <h1>발송 및 검사 현황</h1>
+  <h1>검사 현황</h1>
   <div class="meta">
     ${meta.cohortName ? `<div>기관/단체/그룹명: ${escapeHtml(meta.cohortName)}</div>` : ''}
     <div>검사코드: ${escapeHtml(joinCode)}</div>
@@ -149,8 +172,14 @@ export function printDispatchRecipients(
   <table>
     <thead>
       <tr>
-        <th>No.</th><th>이름</th><th>이메일</th><th>휴대폰</th><th>나의코드</th>
-        <th>발송일시</th><th>검사</th><th class="col-remarks">비고</th>
+        <th class="col-no">No.</th>
+        <th>이름</th>
+        <th>이메일</th>
+        <th>휴대폰</th>
+        <th>나의코드</th>
+        <th>발송일</th>
+        <th>검사</th>
+        <th class="col-remarks">비고</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -158,38 +187,13 @@ export function printDispatchRecipients(
 </body>
 </html>`;
 
-  printHtmlDocument(html);
-}
-
-function printHtmlDocument(html: string): void {
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank');
-  if (!win) {
-    URL.revokeObjectURL(url);
-    printHtmlViaIframe(html);
-    return;
-  }
-
-  const revoke = () => URL.revokeObjectURL(url);
-  const triggerPrint = () => {
-    try {
-      win.focus();
-      win.print();
-    } catch {
-      /* ignore */
-    }
-  };
-
-  win.addEventListener('load', triggerPrint, { once: true });
-  win.addEventListener('beforeunload', revoke, { once: true });
-  setTimeout(revoke, 120_000);
+  printHtmlViaIframe(html);
 }
 
 function printHtmlViaIframe(html: string): void {
   const iframe = document.createElement('iframe');
-  iframe.setAttribute('title', '발송 및 검사 현황 인쇄');
-  iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+  iframe.setAttribute('title', '검사 현황 인쇄');
+  iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;pointer-events:none';
   document.body.appendChild(iframe);
 
   const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
@@ -208,11 +212,23 @@ function printHtmlViaIframe(html: string): void {
     return;
   }
 
-  const cleanup = () => iframe.remove();
+  const cleanup = () => {
+    if (iframe.parentNode) iframe.remove();
+  };
+
   win.addEventListener('afterprint', cleanup, { once: true });
   setTimeout(cleanup, 120_000);
-  win.focus();
-  win.print();
+
+  const triggerPrint = () => {
+    win.focus();
+    win.print();
+  };
+
+  if (doc.readyState === 'complete') {
+    triggerPrint();
+  } else {
+    win.addEventListener('load', triggerPrint, { once: true });
+  }
 }
 
 function escapeHtml(value: string): string {
