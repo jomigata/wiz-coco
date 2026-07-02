@@ -116,8 +116,8 @@ export function printDispatchRecipients(
       <td>${escapeHtml(formatPhoneDisplay(r.phone || '') || '—')}</td>
       <td>${escapeHtml(r.myCode || '—')}</td>
       <td>${escapeHtml(formatNotifyAt(r.notifyAt) || '—')}</td>
-      <td>${escapeHtml(notifyStatusText(r))}</td>
       <td>${escapeHtml(testStatusText(r))}</td>
+      <td class="col-remarks"></td>
     </tr>`,
     )
     .join('');
@@ -134,6 +134,7 @@ export function printDispatchRecipients(
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
     th { background: #f0f0f0; }
+    th.col-remarks, td.col-remarks { min-width: 6rem; width: 18%; }
     @media print { body { padding: 0; } }
   </style>
 </head>
@@ -149,7 +150,7 @@ export function printDispatchRecipients(
     <thead>
       <tr>
         <th>No.</th><th>이름</th><th>이메일</th><th>휴대폰</th><th>나의코드</th>
-        <th>발송일시</th><th>발송</th><th>검사</th>
+        <th>발송일시</th><th>검사</th><th class="col-remarks">비고</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
