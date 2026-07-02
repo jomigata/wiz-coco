@@ -517,337 +517,341 @@ export default function IndividualAssessmentCreateForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-      <div>
-        <div className="flex flex-wrap items-end gap-3 mb-2">
-          <label className="block text-sm font-medium text-slate-300">검사코드 선택</label>
-          <div className="ml-auto flex items-center gap-2">
-            <label htmlFor="assessment-sort" className="text-xs text-slate-500 whitespace-nowrap">
-              정렬
+    <form onSubmit={handleSubmit} className="max-w-6xl space-y-3">
+      {/* 검사코드 선택 */}
+      <div className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-600/70 bg-slate-800/40 px-3 py-2">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-medium text-slate-400 mb-1">검사코드 선택</label>
+          <select
+            value={selectedAssessmentId}
+            onChange={(e) => handleAssessmentSelect(e.target.value)}
+            disabled={loading || loadingAssessments}
+            className="w-full px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm"
+          >
+            <option value="">+ 새 검사코드 만들기</option>
+            {sortedGroupAssessments.map((a) => (
+              <option key={a.id} value={a.id}>
+                {formatAssessmentSelectLabel(a)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <label htmlFor="assessment-sort" className="text-xs text-slate-500 whitespace-nowrap">
+            정렬
+          </label>
+          <select
+            id="assessment-sort"
+            value={listSortKey}
+            onChange={(e) => setListSortKey(e.target.value as AssessmentListSortKey)}
+            disabled={loading || loadingAssessments}
+            className="px-2 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-xs"
+          >
+            {ASSESSMENT_LIST_SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        {usingExisting && selectedAssessment ? (
+          <span className="text-xs text-cyan-300/90 font-mono pb-1.5">
+            선택: {formatAccessCodeDisplay(selectedAssessment.accessCode)}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-500 pb-1.5 hidden sm:inline">
+            기존 코드 선택 시 설정 자동 입력
+          </span>
+        )}
+      </div>
+
+      {/* 검사 정보 */}
+      <section className="rounded-lg border border-slate-600/70 bg-slate-800/30 p-3 space-y-2">
+        <h2 className="text-xs font-semibold text-slate-500">검사 정보</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div>
+            <label className="block text-xs text-slate-400 mb-0.5">
+              기관/단체/그룹명 <span className="text-red-400">*</span>
             </label>
-            <select
-              id="assessment-sort"
-              value={listSortKey}
-              onChange={(e) => setListSortKey(e.target.value as AssessmentListSortKey)}
-              disabled={loading || loadingAssessments}
-              className="px-2 py-1 rounded-lg bg-slate-700 border border-slate-600 text-white text-xs"
-            >
-              {ASSESSMENT_LIST_SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              required
+              maxLength={120}
+              className="w-full px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm disabled:opacity-70"
+              placeholder="예: 2025 OO고 3학년"
+              value={cohortName}
+              onChange={(e) => setCohortName(e.target.value)}
+              disabled={loading || usingExisting}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-0.5">
+              안내 제목 {!usingExisting ? <span className="text-red-400">*</span> : null}
+            </label>
+            <input
+              type="text"
+              required={!usingExisting}
+              maxLength={200}
+              className="w-full px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm disabled:opacity-70"
+              placeholder="예: 개인 심리검사"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={loading || usingExisting}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-0.5">사용최종일 (선택)</label>
+            <input
+              type="date"
+              className="w-full px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm disabled:opacity-70"
+              value={usageEndDate}
+              onChange={(e) => setUsageEndDate(e.target.value)}
+              disabled={loading || usingExisting}
+            />
+          </div>
+          <div className="sm:col-span-2 lg:col-span-1 flex items-end">
+            {usingExisting ? (
+              <p className="text-xs text-slate-500 pb-1.5">검사·메시지는 기존 코드 설정 사용</p>
+            ) : null}
           </div>
         </div>
-        <select
-          value={selectedAssessmentId}
-          onChange={(e) => handleAssessmentSelect(e.target.value)}
-          disabled={loading || loadingAssessments}
-          className="w-full max-w-xl px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
-        >
-          <option value="">+ 새 검사코드 만들기</option>
-          {sortedGroupAssessments.map((a) => (
-            <option key={a.id} value={a.id}>
-              {formatAssessmentSelectLabel(a)}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-slate-500 text-xs">
-          기존 검사코드를 선택하면 아래 설정이 채워지며, 목록의 모든 내담자에게{' '}
-          <strong className="text-slate-400">동일한 검사코드</strong>가 발송됩니다.
-        </p>
-        {usingExisting && selectedAssessment ? (
-          <p className="mt-2 text-sm text-cyan-300/90">
-            선택된 검사코드:{' '}
-            <span className="font-mono font-semibold">
-              {formatAccessCodeDisplay(selectedAssessment.accessCode)}
-            </span>
-          </p>
-        ) : null}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            기관/단체/그룹명 <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={120}
-            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white disabled:opacity-70"
-            placeholder="예: 2025 OO고 3학년"
-            value={cohortName}
-            onChange={(e) => setCohortName(e.target.value)}
-            disabled={loading || usingExisting}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            안내 제목 {!usingExisting ? <span className="text-red-400">*</span> : null}
-          </label>
-          <input
-            type="text"
-            required={!usingExisting}
-            maxLength={200}
-            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white disabled:opacity-70"
-            placeholder="예: 개인 심리검사"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={loading || usingExisting}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">검사코드 사용최종일 (선택)</label>
-        <input
-          type="date"
-          className="w-full max-w-xs px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white disabled:opacity-70"
-          value={usageEndDate}
-          onChange={(e) => setUsageEndDate(e.target.value)}
-          disabled={loading || usingExisting}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">안내 메시지 (선택)</label>
-        <textarea
-          rows={3}
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white resize-y disabled:opacity-70"
-          value={welcomeMessage}
-          onChange={(e) => setWelcomeMessage(e.target.value)}
-          disabled={loading || usingExisting}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          포함할 검사 선택
-          {usingExisting ? (
-            <span className="ml-1 font-normal text-slate-500">(검사선택 및 수정 불가)</span>
-          ) : null}
-        </label>
-        <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800/80 p-3 space-y-2">
-          {counselorAssessmentTestOptions.map((t) => {
-            const checked = selectedTestIds.has(t.testId);
-            const lockedChecked = usingExisting && checked;
-            return (
-            <label
-              key={t.testId}
-              className={`flex items-center gap-3 p-2 rounded ${
-                usingExisting ? 'opacity-70 cursor-default' : 'hover:bg-slate-700/50 cursor-pointer'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => toggleTest(t.testId)}
-                disabled={loading || usingExisting}
-                className={`rounded ${
-                  lockedChecked ? 'accent-red-500 text-red-500' : 'accent-blue-500 text-blue-500'
-                }`}
-              />
-              <span className={lockedChecked ? 'text-red-300' : 'text-white'}>{t.name}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs text-slate-400 mb-0.5">안내 메시지 (선택)</label>
+            <textarea
+              rows={2}
+              className="w-full px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm resize-none disabled:opacity-70"
+              placeholder="내담자에게 보여줄 안내 문구"
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              disabled={loading || usingExisting}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-0.5">
+              포함할 검사
+              {usingExisting ? (
+                <span className="text-slate-500 font-normal"> (수정 불가)</span>
+              ) : null}
             </label>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-slate-300">내담자 목록</label>
-          <button
-            type="button"
-            onClick={() => addRow()}
-            className="text-sm text-blue-400 hover:text-blue-300"
-            disabled={loading}
-          >
-            + 행 추가
-          </button>
-        </div>
-        <div className="space-y-2">
-          {manualRows.map((row, idx) => (
-            <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-              <input
-                ref={(el) => {
-                  recipientNameRefs.current[idx] = el;
-                }}
-                placeholder="이름 *"
-                className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
-                value={row.displayName}
-                onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
-                onKeyDown={handleRecipientFieldKeyDown}
-                disabled={loading}
-              />
-              <input
-                placeholder="이메일"
-                type="email"
-                className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
-                value={row.email}
-                onChange={(e) => updateRow(idx, 'email', e.target.value)}
-                onKeyDown={handleRecipientFieldKeyDown}
-                disabled={loading}
-              />
-              <input
-                placeholder="휴대폰"
-                className="px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
-                value={row.phone}
-                onChange={(e) => updateRow(idx, 'phone', e.target.value)}
-                onKeyDown={handleRecipientFieldKeyDown}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={() => removeRow(idx)}
-                className="text-sm text-slate-400 hover:text-red-400 justify-self-start md:justify-self-end"
-                disabled={loading || manualRows.length <= 1}
-              >
-                삭제
-              </button>
+            <div className="max-h-[4.5rem] overflow-y-auto rounded-md border border-slate-600 bg-slate-800/60 px-2 py-1.5 flex flex-wrap gap-x-3 gap-y-1">
+              {counselorAssessmentTestOptions.map((t) => {
+                const checked = selectedTestIds.has(t.testId);
+                const lockedChecked = usingExisting && checked;
+                return (
+                  <label
+                    key={t.testId}
+                    className={`inline-flex items-center gap-1.5 text-xs ${
+                      usingExisting ? 'opacity-70 cursor-default' : 'cursor-pointer hover:text-white'
+                    } ${lockedChecked ? 'text-red-300' : 'text-slate-200'}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleTest(t.testId)}
+                      disabled={loading || usingExisting}
+                      className={`rounded scale-90 ${lockedChecked ? 'accent-red-500' : 'accent-blue-500'}`}
+                    />
+                    <span className="leading-tight">{t.name}</span>
+                  </label>
+                );
+              })}
             </div>
-          ))}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
-            disabled={loading}
-          >
-            CSV/엑셀 파일 첨부
-          </button>
-          <button
-            type="button"
-            onClick={downloadGroupRecipientSampleCsv}
-            className="px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-blue-200 border border-slate-600 hover:border-slate-500"
-          >
-            엑셀 샘플(CSV)
-          </button>
-          <button
-            type="button"
-            onClick={downloadGroupRecipientSampleTxt}
-            className="px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-blue-200 border border-slate-600 hover:border-slate-500"
-          >
-            텍스트 샘플
-          </button>
-          {fileLabel ? <span className="text-slate-400 text-sm">{fileLabel} ({fileRows.length}명)</span> : null}
-        </div>
-        <p className="text-slate-500 text-xs">
-          파일 형식: 이름, 이메일, 휴대폰 (쉼표·탭·세미콜론 구분 또는 .xlsx). 휴대폰 앞 0이 빠진 경우(10…) 자동 보정. 수동 입력과 파일은 합쳐집니다. 최대{' '}
-          {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명.
-        </p>
-        {recipients.length > 0 ? (
-          <p
-            className={`text-sm ${
-              recipients.length > GROUP_RECIPIENT_MAX ? 'text-red-400' : 'text-slate-400'
-            }`}
-          >
-            발급 대상: {recipients.length.toLocaleString('ko-KR')}명 (동일 검사코드)
-          </p>
-        ) : null}
-        {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD && queueNotify ? (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-amber-200/90 text-xs">
-            {GROUP_NOTIFY_WARN_THRESHOLD.toLocaleString('ko-KR')}명 이상 발급 시{' '}
-            <strong>예약 발송</strong> 또는 <strong>발송 없이 CSV만 받기</strong>를 권장합니다.
-            즉시 발송을 선택해도 서버는 알림을 큐에 넣어 순차 처리합니다.
-          </p>
-        ) : null}
-        {recipients.length > GROUP_BULK_ASYNC_THRESHOLD ? (
-          <p className="text-slate-500 text-xs">
-            {GROUP_BULK_ASYNC_THRESHOLD}명 초과 시 발급은 백그라운드 job으로 처리되며 진행률이 표시됩니다.
-          </p>
-        ) : null}
-      </div>
+      </section>
 
-      <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4 space-y-3">
-        <p className="text-sm font-medium text-slate-200">접속 정보 발송</p>
-        <p className="text-xs text-slate-500">
-          모든 알림은 큐에 등록된 뒤 순차 발송됩니다(51명 이상). 50명 이하는 즉시 발송됩니다. Excel 파일을 반드시 저장해 두세요.
-        </p>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={queueNotify}
-            onChange={(e) => setQueueNotify(e.target.checked)}
-            disabled={loading}
-            className="rounded text-blue-500"
-          />
-          <span className="text-slate-300 text-sm">
-            이메일·문자로 검사코드·나의코드·비밀번호 발송
-          </span>
-        </label>
-        {queueNotify ? (
-          <div className="space-y-3 pl-1 border-l-2 border-slate-600 ml-1">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="notifyTiming"
-                checked={notifyTiming === 'immediate'}
-                onChange={() => setNotifyTiming('immediate')}
-                disabled={loading}
-                className="text-blue-500"
-              />
-              <span className="text-slate-300 text-sm">즉시 발송</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="notifyTiming"
-                checked={notifyTiming === 'scheduled'}
-                onChange={() => setNotifyTiming('scheduled')}
-                disabled={loading}
-                className="text-blue-500"
-              />
-              <span className="text-slate-300 text-sm">예약 발송</span>
-            </label>
-            {notifyTiming === 'scheduled' ? (
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">발송 예정 시각</label>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 items-start">
+        {/* 내담자 목록 */}
+        <section className="xl:col-span-2 rounded-lg border border-slate-600/70 bg-slate-800/30 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xs font-semibold text-slate-500">내담자 목록</h2>
+            <button
+              type="button"
+              onClick={() => addRow()}
+              className="text-xs text-blue-400 hover:text-blue-300"
+              disabled={loading}
+            >
+              + 행 추가
+            </button>
+          </div>
+          <div className="hidden md:grid md:grid-cols-[1fr_1fr_1fr_auto] gap-1.5 px-0.5 text-[10px] text-slate-500 uppercase tracking-wide">
+            <span>이름 *</span>
+            <span>이메일</span>
+            <span>휴대폰</span>
+            <span className="w-8" />
+          </div>
+          <div className="space-y-1.5 max-h-[11rem] overflow-y-auto pr-0.5">
+            {manualRows.map((row, idx) => (
+              <div key={idx} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-1.5 items-center">
+                <input
+                  ref={(el) => {
+                    recipientNameRefs.current[idx] = el;
+                  }}
+                  placeholder="이름"
+                  className="px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm"
+                  value={row.displayName}
+                  onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
+                  onKeyDown={handleRecipientFieldKeyDown}
+                  disabled={loading}
+                />
+                <input
+                  placeholder="이메일"
+                  type="email"
+                  className="px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm"
+                  value={row.email}
+                  onChange={(e) => updateRow(idx, 'email', e.target.value)}
+                  onKeyDown={handleRecipientFieldKeyDown}
+                  disabled={loading}
+                />
+                <input
+                  placeholder="휴대폰"
+                  className="px-2.5 py-1.5 rounded-md bg-slate-700 border border-slate-600 text-white text-sm"
+                  value={row.phone}
+                  onChange={(e) => updateRow(idx, 'phone', e.target.value)}
+                  onKeyDown={handleRecipientFieldKeyDown}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeRow(idx)}
+                  className="text-xs text-slate-500 hover:text-red-400 px-1 justify-self-end"
+                  disabled={loading || manualRows.length <= 1}
+                >
+                  삭제
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-700/60">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-2.5 py-1 rounded-md text-xs bg-slate-700 text-slate-200 hover:bg-slate-600"
+              disabled={loading}
+            >
+              CSV/엑셀 첨부
+            </button>
+            <button
+              type="button"
+              onClick={downloadGroupRecipientSampleCsv}
+              className="px-2 py-1 rounded-md text-xs text-blue-300 hover:text-blue-200"
+            >
+              샘플(CSV)
+            </button>
+            <button
+              type="button"
+              onClick={downloadGroupRecipientSampleTxt}
+              className="px-2 py-1 rounded-md text-xs text-blue-300 hover:text-blue-200"
+            >
+              샘플(TXT)
+            </button>
+            {fileLabel ? (
+              <span className="text-slate-400 text-xs truncate max-w-[180px]" title={fileLabel}>
+                {fileLabel} ({fileRows.length}명)
+              </span>
+            ) : null}
+            {recipients.length > 0 ? (
+              <span
+                className={`text-xs ml-auto ${
+                  recipients.length > GROUP_RECIPIENT_MAX ? 'text-red-400' : 'text-emerald-400/90'
+                }`}
+              >
+                발급 {recipients.length.toLocaleString('ko-KR')}명
+              </span>
+            ) : null}
+          </div>
+          {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD && queueNotify ? (
+            <p className="text-amber-200/80 text-[11px] leading-snug">
+              {GROUP_NOTIFY_WARN_THRESHOLD}명 이상은 예약 발송 또는 CSV만 받기를 권장합니다.
+            </p>
+          ) : null}
+        </section>
+
+        {/* 발송 설정 + 실행 */}
+        <section className="rounded-lg border border-slate-600/70 bg-slate-800/30 p-3 space-y-2 xl:sticky xl:top-20">
+          <h2 className="text-xs font-semibold text-slate-500">접속 정보 발송</h2>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={queueNotify}
+              onChange={(e) => setQueueNotify(e.target.checked)}
+              disabled={loading}
+              className="rounded text-blue-500 mt-0.5"
+            />
+            <span className="text-slate-300 text-xs leading-snug">
+              이메일·문자로 검사코드·나의코드·비밀번호 발송
+            </span>
+          </label>
+          {queueNotify ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="notifyTiming"
+                  checked={notifyTiming === 'immediate'}
+                  onChange={() => setNotifyTiming('immediate')}
+                  disabled={loading}
+                  className="text-blue-500"
+                />
+                <span className="text-slate-300">즉시</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="notifyTiming"
+                  checked={notifyTiming === 'scheduled'}
+                  onChange={() => setNotifyTiming('scheduled')}
+                  disabled={loading}
+                  className="text-blue-500"
+                />
+                <span className="text-slate-300">예약</span>
+              </label>
+              {notifyTiming === 'scheduled' ? (
                 <input
                   type="datetime-local"
                   value={scheduledAtLocal}
                   onChange={(e) => setScheduledAtLocal(e.target.value)}
                   disabled={loading}
-                  className="w-full max-w-xs px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm"
+                  className="flex-1 min-w-[140px] px-2 py-1 rounded-md bg-slate-700 border border-slate-600 text-white text-xs"
                 />
-              </div>
-            ) : null}
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-500">발송 없이 Excel로 코드·비밀번호 확인</p>
+          )}
+
+          {error ? (
+            <p className="text-red-400 text-xs leading-snug" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="w-full px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? '발급 중…' : `${recipients.length || 0}명 검사코드 발급`}
+            </button>
+            <button
+              type="button"
+              onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600"
+            >
+              취소
+            </button>
           </div>
-        ) : null}
-      </div>
-
-      {error ? (
-        <p className="text-red-400 text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? '발급 중…' : `${recipients.length || 0}명 검사코드 발급`}
-        </button>
-        <button
-          type="button"
-          onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
-          disabled={loading}
-          className="px-5 py-2.5 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600"
-        >
-          취소
-        </button>
+        </section>
       </div>
     </form>
   );
