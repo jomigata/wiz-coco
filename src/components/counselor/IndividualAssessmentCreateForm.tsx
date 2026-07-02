@@ -30,6 +30,7 @@ import {
   downloadGroupRecipientSampleCsv,
   downloadGroupRecipientSampleTxt,
 } from '@/lib/groupRecipientSampleDownload';
+import ScheduledNotifyDatetimeField from '@/components/counselor/ScheduledNotifyDatetimeField';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import * as XLSX from 'xlsx';
 
@@ -133,7 +134,6 @@ function applyAssessmentToForm(a: CounselorAssessment, setters: {
 export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scheduledInputRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
@@ -277,20 +277,10 @@ export default function IndividualAssessmentCreateForm() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }, []);
 
-  const openScheduledPicker = () => {
-    const el = scheduledInputRef.current;
-    if (!el || loading) return;
-    if (typeof el.showPicker === 'function') {
-      try {
-        el.showPicker();
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
-    el.focus();
-    el.click();
-  };
+  useEffect(() => {
+    if (!queueNotify || notifyTiming !== 'scheduled' || scheduledAtLocal.trim()) return;
+    setScheduledAtLocal(minScheduledLocal);
+  }, [queueNotify, notifyTiming, scheduledAtLocal, minScheduledLocal]);
 
   const toggleTest = (testId: string) => {
     if (usingExisting) return;
@@ -610,7 +600,7 @@ export default function IndividualAssessmentCreateForm() {
         )}
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[1fr_252px] xl:grid-cols-[minmax(300px,340px)_1fr_252px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[1fr_252px] xl:grid-cols-[minmax(300px,340px)_minmax(300px,340px)_252px]">
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden lg:col-span-1 xl:contents">
           {/* 검사 정보 */}
           <section
@@ -747,7 +737,7 @@ export default function IndividualAssessmentCreateForm() {
                 </button>
               </div>
             </div>
-            <div className="hidden shrink-0 gap-2 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[1fr_1fr_1fr_2.5rem]">
+            <div className="hidden shrink-0 gap-1 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 xl:grid xl:grid-cols-[1fr_1fr_1fr_2.5rem]">
               <span>이름 *</span>
               <span>이메일</span>
               <span>휴대폰</span>
@@ -757,7 +747,7 @@ export default function IndividualAssessmentCreateForm() {
               {manualRows.map((row, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] md:grid-cols-[1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5"
+                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] xl:grid-cols-[1fr_1fr_1fr_2.5rem] xl:px-1 xl:py-0.5"
                 >
                   <input
                     ref={(el) => {
@@ -882,7 +872,10 @@ export default function IndividualAssessmentCreateForm() {
                       type="radio"
                       name="notifyTiming"
                       checked={notifyTiming === 'scheduled'}
-                      onChange={() => setNotifyTiming('scheduled')}
+                      onChange={() => {
+                        setNotifyTiming('scheduled');
+                        if (!scheduledAtLocal.trim()) setScheduledAtLocal(minScheduledLocal);
+                      }}
                       disabled={loading}
                       className="accent-blue-500"
                     />
@@ -891,44 +884,14 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
                 {notifyTiming === 'scheduled' ? (
                   <div>
-                    <label htmlFor="scheduled-at-local" className="mb-1 block text-[11px] text-slate-500">
-                      예약 일시
-                    </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={openScheduledPicker}
-                        disabled={loading}
-                        className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label="예약 일시 달력 열기"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
-                            stroke="currentColor"
-                            strokeWidth="1.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                      <input
-                        id="scheduled-at-local"
-                        ref={scheduledInputRef}
-                        type="datetime-local"
-                        value={scheduledAtLocal}
-                        min={minScheduledLocal}
-                        onChange={(e) => setScheduledAtLocal(e.target.value)}
-                        onClick={openScheduledPicker}
-                        disabled={loading}
-                        className={`${FORM_INPUT} w-full py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
-                      />
-                    </div>
+                    <label className="mb-1 block text-[11px] text-slate-500">예약 일시</label>
+                    <ScheduledNotifyDatetimeField
+                      value={scheduledAtLocal}
+                      onChange={setScheduledAtLocal}
+                      disabled={loading}
+                      min={minScheduledLocal}
+                      inputClassName={FORM_INPUT}
+                    />
                   </div>
                 ) : null}
               </div>
