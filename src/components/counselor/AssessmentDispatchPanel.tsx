@@ -566,98 +566,65 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-white">발송 및 검사 현황</h2>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={toggleAll}
-            className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
-          >
-            {allSelected ? '전체 해제' : '전체 선택'}
-          </button>
-          <button
-            type="button"
-            onClick={handleDownloadSelected}
-            disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
-          >
-            다운로드 ({selected.size})
-          </button>
-          <button
-            type="button"
-            onClick={handlePrintSelected}
-            disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-600 hover:bg-slate-500 disabled:opacity-50"
-          >
-            인쇄 ({selected.size})
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmAction('delete')}
-            disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-red-700 hover:bg-red-600 disabled:opacity-50"
-          >
-            {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmAction('remind')}
-            disabled={
-              remindLoading ||
-              resendLoading ||
-              deleteLoading ||
-              remindEligibleSelected.length === 0
-            }
-            className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
-            title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
-          >
-            {remindLoading
-              ? '발송 진행 중…'
-              : `미실시 알림통보 (${remindEligibleSelected.length})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmAction('resend')}
-            disabled={resendLoading || deleteLoading || selected.size === 0}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-          >
-            {resendLoading ? '발송 진행 중…' : `코드 재발송 (${selected.size})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
-          >
-            새로고침
-          </button>
-          <Link
-            href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
-            className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 inline-flex items-center"
-          >
-            삭제된 목록
-          </Link>
+      <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 px-4 py-3">
+          <h2 className="text-lg font-semibold text-white">발송 및 검사 현황</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
+            <button
+              type="button"
+              onClick={toggleAll}
+              disabled={data.recipients.length === 0}
+              className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+            >
+              {allSelected ? '전체 해제' : '전체 선택'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmAction('remind')}
+              disabled={
+                remindLoading ||
+                resendLoading ||
+                deleteLoading ||
+                remindEligibleSelected.length === 0
+              }
+              className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+              title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
+            >
+              {remindLoading
+                ? '발송 중…'
+                : `미실시 알림통보 (${remindEligibleSelected.length})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmAction('resend')}
+              disabled={resendLoading || deleteLoading || selected.size === 0}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            >
+              {resendLoading ? '발송 중…' : `코드 재발송 (${selected.size})`}
+            </button>
+          </div>
         </div>
-      </div>
 
-      {data.recipients.length === 0 ? (
-        <p className="text-slate-400">발송된 내담자가 없습니다.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-600">
-          <table className="w-max max-w-full text-sm table-fixed">
-            <colgroup>
-              <col className="w-10" />
-              <col className="w-10" />
-              <col className="w-12" />
-              <col className="w-28" />
-              <col className="w-52" />
-              <col className="w-32" />
-              <col className="w-24" />
-              <col className="w-36" />
-              <col className="w-24" />
-              <col className="w-24" />
-            </colgroup>
-            <thead className="bg-slate-800 text-slate-400">
+        {data.recipients.length === 0 ? (
+          <p className="px-4 py-6 text-slate-400 text-sm">발송된 내담자가 없습니다.</p>
+        ) : (
+          <>
+            <div className="max-h-[min(28rem,calc(100dvh-20rem))] overflow-auto">
+              <table className="w-max min-w-full text-sm table-fixed">
+                <colgroup>
+                  <col className="w-10" />
+                  <col className="w-10" />
+                  <col className="w-12" />
+                  <col className="w-28" />
+                  <col className="w-52" />
+                  <col className="w-32" />
+                  <col className="w-24" />
+                  <col className="w-36" />
+                  <col className="w-24" />
+                  <col className="w-24" />
+                </colgroup>
+                <thead className="sticky top-0 z-10 bg-slate-800 text-slate-400 shadow-[0_1px_0_0_rgb(71,85,105)]">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium">No.</th>
                 <th className="px-3 py-2 text-left text-xs font-medium">선택</th>
@@ -867,39 +834,71 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 );
               })}
             </tbody>
-          </table>
-        </div>
-      )}
+              </table>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700/80 px-4 py-3">
+              <p className="text-xs text-slate-500">
+                선택 <span className="text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
+                {data.recipients.length}명
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="hidden text-xs text-slate-500 sm:inline">내보내기·관리</span>
+                <button
+                  type="button"
+                  onClick={handleDownloadSelected}
+                  disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
+                >
+                  다운로드 ({selected.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintSelected}
+                  disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-600 hover:bg-slate-500 disabled:opacity-50"
+                >
+                  인쇄 ({selected.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction('delete')}
+                  disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-red-700 hover:bg-red-600 disabled:opacity-50"
+                >
+                  {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                </button>
+                <Link
+                  href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
+                  className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 inline-flex items-center"
+                >
+                  삭제된 목록
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="rounded-lg border border-slate-600/80 bg-slate-800/40 px-4 py-3">
-        <p className="text-xs font-medium text-slate-400 mb-2.5">이용 안내</p>
-        <ol className="space-y-2.5 text-xs leading-relaxed">
-          <li className="flex gap-2.5">
-            <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">1.</span>
-            <span className="text-slate-400">
-              <span className="text-slate-300">검사현황 ▶</span>를 누르면 해당 내담자의 검사별
-              상태·완료일·결과를 확인할 수 있습니다.
-            </span>
+        <p className="text-xs font-medium text-slate-400 mb-2">이용 안내</p>
+        <ul className="space-y-1.5 text-xs leading-relaxed text-slate-400">
+          <li>
+            <span className="text-slate-300">▶ 검사현황</span> 또는 행 클릭 → 검사별 진행·완료일·결과
+            확인
           </li>
-          <li className="flex gap-2.5">
-            <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">2.</span>
-            <span className="text-slate-400">
-              상단 우측의{' '}
-              <span className="text-amber-200/90">미실시 알림통보</span> 버튼은 미완료 검사 현황과 검사
-              링크만 이메일/SMS로 발송합니다.{' '}
-              <span className="text-slate-300">비밀번호는 변경되지 않습니다.</span>
-            </span>
+          <li>
+            <span className="text-slate-300">상단</span> · 전체 선택 후{' '}
+            <span className="text-amber-200/90">미실시 알림통보</span>(비밀번호 유지) ·{' '}
+            <span className="text-blue-300/90">코드 재발송</span>(비밀번호 재발급)
           </li>
-          <li className="flex gap-2.5">
-            <span className="shrink-0 w-4 font-semibold text-slate-500 tabular-nums">3.</span>
-            <span className="text-slate-400">
-              상단 우측의 <span className="text-blue-300/90">코드 재발송</span> 버튼은 검사 코드와 비밀번호를 다시
-              보냅니다.{' '}
-              <span className="text-slate-300">재발송 시 비밀번호가 새로 발급</span>되며, 기존
-              비밀번호는 더 이상 사용할 수 없습니다.
-            </span>
+          <li>
+            <span className="text-slate-300">하단</span> · 선택 후{' '}
+            <span className="text-emerald-300/90">다운로드</span> ·{' '}
+            <span className="text-slate-300">인쇄</span>(검사 현황) ·{' '}
+            <span className="text-red-300/90">삭제</span> — 삭제는 「삭제된 목록」에서 복구
           </li>
-        </ol>
+        </ul>
       </div>
 
       {dispatchProgress ? (
