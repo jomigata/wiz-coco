@@ -568,3 +568,174 @@ def send_test_reminders(
         )
 
     return {"sent": sent, "failed": failed, "skipped": skipped, "details": details}
+
+
+def _verify_assessment_owned(db, assessment_id: str, counselor_uid: str) -> dict:
+    ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
+    ass_doc = ass_ref.get()
+    if not ass_doc.exists:
+        raise ValueError("검사코드를 찾을 수 없습니다.")
+    ass = ass_doc.to_dict() or {}
+    if ass.get("counselorId") != counselor_uid:
+        raise PermissionError("접근 권한이 없습니다.")
+    return ass
+
+
+def archive_dispatch_portals(
+    db,
+    *,
+    assessment_id: str,
+    counselor_uid: str,
+    portal_ids: list[str],
+) -> dict:
+    """선택 내담자 포털을 soft-delete(archived) — 발송·검사 현황에서 제외."""
+    _verify_assessment_owned(db, assessment_id, counselor_uid)
+    archived = 0
+    failed = 0
+    details: list[dict] = []
+
+    for portal_id in portal_ids:
+        pid = (portal_id or "").strip()
+        if not pid:
+            continue
+        pref = db.collection(CLIENT_PORTALS_COLLECTION).document(pid)
+        pdoc = pref.get()
+        if not pdoc.exists:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "not_found"})
+            continue
+        pdata = pdoc.to_dict() or {}
+        if pdata.get("counselorId") != counselor_uid:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
+            continue
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        if assessment_id not in assigned:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "not_assigned"})
+            continue
+        if (pdata.get("status") or "active") == "archived":
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "already_archived"})
+            continue
+
+        pref.update(
+            {
+                "status": "archived",
+                "archivedAt": SERVER_TIMESTAMP,
+                "archivedFromAssessmentId": assessment_id,
+            }
+        )
+        archived += 1
+        details.append({"portalId": pid, "status": "archived"})
+
+    return {"archived": archived, "failed": failed, "details": details}
+
+
+def list_archived_portals(
+    db,
+    *,
+    counselor_uid: str,
+    assessment_id: str | None = None,
+) -> list[dict]:
+    """상담사 소유 archived 내담자 포털 목록."""
+    refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("counselorId", "==", counselor_uid)
+        .where("status", "==", "archived")
+        .stream()
+    )
+    items: list[dict] = []
+    assessment_cache: dict[str, dict] = {}
+
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        if assessment_id and from_aid and from_aid != assessment_id:
+            assigned = list(pdata.get("assignedAssessmentIds") or [])
+            if assessment_id not in assigned:
+                continue
+
+        join_code = ""
+        assessment_title = ""
+        cohort_name = ""
+        if from_aid:
+            if from_aid not in assessment_cache:
+                adoc = db.collection(ASSESSMENTS_COLLECTION).document(from_aid).get()
+                if adoc.exists:
+                    a = adoc.to_dict() or {}
+                    assessment_cache[from_aid] = a
+                else:
+                    assessment_cache[from_aid] = {}
+            a = assessment_cache.get(from_aid) or {}
+            join_code = (a.get("accessCode") or "").strip()
+            assessment_title = (a.get("title") or "").strip()
+            cohort_name = (a.get("cohortName") or "").strip()
+
+        archived_at = pdata.get("archivedAt")
+        items.append(
+            {
+                "portalId": doc.id,
+                "displayName": pdata.get("displayName") or "",
+                "email": (pdata.get("email") or "").strip(),
+                "phone": (pdata.get("phone") or "").strip(),
+                "myCode": pdata.get("accessCode") or "",
+                "joinAccessCode": join_code,
+                "assessmentId": from_aid,
+                "assessmentTitle": assessment_title,
+                "cohortName": cohort_name,
+                "archivedAt": _iso_timestamp(archived_at),
+            }
+        )
+
+    items.sort(
+        key=lambda x: (x.get("archivedAt") or "", x.get("displayName") or ""),
+        reverse=True,
+    )
+    return items
+
+
+def restore_archived_portals(
+    db,
+    *,
+    counselor_uid: str,
+    portal_ids: list[str],
+) -> dict:
+    """archived 내담자 포털 복구."""
+    from firebase_admin import firestore as fa_firestore
+
+    restored = 0
+    failed = 0
+    details: list[dict] = []
+
+    for portal_id in portal_ids:
+        pid = (portal_id or "").strip()
+        if not pid:
+            continue
+        pref = db.collection(CLIENT_PORTALS_COLLECTION).document(pid)
+        pdoc = pref.get()
+        if not pdoc.exists:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "not_found"})
+            continue
+        pdata = pdoc.to_dict() or {}
+        if pdata.get("counselorId") != counselor_uid:
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
+            continue
+        if (pdata.get("status") or "active") != "archived":
+            failed += 1
+            details.append({"portalId": pid, "status": "failed", "message": "not_archived"})
+            continue
+
+        pref.update(
+            {
+                "status": "active",
+                "archivedAt": fa_firestore.DELETE_FIELD,
+                "archivedFromAssessmentId": fa_firestore.DELETE_FIELD,
+            }
+        )
+        restored += 1
+        details.append({"portalId": pid, "status": "restored"})
+
+    return {"restored": restored, "failed": failed, "details": details}

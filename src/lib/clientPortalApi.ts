@@ -253,6 +253,79 @@ export async function sendDispatchTestReminders(
   return data as { sent: number; failed: number; skipped: number };
 }
 
+export type ArchivedDispatchRecipient = {
+  portalId: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  myCode: string;
+  joinAccessCode: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  cohortName: string;
+  archivedAt: string | null;
+};
+
+export async function archiveDispatchRecipients(
+  assessmentId: string,
+  portalIds: string[],
+): Promise<{ archived: number; failed: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/archive`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ portalIds }),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '삭제에 실패했습니다.');
+  }
+  return data as { archived: number; failed: number };
+}
+
+export async function fetchArchivedDispatchRecipients(
+  assessmentId?: string,
+): Promise<{ items: ArchivedDispatchRecipient[] }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const qs = assessmentId ? `?assessmentId=${encodeURIComponent(assessmentId)}` : '';
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/archived${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '목록 조회에 실패했습니다.');
+  }
+  return data as { items: ArchivedDispatchRecipient[] };
+}
+
+export async function restoreArchivedDispatchRecipients(
+  portalIds: string[],
+): Promise<{ restored: number; failed: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/archived/restore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ portalIds }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '복구에 실패했습니다.');
+  }
+  return data as { restored: number; failed: number };
+}
+
 export async function resendBulkPortalNotifications(body: {
   jobId?: string;
   cohortId?: string;

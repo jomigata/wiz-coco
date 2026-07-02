@@ -50,6 +50,9 @@ from utils.assessment_dispatch import (
     get_assessment_dispatch_status,
     resend_portal_credentials,
     send_test_reminders,
+    archive_dispatch_portals,
+    list_archived_portals,
+    restore_archived_portals,
 )
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
@@ -579,6 +582,56 @@ def remind_dispatch(assessment_id):
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403
     except ValueError as exc:
         return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
+
+
+@bp.route("/assessments/<assessment_id>/dispatch/archive", methods=["POST"])
+@require_counselor
+def archive_dispatch(assessment_id):
+    """선택 내담자 발송·검사 현황에서 제거(soft delete)."""
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    db = get_firestore()
+    try:
+        result = archive_dispatch_portals(
+            db,
+            assessment_id=assessment_id,
+            counselor_uid=g.counselor_uid,
+            portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+        )
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Not Found", "message": str(exc)}), 404
+    return jsonify(result)
+
+
+@bp.route("/archived", methods=["GET"])
+@require_counselor
+def list_archived():
+    """삭제(archived)된 내담자 포털 목록."""
+    assessment_id = (request.args.get("assessmentId") or "").strip() or None
+    db = get_firestore()
+    items = list_archived_portals(db, counselor_uid=g.counselor_uid, assessment_id=assessment_id)
+    return jsonify({"items": items})
+
+
+@bp.route("/archived/restore", methods=["POST"])
+@require_counselor
+def restore_archived():
+    """삭제된 내담자 포털 복구."""
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    db = get_firestore()
+    result = restore_archived_portals(
+        db,
+        counselor_uid=g.counselor_uid,
+        portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+    )
     return jsonify(result)
 
 

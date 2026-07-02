@@ -1,12 +1,18 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { formatPhoneDisplay, formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
+  downloadDispatchRecipientsExcel,
+  printDispatchRecipients,
+} from '@/lib/dispatchRecipientExport';
+import {
+  archiveDispatchRecipients,
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
   sendDispatchTestReminders,
@@ -270,10 +276,10 @@ function skipRemindReason(r: DispatchRecipient): string {
   return '발송 불가';
 }
 
-type BulkConfirmAction = 'remind' | 'resend' | null;
-type DispatchProgress = { kind: 'remind' | 'resend'; count: number };
+type BulkConfirmAction = 'remind' | 'resend' | 'delete' | null;
+type DispatchProgress = { kind: 'remind' | 'resend' | 'delete'; count: number };
 type DispatchComplete = {
-  kind: 'remind' | 'resend';
+  kind: 'remind' | 'resend' | 'delete';
   error?: boolean;
   summary: string;
 };
@@ -291,6 +297,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
@@ -448,7 +455,52 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   };
 
   const closeConfirm = () => {
-    if (!remindLoading && !resendLoading) setConfirmAction(null);
+    if (!remindLoading && !resendLoading && !deleteLoading) setConfirmAction(null);
+  };
+
+  const exportMeta = useMemo(
+    () =>
+      data
+        ? {
+            title: data.title,
+            cohortName: data.cohortName,
+            joinAccessCode: data.joinAccessCode,
+          }
+        : { title: '', cohortName: '', joinAccessCode: '' },
+    [data],
+  );
+
+  const handleDownloadSelected = () => {
+    if (selectedRecipients.length === 0 || !data) return;
+    downloadDispatchRecipientsExcel(selectedRecipients, exportMeta);
+  };
+
+  const handlePrintSelected = () => {
+    if (selectedRecipients.length === 0 || !data) return;
+    printDispatchRecipients(selectedRecipients, exportMeta);
+  };
+
+  const handleDelete = async () => {
+    if (!assessmentId || selected.size === 0) return;
+    setDispatchProgress({ kind: 'delete', count: selected.size });
+    setDeleteLoading(true);
+    try {
+      const result = await archiveDispatchRecipients(assessmentId, Array.from(selected));
+      await load({ silent: true });
+      setDispatchComplete({
+        kind: 'delete',
+        summary: `삭제 ${result.archived}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
+      });
+    } catch (err) {
+      setDispatchComplete({
+        kind: 'delete',
+        error: true,
+        summary: err instanceof Error ? err.message : '삭제에 실패했습니다.',
+      });
+    } finally {
+      setDeleteLoading(false);
+      setDispatchProgress(null);
+    }
   };
 
   const confirmBulkAction = async () => {
@@ -459,6 +511,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     } else if (confirmAction === 'resend') {
       setConfirmAction(null);
       await handleResend();
+    } else if (confirmAction === 'delete') {
+      setConfirmAction(null);
+      await handleDelete();
     }
   };
 
@@ -523,10 +578,35 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           </button>
           <button
             type="button"
+            onClick={handleDownloadSelected}
+            disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
+          >
+            다운로드 ({selected.size})
+          </button>
+          <button
+            type="button"
+            onClick={handlePrintSelected}
+            disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-600 hover:bg-slate-500 disabled:opacity-50"
+          >
+            인쇄 ({selected.size})
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmAction('delete')}
+            disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-red-700 hover:bg-red-600 disabled:opacity-50"
+          >
+            {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+          </button>
+          <button
+            type="button"
             onClick={() => setConfirmAction('remind')}
             disabled={
               remindLoading ||
               resendLoading ||
+              deleteLoading ||
               remindEligibleSelected.length === 0
             }
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
@@ -539,7 +619,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           <button
             type="button"
             onClick={() => setConfirmAction('resend')}
-            disabled={resendLoading || selected.size === 0}
+            disabled={resendLoading || deleteLoading || selected.size === 0}
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
             {resendLoading ? '발송 진행 중…' : `코드 재발송 (${selected.size})`}
@@ -551,6 +631,12 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           >
             새로고침
           </button>
+          <Link
+            href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
+            className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 inline-flex items-center"
+          >
+            삭제된 목록
+          </Link>
         </div>
       </div>
 
@@ -835,10 +921,14 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <p className="mt-2 text-sm text-slate-300">
               {dispatchProgress.kind === 'remind'
                 ? `미실시 알림 ${dispatchProgress.count}명에게 발송하고 있습니다.`
-                : `코드 재발송 ${dispatchProgress.count}명을 처리하고 있습니다.`}
+                : dispatchProgress.kind === 'delete'
+                  ? `선택 ${dispatchProgress.count}명을 삭제 처리하고 있습니다.`
+                  : `코드 재발송 ${dispatchProgress.count}명을 처리하고 있습니다.`}
             </p>
             <p className="mt-3 text-xs text-slate-500">
-              이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.
+              {dispatchProgress.kind === 'delete'
+                ? '잠시만 기다려 주세요.'
+                : '이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.'}
             </p>
           </div>
         </div>
@@ -872,15 +962,21 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             </div>
             <h3 id="dispatch-complete-title" className="text-lg font-semibold text-white">
               {dispatchComplete.error
-                ? '발송 실패'
+                ? dispatchComplete.kind === 'delete'
+                  ? '삭제 실패'
+                  : '발송 실패'
                 : dispatchComplete.kind === 'remind'
                   ? '미실시 알림 발송 완료'
-                  : '코드 재발송 완료'}
+                  : dispatchComplete.kind === 'delete'
+                    ? '삭제 완료'
+                    : '코드 재발송 완료'}
             </h3>
             <p className="mt-2 text-sm text-slate-300">
               {dispatchComplete.error
                 ? dispatchComplete.summary
-                : '발송이 완료되었습니다.'}
+                : dispatchComplete.kind === 'delete'
+                  ? '선택한 검사자가 삭제 목록으로 이동했습니다.'
+                  : '발송이 완료되었습니다.'}
             </p>
             {!dispatchComplete.error ? (
               <p className="mt-2 text-xs text-slate-400">{dispatchComplete.summary}</p>
@@ -907,12 +1003,18 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           >
             <div className="px-4 py-3 border-b border-slate-600">
               <h3 className="text-lg font-semibold text-white">
-                {confirmAction === 'remind' ? '미실시 알림통보 확인' : '코드 재발송 확인'}
+                {confirmAction === 'remind'
+                  ? '미실시 알림통보 확인'
+                  : confirmAction === 'delete'
+                    ? '검사자 삭제 확인'
+                    : '코드 재발송 확인'}
               </h3>
               <p className="text-sm text-slate-400 mt-1">
                 {confirmAction === 'remind'
                   ? '아래 내용으로 이메일·SMS 알림을 발송합니다. 비밀번호는 변경되지 않습니다.'
-                  : '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'}
+                  : confirmAction === 'delete'
+                    ? '선택한 검사자를 발송·검사 현황에서 제거합니다. 삭제된 목록에서 복구할 수 있습니다.'
+                    : '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'}
               </p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
@@ -967,6 +1069,26 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     </ul>
                   </div>
                 </>
+              ) : confirmAction === 'delete' ? (
+                <>
+                  <div>
+                    <p className="text-slate-300 font-medium mb-2">삭제 대상 {selectedRecipients.length}명</p>
+                    <ul className="space-y-2 max-h-48 overflow-y-auto">
+                      {selectedRecipients.map((r) => (
+                        <li
+                          key={r.portalId}
+                          className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
+                        >
+                          <RecipientTargetLine recipient={r} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <p className="text-red-300/90 text-xs">
+                    삭제 후에도 검사 결과 데이터는 보관될 수 있습니다. 내담자는 내 검사실 로그인이
+                    제한됩니다. 「삭제된 목록」에서 복구할 수 있습니다.
+                  </p>
+                </>
               ) : (
                 <>
                   <div>
@@ -1006,7 +1128,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               <button
                 type="button"
                 onClick={closeConfirm}
-                disabled={remindLoading || resendLoading}
+                disabled={remindLoading || resendLoading || deleteLoading}
                 className="px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
               >
                 취소
@@ -1017,16 +1139,24 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 disabled={
                   remindLoading ||
                   resendLoading ||
+                  deleteLoading ||
                   (confirmAction === 'remind' && remindEligibleSelected.length === 0) ||
-                  (confirmAction === 'resend' && resendEligibleSelected.length === 0)
+                  (confirmAction === 'resend' && resendEligibleSelected.length === 0) ||
+                  (confirmAction === 'delete' && selectedRecipients.length === 0)
                 }
                 className={`px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 ${
                   confirmAction === 'remind'
                     ? 'bg-amber-600 hover:bg-amber-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    : confirmAction === 'delete'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {confirmAction === 'remind' ? '알림 발송' : '재발송'}
+                {confirmAction === 'remind'
+                  ? '알림 발송'
+                  : confirmAction === 'delete'
+                    ? '삭제'
+                    : '재발송'}
               </button>
             </div>
           </div>
