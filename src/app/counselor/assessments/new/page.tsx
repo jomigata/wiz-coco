@@ -6,7 +6,7 @@ import IndividualAssessmentCreateForm from '@/components/counselor/IndividualAss
 
 function NewAssessmentContent() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <AuthLink
           href="/counselor/assessments"

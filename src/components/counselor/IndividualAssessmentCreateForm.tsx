@@ -42,6 +42,9 @@ const FORM_CARD =
 const FORM_INPUT =
   'w-full px-3 py-2 rounded-lg bg-slate-950/55 border border-white/10 text-white text-sm placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400/50 disabled:cursor-not-allowed disabled:opacity-55';
 const FORM_LABEL = 'block text-xs font-medium text-slate-400 mb-1';
+/** 포함할 검사: 2열 그리드 기준 5행 높이 (약 11.5rem) */
+const TEST_PICKER_SCROLL =
+  'max-h-[11.5rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-slate-950/40 p-2';
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -534,7 +537,7 @@ export default function IndividualAssessmentCreateForm() {
   const selectedTestCount = selectedTestIds.size;
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       {/* 검사코드 선택 */}
       <div
         className={`${FORM_CARD} flex shrink-0 flex-wrap items-end gap-3 px-4 py-3`}
@@ -584,11 +587,11 @@ export default function IndividualAssessmentCreateForm() {
         )}
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[1fr_252px] xl:grid-cols-[minmax(300px,340px)_1fr_252px]">
-        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:col-span-1 xl:contents">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[1fr_252px] xl:grid-cols-[minmax(300px,340px)_1fr_252px]">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden lg:col-span-1 xl:contents">
           {/* 검사 정보 */}
           <section
-            className={`${FORM_CARD} flex min-h-0 flex-col gap-3 p-4 xl:col-start-1 xl:row-start-1 xl:max-h-full xl:overflow-y-auto`}
+            className={`${FORM_CARD} flex shrink-0 flex-col gap-2.5 p-3 xl:col-start-1 xl:row-start-1`}
           >
             <SectionHeading>검사 정보</SectionHeading>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -636,19 +639,19 @@ export default function IndividualAssessmentCreateForm() {
             {usingExisting ? (
               <p className="text-[11px] text-slate-500">검사·메시지는 선택한 코드 설정을 사용합니다.</p>
             ) : null}
-            <div className="min-h-0 flex-1 space-y-2">
+            <div className="space-y-2">
               <div>
                 <label className={FORM_LABEL}>안내 메시지 (선택)</label>
                 <textarea
-                  rows={2}
-                  className={`${FORM_INPUT} resize-none`}
+                  rows={1}
+                  className={`${FORM_INPUT} min-h-[2.5rem] resize-none`}
                   placeholder="내담자에게 보여줄 안내 문구"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
                   disabled={loading || usingExisting}
                 />
               </div>
-              <div className="flex min-h-0 flex-col">
+              <div>
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <label className={FORM_LABEL}>
                     포함할 검사
@@ -662,7 +665,7 @@ export default function IndividualAssessmentCreateForm() {
                     </span>
                   ) : null}
                 </div>
-                <div className="max-h-[9.5rem] min-h-[5rem] overflow-y-auto rounded-lg border border-white/10 bg-slate-950/40 p-2 sm:max-h-[10.5rem] xl:max-h-none xl:flex-1">
+                <div className={TEST_PICKER_SCROLL}>
                   <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                     {counselorAssessmentTestOptions.map((t) => {
                       const checked = selectedTestIds.has(t.testId);
@@ -695,7 +698,7 @@ export default function IndividualAssessmentCreateForm() {
 
           {/* 내담자 목록 */}
           <section
-            className={`${FORM_CARD} flex min-h-[220px] flex-1 flex-col gap-2.5 p-4 lg:min-h-0 xl:col-start-2 xl:row-start-1`}
+            className={`${FORM_CARD} flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3 lg:min-h-0 xl:col-start-2 xl:row-start-1`}
           >
             <div className="flex shrink-0 items-center justify-between gap-2">
               <SectionHeading>내담자 목록</SectionHeading>
@@ -821,7 +824,7 @@ export default function IndividualAssessmentCreateForm() {
 
         {/* 발송 설정 + 실행 */}
         <section
-          className={`${FORM_CARD} flex flex-col gap-3 p-4 lg:col-start-2 lg:row-start-1 xl:col-start-3 xl:justify-between`}
+          className={`${FORM_CARD} flex shrink-0 flex-col gap-2.5 p-3 lg:col-start-2 lg:row-start-1 xl:col-start-3 xl:self-stretch xl:justify-between`}
         >
           <div className="space-y-3">
             <SectionHeading>접속 정보 발송</SectionHeading>
