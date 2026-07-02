@@ -135,6 +135,7 @@ export default function IndividualAssessmentCreateForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scheduledDateRef = useRef<HTMLInputElement>(null);
   const scheduledTimeRef = useRef<HTMLInputElement>(null);
+  const usageEndDateRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
@@ -662,14 +663,38 @@ export default function IndividualAssessmentCreateForm() {
                 />
               </div>
               <div>
-                <label className={FORM_LABEL}>사용종료일 (선택)</label>
-                <input
-                  type="date"
-                  className={FORM_INPUT}
-                  value={usageEndDate}
-                  onChange={(e) => setUsageEndDate(e.target.value)}
-                  disabled={loading || usingExisting}
-                />
+                <label htmlFor="usage-end-date" className={FORM_LABEL}>
+                  사용종료일 (선택)
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => openDatePicker(usageEndDateRef)}
+                    disabled={loading || usingExisting}
+                    className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="사용종료일 달력 열기"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path
+                        d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <input
+                    id="usage-end-date"
+                    ref={usageEndDateRef}
+                    type="date"
+                    className={`${FORM_INPUT} py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                    value={usageEndDate}
+                    onChange={(e) => setUsageEndDate(e.target.value)}
+                    onClick={() => openDatePicker(usageEndDateRef)}
+                    disabled={loading || usingExisting}
+                  />
+                </div>
               </div>
             </div>
             {usingExisting ? (
