@@ -13,6 +13,7 @@ from routes.client_portals import bp as client_portals_bp
 from routes.notifications import bp as notifications_bp
 from routes.admin_maintenance import bp as admin_maintenance_bp
 from routes.join_flow import bp as join_flow_bp
+from routes.commerce import bp as commerce_bp
 
 
 def create_app():
@@ -34,6 +35,7 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.register_blueprint(admin_maintenance_bp)
     app.register_blueprint(join_flow_bp)
+    app.register_blueprint(commerce_bp)
 
     @app.route("/", methods=["GET"])
     def root():
@@ -48,6 +50,8 @@ def create_app():
                 "/api/client-portals",
                 "/api/notifications/process",
                 "/api/admin/purge-assessment-data",
+                "/api/commerce/catalog",
+                "/api/commerce/credits",
             ],
         }
 

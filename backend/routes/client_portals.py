@@ -18,6 +18,7 @@ from config import (
     BULK_PORTAL_MAX_ROWS,
     BULK_PORTAL_SYNC_MAX,
     BULK_PORTAL_BATCH_SIZE,
+    COMMERCE_CREDITS_ENFORCE,
 )
 from firebase_init import get_firestore
 from auth_middleware import require_counselor
@@ -46,6 +47,7 @@ from utils.bulk_portal_worker import (
     resend_job_notifications,
     resend_cohort_notifications,
 )
+from utils.counselor_credits import consume_credits, get_balance
 from utils.assessment_dispatch import (
     get_assessment_dispatch_status,
     resend_portal_credentials,
@@ -359,6 +361,22 @@ def bulk_create():
         for row in rows
     ]
 
+    credit_required = len(normalized_rows)
+    if COMMERCE_CREDITS_ENFORCE:
+        balance = get_balance(db, counselor_uid)
+        if balance < credit_required:
+            return (
+                jsonify(
+                    {
+                        "error": "Payment Required",
+                        "message": f"검사 크레딧이 부족합니다. (보유 {balance}, 필요 {credit_required})",
+                        "balance": balance,
+                        "required": credit_required,
+                    }
+                ),
+                402,
+            )
+
     if len(normalized_rows) > BULK_PORTAL_SYNC_MAX:
         job_id = create_bulk_job(
             db,
@@ -379,6 +397,14 @@ def bulk_create():
             create_magic_link=_create_magic_link_token,
         )
         status = get_bulk_job_status(db, job_id, counselor_uid=counselor_uid) or {}
+        credit_info = consume_credits(
+            db,
+            counselor_uid,
+            credit_required,
+            reason="bulk_portal_async",
+            actor_uid=counselor_uid,
+            metadata={"jobId": job_id, "cohortId": cohort_id},
+        )
         return (
             jsonify(
                 {
@@ -390,6 +416,7 @@ def bulk_create():
                     "joinAccessCode": join_access_code,
                     "notifyQueued": status.get("notifyQueued", 0),
                     "scheduledAt": scheduled_at_iso or None,
+                    "credits": credit_info,
                     **status,
                 }
             ),
@@ -431,6 +458,15 @@ def bulk_create():
         processed = int(flush.get("processed") or 0)
         notify_queued = max(0, notify_queued - processed)
 
+    credit_info = consume_credits(
+        db,
+        counselor_uid,
+        len(created),
+        reason="bulk_portal_sync",
+        actor_uid=counselor_uid,
+        metadata={"cohortId": cohort_id, "assessmentId": assessment_ref_id},
+    )
+
     return jsonify(
         {
             "async": False,
@@ -443,6 +479,7 @@ def bulk_create():
             "notifyFailed": notify_failed,
             "notifyQueued": notify_queued,
             "scheduledAt": scheduled_at_iso or None,
+            "credits": credit_info,
         }
     ), 201
 

@@ -44,6 +44,16 @@ BULK_PORTAL_SYNC_MAX = int(os.getenv("BULK_PORTAL_SYNC_MAX", "50"))
 BULK_PORTAL_BATCH_SIZE = int(os.getenv("BULK_PORTAL_BATCH_SIZE", "50"))
 BULK_PORTAL_JOBS_COLLECTION = "bulkPortalJobs"
 
+# 상담사 검사 크레딧 (1단계 파일럿)
+COUNSELOR_CREDITS_COLLECTION = "counselorCredits"
+COUNSELOR_CREDIT_LEDGER_COLLECTION = "counselorCreditLedger"
+COMMERCE_CREDITS_ENFORCE = os.getenv("COMMERCE_CREDITS_ENFORCE", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+PILOT_FREE_CREDITS = int(os.getenv("PILOT_FREE_CREDITS", "50"))
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 

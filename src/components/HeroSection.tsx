@@ -59,6 +59,12 @@ export default function HeroSection() {
               <span aria-hidden>⭐</span>
               검사시작
             </Link>
+            <Link
+              href="/partners/"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold text-white border border-white/25 hover:bg-white/10 transition-all"
+            >
+              상담사 · 기관 파트너
+            </Link>
           </div>
         </div>
       </div>

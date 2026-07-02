@@ -22,6 +22,12 @@ export const counselorMenuCategories: TestCategory[] = [
             description: '내담자별 나의코드 검사코드 발급',
             icon: '➕',
           },
+          {
+            name: '검사 크레딧',
+            href: '/counselor/credits',
+            description: '보유 크레딧·사용 내역 (협회 지급)',
+            icon: '💳',
+          },
         ],
       },
       {

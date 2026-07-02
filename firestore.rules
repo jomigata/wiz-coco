@@ -195,6 +195,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // 상담사 검사 크레딧 — Flask Admin SDK 전용
+    match /counselorCredits/{counselorId} {
+      allow read, write: if false;
+    }
+
+    match /counselorCreditLedger/{entryId} {
+      allow read, write: if false;
+    }
+
     // 서버(Admin SDK) 전용 메타 — 클라이언트 직접 접근 차단
     match /system_meta/{docId} {
       allow read, write: if false;

@@ -82,6 +82,12 @@ export const adminMenuCategories: TestCategory[] = [
             description: '검사 생성, 배포, 결과 분석',
             icon: '🧠',
           },
+          {
+            name: '크레딧 · 수익화',
+            href: '/admin/commerce',
+            description: '상담사 파일럿 크레딧 지급·조회',
+            icon: '💰',
+          },
         ],
       },
       {
