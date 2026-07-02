@@ -204,6 +204,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // 결제 주문 — Flask Admin SDK 전용
+    match /commerceOrders/{orderId} {
+      allow read, write: if false;
+    }
+
     // 서버(Admin SDK) 전용 메타 — 클라이언트 직접 접근 차단
     match /system_meta/{docId} {
       allow read, write: if false;

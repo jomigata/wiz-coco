@@ -73,10 +73,10 @@ export const counselorMonetizationProducts: MonetizationProduct[] = [
     name: '스타터',
     description: '월 정기 크레딧 (2단계 PG 연동 예정)',
     priceLabel: '월 150,000원',
-    priceNote: '20크레딧 · 초과 건당 7,500원 (가이드)',
+    priceNote: '20크레딧 · 초과 건당 7,500원',
     features: ['월 20크레딧', '카카오·문자 발송', '상담사 전용 지원'],
-    ctaLabel: '문의하기',
-    ctaHref: '/partners/#inquiry',
+    ctaLabel: '구매하기',
+    ctaHref: '/counselor/credits/',
   },
   {
     id: 'counselor-pro',
@@ -84,10 +84,10 @@ export const counselorMonetizationProducts: MonetizationProduct[] = [
     name: '프로',
     description: '활동량 많은 상담사·센터',
     priceLabel: '월 250,000원',
-    priceNote: '50크레딧 · 초과 건당 6,000원 (가이드)',
+    priceNote: '50크레딧 · 초과 건당 6,000원',
     features: ['월 50크레딧', '우선 지원', '센터 로고 (3단계 화이트라벨)'],
-    ctaLabel: '문의하기',
-    ctaHref: '/partners/#inquiry',
+    ctaLabel: '구매하기',
+    ctaHref: '/counselor/credits/',
   },
 ];
 

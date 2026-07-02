@@ -45,13 +45,15 @@
 
 ## 2단계 — B2B2C 결제·정산
 
-| # | 작업 |
-|---|------|
-| 2.1 | 토스페이먼츠(또는 Stripe) 계약·webhook |
-| 2.2 | `paymentHistory` Admin SDK 기록, 결제→크레딧 자동 충전 |
-| 2.3 | 상담사 SaaS 패키지 (월 N코드, 초과 건당) |
-| 2.4 | 협회 정산 대시보드 (수수료 15~30%) |
-| 2.5 | PDF 리포트 v2 (Premium gap) |
+| # | 작업 | 상태 |
+|---|------|------|
+| 2.1 | 토스페이먼츠 webhook·confirm API | 완료 |
+| 2.2 | `paymentHistory` + 결제→크레딧 자동 충전 | 완료 |
+| 2.3 | 상담사 SaaS 패키지·`subscriptions` | 완료 |
+| 2.4 | 협회 정산 대시보드 (`/admin/commerce/` 정산 탭) | 완료 |
+| 2.5 | PDF 리포트 v2 (상담사 결과 **PDF/인쇄**) | 완료 |
+
+환경 설정: [COMMERCE_TOSS_SETUP.md](./COMMERCE_TOSS_SETUP.md)
 
 ---
 
@@ -77,12 +79,15 @@
 
 ---
 
-## 환경 변수 (1단계)
+## 환경 변수 (1~2단계)
 
 | 변수 | 설명 | 기본값 |
 |------|------|--------|
 | `COMMERCE_CREDITS_ENFORCE` | 크레딧 부족 시 일괄발송 차단 | `false` |
-| `PILOT_FREE_CREDITS` | 문서·UI 참고용 파일럿 권장 지급량 | `50` |
+| `PILOT_FREE_CREDITS` | 파일럿 권장 지급량 | `50` |
+| `COMMERCE_MOCK_PAYMENTS` | Mock 결제 (개발) | `false` |
+| `PLATFORM_FEE_RATE` | 정산 수수료율 | `0.25` |
+| `TOSS_SECRET_KEY` / `TOSS_CLIENT_KEY` | 토스 PG | (미설정) |
 
 ---
 

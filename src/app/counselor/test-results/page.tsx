@@ -4,6 +4,10 @@ import AdminPageLayout from '@/components/AdminPageLayout';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import {
+  buildDefaultResultSections,
+  printAssessmentReport,
+} from '@/lib/assessmentReportPrint';
 
 type CounselorResultRow = {
   id: string;
@@ -117,6 +121,7 @@ export default function TestResultsPage() {
                   <th className="px-3 py-2 text-left">검사</th>
                   <th className="px-3 py-2 text-left">상태</th>
                   <th className="px-3 py-2 text-left">코드</th>
+                  <th className="px-3 py-2 text-left">리포트</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,11 +138,30 @@ export default function TestResultsPage() {
                       <div className="text-xs text-white/70 font-mono">{formatAccessCodeDisplay(r.code || '') || '—'}</div>
                       {r.counselorCode && <div className="text-xs text-white/40 font-mono">연결코드: {formatAccessCodeDisplay(r.counselorCode)}</div>}
                     </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        className="text-xs px-2 py-1 rounded border border-blue-400/40 text-blue-200 hover:bg-blue-950/40"
+                        onClick={() =>
+                          printAssessmentReport({
+                            title: '심리검사 결과 리포트',
+                            subtitle: r.testType || '검사 결과',
+                            clientLabel: r.email || r.uid || '내담자',
+                            testName: r.testType,
+                            accessCode: formatAccessCodeDisplay(r.code || ''),
+                            status: r.status || 'completed',
+                            sections: buildDefaultResultSections(r),
+                          })
+                        }
+                      >
+                        PDF / 인쇄
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td className="px-3 py-6 text-center text-white/60" colSpan={5}>
+                    <td className="px-3 py-6 text-center text-white/60" colSpan={6}>
                       표시할 결과가 없습니다.
                     </td>
                   </tr>

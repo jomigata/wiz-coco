@@ -54,6 +54,21 @@ COMMERCE_CREDITS_ENFORCE = os.getenv("COMMERCE_CREDITS_ENFORCE", "false").lower(
 )
 PILOT_FREE_CREDITS = int(os.getenv("PILOT_FREE_CREDITS", "50"))
 
+# 2단계 — 결제·정산
+COMMERCE_ORDERS_COLLECTION = "commerceOrders"
+PAYMENT_HISTORY_COLLECTION = "paymentHistory"
+SUBSCRIPTIONS_COLLECTION = "subscriptions"
+TOSS_SECRET_KEY = os.getenv("TOSS_SECRET_KEY", "").strip()
+TOSS_CLIENT_KEY = os.getenv("TOSS_CLIENT_KEY", "").strip()
+TOSS_WEBHOOK_SECRET = os.getenv("TOSS_WEBHOOK_SECRET", "").strip()
+TOSS_API_BASE = os.getenv("TOSS_API_BASE", "https://api.tosspayments.com").rstrip("/")
+COMMERCE_MOCK_PAYMENTS = os.getenv("COMMERCE_MOCK_PAYMENTS", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+PLATFORM_FEE_RATE = float(os.getenv("PLATFORM_FEE_RATE", "0.25"))
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 

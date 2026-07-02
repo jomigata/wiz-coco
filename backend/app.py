@@ -52,6 +52,9 @@ def create_app():
                 "/api/admin/purge-assessment-data",
                 "/api/commerce/catalog",
                 "/api/commerce/credits",
+                "/api/commerce/checkout",
+                "/api/commerce/webhooks/toss",
+                "/api/commerce/settlement",
             ],
         }
 
