@@ -152,16 +152,42 @@ function ClientPortalContent() {
 
   useEffect(() => {
     const expand = (searchParams.get('expand') || '').trim();
-    if (!expand) return;
-    expandFromUrlRef.current = true;
-    setExpandedTestKey(expand);
+    const focusResults = (searchParams.get('focus') || '').trim() === 'results';
+    if (!expand && !focusResults) return;
+
+    if (expand) {
+      expandFromUrlRef.current = true;
+      setExpandedTestKey(expand);
+    }
+
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', '/portal/');
+      window.history.replaceState(null, '', focusResults ? '/portal/?focus=results' : '/portal/');
+      if (focusResults) {
+        requestAnimationFrame(() => {
+          document.getElementById('portal-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
     }
     if (assessments.length) {
       void loadResults(assessments);
     }
   }, [searchParams, assessments, loadResults]);
+
+  useEffect(() => {
+    if ((searchParams.get('focus') || '').trim() !== 'results') return;
+    if (!assessments.length || !Object.keys(resultsByCode).length) return;
+    if (expandedTestKey) return;
+    const key = findFirstCompletedExpandKey(
+      assessments.map((a) => ({
+        assessmentId: a.assessmentId,
+        accessCode: a.accessCode,
+        testList: a.testList || [],
+      })),
+      resultsByCode,
+      normalizeAccessCodeInput,
+    );
+    if (key) setExpandedTestKey(key);
+  }, [searchParams, assessments, resultsByCode, expandedTestKey]);
 
   useEffect(() => {
     if (expandFromUrlRef.current || autoExpandDoneRef.current || expandedTestKey) return;
@@ -297,7 +323,9 @@ function ClientPortalContent() {
             </p>
           </div>
 
-          <h2 className="text-lg font-semibold text-white">검사코드별 진행 현황</h2>
+          <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
+            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '검사코드별 진행 현황'}
+          </h2>
 
           {assessments.length === 0 ? (
             <p className="text-slate-400 text-sm">배정된 검사가 없습니다. 담당자에게 검사코드·나의코드를 확인해 주세요.</p>

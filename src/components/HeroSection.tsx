@@ -3,18 +3,23 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
+import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
   const [examHref, setExamHref] = useState('/portal/login/');
+  const [resultsHref, setResultsHref] = useState(portalLoginHref('results'));
   const { isAuthenticated } = useAuthResolved();
 
   useEffect(() => {
     setIsVisible(true);
     const portal = readClientPortalSession();
-    if (portal?.portalToken) setExamHref('/portal/');
+    if (portal?.portalToken) {
+      setExamHref('/portal/');
+      setResultsHref('/portal/?focus=results');
+    }
   }, []);
 
   return (
@@ -68,7 +73,7 @@ export default function HeroSection() {
               검사 시작
             </Link>
             <Link
-              href={examHref}
+              href={resultsHref}
               className="inline-flex items-center justify-center px-8 py-4 rounded-2xl text-base font-medium text-slate-200 border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 transition-all"
             >
               검사 결과 확인
