@@ -101,14 +101,6 @@ export default function PortalLoginPage() {
               <p className="text-slate-400 text-sm leading-relaxed">{copy.description}</p>
             </div>
 
-            {isResults && (
-              <ul className="mb-6 space-y-2 text-xs text-slate-500 border border-white/[0.06] rounded-xl p-4 bg-white/[0.02]">
-                <li>· 완료된 검사만 결과 목록에 표시됩니다.</li>
-                <li>· 진행 중인 검사는 검사시작 후 이어서 할 수 있습니다.</li>
-                <li>· 결과는 담당 전문가 안내와 함께 확인할 수 있습니다.</li>
-              </ul>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="myCode" className="block text-sm font-medium text-slate-300 mb-2">

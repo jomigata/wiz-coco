@@ -24,8 +24,7 @@ export const PORTAL_LOGIN_COPY: Record<
   },
   results: {
     title: '검사 결과 확인',
-    description:
-      '완료한 검사 결과를 보려면 안내 받으신 나의코드와 비밀번호(4자리)를 입력해 주세요.',
+    description: '검사 결과를 보려면 나의코드와 비밀번호를 입력해 주세요.',
     submitLabel: '결과 확인하기',
     loadingLabel: '결과 불러오는 중…',
     redirectPath: '/portal/?focus=results',

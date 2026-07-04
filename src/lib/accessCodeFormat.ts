@@ -59,9 +59,10 @@ export function myCodeYearPrefixFor(year?: number): string {
   return encodeMyCodeYearOffset(y - MY_CODE_YEAR_BASE);
 }
 
-/** 검사시작 입력란 placeholder — 연도 알파벳 + 000 */
+/** 검사시작·결과 확인 입력란 placeholder — 연도 + 연도 알파벳 + 0000 (예: 2026A0000) */
 export function getMyCodeInputPlaceholder(): string {
-  return `${myCodeYearPrefixFor()}000`;
+  const year = new Date().getFullYear();
+  return `${year}${myCodeYearPrefixFor(year)}0000`;
 }
 
 function isValidMyCodeSuffix(body: string): boolean {
