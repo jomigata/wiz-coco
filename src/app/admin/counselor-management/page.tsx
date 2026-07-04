@@ -534,14 +534,31 @@ function CounselorManagementPageContent() {
                         검토 메모
                       </th>
                       <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
-                        작업
+                        승인현황
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.06]">
                     {filteredApplications.map((application) => (
-                      <tr key={`${application.applicantUid}-${application.id}`} className="hover:bg-white/[0.04]">
-                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
+                      <tr
+                        key={`${application.applicantUid}-${application.id}`}
+                        className="cursor-pointer hover:bg-white/[0.04]"
+                        onClick={() => openModal(application)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openModal(application);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`${application.name} 상담사 인증 상세 보기`}
+                      >
+                        <td
+                          className="whitespace-nowrap px-2 py-1.5 text-center"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
                             checked={selectedIds.includes(application.id)}
@@ -591,33 +608,16 @@ function CounselorManagementPageContent() {
                           {application.reviewNotes || '-'}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-center">
-                          <div className="flex flex-wrap items-center justify-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => openModal(application)}
-                              className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
-                            >
-                              상세
-                            </button>
-                            {application.status === 'pending' && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => openReviewModal({ mode: 'single', application, action: 'approve' })}
-                                  className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
-                                >
-                                  승인
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => openReviewModal({ mode: 'single', application, action: 'reject' })}
-                                  className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15"
-                                >
-                                  거부
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal(application);
+                            }}
+                            className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
+                          >
+                            상세 ({getStatusText(application.status)})
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -632,8 +632,9 @@ function CounselorManagementPageContent() {
 
         {/* 상세보기 모달 */}
         {showModal && selectedApplication && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
-            <div className="bg-slate-900 rounded-xl p-6 shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/95">
+            <div className="flex min-h-full justify-center px-4 py-6 sm:py-8">
+              <div className="my-8 w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-white">상담사 인증 상세 정보</h3>
                 <button
@@ -757,6 +758,7 @@ function CounselorManagementPageContent() {
                   닫기
                 </button>
               </div>
+            </div>
           </div>
         </div>
         )}
