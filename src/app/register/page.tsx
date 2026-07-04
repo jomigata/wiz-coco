@@ -85,7 +85,11 @@ const RegisterContent = () => {
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-emerald-100 mb-1">전문가·상담사 계정 만들기</h2>
-            <p className="text-sm text-emerald-500/90">검사 코드 발급·내담자 관리용 전문가·상담사 계정을 생성합니다.</p>
+            <p className="text-sm text-emerald-500/90 leading-relaxed">
+              검사 코드 발급·내담자 관리용
+              <br />
+              전문가·상담사 계정을 생성합니다.
+            </p>
           </div>
 
           {registerError && (
