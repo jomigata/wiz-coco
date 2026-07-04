@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 
-/** 로그인 전: 내담자용 미니멀 푸터 · 로그인 후: 전체 링크 */
+/** 로그인 전: 내담자용 미니멀 푸터 · 승인 상담사: 전체 링크 */
 export default function SiteFooter() {
   const { isAuthenticated, authPending } = useAuthResolved();
+  const { isApprovedCounselor, loading: accessLoading } = useCounselorProfessionalAccess();
 
-  if (authPending) {
+  if (authPending || (isAuthenticated && accessLoading)) {
     return null;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !isApprovedCounselor) {
     return (
       <footer className="border-t border-white/[0.06] bg-[#070b14] py-10">
         <div className="container max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
@@ -85,24 +87,9 @@ export default function SiteFooter() {
               </li>
             </ul>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-4">전문가·상담사</h3>
-            <ul className="text-sm space-y-2">
-              <li>
-                <Link href="/login" className="hover:text-white transition-colors">
-                  전문가·상담사 로그인
-                </Link>
-              </li>
-              <li>
-                <Link href="/counselor/credits/" className="hover:text-white transition-colors">
-                  크레딧 · 결제
-                </Link>
-              </li>
-            </ul>
-          </div>
         </div>
-        <div className="border-t border-gray-700 pt-8 text-center">
-          <p className="text-sm text-gray-500">© {new Date().getFullYear()} WizCoCo. All Rights Reserved.</p>
+        <div className="border-t border-gray-700 pt-8 text-center text-sm text-gray-400">
+          <p>© {new Date().getFullYear()} WizCoCo. All rights reserved.</p>
         </div>
       </div>
     </footer>

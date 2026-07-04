@@ -2,12 +2,21 @@
 
 import Link from 'next/link';
 import { buildLoginRedirectUrl } from '@/lib/authRedirect';
+import { counselorApplicationStatusLabel } from '@/lib/counselorProfessionalAccess';
+
+type AccessState = {
+  canShowApplyIcon: boolean;
+  showPartnerIcon: boolean;
+  showPendingBadge: boolean;
+  applicationStatus?: 'pending' | 'under_review' | 'approved' | 'rejected' | null;
+};
 
 type Props = {
   variant?: 'nav' | 'dock';
   onNavigate?: () => void;
-  /** false: 로그인 아이콘만 · true: 상담사 신청·기관 파트너 아이콘만 */
+  /** false: 로그인 아이콘만 */
   isLoggedIn?: boolean;
+  access?: AccessState;
 };
 
 const iconBtnBase =
@@ -45,39 +54,61 @@ export default function ProfessionalAccessIcons({
   variant = 'nav',
   onNavigate,
   isLoggedIn = false,
+  access,
 }: Props) {
   const btn = variant === 'dock' ? dockIconClass : navIconClass;
   const iconSize = variant === 'dock' ? 'h-5 w-5' : 'h-[18px] w-[18px]';
   const loginHref = buildLoginRedirectUrl();
+  const pendingLabel = counselorApplicationStatusLabel(access?.applicationStatus ?? null) || '승인신청중';
 
   const wrap = (node: React.ReactNode) =>
     variant === 'dock' ? (
       <div className="flex flex-col gap-2">{node}</div>
     ) : (
-      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 border-l border-white/10 pl-2 ml-1">{node}</div>
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 border-l border-white/10 pl-2 ml-1">{node}</div>
     );
 
   if (isLoggedIn) {
+    const showApply = access?.canShowApplyIcon ?? true;
+    const showPartner = access?.showPartnerIcon ?? false;
+    const showPending = access?.showPendingBadge ?? false;
+
+    if (!showApply && !showPartner && !showPending) {
+      return null;
+    }
+
     return wrap(
       <>
-        <Link
-          href="/counselor-application/"
-          onClick={onNavigate}
-          className={btn}
-          title="전문가·상담사 가입 신청"
-          aria-label="전문가·상담사 가입 신청"
-        >
-          <ApplyIcon className={iconSize} />
-        </Link>
-        <Link
-          href="/partners/"
-          onClick={onNavigate}
-          className={btn}
-          title="기관·파트너 안내"
-          aria-label="기관·파트너 안내"
-        >
-          <PartnerIcon className={iconSize} />
-        </Link>
+        {showPending && (
+          <span
+            className="px-2 py-1 rounded-md text-[11px] sm:text-xs font-semibold text-amber-100 bg-amber-500/20 border border-amber-400/30 whitespace-nowrap"
+            title="관리자 승인 검토 중입니다"
+          >
+            {pendingLabel}
+          </span>
+        )}
+        {showApply && (
+          <Link
+            href="/counselor-application/"
+            onClick={onNavigate}
+            className={btn}
+            title="전문가·상담사 가입 신청"
+            aria-label="전문가·상담사 가입 신청"
+          >
+            <ApplyIcon className={iconSize} />
+          </Link>
+        )}
+        {showPartner && (
+          <Link
+            href="/partners/"
+            onClick={onNavigate}
+            className={btn}
+            title="기관·파트너 안내"
+            aria-label="기관·파트너 안내"
+          >
+            <PartnerIcon className={iconSize} />
+          </Link>
+        )}
       </>,
     );
   }

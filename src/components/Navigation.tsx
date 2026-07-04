@@ -5,7 +5,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { initializeFirebase } from '@/lib/firebase';
-import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowPsychologyTestsMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
+import { shouldShowAdminMenu, shouldShowPsychologyTestsMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
+import { canAccessCounselorProfessionalFeatures } from '@/lib/counselorProfessionalAccess';
+import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
@@ -221,9 +223,19 @@ export default function Navigation() {
   const userRole = user?.role || 'user';
   const pendingCounselorCount = usePendingCounselorApplicationsCount(userRole);
   const counselorResultCount = useCounselorApplicationNotificationCount(userUid, userRole);
+  const counselorAccess = useCounselorProfessionalAccess();
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
-  const showPsychologyTestsMenu = shouldShowPsychologyTestsMenu(userRole);
-  const showCounselorMenu = shouldShowCounselorMenu(userRole);
+  const showPsychologyTestsMenu =
+    shouldShowPsychologyTestsMenu(userRole) &&
+    canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
+  const showCounselorMenu =
+    canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
+  const professionalIconAccess = {
+    canShowApplyIcon: counselorAccess.canShowApplyIcon,
+    showPartnerIcon: counselorAccess.showPartnerIcon,
+    showPendingBadge: counselorAccess.showPendingBadge,
+    applicationStatus: counselorAccess.applicationStatus,
+  };
   const showAdminMenu = shouldShowAdminMenu(userRole);
   const showOrgMenu = shouldShowOrgMenu(userRole) && userRole === 'org_admin';
   const visibleAdminMenuItems = useMemo(
@@ -840,7 +852,7 @@ export default function Navigation() {
                       </div>
                     )}
                     
-                    <ProfessionalAccessIcons variant="nav" isLoggedIn />
+                    <ProfessionalAccessIcons variant="nav" isLoggedIn access={professionalIconAccess} />
 
                     {/* 마이페이지 드롭다운 메뉴 */}
                     <div className="relative">
@@ -1009,6 +1021,7 @@ export default function Navigation() {
             <ProfessionalAccessIcons
               variant="nav"
               isLoggedIn={isLoggedIn}
+              access={professionalIconAccess}
               onNavigate={() => setIsMobileMenuOpen(false)}
             />
             <button

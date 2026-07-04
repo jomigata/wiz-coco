@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { DiscoverProfessionalExtras } from './DiscoverProfessionalExtras';
+import DiscoverPurchaseLinks from './DiscoverPurchaseLinks';
 
 export const metadata: Metadata = {
   title: 'WizCoCo Discover — 3분 마음 체크',
@@ -30,20 +31,7 @@ export default function DiscoverLandingPage() {
           <br />
           상담사·기관 파트너 경로와 브랜드를 분리했습니다.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-          <Link
-            href="/discover/mini-check/"
-            className="px-8 py-4 rounded-xl bg-violet-600 font-semibold hover:bg-violet-500 transition-colors"
-          >
-            무료 미니 검사 시작
-          </Link>
-          <Link
-            href="/discover/shop/"
-            className="px-8 py-4 rounded-xl border border-white/25 font-semibold hover:bg-white/5 transition-colors"
-          >
-            Basic · Premium · Pro
-          </Link>
-        </div>
+        <DiscoverPurchaseLinks />
         <DiscoverProfessionalExtras />
         <p className="mt-8 text-sm text-slate-500">
           <Link href="/" className="text-violet-300 hover:underline">

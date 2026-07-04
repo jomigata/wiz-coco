@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
 
 export default function HeroSection() {
@@ -12,6 +13,7 @@ export default function HeroSection() {
   const [examHref, setExamHref] = useState('/portal/login/');
   const [resultsHref, setResultsHref] = useState(portalLoginHref('results'));
   const { isAuthenticated } = useAuthResolved();
+  const { isApprovedCounselor } = useCounselorProfessionalAccess();
 
   useEffect(() => {
     setIsVisible(true);
@@ -58,7 +60,9 @@ export default function HeroSection() {
 
           <p className="text-base md:text-lg text-slate-400 mb-12 leading-relaxed max-w-xl mx-auto">
             {isAuthenticated
-              ? '배정된 검사를 진행하거나, 파트너·요금 안내를 아래에서 확인할 수 있습니다.'
+              ? isApprovedCounselor
+                ? '배정된 검사를 진행하거나, 파트너·요금 안내를 아래에서 확인할 수 있습니다.'
+                : '배정된 검사를 진행하거나, 상담사 승인 후 전문가 기능을 이용할 수 있습니다.'
               : '안내 받으신 검사 코드와 비밀번호만 입력하면, 별도 가입 없이 배정된 검사를 바로 진행할 수 있습니다.'}
           </p>
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
+import RoleGuard from '@/components/RoleGuard';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -127,6 +128,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   return (
+    <RoleGuard allowedRoles={['counselor', 'admin']} redirectTo="/counselor-application/">
     <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
@@ -159,5 +161,6 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </RoleGuard>
   );
 }

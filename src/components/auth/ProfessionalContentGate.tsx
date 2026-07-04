@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useAuthResolved } from '@/hooks/useAuthResolved';
+import CounselorProfessionalAccessGate from '@/components/auth/CounselorProfessionalAccessGate';
 
 type Props = {
   children: ReactNode;
@@ -9,17 +9,11 @@ type Props = {
   fallback?: ReactNode;
 };
 
-/** 로그인한 사용자에게만 상담사·파트너·요금 등 전문가 콘텐츠를 표시 */
+/** 승인된 상담사·관리자에게만 상담사·파트너·요금 등 전문가 콘텐츠를 표시 */
 export default function ProfessionalContentGate({ children, fallback = null }: Props) {
-  const { authPending, isAuthenticated } = useAuthResolved();
-
-  if (authPending) {
-    return null;
-  }
-
-  if (!isAuthenticated) {
-    return <>{fallback}</>;
-  }
-
-  return <>{children}</>;
+  return (
+    <CounselorProfessionalAccessGate loginFallback={fallback} unapprovedFallback={null}>
+      {children}
+    </CounselorProfessionalAccessGate>
+  );
 }

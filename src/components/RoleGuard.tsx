@@ -11,6 +11,8 @@ import {
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
+import { canAccessCounselorProfessionalFeatures } from '@/lib/counselorProfessionalAccess';
+import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -26,12 +28,14 @@ export default function RoleGuard({
   redirectTo = '/',
 }: RoleGuardProps) {
   const { user, authPending, showLoginRequired } = useAuthResolved();
+  const { loading: accessLoading, applicationStatus } = useCounselorProfessionalAccess();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     if (authPending) return;
+    if (user && accessLoading) return;
 
     if (showLoginRequired || !user) {
       setIsAuthorized(false);
@@ -54,7 +58,7 @@ export default function RoleGuard({
     if (allowedRoles.includes('admin') && shouldShowAdminMenu(role)) {
       hasAccess = true;
     } else if (allowedRoles.includes('counselor') && shouldShowCounselorMenu(role)) {
-      hasAccess = true;
+      hasAccess = canAccessCounselorProfessionalFeatures(role, applicationStatus);
     } else if (allowedRoles.includes('org_admin') && shouldShowOrgMenu(role) && role === 'org_admin') {
       hasAccess = true;
     } else if (allowedRoles.includes('org_admin') && shouldShowAdminMenu(role)) {
@@ -67,9 +71,9 @@ export default function RoleGuard({
     if (!hasAccess) {
       pushWithAuthSession(router, redirectTo);
     }
-  }, [user, authPending, showLoginRequired, allowedRoles, router, redirectTo]);
+  }, [user, authPending, showLoginRequired, allowedRoles, router, redirectTo, accessLoading, applicationStatus]);
 
-  if (authPending || isChecking) {
+  if (authPending || isChecking || (user && accessLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">

@@ -4,7 +4,9 @@ import Link from 'next/link';
 import Footer from '@/components/Footer';
 import MonetizationPricingSection from '@/components/monetization/MonetizationPricingSection';
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
-import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
+import CounselorProfessionalAccessGate, {
+  CounselorProfessionalUnapprovedPrompt,
+} from '@/components/auth/CounselorProfessionalAccessGate';
 import { AuthLoadingState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
@@ -124,9 +126,12 @@ export default function PartnersPageClient() {
   return (
     <div className="min-h-screen bg-gray-900">
       <div className="pt-16">
-        <ProfessionalContentGate fallback={<PartnersLoginPrompt />}>
+        <CounselorProfessionalAccessGate
+          loginFallback={<PartnersLoginPrompt />}
+          unapprovedFallback={<CounselorProfessionalUnapprovedPrompt />}
+        >
           <PartnersContent />
-        </ProfessionalContentGate>
+        </CounselorProfessionalAccessGate>
         {isAuthenticated ? <Footer /> : null}
       </div>
     </div>
