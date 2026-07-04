@@ -4,19 +4,19 @@ import Link from 'next/link';
 
 const steps = [
   {
-    step: '1',
+    step: '01',
     title: '코드 입력',
     desc: '안내 받은 검사 코드와 4자리 비밀번호를 입력합니다.',
   },
   {
-    step: '2',
+    step: '02',
     title: '검사 진행',
-    desc: '배정된 심리검사를 순서대로 또는 선택하여 진행합니다.',
+    desc: '배정된 심리검사를 차분한 환경에서 순서대로 진행합니다.',
   },
   {
-    step: '3',
+    step: '03',
     title: '결과 확인',
-    desc: '완료 후 담당 전문가를 통해 결과를 안내받습니다.',
+    desc: '완료 후 담당 전문가 또는 검사실에서 결과를 확인합니다.',
   },
 ];
 
@@ -38,40 +38,56 @@ const faqs = [
 export default function PublicTestPortalSections() {
   return (
     <>
-      <section className="py-16 bg-gray-900 border-t border-white/5">
-        <div className="container max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-white text-center mb-10">검사 진행 방법</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="py-20 md:py-24 bg-[#0a0f1a] border-t border-white/[0.05]">
+        <div className="container max-w-5xl mx-auto px-4">
+          <div className="text-center mb-14">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500 mb-3 block">
+              How it works
+            </span>
+            <h2 className="text-2xl md:text-3xl font-semibold text-white tracking-tight">
+              검사 진행 방법
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
             {steps.map((s) => (
               <div
                 key={s.step}
-                className="rounded-xl border border-white/10 bg-white/5 p-6 text-center"
+                className="relative rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-7 md:p-8 text-center"
               >
-                <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center mx-auto mb-4">
-                  {s.step}
+                <div className="text-[11px] font-medium tracking-[0.2em] text-sky-400/80 mb-4">
+                  STEP {s.step}
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{s.title}</h3>
-                <p className="text-slate-400 text-sm">{s.desc}</p>
+                <h3 className="text-lg font-medium text-white mb-3">{s.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-slate-950">
+      <section className="py-20 md:py-24 bg-[#070b14]">
         <div className="container max-w-2xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">자주 묻는 질문</h2>
-          <div className="space-y-4">
+          <h2 className="text-2xl font-semibold text-white text-center mb-10 tracking-tight">
+            자주 묻는 질문
+          </h2>
+          <div className="space-y-3">
             {faqs.map((f) => (
-              <div key={f.q} className="rounded-lg border border-white/10 bg-white/5 p-5">
-                <h3 className="font-medium text-blue-200 mb-2">{f.q}</h3>
-                <p className="text-slate-400 text-sm">{f.a}</p>
+              <div
+                key={f.q}
+                className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-6 py-5"
+              >
+                <h3 className="font-medium text-sky-100/90 mb-2 text-[15px]">{f.q}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{f.a}</p>
               </div>
             ))}
           </div>
-          <p className="text-center mt-8">
-            <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 font-medium">
-              검사 시작하기 →
+          <p className="text-center mt-10">
+            <Link
+              href="/portal/login/"
+              className="inline-flex items-center gap-2 text-sm font-medium text-sky-300 hover:text-sky-200 transition-colors"
+            >
+              검사 시작하기
+              <span aria-hidden>→</span>
             </Link>
           </p>
         </div>

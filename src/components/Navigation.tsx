@@ -22,6 +22,7 @@ import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
+import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 
 export default function Navigation() {
   const router = useRouter();
@@ -995,25 +996,17 @@ export default function Navigation() {
                     </div>
                   </>
                 ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className="inline-flex h-10 min-w-[6.5rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-semibold tracking-wide text-slate-100 shadow-sm transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white whitespace-nowrap"
-                      onClick={(e) => handleAuthLinkClick("/login", e)}
-                    >
-                      <span className="text-base leading-none" aria-hidden>
-                        🔑
-                      </span>
-                      <span>전문가 로그인</span>
-                    </Link>
-                  </>
+                  <ProfessionalAccessIcons variant="nav" />
                 )}
               </div>
             </div>
           </div>
 
-          {/* 모바일 햄버거 — 브랜드와 같은 행 정렬 */}
-          <div className="flex md:hidden shrink-0 items-center">
+          {/* 모바일: 전문가 아이콘 + 햄버거 */}
+          <div className="flex md:hidden shrink-0 items-center gap-1">
+            {!isLoggedIn && (
+              <ProfessionalAccessIcons variant="nav" onNavigate={() => setIsMobileMenuOpen(false)} />
+            )}
             <button
               type="button"
               aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
@@ -1195,14 +1188,12 @@ export default function Navigation() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2 pt-4 border-t border-white/20">
-                  <Link
-                    href="/login"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-blue-800/30 rounded-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    🔑 전문가 로그인
-                  </Link>
+                <div className="pt-4 border-t border-white/20 flex flex-col items-center gap-3">
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500">전문가 · 기관</p>
+                  <ProfessionalAccessIcons
+                    variant="nav"
+                    onNavigate={() => setIsMobileMenuOpen(false)}
+                  />
                 </div>
               )}
             </div>
