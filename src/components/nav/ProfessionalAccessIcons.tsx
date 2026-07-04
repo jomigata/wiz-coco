@@ -6,6 +6,8 @@ import { buildLoginRedirectUrl } from '@/lib/authRedirect';
 type Props = {
   variant?: 'nav' | 'dock';
   onNavigate?: () => void;
+  /** false: 로그인 아이콘만 · true: 상담사 신청·기관 파트너 아이콘만 */
+  isLoggedIn?: boolean;
 };
 
 const iconBtnBase =
@@ -39,7 +41,11 @@ function PartnerIcon({ className }: { className?: string }) {
   );
 }
 
-export default function ProfessionalAccessIcons({ variant = 'nav', onNavigate }: Props) {
+export default function ProfessionalAccessIcons({
+  variant = 'nav',
+  onNavigate,
+  isLoggedIn = false,
+}: Props) {
   const btn = variant === 'dock' ? dockIconClass : navIconClass;
   const iconSize = variant === 'dock' ? 'h-5 w-5' : 'h-[18px] w-[18px]';
   const loginHref = buildLoginRedirectUrl();
@@ -51,35 +57,40 @@ export default function ProfessionalAccessIcons({ variant = 'nav', onNavigate }:
       <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 border-l border-white/10 pl-2 ml-1">{node}</div>
     );
 
+  if (isLoggedIn) {
+    return wrap(
+      <>
+        <Link
+          href="/counselor-application/"
+          onClick={onNavigate}
+          className={btn}
+          title="전문가·상담사 가입 신청"
+          aria-label="전문가·상담사 가입 신청"
+        >
+          <ApplyIcon className={iconSize} />
+        </Link>
+        <Link
+          href="/partners/"
+          onClick={onNavigate}
+          className={btn}
+          title="기관·파트너 안내"
+          aria-label="기관·파트너 안내"
+        >
+          <PartnerIcon className={iconSize} />
+        </Link>
+      </>,
+    );
+  }
+
   return wrap(
-    <>
-      <Link
-        href={loginHref}
-        onClick={onNavigate}
-        className={btn}
-        title="전문가·상담사 로그인"
-        aria-label="전문가·상담사 로그인"
-      >
-        <LoginIcon className={iconSize} />
-      </Link>
-      <Link
-        href="/counselor-application/"
-        onClick={onNavigate}
-        className={btn}
-        title="상담사 가입 신청"
-        aria-label="상담사 가입 신청"
-      >
-        <ApplyIcon className={iconSize} />
-      </Link>
-      <Link
-        href="/partners/"
-        onClick={onNavigate}
-        className={btn}
-        title="기관·파트너 안내"
-        aria-label="기관·파트너 안내"
-      >
-        <PartnerIcon className={iconSize} />
-      </Link>
-    </>,
+    <Link
+      href={loginHref}
+      onClick={onNavigate}
+      className={btn}
+      title="전문가·상담사 로그인"
+      aria-label="전문가·상담사 로그인"
+    >
+      <LoginIcon className={iconSize} />
+    </Link>,
   );
 }

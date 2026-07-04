@@ -117,10 +117,10 @@ export default function ForgotPasswordPage() {
 
           <div className="text-center space-y-2">
             <Link href="/login" className="block text-emerald-300 hover:text-emerald-200 font-medium">
-              로그인하기
+              전문가·상담사 로그인
             </Link>
             <Link href="/register" className="block text-sm text-emerald-400 hover:text-emerald-300">
-              계정이 없으신가요? 회원가입
+              전문가·상담사 회원가입
             </Link>
           </div>
         </div>

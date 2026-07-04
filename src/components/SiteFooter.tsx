@@ -86,11 +86,11 @@ export default function SiteFooter() {
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">전문가</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">전문가·상담사</h3>
             <ul className="text-sm space-y-2">
               <li>
                 <Link href="/login" className="hover:text-white transition-colors">
-                  전문가 로그인
+                  전문가·상담사 로그인
                 </Link>
               </li>
               <li>

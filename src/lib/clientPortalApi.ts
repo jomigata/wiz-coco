@@ -112,7 +112,7 @@ export async function bulkCreateClientPortals(body: {
   assessmentId?: string;
 }): Promise<ClientPortalBulkCreateResult> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/client-portals/bulk`, {
     method: 'POST',
     headers: {
@@ -130,7 +130,7 @@ export async function bulkCreateClientPortals(body: {
 
 export async function fetchBulkPortalJob(jobId: string): Promise<BulkPortalJobStatus> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/client-portals/bulk/jobs/${encodeURIComponent(jobId)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -143,7 +143,7 @@ export async function fetchBulkPortalJob(jobId: string): Promise<BulkPortalJobSt
 
 export async function fetchBulkPortalJobResult(jobId: string): Promise<ClientPortalBulkJobResult> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
     `${getBaseUrl()}/api/client-portals/bulk/jobs/${encodeURIComponent(jobId)}/result`,
     { headers: { Authorization: `Bearer ${token}` } }
@@ -193,7 +193,7 @@ export async function fetchAssessmentDispatchStatus(
   assessmentId: string
 ): Promise<AssessmentDispatchStatus> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
     `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch`,
     { headers: { Authorization: `Bearer ${token}` } }
@@ -210,7 +210,7 @@ export async function resendDispatchCredentials(
   portalIds: string[]
 ): Promise<{ sent: number; failed: number; skipped: number }> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
     `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/resend`,
     {
@@ -234,7 +234,7 @@ export async function sendDispatchTestReminders(
   portalIds: string[]
 ): Promise<{ sent: number; failed: number; skipped: number }> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
     `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/remind`,
     {
@@ -271,7 +271,7 @@ export async function archiveDispatchRecipients(
   portalIds: string[],
 ): Promise<{ archived: number; failed: number }> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
     `${getBaseUrl()}/api/client-portals/assessments/${encodeURIComponent(assessmentId)}/dispatch/archive`,
     {
@@ -294,7 +294,7 @@ export async function fetchArchivedDispatchRecipients(
   assessmentId?: string,
 ): Promise<{ items: ArchivedDispatchRecipient[] }> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const qs = assessmentId ? `?assessmentId=${encodeURIComponent(assessmentId)}` : '';
   const res = await fetch(`${getBaseUrl()}/api/client-portals/archived${qs}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -310,7 +310,7 @@ export async function restoreArchivedDispatchRecipients(
   portalIds: string[],
 ): Promise<{ restored: number; failed: number }> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/client-portals/archived/restore`, {
     method: 'POST',
     headers: {
@@ -331,7 +331,7 @@ export async function resendBulkPortalNotifications(body: {
   cohortId?: string;
 }): Promise<{ resetFailed: number; requeued: number }> {
   const token = await getCounselorToken();
-  if (!token) throw new Error('전문가 로그인이 필요합니다.');
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/client-portals/bulk/resend-notifications`, {
     method: 'POST',
     headers: {

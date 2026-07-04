@@ -15,7 +15,7 @@ export function isLoginRequiredError(message: unknown): boolean {
   const text = String(message ?? '').trim();
   if (!text) return false;
   if (text.includes('로그인이 필요')) return true;
-  if (text.includes('전문가 로그인')) return true;
+  if (text.includes('전문가·상담사 로그인') || text.includes('전문가 로그인')) return true;
   if (/unauthorized/i.test(text)) return true;
   if (/valid firebase id token/i.test(text)) return true;
   if (/id token required/i.test(text)) return true;

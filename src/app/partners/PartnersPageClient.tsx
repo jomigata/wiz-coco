@@ -102,7 +102,7 @@ function PartnersLoginPrompt() {
             홈으로
           </Link>
           <div className="pt-4 border-t border-white/10 w-full flex justify-center">
-            <ProfessionalAccessIcons variant="nav" />
+            <ProfessionalAccessIcons variant="nav" isLoggedIn={false} />
           </div>
         </div>
       </div>

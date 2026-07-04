@@ -130,7 +130,7 @@ const ResetPasswordContent = () => {
 
           <div className="text-center">
             <Link href="/login" className="text-sm text-emerald-400 hover:text-emerald-300">
-              로그인으로 돌아가기
+              전문가·상담사 로그인으로 돌아가기
             </Link>
           </div>
         </div>

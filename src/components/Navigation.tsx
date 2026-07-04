@@ -840,6 +840,8 @@ export default function Navigation() {
                       </div>
                     )}
                     
+                    <ProfessionalAccessIcons variant="nav" isLoggedIn />
+
                     {/* 마이페이지 드롭다운 메뉴 */}
                     <div className="relative">
                       <Link
@@ -996,7 +998,7 @@ export default function Navigation() {
                     </div>
                   </>
                 ) : (
-                  <ProfessionalAccessIcons variant="nav" />
+                  <ProfessionalAccessIcons variant="nav" isLoggedIn={false} />
                 )}
               </div>
             </div>
@@ -1004,9 +1006,11 @@ export default function Navigation() {
 
           {/* 모바일: 전문가 아이콘 + 햄버거 */}
           <div className="flex md:hidden shrink-0 items-center gap-1">
-            {!isLoggedIn && (
-              <ProfessionalAccessIcons variant="nav" onNavigate={() => setIsMobileMenuOpen(false)} />
-            )}
+            <ProfessionalAccessIcons
+              variant="nav"
+              isLoggedIn={isLoggedIn}
+              onNavigate={() => setIsMobileMenuOpen(false)}
+            />
             <button
               type="button"
               aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
@@ -1189,9 +1193,10 @@ export default function Navigation() {
                 </div>
               ) : (
                 <div className="pt-4 border-t border-white/20 flex flex-col items-center gap-3">
-                  <p className="text-[10px] uppercase tracking-widest text-slate-500">전문가 · 기관</p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500">전문가·상담사 로그인</p>
                   <ProfessionalAccessIcons
                     variant="nav"
+                    isLoggedIn={false}
                     onNavigate={() => setIsMobileMenuOpen(false)}
                   />
                 </div>
