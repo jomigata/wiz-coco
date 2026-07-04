@@ -115,13 +115,22 @@ export default function ForgotPasswordPage() {
             </form>
           )}
 
-          <div className="text-center space-y-2">
-            <Link href="/login" className="block text-emerald-300 hover:text-emerald-200 font-medium">
-              전문가·상담사 로그인
-            </Link>
-            <Link href="/register" className="block text-sm text-emerald-400 hover:text-emerald-300">
-              전문가·상담사 회원가입
-            </Link>
+          <div className="text-center pt-1">
+            <p className="text-xs text-emerald-600">
+              <Link
+                href="/login"
+                className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
+              >
+                전문가·상담사 로그인
+              </Link>
+              <span className="mx-2 text-emerald-800">·</span>
+              <Link
+                href="/register"
+                className="text-emerald-500 hover:text-emerald-400 underline-offset-2 hover:underline"
+              >
+                전문가·상담사 회원가입
+              </Link>
+            </p>
           </div>
         </div>
       </div>
