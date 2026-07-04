@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation, hasAuthenticatedTabSession, beginAuthLoginAttempt, endAuthLoginAttempt, isAuthLoginInProgress } from '@/utils/authSessionLifecycle';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 
 const LoadingLogin = () => (
@@ -34,7 +32,6 @@ const LoginContent = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(registered);
   const [emailVerificationMessage, setEmailVerificationMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordResetSent, setPasswordResetSent] = useState(false);
 
   useEffect(() => {
     if (emailVerification === 'sent') {
@@ -87,39 +84,6 @@ const LoginContent = () => {
     }
   };
 
-  const handlePasswordReset = async () => {
-    if (!email) {
-      setLoginError('비밀번호 재설정을 위해 먼저 이메일을 입력해주세요.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setLoginError('올바른 이메일 형식을 입력해주세요.');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setLoginError('');
-      await sendPasswordResetEmail(auth, email.trim());
-      setPasswordResetSent(true);
-    } catch (error: unknown) {
-      const code = (error as { code?: string })?.code;
-      if (code === 'auth/user-not-found') {
-        setLoginError('등록되지 않은 이메일 주소입니다.');
-      } else if (code === 'auth/invalid-email') {
-        setLoginError('올바르지 않은 이메일 형식입니다.');
-      } else if (code === 'auth/too-many-requests') {
-        setLoginError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
-      } else {
-        setLoginError('비밀번호 재설정 이메일 발송 중 오류가 발생했습니다.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
       <div className="flex-grow flex items-center justify-center px-4 py-12">
@@ -144,12 +108,6 @@ const LoginContent = () => {
               }`}
             >
               {emailVerificationMessage}
-            </div>
-          )}
-
-          {passwordResetSent && (
-            <div className="bg-green-800/50 text-green-200 border border-green-600/50 p-4 rounded-lg text-center text-sm">
-              {email}로 비밀번호 재설정 링크를 보냈습니다. 이메일을 확인해주세요.
             </div>
           )}
 
@@ -198,16 +156,6 @@ const LoginContent = () => {
             >
               {isLoading ? '처리 중…' : '로그인'}
             </button>
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={handlePasswordReset}
-                disabled={isLoading || passwordResetSent}
-                className="text-xs text-emerald-500 hover:text-emerald-400 disabled:opacity-50"
-              >
-                {passwordResetSent ? '재설정 메일 발송됨' : '비밀번호 찾기'}
-              </button>
-            </div>
           </form>
 
           <div className="text-center pt-1">
