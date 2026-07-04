@@ -47,6 +47,20 @@ export default function PortalLoginPage() {
     if (rawPin) setPin(normalizeJoinPinDigits(rawPin));
   }, []);
 
+  /** 브라우저가 로그인 폼으로 인식해 이메일을 채우는 경우 제거 */
+  useEffect(() => {
+    const clearEmailAutofill = () => {
+      setCode((prev) => (prev.includes('@') ? '' : prev));
+    };
+    clearEmailAutofill();
+    const t1 = window.setTimeout(clearEmailAutofill, 50);
+    const t2 = window.setTimeout(clearEmailAutofill, 300);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
+
   useEffect(() => {
     const session = readClientPortalSession();
     if (!session?.portalToken) return;
@@ -101,20 +115,42 @@ export default function PortalLoginPage() {
               <p className="text-slate-400 text-sm leading-relaxed">{copy.description}</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+              <input
+                type="text"
+                name="prevent_autofill_username"
+                tabIndex={-1}
+                autoComplete="username"
+                className="sr-only"
+                aria-hidden
+                readOnly
+              />
+              <input
+                type="password"
+                name="prevent_autofill_password"
+                tabIndex={-1}
+                autoComplete="current-password"
+                className="sr-only"
+                aria-hidden
+                readOnly
+              />
               <div>
-                <label htmlFor="myCode" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="wizcoco-portal-my-code" className="block text-sm font-medium text-slate-300 mb-2">
                   나의코드
                 </label>
                 <input
-                  id="myCode"
-                  name="wizcoco-my-code"
+                  id="wizcoco-portal-my-code"
+                  name="wizcoco_portal_my_code"
                   type="text"
                   inputMode="text"
                   maxLength={20}
                   autoComplete="off"
                   autoCorrect="off"
+                  autoCapitalize="characters"
                   spellCheck={false}
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-bwignore
                   placeholder={myCodePlaceholder}
                   className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                   value={code}
@@ -123,15 +159,18 @@ export default function PortalLoginPage() {
                 />
               </div>
               <div>
-                <label htmlFor="portalPin" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="wizcoco-portal-pin" className="block text-sm font-medium text-slate-300 mb-2">
                   비밀번호 (4자리)
                 </label>
                 <input
-                  id="portalPin"
+                  id="wizcoco-portal-pin"
+                  name="wizcoco_portal_pin"
                   type="password"
                   inputMode="numeric"
                   maxLength={4}
                   autoComplete="off"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                   className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                   value={pin}
                   onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
