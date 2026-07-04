@@ -177,7 +177,8 @@ function PortalLoginContent() {
                   autoComplete="off"
                   data-lpignore="true"
                   data-1p-ignore="true"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  placeholder="••••"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-500 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                   value={pin}
                   onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
                   disabled={loading}
