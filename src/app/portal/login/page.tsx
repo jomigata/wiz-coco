@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loginClientPortal } from '@/lib/clientPortalApi';
 import {
   formatMyCodeWhileTyping,
@@ -19,12 +19,21 @@ import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import {
   PORTAL_LOGIN_COPY,
   parsePortalLoginIntent,
-  type PortalLoginIntent,
+  portalLoginHref,
 } from '@/lib/portalLoginIntent';
 
-export default function PortalLoginPage() {
+function PortalLoginLoading() {
+  return (
+    <div className="min-h-screen bg-[#070b14] pt-24 flex justify-center">
+      <p className="text-slate-400 text-sm">불러오는 중…</p>
+    </div>
+  );
+}
+
+function PortalLoginContent() {
   const router = useRouter();
-  const [intent, setIntent] = useState<PortalLoginIntent>('start');
+  const searchParams = useSearchParams();
+  const intent = parsePortalLoginIntent(searchParams.get('intent'));
   const [code, setCode] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -37,17 +46,12 @@ export default function PortalLoginPage() {
     isValidMyCodeInput(normalizedCode) && normalizedPin.length === 4 && !loading;
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    setIntent(parsePortalLoginIntent(params.get('intent')));
-
-    const raw = (params.get('accessCode') || '').trim();
+    const raw = (searchParams.get('accessCode') || '').trim();
     if (raw) setCode(formatMyCodeWhileTyping(raw));
-    const rawPin = (params.get('pin') || '').trim();
+    const rawPin = (searchParams.get('pin') || '').trim();
     if (rawPin) setPin(normalizeJoinPinDigits(rawPin));
-  }, []);
+  }, [searchParams]);
 
-  /** 브라우저가 로그인 폼으로 인식해 이메일을 채우는 경우 제거 */
   useEffect(() => {
     const clearEmailAutofill = () => {
       setCode((prev) => (prev.includes('@') ? '' : prev));
@@ -59,7 +63,7 @@ export default function PortalLoginPage() {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
-  }, []);
+  }, [intent]);
 
   useEffect(() => {
     const session = readClientPortalSession();
@@ -97,6 +101,8 @@ export default function PortalLoginPage() {
 
   const myCodePlaceholder = getMyCodeInputPlaceholder();
   const isResults = intent === 'results';
+  const startHref = portalLoginHref('start');
+  const resultsHref = portalLoginHref('results');
 
   return (
     <div className="min-h-screen bg-[#070b14]">
@@ -194,7 +200,11 @@ export default function PortalLoginPage() {
             {copy.alternate && (
               <p className="mt-6 text-center text-xs text-slate-500">
                 {copy.alternate.label}{' '}
-                <Link href={copy.alternate.href} className="text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline">
+                <Link
+                  href={isResults ? startHref : resultsHref}
+                  className="text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline font-medium"
+                  onClick={() => setError('')}
+                >
                   여기
                 </Link>
               </p>
@@ -203,5 +213,13 @@ export default function PortalLoginPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function PortalLoginPage() {
+  return (
+    <Suspense fallback={<PortalLoginLoading />}>
+      <PortalLoginContent />
+    </Suspense>
   );
 }
