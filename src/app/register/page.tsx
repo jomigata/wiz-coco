@@ -149,7 +149,7 @@ const RegisterContent = () => {
               className="w-full py-2.5 text-sm font-medium rounded-md text-emerald-50 bg-emerald-700/80 border border-emerald-600/40 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-500/60 disabled:opacity-60"
               disabled={isLoading}
             >
-              {isLoading ? '처리 중…' : '가입하기'}
+              {isLoading ? '처리 중…' : '등록하기'}
             </button>
           </form>
 
