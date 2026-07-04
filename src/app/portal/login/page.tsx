@@ -19,7 +19,6 @@ import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import {
   PORTAL_LOGIN_COPY,
   parsePortalLoginIntent,
-  portalLoginHref,
 } from '@/lib/portalLoginIntent';
 
 function PortalLoginLoading() {
@@ -101,8 +100,17 @@ function PortalLoginContent() {
 
   const myCodePlaceholder = getMyCodeInputPlaceholder();
   const isResults = intent === 'results';
-  const startHref = portalLoginHref('start');
-  const resultsHref = portalLoginHref('results');
+  const alternateHref = copy.alternate?.href;
+
+  const handleAlternateClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (!alternateHref) return;
+      e.preventDefault();
+      setError('');
+      router.push(alternateHref);
+    },
+    [alternateHref, router],
+  );
 
   return (
     <div className="min-h-screen bg-[#070b14]">
@@ -198,13 +206,13 @@ function PortalLoginContent() {
               </button>
             </form>
 
-            {copy.alternate && (
+            {copy.alternate && alternateHref && (
               <p className="mt-6 text-center text-xs text-slate-500">
                 {copy.alternate.label}{' '}
                 <Link
-                  href={isResults ? startHref : resultsHref}
+                  href={alternateHref}
                   className="text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline font-medium"
-                  onClick={() => setError('')}
+                  onClick={handleAlternateClick}
                 >
                   여기
                 </Link>
