@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 const steps = [
   {
@@ -38,7 +39,7 @@ const faqs = [
 export default function PublicTestPortalSections() {
   return (
     <>
-      <section className="py-20 md:py-24 bg-[#0a0f1a] border-t border-white/[0.05]">
+      <HomeSectionShell tone="steps" className="py-20 md:py-24">
         <div className="container max-w-5xl mx-auto px-4">
           <div className="text-center mb-14">
             <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500 mb-3 block">
@@ -52,9 +53,9 @@ export default function PublicTestPortalSections() {
             {steps.map((s) => (
               <div
                 key={s.step}
-                className="relative rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-7 md:p-8 text-center"
+                className="relative rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.035] to-white/[0.01] p-7 md:p-8 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
               >
-                <div className="text-[11px] font-medium tracking-[0.2em] text-sky-400/80 mb-4">
+                <div className="text-[11px] font-medium tracking-[0.2em] text-sky-400/75 mb-4">
                   STEP {s.step}
                 </div>
                 <h3 className="text-lg font-medium text-white mb-3">{s.title}</h3>
@@ -63,9 +64,9 @@ export default function PublicTestPortalSections() {
             ))}
           </div>
         </div>
-      </section>
+      </HomeSectionShell>
 
-      <section className="py-20 md:py-24 bg-[#070b14]">
+      <HomeSectionShell tone="faq" className="py-20 md:py-24">
         <div className="container max-w-2xl mx-auto px-4">
           <h2 className="text-2xl font-semibold text-white text-center mb-10 tracking-tight">
             자주 묻는 질문
@@ -74,9 +75,9 @@ export default function PublicTestPortalSections() {
             {faqs.map((f) => (
               <div
                 key={f.q}
-                className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-6 py-5"
+                className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-6 py-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
               >
-                <h3 className="font-medium text-sky-100/90 mb-2 text-[15px]">{f.q}</h3>
+                <h3 className="font-medium text-sky-100/85 mb-2 text-[15px]">{f.q}</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">{f.a}</p>
               </div>
             ))}
@@ -84,14 +85,14 @@ export default function PublicTestPortalSections() {
           <p className="text-center mt-10">
             <Link
               href="/portal/login/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-sky-300 hover:text-sky-200 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-sky-300/90 hover:text-sky-200 transition-colors"
             >
               검사 시작하기
               <span aria-hidden>→</span>
             </Link>
           </p>
         </div>
-      </section>
+      </HomeSectionShell>
     </>
   );
 }

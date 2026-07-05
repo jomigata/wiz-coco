@@ -445,7 +445,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav
-        className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 shadow-md backdrop-blur-sm"
+        className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.06] bg-[#0a1020]/90 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md"
         style={{ contain: 'layout' }}
       >
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3">

@@ -3,6 +3,7 @@ import {
   counselorMonetizationProducts,
   orgMonetizationProducts,
 } from '@/data/monetizationCatalog';
+import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 function ProductCard({
   product,
@@ -14,7 +15,7 @@ function ProductCard({
       className={`rounded-xl border p-6 flex flex-col h-full ${
         product.highlighted
           ? 'border-blue-500/50 bg-blue-950/30 shadow-lg shadow-blue-900/20'
-          : 'border-white/10 bg-white/5'
+          : 'border-white/[0.07] bg-white/[0.03]'
       }`}
     >
       {product.highlighted && (
@@ -52,7 +53,7 @@ function ProductCard({
 
 export default function MonetizationPricingSection() {
   return (
-    <section className="py-16 bg-gray-900 border-t border-white/5">
+    <HomeSectionShell tone="pricing" className="py-16 md:py-20">
       <div className="container max-w-6xl mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-3">
           요금 안내 (가이드)
@@ -76,6 +77,6 @@ export default function MonetizationPricingSection() {
           ))}
         </div>
       </div>
-    </section>
+    </HomeSectionShell>
   );
 }

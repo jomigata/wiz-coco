@@ -7,6 +7,7 @@ import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
+import { homeSectionTones } from '@/components/home/homeSectionStyles';
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -25,10 +26,10 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-[88vh] flex items-center overflow-hidden bg-[#070b14]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(56,100,180,0.35),transparent)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_60%,rgba(99,60,180,0.12),transparent)]" />
-      <div className="absolute inset-0 opacity-[0.04]">
+    <section className={`relative min-h-[88vh] flex items-center overflow-hidden ${homeSectionTones.hero.section}`}>
+      <div className={`absolute inset-0 ${homeSectionTones.hero.glow}`} />
+      <div className={`absolute inset-0 ${homeSectionTones.hero.glowSecondary}`} />
+      <div className="absolute inset-0 opacity-[0.025]">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
             <pattern id="hero-grid" width="6" height="6" patternUnits="userSpaceOnUse">
@@ -106,7 +107,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#0a0f1a] to-transparent pointer-events-none" />
+      <div className={`absolute bottom-0 inset-x-0 h-28 bg-gradient-to-b ${homeSectionTones.hero.bottomFade} pointer-events-none`} />
     </section>
   );
 }

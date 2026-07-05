@@ -15,7 +15,7 @@ export default function SiteFooter() {
 
   if (!isAuthenticated || !isApprovedCounselor) {
     return (
-      <footer className="border-t border-white/[0.06] bg-[#070b14] py-10">
+      <footer className="border-t border-white/[0.05] bg-[#090d18] py-10">
         <div className="container max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} WizCoCo · Psychological Care</p>
           <div className="flex items-center gap-4">
@@ -32,7 +32,7 @@ export default function SiteFooter() {
   }
 
   return (
-    <footer className="bg-gray-800 text-gray-300 pt-16 pb-8">
+    <footer className="border-t border-white/[0.05] bg-[#0c0f1a] text-gray-300 pt-16 pb-8">
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>

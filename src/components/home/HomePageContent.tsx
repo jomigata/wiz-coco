@@ -9,10 +9,11 @@ import MonetizationPricingSection from '@/components/monetization/MonetizationPr
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
 import MonetizationPartnerSection from '@/components/monetization/MonetizationPartnerSection';
 import SiteFooter from '@/components/SiteFooter';
+import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 
 export default function HomePageContent() {
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
+    <div className="min-h-screen" style={{ backgroundColor: HOME_PAGE_BG }}>
       <div className="pt-16">
         <main className="flex-grow">
           <HeroSection />

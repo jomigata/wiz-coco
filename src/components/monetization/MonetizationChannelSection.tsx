@@ -1,8 +1,9 @@
 import { monetizationChannelSummaries } from '@/data/monetizationCatalog';
+import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 export default function MonetizationChannelSection() {
   return (
-    <section className="py-16 bg-slate-950 border-t border-white/5">
+    <HomeSectionShell tone="channel" className="py-16 md:py-20">
       <div className="container max-w-6xl mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-3">
           이용 방법 — 3가지 채널
@@ -15,7 +16,7 @@ export default function MonetizationChannelSection() {
           {monetizationChannelSummaries.map((ch) => (
             <div
               key={ch.id}
-              className="rounded-xl border border-white/10 bg-white/5 p-6 flex flex-col"
+              className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-6 flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
             >
               <span className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-2">
                 {ch.subtitle}
@@ -35,6 +36,6 @@ export default function MonetizationChannelSection() {
           ))}
         </div>
       </div>
-    </section>
+    </HomeSectionShell>
   );
 }

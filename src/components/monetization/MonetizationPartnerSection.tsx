@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 export default function MonetizationPartnerSection() {
   return (
-    <section className="py-16 bg-gradient-to-br from-indigo-950 to-gray-900 border-t border-white/5">
+    <HomeSectionShell tone="partner" className="py-16 md:py-20" showBottomFade={false}>
       <div className="container max-w-4xl mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
           파트너 · 기관 도입 문의
@@ -25,6 +26,6 @@ export default function MonetizationPartnerSection() {
           </Link>
         </div>
       </div>
-    </section>
+    </HomeSectionShell>
   );
 }

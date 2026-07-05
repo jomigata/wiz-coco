@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 const clientTrustPoints = [
   {
@@ -21,10 +22,10 @@ const clientTrustPoints = [
 
 export default function ClientExamTrustSection() {
   return (
-    <section className="py-20 bg-gradient-to-b from-slate-950 to-gray-900 border-t border-white/[0.06]">
+    <HomeSectionShell tone="trust" className="py-20 md:py-24">
       <div className="container max-w-5xl mx-auto px-4">
         <div className="text-center mb-12">
-          <span className="inline-block text-[11px] uppercase tracking-[0.2em] text-sky-300/80 mb-3">
+          <span className="inline-block text-[11px] uppercase tracking-[0.2em] text-sky-300/70 mb-3">
             Secure Assessment
           </span>
           <h2 className="text-2xl md:text-3xl font-semibold text-white mb-3 tracking-tight">
@@ -39,10 +40,10 @@ export default function ClientExamTrustSection() {
           {clientTrustPoints.map((p) => (
             <div
               key={p.title}
-              className="group rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 md:p-7 hover:border-sky-500/20 hover:bg-sky-950/10 transition-colors duration-300"
+              className="group rounded-2xl border border-white/[0.06] bg-white/[0.025] p-6 md:p-7 hover:border-sky-500/15 hover:bg-sky-950/10 transition-colors duration-300 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
             >
-              <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-400/20 flex items-center justify-center mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-300" aria-hidden />
+              <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-400/15 flex items-center justify-center mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-300/90" aria-hidden />
               </div>
               <h3 className="font-medium text-white mb-2">{p.title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{p.body}</p>
@@ -50,13 +51,13 @@ export default function ClientExamTrustSection() {
           ))}
         </div>
         <p className="text-center mt-10 text-xs text-slate-500">
-          <Link href="/privacy/" className="text-sky-400/90 hover:text-sky-300 underline-offset-2 hover:underline">
+          <Link href="/privacy/" className="text-sky-400/85 hover:text-sky-300 underline-offset-2 hover:underline">
             개인정보처리방침
           </Link>
           {' · '}
           SSL · Firebase 보안 운영
         </p>
       </div>
-    </section>
+    </HomeSectionShell>
   );
 }

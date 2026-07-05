@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { privacyTrustPoints } from '@/data/monetizationCatalog';
+import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 export default function MonetizationTrustSection() {
   return (
-    <section className="py-16 bg-slate-950 border-t border-white/5">
+    <HomeSectionShell tone="monetizationTrust" className="py-16 md:py-20">
       <div className="container max-w-4xl mx-auto px-4">
         <h2 className="text-2xl font-bold text-white text-center mb-3">
           비용·개인정보 부담을 줄이는 설계
@@ -16,7 +17,7 @@ export default function MonetizationTrustSection() {
           {privacyTrustPoints.map((p) => (
             <div
               key={p.title}
-              className="rounded-lg border border-emerald-500/20 bg-emerald-950/20 p-5"
+              className="rounded-lg border border-emerald-500/15 bg-emerald-950/15 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
             >
               <h3 className="font-semibold text-emerald-200 mb-2">{p.title}</h3>
               <p className="text-slate-400 text-sm">{p.body}</p>
@@ -31,6 +32,6 @@ export default function MonetizationTrustSection() {
           SSL 적용 · Firebase 위탁 운영
         </p>
       </div>
-    </section>
+    </HomeSectionShell>
   );
 }
