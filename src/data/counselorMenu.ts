@@ -1,5 +1,26 @@
 import type { TestCategory } from '@/data/psychologyTestMenu';
 
+export const COUNSELOR_MANAGEMENT_LABEL = '상담관리';
+export const COUNSELOR_MANAGEMENT_PANEL_TITLE = '📋 상담관리';
+
+/** AI 심리검사 — 상담관리 메뉴용: 대분류·중분류만 (leaf 항목 제외) */
+export function psychologyTestsForCounselorMenu(testCategories: TestCategory[]): TestCategory[] {
+  return testCategories.map((category) => ({
+    ...category,
+    subcategories: category.subcategories
+      .filter((sub) => !sub.hidden)
+      .map((sub) => ({
+        ...sub,
+        items: [],
+      })),
+  }));
+}
+
+/** 상담관리 메가 메뉴 — AI 심리검사(대·중분류) + 기존 상담사 업무 메뉴 */
+export function buildCounselorManagementMenu(testCategories: TestCategory[]): TestCategory[] {
+  return [...psychologyTestsForCounselorMenu(testCategories), ...counselorMenuCategories];
+}
+
 /** 상담사 메뉴 — AI 심리검사와 동일한 3단계 구조 */
 export const counselorMenuCategories: TestCategory[] = [
   {
