@@ -65,7 +65,7 @@ export default function ProfessionalAccessIcons({
     variant === 'dock' ? (
       <div className="flex flex-col gap-2">{node}</div>
     ) : (
-      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 border-l border-white/10 pl-2 ml-1">{node}</div>
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">{node}</div>
     );
 
   if (isLoggedIn) {

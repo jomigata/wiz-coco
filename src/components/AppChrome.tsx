@@ -2,12 +2,17 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useState, memo } from 'react';
 import Navigation from '@/components/Navigation';
+import AppFooter from '@/components/layout/AppFooter';
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext';
+import {
+  APP_BODY_BG,
+  APP_MAIN_BOTTOM_PAD,
+} from '@/components/layout/appChromeTheme';
 
 const MemoNavigation = memo(Navigation);
 
 type ChromeNavContextValue = {
-  /** true이면 전역 상단 네비게이션을 숨김 (전체 화면 검사 단계 등) */
+  /** true이면 전역 상단·하단 크롬을 숨김 (전체 화면 검사 단계 등) */
   topNavHidden: boolean;
   setTopNavHidden: (hidden: boolean) => void;
 };
@@ -26,8 +31,8 @@ export function useAppChromeNav(): ChromeNavContextValue {
 }
 
 /**
- * 전역 상단 네비게이션을 한 곳에서만 렌더링해 페이지 전환 시 리마운트·깜빡임을 줄입니다.
- * 하위 페이지는 기존처럼 본문에 pt-16 등 오프셋을 유지하면 됩니다.
+ * 전역 상단·하단 크롬을 한 곳에서 렌더링합니다.
+ * 본문은 상단(4rem)·하단(2.75rem) 패딩으로 고정 영역과 겹치지 않습니다.
  */
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [topNavHidden, setTopNavHiddenState] = useState(false);
@@ -43,12 +48,17 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <FirebaseAuthProvider>
       <ChromeNavContext.Provider value={value}>
-        {!topNavHidden ? (
-          <div className="fixed left-0 right-0 top-0 z-50">
-            <MemoNavigation />
+        <div className="min-h-[100dvh] flex flex-col" style={{ backgroundColor: APP_BODY_BG }}>
+          {!topNavHidden ? (
+            <div className="fixed left-0 right-0 top-0 z-50">
+              <MemoNavigation />
+            </div>
+          ) : null}
+          <div className={`flex min-h-[100dvh] flex-1 flex-col ${topNavHidden ? '' : APP_MAIN_BOTTOM_PAD}`}>
+            {children}
           </div>
-        ) : null}
-        {children}
+          {!topNavHidden ? <AppFooter /> : null}
+        </div>
       </ChromeNavContext.Provider>
     </FirebaseAuthProvider>
   );

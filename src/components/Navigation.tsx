@@ -25,6 +25,7 @@ import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
+import { APP_HEADER_SURFACE } from '@/components/layout/appChromeTheme';
 
 export default function Navigation() {
   const router = useRouter();
@@ -445,7 +446,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav
-        className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.06] bg-[#0a1020]/90 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md"
+        className={`w-full border-b border-white/[0.06] ${APP_HEADER_SURFACE} shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md`}
         style={{ contain: 'layout' }}
       >
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3">
@@ -698,8 +699,13 @@ export default function Navigation() {
               )}
             </div>
 
-            {/* 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 (로그인 전후 폭 차로 상단 전체가 밀리지 않게 최소 폭 확보) */}
-            <div className="ml-1 flex min-w-[14rem] shrink-0 flex-nowrap items-center gap-2 border-l border-white/15 pl-3 md:min-w-[15rem] lg:gap-2.5 lg:pl-5 lg:min-w-[16rem]">
+            <span
+              className="hidden md:inline-flex h-7 w-px shrink-0 bg-gradient-to-b from-white/0 via-white/20 to-white/0 mx-0.5 lg:mx-1"
+              aria-hidden
+            />
+
+            {/* 로그인 등 — 줄바꿈 방지용 우측 고정 그룹 */}
+            <div className="flex min-w-[14rem] shrink-0 flex-nowrap items-center gap-2 md:min-w-[15rem] lg:gap-2.5 lg:min-w-[16rem]">
               {/* 마이페이지 메가 메뉴 및 사용자 인증 */}
               <div className="flex shrink-0 items-center gap-2.5 pl-0.5 lg:gap-3">
                 {isLoggedIn ? (

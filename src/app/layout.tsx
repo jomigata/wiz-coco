@@ -9,8 +9,6 @@ import ClientLayoutHandler from '@/components/ClientLayoutHandler'
 import AuthNavigationGuard from '@/components/AuthNavigationGuard'
 import RouteTransitionShell from '@/components/RouteTransitionShell'
 import AppChrome from '@/components/AppChrome'
-import Link from 'next/link'
-import WizcocoLogo from '@/components/WizcocoLogo'
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -43,30 +41,8 @@ export default function RootLayout({
             <RouteTransitionShell>{children}</RouteTransitionShell>
           </Suspense>
         </AppChrome>
-        <footer className="border-t border-white bg-indigo-900">
-          <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex shrink-0 rounded-xl bg-white/90 w-14 h-14 overflow-hidden">
-                <WizcocoLogo className="block w-full h-full object-contain" alt="Wizcoco 로고" />
-              </span>
-              <div className="text-sm text-emerald-200/90">
-                <div className="font-medium text-emerald-100">Wizcoco</div>
-                <div className="text-xs text-emerald-500/90">Psychological Care</div>
-              </div>
-            </div>
-            <div className="text-xs text-emerald-500/90 flex items-center gap-3">
-              <Link href="/privacy/" className="hover:text-emerald-300 underline-offset-2 hover:underline">
-                개인정보처리방침
-              </Link>
-              <span className="text-emerald-800">·</span>
-              <Link href="/terms/" className="hover:text-emerald-300 underline-offset-2 hover:underline">
-                이용약관
-              </Link>
-            </div>
-          </div>
-        </footer>
         <ScrollToTop />
       </body>
     </html>
   )
-} 
+}

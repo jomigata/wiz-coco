@@ -8,14 +8,12 @@ import MonetizationChannelSection from '@/components/monetization/MonetizationCh
 import MonetizationPricingSection from '@/components/monetization/MonetizationPricingSection';
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
 import MonetizationPartnerSection from '@/components/monetization/MonetizationPartnerSection';
-import SiteFooter from '@/components/SiteFooter';
 import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 
 export default function HomePageContent() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: HOME_PAGE_BG }}>
-      <div className="pt-16">
-        <main className="flex-grow">
+    <div className="min-h-full pt-16" style={{ backgroundColor: HOME_PAGE_BG }}>
+      <main className="flex-grow">
           <HeroSection />
           <PublicTestPortalSections />
           <ClientExamTrustSection />
@@ -27,8 +25,6 @@ export default function HomePageContent() {
             <MonetizationPartnerSection />
           </ProfessionalContentGate>
         </main>
-        <SiteFooter />
-      </div>
     </div>
   );
 }
