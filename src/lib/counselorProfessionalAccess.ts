@@ -1,5 +1,5 @@
 import type { CounselorApplicationStatus } from '@/lib/firestore/counselorApplicationsStore';
-import { isAdmin, isCounselor } from '@/utils/roleUtils';
+import { isCounselor } from '@/utils/roleUtils';
 
 export function isPendingCounselorApplication(
   status: CounselorApplicationStatus | null | undefined,
@@ -16,12 +16,9 @@ export function hasCounselorApplicationRecord(
 /** 승인된 상담사·관리자만 전문가 메뉴·파트너·Discover 구매 경로 이용 가능 */
 export function canAccessCounselorProfessionalFeatures(
   role: unknown,
-  applicationStatus: CounselorApplicationStatus | null | undefined,
+  _applicationStatus: CounselorApplicationStatus | null | undefined,
 ): boolean {
-  if (!isCounselor(role)) return false;
-  if (isAdmin(role)) return true;
-  if (isPendingCounselorApplication(applicationStatus)) return false;
-  return true;
+  return isCounselor(role);
 }
 
 export function canShowCounselorApplyIcon(
