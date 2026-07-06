@@ -5,8 +5,7 @@ export { COUNSELING_PROGRAM_CATEGORY };
 
 /** 나만의 공간 — 상담 프로그램 대분류를 최하단에 배치 */
 export function buildAiMindAssistantNavCategories(): TestCategory[] {
-  const counselingProgram = buildCounselingProgramCategory();
-  return [...aiMindAssistantMenuCategories, counselingProgram];
+  return [...aiMindAssistantMenuCategories, buildCounselingProgramCategory()];
 }
 
 /** 나만의 공간(구 나의 AI 비서) — 3단계 메뉴 */
