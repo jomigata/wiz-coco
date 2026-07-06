@@ -122,7 +122,7 @@ export default function ThreeTierMegaMenuPanel({
     <div
       ref={panelRef}
       data-dropdown-menu={menuDataAttribute}
-      className={`absolute top-full mt-0 pt-4 pb-8 w-auto min-w-[48rem] max-w-[56rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-50 animate-fadeIn backdrop-blur-xl ${dropdownAlign}`}
+      className={`absolute top-full mt-0 pt-4 pb-8 w-auto min-w-[48rem] max-w-[56rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-[60] animate-fadeIn backdrop-blur-xl ${dropdownAlign}`}
       onMouseEnter={onPanelMouseEnter}
       onMouseLeave={onPanelMouseLeave}
     >

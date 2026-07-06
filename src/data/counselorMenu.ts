@@ -1,16 +1,31 @@
 import type { TestCategory } from '@/data/psychologyTestMenu';
+import { TEST_CATEGORY_SLUGS } from '@/data/psychologyTestMenu';
 
 export const COUNSELOR_MANAGEMENT_LABEL = '상담관리';
 export const COUNSELOR_MANAGEMENT_PANEL_TITLE = '📋 상담관리';
 export const AI_PSYCHOLOGY_TEST_CATEGORY = 'AI 심리검사';
 
-/** AI 심리검사 — 메가 메뉴에서는 하위 항목 없음, 클릭 시 전체 카탈로그 오버레이 */
-export function buildAiPsychologyTestCategory(_testCategories: TestCategory[]): TestCategory {
+/** AI 심리검사 — 메가 메뉴 호버 시 5개 영역(중분류)만 표시, 클릭 시 전체 카탈로그 */
+export function buildAiPsychologyTestCategory(testCategories: TestCategory[]): TestCategory {
   return {
     category: AI_PSYCHOLOGY_TEST_CATEGORY,
     icon: '🧠',
-    subcategories: [],
+    subcategories: testCategories.map((category) => ({
+      name: category.category,
+      icon: category.icon,
+      items: [],
+    })),
   };
+}
+
+export function navigateAiPsychologyMiddleCategory(
+  subcategoryName: string,
+  navigateTo: (href: string) => void,
+): boolean {
+  const categoryId = TEST_CATEGORY_SLUGS[subcategoryName];
+  if (!categoryId) return false;
+  navigateTo(`/tests?category=${categoryId}`);
+  return true;
 }
 
 /** 상담관리 메가 메뉴 — AI 심리검사 + 기존 상담사 업무 메뉴 */
