@@ -62,69 +62,77 @@ export default function AiPsychologyTestCatalogOverlay({ open, onClose, categori
 
   return createPortal(
     <div
-      className="fixed inset-x-0 top-16 bottom-11 z-40 flex flex-col bg-[#070b14]/96 backdrop-blur-xl"
+      className="fixed inset-x-0 top-16 bottom-11 z-40 flex flex-col bg-[#060912]"
       role="dialog"
       aria-modal="true"
       aria-label="AI 심리검사 전체 목록"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(56,100,180,0.15),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_0%,rgba(45,80,140,0.12),transparent)]" />
 
-      <header className="relative flex shrink-0 items-center justify-between gap-4 border-b border-white/[0.06] px-5 py-4 sm:px-8">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-2xl ring-1 ring-violet-400/25">
-            🧠
-          </span>
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
-              AI 심리검사
-            </h2>
-            <p className="text-xs text-slate-400 sm:text-sm">
-              중분류에 마우스를 올리면 아래에 세부 검사가 표시됩니다
-            </p>
+      <header className="relative shrink-0 border-b border-white/10 bg-[#0a1020] px-5 py-4 sm:px-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600/20 text-2xl ring-1 ring-violet-400/30">
+              🧠
+            </span>
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
+                AI 심리검사
+              </h2>
+              <p className="text-xs text-slate-300 sm:text-sm">
+                중분류에 마우스를 올리면 아래에 세부 검사가 표시됩니다
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Link
-            href="/tests"
-            onClick={onClose}
-            className="hidden rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 transition-colors hover:border-white/30 hover:text-white sm:inline-flex"
-          >
-            검사 대시보드
-          </Link>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-slate-300 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
-            aria-label="닫기"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/tests"
+              onClick={onClose}
+              className="hidden rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-white/35 hover:bg-white/10 hover:text-white sm:inline-flex"
+            >
+              검사 대시보드
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-slate-200 transition-colors hover:border-white/35 hover:bg-white/10 hover:text-white"
+              aria-label="닫기"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden px-4 py-4 sm:px-6 sm:py-5">
+      <div className="relative min-h-0 flex-1 overflow-hidden bg-[#060912] px-4 py-4 sm:px-6 sm:py-5">
         <div className="grid h-full min-h-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-3">
           {categories.map((category) => {
             const categorySlug = TEST_CATEGORY_SLUGS[category.category];
             return (
               <section
                 key={category.category}
-                className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0c1222] shadow-lg shadow-black/30"
               >
+                {/* 대분류 — 헤더 스트립으로 명확히 구분 */}
                 <Link
                   href={categorySlug ? `/tests?category=${categorySlug}` : '/tests'}
                   onClick={onClose}
-                  className="group flex shrink-0 items-start gap-2.5 border-b border-white/[0.06] px-4 py-3.5 transition-colors hover:bg-white/[0.04]"
+                  className="group flex shrink-0 items-start gap-3 border-b-2 border-sky-500/40 bg-[#101828] px-4 py-3.5 transition-colors hover:bg-[#141f35]"
                 >
                   <span className="text-2xl leading-none">{category.icon}</span>
-                  <span className="min-w-0 flex-1 text-sm font-bold leading-snug text-white group-hover:text-sky-100 sm:text-base">
-                    {category.category}
+                  <span className="min-w-0 flex-1">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-sky-400/90">
+                      대분류
+                    </span>
+                    <span className="block text-base font-bold leading-snug text-white group-hover:text-sky-100 sm:text-[17px]">
+                      {category.category}
+                    </span>
                   </span>
                 </Link>
 
-                <ul className="min-h-0 flex-1 space-y-1 overflow-hidden px-2 py-2 sm:px-3 sm:py-3">
+                <ul className="min-h-0 flex-1 space-y-1.5 overflow-hidden px-2.5 py-2.5 sm:px-3 sm:py-3">
                   {category.subcategories
                     .filter((sub) => !sub.hidden)
                     .map((subcategory) => {
@@ -137,49 +145,58 @@ export default function AiPsychologyTestCatalogOverlay({ open, onClose, categori
                       const visibleItems = subcategory.items.filter((item) => !item.hidden);
 
                       return (
-                        <li
-                          key={subcategory.name}
-                          onMouseEnter={() => setActiveSubKey(key)}
-                        >
+                        <li key={subcategory.name} onMouseEnter={() => setActiveSubKey(key)}>
+                          {/* 중분류 */}
                           <Link
                             href={subHref}
                             onClick={onClose}
-                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 transition-all ${
+                            className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 transition-all ${
                               isExpanded
-                                ? 'bg-violet-500/15 ring-1 ring-violet-400/35'
-                                : 'hover:bg-white/[0.05]'
+                                ? 'border-violet-400/50 bg-violet-950/60 shadow-[inset_0_0_0_1px_rgba(167,139,250,0.15)]'
+                                : 'border-transparent bg-[#111827]/80 hover:border-white/10 hover:bg-[#151f33]'
                             }`}
                           >
-                            <span className="shrink-0 text-xl leading-none">{subcategory.icon}</span>
-                            <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-violet-100 sm:text-[15px]">
-                              {subcategory.name}
+                            <span className="shrink-0 text-lg leading-none">{subcategory.icon}</span>
+                            <span className="min-w-0 flex-1">
+                              <span className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                                중분류
+                              </span>
+                              <span className="block text-[13px] font-semibold leading-snug text-slate-100 sm:text-sm">
+                                {subcategory.name}
+                              </span>
                             </span>
                           </Link>
 
+                          {/* 소분류 — 불투명 패널 + 가독성 강화 */}
                           {isExpanded && visibleItems.length > 0 && (
-                            <ul className="mt-1 mb-1 ml-4 space-y-0.5 border-l border-violet-400/20 pl-3">
-                              {visibleItems.map((item) => (
-                                <li key={item.href}>
-                                  <Link
-                                    href={item.href}
-                                    onClick={onClose}
-                                    className="group flex items-start gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.06]"
-                                  >
-                                    <span className="mt-0.5 shrink-0 text-base leading-none">{item.icon}</span>
-                                    <span className="min-w-0 flex-1">
-                                      <span className="block text-sm font-medium leading-snug text-slate-200 group-hover:text-white">
-                                        {item.name}
-                                      </span>
-                                      {item.description ? (
-                                        <span className="mt-0.5 block text-xs leading-relaxed text-slate-500 group-hover:text-slate-400">
-                                          {item.description}
+                            <div className="mt-1.5 rounded-lg border border-white/10 bg-[#0a0f1c] p-1.5 shadow-inner">
+                              <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-400/90">
+                                세부 검사
+                              </p>
+                              <ul className="space-y-0.5">
+                                {visibleItems.map((item) => (
+                                  <li key={item.href}>
+                                    <Link
+                                      href={item.href}
+                                      onClick={onClose}
+                                      className="group flex items-start gap-2.5 rounded-md px-2 py-2.5 transition-colors hover:bg-white/[0.08]"
+                                    >
+                                      <span className="mt-0.5 shrink-0 text-base leading-none">{item.icon}</span>
+                                      <span className="min-w-0 flex-1">
+                                        <span className="block text-sm font-semibold leading-snug text-white group-hover:text-sky-100">
+                                          {item.name}
                                         </span>
-                                      ) : null}
-                                    </span>
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
+                                        {item.description ? (
+                                          <span className="mt-1 block text-[13px] leading-relaxed text-slate-300 group-hover:text-slate-200">
+                                            {item.description}
+                                          </span>
+                                        ) : null}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           )}
                         </li>
                       );

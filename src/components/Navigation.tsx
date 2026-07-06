@@ -680,6 +680,7 @@ export default function Navigation() {
                         <Link
                           href="/counselor"
                           className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
+                            aiPsychologyCatalogOpen ||
                             activeItem === "/counselor" ||
                             activeItem.startsWith("/counselor/") ||
                             activeItem === "/tests" ||
@@ -689,7 +690,10 @@ export default function Navigation() {
                               ? "text-gray-300 border-white"
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
-                          onClick={(e) => handleNavLinkClick("/counselor", e)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openAiPsychologyCatalog();
+                          }}
                           onMouseEnter={() => {
                             openMenu('counselor');
                             initTierMenuSelection(
