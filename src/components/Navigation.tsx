@@ -15,6 +15,7 @@ import { COUNSELING_MAIN_HREF, COUNSELING_PROGRAM_CATEGORY } from '@/data/counse
 import { AI_MIND_ASSISTANT_MAIN_HREF, buildAiMindAssistantNavCategories } from '@/data/aiMindAssistantMenu';
 import { COUNSELOR_MAIN_HREF, buildCounselorManagementMenu, COUNSELOR_MANAGEMENT_LABEL, COUNSELOR_MANAGEMENT_PANEL_TITLE, AI_PSYCHOLOGY_TEST_CATEGORY, isAiPsychologyTestMainCategory, navigateAiPsychologyMiddleCategory } from '@/data/counselorMenu';
 import AiPsychologyTestCatalogOverlay from '@/components/tests/AiPsychologyTestCatalogOverlay';
+import AiPsychologyTestMegaMenuColumn from '@/components/nav/AiPsychologyTestMegaMenuColumn';
 import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -23,7 +24,6 @@ import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
-import AiPsychologyMegaMenuSubColumn from '@/components/nav/AiPsychologyMegaMenuSubColumn';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
@@ -737,12 +737,19 @@ export default function Navigation() {
                             navigateTo={navigateTo}
                             onMainCategoryClick={(category) => {
                               if (isAiPsychologyTestMainCategory(category.category)) {
-                                openAiPsychologyCatalog();
                                 return;
                               }
                               navigateTo(COUNSELOR_MAIN_HREF);
                               setActiveMenu(null);
                             }}
+                            renderSubColumn={(activeMain) =>
+                              isAiPsychologyTestMainCategory(activeMain.category) ? (
+                                <AiPsychologyTestMegaMenuColumn
+                                  categories={visibleTestMenuItems}
+                                  onCloseMenu={() => setActiveMenu(null)}
+                                />
+                              ) : null
+                            }
                             onSubcategoryClick={(subcategory, parent) => {
                               if (isAiPsychologyTestMainCategory(parent.category)) {
                                 if (navigateAiPsychologyMiddleCategory(subcategory.name, navigateTo)) {
@@ -752,19 +759,6 @@ export default function Navigation() {
                               }
                               handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS);
                             }}
-                            renderSubColumn={(activeMain) =>
-                              isAiPsychologyTestMainCategory(activeMain.category) ? (
-                                <AiPsychologyMegaMenuSubColumn
-                                  categories={visibleTestMenuItems}
-                                  onCloseMenu={() => setActiveMenu(null)}
-                                />
-                              ) : null
-                            }
-                            widePanel={isAiPsychologyTestMainCategory(
-                              selectedCounselorMainCategory ??
-                                counselorManagementMenuCategories[0]?.category ??
-                                '',
-                            )}
                             onCloseMenu={() => setActiveMenu(null)}
                             onPanelMouseEnter={() => {
                               openMenu('counselor');
