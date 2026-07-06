@@ -1,29 +1,15 @@
 import type { TestCategory } from '@/data/psychologyTestMenu';
-import { TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
 
 export const COUNSELOR_MANAGEMENT_LABEL = '상담관리';
 export const COUNSELOR_MANAGEMENT_PANEL_TITLE = '📋 상담관리';
 export const AI_PSYCHOLOGY_TEST_CATEGORY = 'AI 심리검사';
 
-/** AI 심리검사 — 5개 검사 대분류를 중분류로, 기존 중분류(1a·1b…)는 호버 leaf */
-export function buildAiPsychologyTestCategory(testCategories: TestCategory[]): TestCategory {
+/** AI 심리검사 — 메가 메뉴에서는 하위 항목 없음, 클릭 시 전체 카탈로그 오버레이 */
+export function buildAiPsychologyTestCategory(_testCategories: TestCategory[]): TestCategory {
   return {
     category: AI_PSYCHOLOGY_TEST_CATEGORY,
     icon: '🧠',
-    subcategories: testCategories.map((category) => ({
-      name: category.category,
-      icon: category.icon,
-      items: category.subcategories
-        .filter((sub) => !sub.hidden)
-        .map((sub) => ({
-          name: sub.name,
-          href: TEST_SUBCATEGORY_SLUGS[sub.name]
-            ? `/tests/${TEST_SUBCATEGORY_SLUGS[sub.name]}`
-            : sub.items[0]?.href ?? '/tests',
-          description: sub.name,
-          icon: sub.icon,
-        })),
-    })),
+    subcategories: [],
   };
 }
 
@@ -34,16 +20,6 @@ export function buildCounselorManagementMenu(testCategories: TestCategory[]): Te
 
 export function isAiPsychologyTestMainCategory(categoryName: string): boolean {
   return categoryName === AI_PSYCHOLOGY_TEST_CATEGORY;
-}
-
-export function navigateAiPsychologySubcategory(
-  subcategoryName: string,
-  navigateTo: (href: string) => void,
-): boolean {
-  const categoryId = TEST_CATEGORY_SLUGS[subcategoryName];
-  if (!categoryId) return false;
-  navigateTo(`/tests?category=${categoryId}`);
-  return true;
 }
 
 /** 상담사 메뉴 — AI 심리검사와 동일한 3단계 구조 */

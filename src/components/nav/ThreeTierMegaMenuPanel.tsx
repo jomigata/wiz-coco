@@ -25,6 +25,8 @@ type ThreeTierMegaMenuPanelProps = {
   onPanelMouseEnter: () => void;
   onPanelMouseLeave: () => void;
   searchSlot?: React.ReactNode;
+  /** 지정 시 기본 중분류 열 대신 커스텀 UI 렌더 (예: AI 심리검사 안내) */
+  renderSubColumn?: (activeMain: TestCategory) => React.ReactNode | null;
 };
 
 function badgeClass(badge: string) {
@@ -97,9 +99,12 @@ export default function ThreeTierMegaMenuPanel({
   onPanelMouseEnter,
   onPanelMouseLeave,
   searchSlot,
+  renderSubColumn,
 }: ThreeTierMegaMenuPanelProps) {
   const activeMain =
     categories.find((category) => category.category === selectedMainCategory) ?? categories[0];
+
+  const customSubColumn = activeMain ? renderSubColumn?.(activeMain) : null;
 
   const handleSubcategoryClick = (subcategory: TestSubcategory, parent: TestCategory) => {
     if (onSubcategoryClick) {
@@ -161,7 +166,7 @@ export default function ThreeTierMegaMenuPanel({
         </div>
 
         <div ref={subColRef} className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 shrink-0">
-          {activeMain ? (
+          {customSubColumn ?? (activeMain ? (
             <div>
               <div className="text-lg font-bold text-blue-300 mb-4">{activeMain.category}</div>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
@@ -223,7 +228,7 @@ export default function ThreeTierMegaMenuPanel({
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-blue-300">대분류를 선택해주세요</div>
-          )}
+          ))}
         </div>
       </div>
     </div>
