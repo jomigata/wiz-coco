@@ -11,11 +11,8 @@ import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessional
 import { usePendingCounselorApplicationsCount } from '@/hooks/usePendingCounselorApplicationsCount';
 import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorApplicationNotificationCount';
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
-import { COUNSELING_MAIN_HREF, COUNSELING_PROGRAM_CATEGORY } from '@/data/counselingMenu';
-import { AI_MIND_ASSISTANT_MAIN_HREF, buildAiMindAssistantNavCategories } from '@/data/aiMindAssistantMenu';
-import { COUNSELOR_MAIN_HREF, buildCounselorManagementMenu, COUNSELOR_MANAGEMENT_LABEL, COUNSELOR_MANAGEMENT_PANEL_TITLE, AI_PSYCHOLOGY_TEST_CATEGORY, isAiPsychologyTestMainCategory, navigateAiPsychologyMiddleCategory } from '@/data/counselorMenu';
-import AiPsychologyTestCatalogOverlay from '@/components/tests/AiPsychologyTestCatalogOverlay';
-import AiPsychologyTestMegaMenuColumn from '@/components/nav/AiPsychologyTestMegaMenuColumn';
+import { counselingMenuCategories, COUNSELING_MAIN_HREF } from '@/data/counselingMenu';
+import { aiMindAssistantMenuCategories, AI_MIND_ASSISTANT_MAIN_HREF } from '@/data/aiMindAssistantMenu';
 import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -24,10 +21,17 @@ import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
+import CounselorMegaMenuPanel from '@/components/nav/CounselorMegaMenuPanel';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import { APP_HEADER_SURFACE } from '@/components/layout/appChromeTheme';
+import {
+  counselorMenuCategories,
+  COUNSELOR_AI_TESTS_CATEGORY,
+  COUNSELOR_MAIN_HREF,
+  COUNSELOR_PANEL_TITLE,
+} from '@/data/counselorMenu';
 
 export default function Navigation() {
   const router = useRouter();
@@ -35,7 +39,6 @@ export default function Navigation() {
   const navigateTo = (href: string) => pushWithAuthSession(router, href);
   const { user, logout } = useFirebaseAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [aiPsychologyCatalogOpen, setAiPsychologyCatalogOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("/");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
@@ -43,11 +46,17 @@ export default function Navigation() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedAiAssistantMainCategory, setSelectedAiAssistantMainCategory] = useState<string | null>(null);
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
+  const [selectedCounselingMainCategory, setSelectedCounselingMainCategory] = useState<string | null>(null);
+  const [selectedCounselingSubcategory, setSelectedCounselingSubcategory] = useState<string | null>(null);
   const [selectedCounselorMainCategory, setSelectedCounselorMainCategory] = useState<string | null>(null);
   const [selectedCounselorSubcategory, setSelectedCounselorSubcategory] = useState<string | null>(null);
   const [selectedAdminMainCategory, setSelectedAdminMainCategory] = useState<string | null>(null);
   const [selectedAdminSubcategory, setSelectedAdminSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const counselingTriggerRef = useRef<HTMLDivElement>(null);
+  const counselingPanelRef = useRef<HTMLDivElement>(null);
+  const counselingLeftColRef = useRef<HTMLDivElement>(null);
+  const counselingSubColRef = useRef<HTMLDivElement>(null);
   const aiAssistantPanelRef = useRef<HTMLDivElement>(null);
   const aiAssistantLeftColRef = useRef<HTMLDivElement>(null);
   const aiAssistantSubColRef = useRef<HTMLDivElement>(null);
@@ -59,6 +68,7 @@ export default function Navigation() {
   const counselorTriggerRef = useRef<HTMLDivElement>(null);
   const counselorPanelRef = useRef<HTMLDivElement>(null);
   const counselorLeftColRef = useRef<HTMLDivElement>(null);
+  const counselorMidColRef = useRef<HTMLDivElement>(null);
   const counselorSubColRef = useRef<HTMLDivElement>(null);
   const adminTriggerRef = useRef<HTMLDivElement>(null);
   const adminPanelRef = useRef<HTMLDivElement>(null);
@@ -76,6 +86,7 @@ export default function Navigation() {
   const userMenuScroll = useAutoScroll();
   
   const isDropdownOpen = activeMenu === 'user';
+  const isCounselingDropdownOpen = activeMenu === 'counseling';
   const isUserMenuOpen = activeMenu === 'additional';
   const isAiMindAssistantOpen = activeMenu === 'ai-mind-assistant';
   const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
@@ -89,6 +100,15 @@ export default function Navigation() {
     psychologyTestsLeftColRef,
     psychologyTestsSubColRef,
     [selectedMainCategory, selectedSubcategory]
+  );
+
+  const counselingPlacement = useHorizontalMenuPlacement(
+    isCounselingDropdownOpen,
+    counselingTriggerRef,
+    counselingPanelRef,
+    counselingLeftColRef,
+    counselingSubColRef,
+    [selectedCounselingMainCategory, selectedCounselingSubcategory]
   );
 
   const aiAssistantPlacement = useHorizontalMenuPlacement(
@@ -106,7 +126,7 @@ export default function Navigation() {
     counselorPanelRef,
     counselorLeftColRef,
     counselorSubColRef,
-    [selectedCounselorMainCategory, selectedCounselorSubcategory]
+    [selectedCounselorMainCategory, selectedCounselorSubcategory, selectedMainCategory]
   );
 
   const adminPlacement = useHorizontalMenuPlacement(
@@ -117,12 +137,6 @@ export default function Navigation() {
     adminSubColRef,
     [selectedAdminMainCategory, selectedAdminSubcategory]
   );
-
-  const openAiPsychologyCatalog = useCallback(() => {
-    setAiPsychologyCatalogOpen(true);
-    setActiveMenu(null);
-    setIsMobileMenuOpen(false);
-  }, []);
 
   const openMenu = useCallback((menuId: string) => {
     if (closeTimerRef.current) {
@@ -219,17 +233,12 @@ export default function Navigation() {
   const counselorResultCount = useCounselorApplicationNotificationCount(userUid, userRole);
   const counselorAccess = useCounselorProfessionalAccess();
   const userName = user?.displayName || sessionFirebaseUser?.displayName || '';
-  const showCounselorMenu =
-    canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
   const showPsychologyTestsMenu =
     shouldShowPsychologyTestsMenu(userRole) &&
-    canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus) &&
-    !showCounselorMenu;
-  const counselorManagementMenuCategories = useMemo(
-    () => buildCounselorManagementMenu(visibleTestMenuItems),
-    [visibleTestMenuItems],
-  );
-  const mySpaceMenuCategories = useMemo(() => buildAiMindAssistantNavCategories(), []);
+    canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
+  const showCounselorMenu =
+    canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
+  const showStandalonePsychologyTestsMenu = showPsychologyTestsMenu && !showCounselorMenu;
   const professionalIconAccess = {
     canShowApplyIcon: counselorAccess.canShowApplyIcon,
     showPartnerIcon: counselorAccess.showPartnerIcon,
@@ -496,7 +505,7 @@ export default function Navigation() {
               {isLoggedIn && (
               <>
               {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
-              {showPsychologyTestsMenu && (
+              {showStandalonePsychologyTestsMenu && (
               <div ref={psychologyTestsTriggerRef} className="relative">
                 <Link
                   href="/tests"
@@ -569,15 +578,75 @@ export default function Navigation() {
               </div>
               )}
 
-              {/* 나만의 공간 드롭다운 메뉴 (상담 프로그램 포함) */}
+              {/* 상담 프로그램 드롭다운 메뉴 */}
+              <div ref={counselingTriggerRef} className="relative">
+                <Link
+                  href="/counseling"
+                  className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
+                    activeItem === "/counseling" || activeItem.startsWith("/counseling/")
+                      ? "text-white bg-blue-600 border-white"
+                      : isCounselingDropdownOpen
+                      ? "text-gray-300 border-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                  }`}
+                  onClick={(e) => handleNavLinkClick("/counseling", e)}
+                  onMouseEnter={() => {
+                    openMenu('counseling');
+                    initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
+                  }}
+                  onMouseLeave={scheduleClose}
+                >
+                  💬 상담 프로그램
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isCounselingDropdownOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Link>
+
+                {isCounselingDropdownOpen && (
+                  <ThreeTierMegaMenuPanel
+                    panelRef={counselingPanelRef}
+                    leftColRef={counselingLeftColRef}
+                    subColRef={counselingSubColRef}
+                    dropdownAlign={counselingPlacement.dropdownAlign}
+                    menuDataAttribute="counseling"
+                    panelTitle="💬 상담 프로그램"
+                    categories={counselingMenuCategories}
+                    selectedMainCategory={selectedCounselingMainCategory}
+                    selectedSubcategory={selectedCounselingSubcategory}
+                    isMenuOpen={isCounselingDropdownOpen}
+                    onSelectMainCategory={setSelectedCounselingMainCategory}
+                    onSelectSubcategory={setSelectedCounselingSubcategory}
+                    navigateTo={navigateTo}
+                    onMainCategoryClick={() => {
+                      navigateTo(COUNSELING_MAIN_HREF);
+                      setActiveMenu(null);
+                    }}
+                    onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                    onCloseMenu={() => setActiveMenu(null)}
+                    onPanelMouseEnter={() => {
+                      openMenu('counseling');
+                      initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
+                    }}
+                    onPanelMouseLeave={scheduleClose}
+                  />
+                )}
+              </div>
+
+              {/* 나만의 공간 드롭다운 메뉴 */}
               <div ref={aiAssistantTriggerRef} className="relative">
                 <Link
                   href="/ai-mind-assistant"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
-                    activeItem === "/ai-mind-assistant" ||
-                    activeItem.startsWith("/ai-mind-assistant/") ||
-                    activeItem === "/counseling" ||
-                    activeItem.startsWith("/counseling/")
+                    activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
                       ? "text-white bg-blue-600 border-white"
                       : isAiMindAssistantOpen
                       ? "text-gray-300 border-white"
@@ -586,7 +655,7 @@ export default function Navigation() {
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                   onMouseEnter={() => {
                     openMenu('ai-mind-assistant');
-                    initTierMenuSelection(mySpaceMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
+                    initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
                   }}
                   onMouseLeave={scheduleClose}
                 >
@@ -613,34 +682,22 @@ export default function Navigation() {
                     dropdownAlign={aiAssistantPlacement.dropdownAlign}
                     menuDataAttribute="ai-mind-assistant"
                     panelTitle="🏠 나만의 공간"
-                    categories={mySpaceMenuCategories}
+                    categories={aiMindAssistantMenuCategories}
                     selectedMainCategory={selectedAiAssistantMainCategory}
                     selectedSubcategory={selectedAiAssistantSubcategory}
                     isMenuOpen={isAiMindAssistantOpen}
                     onSelectMainCategory={setSelectedAiAssistantMainCategory}
                     onSelectSubcategory={setSelectedAiAssistantSubcategory}
                     navigateTo={navigateTo}
-                    onMainCategoryClick={(category) => {
-                      if (category.category === COUNSELING_PROGRAM_CATEGORY) {
-                        navigateTo(COUNSELING_MAIN_HREF);
-                      } else {
-                        navigateTo(AI_MIND_ASSISTANT_MAIN_HREF);
-                      }
+                    onMainCategoryClick={() => {
+                      navigateTo(AI_MIND_ASSISTANT_MAIN_HREF);
                       setActiveMenu(null);
                     }}
-                    onSubcategoryClick={(subcategory, parent) => {
-                      if (parent.category === COUNSELING_PROGRAM_CATEGORY) {
-                        const href = subcategory.items[0]?.href ?? COUNSELING_MAIN_HREF;
-                        navigateTo(href);
-                        setActiveMenu(null);
-                        return;
-                      }
-                      handleTierSubcategoryNav(subcategory);
-                    }}
+                    onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
                     onCloseMenu={() => setActiveMenu(null)}
                     onPanelMouseEnter={() => {
                       openMenu('ai-mind-assistant');
-                      initTierMenuSelection(mySpaceMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
+                      initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
                     }}
                     onPanelMouseLeave={scheduleClose}
                   />
@@ -675,13 +732,12 @@ export default function Navigation() {
                         🏫 기관
                       </Link>
                     )}
-                    {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
+                    {/* 상담관리 메뉴 - 승인된 상담사·관리자 */}
                     {showCounselorMenu && (
                       <div ref={counselorTriggerRef} className="relative">
                         <Link
                           href="/counselor"
                           className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
-                            aiPsychologyCatalogOpen ||
                             activeItem === "/counselor" ||
                             activeItem.startsWith("/counselor/") ||
                             activeItem === "/tests" ||
@@ -691,21 +747,15 @@ export default function Navigation() {
                               ? "text-gray-300 border-white"
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            openAiPsychologyCatalog();
-                          }}
+                          onClick={(e) => handleNavLinkClick("/counselor", e)}
                           onMouseEnter={() => {
                             openMenu('counselor');
-                            initTierMenuSelection(
-                              counselorManagementMenuCategories,
-                              setSelectedCounselorMainCategory,
-                              setSelectedCounselorSubcategory,
-                            );
+                            setSelectedCounselorMainCategory(COUNSELOR_AI_TESTS_CATEGORY);
+                            initTierMenuSelection(visibleTestMenuItems, setSelectedMainCategory, setSelectedSubcategory);
                           }}
                           onMouseLeave={scheduleClose}
                         >
-                          📋 {COUNSELOR_MANAGEMENT_LABEL}
+                          {COUNSELOR_PANEL_TITLE}
                           <svg
                             xmlns="http://www.w3.org/2000/svg" 
                             viewBox="0 0 20 20"
@@ -721,54 +771,60 @@ export default function Navigation() {
                         </Link>
 
                         {isCounselorOpen && (
-                          <ThreeTierMegaMenuPanel
+                          <CounselorMegaMenuPanel
                             panelRef={counselorPanelRef}
                             leftColRef={counselorLeftColRef}
+                            midColRef={counselorMidColRef}
                             subColRef={counselorSubColRef}
                             dropdownAlign={counselorPlacement.dropdownAlign}
-                            menuDataAttribute="counselor"
-                            panelTitle={COUNSELOR_MANAGEMENT_PANEL_TITLE}
-                            categories={counselorManagementMenuCategories}
-                            selectedMainCategory={selectedCounselorMainCategory}
-                            selectedSubcategory={selectedCounselorSubcategory}
+                            panelTitle={COUNSELOR_PANEL_TITLE}
+                            counselorCategories={counselorMenuCategories}
+                            psychologyCategories={visibleTestMenuItems}
+                            selectedCounselorCategory={selectedCounselorMainCategory}
+                            selectedPsychMainCategory={selectedMainCategory}
+                            selectedPsychSubcategory={selectedSubcategory}
+                            selectedCounselorSubcategory={selectedCounselorSubcategory}
                             isMenuOpen={isCounselorOpen}
-                            onSelectMainCategory={setSelectedCounselorMainCategory}
-                            onSelectSubcategory={setSelectedCounselorSubcategory}
+                            onSelectCounselorCategory={setSelectedCounselorMainCategory}
+                            onSelectCounselorSubcategory={setSelectedCounselorSubcategory}
+                            onSelectPsychMainCategory={setSelectedMainCategory}
+                            onSelectPsychSubcategory={setSelectedSubcategory}
+                            onHoverPsychSubcategory={setHoveredCategory}
                             navigateTo={navigateTo}
-                            onMainCategoryClick={(category) => {
-                              if (isAiPsychologyTestMainCategory(category.category)) {
+                            onCounselorMainClick={(category) => {
+                              if (category.category === COUNSELOR_AI_TESTS_CATEGORY) {
+                                navigateTo('/tests');
+                                setActiveMenu(null);
                                 return;
                               }
                               navigateTo(COUNSELOR_MAIN_HREF);
                               setActiveMenu(null);
                             }}
-                            renderSubColumn={(activeMain) =>
-                              isAiPsychologyTestMainCategory(activeMain.category) ? (
-                                <AiPsychologyTestMegaMenuColumn
-                                  categories={visibleTestMenuItems}
-                                  onCloseMenu={() => setActiveMenu(null)}
-                                />
-                              ) : null
-                            }
-                            onSubcategoryClick={(subcategory, parent) => {
-                              if (isAiPsychologyTestMainCategory(parent.category)) {
-                                if (navigateAiPsychologyMiddleCategory(subcategory.name, navigateTo)) {
-                                  setActiveMenu(null);
-                                }
-                                return;
+                            onPsychMainClick={(category) => {
+                              const categoryId = TEST_CATEGORY_SLUGS[category.category];
+                              if (categoryId) {
+                                navigateTo(`/tests?category=${categoryId}`);
+                                setActiveMenu(null);
                               }
-                              handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS);
                             }}
+                            onPsychSubcategoryClick={(subcategory) =>
+                              handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS)
+                            }
+                            onCounselorSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
                             onCloseMenu={() => setActiveMenu(null)}
                             onPanelMouseEnter={() => {
                               openMenu('counselor');
-                              initTierMenuSelection(
-                                counselorManagementMenuCategories,
-                                setSelectedCounselorMainCategory,
-                                setSelectedCounselorSubcategory,
-                              );
+                              setSelectedCounselorMainCategory(COUNSELOR_AI_TESTS_CATEGORY);
+                              initTierMenuSelection(visibleTestMenuItems, setSelectedMainCategory, setSelectedSubcategory);
                             }}
                             onPanelMouseLeave={scheduleClose}
+                            searchSlot={
+                              <TestMenuSearch
+                                categories={visibleTestMenuItems}
+                                variant="desktop"
+                                onNavigate={() => setActiveMenu(null)}
+                              />
+                            }
                           />
                         )}
                       </div>
@@ -1070,7 +1126,7 @@ export default function Navigation() {
                 검사시작
               </Link>
 
-              {isLoggedIn && showPsychologyTestsMenu && (
+              {isLoggedIn && showStandalonePsychologyTestsMenu && (
                 <ThreeTierMobileMenuSection
                   sectionTitle="🧠 AI 심리검사"
                   categories={visibleTestMenuItems}
@@ -1095,34 +1151,64 @@ export default function Navigation() {
               {isLoggedIn && (
               <>
               <ThreeTierMobileMenuSection
+                sectionTitle="💬 상담 프로그램"
+                categories={counselingMenuCategories}
+                selectedMainCategory={selectedCounselingMainCategory}
+                selectedSubcategory={selectedCounselingSubcategory}
+                onToggleMainCategory={(category) =>
+                  setSelectedCounselingMainCategory(selectedCounselingMainCategory === category ? null : category)
+                }
+                onSelectSubcategory={setSelectedCounselingSubcategory}
+                onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                onCloseMenu={() => setIsMobileMenuOpen(false)}
+              />
+
+              <ThreeTierMobileMenuSection
                 sectionTitle="🏠 나만의 공간"
-                categories={mySpaceMenuCategories}
+                categories={aiMindAssistantMenuCategories}
                 selectedMainCategory={selectedAiAssistantMainCategory}
                 selectedSubcategory={selectedAiAssistantSubcategory}
                 onToggleMainCategory={(category) =>
                   setSelectedAiAssistantMainCategory(selectedAiAssistantMainCategory === category ? null : category)
                 }
                 onSelectSubcategory={setSelectedAiAssistantSubcategory}
+                onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
                 onCloseMenu={() => setIsMobileMenuOpen(false)}
               />
 
               {showCounselorMenu && (
                 <ThreeTierMobileMenuSection
-                  sectionTitle={COUNSELOR_MANAGEMENT_PANEL_TITLE}
-                  categories={counselorManagementMenuCategories}
+                  sectionTitle={COUNSELOR_PANEL_TITLE}
+                  categories={counselorMenuCategories}
                   selectedMainCategory={selectedCounselorMainCategory}
                   selectedSubcategory={selectedCounselorSubcategory}
-                  onToggleMainCategory={(category) => {
-                    if (category === AI_PSYCHOLOGY_TEST_CATEGORY) {
-                      openAiPsychologyCatalog();
-                      return;
-                    }
-                    setSelectedCounselorMainCategory(
-                      selectedCounselorMainCategory === category ? null : category,
-                    );
-                  }}
+                  onToggleMainCategory={(category) =>
+                    setSelectedCounselorMainCategory(selectedCounselorMainCategory === category ? null : category)
+                  }
                   onSelectSubcategory={setSelectedCounselorSubcategory}
+                  onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
                   onCloseMenu={() => setIsMobileMenuOpen(false)}
+                  nestedCatalog={{
+                    parentCategory: COUNSELOR_AI_TESTS_CATEGORY,
+                    sectionTitle: '🧠 AI 심리검사',
+                    categories: visibleTestMenuItems,
+                    selectedMainCategory: selectedMainCategory,
+                    selectedSubcategory: selectedSubcategory,
+                    onToggleMainCategory: (category) =>
+                      setSelectedMainCategory(selectedMainCategory === category ? null : category),
+                    onSelectSubcategory: setSelectedSubcategory,
+                    onSubcategoryPress: (subcategory) =>
+                      handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS),
+                    mainTierLabel: '중분류',
+                    subTierLabel: '소분류',
+                    searchSlot: (
+                      <TestMenuSearch
+                        categories={visibleTestMenuItems}
+                        variant="mobile"
+                        onNavigate={() => setIsMobileMenuOpen(false)}
+                      />
+                    ),
+                  }}
                 />
               )}
 
@@ -1229,12 +1315,6 @@ export default function Navigation() {
           </div>
         </div>
       )}
-
-      <AiPsychologyTestCatalogOverlay
-        open={aiPsychologyCatalogOpen}
-        onClose={() => setAiPsychologyCatalogOpen(false)}
-        categories={visibleTestMenuItems}
-      />
     </>
   );
 }
