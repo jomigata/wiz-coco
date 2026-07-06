@@ -27,6 +27,8 @@ type ThreeTierMegaMenuPanelProps = {
   searchSlot?: React.ReactNode;
   /** 지정 시 기본 중분류 열 대신 커스텀 UI 렌더 (예: AI 심리검사 안내) */
   renderSubColumn?: (activeMain: TestCategory) => React.ReactNode | null;
+  /** 커스텀 서브열(예: AI 3단)용 넓은 패널 */
+  widePanel?: boolean;
 };
 
 function badgeClass(badge: string) {
@@ -100,11 +102,13 @@ export default function ThreeTierMegaMenuPanel({
   onPanelMouseLeave,
   searchSlot,
   renderSubColumn,
+  widePanel = false,
 }: ThreeTierMegaMenuPanelProps) {
   const activeMain =
     categories.find((category) => category.category === selectedMainCategory) ?? categories[0];
 
   const customSubColumn = activeMain ? renderSubColumn?.(activeMain) : null;
+  const useWideLayout = widePanel || Boolean(customSubColumn);
 
   const handleSubcategoryClick = (subcategory: TestSubcategory, parent: TestCategory) => {
     if (onSubcategoryClick) {
@@ -122,15 +126,19 @@ export default function ThreeTierMegaMenuPanel({
     <div
       ref={panelRef}
       data-dropdown-menu={menuDataAttribute}
-      className={`absolute top-full mt-0 pt-4 pb-8 w-auto min-w-[48rem] max-w-[56rem] bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-[60] animate-fadeIn backdrop-blur-xl ${dropdownAlign}`}
+      className={`absolute top-full mt-0 pt-4 pb-6 w-auto rounded-2xl shadow-2xl border border-blue-500/30 z-[60] animate-fadeIn backdrop-blur-xl bg-gradient-to-br from-slate-900/98 via-blue-900/98 to-indigo-900/98 ${
+        useWideLayout ? 'min-w-[min(96vw,72rem)] max-w-[96vw]' : 'min-w-[48rem] max-w-[56rem]'
+      } ${dropdownAlign}`}
       onMouseEnter={onPanelMouseEnter}
       onMouseLeave={onPanelMouseLeave}
     >
       {searchSlot && <div className="px-4 pt-2 pb-3 border-b border-blue-500/20">{searchSlot}</div>}
-      <div className="relative flex flex-row h-[62vh]">
+      <div className={`relative flex flex-row ${useWideLayout ? 'h-[68vh]' : 'h-[62vh]'}`}>
         <div
           ref={leftColRef}
-          className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 border-r border-blue-500/30 shrink-0"
+          className={`px-6 py-4 border-r border-blue-500/30 shrink-0 ${
+            useWideLayout ? 'w-72 min-w-[18rem]' : 'w-96 min-w-[24rem] max-w-[28rem]'
+          }`}
         >
           <div className="text-lg font-bold text-blue-300 mb-4">{panelTitle}</div>
           <div className="space-y-2">
@@ -165,11 +173,18 @@ export default function ThreeTierMegaMenuPanel({
           </div>
         </div>
 
-        <div ref={subColRef} className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 shrink-0">
+        <div
+          ref={subColRef}
+          className={
+            useWideLayout
+              ? 'min-w-0 flex-1 px-4 py-4 overflow-hidden'
+              : 'w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 shrink-0'
+          }
+        >
           {customSubColumn ?? (activeMain ? (
             <div>
               <div className="text-lg font-bold text-blue-300 mb-4">{activeMain.category}</div>
-              <div className="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+              <div className="space-y-2 overflow-hidden">
                 {activeMain.subcategories.map((subcategory, index) => {
                   const isSelected = selectedSubcategory === subcategory.name;
 

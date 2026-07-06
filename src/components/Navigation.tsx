@@ -23,6 +23,7 @@ import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
+import AiPsychologyMegaMenuSubColumn from '@/components/nav/AiPsychologyMegaMenuSubColumn';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
@@ -751,6 +752,19 @@ export default function Navigation() {
                               }
                               handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS);
                             }}
+                            renderSubColumn={(activeMain) =>
+                              isAiPsychologyTestMainCategory(activeMain.category) ? (
+                                <AiPsychologyMegaMenuSubColumn
+                                  categories={visibleTestMenuItems}
+                                  onCloseMenu={() => setActiveMenu(null)}
+                                />
+                              ) : null
+                            }
+                            widePanel={isAiPsychologyTestMainCategory(
+                              selectedCounselorMainCategory ??
+                                counselorManagementMenuCategories[0]?.category ??
+                                '',
+                            )}
                             onCloseMenu={() => setActiveMenu(null)}
                             onPanelMouseEnter={() => {
                               openMenu('counselor');

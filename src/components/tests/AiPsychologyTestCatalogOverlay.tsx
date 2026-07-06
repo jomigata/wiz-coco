@@ -115,7 +115,6 @@ export default function AiPsychologyTestCatalogOverlay({ open, onClose, categori
                 key={category.category}
                 className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0c1222] shadow-lg shadow-black/30"
               >
-                {/* 대분류 — 헤더 스트립으로 명확히 구분 */}
                 <Link
                   href={categorySlug ? `/tests?category=${categorySlug}` : '/tests'}
                   onClick={onClose}
@@ -123,7 +122,7 @@ export default function AiPsychologyTestCatalogOverlay({ open, onClose, categori
                 >
                   <span className="text-2xl leading-none">{category.icon}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-sky-400/90">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-sky-400">
                       대분류
                     </span>
                     <span className="block text-base font-bold leading-snug text-white group-hover:text-sky-100 sm:text-[17px]">
@@ -132,7 +131,7 @@ export default function AiPsychologyTestCatalogOverlay({ open, onClose, categori
                   </span>
                 </Link>
 
-                <ul className="min-h-0 flex-1 space-y-1.5 overflow-hidden px-2.5 py-2.5 sm:px-3 sm:py-3">
+                <ul className="min-h-0 flex-1 space-y-2 overflow-hidden px-2.5 py-2.5 sm:px-3 sm:py-3">
                   {category.subcategories
                     .filter((sub) => !sub.hidden)
                     .map((subcategory) => {
@@ -146,52 +145,52 @@ export default function AiPsychologyTestCatalogOverlay({ open, onClose, categori
 
                       return (
                         <li key={subcategory.name} onMouseEnter={() => setActiveSubKey(key)}>
-                          {/* 중분류 */}
                           <Link
                             href={subHref}
                             onClick={onClose}
-                            className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 transition-all ${
+                            className={`flex w-full items-center gap-2.5 rounded-lg border-l-[3px] px-3 py-2.5 transition-all ${
                               isExpanded
-                                ? 'border-violet-400/50 bg-violet-950/60 shadow-[inset_0_0_0_1px_rgba(167,139,250,0.15)]'
-                                : 'border-transparent bg-[#111827]/80 hover:border-white/10 hover:bg-[#151f33]'
+                                ? 'border-l-sky-400 bg-sky-950/40 ring-1 ring-sky-500/25'
+                                : 'border-l-slate-600 bg-[#111827]/90 hover:border-l-sky-500/60 hover:bg-[#151f33]'
                             }`}
                           >
                             <span className="shrink-0 text-lg leading-none">{subcategory.icon}</span>
                             <span className="min-w-0 flex-1">
-                              <span className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                              <span className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-sky-300/80">
                                 중분류
                               </span>
-                              <span className="block text-[13px] font-semibold leading-snug text-slate-100 sm:text-sm">
+                              <span className="block text-sm font-bold leading-snug text-white">
                                 {subcategory.name}
                               </span>
                             </span>
                           </Link>
 
-                          {/* 소분류 — 불투명 패널 + 가독성 강화 */}
                           {isExpanded && visibleItems.length > 0 && (
-                            <div className="mt-1.5 rounded-lg border border-white/10 bg-[#0a0f1c] p-1.5 shadow-inner">
-                              <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-400/90">
+                            <div className="mt-2 rounded-lg border border-emerald-500/25 bg-[#071018] p-2 shadow-inner">
+                              <p className="mb-1.5 border-b border-emerald-500/20 pb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-400">
                                 세부 검사
                               </p>
-                              <ul className="space-y-0.5">
+                              <ul className="space-y-1">
                                 {visibleItems.map((item) => (
                                   <li key={item.href}>
                                     <Link
                                       href={item.href}
                                       onClick={onClose}
-                                      className="group flex items-start gap-2.5 rounded-md px-2 py-2.5 transition-colors hover:bg-white/[0.08]"
+                                      className="group block rounded-md border border-transparent px-2 py-2 transition-colors hover:border-emerald-500/20 hover:bg-emerald-950/30"
                                     >
-                                      <span className="mt-0.5 shrink-0 text-base leading-none">{item.icon}</span>
-                                      <span className="min-w-0 flex-1">
-                                        <span className="block text-sm font-semibold leading-snug text-white group-hover:text-sky-100">
-                                          {item.name}
-                                        </span>
-                                        {item.description ? (
-                                          <span className="mt-1 block text-[13px] leading-relaxed text-slate-300 group-hover:text-slate-200">
-                                            {item.description}
-                                          </span>
-                                        ) : null}
-                                      </span>
+                                      <div className="flex items-start gap-2">
+                                        <span className="mt-0.5 shrink-0 text-base leading-none">{item.icon}</span>
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-sm font-bold leading-snug text-white group-hover:text-emerald-100">
+                                            {item.name}
+                                          </p>
+                                          {item.description ? (
+                                            <p className="mt-1 text-[13px] leading-relaxed text-slate-200 group-hover:text-slate-100">
+                                              {item.description}
+                                            </p>
+                                          ) : null}
+                                        </div>
+                                      </div>
                                     </Link>
                                   </li>
                                 ))}
