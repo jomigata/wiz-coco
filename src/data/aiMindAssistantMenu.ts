@@ -1,4 +1,13 @@
 import type { TestCategory } from '@/data/psychologyTestMenu';
+import { buildCounselingProgramCategory, COUNSELING_PROGRAM_CATEGORY } from '@/data/counselingMenu';
+
+export { COUNSELING_PROGRAM_CATEGORY };
+
+/** 나만의 공간 — 상담 프로그램 대분류 포함 */
+export function buildAiMindAssistantNavCategories(): TestCategory[] {
+  const counselingProgram = buildCounselingProgramCategory();
+  return [aiMindAssistantMenuCategories[0], counselingProgram, ...aiMindAssistantMenuCategories.slice(1)];
+}
 
 /** 나만의 공간(구 나의 AI 비서) — 3단계 메뉴 */
 export const aiMindAssistantMenuCategories: TestCategory[] = [

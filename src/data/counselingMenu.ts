@@ -90,3 +90,26 @@ export const counselingMenuCategories: TestCategory[] = [
 ];
 
 export const COUNSELING_MAIN_HREF = '/counseling';
+export const COUNSELING_PROGRAM_CATEGORY = '상담 프로그램';
+
+/** 나만의 공간 안 상담 프로그램 — 개인/그룹 상담을 중분류로, 기존 중분류는 호버 leaf(소분류 제거) */
+export function buildCounselingProgramCategory(): TestCategory {
+  return {
+    category: COUNSELING_PROGRAM_CATEGORY,
+    icon: '💬',
+    subcategories: counselingMenuCategories.map((category) => ({
+      name: category.category,
+      icon: category.icon,
+      items: category.subcategories.map((sub) => {
+        const leaf = sub.items[0];
+        return {
+          name: sub.name,
+          href: leaf?.href ?? COUNSELING_MAIN_HREF,
+          description: leaf?.description ?? sub.name,
+          icon: sub.icon,
+          badge: leaf?.badge,
+        };
+      }),
+    })),
+  };
+}
