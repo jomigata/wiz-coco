@@ -8,12 +8,13 @@ import MonetizationChannelSection from '@/components/monetization/MonetizationCh
 import MonetizationPricingSection from '@/components/monetization/MonetizationPricingSection';
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
 import MonetizationPartnerSection from '@/components/monetization/MonetizationPartnerSection';
-import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
+import { APP_PAGE_BG } from '@/components/layout/appChromeTheme';
 
 export default function HomePageContent() {
   return (
-    <div className="min-h-full pt-16" style={{ backgroundColor: HOME_PAGE_BG }}>
-      <main className="flex-grow">
+    <div className="min-h-full" style={{ backgroundColor: APP_PAGE_BG }}>
+      <div className="pt-16">
+        <main className="flex-grow">
           <HeroSection />
           <PublicTestPortalSections />
           <ClientExamTrustSection />
@@ -25,6 +26,7 @@ export default function HomePageContent() {
             <MonetizationPartnerSection />
           </ProfessionalContentGate>
         </main>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import ClientLayoutHandler from '@/components/ClientLayoutHandler'
 import AuthNavigationGuard from '@/components/AuthNavigationGuard'
 import RouteTransitionShell from '@/components/RouteTransitionShell'
 import AppChrome from '@/components/AppChrome'
+import { APP_PAGE_BG } from '@/components/layout/appChromeTheme'
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -29,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={notoSansKr.variable}>
+      <body className={notoSansKr.variable} style={{ backgroundColor: APP_PAGE_BG }}>
         <LocalStorageInitializer />
         <BrowserCleanupProvider />
         <Suspense fallback={null}>

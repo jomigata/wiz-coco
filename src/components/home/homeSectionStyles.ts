@@ -6,7 +6,7 @@ export const homeSectionDivider =
 
 export const homeSectionTones = {
   hero: {
-    section: 'bg-[#090d18]',
+    section: 'bg-[#080c17]',
     bottomFade: 'from-transparent to-[#0a101c]',
     glow: 'bg-[radial-gradient(ellipse_80%_55%_at_50%_-15%,rgba(56,100,180,0.22),transparent)]',
     glowSecondary: 'bg-[radial-gradient(ellipse_45%_35%_at_85%_55%,rgba(88,60,140,0.1),transparent)]',
@@ -43,7 +43,7 @@ export const homeSectionTones = {
   },
   partner: {
     section: 'bg-[#0c0f1a]',
-    bottomFade: 'from-transparent to-[#080b14]',
+    bottomFade: 'from-transparent to-[#0c101c]',
     glow: 'bg-[radial-gradient(ellipse_65%_50%_at_50%_100%,rgba(60,70,130,0.12),transparent)]',
   },
 } as const;

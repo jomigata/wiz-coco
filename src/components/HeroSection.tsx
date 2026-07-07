@@ -8,6 +8,7 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
 import { homeSectionTones } from '@/components/home/homeSectionStyles';
+import { appChromeClasses } from '@/components/layout/appChromeTheme';
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,6 +28,7 @@ export default function HeroSection() {
 
   return (
     <section className={`relative min-h-[88vh] flex items-center overflow-hidden ${homeSectionTones.hero.section}`}>
+      <div className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-20 bg-gradient-to-b ${appChromeClasses.headerFade} to-transparent`} aria-hidden />
       <div className={`absolute inset-0 ${homeSectionTones.hero.glow}`} />
       <div className={`absolute inset-0 ${homeSectionTones.hero.glowSecondary}`} />
       <div className="absolute inset-0 opacity-[0.025]">
