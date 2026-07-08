@@ -269,6 +269,19 @@ Wave 2 케어 플랜의 기반 데이터 모델입니다. 포털 내담자는 Fi
 
 ---
 
+## 10. 일상 기록 연동 (T-2-09)
+
+포털에서 `daily_record` 과제 또는 journal/check_in 기록 제출 시 `dailyRecords` 컬렉션에 동기화됩니다.
+
+| API | 설명 |
+|-----|------|
+| `GET /api/care-assignments/daily-records` | 상담사 — 포털·마이페이지 공유 기록 |
+| `PATCH /api/care-assignments/daily-records/{recordId}` | 상담사 메모 |
+
+상담사 UI: `/counselor/daily-records`
+
+---
+
 ## 7. 후속 작업 매핑
 
 | ID | 작업 | 이 스키마 의존 |
@@ -280,3 +293,4 @@ Wave 2 케어 플랜의 기반 데이터 모델입니다. 포털 내담자는 Fi
 | T-2-06 | 진행 기록 | §5-5, `careProgress` |
 | T-2-07 | 상담사 치료 모니터링 | §5-2 + 실시간 |
 | T-2-08 | `care_assignment` 알림 | §9 |
+| T-2-09 | `daily-records` 연동 | §10 |

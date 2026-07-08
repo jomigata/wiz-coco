@@ -11,6 +11,7 @@ from config import (
     CLIENT_PORTALS_COLLECTION,
     NOTIFICATION_QUEUE_COLLECTION,
 )
+from utils.daily_records import sync_portal_care_daily_record
 from utils.care_assignment_schema import (
     CareAssignmentValidationError,
     build_care_assignment_doc,
@@ -401,11 +402,28 @@ def list_portal_care_assignments(db, portal_id: str) -> dict:
     }
 
 
+def _daily_record_target_days(ass_data: dict) -> int:
+    metadata = ass_data.get("metadata") or {}
+    if isinstance(metadata, dict) and metadata.get("targetDays") is not None:
+        try:
+            return max(1, int(metadata["targetDays"]))
+        except (TypeError, ValueError):
+            pass
+    due = _parse_date_only(ass_data.get("dueAt"))
+    start = _parse_date_only(ass_data.get("startAt"))
+    if due and start:
+        return max(1, (due - start).days)
+    return 14
+
+
 def _compute_progress_percent(ass_data: dict, entry_count: int, mark_completed: bool) -> int:
     if mark_completed:
         return 100
     if entry_count <= 0:
         return 0
+    if (ass_data.get("type") or "").strip() == "daily_record":
+        target = _daily_record_target_days(ass_data)
+        return min(100, round((entry_count / target) * 100))
     program_id = (ass_data.get("programId") or "").strip()
     if program_id:
         try:
@@ -504,6 +522,24 @@ def submit_portal_care_progress(
                 "updatedAt": SERVER_TIMESTAMP,
             }
         )
+
+    if (ass_data.get("type") or "").strip() == "daily_record" or entry.get("kind") in (
+        "journal",
+        "check_in",
+        "note",
+    ):
+        try:
+            sync_portal_care_daily_record(
+                db,
+                portal_id=portal_id,
+                portal_display_name=(ass_data.get("portalDisplayName") or "").strip(),
+                counselor_id=(ass_data.get("counselorId") or "").strip(),
+                assignment_id=assignment_id,
+                assignment_title=(ass_data.get("title") or "").strip(),
+                entry=entry,
+            )
+        except Exception:
+            pass
 
     progress_summary = _progress_for_assignment(db, assignment_id, include_recent_entries=True)
 

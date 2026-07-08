@@ -83,4 +83,22 @@ export interface DailyRecord {
   recordedAt: string;
   isShared: boolean;
   counselorNotes?: string;
+  /** T-2-09 — 포털 케어 일기 연동 */
+  source?: 'portal_care' | 'mypage';
+  portalId?: string;
+  portalDisplayName?: string;
+  assignmentId?: string;
+  assignmentTitle?: string;
+  progressEntryId?: string;
 }
+
+export type CounselorDailyRecordListItem = DailyRecord;
+
+export type ListCounselorDailyRecordsResult = {
+  items: CounselorDailyRecordListItem[];
+  total: number;
+  summary: {
+    portalCare: number;
+    mypageShared: number;
+  };
+};

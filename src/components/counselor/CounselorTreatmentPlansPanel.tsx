@@ -106,6 +106,11 @@ export default function CounselorTreatmentPlansPanel() {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingAssignments, setLoadingAssignments] = useState(true);
   const [assigning, setAssigning] = useState(false);
+  const [assigningDaily, setAssigningDaily] = useState(false);
+  const [dailyTitle, setDailyTitle] = useState('일기·기록 과제');
+  const [dailyInstructions, setDailyInstructions] = useState('');
+  const [dailyDueAt, setDailyDueAt] = useState('');
+  const [dailyTargetDays, setDailyTargetDays] = useState('14');
   const [error, setError] = useState('');
   const [resultMsg, setResultMsg] = useState('');
 
@@ -167,7 +172,10 @@ export default function CounselorTreatmentPlansPanel() {
     if (selectedProgram?.defaultDueDays) {
       setDueAt(formatDateInput(selectedProgram.defaultDueDays));
     }
-  }, [selectedProgram?.programId, selectedProgram?.defaultDueDays]);
+    if (!dailyDueAt) {
+      setDailyDueAt(formatDateInput(14));
+    }
+  }, [selectedProgram?.defaultDueDays, dailyDueAt]);
 
   const togglePortal = (portalId: string) => {
     setSelectedPortalIds((prev) => {
@@ -226,6 +234,41 @@ export default function CounselorTreatmentPlansPanel() {
     }
   };
 
+  const handleAssignDailyRecord = async () => {
+    if (selectedPortalIds.size === 0) {
+      setError('일기 과제를 할당할 내담자를 1명 이상 선택해 주세요.');
+      return;
+    }
+
+    setAssigningDaily(true);
+    setError('');
+    setResultMsg('');
+    try {
+      const targetDays = Number(dailyTargetDays) || 14;
+      const result = await createCareAssignments({
+        portalIds: Array.from(selectedPortalIds),
+        type: 'daily_record',
+        title: dailyTitle.trim() || '일기·기록 과제',
+        instructions: dailyInstructions.trim() || undefined,
+        priority,
+        dueAt: dailyDueAt || formatDateInput(targetDays),
+        notify,
+        source: 'manual',
+        metadata: { targetDays },
+      });
+      setResultMsg(
+        `일기 할당 ${result.assigned}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건`,
+      );
+      if (result.assigned > 0) {
+        void loadAssignments();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '일기 과제 할당에 실패했습니다.');
+    } finally {
+      setAssigningDaily(false);
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-[1800px] space-y-6 px-4 py-5 sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -236,6 +279,12 @@ export default function CounselorTreatmentPlansPanel() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <AuthLink
+            href="/counselor/daily-records"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+          >
+            일상 기록
+          </AuthLink>
           <AuthLink
             href="/counselor/clients"
             className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
@@ -519,6 +568,63 @@ export default function CounselorTreatmentPlansPanel() {
             </table>
           </div>
         )}
+      </section>
+
+      <section className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5">
+        <h2 className="text-sm font-semibold text-violet-200">일기·기록 과제 할당</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          위에서 선택한 내담자에게 일기·기록 과제를 할당합니다. 내담자는 포털 「추가 과제·치료」 탭에서
+          작성하며, 상담사는 「일상 기록」 화면에서 확인할 수 있습니다.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="block text-xs text-slate-500">
+            과제 제목
+            <input
+              type="text"
+              value={dailyTitle}
+              onChange={(e) => setDailyTitle(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+            />
+          </label>
+          <label className="block text-xs text-slate-500">
+            목표 일수
+            <input
+              type="number"
+              min={1}
+              max={90}
+              value={dailyTargetDays}
+              onChange={(e) => setDailyTargetDays(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+            />
+          </label>
+        </div>
+        <label className="mt-3 block text-xs text-slate-500">
+          마감일
+          <input
+            type="date"
+            value={dailyDueAt}
+            onChange={(e) => setDailyDueAt(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200 sm:max-w-xs"
+          />
+        </label>
+        <label className="mt-3 block text-xs text-slate-500">
+          안내 문구
+          <textarea
+            value={dailyInstructions}
+            onChange={(e) => setDailyInstructions(e.target.value)}
+            rows={2}
+            placeholder="예: 매일 저녁 기분과 하루를 간단히 기록해 주세요."
+            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => void handleAssignDailyRecord()}
+          disabled={assigningDaily || selectedPortalIds.size === 0}
+          className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+        >
+          {assigningDaily ? '할당 중…' : `일기 과제 할당 (${selectedPortalIds.size}명)`}
+        </button>
       </section>
     </div>
   );

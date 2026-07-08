@@ -74,6 +74,8 @@ function CareProgressForm({
   const [sessionId, setSessionId] = useState('');
   const [content, setContent] = useState('');
   const [moodScore, setMoodScore] = useState('6');
+  const [stressLevel, setStressLevel] = useState('5');
+  const [energyLevel, setEnergyLevel] = useState('5');
   const [markCompleted, setMarkCompleted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -110,12 +112,16 @@ function CareProgressForm({
       }
 
       const mood = moodScore ? Number(moodScore) : undefined;
+      const stress = stressLevel ? Number(stressLevel) : undefined;
+      const energy = energyLevel ? Number(energyLevel) : undefined;
       const result = await submitPortalCareProgress(session.portalToken, item.assignmentId, {
         entry: {
           kind,
           title,
           content: bodyContent || undefined,
           moodScore: Number.isFinite(mood) ? mood : undefined,
+          stressLevel: Number.isFinite(stress) ? stress : undefined,
+          energyLevel: Number.isFinite(energy) ? energy : undefined,
           metadata,
         },
         markCompleted,
@@ -205,6 +211,35 @@ function CareProgressForm({
         />
         <span className="text-sm text-slate-300">{moodScore}</span>
       </label>
+
+      {item.type === 'daily_record' ? (
+        <>
+          <label className="block text-xs text-slate-400">
+            스트레스 (1~10)
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={stressLevel}
+              onChange={(e) => setStressLevel(e.target.value)}
+              className="mt-2 w-full"
+            />
+            <span className="text-sm text-slate-300">{stressLevel}</span>
+          </label>
+          <label className="block text-xs text-slate-400">
+            에너지 (1~10)
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={energyLevel}
+              onChange={(e) => setEnergyLevel(e.target.value)}
+              className="mt-2 w-full"
+            />
+            <span className="text-sm text-slate-300">{energyLevel}</span>
+          </label>
+        </>
+      ) : null}
 
       <label className="flex items-center gap-2 text-sm text-slate-300">
         <input

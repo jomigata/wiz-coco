@@ -23,6 +23,7 @@ from utils.care_program_catalog import (
     list_care_programs,
 )
 from utils.care_assignments import create_care_assignments, list_counselor_care_assignments
+from utils.daily_records import list_counselor_daily_records, update_counselor_daily_record_notes
 
 bp = Blueprint("care_assignments", __name__, url_prefix="/api/care-assignments")
 
@@ -58,6 +59,8 @@ def care_assignment_schema():
                 "GET /api/care-assignments",
                 "GET /api/client-portals/care-assignments",
                 "POST /api/client-portals/care-assignments/{assignmentId}/progress",
+                "GET /api/care-assignments/daily-records",
+                "PATCH /api/care-assignments/daily-records/{recordId}",
             ],
             "plannedEndpoints": [
                 "PATCH /api/care-assignments/{assignmentId}",
@@ -100,6 +103,43 @@ def list_care_assignment_route():
         assignment_type=assignment_type,
         limit=limit,
     )
+    return jsonify(result)
+
+
+@bp.route("/daily-records", methods=["GET"])
+@require_counselor
+def list_daily_records_route():
+    """상담사 — 포털·마이페이지 일상 기록 (T-2-09)."""
+    db = get_firestore()
+    portal_id = (request.args.get("portalId") or "").strip() or None
+    try:
+        limit = int(request.args.get("limit") or 50)
+    except ValueError:
+        limit = 50
+    result = list_counselor_daily_records(
+        db,
+        g.counselor_uid,
+        portal_id=portal_id,
+        limit=limit,
+    )
+    return jsonify(result)
+
+
+@bp.route("/daily-records/<record_id>", methods=["PATCH"])
+@require_counselor
+def patch_daily_record_route(record_id: str):
+    """상담사 — 일상 기록 메모."""
+    db = get_firestore()
+    body = request.get_json(silent=True) or {}
+    try:
+        result = update_counselor_daily_record_notes(
+            db,
+            g.counselor_uid,
+            record_id,
+            body.get("counselorNotes") or "",
+        )
+    except CareAssignmentValidationError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
     return jsonify(result)
 
 

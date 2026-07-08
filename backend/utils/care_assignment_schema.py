@@ -202,6 +202,21 @@ def validate_progress_entry(entry: dict | None) -> dict:
         if mood < 1 or mood > 10:
             raise CareAssignmentValidationError("moodScore는 1~10이어야 합니다.")
 
+    def _optional_score(field: str):
+        value = entry.get(field)
+        if value is None:
+            return None
+        try:
+            value = int(value)
+        except (TypeError, ValueError) as exc:
+            raise CareAssignmentValidationError(f"{field}는 정수여야 합니다.") from exc
+        if value < 1 or value > 10:
+            raise CareAssignmentValidationError(f"{field}는 1~10이어야 합니다.")
+        return value
+
+    stress = _optional_score("stressLevel")
+    energy = _optional_score("energyLevel")
+
     if kind in ("journal", "note") and not content:
         raise CareAssignmentValidationError("journal/note 항목은 content가 필요합니다.")
     if kind == "check_in" and not content and mood is None:
@@ -215,8 +230,8 @@ def validate_progress_entry(entry: dict | None) -> dict:
         "title": title,
         "content": content or None,
         "moodScore": mood,
-        "stressLevel": entry.get("stressLevel"),
-        "energyLevel": entry.get("energyLevel"),
+        "stressLevel": stress,
+        "energyLevel": energy,
         "completedAt": datetime.now(timezone.utc).isoformat(),
         "metadata": entry.get("metadata") if isinstance(entry.get("metadata"), dict) else None,
     }

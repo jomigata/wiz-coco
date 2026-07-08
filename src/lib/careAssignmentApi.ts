@@ -14,6 +14,7 @@ import type {
   CareProgramDefinition,
   CareProgramDetailResult,
 } from '@/types/careProgram';
+import type { ListCounselorDailyRecordsResult } from '@/types/counselor';
 
 export { CARE_ASSIGNMENT_SCHEMA_VERSION } from '@/types/careAssignment';
 
@@ -133,4 +134,52 @@ export async function listCareAssignments(
     throw new Error(typeof data?.message === 'string' ? data.message : '케어 할당 목록 조회에 실패했습니다.');
   }
   return data as ListCareAssignmentsResult;
+}
+
+/** T-2-09 — 상담사 일상 기록 (포털·마이페이지) */
+export async function listCounselorDailyRecords(params?: {
+  portalId?: string;
+  limit?: number;
+}): Promise<ListCounselorDailyRecordsResult> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const search = new URLSearchParams();
+  if (params?.portalId) search.set('portalId', params.portalId);
+  if (params?.limit) search.set('limit', String(params.limit));
+
+  const qs = search.toString();
+  const res = await fetch(`${getBaseUrl()}/api/care-assignments/daily-records${qs ? `?${qs}` : ''}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '일상 기록 조회에 실패했습니다.');
+  }
+  return data as ListCounselorDailyRecordsResult;
+}
+
+export async function updateCounselorDailyRecordNotes(
+  recordId: string,
+  counselorNotes: string,
+): Promise<{ id: string; counselorNotes: string | null }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const res = await fetch(
+    `${getBaseUrl()}/api/care-assignments/daily-records/${encodeURIComponent(recordId)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ counselorNotes }),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '메모 저장에 실패했습니다.');
+  }
+  return data as { id: string; counselorNotes: string | null };
 }
