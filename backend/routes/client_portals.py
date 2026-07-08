@@ -56,7 +56,7 @@ from utils.assessment_dispatch import (
     list_archived_portals,
     restore_archived_portals,
 )
-from utils.client_portal_list import list_counselor_client_portals
+from utils.client_portal_list import list_counselor_client_portals, get_counselor_client_portal_detail
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -735,3 +735,14 @@ def create_magic_link():
     code = d.get("accessCode", "")
     token = _create_magic_link_token(portal_id, code)
     return jsonify({"magicPath": f"/go/?t={token}", "accessCode": code})
+
+
+@bp.route("/detail/<portal_id>", methods=["GET"])
+@require_counselor
+def get_counselor_portal_detail(portal_id):
+    """상담사 내담자 1명 상세 (360° 뷰)."""
+    db = get_firestore()
+    detail = get_counselor_client_portal_detail(db, g.counselor_uid, portal_id)
+    if not detail:
+        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
+    return jsonify(detail)

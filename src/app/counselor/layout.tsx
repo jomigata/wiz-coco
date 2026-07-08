@@ -96,6 +96,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '검사코드 수정';
     if (path.startsWith('/counselor/assessments')) return '검사코드 목록';
+    if (path.startsWith('/counselor/clients/') && path !== '/counselor/clients') return '내담자 상세';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
       '/counselor/clients': '내담자 목록',

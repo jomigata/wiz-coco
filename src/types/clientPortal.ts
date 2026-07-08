@@ -124,6 +124,63 @@ export type CounselorClientPortalListResult = {
   cohorts: CounselorClientPortalCohort[];
 };
 
+export type CounselorClientPortalAssessmentDetail = {
+  assessmentId: string;
+  title: string;
+  joinAccessCode: string;
+  cohortName?: string;
+  usageEndDate?: string | null;
+  welcomeMessage?: string;
+  testList: { testId: string; name: string }[];
+  testStatus: 'completed' | 'in_progress' | 'not_started';
+  completedCount: number;
+  requiredCount: number;
+  tests: {
+    testId: string;
+    testName: string;
+    status: 'completed' | 'in_progress' | 'not_started';
+    completedAt: string | null;
+    resultId: string | null;
+  }[];
+};
+
+export type CounselorClientPortalDetailResult = {
+  portal: {
+    portalId: string;
+    displayName: string;
+    email?: string | null;
+    phone?: string | null;
+    accessCode: string;
+    cohortId?: string | null;
+    cohortName?: string | null;
+    status: ClientPortalStatus;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    lastLoginAt?: string | null;
+    notifyStatus: string;
+    notifyError?: string | null;
+    notifyAt?: string | null;
+    notifySentVia?: string;
+  };
+  progress: {
+    totalTests: number;
+    completedTests: number;
+    percent: number;
+    label: ClientPortalProgressLabel;
+  };
+  assessments: CounselorClientPortalAssessmentDetail[];
+  recentResults: {
+    resultId: string;
+    assessmentId: string;
+    testId: string;
+    testType: string;
+    status: string;
+    completedAt?: string | null;
+    createdAt?: string | null;
+  }[];
+  linkedPortals: { portalId: string; accessCode: string; displayName?: string }[];
+};
+
 export interface ClientPortalBulkJobResult extends BulkPortalJobStatus {
   created: ClientPortalBulkRow[];
 }

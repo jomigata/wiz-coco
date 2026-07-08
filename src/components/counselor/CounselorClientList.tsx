@@ -227,7 +227,14 @@ export default function CounselorClientList() {
                 return (
                   <tr key={item.portalId} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-white">{item.displayName || '—'}</div>
+                      <div className="font-medium text-white">
+                        <Link
+                          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+                          className="hover:text-sky-300"
+                        >
+                          {item.displayName || '—'}
+                        </Link>
+                      </div>
                       <div className="text-xs text-slate-500">
                         등록 {formatDateTime(item.createdAt)}
                       </div>
@@ -271,6 +278,12 @@ export default function CounselorClientList() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
+                        <Link
+                          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+                          className="text-xs text-sky-400 hover:text-sky-300"
+                        >
+                          상세 보기
+                        </Link>
                         {primaryAssessment ? (
                           <Link
                             href={progressHref(primaryAssessment.assessmentId)}

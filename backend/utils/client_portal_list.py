@@ -1,14 +1,22 @@
 """상담사 내담자 CRM — clientPortals 목록·진행 요약."""
 from __future__ import annotations
 
-from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION
+from config import (
+    ASSESSMENTS_COLLECTION,
+    CLIENT_PORTALS_COLLECTION,
+    TEST_RESULTS_COLLECTION,
+)
 from utils.assessment_dispatch import (
     _bulk_completed_tests_by_portal_assessment,
     _iso_timestamp,
     _latest_notify_by_portal,
     _resolve_notify_at,
     _resolve_notify_status,
+    _test_detail_rows,
+    _test_status_for_portal,
 )
+from utils.portal_assessment_access import get_portal_doc
+from utils.portal_linking import list_linked_portal_summaries
 
 
 def _matches_search(pdata: dict, query: str) -> bool:
@@ -176,4 +184,137 @@ def list_counselor_client_portals(
         "items": items,
         "total": len(items),
         "cohorts": cohorts,
+    }
+
+
+def get_counselor_client_portal_detail(
+    db,
+    counselor_uid: str,
+    portal_id: str,
+) -> dict | None:
+    """상담사 내담자 1명 상세 — 검사·발송·진행·결과 통합."""
+    pid = (portal_id or "").strip()
+    if not pid:
+        return None
+
+    portal_doc = get_portal_doc(db, pid)
+    if not portal_doc:
+        return None
+    pdata = portal_doc.to_dict() or {}
+    if pdata.get("counselorId") != counselor_uid:
+        return None
+
+    email = (pdata.get("email") or "").strip()
+    phone = (pdata.get("phone") or "").strip()
+    notify_map = _latest_notify_by_portal(db, {pid})
+    notify = notify_map.get(pid) or {}
+    notify_status, notify_error = _resolve_notify_status(
+        notify, pdata, email=email, phone=phone
+    )
+    notify_at = _resolve_notify_at(notify, pdata, notify_status)
+
+    assigned_ids = [
+        str(aid).strip()
+        for aid in (pdata.get("assignedAssessmentIds") or [])
+        if str(aid).strip()
+    ]
+
+    assessments: list[dict] = []
+    all_aids: set[str] = set()
+    total_tests = 0
+    completed_tests = 0
+
+    for aid in assigned_ids:
+        adoc = db.collection(ASSESSMENTS_COLLECTION).document(aid).get()
+        if not adoc.exists:
+            continue
+        a = adoc.to_dict() or {}
+        if a.get("counselorId") != counselor_uid:
+            continue
+        if (a.get("status") or "active") != "active":
+            continue
+        all_aids.add(aid)
+        test_list = a.get("testList") or []
+        required = {
+            str(t.get("testId") or "").strip()
+            for t in test_list
+            if t and str(t.get("testId") or "").strip()
+        }
+        test_info = _test_status_for_portal(db, pid, aid, required)
+        tests = _test_detail_rows(db, pid, aid, test_list)
+        total_tests += test_info.get("requiredCount") or 0
+        completed_tests += test_info.get("completedCount") or 0
+        assessments.append(
+            {
+                "assessmentId": aid,
+                "title": (a.get("title") or "").strip() or "검사코드",
+                "joinAccessCode": (a.get("accessCode") or "").strip(),
+                "cohortName": (a.get("cohortName") or pdata.get("cohortName") or "").strip(),
+                "usageEndDate": (a.get("usageEndDate") or "").strip() or None,
+                "welcomeMessage": (a.get("welcomeMessage") or "").strip(),
+                "testList": test_list,
+                "testStatus": test_info.get("testStatus"),
+                "completedCount": test_info.get("completedCount"),
+                "requiredCount": test_info.get("requiredCount"),
+                "tests": tests,
+            }
+        )
+
+    percent = round((completed_tests / total_tests) * 100) if total_tests else 0
+    progress_label = _progress_label(total_tests, completed_tests)
+
+    recent_results: list[dict] = []
+    result_refs = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("portalId", "==", pid)
+        .stream()
+    )
+    for rdoc in result_refs:
+        rd = rdoc.to_dict() or {}
+        recent_results.append(
+            {
+                "resultId": rdoc.id,
+                "assessmentId": (rd.get("assessmentId") or "").strip(),
+                "testId": (rd.get("testId") or "").strip(),
+                "testType": (rd.get("testType") or rd.get("testId") or "").strip(),
+                "status": (rd.get("status") or "").strip(),
+                "completedAt": _iso_timestamp(rd.get("completedAt")),
+                "createdAt": _iso_timestamp(rd.get("createdAt")),
+            }
+        )
+    recent_results.sort(
+        key=lambda r: (r.get("completedAt") or r.get("createdAt") or ""),
+        reverse=True,
+    )
+    recent_results = recent_results[:30]
+
+    linked_portals = list_linked_portal_summaries(db, pid)
+
+    return {
+        "portal": {
+            "portalId": pid,
+            "displayName": pdata.get("displayName") or "",
+            "email": email or None,
+            "phone": phone or None,
+            "accessCode": pdata.get("accessCode") or "",
+            "cohortId": (pdata.get("cohortId") or "").strip() or None,
+            "cohortName": (pdata.get("cohortName") or "").strip() or None,
+            "status": pdata.get("status") or "active",
+            "createdAt": _iso_timestamp(pdata.get("createdAt")),
+            "updatedAt": _iso_timestamp(pdata.get("updatedAt")),
+            "lastLoginAt": _iso_timestamp(pdata.get("lastLoginAt")),
+            "notifyStatus": notify_status,
+            "notifyError": notify_error,
+            "notifyAt": notify_at,
+            "notifySentVia": notify.get("sentVia") or "",
+        },
+        "progress": {
+            "totalTests": total_tests,
+            "completedTests": completed_tests,
+            "percent": percent,
+            "label": progress_label,
+        },
+        "assessments": assessments,
+        "recentResults": recent_results,
+        "linkedPortals": linked_portals,
     }
