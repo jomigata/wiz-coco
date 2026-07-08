@@ -13,6 +13,7 @@ import {
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { getCounselorResult } from '@/lib/assessmentApi';
 import { printAssessmentReport, buildDefaultResultSections } from '@/lib/assessmentReportPrint';
+import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorClientPortalDetailResult } from '@/types/clientPortal';
@@ -332,19 +333,26 @@ export default function CounselorClientDetail({ portalId }: Props) {
                         </td>
                         <td className="py-2">
                           {test.resultId && test.status === 'completed' ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handlePrintResult(
-                                  assessment.assessmentId,
-                                  test.resultId!,
-                                  test.testName,
-                                )
-                              }
-                              className="text-sky-400 hover:text-sky-300"
-                            >
-                              리포트 인쇄
-                            </button>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handlePrintResult(
+                                    assessment.assessmentId,
+                                    test.resultId!,
+                                    test.testName,
+                                  )
+                                }
+                                className="text-sky-400 hover:text-sky-300"
+                              >
+                                리포트 인쇄
+                              </button>
+                              <AssessmentAiInterpretButton
+                                resultId={test.resultId}
+                                testLabel={test.testName}
+                                compact
+                              />
+                            </div>
                           ) : (
                             <span className="text-slate-600">—</span>
                           )}

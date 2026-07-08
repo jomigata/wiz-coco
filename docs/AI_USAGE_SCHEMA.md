@@ -91,7 +91,20 @@ Wave 3 AI 워크벤치의 기반 데이터 모델입니다. **검사 크레딧**
 |--------|------|------|------|
 | GET | `/api/ai/schema` | — | 스키마·enum 메타 |
 | GET | `/api/ai/credits/me` | 상담사 Bearer | 잔액 + 최근 원장 |
-| POST | `/api/ai/credits/grant` | Admin | AI 크레딧 지급 |
+| GET | `/api/ai/reports?resultId=` | 상담사 Bearer | 캐시된 AI 리포트 목록 |
+| GET | `/api/ai/reports/<reportId>` | 상담사 Bearer | AI 리포트 단건 (재열람 무료) |
+
+### Callable — `interpretAssessmentResult` (T-3-05)
+
+상담사 Firebase Auth로 호출. 검사 결과 1건 AI 해석 생성·`aiReports` 캐시.
+
+```json
+{ "resultId": "testResults-doc-id", "forceRegenerate": false }
+```
+
+- 최초 생성: 4 AI 크레딧
+- 재생성: 2 AI 크레딧 (50%)
+- 캐시 재열람: 0 크레딧
 
 ### POST /api/ai/credits/grant
 
@@ -135,7 +148,7 @@ Wave 3 AI 워크벤치의 기반 데이터 모델입니다. **검사 크레딧**
 | T-3-02 | Functions Gemini 토큰 기록 | ✅ |
 | T-3-03 | `/counselor/credits` AI 탭 | ✅ |
 | T-3-04 | `aiPricingCatalog.ts` | ✅ |
-| T-3-05 | 검사 결과 AI 해석 Callable | ⬜ |
+| T-3-05 | 검사 결과 AI 해석 Callable | ✅ |
 | T-3-06 | 맞춤 검사 추천 | ⬜ |
 | T-3-07 | AI → 포털 push | ⬜ |
 | T-3-08 | Admin AI 사용량 대시보드 | ⬜ |

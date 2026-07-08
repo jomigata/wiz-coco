@@ -23,6 +23,7 @@ from utils.counselor_ai_credits import (
     grant_ai_credits,
     list_ai_ledger,
 )
+from utils.ai_reports import get_ai_report, list_ai_reports_for_result
 
 bp = Blueprint("ai_credits", __name__, url_prefix="/api/ai")
 
@@ -52,6 +53,8 @@ def ai_usage_schema():
                 "GET /api/ai/schema",
                 "GET /api/ai/credits/me",
                 "POST /api/ai/credits/grant",
+                "GET /api/ai/reports",
+                "GET /api/ai/reports/<report_id>",
             ],
         }
     )
@@ -94,3 +97,26 @@ def ai_credits_grant():
         metadata=payload.get("metadata"),
     )
     return jsonify(result)
+
+
+@bp.route("/reports", methods=["GET"])
+@require_counselor
+def ai_reports_list():
+    """상담사 — resultId별 캐시된 AI 리포트 목록."""
+    result_id = (request.args.get("resultId") or "").strip()
+    if not result_id:
+        return jsonify({"error": "resultId query parameter required"}), 400
+    db = get_firestore()
+    reports = list_ai_reports_for_result(db, g.counselor_uid, result_id)
+    return jsonify({"resultId": result_id, "reports": reports})
+
+
+@bp.route("/reports/<report_id>", methods=["GET"])
+@require_counselor
+def ai_report_detail(report_id):
+    """상담사 — AI 리포트 단건 조회 (재열람 무료)."""
+    db = get_firestore()
+    report = get_ai_report(db, g.counselor_uid, report_id)
+    if not report:
+        return jsonify({"error": "Not Found"}), 404
+    return jsonify(report)

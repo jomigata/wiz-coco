@@ -8,6 +8,7 @@ import {
   buildDefaultResultSections,
   printAssessmentReport,
 } from '@/lib/assessmentReportPrint';
+import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
 
 type CounselorResultRow = {
   id: string;
@@ -139,23 +140,33 @@ export default function TestResultsPage() {
                       {r.counselorCode && <div className="text-xs text-white/40 font-mono">연결코드: {formatAccessCodeDisplay(r.counselorCode)}</div>}
                     </td>
                     <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        className="text-xs px-2 py-1 rounded border border-blue-400/40 text-blue-200 hover:bg-blue-950/40"
-                        onClick={() =>
-                          printAssessmentReport({
-                            title: '심리검사 결과 리포트',
-                            subtitle: r.testType || '검사 결과',
-                            clientLabel: r.email || r.uid || '내담자',
-                            testName: r.testType,
-                            accessCode: formatAccessCodeDisplay(r.code || ''),
-                            status: r.status || 'completed',
-                            sections: buildDefaultResultSections(r),
-                          })
-                        }
-                      >
-                        PDF / 인쇄
-                      </button>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <button
+                          type="button"
+                          className="text-xs px-2 py-1 rounded border border-blue-400/40 text-blue-200 hover:bg-blue-950/40"
+                          onClick={() =>
+                            printAssessmentReport({
+                              title: '심리검사 결과 리포트',
+                              subtitle: r.testType || '검사 결과',
+                              clientLabel: r.email || r.uid || '내담자',
+                              testName: r.testType,
+                              accessCode: formatAccessCodeDisplay(r.code || ''),
+                              status: r.status || 'completed',
+                              sections: buildDefaultResultSections(r),
+                            })
+                          }
+                        >
+                          PDF / 인쇄
+                        </button>
+                        {r.status === 'completed' || !r.status ? (
+                          <AssessmentAiInterpretButton
+                            resultId={r.id}
+                            testLabel={r.testType}
+                            clientLabel={r.email || r.uid || undefined}
+                            compact
+                          />
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}

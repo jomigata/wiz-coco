@@ -12,6 +12,9 @@ const AI_CREDITS_ENFORCE = process.env.AI_CREDITS_ENFORCE === 'true'
 /** counsel_message 1회당 차감 AI 크레딧 (T-3-04 단가표와 동기화 예정) */
 export const COUNSEL_MESSAGE_CREDIT_COST = 0
 
+/** 검사 결과 AI 해석 1건 (T-3-05) */
+export const ASSESSMENT_INTERPRET_CREDIT_COST = 4
+
 export type RecordAiUsageInput = {
   counselorUid?: string
   clientId?: string
