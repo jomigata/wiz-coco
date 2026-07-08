@@ -62,7 +62,7 @@ from utils.client_portal_list import (
     list_counselor_portal_test_assignments,
 )
 from utils.portal_assessment_push import push_assessments_to_portals
-from utils.counselor_monitoring import get_counselor_monitoring_hub
+from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -263,6 +263,15 @@ def counselor_monitoring_hub():
     cohort_id = (request.args.get("cohortId") or "").strip() or None
     db = get_firestore()
     result = get_counselor_monitoring_hub(db, g.counselor_uid, cohort_id=cohort_id)
+    return jsonify(result)
+
+
+@bp.route("/monitoring/cohorts", methods=["GET"])
+@require_counselor
+def counselor_cohort_monitoring():
+    """상담사 그룹(학급·단체)별 진행률 집계."""
+    db = get_firestore()
+    result = get_counselor_cohort_monitoring_view(db, g.counselor_uid)
     return jsonify(result)
 
 

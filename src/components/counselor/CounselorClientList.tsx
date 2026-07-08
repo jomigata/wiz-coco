@@ -2,10 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
+import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorClientPortalListItem } from '@/types/clientPortal';
@@ -61,6 +63,8 @@ function progressHref(assessmentId: string): string {
 }
 
 export default function CounselorClientList() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { authPending, showLoginRequired } = useAuthResolved();
   const [items, setItems] = useState<CounselorClientPortalListItem[]>([]);
   const [cohorts, setCohorts] = useState<{ cohortId: string; cohortName: string }[]>([]);
@@ -69,6 +73,28 @@ export default function CounselorClientList() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [cohortFilter, setCohortFilter] = useState('');
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('cohortId');
+    if (fromUrl !== null) {
+      setCohortFilter(fromUrl);
+    }
+  }, [searchParams]);
+
+  const updateCohortFilter = useCallback(
+    (value: string) => {
+      setCohortFilter(value);
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set('cohortId', value);
+      } else {
+        params.delete('cohortId');
+      }
+      const qs = params.toString();
+      router.replace(qs ? `/counselor/clients?${qs}` : '/counselor/clients', { scroll: false });
+    },
+    [router, searchParams],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -170,10 +196,11 @@ export default function CounselorClientList() {
         </select>
         <select
           value={cohortFilter}
-          onChange={(e) => setCohortFilter(e.target.value)}
+          onChange={(e) => updateCohortFilter(e.target.value)}
           className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
         >
           <option value="">전체 그룹</option>
+          <option value={INDIVIDUAL_COHORT_KEY}>개별 발급</option>
           {cohorts.map((c) => (
             <option key={c.cohortId} value={c.cohortId}>
               {c.cohortName || c.cohortId}

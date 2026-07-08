@@ -17,6 +17,16 @@ from utils.assessment_dispatch import (
 )
 from utils.portal_assessment_access import get_portal_doc
 from utils.portal_linking import list_linked_portal_summaries
+from utils.counselor_monitoring import INDIVIDUAL_COHORT_KEY
+
+
+def _matches_cohort_filter(pdata: dict, cohort_filter: str) -> bool:
+    if not cohort_filter:
+        return True
+    portal_cid = (pdata.get("cohortId") or "").strip()
+    if cohort_filter == INDIVIDUAL_COHORT_KEY:
+        return not portal_cid
+    return portal_cid == cohort_filter
 
 
 def _matches_search(pdata: dict, query: str) -> bool:
@@ -66,7 +76,7 @@ def list_counselor_client_portals(
         st = (pdata.get("status") or "active").strip()
         if status_filter != "all" and st != status_filter:
             continue
-        if cohort_filter and (pdata.get("cohortId") or "") != cohort_filter:
+        if not _matches_cohort_filter(pdata, cohort_filter):
             continue
         if query and not _matches_search(pdata, query):
             continue
@@ -348,7 +358,7 @@ def list_counselor_portal_test_assignments(
         st = (pdata.get("status") or "active").strip()
         if portal_status_filter != "all" and st != portal_status_filter:
             continue
-        if cohort_filter and (pdata.get("cohortId") or "") != cohort_filter:
+        if not _matches_cohort_filter(pdata, cohort_filter):
             continue
         if query and not _matches_search(pdata, query):
             continue

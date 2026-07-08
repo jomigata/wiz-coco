@@ -2,13 +2,18 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
+import CounselorCohortMonitoringView from '@/components/counselor/CounselorCohortMonitoringView';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { fetchCounselorMonitoringHub } from '@/lib/clientPortalApi';
+import { filterHubByCohort, INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { useCounselorMonitoringRealtime } from '@/hooks/useCounselorMonitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorMonitoringAssessment } from '@/types/clientPortal';
+
+export type MonitoringHubView = 'overview' | 'cohorts';
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -105,8 +110,15 @@ function AssessmentCard({ item }: { item: CounselorMonitoringAssessment }) {
   );
 }
 
-export default function CounselorMonitoringHub() {
+type Props = {
+  initialView?: MonitoringHubView;
+};
+
+export default function CounselorMonitoringHub({ initialView = 'overview' }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
+  const [view, setView] = useState<MonitoringHubView>(initialView);
   const [baseData, setBaseData] = useState<Awaited<ReturnType<typeof fetchCounselorMonitoringHub>> | null>(
     null,
   );
@@ -114,13 +126,33 @@ export default function CounselorMonitoringHub() {
   const [error, setError] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
 
+  useEffect(() => {
+    const param = searchParams.get('view');
+    if (param === 'cohorts' || param === 'overview') {
+      setView(param);
+    }
+  }, [searchParams]);
+
+  const setHubView = useCallback(
+    (next: MonitoringHubView) => {
+      setView(next);
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === 'overview') {
+        params.delete('view');
+      } else {
+        params.set('view', next);
+      }
+      const qs = params.toString();
+      router.replace(qs ? `/counselor/progress?${qs}` : '/counselor/progress', { scroll: false });
+    },
+    [router, searchParams],
+  );
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await fetchCounselorMonitoringHub({
-        cohortId: cohortFilter || undefined,
-      });
+      const data = await fetchCounselorMonitoringHub();
       setBaseData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '모니터링 데이터를 불러오지 못했습니다.');
@@ -128,7 +160,7 @@ export default function CounselorMonitoringHub() {
     } finally {
       setLoading(false);
     }
-  }, [cohortFilter]);
+  }, []);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {
@@ -151,13 +183,17 @@ export default function CounselorMonitoringHub() {
     isAuthenticated && !authPending,
   );
 
-  const hub = liveData ?? baseData;
+  const fullHub = liveData ?? baseData;
+  const hub = useMemo(
+    () => (fullHub && view === 'overview' ? filterHubByCohort(fullHub, cohortFilter) : fullHub),
+    [fullHub, cohortFilter, view],
+  );
 
-  if (loading) {
+  if (loading && view === 'overview') {
     return <p className="py-12 text-center text-sm text-slate-500">모니터링 허브를 불러오는 중…</p>;
   }
 
-  if (error) {
+  if (error && view === 'overview') {
     return (
       <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
         {error}
@@ -165,167 +201,202 @@ export default function CounselorMonitoringHub() {
     );
   }
 
-  if (!hub) return null;
-
   const liveUpdatedLabel = lastUpdatedAt
     ? lastUpdatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     : null;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-400">
-            모든 검사코드의 발송·검사 진행을 한 화면에서 확인합니다. 검사코드를 선택하면 알림·재발송·상세
-            모니터링으로 이동합니다.
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-            {isLive ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-                실시간 연결됨
-                {liveUpdatedLabel ? <span className="text-slate-500">· {liveUpdatedLabel}</span> : null}
-              </span>
-            ) : liveError ? (
-              <span className="text-amber-300">실시간 일시 중단 · API 기준 표시</span>
-            ) : (
-              <span className="text-slate-500">실시간 연결 중…</span>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <AuthLink
-            href="/counselor/assessments/new"
-            className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
-          >
-            + 새 검사코드
-          </AuthLink>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
-          >
-            새로고침
-          </button>
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs text-slate-500">활성 검사코드</p>
-          <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.activeAssessments}</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs text-slate-500">내담자(배정)</p>
-          <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.totalRecipients}</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs text-slate-500">진행 중</p>
-          <p className="mt-1 text-2xl font-semibold text-sky-300">{hub.summary.inProgressRecipients}</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs text-slate-500">검사 완료</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-300">{hub.summary.completedRecipients}</p>
-        </div>
-      </div>
-
-      {hub.summary.notifyFailedCount > 0 ? (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          자격증명 발송 실패 {hub.summary.notifyFailedCount}건 — 검사코드별 「발송·검사 현황」에서 재발송할 수
-          있습니다.
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={cohortFilter}
-          onChange={(e) => setCohortFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
+        <button
+          type="button"
+          onClick={() => setHubView('overview')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            view === 'overview'
+              ? 'bg-sky-600 text-white'
+              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+          }`}
         >
-          <option value="">전체 그룹</option>
-          {hub.cohorts.map((c) => (
-            <option key={c.cohortId} value={c.cohortId}>
-              {c.cohortName || c.cohortId}
-            </option>
-          ))}
-        </select>
-        <AuthLink href="/counselor/clients" className="text-sm text-sky-400 hover:text-sky-300">
-          내담자 CRM →
-        </AuthLink>
-        <AuthLink href="/counselor/assign-tests" className="text-sm text-sky-400 hover:text-sky-300">
-          검사 할당 →
-        </AuthLink>
+          전체
+        </button>
+        <button
+          type="button"
+          onClick={() => setHubView('cohorts')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            view === 'cohorts'
+              ? 'bg-violet-600 text-white'
+              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+          }`}
+        >
+          그룹
+        </button>
       </div>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-300">검사코드별 진행</h2>
-        {hub.assessments.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
-            <p className="text-slate-300">모니터링할 검사코드가 없습니다.</p>
-            <AuthLink
-              href="/counselor/assessments/new"
-              className="mt-4 inline-flex rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+      {view === 'cohorts' ? (
+        <CounselorCohortMonitoringView
+          liveHub={fullHub}
+          isLive={isLive}
+          liveError={liveError}
+          lastUpdatedAt={lastUpdatedAt}
+        />
+      ) : !hub ? null : (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-slate-400">
+                모든 검사코드의 발송·검사 진행을 한 화면에서 확인합니다. 검사코드를 선택하면 알림·재발송·상세
+                모니터링으로 이동합니다.
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                {isLive ? (
+                  <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
+                    실시간 연결됨
+                    {liveUpdatedLabel ? <span className="text-slate-500">· {liveUpdatedLabel}</span> : null}
+                  </span>
+                ) : liveError ? (
+                  <span className="text-amber-300">실시간 일시 중단 · API 기준 표시</span>
+                ) : (
+                  <span className="text-slate-500">실시간 연결 중…</span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <AuthLink
+                href="/counselor/assessments/new"
+                className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
+              >
+                + 새 검사코드
+              </AuthLink>
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+              >
+                새로고침
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-xs text-slate-500">활성 검사코드</p>
+              <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.activeAssessments}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-xs text-slate-500">내담자(배정)</p>
+              <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.totalRecipients}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-xs text-slate-500">진행 중</p>
+              <p className="mt-1 text-2xl font-semibold text-sky-300">{hub.summary.inProgressRecipients}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-xs text-slate-500">검사 완료</p>
+              <p className="mt-1 text-2xl font-semibold text-emerald-300">{hub.summary.completedRecipients}</p>
+            </div>
+          </div>
+
+          {hub.summary.notifyFailedCount > 0 ? (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              자격증명 발송 실패 {hub.summary.notifyFailedCount}건 — 검사코드별 「발송·검사 현황」에서 재발송할 수
+              있습니다.
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={cohortFilter}
+              onChange={(e) => setCohortFilter(e.target.value)}
+              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
             >
-              검사코드 발급하기
+          <option value="">전체 그룹</option>
+          <option value={INDIVIDUAL_COHORT_KEY}>개별 발급</option>
+          {hub.cohorts.map((c) => (
+                <option key={c.cohortId} value={c.cohortId}>
+                  {c.cohortName || c.cohortId}
+                </option>
+              ))}
+            </select>
+            <AuthLink href="/counselor/clients" className="text-sm text-sky-400 hover:text-sky-300">
+              내담자 CRM →
+            </AuthLink>
+            <AuthLink href="/counselor/assign-tests" className="text-sm text-sky-400 hover:text-sky-300">
+              검사 할당 →
             </AuthLink>
           </div>
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {hub.assessments.map((item) => (
-              <AssessmentCard key={item.assessmentId} item={item} />
-            ))}
-          </div>
-        )}
-      </section>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-300">최근 검사 완료</h2>
-        {hub.recentActivity.length === 0 ? (
-          <p className="text-sm text-slate-500">아직 완료된 검사가 없습니다.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-4 py-3 font-medium">시각</th>
-                  <th className="px-4 py-3 font-medium">내담자</th>
-                  <th className="px-4 py-3 font-medium">검사코드</th>
-                  <th className="px-4 py-3 font-medium">검사</th>
-                  <th className="px-4 py-3 font-medium">액션</th>
-                </tr>
-              </thead>
-              <tbody>
-                {hub.recentActivity.map((row) => (
-                  <tr
-                    key={row.resultId}
-                    className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]"
-                  >
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{formatDateTime(row.completedAt)}</td>
-                    <td className="px-4 py-2.5">
-                      <Link
-                        href={`/counselor/clients/${encodeURIComponent(row.portalId)}`}
-                        className="text-slate-200 hover:text-sky-300"
-                      >
-                        {row.displayName || '내담자'}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5 text-slate-300">{row.assessmentTitle}</td>
-                    <td className="px-4 py-2.5 text-slate-300">{row.testId}</td>
-                    <td className="px-4 py-2.5">
-                      <AuthLink
-                        href={progressHref(row.assessmentId)}
-                        className="text-xs text-sky-400 hover:text-sky-300"
-                      >
-                        현황
-                      </AuthLink>
-                    </td>
-                  </tr>
+          <section>
+            <h2 className="mb-3 text-sm font-semibold text-slate-300">검사코드별 진행</h2>
+            {hub.assessments.length === 0 ? (
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
+                <p className="text-slate-300">모니터링할 검사코드가 없습니다.</p>
+                <AuthLink
+                  href="/counselor/assessments/new"
+                  className="mt-4 inline-flex rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+                >
+                  검사코드 발급하기
+                </AuthLink>
+              </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {hub.assessments.map((item) => (
+                  <AssessmentCard key={item.assessmentId} item={item} />
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-sm font-semibold text-slate-300">최근 검사 완료</h2>
+            {hub.recentActivity.length === 0 ? (
+              <p className="text-sm text-slate-500">아직 완료된 검사가 없습니다.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+                <table className="min-w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-4 py-3 font-medium">시각</th>
+                      <th className="px-4 py-3 font-medium">내담자</th>
+                      <th className="px-4 py-3 font-medium">검사코드</th>
+                      <th className="px-4 py-3 font-medium">검사</th>
+                      <th className="px-4 py-3 font-medium">액션</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hub.recentActivity.map((row) => (
+                      <tr
+                        key={row.resultId}
+                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]"
+                      >
+                        <td className="px-4 py-2.5 text-xs text-slate-400">{formatDateTime(row.completedAt)}</td>
+                        <td className="px-4 py-2.5">
+                          <Link
+                            href={`/counselor/clients/${encodeURIComponent(row.portalId)}`}
+                            className="text-slate-200 hover:text-sky-300"
+                          >
+                            {row.displayName || '내담자'}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-300">{row.assessmentTitle}</td>
+                        <td className="px-4 py-2.5 text-slate-300">{row.testId}</td>
+                        <td className="px-4 py-2.5">
+                          <AuthLink
+                            href={progressHref(row.assessmentId)}
+                            className="text-xs text-sky-400 hover:text-sky-300"
+                          >
+                            현황
+                          </AuthLink>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }
