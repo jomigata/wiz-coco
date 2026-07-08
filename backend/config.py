@@ -97,6 +97,16 @@ PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/"
 # Cron/스케줄러가 통지 큐 처리 API 호출 시 사용 (X-Notification-Cron-Secret 헤더)
 NOTIFICATION_CRON_SECRET = os.getenv("NOTIFICATION_CRON_SECRET", "").strip()
 COHORT_REMINDER_MIN_HOURS = int(os.getenv("COHORT_REMINDER_MIN_HOURS", "72"))
+INDIVIDUAL_REMINDER_MIN_HOURS = int(os.getenv("INDIVIDUAL_REMINDER_MIN_HOURS", "48"))
+CARE_REMINDER_MIN_HOURS = int(os.getenv("CARE_REMINDER_MIN_HOURS", "24"))
+
+# Wave 6 — Solapi SMS·카카오 알림톡 (선택)
+SOLAPI_API_KEY = os.getenv("SOLAPI_API_KEY", "").strip()
+SOLAPI_API_SECRET = os.getenv("SOLAPI_API_SECRET", "").strip()
+SOLAPI_SENDER = os.getenv("SOLAPI_SENDER", "").strip()
+SOLAPI_KAKAO_PF_ID = os.getenv("SOLAPI_KAKAO_PF_ID", "").strip()
+SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER = os.getenv("SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER", "").strip()
+SOLAPI_KAKAO_TEMPLATE_CARE = os.getenv("SOLAPI_KAKAO_TEMPLATE_CARE", "").strip()
 
 # SMS (Twilio, 선택)
 

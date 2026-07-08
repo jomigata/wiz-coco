@@ -1,0 +1,48 @@
+name: Care assignment due reminders
+
+on:
+  schedule:
+    # 매일 13:00 KST (04:00 UTC)
+    - cron: '0 4 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: care-reminder-worker
+  cancel-in-progress: false
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call care reminder API
+        env:
+          FLASK_URL: ${{ secrets.NEXT_PUBLIC_FLASK_API_URL }}
+          CRON_SECRET: ${{ secrets.NOTIFICATION_CRON_SECRET }}
+        run: |
+          if [ -z "${FLASK_URL}" ]; then
+            echo "NEXT_PUBLIC_FLASK_API_URL secret not set — skip"
+            exit 0
+          fi
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "NOTIFICATION_CRON_SECRET not set — skip"
+            exit 0
+          fi
+          HEALTH_URL="${FLASK_URL%/}/api/health"
+          if ! curl -sf "${HEALTH_URL}" | grep -q ok; then
+            echo "API health check failed"
+            exit 1
+          fi
+          URL="${FLASK_URL%/}/api/notifications/care-reminders"
+          echo "POST ${URL}"
+          HTTP=$(curl -sS -o /tmp/care-reminder-out.json -w "%{http_code}" \
+            -X POST "${URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Notification-Cron-Secret: ${CRON_SECRET}" \
+            -d '{"limit":30}')
+          cat /tmp/care-reminder-out.json
+          echo ""
+          if [ "${HTTP}" -lt 200 ] || [ "${HTTP}" -ge 300 ]; then
+            echo "HTTP ${HTTP}"
+            exit 1
+          fi
+          echo "care reminders processed"

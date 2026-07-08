@@ -105,6 +105,12 @@ jobs:
             echo "⚠️ NOTIFICATION_CRON_SECRET GitHub Secret 미설정 — Cron 워커(통지·cohort 리마인더)가 403으로 실패할 수 있습니다."
           fi
           ENV_VARS="${ENV_VARS},PUBLIC_SITE_URL=https://wizcoco.com"
+          if [ -n "${{ secrets.SOLAPI_API_KEY }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_API_KEY=${{ secrets.SOLAPI_API_KEY }}"; fi
+          if [ -n "${{ secrets.SOLAPI_API_SECRET }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_API_SECRET=${{ secrets.SOLAPI_API_SECRET }}"; fi
+          if [ -n "${{ secrets.SOLAPI_SENDER }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_SENDER=${{ secrets.SOLAPI_SENDER }}"; fi
+          if [ -n "${{ secrets.SOLAPI_KAKAO_PF_ID }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_PF_ID=${{ secrets.SOLAPI_KAKAO_PF_ID }}"; fi
+          if [ -n "${{ secrets.SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER=${{ secrets.SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER }}"; fi
+          if [ -n "${{ secrets.SOLAPI_KAKAO_TEMPLATE_CARE }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_TEMPLATE_CARE=${{ secrets.SOLAPI_KAKAO_TEMPLATE_CARE }}"; fi
           # CORS_ORIGINS는 쉼표가 gcloud --update-env-vars 구분자와 충돌 → backend/utils/cors_config.py 기본값 사용
 
           if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then

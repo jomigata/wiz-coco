@@ -17,6 +17,7 @@ from utils.sms_notify import (
     send_test_reminder_sms,
     send_care_assignment_sms,
 )
+from utils.kakao_alimtalk import send_care_assignment_alimtalk, send_test_reminder_alimtalk
 from utils.portal_magic import create_portal_magic_link_token
 
 
@@ -69,6 +70,9 @@ def deliver_portal_credentials(
     if email and email_ok:
         status = "sent"
         sent_via = "email"
+    elif phone and alimtalk_ok:
+        status = "sent"
+        sent_via = "kakao_alimtalk"
     elif phone and sms_ok:
         status = "sent"
         sent_via = "sms"
@@ -106,7 +110,13 @@ def deliver_test_reminder(
 
     email_ok = False
     sms_ok = False
+    alimtalk_ok = False
     errors = []
+
+    pending_summary = ", ".join(
+        (item.get("testName") or item.get("testId") or "검사").strip()
+        for item in (pending_tests or [])[:5]
+    )
 
     if email:
         if is_email_configured():
@@ -126,7 +136,18 @@ def deliver_test_reminder(
         else:
             errors.append("smtp_not_configured")
 
-    if phone:
+    if phone and not email_ok:
+        alimtalk_ok, alimtalk_err = send_test_reminder_alimtalk(
+            to_phone=phone,
+            display_name=display_name,
+            assessment_title=assessment_title,
+            magic_url=magic_url,
+            pending_summary=pending_summary,
+        )
+        if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
+            errors.append(alimtalk_err)
+
+    if phone and not email_ok and not alimtalk_ok:
         sms_ok, sms_err = send_test_reminder_sms(
             to_phone=phone,
             display_name=display_name,
@@ -144,6 +165,9 @@ def deliver_test_reminder(
     if email and email_ok:
         status = "sent"
         sent_via = "email"
+    elif phone and alimtalk_ok:
+        status = "sent"
+        sent_via = "kakao_alimtalk"
     elif phone and sms_ok:
         status = "sent"
         sent_via = "sms"
@@ -177,6 +201,7 @@ def deliver_care_assignment(
 
     email_ok = False
     sms_ok = False
+    alimtalk_ok = False
     errors = []
 
     if email:
@@ -193,7 +218,17 @@ def deliver_care_assignment(
         else:
             errors.append("smtp_not_configured")
 
-    if phone:
+    if phone and not email_ok:
+        alimtalk_ok, alimtalk_err = send_care_assignment_alimtalk(
+            to_phone=phone,
+            display_name=display_name,
+            assignment_title=assignment_title,
+            magic_url=magic_url,
+        )
+        if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
+            errors.append(alimtalk_err)
+
+    if phone and not email_ok and not alimtalk_ok:
         sms_ok, sms_err = send_care_assignment_sms(
             to_phone=phone,
             display_name=display_name,
@@ -207,6 +242,9 @@ def deliver_care_assignment(
     if email and email_ok:
         status = "sent"
         sent_via = "email"
+    elif phone and alimtalk_ok:
+        status = "sent"
+        sent_via = "kakao_alimtalk"
     elif phone and sms_ok:
         status = "sent"
         sent_via = "sms"

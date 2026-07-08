@@ -1,6 +1,7 @@
 'use client';
 
 import CounselorMonitoringHub from '@/components/counselor/CounselorMonitoringHub';
+import NotificationChannelStatus from '@/components/counselor/NotificationChannelStatus';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import AuthLink from '@/components/auth/AuthLink';
@@ -34,6 +35,7 @@ export default function ProgressPage() {
           검사코드별 상세 현황 →
         </AuthLink>
       </div>
+      <NotificationChannelStatus />
       <CounselorMonitoringHub />
     </div>
   );
