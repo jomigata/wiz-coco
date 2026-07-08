@@ -204,6 +204,19 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // AI 크레딧·토큰 원장 — Flask Admin SDK / Functions 전용 (T-3-01)
+    match /counselorAiCredits/{counselorId} {
+      allow read, write: if false;
+    }
+
+    match /aiUsageLedger/{entryId} {
+      allow read, write: if false;
+    }
+
+    match /aiReports/{reportId} {
+      allow read, write: if false;
+    }
+
     // 결제 주문 — Flask Admin SDK 전용
     match /commerceOrders/{orderId} {
       allow read, write: if false;

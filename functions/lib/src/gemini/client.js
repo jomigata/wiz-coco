@@ -50,6 +50,18 @@ function classifyGeminiFailure(err) {
     }
     return { kind: 'unknown', message };
 }
+function extractUsage(response) {
+    var _a, _b, _c;
+    const meta = response.usageMetadata || {};
+    const prompt = Number((_a = meta.promptTokenCount) !== null && _a !== void 0 ? _a : 0);
+    const completion = Number((_b = meta.candidatesTokenCount) !== null && _b !== void 0 ? _b : 0);
+    const total = Number((_c = meta.totalTokenCount) !== null && _c !== void 0 ? _c : prompt + completion);
+    return {
+        tokensPrompt: prompt > 0 ? prompt : undefined,
+        tokensCompletion: completion > 0 ? completion : undefined,
+        tokensTotal: total > 0 ? total : undefined,
+    };
+}
 async function generateCounselReply(history, userMessage, options) {
     let lastError = null;
     const prompt = (options === null || options === void 0 ? void 0 : options.knowledgeContext)
@@ -60,7 +72,7 @@ async function generateCounselReply(history, userMessage, options) {
             const model = getGeminiModel(modelId);
             const chat = model.startChat({ history });
             const result = await chat.sendMessage(prompt);
-            return { text: result.response.text(), modelId };
+            return { text: result.response.text(), modelId, usage: extractUsage(result.response) };
         }
         catch (err) {
             lastError = toGeminiError(err);
@@ -78,7 +90,11 @@ async function generateSessionSummary(transcript) {
         try {
             const model = getGeminiModel(modelId);
             const result = await model.generateContent(`다음 상담 대화를 3~5문장으로 요약하세요. 진단·처방은 하지 마세요.\n\n${transcript}`);
-            return result.response.text();
+            return {
+                text: result.response.text(),
+                modelId,
+                usage: extractUsage(result.response),
+            };
         }
         catch (err) {
             lastError = toGeminiError(err);

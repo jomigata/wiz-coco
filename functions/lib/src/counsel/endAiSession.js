@@ -5,6 +5,7 @@ const https_1 = require("firebase-functions/v2/https");
 const secrets_1 = require("../config/secrets");
 const session_1 = require("../utils/session");
 const client_1 = require("../gemini/client");
+const aiUsage_1 = require("../utils/aiUsage");
 exports.endAiSession = (0, https_1.onCall)({ region: 'asia-northeast3', secrets: [secrets_1.geminiApiKey] }, async (request) => {
     var _a;
     process.env.GEMINI_API_KEY = secrets_1.geminiApiKey.value().trim();
@@ -21,10 +22,26 @@ exports.endAiSession = (0, https_1.onCall)({ region: 'asia-northeast3', secrets:
     let summary = '상담이 종료되었습니다. 오늘 나눈 이야기를 소중히 돌아보세요.';
     try {
         if (transcript.trim()) {
-            summary = await (0, client_1.generateSessionSummary)(transcript);
+            const result = await (0, client_1.generateSessionSummary)(transcript);
+            summary = result.text;
+            try {
+                await (0, aiUsage_1.recordAiUsage)({
+                    clientId: uid,
+                    feature: 'session_summary',
+                    reason: 'session_summary',
+                    delta: 0,
+                    sessionId,
+                    modelId: result.modelId,
+                    usage: result.usage,
+                    metadata: { channel: 'b2c_ai_counsel' },
+                });
+            }
+            catch (_b) {
+                // 원장 기록 실패는 세션 종료를 막지 않음
+            }
         }
     }
-    catch (_b) {
+    catch (_c) {
         // 요약 실패 시 기본 문구 유지
     }
     await sessionRef.update({

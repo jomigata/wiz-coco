@@ -42,6 +42,7 @@ const crisis_1 = require("../safety/crisis");
 const client_1 = require("../gemini/client");
 const prompts_1 = require("../gemini/prompts");
 const search_1 = require("../knowledge/search");
+const aiUsage_1 = require("../utils/aiUsage");
 exports.sendCounselMessage = (0, https_1.onCall)({ region: 'asia-northeast3', secrets: [secrets_1.geminiApiKey] }, async (request) => {
     var _a, _b, _c;
     process.env.GEMINI_API_KEY = secrets_1.geminiApiKey.value().trim();
@@ -100,6 +101,7 @@ exports.sendCounselMessage = (0, https_1.onCall)({ region: 'asia-northeast3', se
     });
     let reply;
     let modelUsed = client_1.DEFAULT_COUNSEL_MODEL;
+    let geminiUsage;
     try {
         const history = (0, session_1.toGeminiHistory)(historyMessages);
         const matchedFaqs = await (0, search_1.searchCounselFaqs)(content);
@@ -107,6 +109,7 @@ exports.sendCounselMessage = (0, https_1.onCall)({ region: 'asia-northeast3', se
         const result = await (0, client_1.generateCounselReply)(history, content, { knowledgeContext });
         reply = result.text;
         modelUsed = result.modelId;
+        geminiUsage = result.usage;
     }
     catch (err) {
         const failure = (0, client_1.classifyGeminiFailure)(err);
@@ -136,6 +139,21 @@ exports.sendCounselMessage = (0, https_1.onCall)({ region: 'asia-northeast3', se
         model: modelUsed,
         createdAt: session_1.Timestamp.now(),
     });
+    try {
+        await (0, aiUsage_1.recordAiUsage)({
+            clientId: uid,
+            feature: 'counsel_message',
+            reason: 'counsel_message',
+            delta: -aiUsage_1.COUNSEL_MESSAGE_CREDIT_COST,
+            sessionId,
+            modelId: modelUsed,
+            usage: geminiUsage,
+            metadata: { channel: 'b2c_ai_counsel' },
+        });
+    }
+    catch (usageErr) {
+        logger.warn('AI usage ledger write failed', { usageErr, uid, sessionId });
+    }
     await sessionRef.update({
         messageCount: session_1.FieldValue.increment(2),
         riskLevel,

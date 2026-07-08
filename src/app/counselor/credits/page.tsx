@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import RoleGuard from '@/components/RoleGuard';
 import CounselorCheckoutPanel from '@/components/commerce/CounselorCheckoutPanel';
+import CounselorAiCreditsPanel from '@/components/counselor/CounselorAiCreditsPanel';
 import {
   completeCheckoutFromReturn,
   fetchMyCredits,
@@ -14,9 +15,45 @@ import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
+function TabBar({
+  tab,
+  setTab,
+}: {
+  tab: 'assessment' | 'ai';
+  setTab: (t: 'assessment' | 'ai') => void;
+}) {
+  return (
+    <div className="flex gap-2 mb-6 border-b border-white/10 pb-3">
+      <button
+        type="button"
+        onClick={() => setTab('assessment')}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+          tab === 'assessment'
+            ? 'bg-blue-600 text-white'
+            : 'text-slate-400 hover:text-white hover:bg-white/5'
+        }`}
+      >
+        검사 크레딧
+      </button>
+      <button
+        type="button"
+        onClick={() => setTab('ai')}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+          tab === 'ai'
+            ? 'bg-violet-600 text-white'
+            : 'text-slate-400 hover:text-white hover:bg-white/5'
+        }`}
+      >
+        AI 크레딧
+      </button>
+    </div>
+  );
+}
+
 function CreditsContent() {
   const searchParams = useSearchParams();
   const { user, authPending, showLoginRequired } = useAuthResolved();
+  const [tab, setTab] = useState<'assessment' | 'ai'>('assessment');
   const [data, setData] = useState<CounselorCreditsResponse | null>(null);
   const [error, setError] = useState('');
   const [payMessage, setPayMessage] = useState('');
@@ -75,7 +112,7 @@ function CreditsContent() {
     }
   }, [authPending, user, searchParams, reload]);
 
-  if (authPending || (loading && !data)) {
+  if (authPending) {
     return <AuthLoadingState message="크레딧 정보를 불러오는 중…" />;
   }
 
@@ -83,9 +120,24 @@ function CreditsContent() {
     return <AuthRequiredState description="로그인 후 이용할 수 있습니다." />;
   }
 
+  if (tab === 'ai') {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold text-white mb-2">크레딧 · AI</h1>
+        <TabBar tab={tab} setTab={setTab} />
+        <CounselorAiCreditsPanel />
+      </div>
+    );
+  }
+
+  if (loading && !data) {
+    return <AuthLoadingState message="크레딧 정보를 불러오는 중…" />;
+  }
+
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-2">검사 크레딧</h1>
+      <h1 className="text-2xl font-bold text-white mb-2">크레딧 · AI</h1>
+      <TabBar tab={tab} setTab={setTab} />
       <p className="text-slate-400 text-sm mb-6">
         내담자 1명(포털 1개) 발급 = 1크레딧. 파일럿 상담사는 협회에서 {PILOT_FREE_CREDITS}
         크레딧을 지급받을 수 있습니다.
@@ -164,7 +216,6 @@ function CreditsContent() {
     </div>
   );
 }
-
 export default function CounselorCreditsPage() {
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']}>

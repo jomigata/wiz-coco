@@ -18,6 +18,7 @@ import {
 } from '../gemini/client'
 import { CRISIS_SAFE_REPLY } from '../gemini/prompts'
 import { formatFaqKnowledgeContext, searchCounselFaqs } from '../knowledge/search'
+import { COUNSEL_MESSAGE_CREDIT_COST, recordAiUsage } from '../utils/aiUsage'
 
 interface SendCounselMessageRequest {
   sessionId: string
@@ -94,6 +95,7 @@ export const sendCounselMessage = onCall<SendCounselMessageRequest>(
 
     let reply: string
     let modelUsed = DEFAULT_COUNSEL_MODEL
+    let geminiUsage: Awaited<ReturnType<typeof generateCounselReply>>['usage']
     try {
       const history = toGeminiHistory(historyMessages)
       const matchedFaqs = await searchCounselFaqs(content)
@@ -101,6 +103,7 @@ export const sendCounselMessage = onCall<SendCounselMessageRequest>(
       const result = await generateCounselReply(history, content, { knowledgeContext })
       reply = result.text
       modelUsed = result.modelId
+      geminiUsage = result.usage
     } catch (err) {
       const failure = classifyGeminiFailure(err)
       logger.error('Gemini counsel reply failed', {
@@ -143,6 +146,21 @@ export const sendCounselMessage = onCall<SendCounselMessageRequest>(
       model: modelUsed,
       createdAt: Timestamp.now(),
     })
+
+    try {
+      await recordAiUsage({
+        clientId: uid,
+        feature: 'counsel_message',
+        reason: 'counsel_message',
+        delta: -COUNSEL_MESSAGE_CREDIT_COST,
+        sessionId,
+        modelId: modelUsed,
+        usage: geminiUsage,
+        metadata: { channel: 'b2c_ai_counsel' },
+      })
+    } catch (usageErr) {
+      logger.warn('AI usage ledger write failed', { usageErr, uid, sessionId })
+    }
 
     await sessionRef.update({
       messageCount: FieldValue.increment(2),

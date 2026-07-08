@@ -83,6 +83,13 @@ CARE_ASSIGNMENTS_COLLECTION = "careAssignments"
 CARE_PROGRESS_COLLECTION = "careProgress"
 DAILY_RECORDS_COLLECTION = "dailyRecords"
 
+# Wave 3 — AI 토큰·크레딧 (T-3-01)
+COUNSELOR_AI_CREDITS_COLLECTION = "counselorAiCredits"
+AI_USAGE_LEDGER_COLLECTION = "aiUsageLedger"
+AI_REPORTS_COLLECTION = "aiReports"
+AI_CREDITS_ENFORCE = os.getenv("AI_CREDITS_ENFORCE", "false").lower() in ("1", "true", "yes")
+PILOT_FREE_AI_CREDITS = int(os.getenv("PILOT_FREE_AI_CREDITS", "20"))
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 
