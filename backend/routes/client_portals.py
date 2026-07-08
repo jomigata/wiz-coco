@@ -56,6 +56,7 @@ from utils.assessment_dispatch import (
     list_archived_portals,
     restore_archived_portals,
 )
+from utils.client_portal_list import list_counselor_client_portals
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -154,6 +155,27 @@ def _portal_public_json(portal_doc, assessments=None):
         "counselorId": d.get("counselorId", ""),
         "assignedAssessments": assigned,
     }
+
+
+@bp.route("", methods=["GET"])
+@bp.route("/", methods=["GET"])
+@require_counselor
+def list_counselor_portals():
+    """상담사 소유 내담자 포털 목록 (CRM)."""
+    status = (request.args.get("status") or "active").strip().lower()
+    if status not in ("active", "archived", "all"):
+        status = "active"
+    cohort_id = (request.args.get("cohortId") or "").strip() or None
+    q = (request.args.get("q") or "").strip() or None
+    db = get_firestore()
+    result = list_counselor_client_portals(
+        db,
+        g.counselor_uid,
+        status=status,
+        cohort_id=cohort_id,
+        q=q,
+    )
+    return jsonify(result)
 
 
 @bp.route("/login", methods=["POST"])

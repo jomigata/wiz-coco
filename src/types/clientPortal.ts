@@ -87,6 +87,43 @@ export type BulkPortalJobStatus = {
   completedAt?: string | null;
 };
 
+export type ClientPortalProgressLabel = 'completed' | 'in_progress' | 'not_started' | 'no_tests';
+
+export type CounselorClientPortalListItem = {
+  portalId: string;
+  displayName: string;
+  email?: string | null;
+  phone?: string | null;
+  accessCode: string;
+  cohortId?: string | null;
+  cohortName?: string | null;
+  status: ClientPortalStatus;
+  assignedAssessmentCount: number;
+  assessments: { assessmentId: string; title: string }[];
+  notifyStatus: string;
+  notifyError?: string | null;
+  notifyAt?: string | null;
+  lastLoginAt?: string | null;
+  createdAt?: string | null;
+  progress: {
+    totalTests: number;
+    completedTests: number;
+    percent: number;
+    label: ClientPortalProgressLabel;
+  };
+};
+
+export type CounselorClientPortalCohort = {
+  cohortId: string;
+  cohortName: string;
+};
+
+export type CounselorClientPortalListResult = {
+  items: CounselorClientPortalListItem[];
+  total: number;
+  cohorts: CounselorClientPortalCohort[];
+};
+
 export interface ClientPortalBulkJobResult extends BulkPortalJobStatus {
   created: ClientPortalBulkRow[];
 }

@@ -1,10 +1,21 @@
-import AdminPageLayout from '@/components/AdminPageLayout';
+'use client';
+
+import CounselorClientList from '@/components/counselor/CounselorClientList';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
 export default function ClientsPage() {
-  return (
-    <AdminPageLayout title="내담자 목록">
-      <p>담당 내담자를 관리하는 페이지입니다.</p>
-      {/* 여기에 내담자 목록 관련 콘텐츠를 추가하세요 */}
-    </AdminPageLayout>
-  );
+  const { authPending, showLoginRequired } = useAuthResolved();
+
+  if (authPending) {
+    return <AuthLoadingState className="py-16" message="확인 중…" />;
+  }
+
+  if (showLoginRequired) {
+    return (
+      <AuthRequiredState description="Firebase에 로그인한 상태에서 내담자 목록을 이용할 수 있습니다." />
+    );
+  }
+
+  return <CounselorClientList />;
 }
