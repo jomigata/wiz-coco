@@ -1,15 +1,7 @@
 import type { TestCategory } from '@/data/psychologyTestMenu';
 
-/** 상담관리 메가 메뉴 — AI 심리검사를 첫 대분류로 포함 */
-export const COUNSELOR_AI_TESTS_CATEGORY = 'AI 심리검사';
-export const COUNSELOR_PANEL_TITLE = '📋 상담관리';
-
+/** 상담관리 메가 메뉴 — 3단계 구조 */
 export const counselorMenuCategories: TestCategory[] = [
-  {
-    category: COUNSELOR_AI_TESTS_CATEGORY,
-    icon: '🧠',
-    subcategories: [],
-  },
   {
     category: '1. 심리검사 관리',
     icon: '📦',

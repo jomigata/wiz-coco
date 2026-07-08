@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { RefObject } from 'react';
 import type { TestCategory, TestMenuItem, TestSubcategory } from '@/data/psychologyTestMenu';
+import { navMegaMenuClasses } from '@/components/layout/appChromeTheme';
 
 type ThreeTierMegaMenuPanelProps = {
   panelRef: RefObject<HTMLDivElement | null>;
@@ -25,14 +26,12 @@ type ThreeTierMegaMenuPanelProps = {
   onPanelMouseEnter: () => void;
   onPanelMouseLeave: () => void;
   searchSlot?: React.ReactNode;
-  /** 지정 시 기본 중분류 열 대신 커스텀 UI 렌더 (예: AI 심리검사 안내) */
-  renderSubColumn?: (activeMain: TestCategory) => React.ReactNode | null;
 };
 
 function badgeClass(badge: string) {
-  if (badge === '24시간' || badge === '긴급') return 'bg-red-500 text-white';
-  if (badge === '신규') return 'bg-green-500 text-white';
-  return 'bg-orange-500 text-white';
+  if (badge === '24시간' || badge === '긴급') return 'bg-red-500/90 text-white';
+  if (badge === '신규') return 'bg-emerald-500/90 text-white';
+  return 'bg-amber-500/90 text-white';
 }
 
 function LeafItem({
@@ -47,27 +46,27 @@ function LeafItem({
   return (
     <Link
       href={item.href}
-      className={`group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 border-2 ml-8 shadow-sm hover:shadow-md ${
-        highlightBorder ? 'border-white' : 'border-white/20 hover:border-white'
+      className={`group ml-8 flex items-center gap-3 rounded-lg border px-3 py-2 shadow-sm transition-all duration-300 hover:shadow-md ${
+        highlightBorder ? navMegaMenuClasses.leafItemActive : navMegaMenuClasses.leafItemIdle
       }`}
       onClick={onCloseMenu}
     >
-      <div className="w-6 shrink-0 flex items-center justify-center text-base group-hover:scale-110 transition-transform duration-300">
+      <div className="flex w-6 shrink-0 items-center justify-center text-base transition-transform duration-300 group-hover:scale-110">
         {item.icon}
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <div className="text-sm font-medium text-blue-200 group-hover:text-white truncate">{item.name}</div>
+          <div className={`truncate text-sm font-medium ${navMegaMenuClasses.textAccent}`}>{item.name}</div>
           {item.badge && (
-            <span className={`px-2 py-0.5 text-xs font-bold rounded-full shrink-0 ${badgeClass(item.badge)}`}>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${badgeClass(item.badge)}`}>
               {item.badge}
             </span>
           )}
         </div>
-        <div className="text-xs text-blue-300 group-hover:text-blue-100 truncate">{item.description}</div>
+        <div className={`truncate text-xs ${navMegaMenuClasses.textMuted}`}>{item.description}</div>
       </div>
       <svg
-        className="w-3 h-3 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 shrink-0"
+        className="h-3 w-3 shrink-0 text-slate-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -99,12 +98,9 @@ export default function ThreeTierMegaMenuPanel({
   onPanelMouseEnter,
   onPanelMouseLeave,
   searchSlot,
-  renderSubColumn,
 }: ThreeTierMegaMenuPanelProps) {
   const activeMain =
     categories.find((category) => category.category === selectedMainCategory) ?? categories[0];
-
-  const customSubColumn = activeMain ? renderSubColumn?.(activeMain) : null;
 
   const handleSubcategoryClick = (subcategory: TestSubcategory, parent: TestCategory) => {
     if (onSubcategoryClick) {
@@ -122,27 +118,23 @@ export default function ThreeTierMegaMenuPanel({
     <div
       ref={panelRef}
       data-dropdown-menu={menuDataAttribute}
-      className={`absolute top-full mt-0 pt-4 pb-8 w-auto bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 rounded-2xl shadow-2xl border border-blue-500/30 z-[60] animate-fadeIn backdrop-blur-xl ${dropdownAlign} ${
-        customSubColumn ? 'min-w-[72rem] max-w-[80rem] overflow-visible' : 'min-w-[48rem] max-w-[56rem]'
-      }`}
+      className={`${navMegaMenuClasses.panel} ${dropdownAlign}`}
       onMouseEnter={onPanelMouseEnter}
       onMouseLeave={onPanelMouseLeave}
     >
-      {searchSlot && <div className="px-4 pt-2 pb-3 border-b border-blue-500/20">{searchSlot}</div>}
-      <div className={`relative flex flex-row ${customSubColumn ? 'h-auto min-h-0 overflow-visible' : 'h-[62vh]'}`}>
-        <div
-          ref={leftColRef}
-          className="w-96 min-w-[24rem] max-w-[28rem] px-6 py-4 border-r border-blue-500/30 shrink-0"
-        >
-          <div className="text-lg font-bold text-blue-300 mb-4">{panelTitle}</div>
+      <div className={navMegaMenuClasses.panelGlow} aria-hidden />
+      {searchSlot && <div className="relative z-[1] border-b border-white/[0.06] px-4 pb-3 pt-2">{searchSlot}</div>}
+      <div className="relative z-[1] flex h-[62vh] flex-row">
+        <div ref={leftColRef} className={navMegaMenuClasses.leftCol}>
+          <div className={navMegaMenuClasses.panelTitle}>{panelTitle}</div>
           <div className="space-y-2">
             {categories.map((mainCategory, index) => (
               <div
                 key={mainCategory.category}
-                className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${
+                className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ${
                   selectedMainCategory === mainCategory.category || (index === 0 && isMenuOpen && !selectedMainCategory)
-                    ? 'text-white border-white shadow-lg'
-                    : 'text-blue-300 border-white/20 hover:text-white hover:border-white hover:shadow-md'
+                    ? navMegaMenuClasses.mainItemActive
+                    : navMegaMenuClasses.mainItemIdle
                 }`}
                 onClick={() => {
                   onSelectMainCategory(mainCategory.category);
@@ -156,9 +148,9 @@ export default function ThreeTierMegaMenuPanel({
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-8 shrink-0 flex items-center justify-center text-xl">{mainCategory.icon}</span>
+                  <span className="flex w-8 shrink-0 items-center justify-center text-xl">{mainCategory.icon}</span>
                   <span className="font-medium">{mainCategory.category}</span>
-                  <svg className="w-4 h-4 text-white ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="ml-auto h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -167,16 +159,11 @@ export default function ThreeTierMegaMenuPanel({
           </div>
         </div>
 
-        <div
-          ref={subColRef}
-          className={`px-6 py-4 shrink-0 ${
-            customSubColumn ? 'flex-1 min-w-[44rem] max-w-[52rem] overflow-visible' : 'w-96 min-w-[24rem] max-w-[28rem]'
-          }`}
-        >
-          {customSubColumn ?? (activeMain ? (
+        <div ref={subColRef} className={navMegaMenuClasses.rightCol}>
+          {activeMain ? (
             <div>
-              <div className="text-lg font-bold text-blue-300 mb-4">{activeMain.category}</div>
-              <div className="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+              <div className={navMegaMenuClasses.panelTitle}>{activeMain.category}</div>
+              <div className="scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent max-h-[60vh] space-y-2 overflow-y-auto">
                 {activeMain.subcategories.map((subcategory, index) => {
                   const isSelected = selectedSubcategory === subcategory.name;
 
@@ -191,8 +178,8 @@ export default function ThreeTierMegaMenuPanel({
                       }}
                     >
                       <div
-                        className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                          isSelected ? 'border-2 border-white' : 'border-2 border-white/20 hover:border-white'
+                        className={`group flex cursor-pointer items-center gap-4 rounded-xl border-2 px-4 py-3 transition-all duration-300 ${
+                          isSelected ? navMegaMenuClasses.subItemActive : navMegaMenuClasses.subItemIdle
                         }`}
                         onMouseEnter={() => {
                           onHoverSubcategory?.(subcategory.name);
@@ -200,14 +187,14 @@ export default function ThreeTierMegaMenuPanel({
                         }}
                         onClick={() => handleSubcategoryClick(subcategory, activeMain)}
                       >
-                        <div className="w-8 shrink-0 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
+                        <div className="flex w-8 shrink-0 items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110">
                           {subcategory.icon}
                         </div>
-                        <div className="flex flex-col gap-1 flex-1 min-w-0">
-                          <div className="text-base font-medium text-white truncate">{subcategory.name}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-base font-medium text-white">{subcategory.name}</div>
                         </div>
                         <svg
-                          className="w-4 h-4 text-blue-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300 shrink-0 ml-auto"
+                          className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -217,7 +204,7 @@ export default function ThreeTierMegaMenuPanel({
                       </div>
 
                       {isSelected && subcategory.items.length > 0 && (
-                        <div className="mt-2 ml-4 space-y-1 animate-fadeIn-slow">
+                        <div className="animate-fadeIn-slow ml-4 mt-2 space-y-1">
                           {subcategory.items.map((item, itemIndex) => (
                             <LeafItem
                               key={item.name}
@@ -234,8 +221,8 @@ export default function ThreeTierMegaMenuPanel({
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-blue-300">대분류를 선택해주세요</div>
-          ))}
+            <div className="flex h-full items-center justify-center text-slate-500">대분류를 선택해주세요</div>
+          )}
         </div>
       </div>
     </div>

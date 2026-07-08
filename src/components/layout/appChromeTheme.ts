@@ -14,3 +14,23 @@ export const appChromeClasses = {
 
 /** 고정 하단 푸터 높이만큼 본문 하단 여백 */
 export const APP_FOOTER_OFFSET_CLASS = 'pb-10 sm:pb-11';
+
+/** 데스크톱 3단 메가 메뉴 패널 — 헤더 톤과 맞춘 글래스 스타일 */
+export const navMegaMenuClasses = {
+  panel:
+    'absolute top-full z-50 mt-0 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a1020]/[0.97] pt-3 pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] backdrop-blur-2xl animate-fadeIn',
+  panelGlow:
+    'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-5%,rgba(56,100,180,0.1),transparent)]',
+  leftCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 border-r border-white/[0.06] px-5 py-3',
+  rightCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 px-5 py-3',
+  panelTitle: 'mb-4 text-base font-semibold tracking-tight text-slate-300',
+  mainItemActive: 'border-white/70 bg-white/[0.08] text-white shadow-lg shadow-black/20',
+  mainItemIdle:
+    'border-white/10 text-slate-300 hover:border-white/35 hover:bg-white/[0.05] hover:text-white hover:shadow-md',
+  subItemActive: 'border-white/70 bg-white/[0.06]',
+  subItemIdle: 'border-white/10 hover:border-white/35 hover:bg-white/[0.04]',
+  leafItemActive: 'border-white/60',
+  leafItemIdle: 'border-white/10 hover:border-white/35',
+  textAccent: 'text-slate-300 group-hover:text-white',
+  textMuted: 'text-slate-500 group-hover:text-slate-300',
+} as const;

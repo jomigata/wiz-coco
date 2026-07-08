@@ -26,6 +26,7 @@ import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSect
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import NavMenuSeparator from '@/components/nav/NavMenuSeparator';
+import NavMegaMenuBackdrop from '@/components/nav/NavMegaMenuBackdrop';
 import { appChromeClasses } from '@/components/layout/appChromeTheme';
 
 export default function Navigation() {
@@ -86,6 +87,13 @@ export default function Navigation() {
   const isPsychologyTestsOpen = activeMenu === 'psychology-tests';
   const isCounselorOpen = activeMenu === 'counselor';
   const isAdminOpen = activeMenu === 'admin';
+  const hasDesktopMegaMenu =
+    !isMobileMenuOpen &&
+    (isPsychologyTestsOpen ||
+      isCounselingDropdownOpen ||
+      isAiMindAssistantOpen ||
+      isCounselorOpen ||
+      isAdminOpen);
 
   const psychologyPlacement = useHorizontalMenuPlacement(
     isPsychologyTestsOpen,
@@ -446,8 +454,9 @@ export default function Navigation() {
           animation: fadeIn 1.2s ease-out;
         }
       `}</style>
+      <NavMegaMenuBackdrop open={hasDesktopMegaMenu} onClose={() => setActiveMenu(null)} />
       <nav
-        className={`w-full ${appChromeClasses.header}`}
+        className={`w-full ${appChromeClasses.header} ${hasDesktopMegaMenu ? 'bg-[#0a1020]/98 shadow-[0_12px_40px_rgba(0,0,0,0.45)]' : ''}`}
         style={{ contain: 'layout' }}
       >
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3">
