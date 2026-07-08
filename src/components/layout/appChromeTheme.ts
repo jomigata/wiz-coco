@@ -4,11 +4,11 @@ export const APP_PAGE_BG = '#090d18';
 export const appChromeClasses = {
   page: 'bg-[#090d18] text-slate-100',
   header:
-    'border-b border-white/[0.06] bg-[#0a1020]/92 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md',
-  headerFade: 'from-[#0a1020]/70',
-  mainTopFade: 'from-[#0a1020]/50',
+    'border-b border-white/[0.12] bg-[#0a1020] shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
+  headerFade: 'from-[#0a1020]',
+  mainTopFade: 'from-[#0a1020]/80',
   footer:
-    'border-t border-white/[0.07] bg-[#0c101c]/95 backdrop-blur-md shadow-[0_-6px_28px_rgba(0,0,0,0.28)]',
+    'border-t border-white/[0.12] bg-[#0c101c] shadow-[0_-6px_28px_rgba(0,0,0,0.32)]',
   footerHeight: 'h-10 sm:h-11',
 } as const;
 
@@ -18,10 +18,10 @@ export const APP_FOOTER_OFFSET_CLASS = 'pb-10 sm:pb-11';
 /** 데스크톱 3단 메가 메뉴 패널 — 헤더 톤과 맞춘 불투명 배경 */
 export const navMegaMenuClasses = {
   panel:
-    'absolute top-full z-50 mt-0 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a1020] pt-3 pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] animate-fadeIn',
+    'absolute top-full z-50 mt-0 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.10] bg-[#0a1020] pt-3 pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] animate-fadeIn',
   panelGlow:
-    'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-5%,rgba(56,100,180,0.08),transparent)]',
-  leftCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 border-r border-white/[0.06] px-5 py-3',
+    'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-5%,rgba(56,100,180,0.06),transparent)]',
+  leftCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 border-r border-white/[0.08] px-5 py-3',
   rightCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 px-5 py-3',
   panelTitle: 'mb-4 text-base font-semibold tracking-tight text-slate-300',
   mainItemActive: 'border-white/70 bg-white/[0.08] text-white shadow-lg shadow-black/20',
