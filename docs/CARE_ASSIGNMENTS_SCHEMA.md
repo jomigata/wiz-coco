@@ -228,7 +228,25 @@ Wave 2 케어 플랜의 기반 데이터 모델입니다. 포털 내담자는 Fi
 
 ---
 
-## 6. 알림 큐 확장 (T-2-08 예고)
+## 8. 치료프로그램 카탈로그 (T-2-02)
+
+| programId | 제목 | 주차 | 세션 |
+|-----------|------|------|------|
+| `breathing_relaxation_v1` | 4주 호흡·이완 | 4 | 12 |
+| `progressive_muscle_relaxation_v1` | 2주 PMR | 2 | 6 |
+| `cbt_thought_record_v1` | 4주 CBT 생각 기록 | 4 | 8 |
+| `mood_diary_v1` | 2주 기분 일기 | 2 | 14 |
+| `mindfulness_breath_v1` | 3주 마음챙김 호흡 | 3 | 9 |
+| `behavioral_activation_v1` | 4주 행동 활성화 | 4 | 8 |
+| `sleep_hygiene_v1` | 2주 수면 위생 | 2 | 6 |
+| `gratitude_journal_v1` | 2주 감사 일기 | 2 | 14 |
+
+- 프론트 전체 세션: `src/data/careProgramCatalog.ts`
+- API: `GET /api/care-assignments/programs`, `GET /api/care-assignments/programs/{programId}`
+
+---
+
+## 9. 알림 큐 확장 (T-2-08 예고)
 
 `notificationQueue` 항목에 `type: "care_assignment"` 추가:
 
@@ -251,7 +269,7 @@ Wave 2 케어 플랜의 기반 데이터 모델입니다. 포털 내담자는 Fi
 
 | ID | 작업 | 이 스키마 의존 |
 |----|------|----------------|
-| T-2-02 | 치료프로그램 카탈로그 | `programId` |
+| **T-2-02** | 치료프로그램 카탈로그 | `programId` — `src/data/careProgramCatalog.ts`, `GET /api/care-assignments/programs` |
 | T-2-03 | `/counselor/treatment-plans` UI | §5-1, §5-2 |
 | T-2-04 | 케어 할당 API 구현 | §5-1 |
 | T-2-05 | 포털 「추가 과제·치료」탭 | §5-4 |

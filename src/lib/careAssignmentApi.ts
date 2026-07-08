@@ -8,6 +8,12 @@ import type {
   ListCareAssignmentsParams,
   ListCareAssignmentsResult,
 } from '@/types/careAssignment';
+import type {
+  CareProgramCatalogResult,
+  CareProgramCategory,
+  CareProgramDefinition,
+  CareProgramDetailResult,
+} from '@/types/careProgram';
 
 export { CARE_ASSIGNMENT_SCHEMA_VERSION } from '@/types/careAssignment';
 
@@ -46,6 +52,39 @@ export async function fetchCareAssignmentSchema(): Promise<CareAssignmentSchemaM
     throw new Error(typeof data?.message === 'string' ? data.message : '케어 스키마 조회에 실패했습니다.');
   }
   return data as CareAssignmentSchemaMeta;
+}
+
+/** 치료프로그램 카탈로그 목록 (T-2-02) */
+export async function fetchCareProgramCatalog(params?: {
+  category?: CareProgramCategory;
+}): Promise<CareProgramCatalogResult> {
+  const search = new URLSearchParams();
+  if (params?.category) search.set('category', params.category);
+  const qs = search.toString();
+  const res = await fetch(`${getBaseUrl()}/api/care-assignments/programs${qs ? `?${qs}` : ''}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '프로그램 카탈로그 조회에 실패했습니다.');
+  }
+  return data as CareProgramCatalogResult;
+}
+
+/** 치료프로그램 상세 메타 (세션 본문은 로컬 카탈로그 병합) */
+export async function fetchCareProgramMeta(programId: string): Promise<CareProgramDetailResult> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/care-assignments/programs/${encodeURIComponent(programId)}`,
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '프로그램 조회에 실패했습니다.');
+  }
+  return data as CareProgramDetailResult;
+}
+
+/** 로컬 카탈로그에서 세션 포함 전체 프로그램 (권장) */
+export async function fetchCareProgramFull(programId: string): Promise<CareProgramDefinition | null> {
+  const { getCareProgramById } = await import('@/data/careProgramCatalog');
+  return getCareProgramById(programId) ?? null;
 }
 
 /** T-2-04 — 할당 생성 */

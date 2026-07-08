@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from utils.care_program_catalog import CareProgramNotFoundError, validate_care_program_id
+
 SCHEMA_VERSION = 1
 
 CARE_ASSIGNMENT_TYPES = frozenset(
@@ -84,8 +86,13 @@ def validate_create_care_assignment_payload(body: dict | None) -> dict:
     assessment_id = _strip(body.get("assessmentId")) or None
     test_list = _normalize_test_list(body.get("testList"))
 
-    if assignment_type == "treatment_program" and not program_id:
-        raise CareAssignmentValidationError("treatment_program은 programId가 필요합니다.")
+    if assignment_type == "treatment_program":
+        if not program_id:
+            raise CareAssignmentValidationError("treatment_program은 programId가 필요합니다.")
+        try:
+            validate_care_program_id(program_id)
+        except CareProgramNotFoundError as exc:
+            raise CareAssignmentValidationError(str(exc)) from exc
     if assignment_type == "additional_assessment" and not assessment_id and not test_list:
         raise CareAssignmentValidationError(
             "additional_assessment은 assessmentId 또는 testList가 필요합니다."
