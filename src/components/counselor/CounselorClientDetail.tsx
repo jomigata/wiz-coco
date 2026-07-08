@@ -10,6 +10,7 @@ import {
   resendDispatchCredentials,
   sendDispatchTestReminders,
 } from '@/lib/clientPortalApi';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { getCounselorResult } from '@/lib/assessmentApi';
 import { printAssessmentReport, buildDefaultResultSections } from '@/lib/assessmentReportPrint';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -385,7 +386,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
             {linkedPortals.map((lp) => (
               <li key={lp.portalId}>
                 <Link
-                  href={`/counselor/clients/${encodeURIComponent(lp.portalId)}`}
+                  href={counselorClientDetailHref(lp.portalId)}
                   className="text-sky-400 hover:text-sky-300"
                 >
                   {lp.displayName || '내담자'} · {formatAccessCodeDisplay(lp.accessCode)}

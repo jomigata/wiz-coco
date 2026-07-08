@@ -10,6 +10,7 @@ import {
 } from '@/data/careProgramCatalog';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { createCareAssignments, listCareAssignments } from '@/lib/careAssignmentApi';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CareProgramCategory, CareProgramSummary } from '@/types/careProgram';
@@ -542,7 +543,7 @@ export default function CounselorTreatmentPlansPanel() {
                       </td>
                       <td className="px-4 py-3">
                         <Link
-                          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+                          href={counselorClientDetailHref(item.portalId)}
                           className="text-slate-200 hover:text-sky-300"
                         >
                           {item.portalDisplayName || '내담자'}
@@ -555,7 +556,7 @@ export default function CounselorTreatmentPlansPanel() {
                       <td className="px-4 py-3 text-xs text-slate-400">{formatDateTime(item.createdAt)}</td>
                       <td className="px-4 py-3">
                         <Link
-                          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+                          href={counselorClientDetailHref(item.portalId)}
                           className="text-xs text-sky-400 hover:text-sky-300"
                         >
                           상세

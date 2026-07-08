@@ -76,6 +76,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/progress')) return 'assessments-list';
     if (path.startsWith('/counselor/assessments/dispatch')) return 'assessments-list';
     if (path.startsWith('/counselor/assessments')) return 'assessments-list';
+    if (path.startsWith('/counselor/clients/detail')) return 'client-list';
     if (path.startsWith('/counselor/clients')) return 'client-list';
     if (path.startsWith('/counselor/assign-tests')) return 'client-list';
     if (path.startsWith('/counselor/schedule')) return 'counseling-schedule';
@@ -99,11 +100,13 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '검사코드 수정';
     if (path.startsWith('/counselor/assessments')) return '검사코드 목록';
+    if (path.startsWith('/counselor/clients/detail')) return '내담자 상세';
     if (path.startsWith('/counselor/clients/') && path !== '/counselor/clients') return '내담자 상세';
     if (path.startsWith('/counselor/assign-tests')) return '검사 할당';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
       '/counselor/clients': '내담자 목록',
+      '/counselor/clients/detail': '내담자 상세',
       '/counselor/assign-tests': '검사 할당',
       '/counselor/schedule': '상담 일정',
       '/counselor/sessions': '상담 기록',

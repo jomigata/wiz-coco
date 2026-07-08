@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listCounselorPortalTestAssignments } from '@/lib/clientPortalApi';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type {
@@ -370,7 +371,7 @@ export default function CounselorAssignTestsPanel() {
                   <tr key={rowKey} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
                     <td className="px-4 py-3">
                       <Link
-                        href={`/counselor/clients/${encodeURIComponent(row.portalId)}`}
+                        href={counselorClientDetailHref(row.portalId)}
                         className="font-medium text-slate-100 hover:text-sky-300"
                       >
                         {row.displayName || '내담자'}
@@ -398,7 +399,7 @@ export default function CounselorAssignTestsPanel() {
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2 text-xs">
                         <Link
-                          href={`/counselor/clients/${encodeURIComponent(row.portalId)}`}
+                          href={counselorClientDetailHref(row.portalId)}
                           className="text-sky-400 hover:text-sky-300"
                         >
                           상세

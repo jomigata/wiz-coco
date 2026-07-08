@@ -7,6 +7,7 @@ import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -256,7 +257,7 @@ export default function CounselorClientList() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-white">
                         <Link
-                          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+                          href={counselorClientDetailHref(item.portalId)}
                           className="hover:text-sky-300"
                         >
                           {item.displayName || '—'}
@@ -306,7 +307,7 @@ export default function CounselorClientList() {
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <Link
-                          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+                          href={counselorClientDetailHref(item.portalId)}
                           className="text-xs text-sky-400 hover:text-sky-300"
                         >
                           상세 보기

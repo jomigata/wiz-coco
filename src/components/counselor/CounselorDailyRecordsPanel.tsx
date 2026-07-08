@@ -8,6 +8,7 @@ import {
   listCounselorDailyRecords,
   updateCounselorDailyRecordNotes,
 } from '@/lib/careAssignmentApi';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorDailyRecordListItem } from '@/types/counselor';
@@ -59,9 +60,7 @@ function RecordRow({
   const [error, setError] = useState('');
 
   const clientLabel = item.portalDisplayName || (item.portalId ? '내담자' : '회원');
-  const clientHref = item.portalId
-    ? `/counselor/clients/${encodeURIComponent(item.portalId)}`
-    : null;
+  const clientHref = item.portalId ? counselorClientDetailHref(item.portalId) : null;
 
   const saveNotes = async () => {
     setSaving(true);

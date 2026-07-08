@@ -9,6 +9,7 @@ import CounselorCareMonitoringView from '@/components/counselor/CounselorCareMon
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { fetchCounselorMonitoringHub } from '@/lib/clientPortalApi';
 import { filterHubByCohort, INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useCounselorMonitoringRealtime } from '@/hooks/useCounselorMonitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -386,7 +387,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                         <td className="px-4 py-2.5 text-xs text-slate-400">{formatDateTime(row.completedAt)}</td>
                         <td className="px-4 py-2.5">
                           <Link
-                            href={`/counselor/clients/${encodeURIComponent(row.portalId)}`}
+                            href={counselorClientDetailHref(row.portalId)}
                             className="text-slate-200 hover:text-sky-300"
                           >
                             {row.displayName || '내담자'}

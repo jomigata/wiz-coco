@@ -11,6 +11,7 @@ import {
   collectCareRecentActivity,
   summarizeCareAssignments,
 } from '@/lib/careMonitoringRealtime';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import type { CounselorCareAssignmentListItem } from '@/types/careAssignment';
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -127,7 +128,7 @@ function CareAssignmentCard({ item }: { item: CounselorCareAssignmentListItem })
 
       <div className="mt-4 flex flex-wrap gap-2">
         <AuthLink
-          href={`/counselor/clients/${encodeURIComponent(item.portalId)}`}
+          href={counselorClientDetailHref(item.portalId)}
           className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500"
         >
           내담자 보기
@@ -334,7 +335,7 @@ export default function CounselorCareMonitoringView() {
                     <td className="px-4 py-2.5 text-xs text-slate-400">{formatDateTime(row.completedAt)}</td>
                     <td className="px-4 py-2.5">
                       <Link
-                        href={`/counselor/clients/${encodeURIComponent(row.portalId)}`}
+                        href={counselorClientDetailHref(row.portalId)}
                         className="text-slate-200 hover:text-violet-300"
                       >
                         {row.portalDisplayName}
