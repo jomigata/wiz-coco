@@ -124,6 +124,38 @@ export type CounselorClientPortalListResult = {
   cohorts: CounselorClientPortalCohort[];
 };
 
+export type CounselorPortalTestAssignmentStatus = 'not_started' | 'in_progress' | 'completed';
+
+export type CounselorPortalTestAssignmentRow = {
+  portalId: string;
+  displayName: string;
+  email?: string | null;
+  accessCode: string;
+  cohortId?: string | null;
+  cohortName?: string | null;
+  portalStatus: ClientPortalStatus;
+  assessmentId: string;
+  assessmentTitle: string;
+  joinAccessCode: string;
+  testId: string;
+  testName: string;
+  status: CounselorPortalTestAssignmentStatus;
+  completedAt?: string | null;
+  resultId?: string | null;
+};
+
+export type CounselorPortalTestAssignmentAssessment = {
+  assessmentId: string;
+  title: string;
+};
+
+export type CounselorPortalTestAssignmentListResult = {
+  items: CounselorPortalTestAssignmentRow[];
+  total: number;
+  cohorts: CounselorClientPortalCohort[];
+  assessments: CounselorPortalTestAssignmentAssessment[];
+};
+
 export type CounselorClientPortalAssessmentDetail = {
   assessmentId: string;
   title: string;

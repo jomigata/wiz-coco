@@ -56,7 +56,11 @@ from utils.assessment_dispatch import (
     list_archived_portals,
     restore_archived_portals,
 )
-from utils.client_portal_list import list_counselor_client_portals, get_counselor_client_portal_detail
+from utils.client_portal_list import (
+    list_counselor_client_portals,
+    get_counselor_client_portal_detail,
+    list_counselor_portal_test_assignments,
+)
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -173,6 +177,32 @@ def list_counselor_portals():
         g.counselor_uid,
         status=status,
         cohort_id=cohort_id,
+        q=q,
+    )
+    return jsonify(result)
+
+
+@bp.route("/assignments", methods=["GET"])
+@require_counselor
+def list_counselor_assignments():
+    """상담사 내담자 검사 할당 목록 (포털×검사코드×검사항목)."""
+    status = (request.args.get("status") or "active").strip().lower()
+    if status not in ("active", "archived", "all"):
+        status = "active"
+    test_status = (request.args.get("testStatus") or "all").strip().lower()
+    if test_status not in ("all", "not_started", "in_progress", "completed"):
+        test_status = "all"
+    cohort_id = (request.args.get("cohortId") or "").strip() or None
+    assessment_id = (request.args.get("assessmentId") or "").strip() or None
+    q = (request.args.get("q") or "").strip() or None
+    db = get_firestore()
+    result = list_counselor_portal_test_assignments(
+        db,
+        g.counselor_uid,
+        status=status,
+        test_status=test_status,
+        cohort_id=cohort_id,
+        assessment_id=assessment_id,
         q=q,
     )
     return jsonify(result)

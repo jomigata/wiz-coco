@@ -9,6 +9,7 @@ import type {
   BulkPortalJobStatus,
   CounselorClientPortalListResult,
   CounselorClientPortalDetailResult,
+  CounselorPortalTestAssignmentListResult,
 } from '@/types/clientPortal';
 import { getCounselorToken } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
@@ -388,4 +389,32 @@ export async function fetchCounselorClientPortalDetail(
     throw new Error(typeof data?.message === 'string' ? data.message : '내담자 상세 조회에 실패했습니다.');
   }
   return data as CounselorClientPortalDetailResult;
+}
+
+export async function listCounselorPortalTestAssignments(params?: {
+  status?: 'active' | 'archived' | 'all';
+  testStatus?: 'all' | 'not_started' | 'in_progress' | 'completed';
+  cohortId?: string;
+  assessmentId?: string;
+  q?: string;
+}): Promise<CounselorPortalTestAssignmentListResult> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const search = new URLSearchParams();
+  if (params?.status) search.set('status', params.status);
+  if (params?.testStatus) search.set('testStatus', params.testStatus);
+  if (params?.cohortId) search.set('cohortId', params.cohortId);
+  if (params?.assessmentId) search.set('assessmentId', params.assessmentId);
+  if (params?.q?.trim()) search.set('q', params.q.trim());
+  const qs = search.toString() ? `?${search.toString()}` : '';
+
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/assignments${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '검사 할당 목록 조회에 실패했습니다.');
+  }
+  return data as CounselorPortalTestAssignmentListResult;
 }

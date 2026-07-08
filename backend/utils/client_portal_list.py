@@ -318,3 +318,144 @@ def get_counselor_client_portal_detail(
         "recentResults": recent_results,
         "linkedPortals": linked_portals,
     }
+
+
+def list_counselor_portal_test_assignments(
+    db,
+    counselor_uid: str,
+    *,
+    status: str | None = None,
+    test_status: str | None = None,
+    cohort_id: str | None = None,
+    assessment_id: str | None = None,
+    q: str | None = None,
+) -> dict:
+    """상담사 내담자×검사코드×검사항목 할당 목록 (flatten)."""
+    portal_status_filter = (status or "active").strip().lower()
+    test_status_filter = (test_status or "all").strip().lower()
+    query = (q or "").strip().lower()
+    cohort_filter = (cohort_id or "").strip()
+    assessment_filter = (assessment_id or "").strip()
+
+    rows: list[tuple[str, dict, float]] = []
+    refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("counselorId", "==", counselor_uid)
+        .stream()
+    )
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        st = (pdata.get("status") or "active").strip()
+        if portal_status_filter != "all" and st != portal_status_filter:
+            continue
+        if cohort_filter and (pdata.get("cohortId") or "") != cohort_filter:
+            continue
+        if query and not _matches_search(pdata, query):
+            continue
+        created_raw = pdata.get("createdAt")
+        created_ts = 0.0
+        if created_raw is not None and hasattr(created_raw, "timestamp"):
+            created_ts = float(created_raw.timestamp())
+        rows.append((doc.id, pdata, created_ts))
+
+    rows.sort(key=lambda x: x[2], reverse=True)
+
+    all_assessment_ids: set[str] = set()
+    for _, pdata, _ in rows:
+        for aid in pdata.get("assignedAssessmentIds") or []:
+            s = str(aid).strip()
+            if s:
+                all_assessment_ids.add(s)
+
+    assessment_cache: dict[str, dict] = {}
+    for aid in all_assessment_ids:
+        adoc = db.collection(ASSESSMENTS_COLLECTION).document(aid).get()
+        if not adoc.exists:
+            continue
+        a = adoc.to_dict() or {}
+        if a.get("counselorId") != counselor_uid:
+            continue
+        if (a.get("status") or "active") != "active":
+            continue
+        assessment_cache[aid] = {
+            "assessmentId": aid,
+            "title": (a.get("title") or "").strip() or "검사코드",
+            "joinAccessCode": (a.get("accessCode") or "").strip(),
+            "testList": a.get("testList") or [],
+        }
+
+    cohorts_map: dict[str, dict] = {}
+    assessments_map: dict[str, dict] = {}
+    items: list[dict] = []
+
+    for portal_id, pdata, _ in rows:
+        email = (pdata.get("email") or "").strip()
+        cid = (pdata.get("cohortId") or "").strip()
+        cname = (pdata.get("cohortName") or "").strip()
+        if cid and cid not in cohorts_map:
+            cohorts_map[cid] = {"cohortId": cid, "cohortName": cname or cid}
+
+        assigned_ids = [
+            str(aid).strip()
+            for aid in (pdata.get("assignedAssessmentIds") or [])
+            if str(aid).strip() in assessment_cache
+        ]
+
+        for aid in assigned_ids:
+            if assessment_filter and aid != assessment_filter:
+                continue
+            acache = assessment_cache[aid]
+            if aid not in assessments_map:
+                assessments_map[aid] = {
+                    "assessmentId": aid,
+                    "title": acache["title"],
+                }
+            test_list = acache.get("testList") or []
+            test_rows = _test_detail_rows(db, portal_id, aid, test_list)
+            for test in test_rows:
+                tstatus = (test.get("status") or "not_started").strip()
+                if test_status_filter != "all" and tstatus != test_status_filter:
+                    continue
+                items.append(
+                    {
+                        "portalId": portal_id,
+                        "displayName": pdata.get("displayName") or "",
+                        "email": email or None,
+                        "accessCode": pdata.get("accessCode") or "",
+                        "cohortId": cid or None,
+                        "cohortName": cname or None,
+                        "portalStatus": pdata.get("status") or "active",
+                        "assessmentId": aid,
+                        "assessmentTitle": acache["title"],
+                        "joinAccessCode": acache["joinAccessCode"],
+                        "testId": test.get("testId") or "",
+                        "testName": test.get("testName") or "",
+                        "status": tstatus,
+                        "completedAt": test.get("completedAt"),
+                        "resultId": test.get("resultId"),
+                    }
+                )
+
+    items.sort(
+        key=lambda r: (
+            (r.get("displayName") or "").lower(),
+            (r.get("assessmentTitle") or "").lower(),
+            (r.get("testName") or "").lower(),
+        )
+    )
+
+    cohorts = sorted(
+        cohorts_map.values(),
+        key=lambda c: (c.get("cohortName") or c.get("cohortId") or "").lower(),
+    )
+    assessments = sorted(
+        assessments_map.values(),
+        key=lambda a: (a.get("title") or "").lower(),
+    )
+
+    return {
+        "items": items,
+        "total": len(items),
+        "cohorts": cohorts,
+        "assessments": assessments,
+    }

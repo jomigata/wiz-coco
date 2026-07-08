@@ -67,7 +67,7 @@ export const counselorMenuCategories: TestCategory[] = [
           {
             name: '검사 할당',
             href: '/counselor/assign-tests',
-            description: '내담자에게 검사 할당',
+            description: '내담자별 검사 항목 진행 현황',
             icon: '📋',
           },
         ],
