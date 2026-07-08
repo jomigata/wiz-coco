@@ -181,6 +181,27 @@ export type CareProgressSummary = {
   entryCount: number;
   lastActivityAt?: string | null;
   completedAt?: string | null;
+  recentEntries?: CareProgressEntry[];
+};
+
+/** 포털 진행 기록 제출 (T-2-06) */
+export type SubmitPortalCareProgressInput = {
+  entry: {
+    kind: CareProgressEntryKind;
+    title?: string;
+    content?: string;
+    moodScore?: number;
+    stressLevel?: number;
+    energyLevel?: number;
+    metadata?: Record<string, unknown>;
+  };
+  markCompleted?: boolean;
+};
+
+export type SubmitPortalCareProgressResult = {
+  assignmentId: string;
+  assignmentStatus: CareAssignmentStatus;
+  progress: CareProgressSummary;
 };
 
 /** 포털 대시보드용 요약 (T-2-05) */

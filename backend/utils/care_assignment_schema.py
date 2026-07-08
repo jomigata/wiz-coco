@@ -193,9 +193,6 @@ def validate_progress_entry(entry: dict | None) -> dict:
         raise CareAssignmentValidationError("유효하지 않은 진행 kind입니다.")
     content = _strip(entry.get("content"))
     title = _strip(entry.get("title")) or None
-    if kind in ("journal", "note") and not content:
-        raise CareAssignmentValidationError("journal/note 항목은 content가 필요합니다.")
-
     mood = entry.get("moodScore")
     if mood is not None:
         try:
@@ -204,6 +201,13 @@ def validate_progress_entry(entry: dict | None) -> dict:
             raise CareAssignmentValidationError("moodScore는 정수여야 합니다.") from exc
         if mood < 1 or mood > 10:
             raise CareAssignmentValidationError("moodScore는 1~10이어야 합니다.")
+
+    if kind in ("journal", "note") and not content:
+        raise CareAssignmentValidationError("journal/note 항목은 content가 필요합니다.")
+    if kind == "check_in" and not content and mood is None:
+        raise CareAssignmentValidationError("check_in은 기록 내용 또는 기분 점수가 필요합니다.")
+    if kind == "session" and not title:
+        raise CareAssignmentValidationError("session 항목은 title이 필요합니다.")
 
     return {
         "id": _strip(entry.get("id")) or datetime.now(timezone.utc).isoformat(),

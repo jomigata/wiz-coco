@@ -16,8 +16,9 @@ from utils.care_assignment_schema import (
     build_care_assignment_doc,
     build_care_progress_doc,
     validate_create_care_assignment_payload,
+    validate_progress_entry,
 )
-from utils.care_program_catalog import validate_care_program_id
+from utils.care_program_catalog import validate_care_program_id, get_care_program, CareProgramNotFoundError
 from utils.portal_assessment_access import get_portal_doc
 
 
@@ -235,7 +236,7 @@ def create_care_assignments(db, counselor_uid: str, body: dict) -> dict:
     }
 
 
-def _progress_for_assignment(db, assignment_id: str) -> dict | None:
+def _progress_for_assignment(db, assignment_id: str, *, include_recent_entries: bool = False) -> dict | None:
     refs = (
         db.collection(CARE_PROGRESS_COLLECTION)
         .where("assignmentId", "==", assignment_id)
@@ -247,7 +248,7 @@ def _progress_for_assignment(db, assignment_id: str) -> dict | None:
     doc = refs[0]
     data = doc.to_dict() or {}
     entries = data.get("entries") or []
-    return {
+    out = {
         "progressId": doc.id,
         "status": data.get("status") or "not_started",
         "progressPercent": int(data.get("progressPercent") or 0),
@@ -255,6 +256,9 @@ def _progress_for_assignment(db, assignment_id: str) -> dict | None:
         "lastActivityAt": _iso_timestamp(data.get("lastActivityAt")),
         "completedAt": _iso_timestamp(data.get("completedAt")),
     }
+    if include_recent_entries:
+        out["recentEntries"] = entries[-5:]
+    return out
 
 
 def list_counselor_care_assignments(
@@ -324,7 +328,7 @@ def _parse_date_only(value: str | None):
 
 
 def _portal_assignment_item(db, doc_id: str, data: dict) -> dict:
-    progress = _progress_for_assignment(db, doc_id)
+    progress = _progress_for_assignment(db, doc_id, include_recent_entries=True)
     return {
         "assignmentId": doc_id,
         "type": data.get("type") or "custom_task",
@@ -394,4 +398,118 @@ def list_portal_care_assignments(db, portal_id: str) -> dict:
             "completedCount": len(completed),
             "overdueCount": overdue_count,
         },
+    }
+
+
+def _compute_progress_percent(ass_data: dict, entry_count: int, mark_completed: bool) -> int:
+    if mark_completed:
+        return 100
+    if entry_count <= 0:
+        return 0
+    program_id = (ass_data.get("programId") or "").strip()
+    if program_id:
+        try:
+            program = get_care_program(program_id)
+            total = int(program.get("totalSessions") or 0)
+            if total > 0:
+                return min(100, round((entry_count / total) * 100))
+        except CareProgramNotFoundError:
+            pass
+    return min(90, entry_count * 15)
+
+
+def submit_portal_care_progress(
+    db,
+    portal_id: str,
+    assignment_id: str,
+    body: dict,
+) -> dict:
+    """포털 내담자 진행 기록 제출."""
+    portal_id = (portal_id or "").strip()
+    assignment_id = (assignment_id or "").strip()
+    if not portal_id or not assignment_id:
+        raise CareAssignmentValidationError("portalId와 assignmentId가 필요합니다.")
+
+    ass_ref = db.collection(CARE_ASSIGNMENTS_COLLECTION).document(assignment_id)
+    ass_snap = ass_ref.get()
+    if not ass_snap.exists:
+        raise CareAssignmentValidationError("할당을 찾을 수 없습니다.")
+    ass_data = ass_snap.to_dict() or {}
+    if (ass_data.get("portalId") or "").strip() != portal_id:
+        raise CareAssignmentValidationError("이 과제에 접근할 수 없습니다.")
+    if (ass_data.get("status") or "").strip() != "active":
+        raise CareAssignmentValidationError("이미 완료되었거나 종료된 과제입니다.")
+
+    if not isinstance(body, dict):
+        raise CareAssignmentValidationError("요청 본문이 필요합니다.")
+    entry = validate_progress_entry(body.get("entry"))
+    mark_completed = bool(body.get("markCompleted"))
+
+    prog_refs = (
+        db.collection(CARE_PROGRESS_COLLECTION)
+        .where("assignmentId", "==", assignment_id)
+        .where("portalId", "==", portal_id)
+        .limit(1)
+        .get()
+    )
+    if not prog_refs:
+        raise CareAssignmentValidationError("진행 정보를 찾을 수 없습니다.")
+
+    prog_snap = prog_refs[0]
+    prog_ref = prog_snap.reference
+    prog_data = prog_snap.to_dict() or {}
+    entries = list(prog_data.get("entries") or [])
+    entries.append(entry)
+    entry_count = len(entries)
+
+    percent = _compute_progress_percent(ass_data, entry_count, mark_completed)
+    auto_complete = False
+    program_id = (ass_data.get("programId") or "").strip()
+    if not mark_completed and program_id:
+        try:
+            program = get_care_program(program_id)
+            total = int(program.get("totalSessions") or 0)
+            if total > 0 and entry_count >= total:
+                percent = 100
+                auto_complete = True
+        except CareProgramNotFoundError:
+            pass
+
+    if mark_completed or auto_complete:
+        progress_status = "completed"
+        percent = 100
+    elif entry_count > 0:
+        progress_status = "in_progress"
+    else:
+        progress_status = "not_started"
+
+    prog_update: dict = {
+        "entries": entries,
+        "progressPercent": percent,
+        "status": progress_status,
+        "lastActivityAt": SERVER_TIMESTAMP,
+        "updatedAt": SERVER_TIMESTAMP,
+    }
+    if progress_status == "completed":
+        prog_update["completedAt"] = SERVER_TIMESTAMP
+    prog_ref.update(prog_update)
+
+    assignment_status = "active"
+    if progress_status == "completed":
+        assignment_status = "completed"
+        ass_ref.update(
+            {
+                "status": "completed",
+                "completedAt": SERVER_TIMESTAMP,
+                "updatedAt": SERVER_TIMESTAMP,
+            }
+        )
+
+    progress_summary = _progress_for_assignment(db, assignment_id, include_recent_entries=True)
+
+    return {
+        "assignmentId": assignment_id,
+        "assignmentStatus": assignment_status,
+        "progress": progress_summary,
+        "autoCompleted": auto_complete,
     }

@@ -63,7 +63,8 @@ from utils.client_portal_list import (
 )
 from utils.portal_assessment_push import push_assessments_to_portals
 from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
-from utils.care_assignments import list_portal_care_assignments
+from utils.care_assignments import list_portal_care_assignments, submit_portal_care_progress
+from utils.care_assignment_schema import CareAssignmentValidationError
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -380,6 +381,26 @@ def portal_care_assignments():
     db = get_firestore()
     result = list_portal_care_assignments(db, portal_id)
     return jsonify(result)
+
+
+@bp.route("/care-assignments/<assignment_id>/progress", methods=["POST"])
+def portal_care_assignment_progress(assignment_id: str):
+    """포털 내담자 — 치료·과제 진행 기록 제출."""
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify({"error": "Forbidden", "message": "이 기능을 사용할 수 없습니다."}), 403
+
+    db = get_firestore()
+    body = request.get_json(silent=True) or {}
+    try:
+        result = submit_portal_care_progress(db, portal_id, assignment_id, body)
+    except CareAssignmentValidationError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify(result), 200
 
 
 @bp.route("/magic-link/verify", methods=["POST"])

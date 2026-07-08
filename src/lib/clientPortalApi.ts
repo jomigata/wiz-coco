@@ -14,7 +14,7 @@ import type {
   CounselorMonitoringHubResult,
   CounselorCohortMonitoringResult,
 } from '@/types/clientPortal';
-import type { PortalCareAssignmentsResult } from '@/types/careAssignment';
+import type { PortalCareAssignmentsResult, SubmitPortalCareProgressInput, SubmitPortalCareProgressResult } from '@/types/careAssignment';
 import { getCounselorToken } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 
@@ -118,6 +118,30 @@ export async function fetchPortalCareAssignments(
     throw new Error(typeof data?.message === 'string' ? data.message : '과제 목록을 불러오지 못했습니다.');
   }
   return data as PortalCareAssignmentsResult;
+}
+
+/** 포털 — 진행 기록 제출 (T-2-06) */
+export async function submitPortalCareProgress(
+  portalToken: string,
+  assignmentId: string,
+  input: SubmitPortalCareProgressInput,
+): Promise<SubmitPortalCareProgressResult> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/care-assignments/${encodeURIComponent(assignmentId)}/progress`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Portal ${portalToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '진행 기록 저장에 실패했습니다.');
+  }
+  return data as SubmitPortalCareProgressResult;
 }
 
 export async function bulkCreateClientPortals(body: {
