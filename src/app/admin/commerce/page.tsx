@@ -11,8 +11,9 @@ import {
   type PaymentRecord,
 } from '@/lib/commerceApi';
 import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
+import AdminAiUsagePanel from '@/components/admin/AdminAiUsagePanel';
 
-type Tab = 'grant' | 'settlement';
+type Tab = 'grant' | 'settlement' | 'ai';
 
 export default function AdminCommercePage() {
   const [tab, setTab] = useState<Tab>('grant');
@@ -117,6 +118,15 @@ export default function AdminCommercePage() {
             }`}
           >
             정산 · 결제 내역
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('ai')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              tab === 'ai' ? 'bg-violet-600 text-white' : 'bg-white/10 text-slate-300'
+            }`}
+          >
+            AI 사용량
           </button>
         </div>
 
@@ -224,6 +234,8 @@ export default function AdminCommercePage() {
             )}
           </>
         )}
+
+        {tab === 'ai' && <AdminAiUsagePanel />}
 
         {tab === 'settlement' && (
           <div className="space-y-6">

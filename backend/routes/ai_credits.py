@@ -24,6 +24,11 @@ from utils.counselor_ai_credits import (
     list_ai_ledger,
 )
 from utils.ai_reports import get_ai_report, list_ai_reports_for_result
+from utils.ai_usage_admin import (
+    build_ai_usage_summary,
+    get_admin_counselor_ai_detail,
+    list_admin_ai_ledger,
+)
 
 bp = Blueprint("ai_credits", __name__, url_prefix="/api/ai")
 
@@ -55,6 +60,9 @@ def ai_usage_schema():
                 "POST /api/ai/credits/grant",
                 "GET /api/ai/reports",
                 "GET /api/ai/reports/<report_id>",
+                "GET /api/ai/admin/usage/summary",
+                "GET /api/ai/admin/usage/ledger",
+                "GET /api/ai/admin/credits/<counselor_uid>",
             ],
         }
     )
@@ -121,3 +129,41 @@ def ai_report_detail(report_id):
     if not report:
         return jsonify({"error": "Not Found"}), 404
     return jsonify(report)
+
+
+@bp.route("/admin/usage/summary", methods=["GET"])
+@require_admin
+def ai_admin_usage_summary():
+    """관리자 — AI 사용량 월간·전체 요약."""
+    month = (request.args.get("month") or "").strip() or None
+    db = get_firestore()
+    return jsonify(build_ai_usage_summary(db, month=month))
+
+
+@bp.route("/admin/usage/ledger", methods=["GET"])
+@require_admin
+def ai_admin_usage_ledger():
+    """관리자 — AI 원장 최근 내역."""
+    month = (request.args.get("month") or "").strip() or None
+    counselor_uid = (request.args.get("counselorUid") or "").strip() or None
+    limit = request.args.get("limit", 50, type=int)
+    db = get_firestore()
+    return jsonify(
+        {
+            "items": list_admin_ai_ledger(
+                db,
+                month=month,
+                counselor_uid=counselor_uid,
+                limit=limit or 50,
+            ),
+        }
+    )
+
+
+@bp.route("/admin/credits/<counselor_uid>", methods=["GET"])
+@require_admin
+def ai_admin_counselor_credits(counselor_uid):
+    """관리자 — 상담사 AI 잔액·원장 조회."""
+    limit = request.args.get("limit", 30, type=int)
+    db = get_firestore()
+    return jsonify(get_admin_counselor_ai_detail(db, counselor_uid, ledger_limit=limit or 30))

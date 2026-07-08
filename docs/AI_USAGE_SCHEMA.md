@@ -91,8 +91,10 @@ Wave 3 AI 워크벤치의 기반 데이터 모델입니다. **검사 크레딧**
 |--------|------|------|------|
 | GET | `/api/ai/schema` | — | 스키마·enum 메타 |
 | GET | `/api/ai/credits/me` | 상담사 Bearer | 잔액 + 최근 원장 |
-| GET | `/api/ai/reports?resultId=` | 상담사 Bearer | 캐시된 AI 리포트 목록 |
-| GET | `/api/ai/reports/<reportId>` | 상담사 Bearer | AI 리포트 단건 (재열람 무료) |
+| GET | `/api/ai/admin/usage/summary` | Admin | 월별·전체 AI 사용 요약 |
+| GET | `/api/ai/admin/usage/ledger` | Admin | AI 원장 목록 |
+| GET | `/api/ai/admin/credits/<counselorUid>` | Admin | 상담사 AI 잔액·원장 |
+| POST | `/api/ai/credits/grant` | Admin | AI 크레딧 지급 |
 
 ### Callable — `recommendTestsFromResult` (T-3-06)
 
@@ -165,4 +167,4 @@ Wave 3 AI 워크벤치의 기반 데이터 모델입니다. **검사 크레딧**
 | T-3-05 | 검사 결과 AI 해석 Callable | ✅ |
 | T-3-06 | 맞춤 검사 추천 | ✅ |
 | T-3-07 | AI → 포털 push | ✅ (추천 페이지 할당) |
-| T-3-08 | Admin AI 사용량 대시보드 | ⬜ |
+| T-3-08 | Admin AI 사용량 대시보드 | ✅ |

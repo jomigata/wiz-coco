@@ -1,6 +1,9 @@
 import type {
   AiUsageSchemaResponse,
   CounselorAiCreditsMeResponse,
+  AiAdminUsageSummary,
+  AiAdminCounselorDetail,
+  AiUsageLedgerDocument,
 } from '@/types/aiUsage';
 import { getCounselorToken } from '@/lib/counselorAuth';
 
@@ -46,4 +49,52 @@ export async function fetchCounselorAiCredits(
 ): Promise<CounselorAiCreditsMeResponse> {
   const q = limit ? `?limit=${encodeURIComponent(String(limit))}` : '';
   return aiFetch<CounselorAiCreditsMeResponse>(`/api/ai/credits/me${q}`);
+}
+
+/** GET /api/ai/admin/usage/summary */
+export async function fetchAiAdminUsageSummary(month?: string): Promise<AiAdminUsageSummary> {
+  const q = month ? `?month=${encodeURIComponent(month)}` : '';
+  return aiFetch<AiAdminUsageSummary>(`/api/ai/admin/usage/summary${q}`);
+}
+
+/** GET /api/ai/admin/usage/ledger */
+export async function fetchAiAdminUsageLedger(params?: {
+  month?: string;
+  counselorUid?: string;
+  limit?: number;
+}): Promise<{ items: AiUsageLedgerDocument[] }> {
+  const search = new URLSearchParams();
+  if (params?.month) search.set('month', params.month);
+  if (params?.counselorUid) search.set('counselorUid', params.counselorUid);
+  if (params?.limit) search.set('limit', String(params.limit));
+  const qs = search.toString();
+  return aiFetch<{ items: AiUsageLedgerDocument[] }>(
+    `/api/ai/admin/usage/ledger${qs ? `?${qs}` : ''}`,
+  );
+}
+
+/** GET /api/ai/admin/credits/:uid */
+export async function fetchAdminCounselorAiCredits(
+  counselorUid: string,
+  limit = 30,
+): Promise<AiAdminCounselorDetail> {
+  return aiFetch<AiAdminCounselorDetail>(
+    `/api/ai/admin/credits/${encodeURIComponent(counselorUid)}?limit=${limit}`,
+  );
+}
+
+/** POST /api/ai/credits/grant */
+export async function grantCounselorAiCredits(params: {
+  counselorUid: string;
+  amount: number;
+  reason?: string;
+}): Promise<{ counselorUid: string; balance: number; granted: number }> {
+  return aiFetch(`/api/ai/credits/grant`, {
+    method: 'POST',
+    body: JSON.stringify({
+      counselorUid: params.counselorUid,
+      amount: params.amount,
+      reason: params.reason || 'admin_grant',
+    }),
+  });
 }

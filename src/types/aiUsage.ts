@@ -58,6 +58,7 @@ export type AiUsageLedgerEntry = {
   portalId?: string;
   resultId?: string;
   reportId?: string;
+  clientId?: string;
   actorUid?: string;
   metadata?: Record<string, unknown>;
   createdAt?: string | null;
@@ -106,5 +107,34 @@ export type CounselorAiCreditsMeResponse = {
   balance: number;
   enforceCredits: boolean;
   pilotFreeAiCredits: number;
+  ledger: AiUsageLedgerDocument[];
+};
+
+export type AiUsageFeatureStat = {
+  feature: string;
+  label: string;
+  count: number;
+  creditsConsumed: number;
+  creditsGranted: number;
+  tokens: number;
+};
+
+export type AiAdminUsageSummary = {
+  month: string | null;
+  entryCount: number;
+  activeCounselors: number;
+  creditsGranted: number;
+  creditsConsumed: number;
+  tokensTotal: number;
+  walletCount: number;
+  totalWalletBalance: number;
+  byFeature: Record<string, AiUsageFeatureStat>;
+  topWallets: { counselorUid: string; balance: number }[];
+};
+
+export type AiAdminCounselorDetail = {
+  counselorUid: string;
+  email?: string | null;
+  balance: number;
   ledger: AiUsageLedgerDocument[];
 };
