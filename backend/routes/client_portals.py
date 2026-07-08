@@ -917,18 +917,3 @@ def patch_counselor_portal_tags(portal_id):
     if not updated:
         return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
     return jsonify(updated)
-
-
-@bp.route("/detail/<portal_id>/tags", methods=["PATCH"])
-@require_counselor
-def patch_counselor_portal_tags(portal_id):
-    """상담사 — 내담자 관리 태그 편집."""
-    body = request.get_json(silent=True) or {}
-    tags = body.get("counselorTags")
-    if not isinstance(tags, list):
-        return jsonify({"error": "Bad Request", "message": "counselorTags 배열이 필요합니다."}), 400
-    db = get_firestore()
-    updated = update_portal_counselor_tags(db, g.counselor_uid, portal_id, tags)
-    if not updated:
-        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
-    return jsonify(updated)
