@@ -22,6 +22,12 @@ export default function ProgressPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <AuthLink
+          href="/counselor/progress?view=care"
+          className="text-sm text-violet-400 hover:text-violet-300"
+        >
+          치료·과제 모니터링 →
+        </AuthLink>
+        <AuthLink
           href="/counselor/assessments/progress"
           className="text-sm text-sky-400 hover:text-sky-300"
         >

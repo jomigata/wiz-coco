@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorCohortMonitoringView from '@/components/counselor/CounselorCohortMonitoringView';
+import CounselorCareMonitoringView from '@/components/counselor/CounselorCareMonitoringView';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { fetchCounselorMonitoringHub } from '@/lib/clientPortalApi';
 import { filterHubByCohort, INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -13,7 +14,7 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorMonitoringAssessment } from '@/types/clientPortal';
 
-export type MonitoringHubView = 'overview' | 'cohorts';
+export type MonitoringHubView = 'overview' | 'cohorts' | 'care';
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -128,7 +129,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
 
   useEffect(() => {
     const param = searchParams.get('view');
-    if (param === 'cohorts' || param === 'overview') {
+    if (param === 'cohorts' || param === 'overview' || param === 'care') {
       setView(param);
     }
   }, [searchParams]);
@@ -221,6 +222,17 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
         </button>
         <button
           type="button"
+          onClick={() => setHubView('care')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            view === 'care'
+              ? 'bg-violet-600 text-white'
+              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+          }`}
+        >
+          치료·과제
+        </button>
+        <button
+          type="button"
           onClick={() => setHubView('cohorts')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             view === 'cohorts'
@@ -232,7 +244,9 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
         </button>
       </div>
 
-      {view === 'cohorts' ? (
+      {view === 'care' ? (
+        <CounselorCareMonitoringView />
+      ) : view === 'cohorts' ? (
         <CounselorCohortMonitoringView
           liveHub={fullHub}
           isLive={isLive}

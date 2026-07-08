@@ -297,7 +297,7 @@ def list_counselor_care_assignments(
             "updatedAt": _iso_timestamp(data.get("updatedAt")),
             "completedAt": _iso_timestamp(data.get("completedAt")),
             "notifyAt": _iso_timestamp(data.get("notifyAt")),
-            "progress": _progress_for_assignment(db, doc.id),
+            "progress": _progress_for_assignment(db, doc.id, include_recent_entries=True),
         }
         rows.append((ts, item))
 

@@ -285,13 +285,27 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Wave 2 — 케어 할당 (Flask API 전용, T-2-01)
+    // Wave 2 — 케어 할당 (Flask API 쓰기, 상담사 읽기 — T-2-07 실시간 모니터링)
     match /careAssignments/{assignmentId} {
-      allow read, write: if false;
+      function isOwningCounselor() {
+        return request.auth != null
+          && resource.data.keys().hasAny(['counselorId'])
+          && resource.data.counselorId == request.auth.uid;
+      }
+
+      allow read: if isOwningCounselor();
+      allow write: if false;
     }
 
     match /careProgress/{progressId} {
-      allow read, write: if false;
+      function isOwningCounselor() {
+        return request.auth != null
+          && resource.data.keys().hasAny(['counselorId'])
+          && resource.data.counselorId == request.auth.uid;
+      }
+
+      allow read: if isOwningCounselor();
+      allow write: if false;
     }
 
     match /counselFaqMeta/{docId} {
