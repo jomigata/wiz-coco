@@ -10,6 +10,10 @@ concurrency:
   group: deploy-backend-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  secrets: write
+
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
@@ -101,6 +105,8 @@ jobs:
           fi
           if [ -n "${{ secrets.NOTIFICATION_CRON_SECRET }}" ]; then
             ENV_VARS="${ENV_VARS},NOTIFICATION_CRON_SECRET=${{ secrets.NOTIFICATION_CRON_SECRET }}"
+          else
+            echo "⚠️ NOTIFICATION_CRON_SECRET GitHub Secret 미설정 — Cron 워커(통지·cohort 리마인더)가 403으로 실패할 수 있습니다."
           fi
           ENV_VARS="${ENV_VARS},PUBLIC_SITE_URL=https://wizcoco.com"
           # CORS_ORIGINS는 쉼표가 gcloud --update-env-vars 구분자와 충돌 → backend/utils/cors_config.py 기본값 사용
@@ -134,7 +140,13 @@ jobs:
             --concurrency=80 \
             --cpu-throttling \
             --update-env-vars "${ENV_VARS}" \
-            --project "${PROJECT_ID}"
+            --project "${PROJECT_ID}" 2>&1 | tee /tmp/cloud-run-deploy.log
+
+          DEPLOY_URL=$(grep -Eo 'https://[^ ]+run\.app' /tmp/cloud-run-deploy.log | tail -1 || true)
+          if [ -n "${DEPLOY_URL}" ]; then
+            echo "DEPLOY_SERVICE_URL=${DEPLOY_URL}" >> $GITHUB_ENV
+            echo "✅ Deploy stdout URL: ${DEPLOY_URL}"
+          fi
 
       - name: 🔗 Output service URL
         run: |
@@ -143,9 +155,40 @@ jobs:
             exit 1
           fi
           URL=$(gcloud run services describe "${{ env.SERVICE_NAME }}" --region "${{ env.REGION }}" --project "${PROJECT_ID}" --format 'value(status.url)')
+          if [ -n "${DEPLOY_SERVICE_URL:-}" ]; then
+            URL="${DEPLOY_SERVICE_URL}"
+            echo "ℹ️ health/sync에는 deploy stdout URL 사용"
+          fi
           echo "Cloud Run URL: $URL"
           echo "CLOUD_RUN_URL=$URL" >> $GITHUB_ENV
-          curl -sf "${URL}/api/health" | grep -q ok && echo "✅ /api/health OK" || echo "⚠️ /api/health 확인 실패 — 로그 점검 필요"
+
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            if curl -sf "${URL}/api/health" | grep -q ok; then
+              echo "✅ /api/health OK (attempt ${i})"
+              ok=1
+              break
+            fi
+            echo "⏳ /api/health 대기 중… (${i}/6)"
+            sleep 10
+          done
+          if [ "${ok}" -ne 1 ]; then
+            echo "⚠️ /api/health 확인 실패 — Cloud Run 로그 점검 필요"
+            gcloud logging read \
+              "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.SERVICE_NAME }}" \
+              --project "${PROJECT_ID}" \
+              --limit 20 \
+              --format='value(textPayload)' 2>/dev/null || true
+          fi
+
+      - name: 🔐 Sync NEXT_PUBLIC_FLASK_API_URL secret
+        if: env.CLOUD_RUN_URL != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          URL="${CLOUD_RUN_URL%/}"
+          echo "${URL}" | gh secret set NEXT_PUBLIC_FLASK_API_URL --repo "${GITHUB_REPOSITORY}"
+          echo "✅ GitHub Secret NEXT_PUBLIC_FLASK_API_URL 동기화 완료"
 
       - name: 🧹 Clean up old container images (keep latest 5)
         run: |

@@ -27,6 +27,13 @@ jobs:
             echo "NOTIFICATION_CRON_SECRET not set — skip"
             exit 0
           fi
+          HEALTH_URL="${FLASK_URL%/}/api/health"
+          echo "GET ${HEALTH_URL}"
+          if ! curl -sf "${HEALTH_URL}" | grep -q ok; then
+            echo "API health check failed — deploy-backend 또는 Cloud Run 상태를 확인하세요"
+            echo "docs/COHORT_REMINDER_CRON_SETUP_KO.md 참고"
+            exit 1
+          fi
           URL="${FLASK_URL%/}/api/notifications/cohort-reminders"
           echo "POST ${URL}"
           HTTP=$(curl -sS -o /tmp/cohort-reminder-out.json -w "%{http_code}" \

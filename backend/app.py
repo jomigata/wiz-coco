@@ -62,6 +62,7 @@ def create_app():
                 "/api/results",
                 "/api/client-portals",
                 "/api/notifications/process",
+                "/api/notifications/cohort-reminders",
                 "/api/admin/purge-assessment-data",
                 "/api/commerce/catalog",
                 "/api/commerce/credits",

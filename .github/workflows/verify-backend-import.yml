@@ -1,0 +1,22 @@
+name: Verify backend import
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+jobs:
+  import-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Import Flask app
+        working-directory: backend
+        run: python -c "from app import create_app; create_app(); print('import ok')"

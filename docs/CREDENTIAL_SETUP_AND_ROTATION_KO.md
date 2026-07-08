@@ -60,7 +60,19 @@ https://github.com/jomigata/wiz-coco/settings/secrets/actions
 
 자세한 연동: [FRONTEND_FLASK_INTEGRATION.md](./FRONTEND_FLASK_INTEGRATION.md)
 
-### A-5. GCP → Cloud Run 배포용
+> **자동 동기화:** `deploy-backend.yml`이 배포 직후 이 Secret을 Cloud Run URL로 갱신합니다.
+
+### A-5. Cron 공유 시크릿 → `NOTIFICATION_CRON_SECRET`
+
+통지 큐(`notification-worker.yml`)·cohort 리마인더(`cohort-reminder-worker.yml`)·관리 API가 사용합니다.
+
+1. 랜덤 문자열 생성 (32자 이상 권장): `openssl rand -hex 32`
+2. GitHub Secret: `NOTIFICATION_CRON_SECRET` = 위 값
+3. `deploy-backend.yml`이 동일 값을 Cloud Run env로 주입 — **백엔드 재배포 1회** 필요
+
+상세: [COHORT_REMINDER_CRON_SETUP_KO.md](./COHORT_REMINDER_CRON_SETUP_KO.md)
+
+### A-6. GCP → Cloud Run 배포용
 
 1. GCP Console → **IAM 및 관리자** → **서비스 계정** → CI 전용 계정 생성 또는 선택.
 2. 키 **JSON 추가** → 다운로드 (로컬만 보관).
