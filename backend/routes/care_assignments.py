@@ -1,7 +1,9 @@
 """케어 할당 API — T-2-01 스키마 메타, T-2-04부터 CRUD 구현."""
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 
 from config import CARE_ASSIGNMENTS_COLLECTION, CARE_PROGRESS_COLLECTION
+from firebase_init import get_firestore
+from auth_middleware import require_counselor
 from utils.care_assignment_schema import (
     SCHEMA_VERSION,
     CARE_ASSIGNMENT_TYPES,
@@ -11,6 +13,7 @@ from utils.care_assignment_schema import (
     CARE_PROGRESS_STATUSES,
     CARE_PROGRESS_ENTRY_KINDS,
     assignment_type_label,
+    CareAssignmentValidationError,
 )
 from utils.care_program_catalog import (
     CATALOG_VERSION as CARE_PROGRAM_CATALOG_VERSION,
@@ -19,6 +22,7 @@ from utils.care_program_catalog import (
     get_care_program_catalog_meta,
     list_care_programs,
 )
+from utils.care_assignments import create_care_assignments, list_counselor_care_assignments
 
 bp = Blueprint("care_assignments", __name__, url_prefix="/api/care-assignments")
 
@@ -50,16 +54,53 @@ def care_assignment_schema():
                 "GET /api/care-assignments/schema",
                 "GET /api/care-assignments/programs",
                 "GET /api/care-assignments/programs/<programId>",
-            ],
-            "plannedEndpoints": [
                 "POST /api/care-assignments",
                 "GET /api/care-assignments",
+            ],
+            "plannedEndpoints": [
                 "PATCH /api/care-assignments/{assignmentId}",
                 "GET /api/client-portals/care-assignments",
                 "POST /api/client-portals/care-assignments/{assignmentId}/progress",
             ],
         }
     )
+
+
+@bp.route("", methods=["POST"])
+@require_counselor
+def create_care_assignment_route():
+    db = get_firestore()
+    body = request.get_json(silent=True) or {}
+    try:
+        result = create_care_assignments(db, g.counselor_uid, body)
+    except CareAssignmentValidationError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "Internal Server Error", "message": str(exc)}), 500
+    status_code = 201 if result.get("assigned", 0) > 0 else 200
+    return jsonify(result), status_code
+
+
+@bp.route("", methods=["GET"])
+@require_counselor
+def list_care_assignment_route():
+    db = get_firestore()
+    portal_id = (request.args.get("portalId") or "").strip() or None
+    status = (request.args.get("status") or "").strip() or None
+    assignment_type = (request.args.get("type") or "").strip() or None
+    try:
+        limit = int(request.args.get("limit") or 50)
+    except ValueError:
+        limit = 50
+    result = list_counselor_care_assignments(
+        db,
+        g.counselor_uid,
+        portal_id=portal_id,
+        status=status,
+        assignment_type=assignment_type,
+        limit=limit,
+    )
+    return jsonify(result)
 
 
 @bp.route("/programs", methods=["GET"])

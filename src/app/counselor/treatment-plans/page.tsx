@@ -1,10 +1,21 @@
-import AdminPageLayout from '@/components/AdminPageLayout';
+'use client';
+
+import CounselorTreatmentPlansPanel from '@/components/counselor/CounselorTreatmentPlansPanel';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
 export default function TreatmentPlansPage() {
-  return (
-    <AdminPageLayout title="치료 계획">
-      <p>치료 계획을 수립하는 페이지입니다.</p>
-      {/* 여기에 치료 계획 관련 콘텐츠를 추가하세요 */}
-    </AdminPageLayout>
-  );
+  const { authPending, showLoginRequired } = useAuthResolved();
+
+  if (authPending) {
+    return <AuthLoadingState className="py-16" message="확인 중…" />;
+  }
+
+  if (showLoginRequired) {
+    return (
+      <AuthRequiredState description="Firebase에 로그인한 상태에서 치료 계획을 이용할 수 있습니다." />
+    );
+  }
+
+  return <CounselorTreatmentPlansPanel />;
 }
