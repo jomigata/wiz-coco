@@ -28,6 +28,7 @@ import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import NavMenuDivider from '@/components/nav/NavMenuDivider';
 import NavMegaMenuBackdrop from '@/components/nav/NavMegaMenuBackdrop';
 import { APP_HEADER_BG, APP_HEADER_HEIGHT_CLASS } from '@/lib/appChromeLayout';
+import { NAV_MEGA_MENU_BG } from '@/components/layout/appChromeTheme';
 
 export default function Navigation() {
   const router = useRouter();
@@ -901,7 +902,8 @@ export default function Navigation() {
                       {isDropdownOpen && (
                         <div
                           data-dropdown-menu="user"
-                          className="absolute right-0 top-full z-[60] -mt-px w-96 min-w-[24rem] max-w-[28rem] rounded-2xl border border-green-500/30 bg-[#0a1020] pt-3 pb-8 shadow-2xl animate-fadeIn"
+                          className="absolute right-0 top-full z-[60] -mt-px w-96 min-w-[24rem] max-w-[28rem] rounded-2xl border border-sky-400/15 pt-3 pb-8 shadow-2xl animate-fadeIn"
+                          style={{ backgroundColor: NAV_MEGA_MENU_BG }}
                           onMouseMove={(e) => handleMouseMove('user', e)}
                         >
                           <div className="relative">
