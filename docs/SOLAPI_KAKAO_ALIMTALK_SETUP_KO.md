@@ -1,5 +1,7 @@
 # Solapi 카카오 알림톡 연동 가이드
 
+> **처음이신가요?** 단계별 체크리스트: [SOLAPI_QUICKSTART_KO.md](./SOLAPI_QUICKSTART_KO.md)
+
 WizCoCo는 [Solapi](https://solapi.com) REST API로 카카오 알림톡을 발송합니다.  
 이메일 실패(또는 미입력) 시 전화번호가 있으면 알림톡을 시도하고, 알림톡도 실패하면 SMS로 대체발송합니다.
 
