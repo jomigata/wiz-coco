@@ -456,7 +456,7 @@ export default function Navigation() {
       `}</style>
       <NavMegaMenuBackdrop open={hasDesktopMegaMenu} onClose={() => setActiveMenu(null)} />
       <nav
-        className={`w-full ${appChromeClasses.header} ${hasDesktopMegaMenu ? 'bg-[#0a1020]/98 shadow-[0_12px_40px_rgba(0,0,0,0.45)]' : ''}`}
+        className={`w-full ${appChromeClasses.header} ${hasDesktopMegaMenu ? 'bg-[#0a1020] shadow-[0_12px_40px_rgba(0,0,0,0.45)]' : ''}`}
         style={{ contain: 'layout' }}
       >
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 h-16 min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3">
