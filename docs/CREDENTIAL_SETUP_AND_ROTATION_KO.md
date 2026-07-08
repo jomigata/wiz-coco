@@ -76,6 +76,21 @@ gh secret set NEXT_PUBLIC_FLASK_API_URL --body "https://wizcoco-api-....run.app"
 
 상세: [COHORT_REMINDER_CRON_SETUP_KO.md](./COHORT_REMINDER_CRON_SETUP_KO.md)
 
+### A-5b. Solapi 카카오 알림톡 (선택)
+
+1. [Solapi 콘솔](https://console.solapi.com)에서 API Key·Secret, 발신번호, 카카오 pfId, 알림톡 템플릿 3종 승인
+2. 로컬에 값만 저장 (Git 금지):
+
+```bash
+copy backend\.env.solapi.example backend\.env.solapi
+# backend/.env.solapi 에 7개 값 입력
+npm run secrets:solapi
+```
+
+3. 배포 완료 후: `npm run verify:solapi`
+
+상세: [SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md](./SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md)
+
 ### A-6. GCP → Cloud Run 배포용
 
 1. GCP Console → **IAM 및 관리자** → **서비스 계정** → CI 전용 계정 생성 또는 선택.
