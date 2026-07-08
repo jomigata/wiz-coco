@@ -17,7 +17,11 @@ from utils.sms_notify import (
     send_test_reminder_sms,
     send_care_assignment_sms,
 )
-from utils.kakao_alimtalk import send_care_assignment_alimtalk, send_test_reminder_alimtalk
+from utils.kakao_alimtalk import (
+    send_care_assignment_alimtalk,
+    send_portal_credentials_alimtalk,
+    send_test_reminder_alimtalk,
+)
 from utils.portal_magic import create_portal_magic_link_token
 
 
@@ -38,6 +42,7 @@ def deliver_portal_credentials(
 
     email_ok = False
     sms_ok = False
+    alimtalk_ok = False
     errors = []
 
     if email:
@@ -55,7 +60,19 @@ def deliver_portal_credentials(
         else:
             errors.append("smtp_not_configured")
 
-    if phone:
+    if phone and not email_ok:
+        alimtalk_ok, alimtalk_err = send_portal_credentials_alimtalk(
+            to_phone=phone,
+            display_name=display_name,
+            access_code=access_code,
+            pin=pin,
+            join_access_code=join_access_code,
+            magic_url=magic_url,
+        )
+        if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
+            errors.append(alimtalk_err)
+
+    if phone and not email_ok and not alimtalk_ok:
         sms_ok, sms_err = send_portal_credentials_sms(
             to_phone=phone,
             access_code=access_code,
@@ -316,6 +333,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 errors = result["errors"]
                 email_ok = result.get("sentVia") == "email"
                 sms_ok = result.get("sentVia") == "sms"
+                alimtalk_ok = result.get("sentVia") == "kakao_alimtalk"
 
                 if status == "sent":
                     sent += 1
@@ -329,6 +347,8 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     update_payload["error"] = "; ".join(errors)
                 if email_ok:
                     update_payload["sentVia"] = "email"
+                elif alimtalk_ok:
+                    update_payload["sentVia"] = "kakao_alimtalk"
                 elif sms_ok:
                     update_payload["sentVia"] = "sms"
                 doc.reference.update(update_payload)
@@ -359,6 +379,7 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 errors = result["errors"]
                 email_ok = result.get("sentVia") == "email"
                 sms_ok = result.get("sentVia") == "sms"
+                alimtalk_ok = result.get("sentVia") == "kakao_alimtalk"
 
                 if status == "sent":
                     sent += 1
@@ -372,6 +393,8 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     update_payload["error"] = "; ".join(errors)
                 if email_ok:
                     update_payload["sentVia"] = "email"
+                elif alimtalk_ok:
+                    update_payload["sentVia"] = "kakao_alimtalk"
                 elif sms_ok:
                     update_payload["sentVia"] = "sms"
                 if magic_path:

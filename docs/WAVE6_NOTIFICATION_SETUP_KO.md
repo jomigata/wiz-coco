@@ -46,8 +46,9 @@ GitHub Secrets (선택):
 | `SOLAPI_KAKAO_PF_ID` | 카카오 채널 pfId |
 | `SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER` | 검사 미완료 템플릿 ID |
 | `SOLAPI_KAKAO_TEMPLATE_CARE` | 케어·과제 템플릿 ID |
+| `SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS` | 포털 자격증명 템플릿 ID |
 
-템플릿 변수 예: `#{name}`, `#{title}`, `#{pending}`, `#{link}`
+상세 설정: [SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md](./SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md)
 
 발송 우선순위: **이메일 → 알림톡(전화번호) → SMS**
 
@@ -63,6 +64,8 @@ GitHub Secrets (선택):
 | POST | `/api/notifications/individual-reminders` | Cron Secret / Admin |
 | POST | `/api/notifications/care-reminders` | Cron Secret / Admin |
 | POST | `/api/notifications/reminders/assessment` | 상담사 Bearer |
+| GET | `/api/notifications/alimtalk/templates` | Cron Secret / Admin |
+| POST | `/api/notifications/alimtalk/test` | Cron Secret / Admin |
 
 상담사 수동 리마인더는 기존 `POST /api/client-portals/assessments/<id>/dispatch/remind`도 유지됩니다.
 

@@ -20,8 +20,13 @@ export interface NotificationChannelStatus {
   kakaoAlimtalk: {
     configured: boolean;
     provider: string | null;
-    templates: { testReminder: boolean; careAssignment: boolean };
+    templates: {
+      testReminder: boolean;
+      careAssignment: boolean;
+      portalCredentials: boolean;
+    };
     pfId: boolean;
+    sender?: boolean;
   };
   cron: Record<string, string>;
 }

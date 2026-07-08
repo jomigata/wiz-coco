@@ -1,63 +1,96 @@
-# Wave 6 — 카카오 알림톡 (Solapi REST API, T-6-03)
+# Wave 6 — 카카오 알림톡 (Solapi REST API)
 from __future__ import annotations
 
-import hashlib
-import hmac
-import json
 import logging
-import uuid
-from datetime import datetime, timezone
-from urllib import error, request
 
 from config import (
     PUBLIC_SITE_URL,
-    SOLAPI_API_KEY,
-    SOLAPI_API_SECRET,
     SOLAPI_KAKAO_PF_ID,
     SOLAPI_KAKAO_TEMPLATE_CARE,
+    SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS,
     SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
+    SOLAPI_SENDER,
 )
+from utils.solapi_client import is_solapi_configured, normalize_kr_phone, solapi_send_messages
 
 logger = logging.getLogger(__name__)
 
-SOLAPI_API_BASE = "https://api.solapi.com"
+# Solapi 콘솔 템플릿 등록 시 아래 변수명을 그대로 사용하세요.
+ALIMTALK_TEMPLATE_SPECS = {
+    "testReminder": {
+        "templateIdEnv": "SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER",
+        "variables": ["#{name}", "#{title}", "#{pending}", "#{link}"],
+        "sampleBody": (
+            "안녕하세요 #{name}님,\n"
+            "WizCoCo 심리검사 미완료 안내입니다.\n\n"
+            "검사명: #{title}\n"
+            "미완료: #{pending}\n\n"
+            "바로 시작: #{link}"
+        ),
+    },
+    "careAssignment": {
+        "templateIdEnv": "SOLAPI_KAKAO_TEMPLATE_CARE",
+        "variables": ["#{name}", "#{title}", "#{link}"],
+        "sampleBody": (
+            "안녕하세요 #{name}님,\n"
+            "담당 전문가가 새 치료·과제를 할당했습니다.\n\n"
+            "#{title}\n\n"
+            "바로 보기: #{link}"
+        ),
+    },
+    "portalCredentials": {
+        "templateIdEnv": "SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS",
+        "variables": ["#{name}", "#{mycode}", "#{pin}", "#{joincode}", "#{link}"],
+        "sampleBody": (
+            "안녕하세요 #{name}님,\n"
+            "WizCoCo 검사 접속 안내입니다.\n\n"
+            "검사코드: #{joincode}\n"
+            "나의코드: #{mycode}\n"
+            "비밀번호: #{pin}\n\n"
+            "바로 시작: #{link}"
+        ),
+    },
+}
 
 
 def is_alimtalk_configured() -> bool:
     return bool(
-        SOLAPI_API_KEY
-        and SOLAPI_API_SECRET
+        is_solapi_configured()
+        and SOLAPI_SENDER
         and SOLAPI_KAKAO_PF_ID
-        and (SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER or SOLAPI_KAKAO_TEMPLATE_CARE)
+        and (
+            SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER
+            or SOLAPI_KAKAO_TEMPLATE_CARE
+            or SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS
+        )
     )
 
 
-def _solapi_headers() -> dict[str, str]:
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    salt = str(uuid.uuid4())
-    message = date + salt
-    signature = hmac.new(
-        SOLAPI_API_SECRET.encode("utf-8"),
-        message.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-    authorization = (
-        f"HMAC-SHA256 ApiKey={SOLAPI_API_KEY}, "
-        f"Date={date}, Salt={salt}, Signature={signature}"
-    )
+def get_alimtalk_setup_info() -> dict:
+    """관리자용 템플릿 등록 가이드 (비밀값 미포함)."""
     return {
-        "Authorization": authorization,
-        "Content-Type": "application/json",
+        "provider": "solapi",
+        "pfIdConfigured": bool(SOLAPI_KAKAO_PF_ID),
+        "senderConfigured": bool(SOLAPI_SENDER),
+        "templates": {
+            key: {
+                "configured": bool(
+                    (key == "testReminder" and SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER)
+                    or (key == "careAssignment" and SOLAPI_KAKAO_TEMPLATE_CARE)
+                    or (key == "portalCredentials" and SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS)
+                ),
+                "templateIdEnv": spec["templateIdEnv"],
+                "variables": spec["variables"],
+                "sampleBody": spec["sampleBody"],
+            }
+            for key, spec in ALIMTALK_TEMPLATE_SPECS.items()
+        },
     }
 
 
-def _normalize_phone(phone: str) -> str:
-    digits = "".join(c for c in str(phone or "") if c.isdigit())
-    if digits.startswith("82"):
-        return digits
-    if digits.startswith("0"):
-        return "82" + digits[1:]
-    return digits
+def _format_pin_display(pin: str) -> str:
+    digits = "".join(c for c in str(pin or "") if c.isdigit())
+    return digits.zfill(4)[-4:] if digits else str(pin or "")
 
 
 def _send_alimtalk(
@@ -65,51 +98,36 @@ def _send_alimtalk(
     to_phone: str,
     template_id: str,
     variables: dict[str, str],
+    fallback_text: str,
 ) -> tuple[bool, str]:
-    phone = _normalize_phone(to_phone)
+    phone = normalize_kr_phone(to_phone)
     if not phone:
         return False, "no_phone"
-    if not is_alimtalk_configured():
-        return False, "alimtalk_not_configured"
     if not template_id:
         return False, "template_not_configured"
+    if not is_alimtalk_configured():
+        return False, "alimtalk_not_configured"
 
-    payload = {
-        "messages": [
+    ok, err, _ = solapi_send_messages(
+        [
             {
                 "to": phone,
-                "from": SOLAPI_KAKAO_PF_ID,
+                "from": SOLAPI_SENDER,
+                "text": (fallback_text or "WizCoCo 알림")[:2000],
                 "kakaoOptions": {
                     "pfId": SOLAPI_KAKAO_PF_ID,
                     "templateId": template_id,
                     "variables": variables,
+                    "disableSms": False,
                 },
             }
         ]
-    }
-
-    req = request.Request(
-        f"{SOLAPI_API_BASE}/messages/v4/send-many",
-        data=json.dumps(payload).encode("utf-8"),
-        headers=_solapi_headers(),
-        method="POST",
     )
-    try:
-        with request.urlopen(req, timeout=15) as resp:
-            body = json.loads(resp.read().decode("utf-8"))
-            if body.get("errorCode"):
-                return False, str(body.get("errorMessage") or body.get("errorCode"))[:200]
-            return True, ""
-    except error.HTTPError as exc:
-        try:
-            detail = exc.read().decode("utf-8")[:200]
-        except Exception:
-            detail = str(exc)
-        logger.warning("Alimtalk HTTP error: %s", detail)
-        return False, detail
-    except Exception as exc:
-        logger.exception("Alimtalk send failed")
-        return False, str(exc)[:200]
+    if ok:
+        return True, ""
+    if err == "alimtalk_not_configured":
+        return False, err
+    return False, err or "alimtalk_send_failed"
 
 
 def send_test_reminder_alimtalk(
@@ -120,20 +138,21 @@ def send_test_reminder_alimtalk(
     magic_url: str = "",
     pending_summary: str = "",
 ) -> tuple[bool, str]:
-    """검사 미완료 리마인더 알림톡."""
     name = (display_name or "").strip() or "내담자"
     title = (assessment_title or "").strip() or "심리검사"
     link = magic_url or f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
     variables = {
-        "#{name}": name,
+        "#{name}": name[:20],
         "#{title}": title[:40],
         "#{pending}": (pending_summary or "미완료 검사")[:80],
         "#{link}": link,
     }
+    fallback = f"[WizCoCo] {name}님 검사 미완료 안내. {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
         variables=variables,
+        fallback_text=fallback,
     )
 
 
@@ -144,17 +163,48 @@ def send_care_assignment_alimtalk(
     assignment_title: str = "",
     magic_url: str = "",
 ) -> tuple[bool, str]:
-    """치료·과제 리마인더 알림톡."""
     name = (display_name or "").strip() or "내담자"
     title = (assignment_title or "").strip() or "치료·과제"
     link = magic_url or f"{PUBLIC_SITE_URL.rstrip('/')}/portal/?tab=care"
     variables = {
-        "#{name}": name,
+        "#{name}": name[:20],
         "#{title}": title[:40],
         "#{link}": link,
     }
+    fallback = f"[WizCoCo] {name}님 치료·과제 안내. {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_CARE,
         variables=variables,
+        fallback_text=fallback,
+    )
+
+
+def send_portal_credentials_alimtalk(
+    *,
+    to_phone: str,
+    display_name: str = "",
+    access_code: str = "",
+    pin: str = "",
+    join_access_code: str = "",
+    magic_url: str = "",
+) -> tuple[bool, str]:
+    name = (display_name or "").strip() or "내담자"
+    my_code = (access_code or "").strip().upper()
+    join_code = (join_access_code or "").strip().upper() or "-"
+    pin_display = _format_pin_display(pin)
+    link = magic_url or f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
+    variables = {
+        "#{name}": name[:20],
+        "#{mycode}": my_code or "-",
+        "#{pin}": pin_display,
+        "#{joincode}": join_code,
+        "#{link}": link,
+    }
+    fallback = f"[WizCoCo] {name}님 검사시작. 나의코드 {my_code} 비밀번호 {pin_display} {link}"
+    return _send_alimtalk(
+        to_phone=to_phone,
+        template_id=SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS,
+        variables=variables,
+        fallback_text=fallback,
     )

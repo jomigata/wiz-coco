@@ -12,6 +12,12 @@ from utils.cohort_reminder_worker import process_cohort_incomplete_reminders
 from utils.individual_reminder_worker import process_individual_incomplete_reminders
 from utils.care_reminder_worker import process_care_due_reminders
 from utils.notification_channels import get_notification_channel_status
+from utils.kakao_alimtalk import (
+    get_alimtalk_setup_info,
+    send_care_assignment_alimtalk,
+    send_portal_credentials_alimtalk,
+    send_test_reminder_alimtalk,
+)
 from utils.assessment_dispatch import send_test_reminders
 from utils.portal_magic import create_portal_magic_link_token
 from config import BULK_PORTAL_BATCH_SIZE
@@ -55,6 +61,56 @@ def require_cron_or_admin(f):
 def notification_status():
     """알림 채널·Cron 설정 상태 (Wave 6)."""
     return jsonify(get_notification_channel_status())
+
+
+@bp.route("/alimtalk/templates", methods=["GET"])
+@require_cron_or_admin
+def alimtalk_templates():
+    """Solapi 알림톡 템플릿 등록 가이드 (비밀값 미포함)."""
+    return jsonify(get_alimtalk_setup_info())
+
+
+@bp.route("/alimtalk/test", methods=["POST"])
+@require_cron_or_admin
+def alimtalk_test():
+    """관리자·Cron용 알림톡 테스트 발송."""
+    body = request.get_json(silent=True) or {}
+    template = (body.get("template") or "testReminder").strip()
+    to_phone = (body.get("phone") or body.get("toPhone") or "").strip()
+    if not to_phone:
+        return jsonify({"error": "Bad Request", "message": "phone이 필요합니다."}), 400
+
+    display_name = (body.get("displayName") or "테스트").strip()
+    magic_url = (body.get("magicUrl") or "").strip()
+
+    if template == "careAssignment":
+        ok, err = send_care_assignment_alimtalk(
+            to_phone=to_phone,
+            display_name=display_name,
+            assignment_title=(body.get("title") or "테스트 치료·과제").strip(),
+            magic_url=magic_url,
+        )
+    elif template == "portalCredentials":
+        ok, err = send_portal_credentials_alimtalk(
+            to_phone=to_phone,
+            display_name=display_name,
+            access_code=(body.get("accessCode") or "TEST01").strip(),
+            pin=(body.get("pin") or "1234").strip(),
+            join_access_code=(body.get("joinAccessCode") or "JOIN01").strip(),
+            magic_url=magic_url,
+        )
+    else:
+        ok, err = send_test_reminder_alimtalk(
+            to_phone=to_phone,
+            display_name=display_name,
+            assessment_title=(body.get("title") or "테스트 심리검사").strip(),
+            magic_url=magic_url,
+            pending_summary=(body.get("pending") or "미완료 검사 1건").strip(),
+        )
+
+    if ok:
+        return jsonify({"ok": True, "template": template, "sentVia": "kakao_alimtalk"})
+    return jsonify({"ok": False, "template": template, "error": err or "alimtalk_send_failed"}), 502
 
 
 @bp.route("/process", methods=["POST"])

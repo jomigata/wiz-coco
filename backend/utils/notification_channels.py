@@ -6,17 +6,20 @@ from config import (
     SOLAPI_API_SECRET,
     SOLAPI_KAKAO_PF_ID,
     SOLAPI_KAKAO_TEMPLATE_CARE,
+    SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS,
     SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
     SOLAPI_SENDER,
     is_email_configured,
 )
-from utils.kakao_alimtalk import is_alimtalk_configured
+from utils.kakao_alimtalk import get_alimtalk_setup_info, is_alimtalk_configured
 from utils.sms_notify import is_sms_configured
+from utils.solapi_sms import is_solapi_sms_configured
 
 
 def get_notification_channel_status() -> dict:
     """이메일·SMS·카카오 알림톡 채널 설정 여부."""
-    solapi_sms = bool(SOLAPI_API_KEY and SOLAPI_API_SECRET and SOLAPI_SENDER)
+    solapi_sms = is_solapi_sms_configured()
+    alimtalk_setup = get_alimtalk_setup_info()
     return {
         "email": {
             "configured": is_email_configured(),
@@ -39,8 +42,11 @@ def get_notification_channel_status() -> dict:
             "templates": {
                 "testReminder": bool(SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER),
                 "careAssignment": bool(SOLAPI_KAKAO_TEMPLATE_CARE),
+                "portalCredentials": bool(SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS),
             },
             "pfId": bool(SOLAPI_KAKAO_PF_ID),
+            "sender": bool(SOLAPI_SENDER),
+            "setup": alimtalk_setup,
         },
         "cron": {
             "notificationWorker": "*/5 * * * *",

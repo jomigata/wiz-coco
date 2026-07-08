@@ -111,6 +111,7 @@ jobs:
           if [ -n "${{ secrets.SOLAPI_KAKAO_PF_ID }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_PF_ID=${{ secrets.SOLAPI_KAKAO_PF_ID }}"; fi
           if [ -n "${{ secrets.SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER=${{ secrets.SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER }}"; fi
           if [ -n "${{ secrets.SOLAPI_KAKAO_TEMPLATE_CARE }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_TEMPLATE_CARE=${{ secrets.SOLAPI_KAKAO_TEMPLATE_CARE }}"; fi
+          if [ -n "${{ secrets.SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS }}" ]; then ENV_VARS="${ENV_VARS},SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS=${{ secrets.SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS }}"; fi
           # CORS_ORIGINS는 쉼표가 gcloud --update-env-vars 구분자와 충돌 → backend/utils/cors_config.py 기본값 사용
 
           if [ -n "${SMTP_HOST}" ] && [ -n "${SMTP_USER}" ] && [ -n "${SMTP_PASSWORD}" ]; then

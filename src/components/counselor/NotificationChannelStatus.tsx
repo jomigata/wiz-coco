@@ -56,8 +56,8 @@ export default function NotificationChannelStatus() {
     ? status.sms.providers.join(', ')
     : undefined;
   const alimtalkDetail = status.kakaoAlimtalk.configured
-    ? `검사·케어 템플릿 ${status.kakaoAlimtalk.templates.testReminder ? '✓' : '—'} / ${status.kakaoAlimtalk.templates.careAssignment ? '✓' : '—'}`
-    : 'Solapi pfId·템플릿 Secret 필요';
+    ? `검사 ${status.kakaoAlimtalk.templates.testReminder ? '✓' : '—'} · 케어 ${status.kakaoAlimtalk.templates.careAssignment ? '✓' : '—'} · 포털 ${status.kakaoAlimtalk.templates.portalCredentials ? '✓' : '—'}`
+    : 'Solapi 발신번호·pfId·템플릿 Secret 필요';
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
