@@ -73,7 +73,7 @@ function pickBestResultsForPortal(
   return byTest;
 }
 
-function buildTestsForPortal(
+export function buildTestsForPortal(
   portalId: string,
   testList: { testId: string; name: string }[],
   results: RealtimeTestResultDoc[],

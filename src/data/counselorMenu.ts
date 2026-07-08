@@ -131,9 +131,9 @@ export const counselorMenuCategories: TestCategory[] = [
             icon: '📋',
           },
           {
-            name: '진행 상황',
+            name: '통합 모니터링',
             href: '/counselor/progress',
-            description: '치료 진행 상황 추적',
+            description: '검사코드·내담자 진행 실시간 허브',
             icon: '📈',
           },
         ],

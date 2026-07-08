@@ -11,6 +11,7 @@ import type {
   CounselorClientPortalDetailResult,
   CounselorPortalTestAssignmentListResult,
   CounselorPushAssessmentResult,
+  CounselorMonitoringHubResult,
 } from '@/types/clientPortal';
 import { getCounselorToken } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
@@ -445,4 +446,24 @@ export async function pushAssessmentsToPortals(body: {
     throw new Error(typeof data?.message === 'string' ? data.message : '추가 검사 push에 실패했습니다.');
   }
   return data as CounselorPushAssessmentResult;
+}
+
+export async function fetchCounselorMonitoringHub(params?: {
+  cohortId?: string;
+}): Promise<CounselorMonitoringHubResult> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const search = new URLSearchParams();
+  if (params?.cohortId) search.set('cohortId', params.cohortId);
+  const qs = search.toString() ? `?${search.toString()}` : '';
+
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/monitoring${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '모니터링 허브 조회에 실패했습니다.');
+  }
+  return data as CounselorMonitoringHubResult;
 }

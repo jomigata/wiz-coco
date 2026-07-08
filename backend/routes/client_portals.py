@@ -62,6 +62,7 @@ from utils.client_portal_list import (
     list_counselor_portal_test_assignments,
 )
 from utils.portal_assessment_push import push_assessments_to_portals
+from utils.counselor_monitoring import get_counselor_monitoring_hub
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -253,6 +254,16 @@ def push_assessments():
         return jsonify({"error": "Payment Required", **result}), 402
 
     return jsonify(result), 201
+
+
+@bp.route("/monitoring", methods=["GET"])
+@require_counselor
+def counselor_monitoring_hub():
+    """상담사 통합 모니터링 허브 — 전체 검사코드·진행 요약."""
+    cohort_id = (request.args.get("cohortId") or "").strip() or None
+    db = get_firestore()
+    result = get_counselor_monitoring_hub(db, g.counselor_uid, cohort_id=cohort_id)
+    return jsonify(result)
 
 
 @bp.route("/login", methods=["POST"])

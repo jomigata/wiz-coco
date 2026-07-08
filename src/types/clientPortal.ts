@@ -192,6 +192,65 @@ export type CounselorPushAssessmentResult = {
   };
 };
 
+export type CounselorMonitoringRecipient = {
+  portalId: string;
+  displayName: string;
+  notifyStatus: string;
+  notifyError?: string | null;
+  notifyAt?: string | null;
+  testStatus: 'completed' | 'in_progress' | 'not_started';
+  completedCount: number;
+  requiredCount: number;
+};
+
+export type CounselorMonitoringAssessment = {
+  assessmentId: string;
+  title: string;
+  joinAccessCode: string;
+  cohortName?: string | null;
+  testList: { testId: string; name: string }[];
+  requiredPerRecipient: number;
+  recipientCount: number;
+  completedRecipients: number;
+  inProgressRecipients: number;
+  notStartedRecipients: number;
+  notifyFailedCount: number;
+  totalTests: number;
+  completedTests: number;
+  progress: {
+    totalTests: number;
+    completedTests: number;
+    percent: number;
+    label: ClientPortalProgressLabel;
+  };
+  recipients: CounselorMonitoringRecipient[];
+};
+
+export type CounselorMonitoringActivity = {
+  resultId: string;
+  portalId: string;
+  displayName: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  testId: string;
+  completedAt?: string | null;
+};
+
+export type CounselorMonitoringHubResult = {
+  summary: {
+    activeAssessments: number;
+    activePortals: number;
+    totalRecipients: number;
+    completedRecipients: number;
+    inProgressRecipients: number;
+    notStartedRecipients: number;
+    notifyFailedCount: number;
+  };
+  assessments: CounselorMonitoringAssessment[];
+  recentActivity: CounselorMonitoringActivity[];
+  cohorts: CounselorClientPortalCohort[];
+};
+
 export type CounselorClientPortalAssessmentDetail = {
   assessmentId: string;
   title: string;

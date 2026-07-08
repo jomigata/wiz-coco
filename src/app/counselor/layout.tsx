@@ -93,7 +93,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   const getPageTitle = (path: string): string => {
     if (path.startsWith('/counselor/assessments/deleted-recipients')) return '삭제된 검사자';
     if (path.startsWith('/counselor/assessments/new')) return '새 검사코드 만들기';
-    if (path.startsWith('/counselor/assessments/progress')) return '진행현황';
+    if (path.startsWith('/counselor/assessments/progress')) return '진행·모니터링';
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '검사코드 수정';
     if (path.startsWith('/counselor/assessments')) return '검사코드 목록';
@@ -110,7 +110,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       '/counselor/test-recommendations': '검사 추천',
       '/counselor/test-codes': '검사코드 관리',
       '/counselor/notes': '상담 노트',
-      '/counselor/progress': '진행 상황',
+      '/counselor/progress': '통합 모니터링',
       '/counselor/resources': '상담 자료'
     };
     return titleMap[path] || '상담사 대시보드';
