@@ -78,6 +78,10 @@ ORG_CREDIT_LEDGER_COLLECTION = "orgCreditLedger"
 B2C_ENTITLEMENTS_COLLECTION = "b2cEntitlements"
 API_KEYS_COLLECTION = "apiKeys"
 
+# Wave 2 — 케어 플랜 (T-2-01)
+CARE_ASSIGNMENTS_COLLECTION = "careAssignments"
+CARE_PROGRESS_COLLECTION = "careProgress"
+
 # 공개 사이트 URL (매직 링크·초대 메일)
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/")
 

@@ -1,132 +1,47 @@
 {
   "indexes": [
     {
-      "collectionGroup": "assessments",
+      "collectionGroup": "careAssignments",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "counselorId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "accessCode", "order": "ASCENDING" },
-        { "fieldPath": "clientEmail", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "assessmentId", "order": "ASCENDING" },
-        { "fieldPath": "clientEmail", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "clientUid", "order": "ASCENDING" },
-        { "fieldPath": "completedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "accessCode", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "accessCode", "order": "ASCENDING" },
-        { "fieldPath": "portalId", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "notificationQueue",
-      "queryScope": "COLLECTION",
-      "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "testResults",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "email", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "testResults",
+      "collectionGroup": "careAssignments",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "clientEmail", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "clientCounselorRelations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "clientId", "order": "ASCENDING" },
-        { "fieldPath": "isActive", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "aiCounselSessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "clientId", "order": "ASCENDING" },
-        { "fieldPath": "type", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "counselorApplications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "applicantUid", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "counselorApplications",
-      "queryScope": "COLLECTION",
-      "fields": [
+        { "fieldPath": "portalId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "counselorCodes",
+      "collectionGroup": "careAssignments",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "codeNumber", "order": "ASCENDING" },
-        { "fieldPath": "isActive", "order": "ASCENDING" }
+        { "fieldPath": "counselorId", "order": "ASCENDING" },
+        { "fieldPath": "portalId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "counselorCodes",
+      "collectionGroup": "careProgress",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "codeName", "order": "ASCENDING" },
-        { "fieldPath": "isActive", "order": "ASCENDING" }
+        { "fieldPath": "portalId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "careProgress",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "counselorId", "order": "ASCENDING" },
+        { "fieldPath": "assignmentId", "order": "ASCENDING" }
       ]
     }
   ],

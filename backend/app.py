@@ -18,6 +18,7 @@ from routes.admin_organizations import bp as admin_organizations_bp
 from routes.organizations import bp as organizations_bp
 from routes.b2c import bp as b2c_bp
 from routes.public_api import bp as public_api_bp, admin_bp as developer_admin_bp
+from routes.care_assignments import bp as care_assignments_bp
 
 
 def create_app():
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(public_api_bp)
     app.register_blueprint(developer_admin_bp)
     app.register_blueprint(admin_organizations_bp)
+    app.register_blueprint(care_assignments_bp)
 
     @app.route("/", methods=["GET"])
     def root():

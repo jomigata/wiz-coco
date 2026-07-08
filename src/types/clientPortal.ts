@@ -21,6 +21,10 @@ export interface ClientPortal {
   cohortId?: string;
   cohortName?: string;
   assignedAssessmentIds: string[];
+  /** T-2-01 — 상담사가 push한 케어 할당 ID 목록 */
+  careAssignmentIds?: string[];
+  /** T-2-08 — 마지막 케어 알림 발송 시각 */
+  lastCareNotifiedAt?: string;
   status: ClientPortalStatus;
   createdAt?: string;
   updatedAt?: string;
