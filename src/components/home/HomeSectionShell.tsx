@@ -1,17 +1,12 @@
 import type { ReactNode } from 'react';
-import {
-  homeSectionDividerBottom,
-  homeSectionDividerTop,
-  homeSectionTones,
-  type HomeSectionTone,
-} from '@/components/home/homeSectionStyles';
+import { homeSectionDivider, homeSectionTopShade, homeSectionTones, type HomeSectionTone } from '@/components/home/homeSectionStyles';
 
 type Props = {
   tone: HomeSectionTone;
   children: ReactNode;
   className?: string;
   showTopDivider?: boolean;
-  showBottomDivider?: boolean;
+  showTopShade?: boolean;
   showBottomFade?: boolean;
 };
 
@@ -20,14 +15,18 @@ export default function HomeSectionShell({
   children,
   className = '',
   showTopDivider = true,
-  showBottomDivider = true,
-  showBottomFade = false,
+  showTopShade = true,
+  showBottomFade = true,
 }: Props) {
   const t = homeSectionTones[tone];
 
   return (
     <section className={`relative overflow-hidden ${t.section} ${className}`}>
-      {showTopDivider && <div className={homeSectionDividerTop} aria-hidden />}
+      {showTopShade && tone !== 'hero' && <div className={homeSectionTopShade} aria-hidden />}
+      {showTopDivider && tone !== 'hero' && <div className={homeSectionDivider} aria-hidden />}
+      {'topBlend' in t && t.topBlend && (
+        <div className={`pointer-events-none absolute inset-x-0 top-0 h-20 ${t.topBlend}`} aria-hidden />
+      )}
       {'glow' in t && t.glow && (
         <div className={`pointer-events-none absolute inset-0 ${t.glow}`} aria-hidden />
       )}
@@ -36,11 +35,10 @@ export default function HomeSectionShell({
       )}
       {showBottomFade && 'bottomFade' in t && t.bottomFade && (
         <div
-          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-16 bg-gradient-to-b ${t.bottomFade}`}
+          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-b ${t.bottomFade}`}
           aria-hidden
         />
       )}
-      {showBottomDivider && <div className={homeSectionDividerBottom} aria-hidden />}
       <div className="relative z-[2]">{children}</div>
     </section>
   );

@@ -8,11 +8,11 @@ import MonetizationChannelSection from '@/components/monetization/MonetizationCh
 import MonetizationPricingSection from '@/components/monetization/MonetizationPricingSection';
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
 import MonetizationPartnerSection from '@/components/monetization/MonetizationPartnerSection';
-import { APP_PAGE_BG } from '@/components/layout/appChromeTheme';
+import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 
 export default function HomePageContent() {
   return (
-    <div className="min-h-full" style={{ backgroundColor: APP_PAGE_BG }}>
+    <div className="min-h-full" style={{ backgroundColor: HOME_PAGE_BG }}>
       <div className="pt-16">
         <main className="flex-grow">
           <HeroSection />

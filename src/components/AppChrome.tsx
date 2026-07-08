@@ -2,21 +2,19 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useState, memo } from 'react';
 import Navigation from '@/components/Navigation';
-import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext';
 import AppFooter from '@/components/layout/AppFooter';
-import { APP_FOOTER_OFFSET_CLASS, appChromeClasses } from '@/components/layout/appChromeTheme';
+import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext';
+import { APP_CHROME_BG, APP_FOOTER_PB } from '@/lib/appChromeLayout';
 
 const MemoNavigation = memo(Navigation);
 
 type ChromeNavContextValue = {
-  /** true이면 전역 상단 네비게이션을 숨김 (전체 화면 검사 단계 등) */
   topNavHidden: boolean;
   setTopNavHidden: (hidden: boolean) => void;
 };
 
 const ChromeNavContext = createContext<ChromeNavContextValue | null>(null);
 
-/** 레이아웃 밖에서는 숨김 제어만 noop 처리됩니다. */
 export function useAppChromeNav(): ChromeNavContextValue {
   const ctx = useContext(ChromeNavContext);
   return (
@@ -27,10 +25,6 @@ export function useAppChromeNav(): ChromeNavContextValue {
   );
 }
 
-/**
- * 전역 상단 네비게이션을 한 곳에서만 렌더링해 페이지 전환 시 리마운트·깜빡임을 줄입니다.
- * 하위 페이지는 기존처럼 본문에 pt-16 등 오프셋을 유지하면 됩니다.
- */
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [topNavHidden, setTopNavHiddenState] = useState(false);
   const setTopNavHidden = useCallback((hidden: boolean) => {
@@ -45,14 +39,14 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <FirebaseAuthProvider>
       <ChromeNavContext.Provider value={value}>
-        <div className={`min-h-screen flex flex-col ${appChromeClasses.page}`}>
+        <div className="min-h-dvh flex flex-col" style={{ backgroundColor: APP_CHROME_BG }}>
           {!topNavHidden ? (
-            <div className="fixed left-0 right-0 top-0 z-[60]">
+            <div className="fixed left-0 right-0 top-0 z-50">
               <MemoNavigation />
             </div>
           ) : null}
-          <div className={`flex-1 min-h-0 ${APP_FOOTER_OFFSET_CLASS}`}>{children}</div>
-          <AppFooter />
+          <div className={`relative flex min-h-dvh flex-1 flex-col ${APP_FOOTER_PB}`}>{children}</div>
+          {!topNavHidden ? <AppFooter /> : null}
         </div>
       </ChromeNavContext.Provider>
     </FirebaseAuthProvider>

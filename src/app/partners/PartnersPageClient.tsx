@@ -6,7 +6,6 @@ import MonetizationTrustSection from '@/components/monetization/MonetizationTrus
 import CounselorProfessionalAccessGate, {
   CounselorProfessionalUnapprovedPrompt,
 } from '@/components/auth/CounselorProfessionalAccessGate';
-import { APP_PAGE_BG } from '@/components/layout/appChromeTheme';
 import { AuthLoadingState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
@@ -117,15 +116,15 @@ export default function PartnersPageClient() {
 
   if (authPending) {
     return (
-      <div className="min-h-screen pt-16" style={{ backgroundColor: APP_PAGE_BG }}>
+      <div className="min-h-screen bg-gray-900 pt-16">
         <AuthLoadingState message="확인 중…" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-16" style={{ backgroundColor: APP_PAGE_BG }}>
-      <div className="pt-0">
+    <div className="min-h-screen bg-gray-900">
+      <div className="pt-16">
         <CounselorProfessionalAccessGate
           loginFallback={<PartnersLoginPrompt />}
           unapprovedFallback={<CounselorProfessionalUnapprovedPrompt />}

@@ -17,6 +17,8 @@ type Props = {
   /** false: 로그인 아이콘만 */
   isLoggedIn?: boolean;
   access?: AccessState;
+  /** true: 좌측 세로 구분선 표시 (Navigation 우측 그룹은 NavMenuDivider 사용) */
+  showDivider?: boolean;
 };
 
 const iconBtnBase =
@@ -55,6 +57,7 @@ export default function ProfessionalAccessIcons({
   onNavigate,
   isLoggedIn = false,
   access,
+  showDivider = false,
 }: Props) {
   const btn = variant === 'dock' ? dockIconClass : navIconClass;
   const iconSize = variant === 'dock' ? 'h-5 w-5' : 'h-[18px] w-[18px]';
@@ -65,7 +68,11 @@ export default function ProfessionalAccessIcons({
     variant === 'dock' ? (
       <div className="flex flex-col gap-2">{node}</div>
     ) : (
-      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">{node}</div>
+      <div
+        className={`flex shrink-0 items-center gap-1 sm:gap-1.5${showDivider ? ' ml-1 border-l border-white/10 pl-2' : ''}`}
+      >
+        {node}
+      </div>
     );
 
   if (isLoggedIn) {

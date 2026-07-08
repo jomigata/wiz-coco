@@ -143,7 +143,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <div className="hidden text-right sm:block">
-                <p className="text-[10px] uppercase tracking-wide text-slate-500">상담관리</p>
+                <p className="text-[10px] uppercase tracking-wide text-slate-500">상담사</p>
                 <p className="text-sm font-medium text-slate-200">김상담</p>
               </div>
               <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] sm:h-9 sm:w-9">

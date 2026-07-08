@@ -3,7 +3,7 @@ import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 export default function MonetizationPartnerSection() {
   return (
-    <HomeSectionShell tone="partner" className="py-16 md:py-20">
+    <HomeSectionShell tone="partner" className="py-16 md:py-20" showBottomFade={false}>
       <div className="container max-w-4xl mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
           파트너 · 기관 도입 문의

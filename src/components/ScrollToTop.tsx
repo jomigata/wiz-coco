@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronUp } from 'lucide-react';
+import { APP_SCROLL_TO_TOP_BOTTOM } from '@/lib/appChromeLayout';
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -58,7 +59,7 @@ const ScrollToTop = () => {
 
   return (
     <div 
-      className={`fixed right-6 bottom-14 sm:right-8 sm:bottom-16 z-30 transition-all duration-500 global-scroll-button ${
+      className={`fixed right-8 ${APP_SCROLL_TO_TOP_BOTTOM} z-50 transition-all duration-500 global-scroll-button ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
       }`}
     >

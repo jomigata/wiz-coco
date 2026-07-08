@@ -7,8 +7,7 @@ import { portalLoginHref } from '@/lib/portalLoginIntent';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
-import { homeSectionDividerBottom, homeSectionTones } from '@/components/home/homeSectionStyles';
-import { appChromeClasses } from '@/components/layout/appChromeTheme';
+import { homeSectionTones } from '@/components/home/homeSectionStyles';
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,8 +26,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className={`relative min-h-[88vh] flex items-center overflow-hidden border-b border-white/[0.08] ${homeSectionTones.hero.section}`}>
-      <div className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-12 bg-gradient-to-b ${appChromeClasses.headerFade} to-transparent`} aria-hidden />
+    <section className={`relative min-h-[88vh] flex items-center overflow-hidden ${homeSectionTones.hero.section}`}>
       <div className={`absolute inset-0 ${homeSectionTones.hero.glow}`} />
       <div className={`absolute inset-0 ${homeSectionTones.hero.glowSecondary}`} />
       <div className="absolute inset-0 opacity-[0.025]">
@@ -42,7 +40,6 @@ export default function HeroSection() {
         </svg>
       </div>
 
-      <div className={homeSectionDividerBottom} aria-hidden />
       <div className="container relative z-10 py-20 md:py-28">
         <div
           className={`max-w-3xl mx-auto text-center transition-all duration-1000 ease-out ${
