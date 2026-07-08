@@ -156,6 +156,42 @@ export type CounselorPortalTestAssignmentListResult = {
   assessments: CounselorPortalTestAssignmentAssessment[];
 };
 
+export type CounselorPushAssessmentDetail = {
+  portalId: string;
+  status: 'assigned' | 'skipped' | 'failed';
+  displayName?: string;
+  message?: string;
+  notify?: {
+    status: string;
+    message?: string;
+    pendingCount?: number;
+    magicUrl?: string;
+    sentVia?: string | null;
+  };
+};
+
+export type CounselorPushAssessmentResult = {
+  assessmentId: string;
+  assessmentTitle: string;
+  joinAccessCode: string;
+  assigned: number;
+  skipped: number;
+  failed: number;
+  notify: {
+    sent: number;
+    failed: number;
+    skipped: number;
+  };
+  details: CounselorPushAssessmentDetail[];
+  credits?: {
+    counselorUid: string;
+    balance: number;
+    consumed: number;
+    warning?: string;
+    required?: number;
+  };
+};
+
 export type CounselorClientPortalAssessmentDetail = {
   assessmentId: string;
   title: string;

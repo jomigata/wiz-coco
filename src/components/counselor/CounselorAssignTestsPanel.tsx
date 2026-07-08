@@ -11,6 +11,7 @@ import type {
   CounselorPortalTestAssignmentRow,
   CounselorPortalTestAssignmentStatus,
 } from '@/types/clientPortal';
+import CounselorPushAssessmentPanel from '@/components/counselor/CounselorPushAssessmentPanel';
 
 type PortalStatusFilter = 'active' | 'archived' | 'all';
 type TestStatusFilter = 'all' | CounselorPortalTestAssignmentStatus;
@@ -57,6 +58,7 @@ export default function CounselorAssignTestsPanel() {
   const [testStatusFilter, setTestStatusFilter] = useState<TestStatusFilter>('all');
   const [cohortFilter, setCohortFilter] = useState('');
   const [assessmentFilter, setAssessmentFilter] = useState('');
+  const [selectedPortalIds, setSelectedPortalIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,6 +98,47 @@ export default function CounselorAssignTestsPanel() {
     const notStarted = items.filter((i) => i.status === 'not_started').length;
     return { total: items.length, completed, inProgress, notStarted };
   }, [items]);
+
+  const selectablePortals = useMemo(() => {
+    const map = new Map<
+      string,
+      { portalId: string; displayName: string; assessmentIds: Set<string> }
+    >();
+    for (const row of items) {
+      if (row.portalStatus !== 'active') continue;
+      const existing = map.get(row.portalId);
+      if (existing) {
+        existing.assessmentIds.add(row.assessmentId);
+      } else {
+        map.set(row.portalId, {
+          portalId: row.portalId,
+          displayName: row.displayName || '내담자',
+          assessmentIds: new Set([row.assessmentId]),
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.displayName.localeCompare(b.displayName, 'ko'),
+    );
+  }, [items]);
+
+  const togglePortal = (portalId: string) => {
+    setSelectedPortalIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(portalId)) next.delete(portalId);
+      else next.add(portalId);
+      return next;
+    });
+  };
+
+  const selectedAssignedAssessmentIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const portal of selectablePortals) {
+      if (!selectedPortalIds.has(portal.portalId)) continue;
+      portal.assessmentIds.forEach((id) => ids.add(id));
+    }
+    return Array.from(ids);
+  }, [selectablePortals, selectedPortalIds]);
 
   return (
     <div className="mx-auto w-full max-w-[1800px] space-y-5 px-4 py-5 sm:px-6">
@@ -254,7 +297,59 @@ export default function CounselorAssignTestsPanel() {
           </AuthLink>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+        <>
+          {selectablePortals.length > 0 ? (
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-slate-400">추가 검사 push 대상 내담자 선택</p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedPortalIds(
+                      selectedPortalIds.size === selectablePortals.length
+                        ? new Set()
+                        : new Set(selectablePortals.map((p) => p.portalId)),
+                    )
+                  }
+                  className="text-xs text-sky-400 hover:text-sky-300"
+                >
+                  {selectedPortalIds.size === selectablePortals.length ? '전체 해제' : '전체 선택'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectablePortals.map((p) => {
+                  const selected = selectedPortalIds.has(p.portalId);
+                  return (
+                    <button
+                      key={p.portalId}
+                      type="button"
+                      onClick={() => togglePortal(p.portalId)}
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        selected
+                          ? 'border-sky-500/50 bg-sky-500/20 text-sky-200'
+                          : 'border-white/15 text-slate-400 hover:bg-white/5'
+                      }`}
+                    >
+                      {p.displayName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {selectedPortalIds.size > 0 ? (
+            <CounselorPushAssessmentPanel
+              portalIds={Array.from(selectedPortalIds)}
+              assignedAssessmentIds={selectedAssignedAssessmentIds}
+              onSuccess={() => {
+                setSelectedPortalIds(new Set());
+                void load();
+              }}
+            />
+          ) : null}
+
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
           <table className="min-w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
@@ -319,6 +414,7 @@ export default function CounselorAssignTestsPanel() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

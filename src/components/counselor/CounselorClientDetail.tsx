@@ -15,6 +15,7 @@ import { printAssessmentReport, buildDefaultResultSections } from '@/lib/assessm
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorClientPortalDetailResult } from '@/types/clientPortal';
+import CounselorPushAssessmentPanel from '@/components/counselor/CounselorPushAssessmentPanel';
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -181,6 +182,14 @@ export default function CounselorClientDetail({ portalId }: Props) {
         <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
           {actionMsg}
         </div>
+      ) : null}
+
+      {portal.status === 'active' ? (
+        <CounselorPushAssessmentPanel
+          portalIds={[portalId]}
+          assignedAssessmentIds={assessments.map((a) => a.assessmentId)}
+          onSuccess={() => void load()}
+        />
       ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-950/60 p-5 sm:p-6">

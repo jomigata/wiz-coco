@@ -61,6 +61,7 @@ from utils.client_portal_list import (
     get_counselor_client_portal_detail,
     list_counselor_portal_test_assignments,
 )
+from utils.portal_assessment_push import push_assessments_to_portals
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -206,6 +207,52 @@ def list_counselor_assignments():
         q=q,
     )
     return jsonify(result)
+
+
+@bp.route("/push-assessments", methods=["POST"])
+@require_counselor
+def push_assessments():
+    """기존 내담자 포털에 검사코드 추가 배정 + 선택 알림."""
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+
+    assessment_id = (body.get("assessmentId") or "").strip() or None
+    title = (body.get("title") or "").strip()
+    welcome_message = (body.get("welcomeMessage") or "").strip()
+    usage_end_date = (body.get("usageEndDate") or "").strip()
+    test_list = body.get("testList") or []
+    notify = bool(body.get("notify", True))
+
+    if not assessment_id:
+        if not title:
+            return jsonify({"error": "Bad Request", "message": "신규 검사코드 생성 시 title이 필요합니다."}), 400
+        if not isinstance(test_list, list) or not test_list:
+            return jsonify({"error": "Bad Request", "message": "신규 검사코드 생성 시 testList가 필요합니다."}), 400
+
+    db = get_firestore()
+    try:
+        result = push_assessments_to_portals(
+            db,
+            counselor_uid=g.counselor_uid,
+            portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+            assessment_id=assessment_id,
+            title=title,
+            welcome_message=welcome_message,
+            usage_end_date=usage_end_date,
+            test_list=test_list if isinstance(test_list, list) else [],
+            notify=notify,
+        )
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+
+    if result.get("error") == "insufficient_credits":
+        return jsonify({"error": "Payment Required", **result}), 402
+
+    return jsonify(result), 201
 
 
 @bp.route("/login", methods=["POST"])
