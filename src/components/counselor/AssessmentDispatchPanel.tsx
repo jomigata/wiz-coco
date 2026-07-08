@@ -20,6 +20,7 @@ import {
   type DispatchRecipient,
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
+import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -332,25 +333,34 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     void load();
   }, [load, authPending, isAuthenticated]);
 
+  const {
+    data: liveData,
+    isLive,
+    liveError,
+    lastUpdatedAt,
+  } = useAssessmentDispatchRealtime(assessmentId, data, isAuthenticated && !authPending);
+
+  const displayData = liveData ?? data;
+
   const allIds = useMemo(
-    () => (data?.recipients || []).map((r) => r.portalId),
-    [data?.recipients],
+    () => (displayData?.recipients || []).map((r) => r.portalId),
+    [displayData?.recipients],
   );
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
 
   const completedCount = useMemo(
-    () => (data?.recipients || []).filter((r) => r.testStatus === 'completed').length,
-    [data?.recipients],
+    () => (displayData?.recipients || []).filter((r) => r.testStatus === 'completed').length,
+    [displayData?.recipients],
   );
 
   const remindEligibleSelected = useMemo(
-    () => (data?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
-    [data?.recipients, selected],
+    () => (displayData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
+    [displayData?.recipients, selected],
   );
 
   const selectedRecipients = useMemo(
-    () => (data?.recipients || []).filter((r) => selected.has(r.portalId)),
-    [data?.recipients, selected],
+    () => (displayData?.recipients || []).filter((r) => selected.has(r.portalId)),
+    [displayData?.recipients, selected],
   );
 
   const resendEligibleSelected = useMemo(
@@ -374,11 +384,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       : 'https://wizcoco.com/portal/login/';
 
   const sortedRecipients = useMemo(() => {
-    const list = [...(data?.recipients || [])];
+    const list = [...(displayData?.recipients || [])];
     if (!sortKey) return list;
     list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
     return list;
-  }, [data?.recipients, sortKey, sortDir]);
+  }, [displayData?.recipients, sortKey, sortDir]);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -540,29 +550,51 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     return <p className="text-red-400 text-sm">{error}</p>;
   }
 
-  if (!data) return null;
+  if (!data || !displayData) return null;
+
+  const liveUpdatedLabel = lastUpdatedAt
+    ? lastUpdatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : null;
 
   return (
     <section className="space-y-4">
       <div className="rounded-lg border border-slate-600 bg-slate-800/60 p-4 text-sm text-slate-300 space-y-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-slate-500">검사 진행 모니터링</p>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {isLive ? (
+              <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
+                실시간 연결됨
+                {liveUpdatedLabel ? <span className="text-slate-500">· {liveUpdatedLabel}</span> : null}
+              </span>
+            ) : liveError ? (
+              <span className="text-amber-300" title={liveError}>
+                실시간 일시 중단 · API 기준 표시
+              </span>
+            ) : (
+              <span className="text-slate-500">실시간 연결 중…</span>
+            )}
+          </div>
+        </div>
         <p>
           <span className="text-slate-500">검사코드 </span>
           <span className="font-mono font-semibold text-cyan-300">
-            {formatAccessCodeDisplay(data.joinAccessCode)}
+            {formatAccessCodeDisplay(displayData.joinAccessCode)}
           </span>
         </p>
-        {data.cohortName ? (
+        {displayData.cohortName ? (
           <p>
             <span className="text-slate-500">기관/단체/그룹명 </span>
-            {data.cohortName}
+            {displayData.cohortName}
           </p>
         ) : null}
         <p>
           <span className="text-slate-500">검사명 </span>
-          {data.title || '—'}
+          {displayData.title || '—'}
         </p>
         <p className="text-slate-500">
-          검사 완료 {completedCount}명 / 전체 {data.recipients.length}명
+          검사 완료 {completedCount}명 / 전체 {displayData.recipients.length}명
         </p>
       </div>
 
@@ -574,7 +606,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <button
               type="button"
               onClick={toggleAll}
-              disabled={data.recipients.length === 0}
+              disabled={displayData.recipients.length === 0}
               className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
             >
               {allSelected ? '전체 해제' : '전체 선택'}
@@ -606,7 +638,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           </div>
         </div>
 
-        {data.recipients.length === 0 ? (
+        {displayData.recipients.length === 0 ? (
           <p className="px-4 py-6 text-slate-400 text-sm">발송된 내담자가 없습니다.</p>
         ) : (
           <>
@@ -840,7 +872,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700/80 px-4 py-3">
               <p className="text-xs text-slate-500">
                 선택 <span className="text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
-                {data.recipients.length}명
+                {displayData.recipients.length}명
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="hidden text-xs text-slate-500 sm:inline">내보내기·관리</span>
@@ -1021,12 +1053,12 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 <p>
                   <span className="text-slate-500">검사코드 </span>
                   <span className="font-mono text-cyan-300">
-                    {formatAccessCodeDisplay(data.joinAccessCode)}
+                    {formatAccessCodeDisplay(displayData.joinAccessCode)}
                   </span>
                 </p>
                 <p>
                   <span className="text-slate-500">검사명 </span>
-                  <span className="text-white">{data.title || '—'}</span>
+                  <span className="text-white">{displayData.title || '—'}</span>
                 </p>
               </div>
 
@@ -1061,7 +1093,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <li>제목: [WizCoCo] 미실시 알림 (수신자 이름)</li>
                       <li>검사명, 진행 현황, 미완료 검사 목록</li>
                       <li>
-                        검사코드 {formatAccessCodeDisplay(data.joinAccessCode)}, 나의코드(개인별)
+                        검사코드 {formatAccessCodeDisplay(displayData.joinAccessCode)}, 나의코드(개인별)
                       </li>
                       <li>검사시작 URL: {loginUrl}</li>
                       <li>바로 시작 매직링크 (72시간 유효, 개인별 발급)</li>
@@ -1113,7 +1145,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
                       <li>제목: [WizCoCo] 검사시작 접속 안내 (수신자 이름)</li>
                       <li>
-                        검사코드 {formatAccessCodeDisplay(data.joinAccessCode)}, 나의코드(개인별)
+                        검사코드 {formatAccessCodeDisplay(displayData.joinAccessCode)}, 나의코드(개인별)
                       </li>
                       <li className="text-amber-200">새 4자리 비밀번호 (기존 비밀번호 무효화)</li>
                       <li>검사시작 URL: {loginUrl}</li>
