@@ -20,21 +20,16 @@ gh secret list
 - `NEXT_PUBLIC_FLASK_API_URL`
 - `NOTIFICATION_CRON_SECRET`
 
-> **자동 동기화:** `deploy-backend.yml`이 배포 후 Cloud Run URL을 `NEXT_PUBLIC_FLASK_API_URL`에 자동 반영합니다.
+> **URL 갱신:** Cloud Run URL이 바뀌면 `gh secret set NEXT_PUBLIC_FLASK_API_URL --body "..."` 로 수동 반영하세요. `deploy-backend` 로그의 `Service URL:` 줄을 사용합니다.
 
----
-
-## 2. `NEXT_PUBLIC_FLASK_API_URL` 설정
-
-### 방법 A — 백엔드 배포 시 자동 (권장)
+### 방법 A — 백엔드 배포 후 URL 확인 (권장)
 
 `main`에 백엔드 변경이 푸시되면 **Deploy Flask API to Cloud Run** 워크플로가:
 
 1. `wizcoco-api` (asia-northeast3) 배포
-2. `/api/health` 확인 (최대 6회 재시도)
-3. `NEXT_PUBLIC_FLASK_API_URL` Secret 자동 갱신
+2. `/api/health` 확인 (최대 6회 재시도, deploy stdout URL 우선)
 
-수동 재동기화:
+수동 재배포:
 
 ```bash
 gh workflow run deploy-backend.yml
@@ -139,7 +134,7 @@ curl -X POST "${FLASK_URL}/api/notifications/cohort-reminders" \
 
 - `.github/workflows/cohort-reminder-worker.yml` — 일 1회 리마인더 Cron
 - `.github/workflows/notification-worker.yml` — 통지 큐 (동일 Secret 사용)
-- `.github/workflows/deploy-backend.yml` — Secret·Cloud Run env 동기화
+- `.github/workflows/deploy-backend.yml` — Cloud Run 배포·health 확인·`NOTIFICATION_CRON_SECRET` env 주입
 - `backend/routes/notifications.py` — `POST /api/notifications/cohort-reminders`
 - `backend/utils/cohort_reminder_worker.py` — 미완료 cohort 대상 발송
 

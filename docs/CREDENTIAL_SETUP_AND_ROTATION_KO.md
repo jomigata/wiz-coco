@@ -60,7 +60,11 @@ https://github.com/jomigata/wiz-coco/settings/secrets/actions
 
 자세한 연동: [FRONTEND_FLASK_INTEGRATION.md](./FRONTEND_FLASK_INTEGRATION.md)
 
-> **자동 동기화:** `deploy-backend.yml`이 배포 직후 이 Secret을 Cloud Run URL로 갱신합니다.
+배포 후 URL이 바뀌면 CLI로 갱신:
+
+```bash
+gh secret set NEXT_PUBLIC_FLASK_API_URL --body "https://wizcoco-api-....run.app"
+```
 
 ### A-5. Cron 공유 시크릿 → `NOTIFICATION_CRON_SECRET`
 

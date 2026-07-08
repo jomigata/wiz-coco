@@ -10,10 +10,6 @@ concurrency:
   group: deploy-backend-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  secrets: write
-
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
@@ -180,15 +176,6 @@ jobs:
               --limit 20 \
               --format='value(textPayload)' 2>/dev/null || true
           fi
-
-      - name: 🔐 Sync NEXT_PUBLIC_FLASK_API_URL secret
-        if: env.CLOUD_RUN_URL != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          URL="${CLOUD_RUN_URL%/}"
-          echo "${URL}" | gh secret set NEXT_PUBLIC_FLASK_API_URL --repo "${GITHUB_REPOSITORY}"
-          echo "✅ GitHub Secret NEXT_PUBLIC_FLASK_API_URL 동기화 완료"
 
       - name: 🧹 Clean up old container images (keep latest 5)
         run: |
