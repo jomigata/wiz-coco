@@ -23,7 +23,7 @@ from utils.counselor_ai_credits import (
     grant_ai_credits,
     list_ai_ledger,
 )
-from utils.ai_reports import get_ai_report, list_ai_reports_for_result
+from utils.ai_reports import get_ai_report, list_ai_reports_for_result, update_ai_report_annotations
 from utils.ai_usage_admin import (
     build_ai_usage_summary,
     get_admin_counselor_ai_detail,
@@ -63,6 +63,7 @@ def ai_usage_schema():
                 "GET /api/ai/admin/usage/summary",
                 "GET /api/ai/admin/usage/ledger",
                 "GET /api/ai/admin/credits/<counselor_uid>",
+                "PATCH /api/ai/reports/<report_id>/annotations",
             ],
         }
     )
@@ -167,3 +168,23 @@ def ai_admin_counselor_credits(counselor_uid):
     limit = request.args.get("limit", 30, type=int)
     db = get_firestore()
     return jsonify(get_admin_counselor_ai_detail(db, counselor_uid, ledger_limit=limit or 30))
+
+
+@bp.route("/reports/<report_id>/annotations", methods=["PATCH"])
+@require_counselor
+def ai_report_annotations(report_id):
+    """상담사 — 리포트 코멘트·추천 치료 편집 (T-4-05)."""
+    body = request.get_json(silent=True) or {}
+    db = get_firestore()
+    updated = update_ai_report_annotations(
+        db,
+        g.counselor_uid,
+        report_id,
+        counselor_notes=body.get("counselorNotes") if "counselorNotes" in body else None,
+        recommended_treatment=body.get("recommendedTreatment")
+        if "recommendedTreatment" in body
+        else None,
+    )
+    if not updated:
+        return jsonify({"error": "Not Found"}), 404
+    return jsonify(updated)

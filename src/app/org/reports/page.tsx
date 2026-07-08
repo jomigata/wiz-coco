@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchOrgGroupReport, fetchOrgMe, printOrgGroupReport } from '@/lib/orgApi';
+import { buildAnonymousGroupNarrative } from '@/lib/orgGroupReportNarrative';
 import { AuthLoadingState } from '@/components/auth/AuthStatusViews';
 
 function ReportContent() {
@@ -35,6 +36,8 @@ function ReportContent() {
   if (!report) {
     return <p className="text-slate-400">불러오는 중…</p>;
   }
+
+  const narrative = buildAnonymousGroupNarrative(report);
 
   return (
     <div className="space-y-6">
@@ -70,9 +73,27 @@ function ReportContent() {
         </ul>
       </div>
 
+      <div className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-5 space-y-3">
+        <p className="text-xs text-violet-300">AI 자동 분석 요약 (익명 집계 · T-4-04)</p>
+        <p className="text-sm text-slate-200 leading-relaxed">{narrative.summary}</p>
+        <ul className="text-sm text-slate-300 space-y-1 list-disc ml-4">
+          {narrative.insights.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <div>
+          <p className="text-xs text-emerald-300 mb-1">권장 조치</p>
+          <ul className="text-sm text-slate-400 space-y-1 list-disc ml-4">
+            {narrative.recommendations.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
       <button
         type="button"
-        onClick={() => printOrgGroupReport(report, orgName)}
+        onClick={() => printOrgGroupReport(report, orgName, narrative)}
         className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500"
       >
         PDF / 인쇄 (그룹 리포트)

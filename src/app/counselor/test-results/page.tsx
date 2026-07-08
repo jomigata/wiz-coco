@@ -9,6 +9,7 @@ import {
   printAssessmentReport,
 } from '@/lib/assessmentReportPrint';
 import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
+import AssessmentComprehensiveReportButton from '@/components/counselor/AssessmentComprehensiveReportButton';
 
 type CounselorResultRow = {
   id: string;
@@ -159,12 +160,21 @@ export default function TestResultsPage() {
                           PDF / 인쇄
                         </button>
                         {r.status === 'completed' || !r.status ? (
-                          <AssessmentAiInterpretButton
-                            resultId={r.id}
-                            testLabel={r.testType}
-                            clientLabel={r.email || r.uid || undefined}
-                            compact
-                          />
+                          <>
+                            <AssessmentAiInterpretButton
+                              resultId={r.id}
+                              testLabel={r.testType}
+                              clientLabel={r.email || r.uid || undefined}
+                              compact
+                            />
+                            <AssessmentComprehensiveReportButton
+                              resultId={r.id}
+                              testLabel={r.testType}
+                              clientLabel={r.email || r.uid || undefined}
+                              accessCode={formatAccessCodeDisplay(r.code || '')}
+                              compact
+                            />
+                          </>
                         ) : null}
                       </div>
                     </td>

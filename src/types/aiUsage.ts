@@ -73,13 +73,38 @@ export type AiReportDoc = {
   counselorUid: string;
   portalId?: string;
   resultId?: string;
-  feature: 'assessment_interpret' | 'report_generate';
+  feature: 'assessment_interpret' | 'test_recommendation' | 'report_generate';
   title: string;
   content: string;
   modelId?: string;
   creditsCharged: number;
+  testType?: string;
+  clientLabel?: string;
+  metadata?: {
+    sections?: { heading: string; lines: string[] }[];
+    counselorNotes?: string;
+    recommendedTreatment?: string;
+    accessCode?: string;
+    status?: string;
+    recommendations?: unknown[];
+  };
   createdAt?: string | null;
   updatedAt?: string | null;
+};
+
+export type ComprehensiveReportResponse = {
+  reportId: string;
+  title: string;
+  summary: string;
+  sections: { heading: string; lines: string[] }[];
+  counselorNotes: string;
+  recommendedTreatment: string;
+  cached: boolean;
+  creditsCharged: number;
+  modelId: string | null;
+  testType?: string;
+  clientLabel?: string;
+  accessCode?: string;
 };
 
 export type AiUsageSchemaResponse = {

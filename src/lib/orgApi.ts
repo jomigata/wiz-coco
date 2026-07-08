@@ -3,6 +3,7 @@
  */
 
 import { getCounselorToken } from '@/lib/counselorAuth';
+import type { GroupNarrative } from '@/lib/orgGroupReportNarrative';
 
 const getBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_FLASK_API_URL) {
@@ -151,7 +152,11 @@ export async function adminAssignOrgAdmin(orgId: string, adminUid: string) {
   return res.json();
 }
 
-export function printOrgGroupReport(report: OrgGroupReport, orgName: string): void {
+export function printOrgGroupReport(
+  report: OrgGroupReport,
+  orgName: string,
+  narrative?: GroupNarrative,
+): void {
   if (typeof window === 'undefined') return;
   const rows = report.byTest
     .map(
@@ -159,10 +164,20 @@ export function printOrgGroupReport(report: OrgGroupReport, orgName: string): vo
         `<tr><td>${t.name}</td><td style="text-align:right">${t.completedCount}</td></tr>`,
     )
     .join('');
+
+  const narrativeBlock = narrative
+    ? `<h2>AI 자동 분석 요약</h2>
+<p>${narrative.summary}</p>
+<ul>${narrative.insights.map((l) => `<li>${l}</li>`).join('')}</ul>
+<h3>권장 조치</h3>
+<ul>${narrative.recommendations.map((l) => `<li>${l}</li>`).join('')}</ul>`
+    : '';
+
   const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>그룹 리포트</title>
 <style>@page{margin:18mm}body{font-family:'Malgun Gothic',sans-serif;font-size:11pt;color:#1e293b}
-h1{font-size:18pt}table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #cbd5e1;padding:8px}
-th{background:#f1f5f9}.muted{color:#64748b;font-size:9pt;margin-top:24px}</style></head><body>
+h1{font-size:18pt}h2{font-size:13pt;color:#5b21b6;margin-top:20px}h3{font-size:11pt;color:#047857}
+table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #cbd5e1;padding:8px}
+th{background:#f1f5f9}.muted{color:#64748b;font-size:9pt;margin-top:24px}ul{padding-left:18px}</style></head><body>
 <h1>익명 그룹 통계 리포트</h1>
 <p>${orgName} · ${report.cohortName}</p>
 <table><tr><th>항목</th><th>값</th></tr>
@@ -174,6 +189,7 @@ th{background:#f1f5f9}.muted{color:#64748b;font-size:9pt;margin-top:24px}</style
 </table>
 <h2>검사별 완료 건수</h2>
 <table><tr><th>검사</th><th>완료 수</th></tr>${rows}</table>
+${narrativeBlock}
 <p class="muted">${report.disclaimer || ''}</p>
 </body></html>`;
   const iframe = document.createElement('iframe');

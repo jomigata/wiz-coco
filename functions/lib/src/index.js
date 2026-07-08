@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.scheduledSyncCounselFaq = exports.syncCounselFaqFromSheet = exports.recommendTestsFromResult = exports.interpretAssessmentResult = exports.endAiSession = exports.sendCounselMessage = exports.startAiSession = void 0;
+exports.scheduledSyncCounselFaq = exports.syncCounselFaqFromSheet = exports.generateAssessmentReport = exports.recommendTestsFromResult = exports.interpretAssessmentResult = exports.endAiSession = exports.sendCounselMessage = exports.startAiSession = void 0;
 const v2_1 = require("firebase-functions/v2");
 (0, v2_1.setGlobalOptions)({ region: 'asia-northeast3' });
 var startAiSession_1 = require("./counsel/startAiSession");
@@ -13,6 +13,8 @@ var interpretAssessmentResult_1 = require("./counsel/interpretAssessmentResult")
 Object.defineProperty(exports, "interpretAssessmentResult", { enumerable: true, get: function () { return interpretAssessmentResult_1.interpretAssessmentResult; } });
 var recommendTestsFromResult_1 = require("./counsel/recommendTestsFromResult");
 Object.defineProperty(exports, "recommendTestsFromResult", { enumerable: true, get: function () { return recommendTestsFromResult_1.recommendTestsFromResult; } });
+var generateAssessmentReport_1 = require("./counsel/generateAssessmentReport");
+Object.defineProperty(exports, "generateAssessmentReport", { enumerable: true, get: function () { return generateAssessmentReport_1.generateAssessmentReport; } });
 var syncCounselFaqFromSheet_1 = require("./counsel/syncCounselFaqFromSheet");
 Object.defineProperty(exports, "syncCounselFaqFromSheet", { enumerable: true, get: function () { return syncCounselFaqFromSheet_1.syncCounselFaqFromSheet; } });
 Object.defineProperty(exports, "scheduledSyncCounselFaq", { enumerable: true, get: function () { return syncCounselFaqFromSheet_1.scheduledSyncCounselFaq; } });

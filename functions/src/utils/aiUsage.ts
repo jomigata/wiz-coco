@@ -18,6 +18,9 @@ export const ASSESSMENT_INTERPRET_CREDIT_COST = 4
 /** 맞춤 검사 추천 1건 (T-3-06) */
 export const TEST_RECOMMENDATION_CREDIT_COST = 1
 
+/** 종합 검사 리포트 1건 (T-4-01) */
+export const REPORT_GENERATE_CREDIT_COST = 5
+
 export type RecordAiUsageInput = {
   counselorUid?: string
   clientId?: string

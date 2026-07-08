@@ -1,9 +1,10 @@
 import { FieldValue } from 'firebase-admin/firestore'
 import { AI_REPORTS_COLLECTION } from '../types'
 import type { TestRecommendationItem } from '../gemini/testRecommendation'
+import type { ComprehensiveReportSection } from '../gemini/comprehensiveReport'
 import { db } from './session'
 
-export type AiReportFeature = 'assessment_interpret' | 'test_recommendation'
+export type AiReportFeature = 'assessment_interpret' | 'test_recommendation' | 'report_generate'
 
 export type AiReportRecord = {
   counselorUid: string
@@ -19,6 +20,11 @@ export type AiReportRecord = {
   metadata?: {
     recommendations?: TestRecommendationItem[]
     summary?: string
+    sections?: ComprehensiveReportSection[]
+    accessCode?: string
+    status?: string
+    counselorNotes?: string
+    recommendedTreatment?: string
   }
   createdAt?: FirebaseFirestore.Timestamp
   updatedAt?: FirebaseFirestore.Timestamp

@@ -56,3 +56,32 @@ def get_ai_report(db, counselor_uid: str, report_id: str) -> dict | None:
 
             d[key] = datetime.utcfromtimestamp(val.timestamp()).isoformat() + "Z"
     return d
+
+
+def update_ai_report_annotations(
+    db,
+    counselor_uid: str,
+    report_id: str,
+    *,
+    counselor_notes: str | None = None,
+    recommended_treatment: str | None = None,
+) -> dict | None:
+    """T-4-05 — 상담사 코멘트·추천 치료 섹션 저장."""
+    from firebase_admin.firestore import SERVER_TIMESTAMP
+
+    ref = db.collection(AI_REPORTS_COLLECTION).document(report_id)
+    doc = ref.get()
+    if not doc.exists:
+        return None
+    d = doc.to_dict() or {}
+    if d.get("counselorUid") != counselor_uid:
+        return None
+
+    metadata = dict(d.get("metadata") or {})
+    if counselor_notes is not None:
+        metadata["counselorNotes"] = counselor_notes[:4000]
+    if recommended_treatment is not None:
+        metadata["recommendedTreatment"] = recommended_treatment[:4000]
+
+    ref.set({"metadata": metadata, "updatedAt": SERVER_TIMESTAMP}, merge=True)
+    return get_ai_report(db, counselor_uid, report_id)

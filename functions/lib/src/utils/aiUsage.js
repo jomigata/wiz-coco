@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TEST_RECOMMENDATION_CREDIT_COST = exports.ASSESSMENT_INTERPRET_CREDIT_COST = exports.COUNSEL_MESSAGE_CREDIT_COST = void 0;
+exports.REPORT_GENERATE_CREDIT_COST = exports.TEST_RECOMMENDATION_CREDIT_COST = exports.ASSESSMENT_INTERPRET_CREDIT_COST = exports.COUNSEL_MESSAGE_CREDIT_COST = void 0;
 exports.recordAiUsage = recordAiUsage;
 exports.assertCounselorAiCredits = assertCounselorAiCredits;
 const firestore_1 = require("firebase-admin/firestore");
@@ -13,6 +13,8 @@ exports.COUNSEL_MESSAGE_CREDIT_COST = 0;
 exports.ASSESSMENT_INTERPRET_CREDIT_COST = 4;
 /** 맞춤 검사 추천 1건 (T-3-06) */
 exports.TEST_RECOMMENDATION_CREDIT_COST = 1;
+/** 종합 검사 리포트 1건 (T-4-01) */
+exports.REPORT_GENERATE_CREDIT_COST = 5;
 async function getAiBalance(counselorUid) {
     var _a;
     const snap = await (0, session_1.db)().collection(types_1.COUNSELOR_AI_CREDITS_COLLECTION).doc(counselorUid).get();

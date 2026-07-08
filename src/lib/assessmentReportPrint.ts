@@ -1,5 +1,5 @@
 /**
- * 상담사용 검사 결과 PDF/인쇄 리포트 v2
+ * 상담사용 검사 결과 PDF/인쇄 리포트 v3 — AI 종합 섹션·상담사 메모 지원
  */
 
 export type AssessmentReportSection = {
@@ -17,6 +17,11 @@ export type AssessmentReportInput = {
   status?: string;
   sections?: AssessmentReportSection[];
   footerNote?: string;
+  /** T-4-03 — AI 종합 요약 */
+  aiSummary?: string;
+  /** T-4-05 — 상담사 코멘트·추천 치료 */
+  counselorNotes?: string;
+  recommendedTreatment?: string;
 };
 
 function escapeHtml(text: string): string {
@@ -63,6 +68,20 @@ function buildReportHtml(input: AssessmentReportInput): string {
     )
     .join('');
 
+  const aiSummaryBlock = input.aiSummary
+    ? `<section class="block ai"><h2>AI 종합 요약</h2><p>${escapeHtml(input.aiSummary)}</p></section>`
+    : '';
+
+  const counselorNotesBlock =
+    input.counselorNotes?.trim()
+      ? `<section class="block counselor"><h2>상담사 코멘트</h2><p>${escapeHtml(input.counselorNotes.trim())}</p></section>`
+      : '';
+
+  const treatmentBlock =
+    input.recommendedTreatment?.trim()
+      ? `<section class="block counselor"><h2>추천 치료·개입</h2><p>${escapeHtml(input.recommendedTreatment.trim())}</p></section>`
+      : '';
+
   const footer = input.footerNote
     ? `<p class="footer">${escapeHtml(input.footerNote)}</p>`
     : `<p class="footer">본 리포트는 참고 자료이며 진단 또는 치료를 대체하지 않습니다. WizCoCo · 협회 인증 플랫폼</p>`;
@@ -83,6 +102,8 @@ function buildReportHtml(input: AssessmentReportInput): string {
     table.meta th { width: 22%; background: #f1f5f9; font-weight: 600; }
     .block { margin-bottom: 18px; page-break-inside: avoid; }
     .block h2 { font-size: 12pt; color: #1d4ed8; border-bottom: 2px solid #bfdbfe; padding-bottom: 4px; margin: 0 0 8px; }
+    .block.ai h2 { color: #6d28d9; border-color: #ddd6fe; }
+    .block.counselor h2 { color: #047857; border-color: #a7f3d0; }
     .block ul { margin: 0; padding-left: 18px; }
     .block li { margin-bottom: 4px; }
     .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 9pt; color: #64748b; }
@@ -96,7 +117,10 @@ function buildReportHtml(input: AssessmentReportInput): string {
   <h1>${escapeHtml(input.title)}</h1>
   ${input.subtitle ? `<p class="subtitle">${escapeHtml(input.subtitle)}</p>` : ''}
   <table class="meta">${metaTable}</table>
+  ${aiSummaryBlock}
   ${sections || '<section class="block"><h2>요약</h2><p>상세 결과는 검사 화면에서 확인하세요.</p></section>'}
+  ${counselorNotesBlock}
+  ${treatmentBlock}
   ${footer}
 </body>
 </html>`;
@@ -145,6 +169,35 @@ function printHtmlViaIframe(html: string): void {
 export function printAssessmentReport(input: AssessmentReportInput): void {
   if (typeof window === 'undefined') return;
   printHtmlViaIframe(buildReportHtml(input));
+}
+
+/** T-4-03 — AI 종합 리포트 전용 인쇄 */
+export function printComprehensiveReport(input: {
+  title: string;
+  subtitle?: string;
+  clientLabel?: string;
+  testName?: string;
+  accessCode?: string;
+  status?: string;
+  summary: string;
+  sections: AssessmentReportSection[];
+  counselorNotes?: string;
+  recommendedTreatment?: string;
+}): void {
+  printAssessmentReport({
+    title: input.title,
+    subtitle: input.subtitle,
+    clientLabel: input.clientLabel,
+    testName: input.testName,
+    accessCode: input.accessCode,
+    status: input.status,
+    aiSummary: input.summary,
+    sections: input.sections,
+    counselorNotes: input.counselorNotes,
+    recommendedTreatment: input.recommendedTreatment,
+    footerNote:
+      '본 리포트는 AI 초안과 상담사 검토를 포함한 참고 자료이며 진단 또는 치료를 대체하지 않습니다. WizCoCo · 협회 인증 플랫폼',
+  });
 }
 
 export function buildDefaultResultSections(row: {

@@ -14,6 +14,7 @@ import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { getCounselorResult } from '@/lib/assessmentApi';
 import { printAssessmentReport, buildDefaultResultSections } from '@/lib/assessmentReportPrint';
 import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
+import AssessmentComprehensiveReportButton from '@/components/counselor/AssessmentComprehensiveReportButton';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import type { CounselorClientPortalDetailResult } from '@/types/clientPortal';
@@ -350,6 +351,12 @@ export default function CounselorClientDetail({ portalId }: Props) {
                               <AssessmentAiInterpretButton
                                 resultId={test.resultId}
                                 testLabel={test.testName}
+                                compact
+                              />
+                              <AssessmentComprehensiveReportButton
+                                resultId={test.resultId}
+                                testLabel={test.testName}
+                                clientLabel={detail?.portal.displayName}
                                 compact
                               />
                             </div>
