@@ -4,8 +4,8 @@ export const APP_PAGE_BG = '#090d18';
 export const appChromeClasses = {
   page: 'bg-[#090d18] text-slate-100',
   header:
-    'border-b border-white/[0.12] bg-[#0a1020] shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
-  headerFade: 'from-[#0a1020]',
+    'border-b border-white/[0.14] bg-[#0c1424] shadow-[0_8px_32px_rgba(0,0,0,0.5)]',
+  headerFade: 'from-[#0c1424]',
   mainTopFade: 'from-[#0a1020]/80',
   footer:
     'border-t border-white/[0.12] bg-[#0c101c] shadow-[0_-6px_28px_rgba(0,0,0,0.32)]',
@@ -18,7 +18,7 @@ export const APP_FOOTER_OFFSET_CLASS = 'pb-10 sm:pb-11';
 /** 데스크톱 3단 메가 메뉴 패널 — 헤더 톤과 맞춘 불투명 배경 */
 export const navMegaMenuClasses = {
   panel:
-    'absolute top-full z-50 mt-0 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.10] bg-[#0a1020] pt-3 pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] animate-fadeIn',
+    'absolute top-full z-[55] -mt-2.5 pt-2.5 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0c1424] pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.6)] ring-1 ring-white/[0.06] animate-fadeIn',
   panelGlow:
     'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-5%,rgba(56,100,180,0.06),transparent)]',
   leftCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 border-r border-white/[0.08] px-5 py-3',

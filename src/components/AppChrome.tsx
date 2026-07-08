@@ -47,7 +47,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
       <ChromeNavContext.Provider value={value}>
         <div className={`min-h-screen flex flex-col ${appChromeClasses.page}`}>
           {!topNavHidden ? (
-            <div className="fixed left-0 right-0 top-0 z-50">
+            <div className="fixed left-0 right-0 top-0 z-[60]">
               <MemoNavigation />
             </div>
           ) : null}
