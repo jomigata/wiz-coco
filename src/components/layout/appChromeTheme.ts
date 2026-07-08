@@ -18,7 +18,7 @@ export const APP_FOOTER_OFFSET_CLASS = 'pb-10 sm:pb-11';
 /** 데스크톱 3단 메가 메뉴 패널 — 헤더 톤과 맞춘 글래스 스타일 */
 export const navMegaMenuClasses = {
   panel:
-    'absolute top-full z-50 mt-0 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a1020]/[0.97] pt-3 pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] backdrop-blur-2xl animate-fadeIn',
+    'absolute top-full z-[60] -mt-px pt-3 w-auto min-w-[48rem] max-w-[56rem] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a1020] pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] animate-fadeIn',
   panelGlow:
     'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-5%,rgba(56,100,180,0.1),transparent)]',
   leftCol: 'w-96 min-w-[24rem] max-w-[28rem] shrink-0 border-r border-white/[0.06] px-5 py-3',

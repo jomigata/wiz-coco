@@ -152,7 +152,7 @@ export default function Navigation() {
     closeTimerRef.current = setTimeout(() => {
       setActiveMenu(null);
       closeTimerRef.current = null;
-    }, 150);
+    }, 220);
   }, []);
 
   const { auth: firebaseAuth } = initializeFirebase();
@@ -456,7 +456,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav
-        className={`w-full border-b border-white/[0.06] ${APP_HEADER_BG} shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md`}
+        className={`relative z-50 w-full border-b border-white/[0.06] ${APP_HEADER_BG} shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md`}
         style={{ contain: 'layout' }}
       >
         <div className={`w-full max-w-[1800px] mx-auto px-4 sm:px-6 ${APP_HEADER_HEIGHT_CLASS} min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3`}>
@@ -508,7 +508,15 @@ export default function Navigation() {
               <>
               {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
               {showPsychologyTestsMenu && (
-              <div ref={psychologyTestsTriggerRef} className="relative">
+              <div
+                ref={psychologyTestsTriggerRef}
+                className="relative"
+                onMouseEnter={() => {
+                  openMenu('psychology-tests');
+                  initTierMenuSelection(visibleTestMenuItems, setSelectedMainCategory, setSelectedSubcategory);
+                }}
+                onMouseLeave={scheduleClose}
+              >
                 <Link
                   href="/tests"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -519,8 +527,6 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
-                  onMouseEnter={() => openMenu('psychology-tests')}
-                  onMouseLeave={scheduleClose}
                 >
                   🧠 AI 심리검사
                   <svg
@@ -563,11 +569,6 @@ export default function Navigation() {
                     }}
                     onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory, TEST_SUBCATEGORY_SLUGS)}
                     onCloseMenu={() => setActiveMenu(null)}
-                    onPanelMouseEnter={() => {
-                      openMenu('psychology-tests');
-                      initTierMenuSelection(visibleTestMenuItems, setSelectedMainCategory, setSelectedSubcategory);
-                    }}
-                    onPanelMouseLeave={scheduleClose}
                     searchSlot={
                       <TestMenuSearch
                         categories={visibleTestMenuItems}
@@ -581,7 +582,15 @@ export default function Navigation() {
               )}
 
               {/* 상담 프로그램 드롭다운 메뉴 */}
-              <div ref={counselingTriggerRef} className="relative">
+              <div
+                ref={counselingTriggerRef}
+                className="relative"
+                onMouseEnter={() => {
+                  openMenu('counseling');
+                  initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
+                }}
+                onMouseLeave={scheduleClose}
+              >
                 <Link
                   href="/counseling"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -592,11 +601,6 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
-                  onMouseEnter={() => {
-                    openMenu('counseling');
-                    initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
-                  }}
-                  onMouseLeave={scheduleClose}
                 >
                   💬 상담 프로그램
                   <svg
@@ -634,17 +638,20 @@ export default function Navigation() {
                     }}
                     onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
                     onCloseMenu={() => setActiveMenu(null)}
-                    onPanelMouseEnter={() => {
-                      openMenu('counseling');
-                      initTierMenuSelection(counselingMenuCategories, setSelectedCounselingMainCategory, setSelectedCounselingSubcategory);
-                    }}
-                    onPanelMouseLeave={scheduleClose}
                   />
                 )}
               </div>
 
               {/* 나만의 공간 드롭다운 메뉴 */}
-              <div ref={aiAssistantTriggerRef} className="relative">
+              <div
+                ref={aiAssistantTriggerRef}
+                className="relative"
+                onMouseEnter={() => {
+                  openMenu('ai-mind-assistant');
+                  initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
+                }}
+                onMouseLeave={scheduleClose}
+              >
                 <Link
                   href="/ai-mind-assistant"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -655,11 +662,6 @@ export default function Navigation() {
                       : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
-                  onMouseEnter={() => {
-                    openMenu('ai-mind-assistant');
-                    initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
-                  }}
-                  onMouseLeave={scheduleClose}
                 >
                   🏠 나만의 공간
                   <svg
@@ -697,11 +699,6 @@ export default function Navigation() {
                     }}
                     onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
                     onCloseMenu={() => setActiveMenu(null)}
-                    onPanelMouseEnter={() => {
-                      openMenu('ai-mind-assistant');
-                      initTierMenuSelection(aiMindAssistantMenuCategories, setSelectedAiAssistantMainCategory, setSelectedAiAssistantSubcategory);
-                    }}
-                    onPanelMouseLeave={scheduleClose}
                   />
                 )}
               </div>
@@ -733,7 +730,15 @@ export default function Navigation() {
                     )}
                     {/* 상담사 메뉴 - 인증된 상담사만 표시 */}
                     {showCounselorMenu && (
-                      <div ref={counselorTriggerRef} className="relative">
+                      <div
+                        ref={counselorTriggerRef}
+                        className="relative"
+                        onMouseEnter={() => {
+                          openMenu('counselor');
+                          initTierMenuSelection(counselorMenuCategories, setSelectedCounselorMainCategory, setSelectedCounselorSubcategory);
+                        }}
+                        onMouseLeave={scheduleClose}
+                      >
                         <Link
                           href="/counselor"
                           className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -744,11 +749,6 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
-                          onMouseEnter={() => {
-                            openMenu('counselor');
-                            initTierMenuSelection(counselorMenuCategories, setSelectedCounselorMainCategory, setSelectedCounselorSubcategory);
-                          }}
-                          onMouseLeave={scheduleClose}
                         >
                           👨‍⚕️ 상담관리
                           <svg
@@ -786,18 +786,21 @@ export default function Navigation() {
                             }}
                             onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
                             onCloseMenu={() => setActiveMenu(null)}
-                            onPanelMouseEnter={() => {
-                              openMenu('counselor');
-                              initTierMenuSelection(counselorMenuCategories, setSelectedCounselorMainCategory, setSelectedCounselorSubcategory);
-                            }}
-                            onPanelMouseLeave={scheduleClose}
                           />
                         )}
                       </div>
                     )}
 
                     {showAdminMenu && (
-                      <div ref={adminTriggerRef} className="relative">
+                      <div
+                        ref={adminTriggerRef}
+                        className="relative"
+                        onMouseEnter={() => {
+                          openMenu('admin');
+                          initTierMenuSelection(visibleAdminMenuItems, setSelectedAdminMainCategory, setSelectedAdminSubcategory);
+                        }}
+                        onMouseLeave={scheduleClose}
+                      >
                         <Link
                           href="/admin"
                           className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -808,11 +811,6 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
-                          onMouseEnter={() => {
-                            openMenu('admin');
-                            initTierMenuSelection(visibleAdminMenuItems, setSelectedAdminMainCategory, setSelectedAdminSubcategory);
-                          }}
-                          onMouseLeave={scheduleClose}
                         >
                           🔧 관리자
                           {pendingCounselorCount > 0 && (
@@ -855,11 +853,6 @@ export default function Navigation() {
                             }}
                             onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
                             onCloseMenu={() => setActiveMenu(null)}
-                            onPanelMouseEnter={() => {
-                              openMenu('admin');
-                              initTierMenuSelection(visibleAdminMenuItems, setSelectedAdminMainCategory, setSelectedAdminSubcategory);
-                            }}
-                            onPanelMouseLeave={scheduleClose}
                           />
                         )}
                       </div>
@@ -868,7 +861,11 @@ export default function Navigation() {
                     <ProfessionalAccessIcons variant="nav" isLoggedIn access={professionalIconAccess} />
 
                     {/* 마이페이지 드롭다운 메뉴 */}
-                    <div className="relative">
+                    <div
+                      className="relative"
+                      onMouseEnter={() => openMenu('user')}
+                      onMouseLeave={scheduleClose}
+                    >
                       <Link
                         href="/mypage"
                         className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
@@ -879,8 +876,6 @@ export default function Navigation() {
                             : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
-                        onMouseEnter={() => openMenu('user')}
-                        onMouseLeave={scheduleClose}
                       >
                         👤 마이페이지
                         {counselorResultCount > 0 && (
@@ -906,14 +901,7 @@ export default function Navigation() {
                       {isDropdownOpen && (
                         <div
                           data-dropdown-menu="user"
-                          className="absolute right-0 top-full mt-0 pt-4 pb-8 w-96 min-w-[24rem] max-w-[28rem] bg-gradient-to-br from-slate-900/95 via-green-900/95 to-emerald-900/95 rounded-2xl shadow-2xl border border-green-500/30 z-50 animate-fadeIn backdrop-blur-xl"
-                          onMouseEnter={() => {
-                            openMenu('user');
-                          }}
-                          onMouseLeave={() => {
-                            scheduleClose();
-                            handleMouseLeave('user');
-                          }}
+                          className="absolute right-0 top-full z-[60] -mt-px w-96 min-w-[24rem] max-w-[28rem] rounded-2xl border border-green-500/30 bg-[#0a1020] pt-3 pb-8 shadow-2xl animate-fadeIn"
                           onMouseMove={(e) => handleMouseMove('user', e)}
                         >
                           <div className="relative">

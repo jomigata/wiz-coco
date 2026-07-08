@@ -23,8 +23,8 @@ type ThreeTierMegaMenuPanelProps = {
   onSubcategoryClick?: (subcategory: TestSubcategory, parent: TestCategory) => void;
   navigateTo?: (href: string) => void;
   onCloseMenu: () => void;
-  onPanelMouseEnter: () => void;
-  onPanelMouseLeave: () => void;
+  onPanelMouseEnter?: () => void;
+  onPanelMouseLeave?: () => void;
   searchSlot?: React.ReactNode;
 };
 
@@ -122,7 +122,6 @@ export default function ThreeTierMegaMenuPanel({
       onMouseEnter={onPanelMouseEnter}
       onMouseLeave={onPanelMouseLeave}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[#0a1020]" aria-hidden />
       <div className={navMegaMenuClasses.panelGlow} aria-hidden />
       {searchSlot && <div className="relative z-[1] border-b border-white/[0.06] px-4 pb-3 pt-2">{searchSlot}</div>}
       <div className="relative z-[1] flex h-[62vh] flex-row">
