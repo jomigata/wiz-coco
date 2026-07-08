@@ -280,6 +280,70 @@ WizCoCo
     return True
 
 
+def send_care_assignment_email(
+    *,
+    to_email: str,
+    display_name: str = "",
+    assignment_title: str = "",
+    portal_access_code: str = "",
+    magic_url: str,
+) -> bool:
+    """치료·과제 할당 안내 — 포털 치료 탭 바로가기 링크."""
+    if not is_email_configured():
+        return False
+
+    email = (to_email or "").strip().lower()
+    if not email or "@" not in email:
+        return False
+
+    name = (display_name or "").strip() or "내담자"
+    title = (assignment_title or "").strip() or "새 치료·과제"
+    my_code = (portal_access_code or "").strip().upper()
+    login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
+    care_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/?tab=care"
+
+    body = f"""안녕하세요, {name}님.
+
+담당 전문가가 WizCoCo에 새 치료·과제를 할당했습니다.
+
+▶ 과제명
+{title}
+
+"""
+    if my_code:
+        body += f"""▶ 나의코드
+{my_code}
+
+"""
+
+    body += f"""▶ 치료·과제 바로 보기 (추천)
+{magic_url}
+
+▶ 검사실 로그인 후 「추가 과제·치료」 탭
+{care_url}
+
+▶ 검사시작 로그인
+{login_url}
+
+링크는 72시간 동안 유효합니다.
+
+WizCoCo
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = MAIL_FROM
+    msg["To"] = email
+    msg["Subject"] = f"[WizCoCo] 치료·과제 안내 ({name})"
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(MAIL_FROM, [email], msg.as_string())
+
+    return True
+
+
 def send_portal_invite_email(*, to_email: str, access_code: str, magic_url: str) -> bool:
     """내담자 포털 초대 — 검사코드·매직 링크 안내."""
     if not is_email_configured():

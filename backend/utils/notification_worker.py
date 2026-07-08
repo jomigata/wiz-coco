@@ -9,12 +9,15 @@ from utils.email_notify import (
     send_portal_invite_email,
     send_portal_credentials_email,
     send_test_reminder_email,
+    send_care_assignment_email,
 )
 from utils.sms_notify import (
     send_portal_invite_sms,
     send_portal_credentials_sms,
     send_test_reminder_sms,
+    send_care_assignment_sms,
 )
+from utils.portal_magic import create_portal_magic_link_token
 
 
 def deliver_portal_credentials(
@@ -158,6 +161,69 @@ def deliver_test_reminder(
     return {"status": status, "errors": errors, "sentVia": sent_via}
 
 
+def deliver_care_assignment(
+    *,
+    email: str = "",
+    phone: str = "",
+    display_name: str = "",
+    assignment_title: str = "",
+    portal_access_code: str = "",
+    magic_path: str = "",
+) -> dict:
+    """치료·과제 할당 안내를 이메일·문자로 즉시 발송."""
+    email = (email or "").strip().lower()
+    phone = (phone or "").strip()
+    magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}" if magic_path else PUBLIC_SITE_URL
+
+    email_ok = False
+    sms_ok = False
+    errors = []
+
+    if email:
+        if is_email_configured():
+            email_ok = send_care_assignment_email(
+                to_email=email,
+                display_name=display_name,
+                assignment_title=assignment_title,
+                portal_access_code=portal_access_code,
+                magic_url=magic_url,
+            )
+            if not email_ok:
+                errors.append("email_send_failed")
+        else:
+            errors.append("smtp_not_configured")
+
+    if phone:
+        sms_ok, sms_err = send_care_assignment_sms(
+            to_phone=phone,
+            display_name=display_name,
+            assignment_title=assignment_title,
+            portal_access_code=portal_access_code,
+            magic_url=magic_url,
+        )
+        if sms_err:
+            errors.append(sms_err)
+
+    if email and email_ok:
+        status = "sent"
+        sent_via = "email"
+    elif phone and sms_ok:
+        status = "sent"
+        sent_via = "sms"
+    elif not email and not phone:
+        status = "skipped"
+        sent_via = None
+        errors.append("no_recipient")
+    elif errors:
+        status = "failed"
+        sent_via = None
+    else:
+        status = "skipped"
+        sent_via = None
+
+    return {"status": status, "errors": errors, "sentVia": sent_via}
+
+
 def process_notification_queue(*, limit: int = 50) -> dict:
     db = get_firestore()
     refs = (
@@ -227,6 +293,51 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     update_payload["sentVia"] = "email"
                 elif sms_ok:
                     update_payload["sentVia"] = "sms"
+                doc.reference.update(update_payload)
+                details.append({"id": doc.id, "status": status, "errors": errors})
+                continue
+
+            if item_type == "care_assignment":
+                payload = data.get("payload") or {}
+                assignment_title = (payload.get("title") or "").strip() or "새 치료·과제"
+                portal_access_code = (
+                    (payload.get("portalAccessCode") or data.get("accessCode") or "").strip()
+                )
+                portal_id = (data.get("portalId") or "").strip()
+                magic_path = (data.get("magicPath") or "").strip()
+                if not magic_path and portal_id and portal_access_code:
+                    magic = create_portal_magic_link_token(portal_id, portal_access_code)
+                    magic_path = f"/go?t={magic}&tab=care"
+
+                result = deliver_care_assignment(
+                    email=email,
+                    phone=phone,
+                    display_name=data.get("displayName") or "",
+                    assignment_title=assignment_title,
+                    portal_access_code=portal_access_code,
+                    magic_path=magic_path,
+                )
+                status = result["status"]
+                errors = result["errors"]
+                email_ok = result.get("sentVia") == "email"
+                sms_ok = result.get("sentVia") == "sms"
+
+                if status == "sent":
+                    sent += 1
+                elif status == "failed":
+                    failed += 1
+                elif status == "skipped":
+                    skipped += 1
+
+                update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP}
+                if errors:
+                    update_payload["error"] = "; ".join(errors)
+                if email_ok:
+                    update_payload["sentVia"] = "email"
+                elif sms_ok:
+                    update_payload["sentVia"] = "sms"
+                if magic_path:
+                    update_payload["magicPath"] = magic_path
                 doc.reference.update(update_payload)
                 details.append({"id": doc.id, "status": status, "errors": errors})
                 continue

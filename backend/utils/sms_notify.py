@@ -131,6 +131,48 @@ def send_test_reminder_sms(
         return False, str(exc)[:200]
 
 
+def send_care_assignment_sms(
+    *,
+    to_phone: str,
+    display_name: str = "",
+    assignment_title: str = "",
+    portal_access_code: str = "",
+    magic_url: str,
+) -> tuple[bool, str]:
+    phone = (to_phone or "").strip()
+    if not phone:
+        return False, "no_phone"
+    if not is_sms_configured():
+        logger.info("SMS skipped (Twilio not configured) for %s", phone[:4] + "****")
+        return False, "sms_not_configured"
+
+    name = (display_name or "").strip() or "내담자"
+    title = (assignment_title or "").strip() or "새 치료·과제"
+    my_code = (portal_access_code or "").strip().upper()
+    login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
+
+    parts = [f"[WizCoCo] {name}님 치료·과제 안내"]
+    parts.append(title)
+    if my_code:
+        parts.append(f"나의코드 {my_code}")
+    parts.append(login_url)
+    parts.append(magic_url)
+    body = "\n".join(parts)
+
+    try:
+        from twilio.rest import Client
+
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        client.messages.create(body=body, from_=TWILIO_FROM_NUMBER, to=phone)
+        return True, ""
+    except ImportError:
+        logger.warning("twilio package not installed")
+        return False, "twilio_not_installed"
+    except Exception as exc:
+        logger.exception("SMS send failed")
+        return False, str(exc)[:200]
+
+
 def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -> tuple[bool, str]:
     phone = (to_phone or "").strip()
     if not phone:

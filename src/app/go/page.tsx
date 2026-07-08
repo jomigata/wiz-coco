@@ -35,8 +35,10 @@ function GoContent() {
         persistClientPortalSession(result);
         clearJoinGuestSession();
         clearJoinParticipantSession();
-        setPortalReturnPath('/portal/');
-        router.replace('/portal/');
+        const tab = (searchParams.get('tab') || '').trim();
+        const dest = tab ? `/portal/?tab=${encodeURIComponent(tab)}` : '/portal/';
+        setPortalReturnPath(dest);
+        router.replace(dest);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -45,7 +47,7 @@ function GoContent() {
     return () => {
       cancelled = true;
     };
-  }, [token, router]);
+  }, [token, router, searchParams]);
 
   if (error) {
     return (

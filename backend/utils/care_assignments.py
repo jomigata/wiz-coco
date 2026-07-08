@@ -61,7 +61,7 @@ def _enqueue_care_assignment_notify(
     title: str,
     portal_access_code: str,
 ) -> str:
-    """T-2-08 전까지 큐에 적재만 — 워커 확장 시 발송."""
+    """T-2-08 — care_assignment 알림 큐 적재."""
     db.collection(NOTIFICATION_QUEUE_COLLECTION).add(
         {
             "type": "care_assignment",

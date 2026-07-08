@@ -246,22 +246,26 @@ Wave 2 케어 플랜의 기반 데이터 모델입니다. 포털 내담자는 Fi
 
 ---
 
-## 9. 알림 큐 확장 (T-2-08 예고)
+## 9. 알림 큐 — `care_assignment` (T-2-08)
 
-`notificationQueue` 항목에 `type: "care_assignment"` 추가:
+`notificationQueue` 항목 `type: "care_assignment"` — 워커가 이메일/SMS 발송.
 
 ```json
 {
   "type": "care_assignment",
   "portalId": "...",
   "assignmentId": "...",
-  "channels": ["email", "sms"],
+  "email": "...",
+  "phone": "...",
+  "displayName": "홍길동",
   "payload": {
-    "title": "새 치료 과제가 도착했습니다",
+    "title": "4주 호흡·이완 프로그램",
     "portalAccessCode": "CVC123"
   }
 }
 ```
+
+워커 처리 시 매직 링크(`/go?t=...&tab=care`)를 생성해 포털 **추가 과제·치료** 탭으로 안내합니다.
 
 ---
 
@@ -275,4 +279,4 @@ Wave 2 케어 플랜의 기반 데이터 모델입니다. 포털 내담자는 Fi
 | T-2-05 | 포털 「추가 과제·치료」탭 | §5-4 |
 | T-2-06 | 진행 기록 | §5-5, `careProgress` |
 | T-2-07 | 상담사 치료 모니터링 | §5-2 + 실시간 |
-| T-2-08 | `care_assignment` 알림 | §6 |
+| T-2-08 | `care_assignment` 알림 | §9 |
