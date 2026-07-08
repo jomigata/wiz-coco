@@ -60,6 +60,7 @@ from utils.client_portal_list import (
     list_counselor_client_portals,
     get_counselor_client_portal_detail,
     list_counselor_portal_test_assignments,
+    update_portal_counselor_tags,
 )
 from utils.portal_assessment_push import push_assessments_to_portals
 from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
@@ -174,6 +175,8 @@ def list_counselor_portals():
     if status not in ("active", "archived", "all"):
         status = "active"
     cohort_id = (request.args.get("cohortId") or "").strip() or None
+    progress = (request.args.get("progress") or "all").strip().lower() or None
+    tag = (request.args.get("tag") or "").strip() or None
     q = (request.args.get("q") or "").strip() or None
     db = get_firestore()
     result = list_counselor_client_portals(
@@ -181,6 +184,8 @@ def list_counselor_portals():
         g.counselor_uid,
         status=status,
         cohort_id=cohort_id,
+        progress=progress,
+        tag=tag,
         q=q,
     )
     return jsonify(result)
@@ -887,3 +892,33 @@ def get_counselor_portal_detail(portal_id):
     if not detail:
         return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
     return jsonify(detail)
+
+
+@bp.route("/detail/<portal_id>/tags", methods=["PATCH"])
+@require_counselor
+def patch_counselor_portal_tags(portal_id):
+    """상담사 — 내담자 관리 태그 편집."""
+    body = request.get_json(silent=True) or {}
+    tags = body.get("counselorTags")
+    if not isinstance(tags, list):
+        return jsonify({"error": "Bad Request", "message": "counselorTags 배열이 필요합니다."}), 400
+    db = get_firestore()
+    updated = update_portal_counselor_tags(db, g.counselor_uid, portal_id, tags)
+    if not updated:
+        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
+    return jsonify(updated)
+
+
+@bp.route("/detail/<portal_id>/tags", methods=["PATCH"])
+@require_counselor
+def patch_counselor_portal_tags(portal_id):
+    """상담사 — 내담자 관리 태그 편집."""
+    body = request.get_json(silent=True) or {}
+    tags = body.get("counselorTags")
+    if not isinstance(tags, list):
+        return jsonify({"error": "Bad Request", "message": "counselorTags 배열이 필요합니다."}), 400
+    db = get_firestore()
+    updated = update_portal_counselor_tags(db, g.counselor_uid, portal_id, tags)
+    if not updated:
+        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
+    return jsonify(updated)

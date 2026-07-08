@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -8,11 +8,15 @@ import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
   fetchCounselorClientPortalDetail,
   resendDispatchCredentials,
+  saveCounselorPortalTags,
   sendDispatchTestReminders,
 } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { getCounselorResult } from '@/lib/assessmentApi';
 import { printAssessmentReport, buildDefaultResultSections } from '@/lib/assessmentReportPrint';
+import { applyRealtimeToClientDetail } from '@/lib/clientPortalRealtime';
+import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
+import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
 import AssessmentComprehensiveReportButton from '@/components/counselor/AssessmentComprehensiveReportButton';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -67,12 +71,14 @@ type Props = {
 };
 
 export default function CounselorClientDetail({ portalId }: Props) {
-  const { authPending, showLoginRequired } = useAuthResolved();
+  const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
   const [detail, setDetail] = useState<CounselorClientPortalDetailResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionMsg, setActionMsg] = useState('');
   const [actionBusy, setActionBusy] = useState(false);
+  const [tagInput, setTagInput] = useState('');
+  const [tagsDraft, setTagsDraft] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,6 +86,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
     try {
       const data = await fetchCounselorClientPortalDetail(portalId);
       setDetail(data);
+      setTagsDraft(data.portal.counselorTags || []);
     } catch (err) {
       setDetail(null);
       setError(err instanceof Error ? err.message : '상세 정보를 불러오지 못했습니다.');
@@ -97,6 +104,42 @@ export default function CounselorClientDetail({ portalId }: Props) {
   }, [authPending, showLoginRequired, load]);
 
   useRedirectOnLoginRequiredError(error);
+
+  const assessmentIds = useMemo(
+    () => (detail?.assessments || []).map((a) => a.assessmentId),
+    [detail?.assessments],
+  );
+
+  const { results: liveResults, isLive, liveError, lastUpdatedAt } =
+    useCounselorTestResultsRealtime(assessmentIds, isAuthenticated && !authPending);
+
+  const liveDetail = useMemo(
+    () => (detail ? applyRealtimeToClientDetail(detail, liveResults) : null),
+    [detail, liveResults],
+  );
+
+  const handleSaveTags = async () => {
+    setActionBusy(true);
+    setActionMsg('');
+    try {
+      const updated = await saveCounselorPortalTags(portalId, tagsDraft);
+      setDetail(updated);
+      setTagsDraft(updated.portal.counselorTags || []);
+      setActionMsg('관리 태그가 저장되었습니다.');
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : '태그 저장에 실패했습니다.');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (!t || tagsDraft.length >= 10) return;
+    if (tagsDraft.some((x) => x.toLowerCase() === t.toLowerCase())) return;
+    setTagsDraft([...tagsDraft, t.slice(0, 32)]);
+    setTagInput('');
+  };
 
   const handleResend = async (assessmentId: string) => {
     setActionBusy(true);
@@ -149,7 +192,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
     return <p className="py-16 text-center text-sm text-slate-500">내담자 정보를 불러오는 중…</p>;
   }
 
-  if (error || !detail) {
+  if (error || !liveDetail) {
     return (
       <div className="space-y-4 py-8">
         <AuthLink href="/counselor/clients" className="text-sm text-slate-400 hover:text-white">
@@ -162,7 +205,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
     );
   }
 
-  const { portal, progress, assessments, recentResults, linkedPortals } = detail;
+  const { portal, progress, assessments, recentResults, linkedPortals } = liveDetail;
   const notify = notifyStatusLabel(portal.notifyStatus);
 
   return (
@@ -179,6 +222,11 @@ export default function CounselorClientDetail({ portalId }: Props) {
         >
           새로고침
         </button>
+        <CounselorLiveStatusBadge
+          isLive={isLive}
+          liveError={liveError}
+          lastUpdatedAt={lastUpdatedAt}
+        />
       </div>
 
       {actionMsg ? (
@@ -250,6 +298,57 @@ export default function CounselorClientDetail({ portalId }: Props) {
             <dd className="text-slate-200">{formatDateTime(portal.notifyAt)}</dd>
           </div>
         </dl>
+
+        <div className="mt-5 rounded-lg border border-violet-500/20 bg-violet-950/20 p-4">
+          <p className="text-xs text-violet-300 mb-2">관리 태그 (최대 10개)</p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {tagsDraft.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 rounded bg-violet-500/20 px-2 py-1 text-xs text-violet-100"
+              >
+                #{tag}
+                <button
+                  type="button"
+                  onClick={() => setTagsDraft(tagsDraft.filter((t) => t !== tag))}
+                  className="text-violet-300 hover:text-white"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addTag();
+                }
+              }}
+              placeholder="예: 고위험, 재상담"
+              className="flex-1 min-w-[10rem] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
+            />
+            <button
+              type="button"
+              onClick={addTag}
+              disabled={actionBusy || !tagInput.trim()}
+              className="rounded-lg border border-white/15 px-3 py-2 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+            >
+              추가
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleSaveTags()}
+              disabled={actionBusy}
+              className="rounded-lg bg-violet-700 px-3 py-2 text-xs text-white hover:bg-violet-600 disabled:opacity-50"
+            >
+              태그 저장
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className="space-y-4">
@@ -356,7 +455,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                               <AssessmentComprehensiveReportButton
                                 resultId={test.resultId}
                                 testLabel={test.testName}
-                                clientLabel={detail?.portal.displayName}
+                                clientLabel={liveDetail?.portal.displayName}
                                 compact
                               />
                             </div>

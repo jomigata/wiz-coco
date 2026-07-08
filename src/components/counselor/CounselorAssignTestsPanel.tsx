@@ -5,6 +5,9 @@ import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { listCounselorPortalTestAssignments } from '@/lib/clientPortalApi';
+import { applyRealtimeToAssignmentList } from '@/lib/clientPortalRealtime';
+import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
+import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -48,7 +51,7 @@ function progressHref(assessmentId: string): string {
 }
 
 export default function CounselorAssignTestsPanel() {
-  const { authPending, showLoginRequired } = useAuthResolved();
+  const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
   const [items, setItems] = useState<CounselorPortalTestAssignmentRow[]>([]);
   const [cohorts, setCohorts] = useState<{ cohortId: string; cohortName: string }[]>([]);
   const [assessments, setAssessments] = useState<{ assessmentId: string; title: string }[]>([]);
@@ -93,19 +96,32 @@ export default function CounselorAssignTestsPanel() {
 
   useRedirectOnLoginRequiredError(error);
 
+  const assessmentIds = useMemo(
+    () => assessments.map((a) => a.assessmentId),
+    [assessments],
+  );
+
+  const { results: liveResults, isLive, liveError, lastUpdatedAt } =
+    useCounselorTestResultsRealtime(assessmentIds, isAuthenticated && !authPending);
+
+  const displayItems = useMemo(
+    () => applyRealtimeToAssignmentList(items, liveResults),
+    [items, liveResults],
+  );
+
   const stats = useMemo(() => {
-    const completed = items.filter((i) => i.status === 'completed').length;
-    const inProgress = items.filter((i) => i.status === 'in_progress').length;
-    const notStarted = items.filter((i) => i.status === 'not_started').length;
-    return { total: items.length, completed, inProgress, notStarted };
-  }, [items]);
+    const completed = displayItems.filter((i) => i.status === 'completed').length;
+    const inProgress = displayItems.filter((i) => i.status === 'in_progress').length;
+    const notStarted = displayItems.filter((i) => i.status === 'not_started').length;
+    return { total: displayItems.length, completed, inProgress, notStarted };
+  }, [displayItems]);
 
   const selectablePortals = useMemo(() => {
     const map = new Map<
       string,
       { portalId: string; displayName: string; assessmentIds: Set<string> }
     >();
-    for (const row of items) {
+    for (const row of displayItems) {
       if (row.portalStatus !== 'active') continue;
       const existing = map.get(row.portalId);
       if (existing) {
@@ -121,7 +137,7 @@ export default function CounselorAssignTestsPanel() {
     return Array.from(map.values()).sort((a, b) =>
       a.displayName.localeCompare(b.displayName, 'ko'),
     );
-  }, [items]);
+  }, [displayItems]);
 
   const togglePortal = (portalId: string) => {
     setSelectedPortalIds((prev) => {
@@ -162,6 +178,11 @@ export default function CounselorAssignTestsPanel() {
             <span>
               완료 <strong className="text-emerald-300">{stats.completed}</strong>건
             </span>
+            <CounselorLiveStatusBadge
+              isLive={isLive}
+              liveError={liveError}
+              lastUpdatedAt={lastUpdatedAt}
+            />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -284,7 +305,7 @@ export default function CounselorAssignTestsPanel() {
 
       {loading ? (
         <p className="py-12 text-center text-sm text-slate-500">검사 할당 목록을 불러오는 중…</p>
-      ) : items.length === 0 ? (
+      ) : displayItems.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 검사 할당이 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
@@ -364,7 +385,7 @@ export default function CounselorAssignTestsPanel() {
               </tr>
             </thead>
             <tbody>
-              {items.map((row) => {
+              {displayItems.map((row) => {
                 const badge = statusLabel(row.status);
                 const rowKey = `${row.portalId}:${row.assessmentId}:${row.testId}`;
                 return (

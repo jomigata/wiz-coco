@@ -58,12 +58,18 @@ def list_counselor_client_portals(
     *,
     status: str | None = None,
     cohort_id: str | None = None,
+    progress: str | None = None,
+    tag: str | None = None,
     q: str | None = None,
 ) -> dict:
     """상담사 소유 내담자 포털 목록 + 진행·발송 요약."""
     status_filter = (status or "active").strip().lower()
     query = (q or "").strip().lower()
     cohort_filter = (cohort_id or "").strip()
+    progress_filter = (progress or "all").strip().lower()
+    if progress_filter not in ("all", "not_started", "in_progress", "completed", "no_tests"):
+        progress_filter = "all"
+    tag_filter = (tag or "").strip().lower()
 
     rows: list[tuple[str, dict, float]] = []
     refs = (
@@ -80,6 +86,14 @@ def list_counselor_client_portals(
             continue
         if query and not _matches_search(pdata, query):
             continue
+        if tag_filter:
+            tags = [
+                str(t).strip().lower()
+                for t in (pdata.get("counselorTags") or [])
+                if str(t).strip()
+            ]
+            if tag_filter not in tags:
+                continue
         created_raw = pdata.get("createdAt")
         created_ts = 0.0
         if created_raw is not None and hasattr(created_raw, "timestamp"):
@@ -176,6 +190,11 @@ def list_counselor_client_portals(
                 "notifyAt": notify_at,
                 "lastLoginAt": _iso_timestamp(pdata.get("lastLoginAt")),
                 "createdAt": _iso_timestamp(pdata.get("createdAt")),
+                "counselorTags": [
+                    str(t).strip()
+                    for t in (pdata.get("counselorTags") or [])
+                    if str(t).strip()
+                ][:10],
                 "progress": {
                     "totalTests": total_tests,
                     "completedTests": completed_tests,
@@ -184,6 +203,21 @@ def list_counselor_client_portals(
                 },
             }
         )
+
+    if progress_filter != "all":
+        items = [item for item in items if item.get("progress", {}).get("label") == progress_filter]
+
+    all_tags: set[str] = set()
+    for _, pdata, _ in rows:
+        for t in pdata.get("counselorTags") or []:
+            s = str(t).strip()
+            if s:
+                all_tags.add(s)
+
+    assessment_meta = {
+        aid: {"testList": entry.get("testList") or []}
+        for aid, entry in assessment_cache.items()
+    }
 
     cohorts = sorted(
         cohorts_map.values(),
@@ -194,6 +228,8 @@ def list_counselor_client_portals(
         "items": items,
         "total": len(items),
         "cohorts": cohorts,
+        "tags": sorted(all_tags, key=lambda x: x.lower()),
+        "assessmentMeta": assessment_meta,
     }
 
 
@@ -317,6 +353,11 @@ def get_counselor_client_portal_detail(
             "notifyError": notify_error,
             "notifyAt": notify_at,
             "notifySentVia": notify.get("sentVia") or "",
+            "counselorTags": [
+                str(t).strip()
+                for t in (pdata.get("counselorTags") or [])
+                if str(t).strip()
+            ][:10],
         },
         "progress": {
             "totalTests": total_tests,
@@ -469,3 +510,44 @@ def list_counselor_portal_test_assignments(
         "cohorts": cohorts,
         "assessments": assessments,
     }
+
+
+def update_portal_counselor_tags(
+    db,
+    counselor_uid: str,
+    portal_id: str,
+    tags: list[str],
+) -> dict | None:
+    """상담사 관리용 내담자 태그 저장 (최대 10개)."""
+    from firebase_admin.firestore import SERVER_TIMESTAMP
+
+    pid = (portal_id or "").strip()
+    if not pid:
+        return None
+
+    portal_doc = get_portal_doc(db, pid)
+    if not portal_doc:
+        return None
+    pdata = portal_doc.to_dict() or {}
+    if pdata.get("counselorId") != counselor_uid:
+        return None
+
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for raw in tags or []:
+        t = str(raw).strip()[:32]
+        if not t:
+            continue
+        key = t.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(t)
+        if len(cleaned) >= 10:
+            break
+
+    portal_doc.reference.set(
+        {"counselorTags": cleaned, "updatedAt": SERVER_TIMESTAMP},
+        merge=True,
+    )
+    return get_counselor_client_portal_detail(db, counselor_uid, pid)

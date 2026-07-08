@@ -6,6 +6,7 @@ import type {
   ClientPortalBulkCreateResult,
   ClientPortalBulkJobResult,
   ClientPortalLoginResult,
+  ClientPortalProgressLabel,
   BulkPortalJobStatus,
   CounselorClientPortalListResult,
   CounselorClientPortalDetailResult,
@@ -395,6 +396,8 @@ export async function resendBulkPortalNotifications(body: {
 export async function listCounselorClientPortals(params?: {
   status?: 'active' | 'archived' | 'all';
   cohortId?: string;
+  progress?: 'all' | ClientPortalProgressLabel;
+  tag?: string;
   q?: string;
 }): Promise<CounselorClientPortalListResult> {
   const token = await getCounselorToken();
@@ -403,6 +406,8 @@ export async function listCounselorClientPortals(params?: {
   const search = new URLSearchParams();
   if (params?.status) search.set('status', params.status);
   if (params?.cohortId) search.set('cohortId', params.cohortId);
+  if (params?.progress && params.progress !== 'all') search.set('progress', params.progress);
+  if (params?.tag?.trim()) search.set('tag', params.tag.trim());
   if (params?.q?.trim()) search.set('q', params.q.trim());
   const qs = search.toString() ? `?${search.toString()}` : '';
 
@@ -429,6 +434,31 @@ export async function fetchCounselorClientPortalDetail(
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '내담자 상세 조회에 실패했습니다.');
+  }
+  return data as CounselorClientPortalDetailResult;
+}
+
+export async function saveCounselorPortalTags(
+  portalId: string,
+  counselorTags: string[],
+): Promise<CounselorClientPortalDetailResult> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const res = await fetch(
+    `${getBaseUrl()}/api/client-portals/detail/${encodeURIComponent(portalId)}/tags`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ counselorTags }),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '태그 저장에 실패했습니다.');
   }
   return data as CounselorClientPortalDetailResult;
 }

@@ -109,6 +109,7 @@ export type CounselorClientPortalListItem = {
   notifyAt?: string | null;
   lastLoginAt?: string | null;
   createdAt?: string | null;
+  counselorTags?: string[];
   progress: {
     totalTests: number;
     completedTests: number;
@@ -126,6 +127,8 @@ export type CounselorClientPortalListResult = {
   items: CounselorClientPortalListItem[];
   total: number;
   cohorts: CounselorClientPortalCohort[];
+  tags?: string[];
+  assessmentMeta?: Record<string, { testList: { testId: string; name: string }[] }>;
 };
 
 export type CounselorPortalTestAssignmentStatus = 'not_started' | 'in_progress' | 'completed';
@@ -348,6 +351,7 @@ export type CounselorClientPortalDetailResult = {
     notifyError?: string | null;
     notifyAt?: string | null;
     notifySentVia?: string;
+    counselorTags?: string[];
   };
   progress: {
     totalTests: number;

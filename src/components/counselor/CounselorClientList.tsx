@@ -9,11 +9,15 @@ import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
+import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
+import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
+import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
-import type { CounselorClientPortalListItem } from '@/types/clientPortal';
+import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@/types/clientPortal';
 
 type StatusFilter = 'active' | 'archived' | 'all';
+type ProgressFilter = 'all' | ClientPortalProgressLabel;
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -66,13 +70,19 @@ function progressHref(assessmentId: string): string {
 export default function CounselorClientList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { authPending, showLoginRequired } = useAuthResolved();
+  const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
   const [items, setItems] = useState<CounselorClientPortalListItem[]>([]);
+  const [assessmentMeta, setAssessmentMeta] = useState<
+    Record<string, { testList: { testId: string; name: string }[] }>
+  >({});
   const [cohorts, setCohorts] = useState<{ cohortId: string; cohortName: string }[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
+  const [progressFilter, setProgressFilter] = useState<ProgressFilter>('all');
+  const [tagFilter, setTagFilter] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
 
   useEffect(() => {
@@ -104,17 +114,21 @@ export default function CounselorClientList() {
       const data = await listCounselorClientPortals({
         status: statusFilter,
         cohortId: cohortFilter || undefined,
+        progress: progressFilter,
+        tag: tagFilter || undefined,
         q: query.trim() || undefined,
       });
       setItems(data.items || []);
       setCohorts(data.cohorts || []);
+      setTags(data.tags || []);
+      setAssessmentMeta(data.assessmentMeta || {});
     } catch (err) {
       setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, cohortFilter, query]);
+  }, [statusFilter, cohortFilter, progressFilter, tagFilter, query]);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {
@@ -126,11 +140,24 @@ export default function CounselorClientList() {
 
   useRedirectOnLoginRequiredError(error);
 
+  const assessmentIds = useMemo(
+    () => Object.keys(assessmentMeta),
+    [assessmentMeta],
+  );
+
+  const { results: liveResults, isLive, liveError, lastUpdatedAt } =
+    useCounselorTestResultsRealtime(assessmentIds, isAuthenticated && !authPending);
+
+  const displayItems = useMemo(
+    () => applyRealtimeToClientList(items, assessmentMeta, liveResults),
+    [items, assessmentMeta, liveResults],
+  );
+
   const stats = useMemo(() => {
-    const completed = items.filter((i) => i.progress.label === 'completed').length;
-    const inProgress = items.filter((i) => i.progress.label === 'in_progress').length;
-    return { total: items.length, completed, inProgress };
-  }, [items]);
+    const completed = displayItems.filter((i) => i.progress.label === 'completed').length;
+    const inProgress = displayItems.filter((i) => i.progress.label === 'in_progress').length;
+    return { total: displayItems.length, completed, inProgress };
+  }, [displayItems]);
 
   return (
     <div className="mx-auto w-full max-w-[1800px] space-y-5 px-4 py-5 sm:px-6">
@@ -150,6 +177,11 @@ export default function CounselorClientList() {
             <span>
               완료 <strong className="text-emerald-300">{stats.completed}</strong>명
             </span>
+            <CounselorLiveStatusBadge
+              isLive={isLive}
+              liveError={liveError}
+              lastUpdatedAt={lastUpdatedAt}
+            />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -196,6 +228,29 @@ export default function CounselorClientList() {
           <option value="all">전체 상태</option>
         </select>
         <select
+          value={progressFilter}
+          onChange={(e) => setProgressFilter(e.target.value as ProgressFilter)}
+          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+        >
+          <option value="all">전체 진행</option>
+          <option value="in_progress">진행 중</option>
+          <option value="not_started">미시작</option>
+          <option value="completed">완료</option>
+          <option value="no_tests">검사 없음</option>
+        </select>
+        <select
+          value={tagFilter}
+          onChange={(e) => setTagFilter(e.target.value)}
+          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+        >
+          <option value="">전체 태그</option>
+          {tags.map((tag) => (
+            <option key={tag} value={tag}>
+              #{tag}
+            </option>
+          ))}
+        </select>
+        <select
           value={cohortFilter}
           onChange={(e) => updateCohortFilter(e.target.value)}
           className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
@@ -218,7 +273,7 @@ export default function CounselorClientList() {
 
       {loading ? (
         <p className="py-12 text-center text-sm text-slate-500">내담자 목록을 불러오는 중…</p>
-      ) : items.length === 0 ? (
+      ) : displayItems.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 내담자가 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
@@ -240,6 +295,7 @@ export default function CounselorClientList() {
                 <th className="px-4 py-3 font-medium">나의코드</th>
                 <th className="px-4 py-3 font-medium">연락처</th>
                 <th className="px-4 py-3 font-medium">그룹</th>
+                <th className="px-4 py-3 font-medium">태그</th>
                 <th className="px-4 py-3 font-medium">검사 진행</th>
                 <th className="px-4 py-3 font-medium">자격증명 발송</th>
                 <th className="px-4 py-3 font-medium">최근 접속</th>
@@ -247,7 +303,7 @@ export default function CounselorClientList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {items.map((item) => {
+              {displayItems.map((item) => {
                 const notify = notifyStatusLabel(item.notifyStatus);
                 const progress = progressLabel(item);
                 const primaryAssessment = item.assessments[0];
@@ -279,6 +335,22 @@ export default function CounselorClientList() {
                       {item.assignedAssessmentCount > 0 ? (
                         <div className="text-slate-500">검사코드 {item.assignedAssessmentCount}건</div>
                       ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-400">
+                      {(item.counselorTags || []).length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {(item.counselorTags || []).map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded bg-violet-500/15 px-1.5 py-0.5 text-violet-200"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium ${progress.className}`}>{progress.text}</span>
