@@ -238,8 +238,6 @@ export default function Navigation() {
   const showPsychologyTestsMenu =
     shouldShowPsychologyTestsMenu(userRole) &&
     canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
-  /** 상담사는 상담관리 메뉴와 중복되므로 상단 AI 심리검사 숨김 — 관리자만 표시 */
-  const showTopPsychologyTestsMenu = showPsychologyTestsMenu && userRole !== 'counselor';
   const showCounselorMenu =
     canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
   const professionalIconAccess = {
@@ -256,10 +254,10 @@ export default function Navigation() {
   );
 
   useEffect(() => {
-    if (!showTopPsychologyTestsMenu && activeMenu === 'psychology-tests') {
+    if (!showPsychologyTestsMenu && activeMenu === 'psychology-tests') {
       setActiveMenu(null);
     }
-  }, [showTopPsychologyTestsMenu, activeMenu]);
+  }, [showPsychologyTestsMenu, activeMenu]);
 
   // 스크롤 상태 감지 함수
   const checkScrollState = (menuId: string, scrollElement: HTMLElement) => {
@@ -509,7 +507,7 @@ export default function Navigation() {
               {isLoggedIn && (
               <>
               {/* 심리검사 드롭다운 메뉴 — 상담사·관리자 전용 */}
-              {showTopPsychologyTestsMenu && (
+              {showPsychologyTestsMenu && (
               <div ref={psychologyTestsTriggerRef} className="relative">
                 <Link
                   href="/tests"
@@ -1094,7 +1092,7 @@ export default function Navigation() {
                 검사시작
               </Link>
 
-              {isLoggedIn && showTopPsychologyTestsMenu && (
+              {isLoggedIn && showPsychologyTestsMenu && (
                 <ThreeTierMobileMenuSection
                   sectionTitle="🧠 AI 심리검사"
                   categories={visibleTestMenuItems}
