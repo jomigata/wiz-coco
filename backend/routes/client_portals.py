@@ -63,6 +63,7 @@ from utils.client_portal_list import (
 )
 from utils.portal_assessment_push import push_assessments_to_portals
 from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
+from utils.care_assignments import list_portal_care_assignments
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -357,6 +358,28 @@ def portal_me():
             "linkedPortals": linked_portals,
         }
     )
+
+
+@bp.route("/care-assignments", methods=["GET"])
+def portal_care_assignments():
+    """포털 내담자 — 상담사가 할당한 치료·과제 목록."""
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify(
+            {
+                "active": [],
+                "completed": [],
+                "summary": {"activeCount": 0, "completedCount": 0, "overdueCount": 0},
+            }
+        )
+
+    db = get_firestore()
+    result = list_portal_care_assignments(db, portal_id)
+    return jsonify(result)
 
 
 @bp.route("/magic-link/verify", methods=["POST"])

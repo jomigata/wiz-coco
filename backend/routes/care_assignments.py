@@ -56,10 +56,10 @@ def care_assignment_schema():
                 "GET /api/care-assignments/programs/<programId>",
                 "POST /api/care-assignments",
                 "GET /api/care-assignments",
+                "GET /api/client-portals/care-assignments",
             ],
             "plannedEndpoints": [
                 "PATCH /api/care-assignments/{assignmentId}",
-                "GET /api/client-portals/care-assignments",
                 "POST /api/client-portals/care-assignments/{assignmentId}/progress",
             ],
         }

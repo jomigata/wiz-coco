@@ -14,6 +14,7 @@ import type {
   CounselorMonitoringHubResult,
   CounselorCohortMonitoringResult,
 } from '@/types/clientPortal';
+import type { PortalCareAssignmentsResult } from '@/types/careAssignment';
 import { getCounselorToken } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput, normalizeMyCodeInput, normalizeJoinPinDigits } from '@/lib/accessCodeFormat';
 
@@ -103,6 +104,20 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
     throw new Error(typeof data?.message === 'string' ? data.message : '세션이 만료되었습니다.');
   }
   return data;
+}
+
+/** 포털 — 상담사가 할당한 치료·과제 (T-2-05) */
+export async function fetchPortalCareAssignments(
+  portalToken: string,
+): Promise<PortalCareAssignmentsResult> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/care-assignments`, {
+    headers: { Authorization: `Portal ${portalToken}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '과제 목록을 불러오지 못했습니다.');
+  }
+  return data as PortalCareAssignmentsResult;
 }
 
 export async function bulkCreateClientPortals(body: {

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchPortalDashboard, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
+import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
   findFirstCompletedExpandKey,
@@ -26,6 +27,7 @@ import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 
 type PortalAssessment = PortalDashboardAssessment;
+type PortalTab = 'tests' | 'care';
 
 function PortalLoading() {
   return (
@@ -60,6 +62,7 @@ function ClientPortalContent() {
   const [resultDetail, setResultDetail] = useState<Awaited<ReturnType<typeof getClientResult>> | null>(null);
   const [resultViewLoading, setResultViewLoading] = useState(false);
   const [resultViewError, setResultViewError] = useState('');
+  const [portalTab, setPortalTab] = useState<PortalTab>('tests');
 
   useEffect(() => {
     if (!resultView) {
@@ -149,6 +152,12 @@ function ClientPortalContent() {
   useEffect(() => {
     setPortalReturnPath('/portal/');
   }, []);
+
+  useEffect(() => {
+    const tab = (searchParams.get('tab') || '').trim();
+    if (tab === 'care') setPortalTab('care');
+    else if (tab === 'tests') setPortalTab('tests');
+  }, [searchParams]);
 
   useEffect(() => {
     const expand = (searchParams.get('expand') || '').trim();
@@ -323,6 +332,35 @@ function ClientPortalContent() {
             </p>
           </div>
 
+          <div className="flex gap-2 border-b border-slate-700/80">
+            <button
+              type="button"
+              onClick={() => setPortalTab('tests')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                portalTab === 'tests'
+                  ? 'border-cyan-400 text-cyan-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              검사 진행
+            </button>
+            <button
+              type="button"
+              onClick={() => setPortalTab('care')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                portalTab === 'care'
+                  ? 'border-violet-400 text-violet-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              추가 과제·치료
+            </button>
+          </div>
+
+          {portalTab === 'care' ? (
+            <PortalCareAssignmentsPanel />
+          ) : (
+            <>
           <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
             {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '검사코드별 진행 현황'}
           </h2>
@@ -384,6 +422,8 @@ function ClientPortalContent() {
                 </section>
               );
             })
+          )}
+            </>
           )}
         </main>
       </div>

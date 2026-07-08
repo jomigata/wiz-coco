@@ -1,7 +1,7 @@
 """케어 할당 생성·조회 (T-2-04)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from firebase_admin.firestore import ArrayUnion, SERVER_TIMESTAMP
 
@@ -310,4 +310,88 @@ def list_counselor_care_assignments(
         "items": items,
         "total": len(rows),
         "summary": summary,
+    }
+
+
+def _parse_date_only(value: str | None):
+    if not value:
+        return None
+    raw = str(value).strip()[:10]
+    try:
+        return datetime.strptime(raw, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _portal_assignment_item(db, doc_id: str, data: dict) -> dict:
+    progress = _progress_for_assignment(db, doc_id)
+    return {
+        "assignmentId": doc_id,
+        "type": data.get("type") or "custom_task",
+        "status": data.get("status") or "active",
+        "title": data.get("title") or "과제",
+        "description": data.get("description"),
+        "instructions": data.get("instructions"),
+        "priority": data.get("priority") or "medium",
+        "programId": data.get("programId"),
+        "dueAt": data.get("dueAt"),
+        "progress": progress,
+    }
+
+
+def list_portal_care_assignments(db, portal_id: str) -> dict:
+    """포털 내담자용 활성·완료 케어 할당 목록."""
+    portal_id = (portal_id or "").strip()
+    if not portal_id:
+        return {
+            "active": [],
+            "completed": [],
+            "summary": {"activeCount": 0, "completedCount": 0, "overdueCount": 0},
+        }
+
+    today = datetime.now(timezone.utc).date()
+    active: list[dict] = []
+    completed: list[dict] = []
+    overdue_count = 0
+
+    refs = (
+        db.collection(CARE_ASSIGNMENTS_COLLECTION)
+        .where("portalId", "==", portal_id)
+        .stream()
+    )
+
+    for doc in refs:
+        data = doc.to_dict() or {}
+        status = (data.get("status") or "").strip()
+        if status in ("cancelled", "expired"):
+            continue
+        item = _portal_assignment_item(db, doc.id, data)
+        if status == "completed":
+            completed.append(item)
+            continue
+        if status != "active":
+            continue
+        due = _parse_date_only(data.get("dueAt"))
+        if due and due < today:
+            overdue_count += 1
+        active.append(item)
+
+    def _due_sort_key(row: dict):
+        due = _parse_date_only(row.get("dueAt"))
+        return due or date.max
+
+    active.sort(key=_due_sort_key)
+    completed.sort(
+        key=lambda r: (r.get("progress") or {}).get("completedAt") or "",
+        reverse=True,
+    )
+
+    return {
+        "active": active,
+        "completed": completed,
+        "summary": {
+            "activeCount": len(active),
+            "completedCount": len(completed),
+            "overdueCount": overdue_count,
+        },
     }
