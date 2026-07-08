@@ -7,6 +7,7 @@ import {
   adminCreateOrganization,
   adminGrantOrgCredits,
   adminListOrganizations,
+  adminUpdateOrgLiaison,
   type OrganizationRecord,
 } from '@/lib/orgApi';
 
@@ -150,18 +151,36 @@ export default function AdminOrganizationsPage() {
                 <p className="text-xs text-slate-500">{id} · {o.type} · 크레딧 {o.creditBalance ?? 0}</p>
                 <p className="text-xs">담당 상담사: {o.liaisonCounselorUid || '—'}</p>
                 <p className="text-xs">org_admin: {o.adminUid || '—'}</p>
-                {o.adminUid ? null : (
+                <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="mt-2 text-xs text-blue-400"
+                    className="text-xs text-violet-400 hover:text-violet-300"
                     onClick={() => {
-                      const uid = prompt('org_admin UID');
-                      if (uid) adminAssignOrgAdmin(id, uid).then(reload).catch(alert);
+                      const uid = prompt('새 담당 상담사 UID (liaisonCounselorUid)', o.liaisonCounselorUid || '');
+                      if (!uid?.trim()) return;
+                      adminUpdateOrgLiaison(id, uid.trim())
+                        .then(() => {
+                          setMessage('담당 상담사가 변경되었습니다.');
+                          return reload();
+                        })
+                        .catch((e) => setError(e instanceof Error ? e.message : '변경 실패'));
                     }}
                   >
-                    담당자 배정
+                    담당 상담사 변경
                   </button>
-                )}
+                  {o.adminUid ? null : (
+                    <button
+                      type="button"
+                      className="text-xs text-blue-400"
+                      onClick={() => {
+                        const uid = prompt('org_admin UID');
+                        if (uid) adminAssignOrgAdmin(id, uid).then(reload).catch(alert);
+                      }}
+                    >
+                      담당자 배정
+                    </button>
+                  )}
+                </div>
               </li>
             );
           })}

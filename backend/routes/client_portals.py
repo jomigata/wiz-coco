@@ -64,6 +64,7 @@ from utils.client_portal_list import (
 )
 from utils.portal_assessment_push import push_assessments_to_portals
 from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
+from utils.counselor_org_liaison import list_counselor_org_liaisons
 from utils.care_assignments import list_portal_care_assignments, submit_portal_care_progress
 from utils.care_assignment_schema import CareAssignmentValidationError
 
@@ -280,6 +281,15 @@ def counselor_cohort_monitoring():
     db = get_firestore()
     result = get_counselor_cohort_monitoring_view(db, g.counselor_uid)
     return jsonify(result)
+
+
+@bp.route("/org-liaisons", methods=["GET"])
+@require_counselor
+def counselor_org_liaisons():
+    """담당 상담사로 배정된 B2B 기관·cohort 요약 (T-5-03)."""
+    db = get_firestore()
+    orgs = list_counselor_org_liaisons(db, g.counselor_uid)
+    return jsonify({"organizations": orgs})
 
 
 @bp.route("/login", methods=["POST"])

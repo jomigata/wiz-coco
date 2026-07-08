@@ -152,6 +152,67 @@ export async function adminAssignOrgAdmin(orgId: string, adminUid: string) {
   return res.json();
 }
 
+export async function adminUpdateOrgLiaison(orgId: string, liaisonCounselorUid: string) {
+  const res = await orgFetch(`/api/admin/organizations/${encodeURIComponent(orgId)}/liaison`, {
+    method: 'PATCH',
+    body: JSON.stringify({ liaisonCounselorUid }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || '담당 상담사 변경 실패');
+  }
+  const data = await res.json();
+  return data.organization as OrganizationRecord;
+}
+
+export interface OrgCohortTemplate {
+  id: string;
+  organizationId?: string;
+  name: string;
+  title?: string;
+  welcomeMessage?: string;
+  usageEndDate?: string;
+  testList: { testId: string; name: string }[];
+}
+
+export async function fetchOrgCohortTemplates(): Promise<OrgCohortTemplate[]> {
+  const res = await orgFetch('/api/org/cohort-templates');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || data.error || '프리셋 목록 조회 실패');
+  }
+  const data = await res.json();
+  return data.templates || [];
+}
+
+export async function createOrgCohortTemplate(body: {
+  name: string;
+  title?: string;
+  welcomeMessage?: string;
+  usageEndDate?: string;
+  testList: { testId: string; name: string }[];
+}): Promise<OrgCohortTemplate> {
+  const res = await orgFetch('/api/org/cohort-templates', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || data.error || '프리셋 저장 실패');
+  }
+  return res.json();
+}
+
+export async function deleteOrgCohortTemplate(templateId: string): Promise<void> {
+  const res = await orgFetch(`/api/org/cohort-templates/${encodeURIComponent(templateId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || data.error || '프리셋 삭제 실패');
+  }
+}
+
 export function printOrgGroupReport(
   report: OrgGroupReport,
   orgName: string,

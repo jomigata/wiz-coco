@@ -8,6 +8,7 @@ from config import NOTIFICATION_CRON_SECRET, USERS_COLLECTION, BOOTSTRAP_ADMIN_E
 from firebase_init import get_firestore
 from utils.notification_worker import process_notification_queue
 from utils.bulk_portal_worker import process_pending_bulk_jobs
+from utils.cohort_reminder_worker import process_cohort_incomplete_reminders
 from utils.portal_magic import create_portal_magic_link_token
 from config import BULK_PORTAL_BATCH_SIZE
 
@@ -60,3 +61,22 @@ def process_queue():
         create_magic_link=create_portal_magic_link_token,
     )
     return jsonify({"notifications": notify_result, "bulkPortalJobs": bulk_result})
+
+
+@bp.route("/cohort-reminders", methods=["POST"])
+@require_cron_or_admin
+def process_cohort_reminders():
+    """그룹 미완료 자동 리마인더 (T-5-02) — 일 1회 Cron 권장."""
+    body = request.get_json(silent=True) or {}
+    limit = min(int(body.get("limit") or 40), 100)
+    min_hours = body.get("minHours")
+    try:
+        min_hours = int(min_hours) if min_hours is not None else None
+    except (TypeError, ValueError):
+        min_hours = None
+    result = process_cohort_incomplete_reminders(
+        get_firestore(),
+        limit=limit,
+        min_hours=min_hours,
+    )
+    return jsonify(result)

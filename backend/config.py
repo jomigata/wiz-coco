@@ -71,6 +71,7 @@ PLATFORM_FEE_RATE = float(os.getenv("PLATFORM_FEE_RATE", "0.25"))
 
 # 3단계 — B2B 기관
 ORGANIZATIONS_COLLECTION = "organizations"
+ORG_COHORT_TEMPLATES_COLLECTION = "orgCohortTemplates"
 ORG_CREDITS_COLLECTION = "orgCredits"
 ORG_CREDIT_LEDGER_COLLECTION = "orgCreditLedger"
 
@@ -95,6 +96,7 @@ PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://wizcoco.com").rstrip("/"
 
 # Cron/스케줄러가 통지 큐 처리 API 호출 시 사용 (X-Notification-Cron-Secret 헤더)
 NOTIFICATION_CRON_SECRET = os.getenv("NOTIFICATION_CRON_SECRET", "").strip()
+COHORT_REMINDER_MIN_HOURS = int(os.getenv("COHORT_REMINDER_MIN_HOURS", "72"))
 
 # SMS (Twilio, 선택)
 

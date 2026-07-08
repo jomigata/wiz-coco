@@ -112,3 +112,28 @@ def list_organizations(db, *, limit: int = 100) -> list[dict]:
         rows.append(d)
     rows.sort(key=lambda x: x.get("name") or "")
     return rows[:limit]
+
+
+def update_organization_liaison(
+    db,
+    org_id: str,
+    liaison_counselor_uid: str,
+    *,
+    actor_uid: str = "",
+) -> dict | None:
+    """기관 담당 상담사(liaison) 변경 — T-5-03."""
+    org = get_organization(db, org_id)
+    if not org:
+        raise ValueError("organization not found")
+    liaison = (liaison_counselor_uid or "").strip()
+    if not liaison:
+        raise ValueError("liaisonCounselorUid required")
+
+    db.collection(ORGANIZATIONS_COLLECTION).document(org_id).update(
+        {
+            "liaisonCounselorUid": liaison,
+            "updatedAt": SERVER_TIMESTAMP,
+            "liaisonUpdatedBy": actor_uid or "",
+        }
+    )
+    return get_organization(db, org_id)

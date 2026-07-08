@@ -7,6 +7,11 @@ from config import BULK_PORTAL_MAX_ROWS, BULK_PORTAL_SYNC_MAX, BULK_PORTAL_BATCH
 from utils.organizations import get_organization
 from utils.org_credits import get_org_balance, consume_org_credits, list_org_ledger
 from utils.org_group_report import build_anonymous_group_report, list_org_cohort_summaries
+from utils.org_cohort_templates import (
+    create_org_cohort_template,
+    delete_org_cohort_template,
+    list_org_cohort_templates,
+)
 from utils.bulk_portal_worker import (
     create_bulk_job,
     create_portal_for_row,
@@ -225,3 +230,42 @@ def org_bulk_create():
             "notifyFailed": notify_failed,
         }
     ), 201
+
+
+@bp.route("/cohort-templates", methods=["GET"])
+@require_org_admin
+def org_list_cohort_templates():
+    """기관 cohort 검사 세트 프리셋 목록 (T-5-01)."""
+    db = get_firestore()
+    templates = list_org_cohort_templates(db, g.organization_id)
+    return jsonify({"templates": templates})
+
+
+@bp.route("/cohort-templates", methods=["POST"])
+@require_org_admin
+def org_create_cohort_template():
+    body = request.get_json(silent=True) or {}
+    db = get_firestore()
+    try:
+        template = create_org_cohort_template(
+            db,
+            g.organization_id,
+            name=(body.get("name") or "").strip(),
+            title=(body.get("title") or "").strip(),
+            welcome_message=(body.get("welcomeMessage") or "").strip(),
+            usage_end_date=(body.get("usageEndDate") or "").strip(),
+            test_list=body.get("testList") or [],
+            actor_uid=g.org_admin_uid,
+        )
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    return jsonify(template), 201
+
+
+@bp.route("/cohort-templates/<template_id>", methods=["DELETE"])
+@require_org_admin
+def org_delete_cohort_template(template_id: str):
+    db = get_firestore()
+    if not delete_org_cohort_template(db, g.organization_id, template_id):
+        return jsonify({"error": "Not Found", "message": "템플릿을 찾을 수 없습니다."}), 404
+    return jsonify({"ok": True})

@@ -8,6 +8,7 @@ from utils.organizations import (
     get_organization,
     list_organizations,
     assign_org_admin,
+    update_organization_liaison,
 )
 from utils.org_credits import grant_org_credits, get_org_balance, list_org_ledger
 
@@ -99,6 +100,29 @@ def admin_assign_org_admin(org_id: str):
         return jsonify({"error": "Bad Request", "message": str(exc)}), 400
 
     return jsonify({"ok": True, "organizationId": org_id, "adminUid": admin_uid})
+
+
+@bp.route("/<org_id>/liaison", methods=["PATCH"])
+@require_admin
+def admin_update_org_liaison(org_id: str):
+    """기관 담당 상담사(liaison) 변경 (T-5-03)."""
+    body = request.get_json(silent=True) or {}
+    liaison = (body.get("liaisonCounselorUid") or "").strip()
+    if not liaison:
+        return jsonify({"error": "Bad Request", "message": "liaisonCounselorUid가 필요합니다."}), 400
+    db = get_firestore()
+    try:
+        org = update_organization_liaison(
+            db,
+            org_id,
+            liaison,
+            actor_uid=g.admin_uid,
+        )
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+    if not org:
+        return jsonify({"error": "Not Found", "message": "기관을 찾을 수 없습니다."}), 404
+    return jsonify({"ok": True, "organization": org})
 
 
 @bp.route("/<org_id>", methods=["GET"])

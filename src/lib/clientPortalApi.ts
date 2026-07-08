@@ -551,3 +551,33 @@ export async function fetchCounselorCohortMonitoring(): Promise<CounselorCohortM
   }
   return data as CounselorCohortMonitoringResult;
 }
+
+export interface CounselorOrgLiaison {
+  organizationId: string;
+  name: string;
+  type: string;
+  adminUid?: string;
+  creditBalance: number;
+  cohortCount: number;
+  cohorts: {
+    cohortId: string;
+    cohortName: string;
+    participantCount: number;
+    completedCount: number;
+    completionRatePercent: number;
+  }[];
+}
+
+export async function fetchCounselorOrgLiaisons(): Promise<CounselorOrgLiaison[]> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/org-liaisons`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '담당 기관 조회에 실패했습니다.');
+  }
+  return (data.organizations || []) as CounselorOrgLiaison[];
+}
