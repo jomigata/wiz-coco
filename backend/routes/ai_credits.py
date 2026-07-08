@@ -104,10 +104,11 @@ def ai_credits_grant():
 def ai_reports_list():
     """상담사 — resultId별 캐시된 AI 리포트 목록."""
     result_id = (request.args.get("resultId") or "").strip()
+    feature = (request.args.get("feature") or "").strip() or None
     if not result_id:
         return jsonify({"error": "resultId query parameter required"}), 400
     db = get_firestore()
-    reports = list_ai_reports_for_result(db, g.counselor_uid, result_id)
+    reports = list_ai_reports_for_result(db, g.counselor_uid, result_id, feature=feature)
     return jsonify({"resultId": result_id, "reports": reports})
 
 

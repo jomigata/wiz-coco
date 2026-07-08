@@ -15,6 +15,9 @@ export const COUNSEL_MESSAGE_CREDIT_COST = 0
 /** 검사 결과 AI 해석 1건 (T-3-05) */
 export const ASSESSMENT_INTERPRET_CREDIT_COST = 4
 
+/** 맞춤 검사 추천 1건 (T-3-06) */
+export const TEST_RECOMMENDATION_CREDIT_COST = 1
+
 export type RecordAiUsageInput = {
   counselorUid?: string
   clientId?: string

@@ -9,16 +9,18 @@ def list_ai_reports_for_result(
     counselor_uid: str,
     result_id: str,
     *,
+    feature: str | None = None,
     limit: int = 5,
 ) -> list[dict]:
     limit = max(1, min(limit, 20))
-    snaps = (
+    query = (
         db.collection(AI_REPORTS_COLLECTION)
         .where("counselorUid", "==", counselor_uid)
         .where("resultId", "==", result_id)
-        .limit(limit)
-        .stream()
     )
+    if feature:
+        query = query.where("feature", "==", feature)
+    snaps = query.limit(limit).stream()
     rows = []
     for snap in snaps:
         d = snap.to_dict() or {}

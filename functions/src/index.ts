@@ -6,6 +6,7 @@ export { startAiSession } from './counsel/startAiSession'
 export { sendCounselMessage } from './counsel/sendCounselMessage'
 export { endAiSession } from './counsel/endAiSession'
 export { interpretAssessmentResult } from './counsel/interpretAssessmentResult'
+export { recommendTestsFromResult } from './counsel/recommendTestsFromResult'
 export {
   syncCounselFaqFromSheet,
   scheduledSyncCounselFaq,

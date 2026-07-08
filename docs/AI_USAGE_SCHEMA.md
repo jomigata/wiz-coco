@@ -94,6 +94,20 @@ Wave 3 AI 워크벤치의 기반 데이터 모델입니다. **검사 크레딧**
 | GET | `/api/ai/reports?resultId=` | 상담사 Bearer | 캐시된 AI 리포트 목록 |
 | GET | `/api/ai/reports/<reportId>` | 상담사 Bearer | AI 리포트 단건 (재열람 무료) |
 
+### Callable — `recommendTestsFromResult` (T-3-06)
+
+```json
+{
+  "resultId": "testResults-doc-id",
+  "availableTests": [{ "testId": "mbti", "name": "MBTI" }],
+  "forceRegenerate": false
+}
+```
+
+- 추천 1회: 1 AI 크레딧
+- 캐시 재조회: 0 크레딧
+- 포털 연결 시 UI에서 `additional_assessment` 케어 할당 (T-3-07)
+
 ### Callable — `interpretAssessmentResult` (T-3-05)
 
 상담사 Firebase Auth로 호출. 검사 결과 1건 AI 해석 생성·`aiReports` 캐시.
@@ -149,6 +163,6 @@ Wave 3 AI 워크벤치의 기반 데이터 모델입니다. **검사 크레딧**
 | T-3-03 | `/counselor/credits` AI 탭 | ✅ |
 | T-3-04 | `aiPricingCatalog.ts` | ✅ |
 | T-3-05 | 검사 결과 AI 해석 Callable | ✅ |
-| T-3-06 | 맞춤 검사 추천 | ⬜ |
-| T-3-07 | AI → 포털 push | ⬜ |
+| T-3-06 | 맞춤 검사 추천 | ✅ |
+| T-3-07 | AI → 포털 push | ✅ (추천 페이지 할당) |
 | T-3-08 | Admin AI 사용량 대시보드 | ⬜ |
