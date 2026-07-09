@@ -20,12 +20,14 @@ copy backend\.env.solapi.example backend\.env.solapi
 2. 사업자/개인 정보·본인인증 완료
 3. 로그인
 
+**다음:** [SOLAPI_STEP2_CONSOLE_GUIDE_KO.md](./SOLAPI_STEP2_CONSOLE_GUIDE_KO.md) (콘솔 상세 클릭 경로)
+
 ---
 
 ## 2. API Key 발급
 
-1. 콘솔 → **API Key** (또는 개발자/API 메뉴)
-2. **새 API Key** 생성
+1. 콘솔 우측 상단 **워크스페이스** 선택 (본인 계정)
+2. 왼쪽 **개발자 허브** → **API Keys**
 3. `.env.solapi`에 저장:
    - `SOLAPI_API_KEY`
    - `SOLAPI_API_SECRET`
