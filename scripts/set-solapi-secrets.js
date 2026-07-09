@@ -52,6 +52,8 @@ function ghSecretSet(name, value) {
 }
 
 function main() {
+  const partial = process.argv.includes('--partial');
+
   if (!fs.existsSync(ENV_PATH)) {
     console.error('❌ backend/.env.solapi 파일이 없습니다.');
     console.error(`   예시 복사: copy "${EXAMPLE_PATH}" "${ENV_PATH}"`);
@@ -61,15 +63,27 @@ function main() {
 
   const vars = parseEnv(fs.readFileSync(ENV_PATH, 'utf8'));
   const missing = REQUIRED.filter((k) => !vars[k]);
-  if (missing.length) {
+  const present = REQUIRED.filter((k) => vars[k]);
+
+  if (!partial && missing.length) {
     console.error('❌ 다음 값이 비어 있습니다:', missing.join(', '));
+    console.error('   일부만 등록: npm run secrets:solapi:partial');
     process.exit(1);
   }
 
-  console.log('🔐 GitHub Secrets 등록 중 (7개)...');
-  for (const key of REQUIRED) {
+  if (!present.length) {
+    console.error('❌ 등록할 Secret 값이 없습니다.');
+    process.exit(1);
+  }
+
+  console.log(`🔐 GitHub Secrets 등록 중 (${present.length}개)...`);
+  for (const key of present) {
     ghSecretSet(key, vars[key]);
     console.log(`   ✅ ${key}`);
+  }
+
+  if (missing.length) {
+    console.log(`\nℹ️ 아직 비어 있음 (${missing.length}개): ${missing.join(', ')}`);
   }
 
   console.log('\n🚀 백엔드 재배포 트리거 (deploy-backend.yml)...');

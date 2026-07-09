@@ -37,6 +37,7 @@
     "deploy:fast": "node scripts/auto-deploy.js --fast",
     "git:push": "git push origin HEAD",
     "secrets:solapi": "node scripts/set-solapi-secrets.js",
+    "secrets:solapi:partial": "node scripts/set-solapi-secrets.js --partial",
     "verify:solapi": "node scripts/verify-solapi-status.js",
     "migrate:strip-code-hyphens": "python backend/scripts/migrate_strip_code_hyphens.py",
     "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run"
