@@ -11,7 +11,7 @@ export const BUSINESS_LEGAL = {
   representative: '송재화',
   businessRegistrationNumber: '542-22-01072',
   address:
-    '서울특별시 금천구 서부샛길 606, B동 21층 2102호(가산동, 대성디폴리스지식산업센터)',
+    '경기도 광명시 하안로 237, 806동 803호(하안동, 하안주공)',
   contactEmail: 'support@wizcoco.com',
   contactPhone: '010-5182-5410',
   /**
