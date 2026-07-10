@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
+import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
 
 /** 로그인 전: 내담자용 미니멀 푸터 · 승인 상담사: 전체 링크 */
 export default function SiteFooter() {
@@ -16,15 +17,21 @@ export default function SiteFooter() {
   if (!isAuthenticated || !isApprovedCounselor) {
     return (
       <footer className="border-t border-white/[0.05] bg-[#090d18] py-10">
-        <div className="container max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} WizCoCo · Psychological Care</p>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy/" className="hover:text-slate-300 transition-colors">
-              개인정보처리방침
-            </Link>
-            <Link href="/terms/" className="hover:text-slate-300 transition-colors">
-              이용약관
-            </Link>
+        <div className="container max-w-4xl mx-auto px-4 space-y-6">
+          <BusinessLegalBlock variant="full" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+            <p>© {new Date().getFullYear()} WizCoCo · Psychological Care</p>
+            <div className="flex items-center gap-4">
+              <Link href="/company/" className="hover:text-slate-300 transition-colors">
+                사업자정보
+              </Link>
+              <Link href="/privacy/" className="hover:text-slate-300 transition-colors">
+                개인정보처리방침
+              </Link>
+              <Link href="/terms/" className="hover:text-slate-300 transition-colors">
+                이용약관
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
@@ -88,8 +95,11 @@ export default function SiteFooter() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-700 pt-8 text-center text-sm text-gray-400">
-          <p>© {new Date().getFullYear()} WizCoCo. All rights reserved.</p>
+        <div className="border-t border-gray-700 pt-8 space-y-6">
+          <BusinessLegalBlock variant="full" className="text-left max-w-3xl mx-auto" />
+          <p className="text-center text-sm text-gray-400">
+            © {new Date().getFullYear()} WizCoCo. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

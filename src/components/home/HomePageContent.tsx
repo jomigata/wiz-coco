@@ -8,6 +8,7 @@ import MonetizationChannelSection from '@/components/monetization/MonetizationCh
 import MonetizationPricingSection from '@/components/monetization/MonetizationPricingSection';
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
 import MonetizationPartnerSection from '@/components/monetization/MonetizationPartnerSection';
+import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
 import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 
 export default function HomePageContent() {
@@ -25,6 +26,12 @@ export default function HomePageContent() {
             <MonetizationTrustSection />
             <MonetizationPartnerSection />
           </ProfessionalContentGate>
+
+          <section className="border-t border-white/[0.06] px-4 py-12">
+            <div className="mx-auto max-w-3xl">
+              <BusinessLegalBlock variant="full" />
+            </div>
+          </section>
         </main>
       </div>
     </div>
