@@ -105,6 +105,7 @@ backend/__pycache__/
 backend/**/__pycache__/
 backend/.env
 backend/.env.solapi
+.env.cloudflare
 backend/*.pyc
 
 # Service account keys (보안상 중요). Firebase_GitHub/*.json 등 포함.
