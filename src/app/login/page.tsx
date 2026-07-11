@@ -90,7 +90,7 @@ const LoginContent = () => {
         <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-emerald-100 mb-1">전문가·상담사 로그인</h2>
-            <p className="text-sm text-emerald-500/90">검사 코드 발급·결과 관리를 위한 전문가·상담사 계정</p>
+            <p className="text-sm text-emerald-500/90">검사 코드 관리를 위한 전문가·상담사 계정</p>
           </div>
 
           {registrationSuccess && !emailVerificationMessage && (
