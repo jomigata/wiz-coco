@@ -65,13 +65,24 @@ ALIMTALK_TEST_PHONE=01051825410
 
 ### C-2. Solapi에 채널 연동
 
-1. Solapi 콘솔 → **카카오/네이버/RCS** 메뉴
-2. **카카오톡 채널 연동** / **발신 프로필** 등록
-3. 연동 완료 후 **pfId** (또는 채널 ID) 복사
-4. `.env.solapi`:
-   ```
-   SOLAPI_KAKAO_PF_ID=복사한_pfId
-   ```
+**먼저 (카카오 관리자센터):** 채널 정보 → **채널 공개 ON**, **검색 허용 ON**  
+(비공개·검색불가면 Solapi 연동 오류: 「채널 상태를 확인」)
+
+**콘솔 (클릭):**
+
+1. Solapi 콘솔 → **카카오/네이버/RCS** → **채널 연동**
+2. 검색용 아이디: `wizcoco`
+3. 카테고리: **교육** → **교육정보/접수대행/자격증**
+4. 채널 관리자 휴대폰: `01051825410` → **인증 요청** → 카카오톡 인증번호 입력
+5. 연동 후 **pfId(channelId)** 복사 → `.env.solapi`의 `SOLAPI_KAKAO_PF_ID`
+
+**CLI (선택):**
+
+```bash
+npm run solapi:kakao:token
+npm run solapi:kakao:link -- 받은인증번호
+npm run solapi:kakao:list
+```
 
 ---
 

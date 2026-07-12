@@ -40,6 +40,9 @@
     "secrets:solapi:partial": "node scripts/set-solapi-secrets.js --partial",
     "verify:solapi": "node scripts/verify-solapi-status.js",
     "setup:cloudflare-email": "node scripts/setup-cloudflare-email-routing.js",
+    "solapi:kakao:token": "node scripts/link-solapi-kakao-channel.js token",
+    "solapi:kakao:link": "node scripts/link-solapi-kakao-channel.js link",
+    "solapi:kakao:list": "node scripts/link-solapi-kakao-channel.js list",
     "migrate:strip-code-hyphens": "python backend/scripts/migrate_strip_code_hyphens.py",
     "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run"
   },
