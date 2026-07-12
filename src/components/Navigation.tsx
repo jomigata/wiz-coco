@@ -22,6 +22,7 @@ import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
+import CascadingTierMenuPanel from '@/components/nav/CascadingTierMenuPanel';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
@@ -734,12 +735,7 @@ export default function Navigation() {
                       <div
                         ref={counselorTriggerRef}
                         className="relative"
-                        onMouseEnter={() => {
-                          openMenu('counselor');
-                          // 대분류만 먼저 표시 — 중·소분류는 대분류 호버 시 표시
-                          setSelectedCounselorMainCategory(null);
-                          setSelectedCounselorSubcategory(null);
-                        }}
+                        onMouseEnter={() => openMenu('counselor')}
                         onMouseLeave={scheduleClose}
                       >
                         <Link
@@ -752,6 +748,11 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
+                          onMouseEnter={() => {
+                            // 상단 메뉴로 돌아오면 대분류만 표시
+                            setSelectedCounselorMainCategory(null);
+                            setSelectedCounselorSubcategory(null);
+                          }}
                         >
                           👨‍⚕️ 상담관리
                           <svg
@@ -769,7 +770,7 @@ export default function Navigation() {
                         </Link>
 
                         {isCounselorOpen && (
-                          <ThreeTierMegaMenuPanel
+                          <CascadingTierMenuPanel
                             panelRef={counselorPanelRef}
                             leftColRef={counselorLeftColRef}
                             subColRef={counselorSubColRef}
@@ -779,11 +780,9 @@ export default function Navigation() {
                             categories={counselorMenuCategories}
                             selectedMainCategory={selectedCounselorMainCategory}
                             selectedSubcategory={selectedCounselorSubcategory}
-                            isMenuOpen={isCounselorOpen}
                             onSelectMainCategory={setSelectedCounselorMainCategory}
                             onSelectSubcategory={setSelectedCounselorSubcategory}
                             navigateTo={navigateTo}
-                            deferSubPanel
                             onMainCategoryClick={() => {
                               navigateTo(COUNSELOR_MAIN_HREF);
                               setActiveMenu(null);
