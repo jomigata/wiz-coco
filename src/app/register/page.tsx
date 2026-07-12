@@ -86,8 +86,8 @@ const RegisterContent = () => {
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-emerald-100 mb-1">전문가·상담사 계정 등록</h2>
             <p className="text-sm text-emerald-500/90 leading-snug">
-              <span className="block whitespace-nowrap">검사 코드 발급·내담자 관리용</span>
-              <span className="block whitespace-nowrap">전문가·상담사 계정을 생성합니다.</span>
+              <span className="block whitespace-nowrap">검사 코드 관리를 위한</span>
+              <span className="block whitespace-nowrap">전문가·상담사 계정을 등록합니다.</span>
             </p>
           </div>
 
