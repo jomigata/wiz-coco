@@ -18,10 +18,11 @@ export function canAccessCounselorProfessionalFeatures(
   role: unknown,
   applicationStatus: CounselorApplicationStatus | null | undefined,
 ): boolean {
-  if (!isCounselor(role)) return false;
   if (isAdmin(role)) return true;
+  // 역할이 counselor로 부여된 경우 신청서 상태(pending 등)와 무관하게 접근 허용
+  if (role === 'counselor') return true;
   if (isPendingCounselorApplication(applicationStatus)) return false;
-  return true;
+  return false;
 }
 
 export function canShowCounselorApplyIcon(

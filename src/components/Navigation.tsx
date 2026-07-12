@@ -783,8 +783,10 @@ export default function Navigation() {
                             onSelectMainCategory={setSelectedCounselorMainCategory}
                             onSelectSubcategory={setSelectedCounselorSubcategory}
                             navigateTo={navigateTo}
-                            onMainCategoryClick={() => {
-                              navigateTo(COUNSELOR_MAIN_HREF);
+                            onMainCategoryClick={(category) => {
+                              const href =
+                                category.subcategories[0]?.items[0]?.href ?? COUNSELOR_MAIN_HREF;
+                              navigateTo(href);
                               setActiveMenu(null);
                             }}
                             onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}

@@ -31,12 +31,27 @@ function badgeClass(badge: string) {
   return 'bg-amber-500/90 text-white';
 }
 
-function LeafItem({ item, onCloseMenu }: { item: TestMenuItem; onCloseMenu: () => void }) {
+function LeafItem({
+  item,
+  onCloseMenu,
+  navigateTo,
+}: {
+  item: TestMenuItem;
+  onCloseMenu: () => void;
+  navigateTo?: (href: string) => void;
+}) {
   return (
     <Link
       href={item.href}
       className={`group flex items-center gap-3 rounded-lg border px-3 py-2 shadow-sm transition-all duration-300 hover:shadow-md ${navMegaMenuClasses.leafItemIdle}`}
-      onClick={onCloseMenu}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (navigateTo) {
+          navigateTo(item.href);
+        }
+        onCloseMenu();
+      }}
     >
       <div className="flex w-6 shrink-0 items-center justify-center text-base transition-transform duration-300 group-hover:scale-110">
         {item.icon}
@@ -120,7 +135,8 @@ export default function CascadingTierMenuPanel({
                     onSelectMainCategory(mainCategory.category);
                     onSelectSubcategory(null);
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onSelectMainCategory(mainCategory.category);
                     onMainCategoryClick?.(mainCategory);
                   }}
@@ -149,7 +165,10 @@ export default function CascadingTierMenuPanel({
                             className={`group flex cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2.5 transition-all duration-300 ${
                               isSubActive ? navMegaMenuClasses.subItemActive : navMegaMenuClasses.subItemIdle
                             }`}
-                            onClick={() => handleSubcategoryClick(subcategory, mainCategory)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSubcategoryClick(subcategory, mainCategory);
+                            }}
                           >
                             <div className="flex w-7 shrink-0 items-center justify-center text-xl transition-transform duration-300 group-hover:scale-110">
                               {subcategory.icon}
@@ -175,7 +194,12 @@ export default function CascadingTierMenuPanel({
                             >
                               <div className={`${navMegaMenuClasses.cascadingLeafFlyoutInner} space-y-1.5`}>
                                 {subcategory.items.map((item) => (
-                                  <LeafItem key={item.name} item={item} onCloseMenu={onCloseMenu} />
+                                  <LeafItem
+                                    key={item.name}
+                                    item={item}
+                                    onCloseMenu={onCloseMenu}
+                                    navigateTo={navigateTo}
+                                  />
                                 ))}
                               </div>
                             </div>
