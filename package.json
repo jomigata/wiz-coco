@@ -43,6 +43,7 @@
     "solapi:kakao:token": "node scripts/link-solapi-kakao-channel.js token",
     "solapi:kakao:link": "node scripts/link-solapi-kakao-channel.js link",
     "solapi:kakao:list": "node scripts/link-solapi-kakao-channel.js list",
+    "solapi:templates:list": "node scripts/list-solapi-templates.js",
     "migrate:strip-code-hyphens": "python backend/scripts/migrate_strip_code_hyphens.py",
     "migrate:strip-code-hyphens:dry": "python backend/scripts/migrate_strip_code_hyphens.py --dry-run"
   },
