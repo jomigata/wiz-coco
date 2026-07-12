@@ -736,7 +736,9 @@ export default function Navigation() {
                         className="relative"
                         onMouseEnter={() => {
                           openMenu('counselor');
-                          initTierMenuSelection(counselorMenuCategories, setSelectedCounselorMainCategory, setSelectedCounselorSubcategory);
+                          // 대분류만 먼저 표시 — 중·소분류는 대분류 호버 시 표시
+                          setSelectedCounselorMainCategory(null);
+                          setSelectedCounselorSubcategory(null);
                         }}
                         onMouseLeave={scheduleClose}
                       >
@@ -781,6 +783,7 @@ export default function Navigation() {
                             onSelectMainCategory={setSelectedCounselorMainCategory}
                             onSelectSubcategory={setSelectedCounselorSubcategory}
                             navigateTo={navigateTo}
+                            deferSubPanel
                             onMainCategoryClick={() => {
                               navigateTo(COUNSELOR_MAIN_HREF);
                               setActiveMenu(null);

@@ -26,6 +26,8 @@ type ThreeTierMegaMenuPanelProps = {
   onPanelMouseEnter?: () => void;
   onPanelMouseLeave?: () => void;
   searchSlot?: React.ReactNode;
+  /** true면 대분류만 먼저 보이고, 대분류 호버 시에만 중·소분류 열을 표시 */
+  deferSubPanel?: boolean;
 };
 
 function badgeClass(badge: string) {
@@ -98,9 +100,11 @@ export default function ThreeTierMegaMenuPanel({
   onPanelMouseEnter,
   onPanelMouseLeave,
   searchSlot,
+  deferSubPanel = false,
 }: ThreeTierMegaMenuPanelProps) {
-  const activeMain =
-    categories.find((category) => category.category === selectedMainCategory) ?? categories[0];
+  const selectedMain = categories.find((category) => category.category === selectedMainCategory);
+  const activeMain = deferSubPanel ? selectedMain : selectedMain ?? categories[0];
+  const showSubPanel = !deferSubPanel || Boolean(selectedMain);
 
   const handleSubcategoryClick = (subcategory: TestSubcategory, parent: TestCategory) => {
     if (onSubcategoryClick) {
@@ -118,112 +122,123 @@ export default function ThreeTierMegaMenuPanel({
     <div
       ref={panelRef}
       data-dropdown-menu={menuDataAttribute}
-      className={`${navMegaMenuClasses.panel} ${dropdownAlign}`}
+      className={`${navMegaMenuClasses.panel} ${
+        showSubPanel ? navMegaMenuClasses.panelSizeFull : navMegaMenuClasses.panelSizeMainOnly
+      } ${dropdownAlign}`}
       onMouseEnter={onPanelMouseEnter}
       onMouseLeave={onPanelMouseLeave}
     >
       <div className={navMegaMenuClasses.panelGlow} aria-hidden />
       {searchSlot && <div className="relative z-[1] border-b border-white/[0.06] px-4 pb-3 pt-2">{searchSlot}</div>}
       <div className="relative z-[1] flex h-[62vh] flex-row">
-        <div ref={leftColRef} className={navMegaMenuClasses.leftCol}>
+        <div
+          ref={leftColRef}
+          className={showSubPanel ? navMegaMenuClasses.leftCol : navMegaMenuClasses.leftColSolo}
+        >
           <div className={navMegaMenuClasses.panelTitle}>{panelTitle}</div>
           <div className="space-y-2">
-            {categories.map((mainCategory, index) => (
-              <div
-                key={mainCategory.category}
-                className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ${
-                  selectedMainCategory === mainCategory.category || (index === 0 && isMenuOpen && !selectedMainCategory)
-                    ? navMegaMenuClasses.mainItemActive
-                    : navMegaMenuClasses.mainItemIdle
-                }`}
-                onClick={() => {
-                  onSelectMainCategory(mainCategory.category);
-                  onMainCategoryClick?.(mainCategory);
-                }}
-                onMouseEnter={() => {
-                  onSelectMainCategory(mainCategory.category);
-                  if (mainCategory.subcategories.length > 0) {
-                    onSelectSubcategory(mainCategory.subcategories[0].name);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex w-8 shrink-0 items-center justify-center text-xl">{mainCategory.icon}</span>
-                  <span className="font-medium">{mainCategory.category}</span>
-                  <svg className="ml-auto h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+            {categories.map((mainCategory, index) => {
+              const isActive =
+                selectedMainCategory === mainCategory.category ||
+                (!deferSubPanel && index === 0 && isMenuOpen && !selectedMainCategory);
+
+              return (
+                <div
+                  key={mainCategory.category}
+                  className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ${
+                    isActive ? navMegaMenuClasses.mainItemActive : navMegaMenuClasses.mainItemIdle
+                  }`}
+                  onClick={() => {
+                    onSelectMainCategory(mainCategory.category);
+                    onMainCategoryClick?.(mainCategory);
+                  }}
+                  onMouseEnter={() => {
+                    onSelectMainCategory(mainCategory.category);
+                    if (mainCategory.subcategories.length > 0) {
+                      onSelectSubcategory(mainCategory.subcategories[0].name);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex w-8 shrink-0 items-center justify-center text-xl">{mainCategory.icon}</span>
+                    <span className="font-medium">{mainCategory.category}</span>
+                    <svg className="ml-auto h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        <div ref={subColRef} className={navMegaMenuClasses.rightCol}>
-          {activeMain ? (
-            <div>
-              <div className={navMegaMenuClasses.panelTitle}>{activeMain.category}</div>
-              <div className="scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent max-h-[60vh] space-y-2 overflow-y-auto">
-                {activeMain.subcategories.map((subcategory, index) => {
-                  const isSelected = selectedSubcategory === subcategory.name;
+        {showSubPanel && (
+          <div ref={subColRef} className={`${navMegaMenuClasses.rightCol} animate-fadeIn`}>
+            {activeMain ? (
+              <div>
+                <div className={navMegaMenuClasses.panelTitle}>{activeMain.category}</div>
+                <div className="scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent max-h-[60vh] space-y-2 overflow-y-auto">
+                  {activeMain.subcategories.map((subcategory, index) => {
+                    const isSelected = selectedSubcategory === subcategory.name;
 
-                  return (
-                    <div
-                      key={subcategory.name}
-                      className="relative"
-                      style={{
-                        animation: 'fadeIn 0.3s ease-out',
-                        animationDelay: `${index * 0.1}s`,
-                        animationFillMode: 'both',
-                      }}
-                    >
+                    return (
                       <div
-                        className={`group flex cursor-pointer items-center gap-4 rounded-xl border-2 px-4 py-3 transition-all duration-300 ${
-                          isSelected ? navMegaMenuClasses.subItemActive : navMegaMenuClasses.subItemIdle
-                        }`}
-                        onMouseEnter={() => {
-                          onHoverSubcategory?.(subcategory.name);
-                          onSelectSubcategory(subcategory.name);
+                        key={subcategory.name}
+                        className="relative"
+                        style={{
+                          animation: 'fadeIn 0.3s ease-out',
+                          animationDelay: `${index * 0.1}s`,
+                          animationFillMode: 'both',
                         }}
-                        onClick={() => handleSubcategoryClick(subcategory, activeMain)}
                       >
-                        <div className="flex w-8 shrink-0 items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110">
-                          {subcategory.icon}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-base font-medium text-white">{subcategory.name}</div>
-                        </div>
-                        <svg
-                          className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <div
+                          className={`group flex cursor-pointer items-center gap-4 rounded-xl border-2 px-4 py-3 transition-all duration-300 ${
+                            isSelected ? navMegaMenuClasses.subItemActive : navMegaMenuClasses.subItemIdle
+                          }`}
+                          onMouseEnter={() => {
+                            onHoverSubcategory?.(subcategory.name);
+                            onSelectSubcategory(subcategory.name);
+                          }}
+                          onClick={() => handleSubcategoryClick(subcategory, activeMain)}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-
-                      {isSelected && subcategory.items.length > 0 && (
-                        <div className="animate-fadeIn-slow ml-4 mt-2 space-y-1">
-                          {subcategory.items.map((item, itemIndex) => (
-                            <LeafItem
-                              key={item.name}
-                              item={item}
-                              highlightBorder={itemIndex === 0 && isSelected}
-                              onCloseMenu={onCloseMenu}
-                            />
-                          ))}
+                          <div className="flex w-8 shrink-0 items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110">
+                            {subcategory.icon}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-base font-medium text-white">{subcategory.name}</div>
+                          </div>
+                          <svg
+                            className="ml-auto h-4 w-4 shrink-0 text-slate-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+                        {isSelected && subcategory.items.length > 0 && (
+                          <div className="animate-fadeIn-slow ml-4 mt-2 space-y-1">
+                            {subcategory.items.map((item, itemIndex) => (
+                              <LeafItem
+                                key={item.name}
+                                item={item}
+                                highlightBorder={itemIndex === 0 && isSelected}
+                                onCloseMenu={onCloseMenu}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center text-slate-500">대분류를 선택해주세요</div>
-          )}
-        </div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-slate-500">대분류를 선택해주세요</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
