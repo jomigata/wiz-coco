@@ -11,8 +11,6 @@ type CounselorMainCategoryDropdownProps = {
   dropdownAlign: string;
   menuDataAttribute: string;
   categories: CounselorMainCategory[];
-  userName?: string;
-  userEmail?: string;
   onCloseMenu: () => void;
 };
 
@@ -21,13 +19,8 @@ export default function CounselorMainCategoryDropdown({
   dropdownAlign,
   menuDataAttribute,
   categories,
-  userName,
-  userEmail,
   onCloseMenu,
 }: CounselorMainCategoryDropdownProps) {
-  const displayName = userName || '상담사';
-  const displayEmail = userEmail || '전문가 계정';
-
   return (
     <div
       ref={panelRef}
@@ -36,18 +29,6 @@ export default function CounselorMainCategoryDropdown({
       style={{ backgroundColor: NAV_MEGA_MENU_BG }}
     >
       <div className="px-6 py-4 space-y-2">
-        <div className="mb-4 rounded-xl border border-sky-400/25 bg-gradient-to-r from-sky-500/20 to-blue-500/20 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-lg font-bold text-white">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate font-semibold text-white">{displayName}</div>
-              <div className="truncate text-sm text-sky-300">{displayEmail}</div>
-            </div>
-          </div>
-        </div>
-
         <div className="mb-2 text-base font-semibold tracking-tight text-slate-300">👨‍⚕️ 상담관리</div>
 
         <div className="space-y-1">

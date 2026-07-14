@@ -766,8 +766,6 @@ export default function Navigation() {
                             dropdownAlign={counselorPlacement.dropdownAlign}
                             menuDataAttribute="counselor"
                             categories={counselorMenuCategories}
-                            userName={userName}
-                            userEmail={userEmail}
                             onCloseMenu={() => setActiveMenu(null)}
                           />
                         )}
