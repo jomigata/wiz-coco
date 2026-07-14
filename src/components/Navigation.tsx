@@ -240,7 +240,6 @@ export default function Navigation() {
     canAccessCounselorProfessionalFeatures(userRole, counselorAccess.applicationStatus);
   const professionalIconAccess = {
     canShowApplyIcon: counselorAccess.canShowApplyIcon,
-    showPartnerIcon: counselorAccess.showPartnerIcon,
     showPendingBadge: counselorAccess.showPendingBadge,
     applicationStatus: counselorAccess.applicationStatus,
   };

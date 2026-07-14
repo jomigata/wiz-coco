@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
+import { COUNSELOR_SALES_HUB_HREF } from '@/data/counselorMenu';
 
 /** 로그인 전: 내담자용 미니멀 푸터 · 승인 상담사: 전체 링크 */
 export default function SiteFooter() {
@@ -68,8 +69,13 @@ export default function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/partners/" className="hover:text-white transition-colors">
-                  파트너 · 요금
+                <Link href={COUNSELOR_SALES_HUB_HREF} className="hover:text-white transition-colors">
+                  영업 · 파트너
+                </Link>
+              </li>
+              <li>
+                <Link href="/counselor/credits/" className="hover:text-white transition-colors">
+                  크레딧 · AI
                 </Link>
               </li>
               <li>

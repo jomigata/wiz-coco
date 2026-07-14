@@ -20,7 +20,8 @@ export function CounselorProfessionalUnapprovedPrompt() {
         <p className="text-xs uppercase tracking-[0.16em] text-amber-200/80 mb-3">Professional Access</p>
         <h1 className="text-xl font-semibold text-white mb-3">상담사 승인 후 이용 가능합니다</h1>
         <p className="text-sm text-slate-400 leading-relaxed mb-6">
-          파트너·요금 안내와 Discover 구매 경로는 관리자 승인을 받은 전문가·상담사에게만 제공됩니다.
+          파트너·요금·Discover·크레딧 영업 도구는 관리자 승인을 받은 상담사에게만 제공됩니다.
+          상담관리 → 영업 · 파트너 메뉴에서 이용할 수 있습니다.
         </p>
         <div className="flex flex-col gap-3">
           <Link

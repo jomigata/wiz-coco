@@ -88,7 +88,7 @@ export default function MiniCheckQuiz() {
           </button>
         </div>
         <p className="text-center text-xs text-slate-500 mt-6">
-          친구에게 공유하기 —{' '}
+          내담자·SNS에 공유 —{' '}
           <button
             type="button"
             className="text-violet-300 underline"

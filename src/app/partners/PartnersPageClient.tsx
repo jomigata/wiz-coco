@@ -6,16 +6,20 @@ import MonetizationTrustSection from '@/components/monetization/MonetizationTrus
 import CounselorProfessionalAccessGate, {
   CounselorProfessionalUnapprovedPrompt,
 } from '@/components/auth/CounselorProfessionalAccessGate';
+import CounselorSalesLoginPrompt from '@/components/auth/CounselorSalesLoginPrompt';
+import CounselorSalesBackLink from '@/components/counselor/CounselorSalesBackLink';
 import { AuthLoadingState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
-import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
+import { APP_HEADER_PT } from '@/lib/appChromeLayout';
 
 function PartnersContent() {
   return (
     <>
-      <section className="py-16 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900">
-        <div className="container max-w-3xl mx-auto px-4 text-center">
+      <section className="py-12 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900">
+        <div className="container max-w-3xl mx-auto px-4">
+          <CounselorSalesBackLink />
+          <div className="text-center">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 mb-4">
             협회 플랫폼 · B2B / B2B2C
           </span>
@@ -23,10 +27,12 @@ function PartnersContent() {
             기관·상담사 파트너 프로그램
           </h1>
           <p className="text-slate-300 leading-relaxed">
-            WizCoCo는 협회(플랫폼)가 검사 품질·정산을 관리하고, 전문상담사와
+            상담사·센터가 내담자에게 검사를 제공하고, 학교·기업과 B2B 파일럿을 진행할 때 참고할
+            요금·패키지 안내입니다. WizCoCo는 협회(플랫폼)가 검사 품질·정산을 관리하고, 전문상담사와
             학교·기업이 내담자에게 <strong className="text-white">코드 한 장</strong>
             으로 부담 없이 검사를 제공할 수 있도록 설계되었습니다.
           </p>
+          </div>
         </div>
       </section>
 
@@ -85,29 +91,10 @@ function PartnersContent() {
 
 function PartnersLoginPrompt() {
   return (
-    <main className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center rounded-2xl border border-white/10 bg-white/[0.03] p-8 md:p-10">
-        <h1 className="text-xl font-semibold text-white mb-3">전문가·기관 전용 안내</h1>
-        <p className="text-slate-400 text-sm leading-relaxed mb-8">
-          파트너 프로그램·요금·B2B 안내는 로그인한 전문가·기관 담당자에게만 표시됩니다.
-          내담자 검사는 홈에서 바로 시작할 수 있습니다.
-        </p>
-        <div className="flex flex-col gap-3 items-center">
-          <Link
-            href="/portal/login/"
-            className="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold hover:bg-sky-500 transition-colors"
-          >
-            검사 시작
-          </Link>
-          <Link href="/" className="text-sm text-slate-500 hover:text-slate-300">
-            홈으로
-          </Link>
-          <div className="pt-4 border-t border-white/10 w-full flex justify-center">
-            <ProfessionalAccessIcons variant="nav" isLoggedIn={false} />
-          </div>
-        </div>
-      </div>
-    </main>
+    <CounselorSalesLoginPrompt
+      title="상담사 전용 · 파트너 프로그램"
+      description="파트너·요금·B2B 안내는 승인된 상담사에게만 제공됩니다. 상담관리 → 영업 · 파트너 메뉴에서도 접근할 수 있습니다."
+    />
   );
 }
 
@@ -116,22 +103,20 @@ export default function PartnersPageClient() {
 
   if (authPending) {
     return (
-      <div className="min-h-screen bg-gray-900 pt-16">
+      <div className={`min-h-screen bg-gray-900 ${APP_HEADER_PT}`}>
         <AuthLoadingState message="확인 중…" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <div className="pt-16">
-        <CounselorProfessionalAccessGate
-          loginFallback={<PartnersLoginPrompt />}
-          unapprovedFallback={<CounselorProfessionalUnapprovedPrompt />}
-        >
-          <PartnersContent />
-        </CounselorProfessionalAccessGate>
-      </div>
+    <div className={`min-h-screen bg-gray-900 ${APP_HEADER_PT}`}>
+      <CounselorProfessionalAccessGate
+        loginFallback={<PartnersLoginPrompt />}
+        unapprovedFallback={<CounselorProfessionalUnapprovedPrompt />}
+      >
+        <PartnersContent />
+      </CounselorProfessionalAccessGate>
     </div>
   );
 }

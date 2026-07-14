@@ -189,7 +189,7 @@ function CreditsContent() {
               href="/partners/"
               className="px-4 py-2 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
             >
-              요금 · 패키지 안내
+              파트너 · 요금 안내
             </Link>
           </div>
 

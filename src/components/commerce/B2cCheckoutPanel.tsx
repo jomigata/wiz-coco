@@ -185,10 +185,11 @@ export default function B2cCheckoutPanel() {
       </div>
 
       <p className="text-xs text-slate-500 text-center">
-        Discover는 협회 B2B2C 브랜드와 분리된 개인(D2C) 경로입니다.{' '}
+        상담사 영업용 D2C 경로입니다. 기관·B2B 패키지는{' '}
         <Link href="/partners/" className="text-violet-300 underline">
-          상담사·기관은 여기
+          파트너 프로그램
         </Link>
+        을 참고하세요.
       </p>
     </div>
   );

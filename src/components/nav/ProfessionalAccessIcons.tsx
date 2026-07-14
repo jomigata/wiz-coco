@@ -6,7 +6,6 @@ import { counselorApplicationStatusLabel } from '@/lib/counselorProfessionalAcce
 
 type AccessState = {
   canShowApplyIcon: boolean;
-  showPartnerIcon: boolean;
   showPendingBadge: boolean;
   applicationStatus?: 'pending' | 'under_review' | 'approved' | 'rejected' | null;
 };
@@ -44,14 +43,6 @@ function ApplyIcon({ className }: { className?: string }) {
   );
 }
 
-function PartnerIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 9h.01M15 9h.01M9 13h.01M15 13h.01" />
-    </svg>
-  );
-}
-
 export default function ProfessionalAccessIcons({
   variant = 'nav',
   onNavigate,
@@ -77,10 +68,9 @@ export default function ProfessionalAccessIcons({
 
   if (isLoggedIn) {
     const showApply = access?.canShowApplyIcon ?? true;
-    const showPartner = access?.showPartnerIcon ?? false;
     const showPending = access?.showPendingBadge ?? false;
 
-    if (!showApply && !showPartner && !showPending) {
+    if (!showApply && !showPending) {
       return null;
     }
 
@@ -103,17 +93,6 @@ export default function ProfessionalAccessIcons({
             aria-label="전문가·상담사 가입 신청"
           >
             <ApplyIcon className={iconSize} />
-          </Link>
-        )}
-        {showPartner && (
-          <Link
-            href="/partners/"
-            onClick={onNavigate}
-            className={btn}
-            title="기관·파트너 안내"
-            aria-label="기관·파트너 안내"
-          >
-            <PartnerIcon className={iconSize} />
           </Link>
         )}
       </>,

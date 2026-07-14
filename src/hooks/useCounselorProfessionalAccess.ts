@@ -71,7 +71,6 @@ export function useCounselorProfessionalAccess() {
   const isPendingApplication = isPendingCounselorApplication(applicationStatus);
   const hasApplied = hasCounselorApplicationRecord(applicationStatus);
   const canShowApplyIcon = canShowCounselorApplyIcon(role, applicationStatus);
-  const showPartnerIcon = isApprovedCounselor;
   const showPendingBadge = isAuthenticated && isPendingApplication && !isApprovedCounselor;
 
   return {
@@ -83,7 +82,6 @@ export function useCounselorProfessionalAccess() {
     isPendingApplication,
     hasApplied,
     canShowApplyIcon,
-    showPartnerIcon,
     showPendingBadge,
     isCounselorRole: counselorRole,
   };

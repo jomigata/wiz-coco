@@ -177,14 +177,67 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
       },
     ],
   },
+  {
+    slug: 'sales',
+    category: '5. 영업 · 파트너',
+    description: '내담자 유입·요금·크레딧 영업 도구',
+    icon: '📣',
+    subcategories: [
+      {
+        name: '5a. Discover · D2C',
+        icon: '✨',
+        items: [
+          {
+            name: '3분 마음 체크',
+            href: '/discover/mini-check/',
+            description: '무료 미니 검사 — SNS·내담자 공유',
+            icon: '⏱️',
+          },
+          {
+            name: 'Discover 안내',
+            href: '/discover/',
+            description: 'D2C 랜딩·바이럴 운영 가이드',
+            icon: '🌐',
+          },
+          {
+            name: '개인 리포트 · 이용권',
+            href: '/discover/shop/',
+            description: 'Basic / Premium / Pro 안내·구매',
+            icon: '🎫',
+          },
+        ],
+      },
+      {
+        name: '5b. 요금 · 크레딧',
+        icon: '💳',
+        items: [
+          {
+            name: '크레딧 · AI',
+            href: '/counselor/credits',
+            description: '검사·AI 크레딧 구매·잔액',
+            icon: '🤖',
+          },
+          {
+            name: '파트너 프로그램',
+            href: '/partners/',
+            description: '기관·B2B 요금·파일럿 안내',
+            icon: '🏢',
+          },
+        ],
+      },
+    ],
+  },
 ];
-
-export const COUNSELOR_MAIN_HREF = '/counselor';
 
 export function getCounselorCategoryHubHref(slug: string): string {
   // trailingSlash: true (static export / Firebase Hosting)
   return `/counselor/hub/${slug}/`;
 }
+
+export const COUNSELOR_MAIN_HREF = '/counselor';
+
+export const COUNSELOR_SALES_HUB_SLUG = 'sales';
+export const COUNSELOR_SALES_HUB_HREF = getCounselorCategoryHubHref(COUNSELOR_SALES_HUB_SLUG);
 
 export function getCounselorCategoryBySlug(slug: string): CounselorMainCategory | undefined {
   return counselorMenuCategories.find((category) => category.slug === slug);
