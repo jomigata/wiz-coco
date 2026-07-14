@@ -38,8 +38,8 @@ import React from 'react';export default function ReviewsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900"><div className="pt-24 px-4 pb-12">
-        <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-slate-200">
-          <h1 className="text-3xl font-bold text-slate-900 mb-6 text-center">고객 후기</h1>
+        <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-white/20">
+          <h1 className="text-3xl font-bold text-white mb-6 text-center">고객 후기</h1>
           <p className="text-purple-200 mb-8 text-center">
             심리케어 서비스를 이용한 고객님들의 소중한 후기입니다.
           </p>
@@ -47,7 +47,7 @@ import React from 'react';export default function ReviewsPage() {
           {/* 후기 목록 */}
           <div className="space-y-6">
             {reviews.map(review => (
-              <div key={review.id} className="bg-white/10 p-6 rounded-lg border border-slate-200">
+              <div key={review.id} className="bg-white/10 p-6 rounded-lg border border-white/20">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="text-lg text-white font-semibold">{review.name}</h3>

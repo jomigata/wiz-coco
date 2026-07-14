@@ -226,7 +226,7 @@ export default function InsideMbtiPage() {
         <section className="relative z-10 py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-slate-200">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
                 <h1 className="text-4xl font-bold text-white text-center mb-2">인사이드 MBTI</h1>
                 <p className="text-blue-200 text-center mb-8">
                   두 사람의 MBTI 유형을 비교하여 관계 역학을 분석하고 상호작용 방법을 제안합니다
@@ -252,7 +252,7 @@ export default function InsideMbtiPage() {
                         <input
                           type="text"
                           id="person1Name"
-                          className="w-full bg-white/5 border border-slate-200 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                           placeholder="이름을 입력하세요"
                           value={form.person1.name}
                           onChange={(e) => handleChange('person1', 'name', e.target.value)}
@@ -276,7 +276,7 @@ export default function InsideMbtiPage() {
                           <input
                             type="text"
                             id="person1Mbti"
-                            className="w-full bg-white/5 border border-slate-200 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             placeholder="MBTI 유형을 입력하세요 (예: ENFP)"
                             value={form.person1.mbti}
                             onChange={(e) => handleChange('person1', 'mbti', e.target.value)}
@@ -284,7 +284,7 @@ export default function InsideMbtiPage() {
                         ) : (
                           <select
                             id="person1TestCode"
-                            className="w-full bg-white/5 border border-slate-200 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             style={customStyles.select}
                             value={form.person1.testCode}
                             onChange={(e) => handleChange('person1', 'testCode', e.target.value)}
@@ -316,7 +316,7 @@ export default function InsideMbtiPage() {
                         <input
                           type="text"
                           id="person2Name"
-                          className="w-full bg-white/5 border border-slate-200 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                           placeholder="이름을 입력하세요"
                           value={form.person2.name}
                           onChange={(e) => handleChange('person2', 'name', e.target.value)}
@@ -340,7 +340,7 @@ export default function InsideMbtiPage() {
                           <input
                             type="text"
                             id="person2Mbti"
-                            className="w-full bg-white/5 border border-slate-200 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             placeholder="MBTI 유형을 입력하세요 (예: ENFP)"
                             value={form.person2.mbti}
                             onChange={(e) => handleChange('person2', 'mbti', e.target.value)}
@@ -348,7 +348,7 @@ export default function InsideMbtiPage() {
                         ) : (
                           <select
                             id="person2TestCode"
-                            className="w-full bg-white/5 border border-slate-200 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             style={customStyles.select}
                             value={form.person2.testCode}
                             onChange={(e) => handleChange('person2', 'testCode', e.target.value)}
@@ -392,7 +392,7 @@ export default function InsideMbtiPage() {
                               w-full text-center py-2 px-3 rounded-lg cursor-pointer transition
                               ${form.relationshipType === relType.id ? 
                                 'bg-blue-600 text-white' : 
-                                'bg-white/5 text-blue-200 hover:bg-slate-100'}
+                                'bg-white/5 text-blue-200 hover:bg-white/10'}
                             `}
                           >
                             {relType.label}

@@ -63,9 +63,9 @@ export default function MiniCheckQuiz() {
           ? 'Pro'
           : 'Basic';
     return (
-      <div className="max-w-xl mx-auto rounded-2xl border border-slate-200 bg-white p-8">
+      <div className="max-w-xl mx-auto rounded-2xl border border-white/10 bg-slate-900/80 p-8">
         <p className="text-sm text-violet-300 mb-2">3분 마음 체크 결과</p>
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">{result.hookMessage}</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">{result.hookMessage}</h2>
         <p className="text-slate-300 mb-6">{result.summary}</p>
         <p className="text-xs text-slate-500 mb-6">{result.disclaimer}</p>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -82,7 +82,7 @@ export default function MiniCheckQuiz() {
               setStep(0);
               setAnswers({});
             }}
-            className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="flex-1 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5"
           >
             다시 하기
           </button>
@@ -131,7 +131,7 @@ export default function MiniCheckQuiz() {
             className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
               answers[current.id] === c.value
                 ? 'border-violet-400 bg-violet-950/50 text-white'
-                : 'border-slate-200 text-slate-600 hover:border-blue-300'
+                : 'border-white/10 text-slate-300 hover:border-white/25'
             }`}
           >
             {c.label}

@@ -630,9 +630,9 @@ function MbtiResultContent() {
       
       <div className="container mx-auto max-w-4xl relative z-10">
         {isLoading ? (
-          <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+          <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
             <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-xl text-slate-600">결과를 불러오는 중입니다...</p>
+            <p className="text-xl text-blue-200">결과를 불러오는 중입니다...</p>
           </div>
         ) : error ? (
           <div className="text-center bg-indigo-950 rounded-xl p-8 shadow-lg border border-indigo-700">
@@ -762,12 +762,12 @@ function MbtiResultContent() {
             </div>
 
             {/* MBTI 유형 결과 카드 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
               <div className="text-center">
-                <div className="inline-block p-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border border-slate-200 mb-6">
+                <div className="inline-block p-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border border-white/20 mb-6">
                   <h2 className="text-6xl font-bold text-white mb-2">{mbtiType}</h2>
                 </div>
-                <h3 className="text-2xl font-semibold text-slate-600 mb-4">
+                <h3 className="text-2xl font-semibold text-blue-200 mb-4">
                   {mbtiDescriptions[mbtiType]?.title || '성격 유형'}
                 </h3>
                 <p className="text-white text-lg leading-relaxed max-w-2xl mx-auto">
@@ -777,7 +777,7 @@ function MbtiResultContent() {
             </div>
 
             {/* 추가 정보 섹션 */}
-            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
               <h3 className="text-xl font-semibold text-white mb-4">검사 완료 정보</h3>
               {useMemo(() => {
                 // timestamp 우선순위: testResult.timestamp > testResult.userData.timestamp > test_records에서 찾기
@@ -870,7 +870,7 @@ function MbtiResultContent() {
             </div>
 
             {/* 안내 메시지 */}
-            <div className="mt-8 p-4 rounded-lg bg-white/5 text-center border border-slate-200">
+            <div className="mt-8 p-4 rounded-lg bg-white/5 text-center border border-white/10">
               <p className="text-blue-200 text-sm">
                 이 결과는 MBTI 이론을 기반으로 한 일반적인 성향을 보여줍니다. 
                 개인의 성격은 더 복잡하며 다양한 요소에 영향을 받을 수 있습니다.
@@ -902,9 +902,9 @@ function MbtiResultLoading() {
       </div>
       
       <div className="container mx-auto px-4 py-6 relative z-10">
-        <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+        <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
           <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-slate-600">결과 페이지를 불러오는 중입니다...</p>
+          <p className="text-xl text-blue-200">결과 페이지를 불러오는 중입니다...</p>
         </div>
       </div>
     </main>

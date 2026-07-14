@@ -39,9 +39,9 @@ export default function CounselingPage() {
       <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
 <div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
           <div className="flex items-center justify-center">
-            <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-slate-600">정보를 불러오는 중입니다...</p>
+              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
             </div>
           </div>
         </div>
@@ -53,8 +53,8 @@ export default function CounselingPage() {
     return (
       <main className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 pb-16">
 <div className="pt-32 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center py-8">
-            <p className="text-slate-600 mb-4">상담 예약에 접근하려면 로그인이 필요합니다</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
+            <p className="text-blue-200 mb-4">상담 예약에 접근하려면 로그인이 필요합니다</p>
             <Link 
               href="/login" 
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -80,11 +80,11 @@ export default function CounselingPage() {
             </svg>
             마이페이지로 돌아가기
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 mt-6">상담 예약</h1>
+          <h1 className="text-3xl font-bold text-white mt-6">상담 예약</h1>
           <p className="text-blue-200 mt-2">심리 상담 예약을 관리할 수 있습니다.</p>
         </div>
         
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-8">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 mb-8">
           <h2 className="text-xl font-semibold text-white mb-4">내 상담 예약</h2>
           <p className="text-blue-200 mb-8">현재 개발 중입니다. 곧 상담 예약 기능이 추가될 예정입니다.</p>
           

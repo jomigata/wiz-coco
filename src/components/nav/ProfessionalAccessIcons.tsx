@@ -24,8 +24,8 @@ type Props = {
 const iconBtnBase =
   'inline-flex items-center justify-center rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60';
 
-const navIconClass = `${iconBtnBase} h-9 w-9 text-slate-400/90 hover:text-slate-100 hover:bg-slate-100 border border-transparent hover:border-slate-200`;
-const dockIconClass = `${iconBtnBase} h-11 w-11 text-slate-300/80 hover:text-white bg-slate-900/70 hover:bg-slate-800/90 border border-slate-200 hover:border-slate-200 backdrop-blur-md shadow-lg`;
+const navIconClass = `${iconBtnBase} h-9 w-9 text-slate-400/90 hover:text-slate-100 hover:bg-white/10 border border-transparent hover:border-white/10`;
+const dockIconClass = `${iconBtnBase} h-11 w-11 text-slate-300/80 hover:text-white bg-slate-900/70 hover:bg-slate-800/90 border border-white/10 hover:border-white/20 backdrop-blur-md shadow-lg`;
 
 function LoginIcon({ className }: { className?: string }) {
   return (
@@ -69,7 +69,7 @@ export default function ProfessionalAccessIcons({
       <div className="flex flex-col gap-2">{node}</div>
     ) : (
       <div
-        className={`flex shrink-0 items-center gap-1 sm:gap-1.5${showDivider ? ' ml-1 border-l border-slate-200 pl-2' : ''}`}
+        className={`flex shrink-0 items-center gap-1 sm:gap-1.5${showDivider ? ' ml-1 border-l border-white/10 pl-2' : ''}`}
       >
         {node}
       </div>

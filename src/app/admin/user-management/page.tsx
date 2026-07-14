@@ -22,11 +22,11 @@ export default function UserManagement() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">사용자 관리</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">사용자 관리</h1>
           <p className="text-gray-300">상담사와 내담자를 통합 관리하세요</p>
         </div>
 
@@ -35,8 +35,8 @@ export default function UserManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">총 사용자</p>
-                <p className="text-3xl font-bold text-slate-900">{users.length}</p>
+                <p className="text-gray-300 text-sm">총 사용자</p>
+                <p className="text-3xl font-bold text-white">{users.length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">👥</span>
@@ -47,8 +47,8 @@ export default function UserManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">상담사</p>
-                <p className="text-3xl font-bold text-slate-900">{users.filter(u => u.role === '상담사').length}</p>
+                <p className="text-gray-300 text-sm">상담사</p>
+                <p className="text-3xl font-bold text-white">{users.filter(u => u.role === '상담사').length}</p>
               </div>
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">👨‍⚕️</span>
@@ -59,8 +59,8 @@ export default function UserManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">내담자</p>
-                <p className="text-3xl font-bold text-slate-900">{users.filter(u => u.role === '내담자').length}</p>
+                <p className="text-gray-300 text-sm">내담자</p>
+                <p className="text-3xl font-bold text-white">{users.filter(u => u.role === '내담자').length}</p>
               </div>
               <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">👤</span>
@@ -71,8 +71,8 @@ export default function UserManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">활성 사용자</p>
-                <p className="text-3xl font-bold text-slate-900">{users.filter(u => u.status === '활성').length}</p>
+                <p className="text-gray-300 text-sm">활성 사용자</p>
+                <p className="text-3xl font-bold text-white">{users.filter(u => u.status === '활성').length}</p>
               </div>
               <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">✅</span>

@@ -86,7 +86,7 @@ export default function TestMenuSearch({
         검사 찾기
       </label>
       <div
-        className={`flex items-center gap-2 rounded-xl border bg-white ${
+        className={`flex items-center gap-2 rounded-xl border bg-slate-950/60 ${
           focused ? 'border-sky-400/60 ring-1 ring-sky-400/30' : 'border-blue-400/25'
         } ${isMobile ? 'px-3 py-2' : 'px-4 py-2.5'}`}
       >
@@ -125,7 +125,7 @@ export default function TestMenuSearch({
 
       {showResults && (
         <div
-          className={`absolute left-0 right-0 z-[60] mt-1 overflow-hidden rounded-xl border border-blue-400/30 bg-white shadow-2xl backdrop-blur-xl ${
+          className={`absolute left-0 right-0 z-[60] mt-1 overflow-hidden rounded-xl border border-blue-400/30 bg-slate-950/98 shadow-2xl backdrop-blur-xl ${
             isMobile ? 'max-h-64' : 'max-h-72'
           } overflow-y-auto`}
         >
@@ -161,7 +161,7 @@ export default function TestMenuSearch({
           <div className="border-t border-blue-500/20 px-4 py-2">
             <Link
               href="/tests"
-              className="text-xs text-blue-600 hover:text-blue-700"
+              className="text-xs text-sky-400 hover:text-sky-300"
               onClick={() => onNavigate?.()}
             >
               전체 검사 목록 보기 →

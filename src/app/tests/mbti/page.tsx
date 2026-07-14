@@ -816,7 +816,7 @@ function MbtiTestPageContent() {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-emerald-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-emerald-700"
         >
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">이어하기</h2>
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
           <p className="text-emerald-200 mb-6 text-center">
             {actualHasResumeData 
               ? '진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?'
@@ -834,7 +834,7 @@ function MbtiTestPageContent() {
                   style={{ width: `${Math.round((answeredCount / totalQuestions) * 100)}%` }}
                 />
               </div>
-              <p className="text-emerald-600 text-xs mt-2 text-center">
+              <p className="text-emerald-300/80 text-xs mt-2 text-center">
                 {answeredCount}개 문항 완료 / 전체 {totalQuestions}개
               </p>
             </div>

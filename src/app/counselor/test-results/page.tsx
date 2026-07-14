@@ -98,7 +98,7 @@ export default function TestResultsPage() {
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
             placeholder="이메일/UID/검사명/코드로 검색"
-            className="w-full max-w-md px-3 py-2 rounded-md bg-white/5 border border-slate-200 text-white placeholder-white/40"
+            className="w-full max-w-md px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-white/40"
           />
           <div className="text-sm text-white/70">
             총 <span className="text-white font-semibold">{filtered.length}</span>건
@@ -114,7 +114,7 @@ export default function TestResultsPage() {
         {isLoading ? (
           <div className="text-white/70 text-sm">불러오는 중…</div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="overflow-x-auto rounded-lg border border-white/10">
             <table className="min-w-full text-sm text-white/90">
               <thead className="bg-white/5 text-white/70">
                 <tr>
@@ -128,7 +128,7 @@ export default function TestResultsPage() {
               </thead>
               <tbody>
                 {filtered.map((r) => (
-                  <tr key={r.id} className="border-t border-slate-200 hover:bg-slate-50">
+                  <tr key={r.id} className="border-t border-white/10 hover:bg-white/5">
                     <td className="px-3 py-2 whitespace-nowrap">{formatCreatedAt(r.createdAt)}</td>
                     <td className="px-3 py-2">
                       <div className="text-white">{r.email || '—'}</div>

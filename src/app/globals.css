@@ -231,9 +231,9 @@ body.dropdown-open {
 }
 
 :root {
-  --foreground-rgb: 34, 34, 34; /* 진한 회색 */
-  --background-start-rgb: 250, 250, 250; /* 밝은 회색 */
-  --background-end-rgb: 245, 245, 245; /* 약간 더 어두운 밝은 회색 */
+  --foreground-rgb: 226, 232, 240; /* 밝은 슬레이트 */
+  --background-start-rgb: 15, 22, 40; /* #0f1628 */
+  --background-end-rgb: 11, 17, 32; /* #0b1120 */
   --primary-color: 65, 105, 225; /* 로얄 블루 */
   --secondary-color: 100, 149, 237; /* 콘플라워 블루 */
   --accent-color: 255, 193, 7; /* 앰버 */

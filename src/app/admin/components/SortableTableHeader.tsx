@@ -32,7 +32,7 @@ export default function SortableTableHeader({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className={`inline-flex w-full items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800 ${alignCls}`}
+        className={`inline-flex w-full items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-200 ${alignCls}`}
       >
         <span>{label}</span>
         <span className={`text-[10px] leading-none ${active ? 'text-sky-300' : 'text-slate-600'}`}>

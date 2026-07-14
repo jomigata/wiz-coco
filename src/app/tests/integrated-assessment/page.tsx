@@ -508,13 +508,13 @@ function IntegratedAssessmentPageContent() {
     );
     
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-indigo-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-indigo-700"
         >
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">이어하기</h2>
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
           <p className="text-indigo-200 mb-6 text-center">
             진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
           </p>
@@ -558,18 +558,18 @@ function IntegratedAssessmentPageContent() {
 
   if (showResult && report) {
     return (
-      <div className="bg-[#f8fafc] p-6 min-h-screen">
+      <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4">
               🎓
             </div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">신입생 통합 심리검사 결과</h1>
-            <p className="text-slate-600 text-lg">{report.studentInfo.name}님의 맞춤형 분석 리포트</p>
+            <h1 className="text-4xl font-bold text-white mb-2">신입생 통합 심리검사 결과</h1>
+            <p className="text-gray-300 text-lg">{report.studentInfo.name}님의 맞춤형 분석 리포트</p>
           </div>
 
           {/* 기본 정보 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 mb-6">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-6">
             <h2 className="text-xl font-bold text-white mb-4">기본 정보</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white/5 rounded-lg p-4">
@@ -590,7 +590,7 @@ function IntegratedAssessmentPageContent() {
           {/* 분석 결과 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* 성격 분석 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <span className="text-2xl">🎭</span>
                 성격 분석
@@ -608,7 +608,7 @@ function IntegratedAssessmentPageContent() {
             </div>
 
             {/* 학습 스타일 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <span className="text-2xl">📚</span>
                 학습 스타일
@@ -618,14 +618,14 @@ function IntegratedAssessmentPageContent() {
                   <span className="text-gray-300">주요 학습 방식</span>
                   <span className="text-white font-semibold">{report.learningStyle.dominant}</span>
                 </div>
-                <p className="text-slate-600 text-sm">{report.learningStyle.recommendation}</p>
+                <p className="text-gray-300 text-sm">{report.learningStyle.recommendation}</p>
               </div>
             </div>
           </div>
 
           {/* 강점 및 추천사항 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <span className="text-2xl">💪</span>
                 주요 강점
@@ -640,7 +640,7 @@ function IntegratedAssessmentPageContent() {
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <span className="text-2xl">🎯</span>
                 맞춤 추천
@@ -658,7 +658,7 @@ function IntegratedAssessmentPageContent() {
 
           {/* 성장 영역 */}
           {report.areasForGrowth.length > 0 && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 mb-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <span className="text-2xl">📈</span>
                 성장 영역
@@ -688,15 +688,15 @@ function IntegratedAssessmentPageContent() {
   }
 
   return (
-    <div className="bg-[#f8fafc] p-6 min-h-screen">
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4">
             🎓
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">신입생 통합 심리검사</h1>
-          <p className="text-slate-600 text-lg">대학 생활 적응을 위한 종합 분석</p>
+          <h1 className="text-4xl font-bold text-white mb-2">신입생 통합 심리검사</h1>
+          <p className="text-gray-300 text-lg">대학 생활 적응을 위한 종합 분석</p>
         </div>
 
         {/* 진행률 바 */}
@@ -714,11 +714,11 @@ function IntegratedAssessmentPageContent() {
         </div>
 
         {/* 현재 단계 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 mb-6">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 mb-6">
           <div className="flex items-center gap-4 mb-6">
             {currentStepData.icon && <span className="text-4xl">{currentStepData.icon}</span>}
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{currentStepData.title}</h2>
+              <h2 className="text-2xl font-bold text-white">{currentStepData.title}</h2>
               <p className="text-gray-300">{currentStepData.description}</p>
             </div>
           </div>
@@ -728,7 +728,7 @@ function IntegratedAssessmentPageContent() {
             <div className="space-y-6">
               {currentStepData.fields.map((field) => (
                 <div key={field.id} className="bg-white/5 rounded-xl p-6">
-                  <label className="block text-lg font-semibold text-slate-900 mb-3">
+                  <label className="block text-lg font-semibold text-white mb-3">
                     {field.label} {field.required && <span className="text-red-400">*</span>}
                   </label>
                   {field.type === "text" ? (
@@ -736,7 +736,7 @@ function IntegratedAssessmentPageContent() {
                       type="text"
                       value={studentInfo[field.id as keyof typeof studentInfo]}
                       onChange={(e) => handleInfoChange(field.id, e.target.value)}
-                      className="w-full p-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
+                      className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
                       placeholder={`${field.label}을(를) 입력하세요`}
                       required={field.required}
                     />
@@ -744,7 +744,7 @@ function IntegratedAssessmentPageContent() {
                     <select
                       value={studentInfo[field.id as keyof typeof studentInfo]}
                       onChange={(e) => handleInfoChange(field.id, e.target.value)}
-                      className="w-full p-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                      className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
                       required={field.required}
                     >
                       <option value="">선택하세요</option>
@@ -765,7 +765,7 @@ function IntegratedAssessmentPageContent() {
             <div className="space-y-6">
               {currentStepData.questions?.map((question) => (
                 <div key={question.id} className="bg-white/5 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">{question.text}</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">{question.text}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {question.options.map((option) => (
                       <button
@@ -817,7 +817,7 @@ function IntegratedAssessmentPageContent() {
 export default function IntegratedAssessmentPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
         <div className="text-white text-lg">로딩 중...</div>
       </div>
     }>

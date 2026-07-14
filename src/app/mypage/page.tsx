@@ -167,12 +167,12 @@ function formatKoreanDateTime(v: unknown): string {
 
 // 로딩 컴포넌트
 const LoadingMyPage = () => (
-  <main className="relative h-[100dvh] overflow-y-auto bg-[#f8fafc] pt-16">
+  <main className="relative h-[100dvh] overflow-y-auto bg-[#0b1120] pt-16">
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
     <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-col px-4 py-8 sm:px-6">
-      <h1 className="mb-8 text-xl font-semibold tracking-tight text-slate-900">마이페이지</h1>
+      <h1 className="mb-8 text-xl font-semibold tracking-tight text-white">마이페이지</h1>
       <div className="flex flex-1 items-center justify-center py-16">
-        <div className="rounded-lg border border-slate-200 bg-white shadow-sm px-8 py-10 text-center backdrop-blur-sm">
+        <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
           <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
           <p className="text-sm text-slate-400">불러오는 중…</p>
         </div>
@@ -869,9 +869,9 @@ function MyPageContent() {
     hasAuthenticatedTabSession() && !user && !firebaseUser && (firebaseLoading || isLoading);
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#f8fafc]">
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
       <div className="flex min-h-0 flex-1 flex-col pt-16">
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-[#f8fafc] text-slate-900">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
 
@@ -882,7 +882,7 @@ function MyPageContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
         >
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
             마이페이지
           </h1>
         </motion.div>
@@ -898,14 +898,14 @@ function MyPageContent() {
         
         {firebaseLoading || isLoading || awaitingAuthRestore || (!user && firebaseUser) ? (
           <div className="flex items-center justify-center">
-            <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-slate-600">정보를 불러오는 중입니다...</p>
+              <p className="text-xl text-blue-200">정보를 불러오는 중입니다...</p>
             </div>
           </div>
         ) : !(user || firebaseUser) ? (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center py-8">
-            <p className="text-slate-600 mb-4">마이페이지에 접근하려면 로그인이 필요합니다</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
+            <p className="text-blue-200 mb-4">마이페이지에 접근하려면 로그인이 필요합니다</p>
             <Link 
               href="/login" 
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -916,7 +916,7 @@ function MyPageContent() {
         ) : (
           <>
             <motion.div
-              className="flex flex-wrap gap-x-1 gap-y-0 border-b border-slate-200 mb-2 shrink-0"
+              className="flex flex-wrap gap-x-1 gap-y-0 border-b border-white/10 mb-2 shrink-0"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.35 }}
@@ -926,8 +926,8 @@ function MyPageContent() {
                 onClick={() => changeTab('profile')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'profile'
-                    ? 'text-slate-900 bg-white border border-b-0 border-slate-200'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 기본 정보
@@ -937,8 +937,8 @@ function MyPageContent() {
                 onClick={() => changeTab('records')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'records'
-                    ? 'text-slate-900 bg-white border border-b-0 border-slate-200'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 검사 기록 ({testRecords.length}
@@ -954,8 +954,8 @@ function MyPageContent() {
                 onClick={() => changeTab('in-progress')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'in-progress'
-                    ? 'text-slate-900 bg-white border border-b-0 border-slate-200'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 진행중인 검사 ({inProgressTests.length})
@@ -965,8 +965,8 @@ function MyPageContent() {
                 onClick={() => changeTab('stats')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'stats'
-                    ? 'text-slate-900 bg-white border border-b-0 border-slate-200'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 통계 보기
@@ -976,8 +976,8 @@ function MyPageContent() {
                 onClick={() => changeTab('deleted')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
                   activeTab === 'deleted'
-                    ? 'text-slate-900 bg-white border border-b-0 border-slate-200'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 삭제코드 ({deletedCodesCount})
@@ -988,7 +988,7 @@ function MyPageContent() {
 
             {activeTab === 'profile' && (
               <motion.div
-                className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm p-4 backdrop-blur-sm sm:p-5"
+                className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm sm:p-5"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05, duration: 0.35 }}
@@ -999,7 +999,7 @@ function MyPageContent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.05, duration: 0.35 }}
                 >
-                  <h2 className="text-lg font-semibold text-slate-900">기본 정보</h2>
+                  <h2 className="text-lg font-semibold text-slate-100">기본 정보</h2>
                   <p className="mt-1 text-xs text-slate-400 max-w-2xl">
                     각 블록의 <span className="text-violet-300/90 font-medium">수정</span>으로 정보를 바로 편집할 수 있습니다.
                   </p>
@@ -1037,7 +1037,7 @@ function MyPageContent() {
 
             {activeTab === 'in-progress' && (
               <motion.div
-                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-sm"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -1056,7 +1056,7 @@ function MyPageContent() {
                 </motion.div>
 
                 {inProgressTests.length === 0 ? (
-                  <div className="text-center py-12 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
                     <FaClock className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
                     <p className="text-blue-300 text-lg mb-2">진행중인 검사가 없습니다</p>
                     <p className="text-blue-400/70 text-sm">새로운 검사를 시작해보세요!</p>
@@ -1069,24 +1069,24 @@ function MyPageContent() {
                         <select
                           value={inProgressFilter}
                           onChange={(e) => setInProgressFilter(e.target.value as any)}
-                          className="select-theme-light w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="all" className="bg-white text-slate-900">전체 검사</option>
-                          <option value="mbti_pro" className="bg-white text-slate-900">MBTI Pro</option>
-                          <option value="mbti" className="bg-white text-slate-900">MBTI</option>
-                          <option value="ai-profiling" className="bg-white text-slate-900">AI 프로파일링</option>
-                          <option value="integrated-assessment" className="bg-white text-slate-900">통합 평가</option>
+                          <option value="all" className="bg-blue-900 text-white">전체 검사</option>
+                          <option value="mbti_pro" className="bg-blue-900 text-white">MBTI Pro</option>
+                          <option value="mbti" className="bg-blue-900 text-white">MBTI</option>
+                          <option value="ai-profiling" className="bg-blue-900 text-white">AI 프로파일링</option>
+                          <option value="integrated-assessment" className="bg-blue-900 text-white">통합 평가</option>
                         </select>
                       </div>
                       <div className="flex-1">
                         <select
                           value={inProgressSort}
                           onChange={(e) => setInProgressSort(e.target.value as any)}
-                          className="select-theme-light w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="recent" className="bg-white text-slate-900">최근 업데이트순</option>
-                          <option value="progress" className="bg-white text-slate-900">진행률순</option>
-                          <option value="name" className="bg-white text-slate-900">이름순</option>
+                          <option value="recent" className="bg-blue-900 text-white">최근 업데이트순</option>
+                          <option value="progress" className="bg-blue-900 text-white">진행률순</option>
+                          <option value="name" className="bg-blue-900 text-white">이름순</option>
                         </select>
                       </div>
                     </div>
@@ -1184,7 +1184,7 @@ function MyPageContent() {
                               const lastUpdate = new Date(test.timestamp);
                               
                               return (
-                                <tr key={test.testId} className="hover:bg-slate-50 transition-colors">
+                                <tr key={test.testId} className="hover:bg-white/5 transition-colors">
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-blue-100 font-medium">{test.testName}</div>
                                   </td>
@@ -1256,8 +1256,8 @@ function MyPageContent() {
                   className="bg-indigo-950 rounded-xl p-6 shadow-lg border border-indigo-700 max-w-md w-full mx-4"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="text-xl font-bold text-slate-600 mb-4 text-center">이어하기</h3>
-                  <p className="text-slate-600 mb-4 text-center">
+                  <h3 className="text-xl font-bold text-blue-200 mb-4 text-center">이어하기</h3>
+                  <p className="text-blue-200 mb-4 text-center">
                     진행 중이던 검사를 이어서 계속하시겠습니까?
                   </p>
                   {(() => {
@@ -1332,7 +1332,7 @@ function MyPageContent() {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="text-xl font-bold text-red-300 mb-4 text-center">진행 상태 삭제</h3>
-                  <p className="text-slate-600 mb-4 text-center">
+                  <p className="text-blue-200 mb-4 text-center">
                     진행 중인 검사의 진행 상태를 삭제하시겠습니까?
                   </p>
                   {(() => {
@@ -1401,7 +1401,7 @@ function MyPageContent() {
 
             {activeTab === 'stats' && (
               <motion.div
-                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="relative flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-sm"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -1421,11 +1421,11 @@ function MyPageContent() {
                     <select
                       value={statsPeriod}
                       onChange={(e) => setStatsPeriod(e.target.value as any)}
-                      className="select-theme-light px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="week" className="bg-white text-slate-900">최근 1주</option>
-                      <option value="month" className="bg-white text-slate-900">최근 1개월</option>
-                      <option value="year" className="bg-white text-slate-900">최근 1년</option>
+                      <option value="week" className="bg-blue-900 text-white">최근 1주</option>
+                      <option value="month" className="bg-blue-900 text-white">최근 1개월</option>
+                      <option value="year" className="bg-blue-900 text-white">최근 1년</option>
                     </select>
                   </div>
                 </motion.div>
@@ -1433,7 +1433,7 @@ function MyPageContent() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <motion.div
-                    className="bg-slate-50 rounded-xl p-6 border border-slate-200"
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1, duration: 0.5 }}
@@ -1452,7 +1452,7 @@ function MyPageContent() {
                   </motion.div>
                   
                   <motion.div
-                    className="bg-slate-50 rounded-xl p-6 border border-slate-200"
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.5 }}
@@ -1471,7 +1471,7 @@ function MyPageContent() {
                   </motion.div>
                   
                   <motion.div
-                    className="bg-slate-50 rounded-xl p-6 border border-slate-200"
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
@@ -1490,7 +1490,7 @@ function MyPageContent() {
                   </motion.div>
                   
                   <motion.div
-                    className="bg-slate-50 rounded-xl p-6 border border-slate-200"
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
@@ -1512,7 +1512,7 @@ function MyPageContent() {
                 </div>
                 
                 {/* 추이 그래프 (간단 바 차트) */}
-                <div className="mb-6 bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div className="mb-6 bg-white/5 rounded-lg p-4 border border-white/10">
                   {(() => {
                     const now = new Date();
                     const bucketCount = statsPeriod === 'week' ? 7 : statsPeriod === 'month' ? 30 : 12;
@@ -1600,7 +1600,7 @@ function MyPageContent() {
                             )[0];
 
                             return (
-                              <tr key={type} className="hover:bg-slate-100 transition-colors duration-150">
+                              <tr key={type} className="hover:bg-white/10 transition-colors duration-150">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-100">
                                   {type}
                                 </td>
@@ -1620,7 +1620,7 @@ function MyPageContent() {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
                     <FaBrain className="w-16 h-16 text-blue-400/50 mx-auto mb-4" />
                     <p className="text-blue-300 text-lg mb-2">통계 데이터가 없습니다</p>
                     <p className="text-blue-400/70 text-sm">검사를 완료하면 통계 정보가 표시됩니다</p>
@@ -1650,7 +1650,7 @@ function MyPageContent() {
         {/* 비밀번호 변경 모달 */}
         {isPasswordModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 max-w-md w-full mx-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 max-w-md w-full mx-4">
               <h3 className="text-xl font-bold text-white mb-4">비밀번호 변경</h3>
               
               <div className="space-y-4">
@@ -1663,7 +1663,7 @@ function MyPageContent() {
                     id="currentPassword"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-slate-200 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="현재 비밀번호를 입력하세요"
                   />
                 </div>
@@ -1677,7 +1677,7 @@ function MyPageContent() {
                     id="newPassword"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-slate-200 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="새 비밀번호 (6자 이상)"
                   />
                 </div>
@@ -1691,7 +1691,7 @@ function MyPageContent() {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-slate-200 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="새 비밀번호를 다시 입력하세요"
                   />
                 </div>
@@ -2415,13 +2415,13 @@ function TestRecordsTabContent({
 
   return (
     <motion.div
-      className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm p-3 backdrop-blur-sm sm:p-4"
+      className="relative flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
       <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 sm:w-auto">
+        <h2 className="text-lg font-semibold text-slate-100 sm:w-auto">
           검사 기록{' '}
           <span className="font-normal text-slate-500">({filteredRecords.length})</span>
         </h2>
@@ -2436,14 +2436,14 @@ function TestRecordsTabContent({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="일시 · 코드 · 검사명 검색"
-            className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           >
             <option value="all" className="bg-slate-900 text-white">
               전체
@@ -2487,7 +2487,7 @@ function TestRecordsTabContent({
 
       {/* 검사 기록 테이블 */}
       {filteredRecords.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-slate-200 bg-white py-10 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
           <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
           <p className="text-base text-slate-300">
             {testRecords.length === 0 ? '완료한 검사가 없습니다' : '검색 결과가 없습니다'}
@@ -2498,7 +2498,7 @@ function TestRecordsTabContent({
         </div>
       ) : (
         <>
-          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-slate-200">
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
             <table className="min-w-full divide-y divide-white/10 text-sm">
               <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                 <tr>
@@ -2515,7 +2515,7 @@ function TestRecordsTabContent({
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-2 py-2 text-left text-xs font-medium text-slate-500 hover:text-slate-800"
+                    className="cursor-pointer px-2 py-2 text-left text-xs font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('timestamp')}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -2525,7 +2525,7 @@ function TestRecordsTabContent({
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-2 py-2 text-left text-xs font-medium text-slate-500 hover:text-slate-800"
+                    className="cursor-pointer px-2 py-2 text-left text-xs font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('counselorCode')}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -2535,7 +2535,7 @@ function TestRecordsTabContent({
                   </th>
                   <th
                     scope="col"
-                    className="cursor-pointer px-2 py-2 text-left text-xs font-medium text-slate-500 hover:text-slate-800"
+                    className="cursor-pointer px-2 py-2 text-left text-xs font-medium text-slate-400 hover:text-slate-200"
                     onClick={() => handleSort('testType')}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -2557,7 +2557,7 @@ function TestRecordsTabContent({
                     const isOpen = !!expandedAccessCodes[row.accessCode];
                     return (
                       <React.Fragment key={`group-${row.accessCode}`}>
-                        <tr className="bg-slate-50 hover:bg-slate-50">
+                        <tr className="bg-white/[0.03] hover:bg-white/[0.05]">
                           <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-500">
                             —
                           </td>
@@ -2565,7 +2565,7 @@ function TestRecordsTabContent({
                             <button
                               type="button"
                               onClick={() => toggleAccessCodeGroup(row.accessCode)}
-                              className="inline-flex items-center gap-2 rounded px-2 py-1 text-left hover:bg-slate-100"
+                              className="inline-flex items-center gap-2 rounded px-2 py-1 text-left hover:bg-white/10"
                               title={isOpen ? '접기' : '펼치기'}
                             >
                               <span className="text-slate-400">{isOpen ? '▼' : '▶'}</span>
@@ -2591,7 +2591,7 @@ function TestRecordsTabContent({
                           row.children.map((record, childIdx) => (
                             <tr
                               key={`${record.code}-${childIdx}`}
-                              className="group hover:bg-slate-50"
+                              className="group hover:bg-white/[0.04]"
                             >
                               <td className="whitespace-nowrap px-2 py-2 text-center text-xs text-slate-600">
                                 ·
@@ -2670,7 +2670,7 @@ function TestRecordsTabContent({
 
                   const record = row.record;
                   return (
-                    <tr key={record.code || index} className="group hover:bg-slate-50">
+                    <tr key={record.code || index} className="group hover:bg-white/[0.04]">
                       <td className="whitespace-nowrap px-2 py-2">
                         <div className="flex justify-center">
                           <input
@@ -2763,7 +2763,7 @@ function TestRecordsTabContent({
                   type="button"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="rounded border border-slate-200 px-2.5 py-1 text-slate-300 hover:bg-slate-100 disabled:opacity-40"
+                  className="rounded border border-white/10 px-2.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-40"
                 >
                   이전
                 </button>
@@ -2771,7 +2771,7 @@ function TestRecordsTabContent({
                   type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded border border-slate-200 px-2.5 py-1 text-slate-300 hover:bg-slate-100 disabled:opacity-40"
+                  className="rounded border border-white/10 px-2.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-40"
                 >
                   다음
                 </button>
@@ -2905,11 +2905,11 @@ function TestRecordsTabContent({
           onClick={() => setCounselorViewRecord(null)}
         >
           <div
-            className="max-w-lg w-full rounded-xl border border-slate-200 bg-slate-900 p-6 shadow-xl"
+            className="max-w-lg w-full rounded-xl border border-white/20 bg-slate-900 p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h4 className="text-lg font-semibold text-slate-900 mb-2">검사 결과 요약</h4>
-            <pre className="text-sm text-slate-200 whitespace-pre-wrap break-words max-h-[60vh] overflow-y-auto bg-black/30 rounded-lg p-4 border border-slate-200">
+            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 요약</h4>
+            <pre className="text-sm text-slate-200 whitespace-pre-wrap break-words max-h-[60vh] overflow-y-auto bg-black/30 rounded-lg p-4 border border-white/10">
               {counselorViewText}
             </pre>
             <button
@@ -2946,7 +2946,7 @@ function CounselorConnectionStatus({
         animate={{ opacity: 1, y: 0 }}
         className="mb-2 shrink-0"
       >
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 flex items-center gap-2">
+        <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 flex items-center gap-2">
           <div className="h-4 w-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin shrink-0" />
           <p className="text-xs text-slate-400">상담사 연결 상태 확인 중…</p>
         </div>

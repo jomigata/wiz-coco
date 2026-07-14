@@ -99,9 +99,9 @@ const LoadingResults = () => (
     </div>
     
     <div className="container mx-auto px-4 py-6 relative z-10">
-      <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+      <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
         <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-xl text-slate-600">결과를 불러오는 중입니다...</p>
+        <p className="text-xl text-blue-200">결과를 불러오는 중입니다...</p>
       </div>
     </div>
   </main>
@@ -235,8 +235,8 @@ function MbtiGraphResults() {
 <div className="h-20"></div>
         
         <div className="container mx-auto px-4 py-6 relative z-10">
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-200">
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">결과 불러오기 오류</h1>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+            <h1 className="text-2xl font-bold text-white mb-4">결과 불러오기 오류</h1>
             <p className="text-blue-200 mb-6">{errorMessage}</p>
             <Link href="/mypage/test-records" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
               테스트 기록으로 돌아가기

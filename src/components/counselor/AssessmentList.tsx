@@ -182,7 +182,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
 
   return (
     <motion.div
-      className="flex min-h-0 flex-1 flex-col bg-white backdrop-blur-sm rounded-lg border border-slate-200 p-3 sm:p-4 text-sm"
+      className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4 text-sm"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -190,7 +190,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       {/* 삭제 모달 */}
       {deleteTarget && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-200 rounded-xl max-w-md w-full p-6 shadow-2xl text-sm">
+          <div className="bg-slate-900 border border-white/10 rounded-xl max-w-md w-full p-6 shadow-2xl text-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,7 +199,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               </div>
               <h2 className="text-xl font-semibold text-white">검사코드 삭제</h2>
             </div>
-            <div className="bg-white rounded-xl p-4 mb-4 border border-slate-200">
+            <div className="bg-white/[0.06] rounded-xl p-4 mb-4 border border-white/10">
               <p className="text-cyan-400 font-mono font-bold tracking-wider">{formatAccessCodeDisplay(deleteTarget.accessCode)}</p>
               <p className="text-slate-300 mt-1">{deleteTarget.title}</p>
             </div>
@@ -212,7 +212,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 type="button"
                 onClick={() => { setDeleteTarget(null); setDeleteError(''); }}
                 disabled={deleteLoading}
-                className="px-4 py-2 rounded-lg text-slate-300 bg-slate-800 border border-slate-200 hover:bg-slate-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 rounded-lg text-slate-300 bg-slate-800 border border-white/10 hover:bg-slate-700 disabled:opacity-50 transition-colors"
               >취소</button>
               <button
                 type="button"
@@ -248,7 +248,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
 
       {/* 툴바 — 마이페이지 검사 기록 탭과 동일 패턴 */}
       <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 sm:w-auto">
+        <h2 className="text-lg font-semibold text-slate-100 sm:w-auto">
           검사코드 목록{' '}
           <span className="font-normal text-slate-500">({filtered.length})</span>
         </h2>
@@ -263,7 +263,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="검사명 · 코드 · 유형 검색"
-            className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
         </div>
         <AuthLink
@@ -284,7 +284,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       </p>
 
       {filtered.length === 0 ? (
-        <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-slate-200 bg-white py-10 text-center">
+        <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
           <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
           <p className="text-base text-slate-300">
             {assessments.length === 0 ? '등록된 검사코드가 없습니다' : '검색 결과가 없습니다'}
@@ -306,7 +306,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         </div>
       ) : (
         <>
-          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-slate-200">
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
             <table className="min-w-full divide-y divide-white/10 text-sm">
               <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                 <tr>
@@ -362,7 +362,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const orgLabel = getAssessmentOrgLabel(a);
 
                   return (
-                    <tr key={a.id} className="group hover:bg-slate-50">
+                    <tr key={a.id} className="group hover:bg-white/[0.04]">
                       <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
                         <button
                           type="button"

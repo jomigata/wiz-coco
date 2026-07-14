@@ -126,7 +126,7 @@ export default function AssessmentAiInterpretButton({
           <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl border border-violet-500/30 bg-slate-950 p-5 shadow-xl">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">{title || 'AI 해석 리포트'}</h3>
+                <h3 className="text-lg font-semibold text-white">{title || 'AI 해석 리포트'}</h3>
                 <p className="text-xs text-slate-500 mt-1">
                   {testLabel || '검사'}
                   {clientLabel ? ` · ${clientLabel}` : ''}
@@ -150,13 +150,13 @@ export default function AssessmentAiInterpretButton({
               <div className="prose prose-invert max-w-none text-sm">{renderMarkdownLite(content)}</div>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+            <div className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
               {content && (
                 <button
                   type="button"
                   disabled={loading}
                   onClick={() => void runInterpret(true)}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                 >
                   재생성 ({regenCost} 크레딧, 50% 할인)
                 </button>

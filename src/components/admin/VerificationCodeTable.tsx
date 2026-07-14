@@ -33,7 +33,7 @@ const VerificationCodeTable: React.FC<VerificationCodeTableProps> = ({
     <div className="overflow-x-auto rounded-lg shadow">
       <table className="min-w-full bg-slate-900 border border-slate-700">
         <thead>
-          <tr className="border-b border-slate-200">
+          <tr className="border-b border-white/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase tracking-wider">
               이메일
             </th>
@@ -56,7 +56,7 @@ const VerificationCodeTable: React.FC<VerificationCodeTableProps> = ({
         </thead>
         <tbody className="divide-y divide-white/10">
           {codes.map((code) => (
-            <tr key={code.id} className="hover:bg-slate-50">
+            <tr key={code.id} className="hover:bg-white/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                 {code.email}
               </td>

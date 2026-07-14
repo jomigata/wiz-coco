@@ -42,19 +42,19 @@ export default function AdminDeveloperPage() {
   return (
     <RoleGuard allowedRoles={['admin']}>
       <main className="container py-10 max-w-2xl">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Developer · API 키</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">Developer · API 키</h1>
         <p className="text-slate-400 text-sm mb-8">
           화이트라벨 연동용 공개 API 키.{' '}
           <code className="text-violet-300">GET /api/v1/public/catalog</code> — 헤더{' '}
           <code className="text-violet-300">X-Api-Key</code>
         </p>
 
-        <form onSubmit={handleCreate} className="rounded-xl border border-slate-200 p-6 mb-8 bg-slate-900/50">
+        <form onSubmit={handleCreate} className="rounded-xl border border-white/10 p-6 mb-8 bg-slate-900/50">
           <label className="block text-sm text-slate-300 mb-2">키 이름</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-black/30 border border-slate-200 text-white mb-4"
+            className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white mb-4"
           />
           <button
             type="submit"
@@ -78,7 +78,7 @@ export default function AdminDeveloperPage() {
           {keys.map((k) => (
             <li
               key={k.id}
-              className="flex justify-between items-center px-4 py-3 rounded-lg border border-slate-200 text-sm text-slate-300"
+              className="flex justify-between items-center px-4 py-3 rounded-lg border border-white/10 text-sm text-slate-300"
             >
               <span>{k.name || k.id}</span>
               <span className="font-mono text-xs">{k.keyPrefix}…</span>

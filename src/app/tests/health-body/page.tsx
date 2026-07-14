@@ -56,7 +56,7 @@ export default function HealthBodyPage() {
   ];
 
   return (
-    <div className="bg-[#f8fafc] p-6 min-h-full">
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
       <div className="max-w-5xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
@@ -65,20 +65,20 @@ export default function HealthBodyPage() {
               🏥
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">건강 및 신체 문제</h1>
-              <p className="text-slate-600 text-lg mt-2">신체 이미지, 건강 불안, 만성 질환 등 건강과 관련된 심리적 문제를 다룹니다.</p>
+              <h1 className="text-3xl font-bold text-white">건강 및 신체 문제</h1>
+              <p className="text-gray-300 text-lg mt-2">신체 이미지, 건강 불안, 만성 질환 등 건강과 관련된 심리적 문제를 다룹니다.</p>
             </div>
           </div>
         </div>
 
         {/* 이론적 배경 */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-8">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 mb-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
                 <span>🧠</span> 기본 심리 이론
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 인지행동 이론(CBT), 건강 심리학, 스트레스-대처 이론, 건강 신념 모델을 바탕으로 합니다.
               </p>
             </div>
@@ -86,7 +86,7 @@ export default function HealthBodyPage() {
               <h3 className="text-lg font-semibold text-green-400 mb-3 flex items-center gap-2">
                 <span>📋</span> 연관 기존 검사
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 신체상 척도, 건강염려증 척도, 건강관련 삶의 질 척도(HRQoL), 섭식태도 검사(EAT-26) 등과 연계됩니다.
               </p>
             </div>
@@ -96,23 +96,23 @@ export default function HealthBodyPage() {
         {/* 검사 목록 - 카드 그리드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {testItems.map((item, index) => (
-            <div key={index} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
+            <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
               {/* 카드 헤더 */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-lg flex-shrink-0">
+                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                   {item.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-slate-900 leading-tight">{item.name}</h3>
+                  <h3 className="text-lg font-semibold text-white leading-tight">{item.name}</h3>
                 </div>
               </div>
 
               {/* 카드 내용 */}
               <div className="flex-1 flex flex-col">
-                <p className="text-slate-600 text-sm mb-3 leading-relaxed">{item.desc}</p>
+                <p className="text-gray-300 text-sm mb-3 leading-relaxed">{item.desc}</p>
                 
                 {/* 고민 예시 - 축약된 형태 */}
-                <div className="bg-slate-100 rounded-lg p-3 mb-4 flex-1">
+                <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
                   <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
                     <span>💭</span> 주요 고민
                   </h4>
@@ -157,10 +157,10 @@ export default function HealthBodyPage() {
         </div>
 
         {/* 하단 안내 */}
-        <div className="mt-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
+        <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">🏥 건강 심리 안내</h3>
-            <p className="text-slate-600 text-sm">
+            <h3 className="text-lg font-semibold text-white mb-2">🏥 건강 심리 안내</h3>
+            <p className="text-gray-300 text-sm">
               신체적 건강과 정신적 건강은 서로 밀접한 관련이 있습니다. 전문의와 상담하여 종합적인 치료를 받으시기 바랍니다.
             </p>
           </div>

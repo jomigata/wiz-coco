@@ -90,9 +90,9 @@ export default function SettingsPage() {
         
         <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="flex items-center justify-center">
-            <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-slate-600">설정을 불러오는 중입니다...</p>
+              <p className="text-xl text-blue-200">설정을 불러오는 중입니다...</p>
             </div>
           </div>
         </div>
@@ -117,8 +117,8 @@ export default function SettingsPage() {
         </div>
         
         <div className="container mx-auto px-4 py-6 relative z-10">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center py-8">
-            <p className="text-slate-600 mb-4">설정에 접근하려면 로그인이 필요합니다</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
+            <p className="text-blue-200 mb-4">설정에 접근하려면 로그인이 필요합니다</p>
             <Link 
               href="/login" 
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -165,7 +165,7 @@ export default function SettingsPage() {
 
         <div className="max-w-2xl mx-auto">
           {/* 개인정보 설정 */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                 <select
                   value={privacy.profileVisibility}
                   onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
-                  className="w-full bg-white/10 border border-slate-200 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="public">공개</option>
                   <option value="friends">친구만</option>

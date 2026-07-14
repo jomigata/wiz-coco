@@ -304,7 +304,7 @@ export default function TestPrefixPage() {
         )}
         
         {/* 접두사 추가/편집 폼 */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6 mb-8">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6 mb-8">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
             {editMode ? (
               <>
@@ -329,7 +329,7 @@ export default function TestPrefixPage() {
                 type="text"
                 value={newPrefix.code}
                 onChange={(e) => setNewPrefix({...newPrefix, code: e.target.value.toUpperCase()})}
-                className="w-full p-2 bg-white/5 border border-slate-200 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 maxLength={2}
                 placeholder="예: MP"
                 disabled={!!editMode}
@@ -341,7 +341,7 @@ export default function TestPrefixPage() {
                 type="text"
                 value={newPrefix.name}
                 onChange={(e) => setNewPrefix({...newPrefix, name: e.target.value})}
-                className="w-full p-2 bg-white/5 border border-slate-200 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="예: 전문가용 MBTI 검사"
               />
             </div>
@@ -351,7 +351,7 @@ export default function TestPrefixPage() {
             <textarea
               value={newPrefix.description}
               onChange={(e) => setNewPrefix({...newPrefix, description: e.target.value})}
-              className="w-full p-2 bg-white/5 border border-slate-200 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={2}
               placeholder="검사에 대한 간략한 설명"
             />
@@ -362,7 +362,7 @@ export default function TestPrefixPage() {
               id="active"
               checked={newPrefix.active}
               onChange={(e) => setNewPrefix({...newPrefix, active: e.target.checked})}
-              className="h-4 w-4 text-blue-600 bg-white/5 border-slate-200 rounded focus:ring-blue-500 focus:ring-offset-gray-900"
+              className="h-4 w-4 text-blue-600 bg-white/5 border-white/10 rounded focus:ring-blue-500 focus:ring-offset-gray-900"
             />
             <label htmlFor="active" className="ml-2 text-sm text-blue-200">활성 상태</label>
           </div>
@@ -408,7 +408,7 @@ export default function TestPrefixPage() {
         </div>
         
         {/* 접두사 목록 테이블 */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-white/10">
               <thead className="bg-white/5">

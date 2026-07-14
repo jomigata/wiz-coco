@@ -26,7 +26,7 @@ export default function IdentityValuesPage() {
   ];
 
   return (
-    <div className="bg-[#f8fafc] p-6 min-h-full">
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
       <div className="max-w-5xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
@@ -35,20 +35,20 @@ export default function IdentityValuesPage() {
               🌟
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">자아정체감 및 가치관</h1>
-              <p className="text-slate-600 text-lg mt-2">자아 정체성과 개인의 가치관 체계를 탐색하여 일관된 자아상을 형성하도록 돕습니다.</p>
+              <h1 className="text-3xl font-bold text-white">자아정체감 및 가치관</h1>
+              <p className="text-gray-300 text-lg mt-2">자아 정체성과 개인의 가치관 체계를 탐색하여 일관된 자아상을 형성하도록 돕습니다.</p>
             </div>
           </div>
         </div>
 
         {/* 이론적 배경 */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-8">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 mb-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
                 <span>🧠</span> 기본 심리 이론
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 발달 심리학(Erikson의 심리사회적 발달단계), 사회 정체성 이론, 인본주의 심리학을 기반으로 자아 정체성을 탐색합니다.
               </p>
             </div>
@@ -56,7 +56,7 @@ export default function IdentityValuesPage() {
               <h3 className="text-lg font-semibold text-green-400 mb-3 flex items-center gap-2">
                 <span>📋</span> 연관 기존 검사
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 자아정체감 검사, 자존감 척도(Rosenberg), SCT, TCI, 가치관 검사(Values Scale) 등과 연계됩니다.
               </p>
             </div>
@@ -66,23 +66,23 @@ export default function IdentityValuesPage() {
         {/* 검사 목록 - 카드 그리드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {testItems.map((item, index) => (
-            <div key={index} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
+            <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
               {/* 카드 헤더 */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-lg flex-shrink-0">
+                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                   {item.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-slate-900 leading-tight">{item.name}</h3>
+                  <h3 className="text-lg font-semibold text-white leading-tight">{item.name}</h3>
                 </div>
               </div>
 
               {/* 카드 내용 */}
               <div className="flex-1 flex flex-col">
-                <p className="text-slate-600 text-sm mb-3 leading-relaxed">{item.desc}</p>
+                <p className="text-gray-300 text-sm mb-3 leading-relaxed">{item.desc}</p>
                 
                 {/* 고민 예시 - 축약된 형태 */}
-                <div className="bg-slate-100 rounded-lg p-3 mb-4 flex-1">
+                <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
                   <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
                     <span>💭</span> 주요 고민
                   </h4>
@@ -127,10 +127,10 @@ export default function IdentityValuesPage() {
         </div>
 
         {/* 하단 안내 */}
-        <div className="mt-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
+        <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">검사 전 안내사항</h3>
-            <p className="text-slate-600 text-sm">
+            <h3 className="text-lg font-semibold text-white mb-2">검사 전 안내사항</h3>
+            <p className="text-gray-300 text-sm">
               자아 정체성과 가치관 탐색은 깊은 성찰이 필요합니다. 충분한 시간을 갖고 진솔하게 답변해 주세요.
             </p>
           </div>

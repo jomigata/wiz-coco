@@ -104,12 +104,12 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">관리자 대시보드</h1>
-          <p className="text-slate-600 text-lg">전체 시스템을 한눈에 파악하고 빠르게 접근하세요</p>
+          <h1 className="text-4xl font-bold text-white mb-2">관리자 대시보드</h1>
+          <p className="text-gray-300 text-lg">전체 시스템을 한눈에 파악하고 빠르게 접근하세요</p>
         </div>
 
         {/* 전체 현황 카드 */}
@@ -117,8 +117,8 @@ export default function AdminDashboard() {
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">총 사용자</p>
-                <p className="text-3xl font-bold text-slate-900">1,247</p>
+                <p className="text-gray-300 text-sm">총 사용자</p>
+                <p className="text-3xl font-bold text-white">1,247</p>
                 <p className="text-green-400 text-sm">+12% 이번 주</p>
               </div>
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -130,8 +130,8 @@ export default function AdminDashboard() {
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">활성 상담사</p>
-                <p className="text-3xl font-bold text-slate-900">23</p>
+                <p className="text-gray-300 text-sm">활성 상담사</p>
+                <p className="text-3xl font-bold text-white">23</p>
                 <p className="text-green-400 text-sm">+2 이번 주</p>
               </div>
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
@@ -143,8 +143,8 @@ export default function AdminDashboard() {
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">진행 중인 상담</p>
-                <p className="text-3xl font-bold text-slate-900">156</p>
+                <p className="text-gray-300 text-sm">진행 중인 상담</p>
+                <p className="text-3xl font-bold text-white">156</p>
                 <p className="text-blue-400 text-sm">+8 오늘</p>
               </div>
               <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -156,8 +156,8 @@ export default function AdminDashboard() {
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">완료된 상담</p>
-                <p className="text-3xl font-bold text-slate-900">2,341</p>
+                <p className="text-gray-300 text-sm">완료된 상담</p>
+                <p className="text-3xl font-bold text-white">2,341</p>
                 <p className="text-green-400 text-sm">+45 이번 주</p>
               </div>
               <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
 
         {/* 빠른 접근 버튼들 */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">빠른 접근</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">빠른 접근</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {quickAccessItems.map((item, index) => (
               <Link

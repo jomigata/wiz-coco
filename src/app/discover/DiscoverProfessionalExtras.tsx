@@ -6,7 +6,7 @@ import ProfessionalContentGate from '@/components/auth/ProfessionalContentGate';
 export function DiscoverProfessionalExtras() {
   return (
     <ProfessionalContentGate>
-      <section className="text-left rounded-2xl border border-slate-200 bg-white/5 p-6 md:p-8 mt-16">
+      <section className="text-left rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8 mt-16">
         <h2 className="text-lg font-semibold mb-4">SNS · 바이럴 (운영)</h2>
         <ul className="text-sm text-slate-400 space-y-2 list-disc pl-5">
           <li>미니 검사 완료 화면에서 링크 공유 (카카오·인스타 스토리 등)</li>

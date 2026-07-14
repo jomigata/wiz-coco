@@ -150,10 +150,10 @@ export default function RoleGuard({
     }
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-[#0f1628]">
+        <div className="rounded-xl border border-white/10 bg-[#162b4a] p-8 text-center shadow-sm">
           <h2 className="mb-4 text-2xl font-bold text-red-400">접근 권한이 없습니다</h2>
-          <p className="mb-6 text-red-200">이 페이지에 접근할 권한이 없습니다.</p>
+          <p className="mb-6 text-slate-300">이 페이지에 접근할 권한이 없습니다.</p>
           <button
             type="button"
             onClick={() => pushWithAuthSession(router, '/')}

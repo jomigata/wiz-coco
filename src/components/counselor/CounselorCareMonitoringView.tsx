@@ -89,7 +89,7 @@ function CareAssignmentCard({ item }: { item: CounselorCareAssignmentListItem })
   const overdue = isOverdue(item);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-white">{item.title}</h3>
@@ -135,7 +135,7 @@ function CareAssignmentCard({ item }: { item: CounselorCareAssignmentListItem })
         </AuthLink>
         <AuthLink
           href="/counselor/treatment-plans"
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5"
         >
           치료 할당
         </AuthLink>
@@ -236,7 +236,7 @@ export default function CounselorCareMonitoringView() {
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
@@ -244,23 +244,23 @@ export default function CounselorCareMonitoringView() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">활성 과제</p>
           <p className="mt-1 text-2xl font-semibold text-white">{summary.active}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">진행 중</p>
           <p className="mt-1 text-2xl font-semibold text-sky-300">{summary.inProgress}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">미시작</p>
           <p className="mt-1 text-2xl font-semibold text-amber-300">{summary.notStarted}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">완료</p>
           <p className="mt-1 text-2xl font-semibold text-emerald-300">{summary.completed}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">마감 지남</p>
           <p className="mt-1 text-2xl font-semibold text-red-300">{summary.overdue}</p>
         </div>
@@ -277,7 +277,7 @@ export default function CounselorCareMonitoringView() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'active' | 'all')}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
         >
           <option value="active">활성 과제만</option>
           <option value="all">전체 (완료 포함)</option>
@@ -290,7 +290,7 @@ export default function CounselorCareMonitoringView() {
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-300">과제별 진행</h2>
         {items.filter((item) => statusFilter === 'all' || item.status === 'active').length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
             <p className="text-slate-300">모니터링할 치료·과제가 없습니다.</p>
             <AuthLink
               href="/counselor/treatment-plans"
@@ -315,10 +315,10 @@ export default function CounselorCareMonitoringView() {
         {recentActivity.length === 0 ? (
           <p className="text-sm text-slate-500">아직 제출된 진행 기록이 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3 font-medium">시각</th>
                   <th className="px-4 py-3 font-medium">내담자</th>
                   <th className="px-4 py-3 font-medium">과제</th>
@@ -330,7 +330,7 @@ export default function CounselorCareMonitoringView() {
                 {recentActivity.map((row) => (
                   <tr
                     key={`${row.assignmentId}-${row.entryId}`}
-                    className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                    className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]"
                   >
                     <td className="px-4 py-2.5 text-xs text-slate-400">{formatDateTime(row.completedAt)}</td>
                     <td className="px-4 py-2.5">

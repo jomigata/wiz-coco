@@ -258,7 +258,7 @@ export default function AdminVerificationPage() {
         
         {/* 인증 코드 테이블 */}
         <motion.div
-          className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200"
+          className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}

@@ -144,7 +144,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
       
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
-          <h1 className="text-3xl font-bold text-slate-900 mb-4">
+          <h1 className="text-3xl font-bold text-white mb-4">
             {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
           </h1>
           <p className="text-emerald-300 max-w-lg mx-auto">
@@ -184,7 +184,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
 
             {/* 검사코드 입력 섹션 */}
             <div className="space-y-6 border border-blue-500/20 rounded-lg p-4 bg-blue-500/10">
-              <div className="pb-2 border-b border-slate-200">
+              <div className="pb-2 border-b border-white/20">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-medium text-emerald-300">검사 코드</span>
                 </div>

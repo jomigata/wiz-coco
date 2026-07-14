@@ -49,7 +49,7 @@ export function AiCounselChatThread({ sessionId }: AiCounselChatThreadProps) {
   }
 
   return (
-    <div className="flex flex-col h-[min(70vh,640px)] bg-white rounded-2xl shadow-xl border border-indigo-500/30 overflow-hidden backdrop-blur-sm">
+    <div className="flex flex-col h-[min(70vh,640px)] bg-slate-900/80 rounded-2xl shadow-xl border border-indigo-500/30 overflow-hidden backdrop-blur-sm">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <p className="text-center text-indigo-200/70 text-sm py-8">
@@ -65,7 +65,7 @@ export function AiCounselChatThread({ sessionId }: AiCounselChatThreadProps) {
               className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white'
-                  : 'bg-white/10 text-indigo-50 border border-slate-200'
+                  : 'bg-white/10 text-indigo-50 border border-white/10'
               }`}
             >
               {msg.content}
@@ -83,7 +83,7 @@ export function AiCounselChatThread({ sessionId }: AiCounselChatThreadProps) {
 
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 p-4 border-t border-indigo-500/20 bg-white"
+        className="flex items-center gap-2 p-4 border-t border-indigo-500/20 bg-slate-900/90"
       >
         <input
           type="text"
@@ -92,7 +92,7 @@ export function AiCounselChatThread({ sessionId }: AiCounselChatThreadProps) {
           placeholder="메시지를 입력하세요..."
           maxLength={2000}
           disabled={sending}
-          className="flex-1 rounded-xl border border-slate-200 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-indigo-200/40 focus:outline-none focus:ring-2 focus:ring-sky-500/50 disabled:opacity-50"
+          className="flex-1 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-indigo-200/40 focus:outline-none focus:ring-2 focus:ring-sky-500/50 disabled:opacity-50"
         />
         <button
           type="submit"

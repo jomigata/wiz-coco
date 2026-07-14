@@ -108,10 +108,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#f8fafc]">
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-        <header className="shrink-0 border-b border-slate-200 bg-white/90 py-2 backdrop-blur-sm">
+        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2 backdrop-blur-sm">
           <div className="flex w-full items-center justify-between gap-3 px-3 sm:px-4">
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-sky-500/25 bg-sky-500/10">
@@ -119,23 +119,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h1 className="truncate text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
+              <h1 className="truncate text-xl font-semibold tracking-tight text-white sm:text-2xl">
                 {currentPageTitle || '관리자 대시보드'}
               </h1>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <div className="hidden text-right text-xs leading-tight text-slate-400 sm:block">
                 <span className="text-slate-500">관리자</span>
-                <span className="ml-1.5 font-medium text-slate-700">김관리</span>
+                <span className="ml-1.5 font-medium text-slate-200">김관리</span>
               </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-slate-200">
                 김
               </div>
             </div>
           </div>
         </header>
 
-        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8fafc] px-3 py-2 sm:px-4 sm:py-2">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 px-3 py-2 sm:px-4 sm:py-2">
           {children}
         </main>
       </div>

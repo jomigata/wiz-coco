@@ -627,7 +627,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-emerald-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-emerald-700"
         >
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">이어하기</h2>
+          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
           <p className="text-emerald-200 mb-6 text-center">
             진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
           </p>
@@ -642,7 +642,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <p className="text-emerald-600 text-xs mt-2 text-center">
+            <p className="text-emerald-300/80 text-xs mt-2 text-center">
               {answeredCount}개 문항 완료 / 전체 {totalCount}개
             </p>
           </div>
@@ -761,7 +761,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       <div className="flex-1 bg-emerald-950 py-4 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-2xl mx-auto relative z-10">
           <div className="text-center mb-5">
-            <h1 className="text-3xl font-bold text-slate-900 mb-4">전문가용 MBTI 검사</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">전문가용 MBTI 검사</h1>
             <p className="text-emerald-300 max-w-lg mx-auto">
               깊이 생각하지 말고, 자연스럽게 떠오르는 대로 선택해주세요.
             </p>

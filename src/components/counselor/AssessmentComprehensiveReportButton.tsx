@@ -168,7 +168,7 @@ export default function AssessmentComprehensiveReportButton({
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl border border-emerald-500/30 bg-slate-950 p-5 shadow-xl">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-lg font-semibold text-white">
                   {report?.title || 'AI 종합 검사 리포트'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
@@ -204,7 +204,7 @@ export default function AssessmentComprehensiveReportButton({
                 </section>
 
                 {report.sections.map((sec) => (
-                  <section key={sec.heading} className="rounded-lg border border-slate-200 p-4">
+                  <section key={sec.heading} className="rounded-lg border border-white/10 p-4">
                     <h4 className="text-sm font-semibold text-blue-200 mb-2">{sec.heading}</h4>
                     <ul className="list-disc ml-4 text-sm text-slate-300 space-y-1">
                       {sec.lines.map((line) => (
@@ -221,7 +221,7 @@ export default function AssessmentComprehensiveReportButton({
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
                     placeholder="내담자·보호자에게 전달할 상담사 메모…"
-                    className="w-full rounded-lg bg-slate-900 border border-slate-200 px-3 py-2 text-sm text-slate-200"
+                    className="w-full rounded-lg bg-slate-900 border border-white/10 px-3 py-2 text-sm text-slate-200"
                   />
                   <h4 className="text-sm font-semibold text-emerald-200">추천 치료·개입</h4>
                   <textarea
@@ -229,7 +229,7 @@ export default function AssessmentComprehensiveReportButton({
                     onChange={(e) => setTreatment(e.target.value)}
                     rows={3}
                     placeholder="권장 상담·치료 프로그램, 추가 검사 등…"
-                    className="w-full rounded-lg bg-slate-900 border border-slate-200 px-3 py-2 text-sm text-slate-200"
+                    className="w-full rounded-lg bg-slate-900 border border-white/10 px-3 py-2 text-sm text-slate-200"
                   />
                   <div className="flex flex-wrap gap-2 items-center">
                     <button
@@ -248,7 +248,7 @@ export default function AssessmentComprehensiveReportButton({
 
             {error && report && <p className="text-red-300 text-sm mt-3">{error}</p>}
 
-            <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+            <div className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
               {report && (
                 <>
                   <button
@@ -262,7 +262,7 @@ export default function AssessmentComprehensiveReportButton({
                     type="button"
                     disabled={loading}
                     onClick={() => void runGenerate(true)}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                   >
                     재생성 ({regenCost} 크레딧, 50% 할인)
                   </button>

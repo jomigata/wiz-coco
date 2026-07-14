@@ -143,7 +143,7 @@ export default function ProgressDashboard({
       {!hideHeader ? (
         <div className="flex flex-wrap items-center gap-4">
           {assessmentTitle && (
-            <h2 className="text-lg font-semibold text-slate-900">{assessmentTitle}</h2>
+            <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
           )}
           <div className="flex items-center gap-2">
             <span className="text-slate-400">검사코드:</span>
@@ -303,7 +303,7 @@ export default function ProgressDashboard({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-slate-600 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">검사 결과 상세</h3>
+              <h3 className="text-lg font-semibold text-white">검사 결과 상세</h3>
               <button
                 type="button"
                 onClick={closeModal}
@@ -328,7 +328,7 @@ export default function ProgressDashboard({
                   {detail.resultData && Object.keys(detail.resultData).length > 0 && (
                     <div>
                       <h4 className="text-slate-400 text-sm font-medium mb-2">채점/요약</h4>
-                      <pre className="bg-white rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
+                      <pre className="bg-slate-900/80 rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
                         {JSON.stringify(detail.resultData, null, 2)}
                       </pre>
                     </div>
@@ -336,7 +336,7 @@ export default function ProgressDashboard({
                   {detail.responses != null && (
                     <div>
                       <h4 className="text-slate-400 text-sm font-medium mb-2">응답</h4>
-                      <pre className="bg-white rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
+                      <pre className="bg-slate-900/80 rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
                         {JSON.stringify(detail.responses, null, 2)}
                       </pre>
                     </div>

@@ -4,11 +4,11 @@ import React from 'react';
 
 export default function SystemDashboard() {
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">시스템 대시보드</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">시스템 대시보드</h1>
           <p className="text-gray-300">전체 현황을 한눈에 파악하세요</p>
         </div>
 
@@ -17,8 +17,8 @@ export default function SystemDashboard() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">총 사용자</p>
-                <p className="text-3xl font-bold text-slate-900">1,247</p>
+                <p className="text-gray-300 text-sm">총 사용자</p>
+                <p className="text-3xl font-bold text-white">1,247</p>
                 <p className="text-green-400 text-sm">+12% 이번 주</p>
               </div>
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -30,8 +30,8 @@ export default function SystemDashboard() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">활성 상담사</p>
-                <p className="text-3xl font-bold text-slate-900">23</p>
+                <p className="text-gray-300 text-sm">활성 상담사</p>
+                <p className="text-3xl font-bold text-white">23</p>
                 <p className="text-green-400 text-sm">+2 이번 주</p>
               </div>
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
@@ -43,8 +43,8 @@ export default function SystemDashboard() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">진행 중인 상담</p>
-                <p className="text-3xl font-bold text-slate-900">156</p>
+                <p className="text-gray-300 text-sm">진행 중인 상담</p>
+                <p className="text-3xl font-bold text-white">156</p>
                 <p className="text-blue-400 text-sm">+8 오늘</p>
               </div>
               <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -56,8 +56,8 @@ export default function SystemDashboard() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm">완료된 상담</p>
-                <p className="text-3xl font-bold text-slate-900">2,341</p>
+                <p className="text-gray-300 text-sm">완료된 상담</p>
+                <p className="text-3xl font-bold text-white">2,341</p>
                 <p className="text-green-400 text-sm">+45 이번 주</p>
               </div>
               <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">

@@ -35,7 +35,7 @@ export default function PotentialDevelopmentPage() {
   ];
 
   return (
-    <div className="bg-[#f8fafc] p-6 min-h-full">
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
       <div className="max-w-5xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
@@ -44,20 +44,20 @@ export default function PotentialDevelopmentPage() {
               🚀
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">잠재력 및 역량 개발</h1>
-              <p className="text-slate-600 text-lg mt-2">개인의 숨겨진 잠재력을 발굴하고 역량을 체계적으로 개발할 수 있는 방향을 제시합니다.</p>
+              <h1 className="text-3xl font-bold text-white">잠재력 및 역량 개발</h1>
+              <p className="text-gray-300 text-lg mt-2">개인의 숨겨진 잠재력을 발굴하고 역량을 체계적으로 개발할 수 있는 방향을 제시합니다.</p>
             </div>
           </div>
         </div>
 
         {/* 이론적 배경 */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-8">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 mb-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
                 <span>🧠</span> 기본 심리 이론
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 인지 심리학, 다중지능 이론, 정보처리 이론, 긍정 심리학을 바탕으로 개인의 잠재력을 과학적으로 분석합니다.
               </p>
             </div>
@@ -65,7 +65,7 @@ export default function PotentialDevelopmentPage() {
               <h3 className="text-lg font-semibold text-green-400 mb-3 flex items-center gap-2">
                 <span>📋</span> 연관 기존 검사
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 웩슬러 지능검사(WAIS/WISC), STRONG 직업흥미검사, 다중지능검사, 창의성 검사(TTCT) 등과 연계됩니다.
               </p>
             </div>
@@ -76,23 +76,23 @@ export default function PotentialDevelopmentPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {testItems.map((item, index) => (
             <Link key={index} href={item.href} className="block">
-              <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
                 {/* 카드 헤더 */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-lg flex-shrink-0">
+                  <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                     {item.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-slate-900 leading-tight">{item.name}</h3>
+                    <h3 className="text-lg font-semibold text-white leading-tight">{item.name}</h3>
                   </div>
                 </div>
 
                 {/* 카드 내용 */}
                 <div className="flex-1 flex flex-col">
-                  <p className="text-slate-600 text-sm mb-3 leading-relaxed">{item.desc}</p>
+                  <p className="text-gray-300 text-sm mb-3 leading-relaxed">{item.desc}</p>
                   
                   {/* 고민 예시 - 축약된 형태 */}
-                  <div className="bg-slate-100 rounded-lg p-3 mb-4 flex-1">
+                  <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
                     <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
                       <span>💭</span> 주요 고민
                     </h4>
@@ -130,10 +130,10 @@ export default function PotentialDevelopmentPage() {
         </div>
 
         {/* 하단 안내 */}
-        <div className="mt-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
+        <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">검사 전 안내사항</h3>
-            <p className="text-slate-600 text-sm">
+            <h3 className="text-lg font-semibold text-white mb-2">검사 전 안내사항</h3>
+            <p className="text-gray-300 text-sm">
               잠재력과 역량 평가는 현재 상태를 정확히 파악하는 것이 중요합니다. 평소의 모습 그대로 답변해 주세요.
             </p>
           </div>

@@ -94,7 +94,7 @@ export default function AdminAiUsagePanel() {
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+          className="rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
         />
         {loading && <span className="text-xs text-slate-500">불러오는 중…</span>}
       </div>
@@ -103,26 +103,26 @@ export default function AdminAiUsagePanel() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="rounded-xl border border-violet-500/20 p-4 bg-violet-950/20">
             <p className="text-xs text-violet-300">AI 크레딧 차감</p>
-            <p className="text-2xl font-bold text-slate-900">{summary.creditsConsumed}</p>
+            <p className="text-2xl font-bold text-white">{summary.creditsConsumed}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+          <div className="rounded-xl border border-white/10 p-4 bg-white/5">
             <p className="text-xs text-slate-400">AI 크레딧 지급</p>
-            <p className="text-2xl font-bold text-slate-900">{summary.creditsGranted}</p>
+            <p className="text-2xl font-bold text-white">{summary.creditsGranted}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+          <div className="rounded-xl border border-white/10 p-4 bg-white/5">
             <p className="text-xs text-slate-400">활성 상담사</p>
-            <p className="text-2xl font-bold text-slate-900">{summary.activeCounselors}</p>
+            <p className="text-2xl font-bold text-white">{summary.activeCounselors}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+          <div className="rounded-xl border border-white/10 p-4 bg-white/5">
             <p className="text-xs text-slate-400">총 토큰</p>
-            <p className="text-2xl font-bold text-slate-900">{summary.tokensTotal.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">{summary.tokensTotal.toLocaleString()}</p>
           </div>
         </div>
       )}
 
       {summary && (
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="rounded-xl border border-slate-200 p-4 bg-slate-900/50">
+          <div className="rounded-xl border border-white/10 p-4 bg-slate-900/50">
             <h3 className="text-white font-medium mb-3">기능별 사용</h3>
             <ul className="text-sm space-y-2">
               {featureRows.length === 0 && (
@@ -144,7 +144,7 @@ export default function AdminAiUsagePanel() {
               ))}
             </ul>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4 bg-slate-900/50">
+          <div className="rounded-xl border border-white/10 p-4 bg-slate-900/50">
             <h3 className="text-white font-medium mb-3">AI 지갑 상위</h3>
             <p className="text-xs text-slate-500 mb-2">
               전체 {summary.walletCount}지갑 · 합계 잔액 {summary.totalWalletBalance}
@@ -166,13 +166,13 @@ export default function AdminAiUsagePanel() {
 
       <form
         onSubmit={handleGrant}
-        className="rounded-xl border border-violet-500/20 bg-white p-6 space-y-4"
+        className="rounded-xl border border-violet-500/20 bg-slate-900/80 p-6 space-y-4"
       >
-        <h2 className="text-lg font-semibold text-slate-900">AI 크레딧 지급</h2>
+        <h2 className="text-lg font-semibold text-white">AI 크레딧 지급</h2>
         <input
           value={grantUid}
           onChange={(e) => setGrantUid(e.target.value)}
-          className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+          className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
           placeholder="상담사 Firebase UID"
           required
         />
@@ -183,12 +183,12 @@ export default function AdminAiUsagePanel() {
             max={100000}
             value={grantAmount}
             onChange={(e) => setGrantAmount(Number(e.target.value))}
-            className="rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+            className="rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
           />
           <input
             value={grantReason}
             onChange={(e) => setGrantReason(e.target.value)}
-            className="rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+            className="rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
           />
         </div>
         <button
@@ -203,20 +203,20 @@ export default function AdminAiUsagePanel() {
 
       <form
         onSubmit={handleLookup}
-        className="rounded-xl border border-slate-200 bg-white p-6 space-y-4"
+        className="rounded-xl border border-white/10 bg-slate-900/80 p-6 space-y-4"
       >
-        <h2 className="text-lg font-semibold text-slate-900">상담사 AI 잔액 조회</h2>
+        <h2 className="text-lg font-semibold text-white">상담사 AI 잔액 조회</h2>
         <input
           value={lookupUid}
           onChange={(e) => setLookupUid(e.target.value)}
-          className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+          className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
           placeholder="상담사 UID"
           required
         />
         <button
           type="submit"
           disabled={loading}
-          className="py-2 px-4 rounded-lg border border-slate-200 text-white text-sm hover:bg-slate-100"
+          className="py-2 px-4 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
         >
           조회
         </button>
@@ -230,7 +230,7 @@ export default function AdminAiUsagePanel() {
         )}
       </form>
 
-      <div className="rounded-xl border border-slate-200 overflow-x-auto">
+      <div className="rounded-xl border border-white/10 overflow-x-auto">
         <table className="min-w-full text-sm text-slate-300">
           <thead className="bg-white/5 text-slate-400">
             <tr>
@@ -243,7 +243,7 @@ export default function AdminAiUsagePanel() {
           </thead>
           <tbody>
             {ledgerItems.map((row) => (
-              <tr key={row.id} className="border-t border-slate-100">
+              <tr key={row.id} className="border-t border-white/5">
                 <td className="px-3 py-2 whitespace-nowrap text-xs">
                   {row.createdAt?.slice(0, 16) || '—'}
                 </td>

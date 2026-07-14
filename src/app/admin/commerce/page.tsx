@@ -95,7 +95,7 @@ export default function AdminCommercePage() {
   return (
     <RoleGuard allowedRoles={['admin']}>
       <div className="p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">협회 · 수익화 관리</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">협회 · 수익화 관리</h1>
         <p className="text-slate-400 text-sm mb-6">
           크레딧 지급(파일럿) · PG 결제 정산(2단계) · 월간 리포트
         </p>
@@ -145,15 +145,15 @@ export default function AdminCommercePage() {
           <>
             <form
               onSubmit={handleGrant}
-              className="rounded-xl border border-slate-200 bg-white p-6 mb-8 space-y-4"
+              className="rounded-xl border border-white/10 bg-slate-900/80 p-6 mb-8 space-y-4"
             >
-              <h2 className="text-lg font-semibold text-slate-900">크레딧 지급</h2>
+              <h2 className="text-lg font-semibold text-white">크레딧 지급</h2>
               <div>
                 <label className="block text-sm text-slate-400 mb-1">상담사 UID</label>
                 <input
                   value={counselorUid}
                   onChange={(e) => setCounselorUid(e.target.value)}
-                  className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+                  className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
                   placeholder="Firebase uid"
                   required
                 />
@@ -167,7 +167,7 @@ export default function AdminCommercePage() {
                     max={100000}
                     value={amount}
                     onChange={(e) => setAmount(Number(e.target.value))}
-                    className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+                    className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
                   />
                 </div>
                 <div>
@@ -175,7 +175,7 @@ export default function AdminCommercePage() {
                   <input
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+                    className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
                   />
                 </div>
               </div>
@@ -190,27 +190,27 @@ export default function AdminCommercePage() {
 
             <form
               onSubmit={handleLookup}
-              className="rounded-xl border border-slate-200 bg-white p-6 mb-6 space-y-4"
+              className="rounded-xl border border-white/10 bg-slate-900/80 p-6 mb-6 space-y-4"
             >
-              <h2 className="text-lg font-semibold text-slate-900">잔액 · 내역 조회</h2>
+              <h2 className="text-lg font-semibold text-white">잔액 · 내역 조회</h2>
               <input
                 value={lookupUid}
                 onChange={(e) => setLookupUid(e.target.value)}
-                className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+                className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
                 placeholder="상담사 UID"
                 required
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="py-2 px-4 rounded-lg border border-slate-200 text-white text-sm hover:bg-slate-100"
+                className="py-2 px-4 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
               >
                 조회
               </button>
             </form>
 
             {lookupResult && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-6">
                 <p className="text-white font-semibold mb-1">잔액: {lookupResult.balance} 크레딧</p>
                 {lookupResult.email && (
                   <p className="text-slate-400 text-sm mb-4">{lookupResult.email}</p>
@@ -220,7 +220,7 @@ export default function AdminCommercePage() {
                   {lookupResult.ledger.map((row, i) => (
                     <li
                       key={i}
-                      className="flex justify-between text-slate-300 border-b border-slate-100 pb-2"
+                      className="flex justify-between text-slate-300 border-b border-white/5 pb-2"
                     >
                       <span>
                         {row.delta > 0 ? '+' : ''}
@@ -245,27 +245,27 @@ export default function AdminCommercePage() {
                 type="month"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
+                className="rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
               />
             </div>
 
             {summary && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
                   <p className="text-xs text-slate-400">결제 건수</p>
-                  <p className="text-2xl font-bold text-slate-900">{summary.paymentCount}</p>
+                  <p className="text-2xl font-bold text-white">{summary.paymentCount}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
                   <p className="text-xs text-slate-400">총 매출</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-2xl font-bold text-white">
                     {summary.totalAmount.toLocaleString()}원
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
                   <p className="text-xs text-slate-400">발급 크레딧</p>
-                  <p className="text-2xl font-bold text-slate-900">{summary.totalCreditsGranted}</p>
+                  <p className="text-2xl font-bold text-white">{summary.totalCreditsGranted}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4 bg-white/5">
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
                   <p className="text-xs text-slate-400">
                     플랫폼 수수료 ({Math.round(summary.platformFeeRate * 100)}%)
                   </p>
@@ -277,7 +277,7 @@ export default function AdminCommercePage() {
             )}
 
             {summary && Object.keys(summary.byProduct).length > 0 && (
-              <div className="rounded-xl border border-slate-200 p-4 bg-slate-900/50">
+              <div className="rounded-xl border border-white/10 p-4 bg-slate-900/50">
                 <h3 className="text-white font-medium mb-3">상품별</h3>
                 <ul className="text-sm space-y-2">
                   {Object.entries(summary.byProduct).map(([pid, row]) => (
@@ -292,7 +292,7 @@ export default function AdminCommercePage() {
               </div>
             )}
 
-            <div className="rounded-xl border border-slate-200 overflow-x-auto">
+            <div className="rounded-xl border border-white/10 overflow-x-auto">
               <table className="min-w-full text-sm text-slate-300">
                 <thead className="bg-white/5 text-slate-400">
                   <tr>
@@ -304,7 +304,7 @@ export default function AdminCommercePage() {
                 </thead>
                 <tbody>
                   {payments.map((p) => (
-                    <tr key={p.id} className="border-t border-slate-100">
+                    <tr key={p.id} className="border-t border-white/5">
                       <td className="px-3 py-2">{p.createdAt?.slice(0, 16) || '—'}</td>
                       <td className="px-3 py-2">{p.productId || '—'}</td>
                       <td className="px-3 py-2 text-right">

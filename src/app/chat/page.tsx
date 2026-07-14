@@ -95,7 +95,7 @@ export default function ChatPage() {
 
   if (loading || counselorLoading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-emerald-300 text-lg">로딩 중...</p>
@@ -106,7 +106,7 @@ export default function ChatPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-lg">로그인이 필요합니다.</p>
         </div>
@@ -116,7 +116,7 @@ export default function ChatPage() {
 
   if (!counselorConnection.isConnected) {
     return (
-      <div className="min-h-screen bg-[#f8fafc]"><div className="pt-16 p-6">
+      <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -146,7 +146,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]"><div className="pt-16 h-screen flex flex-col">
+    <div className="min-h-screen bg-gray-900"><div className="pt-16 h-screen flex flex-col">
         {/* 채팅 헤더 */}
         <div className="bg-gray-800 border-b border-gray-700 p-4">
           <div className="flex items-center justify-between">
@@ -195,7 +195,7 @@ export default function ChatPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">채팅을 시작해보세요</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">채팅을 시작해보세요</h3>
                 <p className="text-gray-400">상담사와의 첫 메시지를 보내보세요.</p>
               </div>
             </div>

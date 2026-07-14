@@ -164,7 +164,7 @@ export default function CompletedTestList({
   if (!usePortalSession && !useParticipantSession && authLoading) {
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">완료한 검사</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
         <p className="text-slate-400 text-sm">불러오는 중…</p>
       </div>
     );
@@ -173,7 +173,7 @@ export default function CompletedTestList({
   if (!canLoad) {
     return (
       <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">완료한 검사</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">완료한 검사</h3>
         <p className="text-slate-400 text-sm">프로필 등록 후 완료 내역이 표시됩니다.</p>
       </div>
     );
@@ -183,7 +183,7 @@ export default function CompletedTestList({
 
   return (
     <div className="rounded-xl bg-slate-800/60 border border-slate-600 p-4">
-      <h3 className="text-lg font-semibold text-slate-900 mb-3">완료한 검사</h3>
+      <h3 className="text-lg font-semibold text-white mb-3">완료한 검사</h3>
       {loading ? (
         <p className="text-slate-400 text-sm">불러오는 중…</p>
       ) : error ? (
@@ -274,7 +274,7 @@ export default function CompletedTestList({
             className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h4 className="text-lg font-semibold text-slate-900 mb-2">검사 결과 삭제</h4>
+            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
             <p className="text-slate-300 text-sm mb-4">
               「{deleteModal.testName}」 결과를 삭제할까요?
             </p>

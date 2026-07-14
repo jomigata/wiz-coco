@@ -153,7 +153,7 @@ function CounselorManagementPageContent() {
       case 'rejected':
         return 'border border-rose-500/30 bg-rose-500/10 text-rose-100';
       default:
-        return 'border border-slate-200 bg-white/5 text-slate-300';
+        return 'border border-white/15 bg-white/5 text-slate-300';
     }
   };
 
@@ -339,7 +339,7 @@ function CounselorManagementPageContent() {
       </motion.div>
 
       <motion.div
-        className="mb-2 flex shrink-0 flex-wrap gap-x-1 gap-y-0 border-b border-slate-200"
+        className="mb-2 flex shrink-0 flex-wrap gap-x-1 gap-y-0 border-b border-white/10"
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
@@ -349,8 +349,8 @@ function CounselorManagementPageContent() {
           onClick={() => setActiveTab('verification')}
           className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors ${
             activeTab === 'verification'
-              ? 'border border-b-0 border-slate-200 bg-white/10 text-white'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'border border-b-0 border-white/15 bg-white/10 text-white'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           인증 관리 ({filteredApplications.length})
@@ -360,8 +360,8 @@ function CounselorManagementPageContent() {
           onClick={() => setActiveTab('profiles')}
           className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors ${
             activeTab === 'profiles'
-              ? 'border border-b-0 border-slate-200 bg-white/10 text-white'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'border border-b-0 border-white/15 bg-white/10 text-white'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           프로필 ({approvedCount})
@@ -371,8 +371,8 @@ function CounselorManagementPageContent() {
           onClick={() => setActiveTab('activity')}
           className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors ${
             activeTab === 'activity'
-              ? 'border border-b-0 border-slate-200 bg-white/10 text-white'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'border border-b-0 border-white/15 bg-white/10 text-white'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           활동 현황
@@ -381,7 +381,7 @@ function CounselorManagementPageContent() {
 
       {activeTab === 'verification' && (
         <motion.div
-          className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm p-3 backdrop-blur-sm sm:p-4"
+          className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -395,7 +395,7 @@ function CounselorManagementPageContent() {
             <div className="mb-2 text-xs text-slate-400">목록 갱신 중…</div>
           )}
           <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <h2 className="text-lg font-semibold text-slate-900 sm:w-auto sm:shrink-0">
+            <h2 className="text-lg font-semibold text-slate-100 sm:w-auto sm:shrink-0">
               인증 신청{' '}
               <span className="font-normal text-slate-500">({filteredApplications.length})</span>
             </h2>
@@ -406,14 +406,14 @@ function CounselorManagementPageContent() {
                 placeholder="이름 · 이메일 · 기관명 · 지역 · 분야 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+                className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
-                className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+                className="rounded-md border border-white/10 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
               >
                 <option value="all" className="bg-slate-900">전체</option>
                 <option value="pending" className="bg-slate-900">검토 중</option>
@@ -439,7 +439,7 @@ function CounselorManagementPageContent() {
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-slate-200">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-white/10">
             {filteredApplications.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
                 <FaUserCheck className="mb-2 h-10 w-10 text-slate-600" />
@@ -542,7 +542,7 @@ function CounselorManagementPageContent() {
                     {filteredApplications.map((application) => (
                       <tr
                         key={`${application.applicantUid}-${application.id}`}
-                        className="cursor-pointer hover:bg-slate-50"
+                        className="cursor-pointer hover:bg-white/[0.04]"
                         onClick={() => openModal(application)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
@@ -769,15 +769,15 @@ function CounselorManagementPageContent() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm p-3 backdrop-blur-sm sm:p-4"
+            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
           >
             <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-100">
                 승인 프로필{' '}
                 <span className="font-normal text-slate-500">({approvedCount})</span>
               </h2>
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-slate-200">
+            <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
               {approvedCount === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center text-base text-slate-300">
                   승인된 상담사가 없습니다.
@@ -799,7 +799,7 @@ function CounselorManagementPageContent() {
                       {groupedApplications
                         .filter((app) => app.status === 'approved')
                         .map((c) => (
-                          <tr key={c.id} className="hover:bg-slate-50">
+                          <tr key={c.id} className="hover:bg-white/[0.04]">
                             <td className="max-w-[6rem] truncate px-2 py-2 text-left text-sm font-medium text-white">{c.name}</td>
                             <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={c.email}>
                               {c.email}
@@ -836,7 +836,7 @@ function CounselorManagementPageContent() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm p-3 backdrop-blur-sm sm:p-4"
+            className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-3 backdrop-blur-sm sm:p-4"
           >
             <div className="mb-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-md border border-emerald-500/20 bg-emerald-950/30 px-2 py-2 text-center">
@@ -859,8 +859,8 @@ function CounselorManagementPageContent() {
               </div>
             </div>
 
-            <h2 className="mb-2 text-lg font-semibold text-slate-900">최근 활동</h2>
-            <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-slate-200">
+            <h2 className="mb-2 text-lg font-semibold text-slate-100">최근 활동</h2>
+            <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-white/10">
               <div className="max-h-[min(50vh,24rem)] overflow-auto lg:max-h-none">
                 <table className="min-w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
@@ -876,7 +876,7 @@ function CounselorManagementPageContent() {
                       ['이치료', '치료 계획 업데이트', '4시간 전'],
                       ['박심리', '내담자 평가 완료', '6시간 전'],
                     ].map(([name, action, time], i) => (
-                      <tr key={i} className="hover:bg-slate-50">
+                      <tr key={i} className="hover:bg-white/[0.04]">
                         <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">{name}</td>
                         <td className="px-2 py-2 text-left text-sm text-slate-300">{action}</td>
                         <td className="whitespace-nowrap px-2 py-2 text-right text-sm text-slate-400">{time}</td>

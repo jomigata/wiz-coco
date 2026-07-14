@@ -246,7 +246,7 @@ function TestRecommendationsContent() {
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
             placeholder="이메일/검사명/코드 검색"
-            className="w-full max-w-md px-3 py-2 rounded-md bg-white/5 border border-slate-200 text-white placeholder-white/40"
+            className="w-full max-w-md px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-white/40"
           />
           <span className="text-sm text-white/70">
             완료 결과 <span className="text-white font-semibold">{filtered.length}</span>건
@@ -254,7 +254,7 @@ function TestRecommendationsContent() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="overflow-x-auto rounded-lg border border-white/10">
             {isLoading ? (
               <p className="p-4 text-sm text-white/60">불러오는 중…</p>
             ) : (
@@ -271,8 +271,8 @@ function TestRecommendationsContent() {
                   {filtered.map((r) => (
                     <tr
                       key={r.id}
-                      className={`border-t border-slate-200 cursor-pointer ${
-                        selectedId === r.id ? 'bg-violet-950/40' : 'hover:bg-slate-50'
+                      className={`border-t border-white/10 cursor-pointer ${
+                        selectedId === r.id ? 'bg-violet-950/40' : 'hover:bg-white/5'
                       }`}
                       onClick={() => setSelectedId(r.id)}
                     >
@@ -296,14 +296,14 @@ function TestRecommendationsContent() {
             )}
           </div>
 
-          <div className="rounded-xl border border-violet-500/20 bg-white p-5 min-h-[320px]">
+          <div className="rounded-xl border border-violet-500/20 bg-slate-950/50 p-5 min-h-[320px]">
             {!selectedId ? (
               <p className="text-sm text-slate-500 py-12 text-center">왼쪽에서 검사 결과를 선택하세요.</p>
             ) : (
               <>
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
+                    <h3 className="text-lg font-semibold text-white">
                       {selectedRow?.testType || '검사'} 추천
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
@@ -327,7 +327,7 @@ function TestRecommendationsContent() {
                     type="button"
                     disabled={recoLoading}
                     onClick={() => void loadRecommendations(selectedId, true)}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                   >
                     재추천 ({creditCost} 크레딧)
                   </button>
@@ -346,7 +346,7 @@ function TestRecommendationsContent() {
                       {recommendations.map((item) => (
                         <li
                           key={item.testId}
-                          className="rounded-lg border border-slate-200 bg-white/5 px-4 py-3"
+                          className="rounded-lg border border-white/10 bg-white/5 px-4 py-3"
                         >
                           <label className="flex items-start gap-3 cursor-pointer">
                             <input
@@ -373,7 +373,7 @@ function TestRecommendationsContent() {
                     </ul>
 
                     {recommendations.length > 0 && (
-                      <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+                      <div className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
                         <button
                           type="button"
                           disabled={assignBusy || !portalId}
@@ -384,7 +384,7 @@ function TestRecommendationsContent() {
                         </button>
                         <Link
                           href="/counselor/treatment-plans"
-                          className="px-4 py-2 rounded-lg border border-slate-200 text-slate-300 text-sm hover:bg-slate-50"
+                          className="px-4 py-2 rounded-lg border border-white/20 text-slate-300 text-sm hover:bg-white/5"
                         >
                           치료 계획에서 할당
                         </Link>

@@ -109,7 +109,7 @@ export default function DailyTrackingPage() {
 
   if (authPending) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <AuthLoadingState message="로딩 중..." />
       </div>
     );
@@ -117,7 +117,7 @@ export default function DailyTrackingPage() {
 
   if (showLoginRequired) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
         <AuthRequiredState className="max-w-md w-full" />
       </div>
     );
@@ -131,12 +131,12 @@ export default function DailyTrackingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-gray-900">
 <div className="pt-16 p-6">
         <div className="max-w-4xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">일상생활 추적</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">일상생활 추적</h1>
             <p className="text-gray-300">
               매일의 마음 상태와 감정을 기록하여 자신을 더 잘 이해해보세요.
             </p>
@@ -335,7 +335,7 @@ export default function DailyTrackingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">아직 기록이 없습니다</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">아직 기록이 없습니다</h3>
                 <p className="text-gray-400">첫 번째 기록을 작성해보세요.</p>
               </div>
             ) : (
@@ -374,7 +374,7 @@ function DailyRecordCard({ record }: { record: DailyRecord }) {
         <div className="flex items-center gap-3">
           <span className="text-2xl">{typeInfo.icon}</span>
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">{typeInfo.label}</h3>
+            <h3 className="text-lg font-semibold text-white">{typeInfo.label}</h3>
             <p className="text-gray-400 text-sm">
               {new Date(record.recordedAt).toLocaleDateString('ko-KR', {
                 year: 'numeric',

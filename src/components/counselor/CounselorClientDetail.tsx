@@ -218,7 +218,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
           type="button"
           onClick={() => void load()}
           disabled={actionBusy}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
         >
           새로고침
         </button>
@@ -243,7 +243,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
         />
       ) : null}
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
+      <section className="rounded-xl border border-white/10 bg-slate-950/60 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-white">{portal.displayName || '내담자'}</h2>
@@ -260,14 +260,14 @@ export default function CounselorClientDetail({ portalId }: Props) {
           <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
             <div className="rounded-lg bg-white/5 px-4 py-3">
               <p className="text-xs text-slate-500">검사 진행</p>
-              <p className="mt-1 text-lg font-semibold text-slate-900">{progress.percent}%</p>
+              <p className="mt-1 text-lg font-semibold text-white">{progress.percent}%</p>
               <p className="text-[11px] text-slate-500">
                 {progress.completedTests}/{progress.totalTests}
               </p>
             </div>
             <div className="rounded-lg bg-white/5 px-4 py-3">
               <p className="text-xs text-slate-500">검사코드</p>
-              <p className="mt-1 text-lg font-semibold text-slate-900">{assessments.length}</p>
+              <p className="mt-1 text-lg font-semibold text-white">{assessments.length}</p>
             </div>
             <div className="rounded-lg bg-white/5 px-4 py-3">
               <p className="text-xs text-slate-500">자격증명</p>
@@ -329,13 +329,13 @@ export default function CounselorClientDetail({ portalId }: Props) {
                 }
               }}
               placeholder="예: 고위험, 재상담"
-              className="flex-1 min-w-[10rem] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="flex-1 min-w-[10rem] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
             />
             <button
               type="button"
               onClick={addTag}
               disabled={actionBusy || !tagInput.trim()}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-lg border border-white/15 px-3 py-2 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
             >
               추가
             </button>
@@ -352,14 +352,14 @@ export default function CounselorClientDetail({ portalId }: Props) {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900">할당된 검사코드</h3>
+        <h3 className="text-lg font-semibold text-white">할당된 검사코드</h3>
         {assessments.length === 0 ? (
           <p className="text-sm text-slate-500">할당된 검사가 없습니다.</p>
         ) : (
           assessments.map((assessment) => (
             <div
               key={assessment.assessmentId}
-              className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 sm:p-5"
+              className="rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -378,7 +378,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessment.assessmentId)}`}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50"
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-sky-300 hover:bg-white/5"
                   >
                     전체 진행현황
                   </Link>
@@ -386,7 +386,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                     type="button"
                     disabled={actionBusy}
                     onClick={() => void handleResend(assessment.assessmentId)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
                   >
                     자격증명 재발송
                   </button>
@@ -394,7 +394,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                     type="button"
                     disabled={actionBusy}
                     onClick={() => void handleRemind(assessment.assessmentId)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
                   >
                     미완료 알림
                   </button>
@@ -402,7 +402,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
               </div>
 
               {assessment.welcomeMessage ? (
-                <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-400">
+                <p className="mt-3 rounded-lg bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
                   {assessment.welcomeMessage}
                 </p>
               ) : null}
@@ -443,7 +443,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                                     test.testName,
                                   )
                                 }
-                                className="text-blue-600 hover:text-blue-700"
+                                className="text-sky-400 hover:text-sky-300"
                               >
                                 리포트 인쇄
                               </button>
@@ -474,8 +474,8 @@ export default function CounselorClientDetail({ portalId }: Props) {
       </section>
 
       {recentResults.length > 0 ? (
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-slate-900">최근 검사 결과</h3>
+        <section className="rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5">
+          <h3 className="text-lg font-semibold text-white">최근 검사 결과</h3>
           <ul className="mt-3 divide-y divide-white/5 text-sm">
             {recentResults.slice(0, 10).map((r) => (
               <li key={r.resultId} className="flex flex-wrap items-center justify-between gap-2 py-2">
@@ -487,21 +487,21 @@ export default function CounselorClientDetail({ portalId }: Props) {
               </li>
             ))}
           </ul>
-          <Link href="/counselor/test-results" className="mt-3 inline-block text-xs text-blue-600 hover:text-blue-700">
+          <Link href="/counselor/test-results" className="mt-3 inline-block text-xs text-sky-400 hover:text-sky-300">
             전체 검사 결과 분석 →
           </Link>
         </section>
       ) : null}
 
       {linkedPortals.length > 0 ? (
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-slate-900">연결된 나의코드</h3>
+        <section className="rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5">
+          <h3 className="text-lg font-semibold text-white">연결된 나의코드</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {linkedPortals.map((lp) => (
               <li key={lp.portalId}>
                 <Link
                   href={counselorClientDetailHref(lp.portalId)}
-                  className="text-blue-600 hover:text-blue-700"
+                  className="text-sky-400 hover:text-sky-300"
                 >
                   {lp.displayName || '내담자'} · {formatAccessCodeDisplay(lp.accessCode)}
                 </Link>

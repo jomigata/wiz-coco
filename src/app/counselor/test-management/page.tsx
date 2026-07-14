@@ -168,7 +168,7 @@ export default function CounselorTestManagementPage() {
   };
 
   return (
-    <div className="bg-[#f8fafc] p-6 min-h-screen">
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* 헤더 */}
         <div className="mb-8">
@@ -177,33 +177,33 @@ export default function CounselorTestManagementPage() {
               👨‍⚕️
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">신입생 검사 관리 시스템</h1>
-              <p className="text-slate-600 text-lg mt-2">2000명 신입생 통합 심리검사 관리</p>
+              <h1 className="text-3xl font-bold text-white">신입생 검사 관리 시스템</h1>
+              <p className="text-gray-300 text-lg mt-2">2000명 신입생 통합 심리검사 관리</p>
             </div>
           </div>
         </div>
 
         {/* 통계 요약 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
                 <span className="text-blue-400 text-xl">👥</span>
               </div>
               <div>
-                <p className="text-slate-600 text-sm">총 신입생</p>
+                <p className="text-gray-300 text-sm">총 신입생</p>
                 <p className="text-white text-2xl font-bold">{students.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
                 <span className="text-green-400 text-xl">✅</span>
               </div>
               <div>
-                <p className="text-slate-600 text-sm">검사 완료</p>
+                <p className="text-gray-300 text-sm">검사 완료</p>
                 <p className="text-white text-2xl font-bold">
                   {testAssignments.filter(t => t.status === 'completed').length}
                 </p>
@@ -211,13 +211,13 @@ export default function CounselorTestManagementPage() {
             </div>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
                 <span className="text-yellow-400 text-xl">⏳</span>
               </div>
               <div>
-                <p className="text-slate-600 text-sm">진행 중</p>
+                <p className="text-gray-300 text-sm">진행 중</p>
                 <p className="text-white text-2xl font-bold">
                   {testAssignments.filter(t => t.status === 'in_progress').length}
                 </p>
@@ -225,13 +225,13 @@ export default function CounselorTestManagementPage() {
             </div>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
                 <span className="text-red-400 text-xl">📋</span>
               </div>
               <div>
-                <p className="text-slate-600 text-sm">대기 중</p>
+                <p className="text-gray-300 text-sm">대기 중</p>
                 <p className="text-white text-2xl font-bold">
                   {testAssignments.filter(t => t.status === 'pending').length}
                 </p>
@@ -241,17 +241,17 @@ export default function CounselorTestManagementPage() {
         </div>
 
         {/* 학생 목록 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 mb-6">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-900">신입생 목록</h2>
+            <h2 className="text-2xl font-bold text-white">신입생 목록</h2>
             <div className="flex gap-3">
-              <select className="px-4 py-2 bg-white/10 border border-slate-200 rounded-lg text-white">
+              <select className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
                 <option value="all">전체</option>
                 <option value="active">활성</option>
                 <option value="pending">대기</option>
                 <option value="inactive">비활성</option>
               </select>
-              <select className="px-4 py-2 bg-white/10 border border-slate-200 rounded-lg text-white">
+              <select className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
                 <option value="all">전공별</option>
                 <option value="computer">컴퓨터공학과</option>
                 <option value="psychology">심리학과</option>
@@ -263,7 +263,7 @@ export default function CounselorTestManagementPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200">
+                <tr className="border-b border-white/20">
                   <th className="text-left text-gray-300 py-3 px-4">이름</th>
                   <th className="text-left text-gray-300 py-3 px-4">학번</th>
                   <th className="text-left text-gray-300 py-3 px-4">전공</th>
@@ -275,7 +275,7 @@ export default function CounselorTestManagementPage() {
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr key={student.id} className="border-b border-slate-200 hover:bg-slate-50">
+                  <tr key={student.id} className="border-b border-white/10 hover:bg-white/5">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white text-sm font-semibold">
@@ -342,11 +342,11 @@ export default function CounselorTestManagementPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-slate-600 text-sm mb-2">검사 유형</label>
+                  <label className="block text-gray-300 text-sm mb-2">검사 유형</label>
                   <select
                     value={newAssignment.testType}
                     onChange={(e) => setNewAssignment(prev => ({ ...prev, testType: e.target.value }))}
-                    className="w-full p-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
                   >
                     <option value="">검사를 선택하세요</option>
                     {testTypes.map((test) => (
@@ -358,21 +358,21 @@ export default function CounselorTestManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 text-sm mb-2">마감일</label>
+                  <label className="block text-gray-300 text-sm mb-2">마감일</label>
                   <input
                     type="date"
                     value={newAssignment.dueDate}
                     onChange={(e) => setNewAssignment(prev => ({ ...prev, dueDate: e.target.value }))}
-                    className="w-full p-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 text-sm mb-2">우선순위</label>
+                  <label className="block text-gray-300 text-sm mb-2">우선순위</label>
                   <select
                     value={newAssignment.priority}
                     onChange={(e) => setNewAssignment(prev => ({ ...prev, priority: e.target.value as 'high' | 'medium' | 'low' }))}
-                    className="w-full p-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
                   >
                     <option value="high" className="bg-gray-800">높음</option>
                     <option value="medium" className="bg-gray-800">보통</option>
@@ -381,12 +381,12 @@ export default function CounselorTestManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 text-sm mb-2">메모</label>
+                  <label className="block text-gray-300 text-sm mb-2">메모</label>
                   <textarea
                     value={newAssignment.notes}
                     onChange={(e) => setNewAssignment(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="검사 할당 관련 메모를 입력하세요"
-                    className="w-full p-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 h-20 resize-none"
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 h-20 resize-none"
                   />
                 </div>
               </div>

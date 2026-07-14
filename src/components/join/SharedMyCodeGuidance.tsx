@@ -18,7 +18,7 @@ export default function SharedMyCodeGuidance({
 
   return (
     <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/30 p-5 space-y-4">
-      <h2 className="text-lg font-semibold text-slate-900">나의코드 발급 안내</h2>
+      <h2 className="text-lg font-semibold text-white">나의코드 발급 안내</h2>
 
       {finalizeMessage ? (
         <p className="text-emerald-200 text-sm">{finalizeMessage}</p>

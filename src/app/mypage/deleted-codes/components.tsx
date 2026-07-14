@@ -743,13 +743,13 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       );
     }
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-[#f8fafc]">
+      <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
         
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-          <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8fafc] text-slate-900">
+          <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
             <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6">
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm px-8 py-10 text-center backdrop-blur-sm">
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] px-8 py-10 text-center backdrop-blur-sm">
                 <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
                 <p className="text-sm text-slate-400">불러오는 중…</p>
               </div>
@@ -764,22 +764,22 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   if (showLoginRequired && !user) {
     if (isEmbedded) {
       return (
-        <div className="w-full rounded-lg border border-slate-200 bg-white shadow-sm p-6 text-center text-slate-300">
+        <div className="w-full rounded-lg border border-white/10 bg-white/[0.06] p-6 text-center text-slate-300">
           <p className="mb-4 text-sm">로그인이 필요합니다.</p>
-          <Link href="/login" className="text-blue-600 hover:text-blue-700 underline">
+          <Link href="/login" className="text-sky-400 hover:text-sky-300 underline">
             로그인하기
           </Link>
         </div>
       );
     }
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-[#f8fafc]">
+      <div className="flex min-h-[100dvh] flex-col bg-[#0b1120]">
         
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-          <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8fafc] text-slate-900">
+          <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950 text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
             <div className="relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 flex-1 flex-col px-4 py-6 sm:px-6">
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm p-6 text-center backdrop-blur-sm">
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] p-6 text-center backdrop-blur-sm">
                 <p className="mb-4 text-slate-300">삭제된 코드에 접근하려면 로그인이 필요합니다</p>
                 <Link
                   href="/login"
@@ -796,13 +796,13 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   }
 
   const tabLinkBase =
-    'px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors text-slate-500 hover:text-slate-800';
+    'px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors text-slate-400 hover:text-slate-200';
   const tabLinkActive =
-    'px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors text-slate-900 bg-white border border-b-0 border-slate-200';
+    'px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors text-white bg-white/10 border border-b-0 border-white/15';
 
   const listPanel = (
           <motion.div
-            className="flex min-h-0 flex-1 flex-col bg-white backdrop-blur-sm rounded-lg border border-slate-200 p-3 sm:p-4"
+            className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
@@ -823,13 +823,13 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="검사 코드 · 유형 · 이름 검색"
-                  className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+                  className="w-full rounded-md border border-white/10 bg-white/[0.06] py-2 pl-9 pr-3 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
                 />
               </div>
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-2 text-lg text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+                className="shrink-0 rounded-md border border-white/10 bg-slate-900/80 px-2 py-2 text-lg text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
               >
                 <option value="newest" className="bg-slate-900 text-white">최근 삭제순</option>
                 <option value="oldest" className="bg-slate-900 text-white">오래된 삭제순</option>
@@ -877,7 +877,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
             
             {filteredRecords.length > 0 ? (
               <>
-                <div className="max-h-[min(70vh,720px)] overflow-auto rounded-md border border-slate-200">
+                <div className="max-h-[min(70vh,720px)] overflow-auto rounded-md border border-white/10">
                   <table className="min-w-full divide-y divide-white/10">
                     <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                       <tr>
@@ -982,21 +982,21 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-slate-100 hover:text-sky-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {formatDate(record.timestamp)}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-slate-100 hover:text-sky-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {record.testType}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-slate-100 hover:text-sky-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {formatAccessCodeDisplay(
@@ -1016,20 +1016,20 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-300 hover:bg-slate-100 hover:text-yellow-200 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-300 hover:bg-white/10 hover:text-yellow-200 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {formatAccessCodeDisplay(record.code || '')}
                         </td>
                         <td 
                           onClick={() => handleRecordClick(record)}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-slate-100 hover:text-sky-50 cursor-pointer transition-colors duration-150"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-white text-center hover:bg-white/10 hover:text-sky-50 cursor-pointer transition-colors duration-150"
                           title="클릭하여 검사 결과 보기"
                         >
                           {formatDate(record.deletedAt)}
                         </td>
                         <td 
-                          className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-slate-100 transition-colors duration-150 cursor-pointer"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-center hover:bg-white/10 transition-colors duration-150 cursor-pointer"
                           onClick={(e) => handleSingleRestoreClick(e, record)}
                         >
                           <button
@@ -1129,7 +1129,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       {showRestoreConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
           <motion.div 
-            className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-6 max-w-md w-full border border-slate-200"
+            className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-6 max-w-md w-full border border-white/15"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -1170,7 +1170,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       {showSingleRestoreConfirm && singleRestoreRecord && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowSingleRestoreConfirm(false)}>
           <motion.div 
-            className="rounded-xl border border-slate-200 bg-slate-900/95 p-6 shadow-lg backdrop-blur-sm max-w-md w-full"
+            className="rounded-xl border border-white/15 bg-slate-900/95 p-6 shadow-lg backdrop-blur-sm max-w-md w-full"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -1233,7 +1233,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
           <motion.div 
-            className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-6 max-w-md w-full border border-slate-200"
+            className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-6 max-w-md w-full border border-white/15"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -1285,10 +1285,10 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#f8fafc] text-white">
+    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8fafc]">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.12),transparent)]" />
           <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1800px] min-w-0 flex-1 flex-col px-4 py-3 sm:px-6">
             <motion.div
@@ -1297,12 +1297,12 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
             >
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
+              <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
                 마이페이지
               </h1>
             </motion.div>
             <motion.div
-              className="mb-2 flex shrink-0 flex-wrap gap-x-1 gap-y-0 border-b border-slate-200"
+              className="mb-2 flex shrink-0 flex-wrap gap-x-1 gap-y-0 border-b border-white/10"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.35 }}

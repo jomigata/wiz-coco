@@ -171,7 +171,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
         {/* 상단 제목 및 진행률 표시 영역 - 메인 컨텐츠 안으로 이동 */}
         <div className="mb-8">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">개인용 MBTI 검사</h1>
+            <h1 className="text-4xl font-bold text-white mb-2">개인용 MBTI 검사</h1>
             <p className="text-emerald-200">자신에게 맞는 답변을 선택해주세요</p>
           </div>
           

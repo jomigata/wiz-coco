@@ -56,7 +56,7 @@ import Link from 'next/link';export default function AIMindAssistantPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-gray-900">
       
 {/* 메인 콘텐츠 영역 */}
       <div className="pt-16">

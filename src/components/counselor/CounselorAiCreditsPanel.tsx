@@ -53,12 +53,12 @@ export default function CounselorAiCreditsPanel() {
             )}
           </div>
 
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">AI 기능 단가</h2>
+          <h2 className="text-lg font-semibold text-white mb-3">AI 기능 단가</h2>
           <ul className="space-y-2 text-sm mb-8">
             {AI_PRICING_CATALOG.filter((item) => item.credits > 0).map((item) => (
               <li
                 key={item.feature}
-                className="rounded-lg border border-slate-100 bg-white/5 px-4 py-3 text-slate-300"
+                className="rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300"
               >
                 <div className="flex justify-between gap-4">
                   <span className="font-medium text-white">{item.label}</span>
@@ -69,7 +69,7 @@ export default function CounselorAiCreditsPanel() {
             ))}
           </ul>
 
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">최근 AI 사용 내역</h2>
+          <h2 className="text-lg font-semibold text-white mb-3">최근 AI 사용 내역</h2>
           <ul className="space-y-2 text-sm">
             {(data.ledger || []).length === 0 && (
               <li className="text-slate-500">아직 AI 사용 내역이 없습니다.</li>
@@ -77,7 +77,7 @@ export default function CounselorAiCreditsPanel() {
             {(data.ledger || []).map((row) => (
               <li
                 key={row.id}
-                className="flex flex-col sm:flex-row sm:justify-between gap-1 rounded-lg border border-slate-100 bg-white/5 px-4 py-3 text-slate-300"
+                className="flex flex-col sm:flex-row sm:justify-between gap-1 rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300"
               >
                 <span>
                   {row.delta > 0 ? '+' : ''}

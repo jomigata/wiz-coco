@@ -1257,9 +1257,9 @@ const MbtiProResult: React.FC = () => {
         </div>
         
         <div className="container mx-auto max-w-4xl py-6 relative z-10">
-          <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+          <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
             <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-xl text-slate-600">결과를 불러오는 중입니다...</p>
+            <p className="text-xl text-blue-200">결과를 불러오는 중입니다...</p>
           </div>
         </div>
       </main>
@@ -1506,7 +1506,7 @@ const MbtiProResult: React.FC = () => {
 
         {/* 검사자 결과정보 섹션 */}
         {clientInfo && (
-          <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-slate-200">
+          <div className="bg-white/15 backdrop-blur-md rounded-xl p-6 mb-6 shadow-lg border border-white/20">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">검사결과 정보</h2>
               <div className="bg-blue-900/60 py-2 px-4 rounded-lg shadow-md border border-blue-700/50">
@@ -1517,26 +1517,26 @@ const MbtiProResult: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {clientInfo.name && clientInfo.name !== "-" && (
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="bg-white/10 p-4 rounded-lg border border-white/15">
                   <h3 className="text-sm font-medium text-blue-300">이름(가명)</h3>
                   <p className="text-xl font-semibold text-white">{clientInfo.name}</p>
                 </div>
               )}
               
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-white/10 p-4 rounded-lg border border-white/15">
                 <h3 className="text-sm font-medium text-blue-300">출생연도/성별</h3>
                 <p className="text-xl font-semibold text-white">
                   {clientInfo.birthYear ? `${clientInfo.birthYear}년 (${new Date().getFullYear() - clientInfo.birthYear}세)` : '-'} / {clientInfo.gender || '-'}
                 </p>
               </div>
               
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-white/10 p-4 rounded-lg border border-white/15">
                 <h3 className="text-sm font-medium text-blue-300">검사일자</h3>
                 <p className="text-xl font-semibold text-white">{testDate}</p>
               </div>
               
               {clientInfo.groupCode && (
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="bg-white/10 p-4 rounded-lg border border-white/15">
                   <h3 className="text-sm font-medium text-blue-300">검사 코드</h3>
                   <p className="text-xl font-semibold text-white font-mono">{formatAccessCodeDisplay(clientInfo.groupCode)}</p>
                 </div>
@@ -1546,7 +1546,7 @@ const MbtiProResult: React.FC = () => {
         )}
 
         {/* MBTI 유형 결과 섹션 */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-slate-200">
+        <div className="bg-white/15 backdrop-blur-md rounded-xl p-6 mb-6 shadow-lg border border-white/20">
           <h2 className="text-2xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">
             나의 MBTI 유형 : {
               calculateDominantDirections(directionResults.percentages)
@@ -1572,7 +1572,7 @@ const MbtiProResult: React.FC = () => {
               const isDominant = mainPercentage >= oppositePercentage;
 
               return (
-                <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <div className="flex justify-between mb-2">
                     <div className="flex flex-col items-start h-12">
                       <span className={`${mainPercentage > oppositePercentage ? 'text-lg font-bold' : 'text-sm'} h-6 flex items-center`}
@@ -1629,7 +1629,7 @@ const MbtiProResult: React.FC = () => {
         </div>
 
         {/* 그래프 섹션 */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-slate-200">
+        <div className="bg-white/15 backdrop-blur-md rounded-xl p-6 mb-6 shadow-lg border border-white/20">
           <h2 className="text-2xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">MBTI 성향 비교</h2>
           <div className="h-[300px] w-full">
             <Line data={lineChartData} options={{
@@ -1665,49 +1665,49 @@ const MbtiProResult: React.FC = () => {
           {/* 성향 비교 분석 */}
           <div className="mt-8 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                 <h3 className="text-lg font-semibold mb-2 flex items-center">
                   <span style={{ color: '#4263EB' }}>외향(E)</span>
                   <span className="mx-2">vs</span>
                   <span style={{ color: '#8EA3FA' }}>내향(I)</span>
                 </h3>
-                <p className="text-slate-600 text-sm">
+                <p className="text-gray-300 text-sm">
                   외향형은 외부 세계와의 상호작용을 통해 에너지를 얻으며, 내향형은 내면의 세계에서 에너지를 얻습니다.
                   당신은 {directionResults.percentages.E > directionResults.percentages.I ? '외향적' : '내향적'} 성향이 
                   {Math.abs(directionResults.percentages.E - directionResults.percentages.I).toFixed(1)}% 더 강합니다.
                 </p>
               </div>
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                 <h3 className="text-lg font-semibold mb-2 flex items-center">
                   <span style={{ color: '#10B981' }}>감각(S)</span>
                   <span className="mx-2">vs</span>
                   <span style={{ color: '#6EE7B7' }}>직관(N)</span>
                 </h3>
-                <p className="text-slate-600 text-sm">
+                <p className="text-gray-300 text-sm">
                   감각형은 구체적이고 실제적인 정보를 선호하며, 직관형은 가능성과 패턴을 중시합니다.
                   당신은 {directionResults.percentages.S > directionResults.percentages.N ? '감각적' : '직관적'} 성향이 
                   {Math.abs(directionResults.percentages.S - directionResults.percentages.N).toFixed(1)}% 더 강합니다.
                 </p>
               </div>
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                 <h3 className="text-lg font-semibold mb-2 flex items-center">
                   <span style={{ color: '#F59E0B' }}>사고(T)</span>
                   <span className="mx-2">vs</span>
                   <span style={{ color: '#FCD34D' }}>감정(F)</span>
                 </h3>
-                <p className="text-slate-600 text-sm">
+                <p className="text-gray-300 text-sm">
                   사고형은 논리와 객관성을 중시하며, 감정형은 가치와 조화를 중시합니다.
                   당신은 {directionResults.percentages.T > directionResults.percentages.F ? '사고적' : '감정적'} 성향이 
                   {Math.abs(directionResults.percentages.T - directionResults.percentages.F).toFixed(1)}% 더 강합니다.
                 </p>
               </div>
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                 <h3 className="text-lg font-semibold mb-2 flex items-center">
                   <span style={{ color: '#EC4899' }}>판단(J)</span>
                   <span className="mx-2">vs</span>
                   <span style={{ color: '#F9A8D4' }}>인식(P)</span>
                 </h3>
-                <p className="text-slate-600 text-sm">
+                <p className="text-gray-300 text-sm">
                   판단형은 계획적이고 체계적인 생활을 선호하며, 인식형은 유연하고 자유로운 생활을 선호합니다.
                   당신은 {directionResults.percentages.J > directionResults.percentages.P ? '판단적' : '인식적'} 성향이 
                   {Math.abs(directionResults.percentages.J - directionResults.percentages.P).toFixed(1)}% 더 강합니다.
@@ -1718,10 +1718,10 @@ const MbtiProResult: React.FC = () => {
         </div>
 
         {/* 방향성 점수 */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-slate-200">
+        <div className="bg-white/15 backdrop-blur-md rounded-xl p-6 mb-6 shadow-lg border border-white/20">
           <h2 className="text-2xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">방향성 점수</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <h3 className="text-lg font-semibold text-center">외향 / 내향</h3>
               <div className="flex justify-between mb-2">
                 <span className="text-blue-400">E: {directionResults.percentages.E.toFixed(1)}%</span>
@@ -1732,7 +1732,7 @@ const MbtiProResult: React.FC = () => {
                 <span>점수: {directionResults.scores.I.toFixed(1)}/{maxCodeScores.I.toFixed(1)}</span>
               </div>
             </div>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <h3 className="text-lg font-semibold text-center">감각 / 직관</h3>
               <div className="flex justify-between mb-2">
                 <span className="text-green-400">S: {directionResults.percentages.S.toFixed(1)}%</span>
@@ -1743,7 +1743,7 @@ const MbtiProResult: React.FC = () => {
                 <span>점수: {directionResults.scores.N.toFixed(1)}/{maxCodeScores.N.toFixed(1)}</span>
               </div>
             </div>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <h3 className="text-lg font-semibold text-center">사고 / 감정</h3>
               <div className="flex justify-between mb-2">
                 <span className="text-amber-400">T: {directionResults.percentages.T.toFixed(1)}%</span>
@@ -1754,7 +1754,7 @@ const MbtiProResult: React.FC = () => {
                 <span>점수: {directionResults.scores.F.toFixed(1)}/{maxCodeScores.F.toFixed(1)}</span>
               </div>
             </div>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <h3 className="text-lg font-semibold text-center">판단 / 인식</h3>
               <div className="flex justify-between mb-2">
                 <span className="text-pink-400">J: {directionResults.percentages.J.toFixed(1)}%</span>
@@ -1769,7 +1769,7 @@ const MbtiProResult: React.FC = () => {
         </div>
 
         {/* 질문별 선택 결과 */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-slate-200">
+        <div className="bg-white/15 backdrop-blur-md rounded-xl p-6 mb-6 shadow-lg border border-white/20">
           <h2 className="text-2xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-200">질문별 선택 결과</h2>
           <div className="space-y-3">
             {Object.entries(answers).map(([questionIndex, answer]) => {
@@ -1793,7 +1793,7 @@ const MbtiProResult: React.FC = () => {
               const weightedScore = answer * (question.codeScore / 100);
               
               return (
-                <div key={questionIndex} className="bg-white/5 p-4 rounded-lg flex items-center justify-between border border-slate-200">
+                <div key={questionIndex} className="bg-white/5 p-4 rounded-lg flex items-center justify-between border border-white/10">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-1">
                       <span className="text-sm text-blue-300">문항 {parseInt(questionIndex) + 1}</span>
@@ -1817,7 +1817,7 @@ const MbtiProResult: React.FC = () => {
         </div>
 
         {/* 결과 관련 버튼 섹션 */}
-        <div className="bg-white rounded-xl p-6 mt-6 shadow-sm border border-slate-200">
+        <div className="bg-white/15 backdrop-blur-md rounded-xl p-6 mt-6 shadow-lg border border-white/20">
           <div className="flex flex-wrap justify-center gap-4">
             <button 
               onClick={() => {

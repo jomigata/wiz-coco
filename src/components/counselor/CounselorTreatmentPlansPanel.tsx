@@ -61,7 +61,7 @@ function ProgramCard({
       className={`w-full rounded-xl border p-4 text-left transition-colors ${
         selected
           ? 'border-violet-500/60 bg-violet-500/10'
-          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+          : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -282,13 +282,13 @@ export default function CounselorTreatmentPlansPanel() {
         <div className="flex flex-wrap gap-2">
           <AuthLink
             href="/counselor/daily-records"
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
           >
             일상 기록
           </AuthLink>
           <AuthLink
             href="/counselor/clients"
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
           >
             내담자 CRM
           </AuthLink>
@@ -298,7 +298,7 @@ export default function CounselorTreatmentPlansPanel() {
               void loadClients();
               void loadAssignments();
             }}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
@@ -323,7 +323,7 @@ export default function CounselorTreatmentPlansPanel() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value as '' | CareProgramCategory)}
-              className="rounded-lg select-theme-light border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900"
+              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-xs text-slate-200"
             >
               <option value="">전체 분류</option>
               {(Object.keys(CATEGORY_LABELS) as CareProgramCategory[]).map((id) => (
@@ -345,13 +345,13 @@ export default function CounselorTreatmentPlansPanel() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <section className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
           {!selectedProgram ? (
             <p className="py-16 text-center text-sm text-slate-500">왼쪽에서 치료 프로그램을 선택하세요.</p>
           ) : (
             <form onSubmit={(e) => void handleAssign(e)} className="space-y-5">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">{selectedProgram.title}</h2>
+                <h2 className="text-lg font-semibold text-white">{selectedProgram.title}</h2>
                 <p className="mt-1 text-sm text-slate-400">{selectedProgram.description}</p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
                   <span>{selectedProgram.durationWeeks}주</span>
@@ -365,7 +365,7 @@ export default function CounselorTreatmentPlansPanel() {
               {'sessions' in selectedProgram && selectedProgram.sessions?.length ? (
                 <div>
                   <p className="mb-2 text-xs font-medium text-slate-500">세션 미리보기</p>
-                  <ul className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-slate-100 bg-black/20 p-3 text-xs text-slate-400">
+                  <ul className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-white/5 bg-black/20 p-3 text-xs text-slate-400">
                     {selectedProgram.sessions.slice(0, 6).map((s) => (
                       <li key={s.id}>
                         W{s.week} · {s.title}
@@ -384,10 +384,10 @@ export default function CounselorTreatmentPlansPanel() {
                     내담자 선택 ({selectedPortalIds.size}명)
                   </p>
                   <div className="flex gap-2 text-xs">
-                    <button type="button" onClick={selectAllVisible} className="text-blue-600 hover:text-blue-700">
+                    <button type="button" onClick={selectAllVisible} className="text-sky-400 hover:text-sky-300">
                       전체 선택
                     </button>
-                    <button type="button" onClick={clearSelection} className="text-slate-500 hover:text-slate-800">
+                    <button type="button" onClick={clearSelection} className="text-slate-400 hover:text-slate-200">
                       선택 해제
                     </button>
                   </div>
@@ -400,19 +400,19 @@ export default function CounselorTreatmentPlansPanel() {
                       if (e.key === 'Enter') void loadClients();
                     }}
                     placeholder="이름·연락처 검색"
-                    className="min-w-[12rem] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+                    className="min-w-[12rem] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500"
                   />
                   <button
                     type="button"
                     onClick={() => void loadClients()}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600"
+                    className="rounded-lg border border-white/15 px-3 py-2 text-xs text-slate-300"
                   >
                     검색
                   </button>
                   <select
                     value={cohortFilter}
                     onChange={(e) => setCohortFilter(e.target.value)}
-                    className="rounded-lg border border-slate-200 bg-slate-900 px-3 py-2 text-xs text-slate-200"
+                    className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs text-slate-200"
                   >
                     <option value="">전체 그룹</option>
                     {cohorts.map((c) => (
@@ -422,7 +422,7 @@ export default function CounselorTreatmentPlansPanel() {
                     ))}
                   </select>
                 </div>
-                <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200">
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-white/10">
                   {loadingClients ? (
                     <p className="px-4 py-8 text-center text-xs text-slate-500">내담자 불러오는 중…</p>
                   ) : clients.length === 0 ? (
@@ -431,12 +431,12 @@ export default function CounselorTreatmentPlansPanel() {
                     <ul className="divide-y divide-white/5">
                       {clients.map((client) => (
                         <li key={client.portalId}>
-                          <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-slate-50">
+                          <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-white/[0.03]">
                             <input
                               type="checkbox"
                               checked={selectedPortalIds.has(client.portalId)}
                               onChange={() => togglePortal(client.portalId)}
-                              className="rounded border-slate-300"
+                              className="rounded border-white/20"
                             />
                             <span className="min-w-0 flex-1">
                               <span className="block text-sm text-white">{client.displayName || '내담자'}</span>
@@ -458,7 +458,7 @@ export default function CounselorTreatmentPlansPanel() {
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as CareAssignmentPriority)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
                   >
                     <option value="low">낮음</option>
                     <option value="medium">보통</option>
@@ -471,7 +471,7 @@ export default function CounselorTreatmentPlansPanel() {
                     type="date"
                     value={dueAt}
                     onChange={(e) => setDueAt(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
                   />
                 </label>
               </div>
@@ -483,7 +483,7 @@ export default function CounselorTreatmentPlansPanel() {
                   onChange={(e) => setInstructions(e.target.value)}
                   rows={3}
                   placeholder="예: 매주 화·목 저녁에 15분씩 실천해 주세요."
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-600"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600"
                 />
               </label>
 
@@ -492,7 +492,7 @@ export default function CounselorTreatmentPlansPanel() {
                   type="checkbox"
                   checked={notify}
                   onChange={(e) => setNotify(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-white/20"
                 />
                 할당 시 이메일/SMS 알림 큐에 등록
               </label>
@@ -516,14 +516,14 @@ export default function CounselorTreatmentPlansPanel() {
         {loadingAssignments ? (
           <p className="text-sm text-slate-500">할당 목록을 불러오는 중…</p>
         ) : assignments.length === 0 ? (
-          <p className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-white/10 bg-white/[0.02] px-6 py-10 text-center text-sm text-slate-500">
             아직 활성 치료 할당이 없습니다.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/50">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                <tr className="border-b border-white/10 text-left text-xs text-slate-500">
                   <th className="px-4 py-3 font-medium">프로그램</th>
                   <th className="px-4 py-3 font-medium">내담자</th>
                   <th className="px-4 py-3 font-medium">마감</th>
@@ -536,7 +536,7 @@ export default function CounselorTreatmentPlansPanel() {
                 {assignments.map((item) => {
                   const badge = progressBadge(item);
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50">
+                    <tr key={item.id} className="hover:bg-white/[0.02]">
                       <td className="px-4 py-3">
                         <p className="font-medium text-white">{item.title}</p>
                         <p className="text-xs text-slate-500">{item.programId}</p>
@@ -557,7 +557,7 @@ export default function CounselorTreatmentPlansPanel() {
                       <td className="px-4 py-3">
                         <Link
                           href={counselorClientDetailHref(item.portalId)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
+                          className="text-xs text-sky-400 hover:text-sky-300"
                         >
                           상세
                         </Link>
@@ -584,7 +584,7 @@ export default function CounselorTreatmentPlansPanel() {
               type="text"
               value={dailyTitle}
               onChange={(e) => setDailyTitle(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
             />
           </label>
           <label className="block text-xs text-slate-500">
@@ -595,7 +595,7 @@ export default function CounselorTreatmentPlansPanel() {
               max={90}
               value={dailyTargetDays}
               onChange={(e) => setDailyTargetDays(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
             />
           </label>
         </div>
@@ -605,7 +605,7 @@ export default function CounselorTreatmentPlansPanel() {
             type="date"
             value={dailyDueAt}
             onChange={(e) => setDailyDueAt(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 sm:max-w-xs"
+            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200 sm:max-w-xs"
           />
         </label>
         <label className="mt-3 block text-xs text-slate-500">
@@ -615,7 +615,7 @@ export default function CounselorTreatmentPlansPanel() {
             onChange={(e) => setDailyInstructions(e.target.value)}
             rows={2}
             placeholder="예: 매일 저녁 기분과 하루를 간단히 기록해 주세요."
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
           />
         </label>
         <button

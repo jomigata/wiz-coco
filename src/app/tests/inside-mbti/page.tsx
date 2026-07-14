@@ -102,7 +102,7 @@ export default function InsideMbtiPage() {
     <><div className="bg-blue-950 min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold text-slate-900 mb-8 text-center">
+            <h1 className="text-3xl font-bold text-white mb-8 text-center">
               Inside MBTI 검사
             </h1>
             

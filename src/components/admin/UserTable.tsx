@@ -53,7 +53,7 @@ const UserTable: React.FC<UserTableProps> = ({
     <div className="overflow-x-auto rounded-lg shadow">
       <table className="min-w-full bg-slate-900 border border-slate-700">
         <thead>
-          <tr className="border-b border-slate-200">
+          <tr className="border-b border-white/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-blue-200 uppercase tracking-wider">
               이름
             </th>
@@ -79,7 +79,7 @@ const UserTable: React.FC<UserTableProps> = ({
         </thead>
         <tbody className="divide-y divide-white/10">
           {users.map((user) => (
-            <tr key={user.id} className="hover:bg-slate-50">
+            <tr key={user.id} className="hover:bg-white/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                 {user.name}
               </td>

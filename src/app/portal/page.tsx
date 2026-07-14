@@ -31,7 +31,7 @@ type PortalTab = 'tests' | 'care';
 
 function PortalLoading() {
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-24 flex justify-center">
+    <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
       <p className="text-slate-400">내 검사실을 불러오는 중…</p>
     </div>
   );
@@ -294,7 +294,7 @@ function ClientPortalContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] pt-24 px-4">
+      <div className="min-h-screen bg-gray-900 pt-24 px-4">
         <div className="max-w-lg mx-auto text-center">
           <p className="text-red-400 mb-4">{error}</p>
           <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300">
@@ -306,7 +306,7 @@ function ClientPortalContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-gray-900">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
@@ -321,7 +321,7 @@ function ClientPortalContent() {
                   clearClientPortalSession();
                   router.push('/portal/login/');
                 }}
-                className="text-xs text-slate-500 hover:text-slate-800 underline"
+                className="text-xs text-slate-400 hover:text-slate-200 underline"
               >
                 로그아웃
               </button>
@@ -361,7 +361,7 @@ function ClientPortalContent() {
             <PortalCareAssignmentsPanel />
           ) : (
             <>
-          <h2 id="portal-results" className="text-lg font-semibold text-slate-900 scroll-mt-24">
+          <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
             {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '검사코드별 진행 현황'}
           </h2>
 
@@ -447,7 +447,7 @@ function ClientPortalContent() {
             className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h4 className="text-lg font-semibold text-slate-900 mb-2">검사 결과 삭제</h4>
+            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
             <p className="text-slate-300 text-sm mb-4">
               「{deleteModal.testName}」 결과를 삭제할까요?
             </p>

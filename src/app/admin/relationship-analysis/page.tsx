@@ -118,7 +118,7 @@ export default function RelationshipAnalysisPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="mb-8 bg-white/10 backdrop-blur-md rounded-xl p-5 shadow-lg border border-slate-200"
+          className="mb-8 bg-white/10 backdrop-blur-md rounded-xl p-5 shadow-lg border border-white/10"
         >
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
             <UserGroupIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -159,7 +159,7 @@ export default function RelationshipAnalysisPage() {
                 </ResponsiveContainer>
               </div>
               <div className="mt-4">
-                <p className="text-slate-600 text-sm">
+                <p className="text-gray-300 text-sm">
                   관계 유형을 클릭하여 해당 데이터만 필터링할 수 있습니다.
                   {selectedRelationship !== 'all' && (
                     <span className="block mt-2 text-blue-300">

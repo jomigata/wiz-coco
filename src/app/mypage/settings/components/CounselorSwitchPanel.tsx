@@ -27,7 +27,7 @@ import type { CounselorAttachmentItem } from '@/types/counselorApplication';
 import CounselorApplicationAttachmentsField from '@/app/mypage/settings/components/CounselorApplicationAttachmentsField';
 
 const fieldCls =
-  'w-full bg-white/10 border border-slate-200 rounded-lg px-3 py-2 text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm';
+  'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm';
 const labelCls = 'block text-blue-200 text-xs mb-1';
 
 interface Props {
@@ -239,7 +239,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
 
   if (loading) {
     return (
-      <div className="pt-4 border-t border-slate-200">
+      <div className="pt-4 border-t border-white/10">
         <p className="text-blue-300 text-sm">상담사 정보를 불러오는 중...</p>
       </div>
     );
@@ -256,7 +256,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
           : '승인 후 상담사 메뉴·내담자 연결 기능을 사용할 수 있습니다.';
 
   return (
-    <div className="pt-4 border-t border-slate-200">
+    <div className="pt-4 border-t border-white/10">
       <button
         type="button"
         onClick={handleToggleExpanded}
@@ -325,7 +325,7 @@ export default function CounselorSwitchPanel({ uid, email, role }: Props) {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
+          <form onSubmit={handleSubmit} className="space-y-4 bg-white/5 rounded-lg p-4 border border-white/10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>이름 *</label>

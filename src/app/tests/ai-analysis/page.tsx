@@ -199,12 +199,12 @@ export default function AIAnalysisPage() {
 
   if (isLoading) {
     return (
-      <div className="bg-[#f8fafc] p-6 min-h-screen flex items-center justify-center">
+      <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4 animate-pulse">
             🤖
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">AI 분석 중...</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">AI 분석 중...</h2>
           <p className="text-gray-300">당신의 데이터를 종합 분석하여 맞춤형 리포트를 생성하고 있습니다.</p>
           <div className="mt-6 w-64 bg-white/20 rounded-full h-2 mx-auto">
             <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full animate-pulse" style={{ width: '70%' }}></div>
@@ -216,39 +216,39 @@ export default function AIAnalysisPage() {
 
   if (!analysisResult) {
     return (
-      <div className="bg-[#f8fafc] p-6 min-h-screen">
+      <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4">
               🤖
             </div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">AI 종합 분석</h1>
-            <p className="text-slate-600 text-lg">당신의 모든 검사 결과를 AI가 종합 분석하여 맞춤형 리포트를 생성합니다</p>
+            <h1 className="text-4xl font-bold text-white mb-2">AI 종합 분석</h1>
+            <p className="text-gray-300 text-lg">당신의 모든 검사 결과를 AI가 종합 분석하여 맞춤형 리포트를 생성합니다</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">분석 내용</h2>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 mb-6">
+            <h2 className="text-2xl font-bold text-white mb-4">분석 내용</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🎭</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">성격 프로파일링</h3>
-                    <p className="text-slate-600 text-sm">MBTI, 성격 5요인 분석</p>
+                    <h3 className="text-lg font-semibold text-white">성격 프로파일링</h3>
+                    <p className="text-gray-300 text-sm">MBTI, 성격 5요인 분석</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">📚</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">학습 스타일 분석</h3>
-                    <p className="text-slate-600 text-sm">최적의 학습 방법 제안</p>
+                    <h3 className="text-lg font-semibold text-white">학습 스타일 분석</h3>
+                    <p className="text-gray-300 text-sm">최적의 학습 방법 제안</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">👥</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">사회적 패턴</h3>
-                    <p className="text-slate-600 text-sm">대인관계 및 소통 스타일</p>
+                    <h3 className="text-lg font-semibold text-white">사회적 패턴</h3>
+                    <p className="text-gray-300 text-sm">대인관계 및 소통 스타일</p>
                   </div>
                 </div>
               </div>
@@ -256,22 +256,22 @@ export default function AIAnalysisPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">💪</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">스트레스 관리</h3>
-                    <p className="text-slate-600 text-sm">스트레스 대처 및 관리 방안</p>
+                    <h3 className="text-lg font-semibold text-white">스트레스 관리</h3>
+                    <p className="text-gray-300 text-sm">스트레스 대처 및 관리 방안</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🎯</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">진로 인사이트</h3>
-                    <p className="text-slate-600 text-sm">적성과 흥미 기반 진로 제안</p>
+                    <h3 className="text-lg font-semibold text-white">진로 인사이트</h3>
+                    <p className="text-gray-300 text-sm">적성과 흥미 기반 진로 제안</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🏫</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">캠퍼스 라이프</h3>
-                    <p className="text-slate-600 text-sm">맞춤형 대학 생활 가이드</p>
+                    <h3 className="text-lg font-semibold text-white">캠퍼스 라이프</h3>
+                    <p className="text-gray-300 text-sm">맞춤형 대학 생활 가이드</p>
                   </div>
                 </div>
               </div>
@@ -292,15 +292,15 @@ export default function AIAnalysisPage() {
   }
 
   return (
-    <div className="bg-[#f8fafc] p-6 min-h-screen">
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4">
             🤖
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">AI 종합 분석 리포트</h1>
-          <p className="text-slate-600 text-lg">당신만을 위한 맞춤형 캠퍼스 라이프 가이드</p>
+          <h1 className="text-4xl font-bold text-white mb-2">AI 종합 분석 리포트</h1>
+          <p className="text-gray-300 text-lg">당신만을 위한 맞춤형 캠퍼스 라이프 가이드</p>
         </div>
 
         {/* 탭 네비게이션 */}
@@ -322,10 +322,10 @@ export default function AIAnalysisPage() {
         </div>
 
         {/* 탭 컨텐츠 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-slate-200">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
           {selectedTab === 'overview' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">종합 개요</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">종합 개요</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4">성격 프로파일</h3>
@@ -335,7 +335,7 @@ export default function AIAnalysisPage() {
                       <span className="text-white font-semibold">{analysisResult.personalityProfile.mbti}</span>
                     </div>
                     <div className="space-y-2">
-                      <span className="text-slate-600 text-sm">주요 강점</span>
+                      <span className="text-gray-300 text-sm">주요 강점</span>
                       <div className="space-y-1">
                         {analysisResult.personalityProfile.strengths.map((strength, index) => (
                           <div key={index} className="flex items-center gap-2">
@@ -356,7 +356,7 @@ export default function AIAnalysisPage() {
                       <span className="text-white font-semibold">{analysisResult.learningStyle.dominantStyle}</span>
                     </div>
                     <div className="space-y-2">
-                      <span className="text-slate-600 text-sm">학습 선호도</span>
+                      <span className="text-gray-300 text-sm">학습 선호도</span>
                       <div className="space-y-1">
                         {analysisResult.learningStyle.preferences.map((pref, index) => (
                           <div key={index} className="flex items-center gap-2">
@@ -374,7 +374,7 @@ export default function AIAnalysisPage() {
 
           {selectedTab === 'personality' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">성격 분석</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">성격 분석</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4">MBTI & 성격 5요인</h3>
@@ -435,7 +435,7 @@ export default function AIAnalysisPage() {
 
           {selectedTab === 'learning' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">학습 스타일 분석</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">학습 스타일 분석</h2>
               <div className="space-y-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4">학습 추천사항</h3>
@@ -454,13 +454,13 @@ export default function AIAnalysisPage() {
 
           {selectedTab === 'social' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">사회적 패턴</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">사회적 패턴</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4">소통 스타일</h3>
                   <p className="text-gray-200 mb-4">{analysisResult.socialPatterns.communicationStyle}</p>
                   <div className="space-y-2">
-                    <span className="text-slate-600 text-sm">관계 패턴</span>
+                    <span className="text-gray-300 text-sm">관계 패턴</span>
                     <div className="space-y-1">
                       {analysisResult.socialPatterns.relationshipPatterns.map((pattern, index) => (
                         <div key={index} className="flex items-center gap-2">
@@ -489,7 +489,7 @@ export default function AIAnalysisPage() {
 
           {selectedTab === 'stress' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">스트레스 관리</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">스트레스 관리</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4">현재 스트레스 수준</h3>
@@ -504,7 +504,7 @@ export default function AIAnalysisPage() {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    <span className="text-slate-600 text-sm">현재 대처 전략</span>
+                    <span className="text-gray-300 text-sm">현재 대처 전략</span>
                     <div className="space-y-1">
                       {analysisResult.stressManagement.copingStrategies.map((strategy, index) => (
                         <div key={index} className="flex items-center gap-2">
@@ -533,7 +533,7 @@ export default function AIAnalysisPage() {
 
           {selectedTab === 'career' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">진로 인사이트</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">진로 인사이트</h2>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4">관심 분야</h3>
@@ -576,7 +576,7 @@ export default function AIAnalysisPage() {
 
           {selectedTab === 'recommendations' && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">캠퍼스 라이프 추천</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">캠퍼스 라이프 추천</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white/5 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">

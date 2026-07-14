@@ -77,7 +77,7 @@ function RecordRow({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -121,7 +121,7 @@ function RecordRow({
         ) : null}
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-3">
+      <div className="mt-4 border-t border-white/5 pt-3">
         {editing ? (
           <div className="space-y-2">
             <textarea
@@ -129,7 +129,7 @@ function RecordRow({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="상담사 메모"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
             />
             {error ? <p className="text-xs text-red-400">{error}</p> : null}
             <div className="flex gap-2">
@@ -148,7 +148,7 @@ function RecordRow({
                   setNotes(item.counselorNotes || '');
                   setError('');
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500"
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-400"
               >
                 취소
               </button>
@@ -169,7 +169,7 @@ function RecordRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-xs text-blue-600 hover:text-blue-700"
+              className="text-xs text-sky-400 hover:text-sky-300"
             >
               {item.counselorNotes ? '메모 수정' : '메모 추가'}
             </button>
@@ -265,7 +265,7 @@ export default function CounselorDailyRecordsPanel() {
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
@@ -273,15 +273,15 @@ export default function CounselorDailyRecordsPanel() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">전체 기록</p>
           <p className="mt-1 text-2xl font-semibold text-white">{filteredCount}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">검사실 포털</p>
           <p className="mt-1 text-2xl font-semibold text-violet-300">{summary.portalCare}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">마이페이지 공유</p>
           <p className="mt-1 text-2xl font-semibold text-sky-300">{summary.mypageShared}</p>
         </div>
@@ -291,7 +291,7 @@ export default function CounselorDailyRecordsPanel() {
         <select
           value={portalFilter}
           onChange={(e) => setPortalFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
         >
           <option value="">전체 내담자</option>
           {portals.map((p) => (
@@ -306,7 +306,7 @@ export default function CounselorDailyRecordsPanel() {
       </div>
 
       {records.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
           <p className="text-slate-300">표시할 일상 기록이 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
             내담자에게 일기·기록 과제를 할당하면 포털에서 작성한 내용이 여기에 표시됩니다.

@@ -76,7 +76,7 @@ interface DeletedTestRecord extends TestRecord {
 
 // 로딩 컴포넌트
 const LoadingRecords = () => (
-  <main className="relative bg-[#f8fafc] overflow-hidden min-h-screen pt-16 pb-12">
+  <main className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12">
 <div className="h-20"></div>
     
     {/* Background pattern */}
@@ -103,9 +103,9 @@ const LoadingRecords = () => (
       </div>
       
       <div className="flex items-center justify-center">
-        <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
+        <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
           <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-slate-600">기록을 불러오는 중입니다...</p>
+          <p className="text-xl text-blue-200">기록을 불러오는 중입니다...</p>
         </div>
       </div>
     </div>
@@ -1330,7 +1330,7 @@ function TestRecordsContent() {
   }
 
   return (
-    <div className="relative bg-[#f8fafc] overflow-hidden min-h-screen pt-16 pb-12">
+    <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden min-h-screen pt-16 pb-12">
 <div className="h-20"></div>
       
       {/* Background pattern */}
@@ -1362,8 +1362,8 @@ function TestRecordsContent() {
         </div>
         
         {!user ? (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center py-8">
-            <p className="text-slate-600 mb-4">마이페이지에 접근하려면 로그인이 필요합니다</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 text-center py-8">
+            <p className="text-blue-200 mb-4">마이페이지에 접근하려면 로그인이 필요합니다</p>
             <Link 
               href="/login" 
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -1373,7 +1373,7 @@ function TestRecordsContent() {
           </div>
         ) : (
           <>
-            <div className="flex border-b border-slate-200 mb-6">
+            <div className="flex border-b border-white/20 mb-6">
               <Link
                 href="/mypage?tab=profile"
                 className="px-4 py-2 font-medium text-blue-300 hover:text-blue-200"
@@ -1402,7 +1402,7 @@ function TestRecordsContent() {
 
             {/* 검색 및 필터링 섹션 - 통계보기에서는 숨김 */}
             {!showStats && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8 border border-slate-200">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8 border border-white/20">
                 <div className="flex flex-col sm:flex-row gap-4 items-end">
                   <div className="w-full sm:w-auto flex-1">
                     <label htmlFor="search" className="block text-blue-300 text-sm font-medium mb-2">
@@ -1414,7 +1414,7 @@ function TestRecordsContent() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="검사 코드, 유형 등으로 검색"
-                      className="w-full px-4 py-2 bg-white/5 border border-slate-200 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   
@@ -1426,7 +1426,7 @@ function TestRecordsContent() {
                       id="filter"
                       value={filterType}
                       onChange={(e) => setFilterType(e.target.value)}
-                      className="w-full px-4 py-2 bg-white/5 border border-slate-200 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="all">모든 유형</option>
                       <option value="mbti">MBTI</option>
@@ -1442,7 +1442,7 @@ function TestRecordsContent() {
                       id="sort"
                       value={sortOrder}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="w-full px-4 py-2 bg-white/5 border border-slate-200 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="newest">최신순</option>
                       <option value="oldest">오래된순</option>
@@ -1464,7 +1464,7 @@ function TestRecordsContent() {
             )}
             
             {/* 레코드 테이블 또는 통계 섹션 */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
               {/* 전체 생성 코드 수 정보 - 항상 표시 */}
               <div className="mb-4 flex justify-between items-center">
                 {!showStats && (
@@ -1492,7 +1492,7 @@ function TestRecordsContent() {
               {/* 통계 보기 또는 일반 기록 테이블 */}
               {showStats ? (
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-white mb-5 border-b border-slate-200 pb-2">검사 코드 통계 대시보드</h3>
+                  <h3 className="text-xl font-semibold text-white mb-5 border-b border-white/10 pb-2">검사 코드 통계 대시보드</h3>
                   
                   {codeStats.lastGeneratedTime && (
                     <div className="mb-4">
@@ -1503,14 +1503,14 @@ function TestRecordsContent() {
                   
                   {/* 통계 요약 카드 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-r from-blue-600/40 to-indigo-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-gradient-to-r from-blue-600/40 to-indigo-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h5 className="text-sm font-medium text-blue-200 mb-1">총 검사 횟수</h5>
-                      <p className="text-2xl font-bold text-slate-900">{testRecords.length}</p>
+                      <p className="text-2xl font-bold text-white">{testRecords.length}</p>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-purple-600/40 to-pink-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-gradient-to-r from-purple-600/40 to-pink-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h5 className="text-sm font-medium text-blue-200 mb-1">검사 유형 수</h5>
-                      <p className="text-2xl font-bold text-slate-900">
+                      <p className="text-2xl font-bold text-white">
                         {prefixStats.length > 0 
                           ? prefixStats.length 
                           : testRecords.length > 0 
@@ -1519,16 +1519,16 @@ function TestRecordsContent() {
                       </p>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-green-600/40 to-teal-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-gradient-to-r from-green-600/40 to-teal-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h5 className="text-sm font-medium text-blue-200 mb-1">완료된 검사</h5>
-                      <p className="text-2xl font-bold text-slate-900">
+                      <p className="text-2xl font-bold text-white">
                         {testRecords.filter(r => r.status === '완료').length || testRecords.length}
                       </p>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-orange-600/40 to-yellow-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-gradient-to-r from-orange-600/40 to-yellow-600/40 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h5 className="text-sm font-medium text-blue-200 mb-1">가장 많은 검사</h5>
-                      <p className="text-2xl font-bold text-slate-900">
+                      <p className="text-2xl font-bold text-white">
                         {prefixStats.length > 0 ? prefixStats[0].name.split(' ')[0] : 'MBTI'}
                       </p>
                     </div>
@@ -1537,7 +1537,7 @@ function TestRecordsContent() {
                   {/* 차트 그리드 */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* 생성된 코드 수 (막대 차트) */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h4 className="text-lg font-medium text-white mb-3">접두사별 생성된 코드 수</h4>
                       <div className="h-64">
                         {chartInitialized ? (
@@ -1554,7 +1554,7 @@ function TestRecordsContent() {
                     </div>
                     
                     {/* 검사 유형 분포 (파이 차트) */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h4 className="text-lg font-medium text-white mb-3">검사 유형 분포</h4>
                       <div className="h-64">
                         {chartInitialized ? (
@@ -1571,7 +1571,7 @@ function TestRecordsContent() {
                     </div>
                     
                     {/* 월별 검사 횟수 (선 그래프) */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h4 className="text-lg font-medium text-white mb-3">월별 검사 횟수</h4>
                       <div className="h-64">
                         {chartInitialized ? (
@@ -1588,7 +1588,7 @@ function TestRecordsContent() {
                     </div>
                     
                     {/* 검사 유형별 분포 (레이더 차트) */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-200">
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/10">
                       <h4 className="text-lg font-medium text-white mb-3">검사 유형별 분포</h4>
                       <div className="h-64">
                         {chartInitialized ? (
@@ -1609,7 +1609,7 @@ function TestRecordsContent() {
                 <div className="overflow-x-auto">
                   {currentRecords.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-xl text-slate-600">검사 기록이 없습니다.</p>
+                      <p className="text-xl text-blue-200">검사 기록이 없습니다.</p>
                     </div>
                   ) : (
                     <table className="min-w-full divide-y divide-white/10">
@@ -1620,7 +1620,7 @@ function TestRecordsContent() {
                               type="checkbox"
                               checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
                               onChange={toggleAllSelection}
-                              className="rounded bg-white/10 border-slate-200 text-blue-500 focus:ring-blue-500"
+                              className="rounded bg-white/10 border-white/20 text-blue-500 focus:ring-blue-500"
                             />
                           </th>
                           <th 
@@ -1687,12 +1687,12 @@ function TestRecordsContent() {
                                 type="checkbox"
                                 checked={selectedRecords.includes(record.code)}
                                 onChange={() => toggleSelection(record.code)}
-                                className="rounded bg-white/10 border-slate-200 text-blue-500 focus:ring-blue-500"
+                                className="rounded bg-white/10 border-white/20 text-blue-500 focus:ring-blue-500"
                               />
                             </td>
                             <td 
                               onClick={() => viewTestDetail(record.code)}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-slate-100 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                               title="클릭하여 검사 결과 보기"
                             >
                               {formatDate(record.timestamp)}
@@ -1702,7 +1702,7 @@ function TestRecordsContent() {
                             </td>
                             <td 
                               onClick={() => viewTestDetail(record.code)}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-slate-100 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                               title="클릭하여 검사 결과 보기"
                             >
                               {formatAccessCodeDisplay(
@@ -1716,7 +1716,7 @@ function TestRecordsContent() {
                             </td>
                             <td 
                               onClick={() => viewTestDetail(record.code)}
-                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-slate-100 hover:text-blue-50 cursor-pointer transition-colors duration-150"
+                              className="px-6 py-4 whitespace-nowrap text-sm text-center text-blue-100 hover:bg-white/10 hover:text-blue-50 cursor-pointer transition-colors duration-150"
                               title="클릭하여 검사 결과 보기"
                             >
                               {formatAccessCodeDisplay(record.code || '') || '-'}
@@ -1752,10 +1752,10 @@ function TestRecordsContent() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-[#8A569B] rounded-xl p-8 max-w-md w-full mx-4 border border-slate-200 shadow-2xl"
+            className="bg-[#8A569B] rounded-xl p-8 max-w-md w-full mx-4 border border-white/20 shadow-2xl"
           >
             {/* 제목 */}
-            <h3 className="text-2xl font-bold text-slate-900 mb-4">삭제 확인</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">삭제 확인</h3>
             
             {/* 주요 질문 */}
             <p className="text-white text-lg mb-6">

@@ -534,12 +534,12 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-blue-600/10 rounded-t-2xl"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">프로필 편집</h2>
+              <h2 className="text-2xl font-bold text-white">프로필 편집</h2>
               <p className="text-emerald-300 text-sm mt-1">개인정보를 수정하고 관리하세요</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-slate-100 rounded-lg transition-all duration-300"
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -593,7 +593,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
             <>
               {/* 기본 정보 */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">기본 정보</h3>
+                <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">기본 정보</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -603,7 +603,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       name="displayName"
                       value={formData.displayName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                       placeholder="이름을 입력하세요"
                     />
                   </div>
@@ -615,7 +615,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       name="reportDisplayName"
                       value={formData.reportDisplayName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                       placeholder="예: 이나리 상담사 / 에필테크 상담센터"
                     />
                     <p className="mt-2 text-xs text-white/60">
@@ -632,7 +632,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                       placeholder="이메일을 입력하세요 (선택)"
                     />
                     <p className="mt-2 text-xs text-white/60">
@@ -646,7 +646,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       name="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                       placeholder="전화번호를 입력하세요"
                     />
                   </div>
@@ -675,7 +675,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                          type="text"
                          value={formatDate(formData.birthDate)}
                          readOnly
-                         className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
+                         className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 cursor-pointer"
                          placeholder="연도. 월. 일."
                        />
                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -730,7 +730,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                               }}
                               onMouseDown={(e) => e.stopPropagation()}
                               onMouseUp={(e) => e.stopPropagation()}
-                              className="text-gray-400 hover:text-white hover:bg-slate-100 p-1 rounded transition-colors"
+                              className="text-gray-400 hover:text-white hover:bg-white/10 p-1 rounded transition-colors"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -838,7 +838,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                          </div>
                         
                                                                           {/* 하단 버튼 */}
-                           <div className="flex justify-between mt-2 pt-2 border-t border-slate-200">
+                           <div className="flex justify-between mt-2 pt-2 border-t border-white/20">
                                                         <button
                                onClick={(e) => {
                                  e.stopPropagation();
@@ -894,7 +894,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       name="gender"
                       value={formData.gender}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                       style={{
                         color: 'white'
                       }}
@@ -912,7 +912,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                       name="occupation"
                       value={formData.occupation}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                       style={{ color: 'white' }}
                     >
                       <option value="" style={{ backgroundColor: '#1e293b', color: 'white' }}>선택하세요</option>
@@ -930,7 +930,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
                 {isCounselor(authUser?.role) && (
                   <div className="space-y-4 pt-2">
-                    <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">상담/운영 정보</h3>
+                    <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">상담/운영 정보</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -939,14 +939,14 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="practiceType"
                           value={formData.practiceType}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           style={{ color: 'white' }}
                         >
                           <option value="solo" style={{ backgroundColor: '#1e293b', color: 'white' }}>1인 상담/센터 운영</option>
                           <option value="organization" style={{ backgroundColor: '#1e293b', color: 'white' }}>조직/기업 운영</option>
                         </select>
                       </div>
-                      <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/5 px-4 py-3 text-white">
+                      <label className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white">
                         <input
                           type="checkbox"
                           name="teamSharingEnabled"
@@ -969,7 +969,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="organizationName"
                           value={formData.organizationName}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="회사 또는 기관명을 입력하세요"
                         />
                       </div>
@@ -980,7 +980,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="organizationManager"
                           value={formData.organizationManager}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="담당자명을 입력하세요"
                         />
                       </div>
@@ -994,7 +994,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           value={formData.specialties}
                           onChange={handleInputChange}
                           rows={3}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
                           placeholder="예: 청소년 상담, 직무스트레스, 조직 적응, 심리검사 해석"
                         />
                       </div>
@@ -1005,7 +1005,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           value={formData.clientFocus}
                           onChange={handleInputChange}
                           rows={3}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
                           placeholder="예: 임직원 심리검사, 내담자 치료 보조, 부모 상담, 그룹 프로그램"
                         />
                       </div>
@@ -1019,7 +1019,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="organizationTel"
                           value={formData.organizationTel}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="대표 전화번호를 입력하세요"
                         />
                       </div>
@@ -1030,7 +1030,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="organizationMobile"
                           value={formData.organizationMobile}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="담당자 핸드폰번호를 입력하세요"
                         />
                       </div>
@@ -1044,7 +1044,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="organizationFax"
                           value={formData.organizationFax}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="팩스번호를 입력하세요"
                         />
                       </div>
@@ -1055,7 +1055,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           name="organizationEmail"
                           value={formData.organizationEmail}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300"
                           placeholder="기관 이메일을 입력하세요"
                         />
                       </div>
@@ -1068,13 +1068,13 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                         value={formData.organizationAddress}
                         onChange={handleInputChange}
                         rows={3}
-                        className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
                         placeholder="회사/기관 주소를 입력하세요"
                       />
                     </div>
 
                     <div className="space-y-4 pt-2">
-                      <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">리포트/공유 설정</h3>
+                      <h3 className="text-lg font-semibold text-white border-b border-white/20 pb-2">리포트/공유 설정</h3>
 
                       <div>
                         <label className="block text-sm font-medium text-emerald-300 mb-2">리포트 서명</label>
@@ -1083,13 +1083,13 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           value={formData.reportSignature}
                           onChange={handleInputChange}
                           rows={4}
-                          className="w-full px-4 py-3 bg-white/10 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-300 resize-y"
                           placeholder="예: 이나리 상담사 | 에필테크 상담센터 | 필요 시 추가 상담 가능합니다."
                         />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/5 px-4 py-3 text-white">
+                        <label className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white">
                           <input
                             type="checkbox"
                             name="shareOrganizationInReport"
@@ -1103,7 +1103,7 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
                           </span>
                         </label>
 
-                        <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/5 px-4 py-3 text-white">
+                        <label className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white">
                           <input
                             type="checkbox"
                             name="shareContactInReport"
@@ -1125,11 +1125,11 @@ export default function ProfileEditor({ onClose, onUpdate }: ProfileEditorProps)
 
 
               {/* 버튼 */}
-              <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
+              <div className="flex justify-end space-x-4 pt-6 border-t border-white/20">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-3 text-gray-300 hover:text-white border border-slate-200 hover:border-white/40 rounded-lg transition-all duration-300"
+                  className="px-6 py-3 text-gray-300 hover:text-white border border-white/20 hover:border-white/40 rounded-lg transition-all duration-300"
                 >
                   취소
                 </button>
