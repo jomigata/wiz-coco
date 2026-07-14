@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
 import RoleGuard from '@/components/RoleGuard';
+import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -71,6 +72,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   // 활성 섹션 결정 함수
   const getActiveSection = (path: string): string => {
     if (path === '/counselor') return 'dashboard';
+    if (path.startsWith('/counselor/hub/')) return 'dashboard';
     if (path.startsWith('/counselor/assessments/deleted-recipients')) return 'assessments-deleted';
     if (path.startsWith('/counselor/assessments/new')) return 'assessments-new';
     if (path.startsWith('/counselor/assessments/progress')) return 'assessments-list';
@@ -94,6 +96,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
 
   // 페이지 제목 결정 함수
   const getPageTitle = (path: string): string => {
+    if (path.startsWith('/counselor/hub/')) {
+      const slug = path.replace('/counselor/hub/', '').split('/')[0];
+      const hubCategory = getCounselorCategoryBySlug(slug);
+      if (hubCategory) return hubCategory.category;
+    }
     if (path.startsWith('/counselor/assessments/deleted-recipients')) return '삭제된 검사자';
     if (path.startsWith('/counselor/assessments/new')) return '새 검사코드 만들기';
     if (path.startsWith('/counselor/assessments/progress')) return '진행·모니터링';

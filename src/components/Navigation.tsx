@@ -13,7 +13,7 @@ import { useCounselorApplicationNotificationCount } from '@/hooks/useCounselorAp
 import { getVisibleTestMenuItems, TestCategory, TestSubcategory, TEST_CATEGORY_SLUGS, TEST_SUBCATEGORY_SLUGS } from '@/data/psychologyTestMenu';
 import { counselingMenuCategories, COUNSELING_MAIN_HREF } from '@/data/counselingMenu';
 import { aiMindAssistantMenuCategories, AI_MIND_ASSISTANT_MAIN_HREF } from '@/data/aiMindAssistantMenu';
-import { counselorMenuCategories, COUNSELOR_MAIN_HREF } from '@/data/counselorMenu';
+import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
@@ -22,7 +22,7 @@ import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
 import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
-import CascadingTierMenuPanel from '@/components/nav/CascadingTierMenuPanel';
+import CounselorMainCategoryDropdown from '@/components/nav/CounselorMainCategoryDropdown';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
@@ -46,8 +46,6 @@ export default function Navigation() {
   const [selectedAiAssistantSubcategory, setSelectedAiAssistantSubcategory] = useState<string | null>(null);
   const [selectedCounselingMainCategory, setSelectedCounselingMainCategory] = useState<string | null>(null);
   const [selectedCounselingSubcategory, setSelectedCounselingSubcategory] = useState<string | null>(null);
-  const [selectedCounselorMainCategory, setSelectedCounselorMainCategory] = useState<string | null>(null);
-  const [selectedCounselorSubcategory, setSelectedCounselorSubcategory] = useState<string | null>(null);
   const [selectedAdminMainCategory, setSelectedAdminMainCategory] = useState<string | null>(null);
   const [selectedAdminSubcategory, setSelectedAdminSubcategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -65,8 +63,6 @@ export default function Navigation() {
   const psychologyTestsSubColRef = useRef<HTMLDivElement>(null);
   const counselorTriggerRef = useRef<HTMLDivElement>(null);
   const counselorPanelRef = useRef<HTMLDivElement>(null);
-  const counselorLeftColRef = useRef<HTMLDivElement>(null);
-  const counselorSubColRef = useRef<HTMLDivElement>(null);
   const adminTriggerRef = useRef<HTMLDivElement>(null);
   const adminPanelRef = useRef<HTMLDivElement>(null);
   const adminLeftColRef = useRef<HTMLDivElement>(null);
@@ -128,9 +124,9 @@ export default function Navigation() {
     isCounselorOpen,
     counselorTriggerRef,
     counselorPanelRef,
-    counselorLeftColRef,
-    counselorSubColRef,
-    [selectedCounselorMainCategory, selectedCounselorSubcategory]
+    counselorPanelRef,
+    counselorPanelRef,
+    []
   );
 
   const adminPlacement = useHorizontalMenuPlacement(
@@ -748,11 +744,6 @@ export default function Navigation() {
                               : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
-                          onMouseEnter={() => {
-                            // 상단 메뉴로 돌아오면 대분류만 표시
-                            setSelectedCounselorMainCategory(null);
-                            setSelectedCounselorSubcategory(null);
-                          }}
                         >
                           👨‍⚕️ 상담관리
                           <svg
@@ -770,26 +761,13 @@ export default function Navigation() {
                         </Link>
 
                         {isCounselorOpen && (
-                          <CascadingTierMenuPanel
+                          <CounselorMainCategoryDropdown
                             panelRef={counselorPanelRef}
-                            leftColRef={counselorLeftColRef}
-                            subColRef={counselorSubColRef}
                             dropdownAlign={counselorPlacement.dropdownAlign}
                             menuDataAttribute="counselor"
-                            panelTitle="👨‍⚕️ 상담관리"
                             categories={counselorMenuCategories}
-                            selectedMainCategory={selectedCounselorMainCategory}
-                            selectedSubcategory={selectedCounselorSubcategory}
-                            onSelectMainCategory={setSelectedCounselorMainCategory}
-                            onSelectSubcategory={setSelectedCounselorSubcategory}
-                            navigateTo={navigateTo}
-                            onMainCategoryClick={(category) => {
-                              const href =
-                                category.subcategories[0]?.items[0]?.href ?? COUNSELOR_MAIN_HREF;
-                              navigateTo(href);
-                              setActiveMenu(null);
-                            }}
-                            onSubcategoryClick={(subcategory) => handleTierSubcategoryNav(subcategory)}
+                            userName={userName}
+                            userEmail={userEmail}
                             onCloseMenu={() => setActiveMenu(null)}
                           />
                         )}
@@ -1137,18 +1115,27 @@ export default function Navigation() {
               />
 
               {showCounselorMenu && (
-                <ThreeTierMobileMenuSection
-                  sectionTitle="👨‍⚕️ 상담관리"
-                  categories={counselorMenuCategories}
-                  selectedMainCategory={selectedCounselorMainCategory}
-                  selectedSubcategory={selectedCounselorSubcategory}
-                  onToggleMainCategory={(category) =>
-                    setSelectedCounselorMainCategory(selectedCounselorMainCategory === category ? null : category)
-                  }
-                  onSelectSubcategory={setSelectedCounselorSubcategory}
-                  onSubcategoryPress={(subcategory) => handleTierSubcategoryNav(subcategory)}
-                  onCloseMenu={() => setIsMobileMenuOpen(false)}
-                />
+                <div className="space-y-3">
+                  <div className="border-b border-blue-500/30 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-blue-300">
+                    👨‍⚕️ 상담관리
+                  </div>
+                  <div className="space-y-2 px-2">
+                    {counselorMenuCategories.map((category) => (
+                      <Link
+                        key={category.slug}
+                        href={getCounselorCategoryHubHref(category.slug)}
+                        className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 transition-all duration-300 hover:border-white/30 hover:bg-blue-500/10"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <span className="text-xl">{category.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-white">{category.category}</div>
+                          <div className="truncate text-xs text-blue-300">{category.description}</div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {showAdminMenu && (

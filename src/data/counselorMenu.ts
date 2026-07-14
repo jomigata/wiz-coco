@@ -1,9 +1,16 @@
 import type { TestCategory } from '@/data/psychologyTestMenu';
 
+export interface CounselorMainCategory extends TestCategory {
+  slug: string;
+  description: string;
+}
+
 /** 상담관리 메가 메뉴 — 3단계 구조 */
-export const counselorMenuCategories: TestCategory[] = [
+export const counselorMenuCategories: CounselorMainCategory[] = [
   {
+    slug: 'psych-tests',
     category: '1. 심리검사 관리',
+    description: '검사코드 발급·결과 분석·추천',
     icon: '📦',
     subcategories: [
       {
@@ -51,7 +58,9 @@ export const counselorMenuCategories: TestCategory[] = [
     ],
   },
   {
+    slug: 'clients',
     category: '2. 내담자 관리',
+    description: '내담자·상담 일정·기록 운영',
     icon: '👥',
     subcategories: [
       {
@@ -99,7 +108,9 @@ export const counselorMenuCategories: TestCategory[] = [
     ],
   },
   {
+    slug: 'tools',
     category: '3. 상담 도구',
+    description: '채팅·노트·치료 계획·모니터링',
     icon: '💬',
     subcategories: [
       {
@@ -141,7 +152,9 @@ export const counselorMenuCategories: TestCategory[] = [
     ],
   },
   {
+    slug: 'data',
     category: '4. 데이터 관리',
+    description: '데이터 공유·일상 기록 관리',
     icon: '🤝',
     subcategories: [
       {
@@ -167,3 +180,15 @@ export const counselorMenuCategories: TestCategory[] = [
 ];
 
 export const COUNSELOR_MAIN_HREF = '/counselor';
+
+export function getCounselorCategoryHubHref(slug: string): string {
+  return `/counselor/hub/${slug}`;
+}
+
+export function getCounselorCategoryBySlug(slug: string): CounselorMainCategory | undefined {
+  return counselorMenuCategories.find((category) => category.slug === slug);
+}
+
+export function countCounselorCategoryActions(category: CounselorMainCategory): number {
+  return category.subcategories.reduce((sum, sub) => sum + sub.items.length, 0);
+}
