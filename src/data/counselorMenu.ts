@@ -182,7 +182,8 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
 export const COUNSELOR_MAIN_HREF = '/counselor';
 
 export function getCounselorCategoryHubHref(slug: string): string {
-  return `/counselor/hub/${slug}`;
+  // trailingSlash: true (static export / Firebase Hosting)
+  return `/counselor/hub/${slug}/`;
 }
 
 export function getCounselorCategoryBySlug(slug: string): CounselorMainCategory | undefined {

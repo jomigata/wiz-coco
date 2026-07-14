@@ -24,6 +24,7 @@ import { uploadCounselorApplicationAttachments } from '@/lib/counselorApplicatio
 import { isCounselor } from '@/utils/roleUtils';
 import type { CounselorAttachmentItem } from '@/types/counselorApplication';
 import CounselorApplicationAttachmentsField from '@/app/mypage/settings/components/CounselorApplicationAttachmentsField';
+import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 
 const inputCls =
   'w-full rounded-xl border border-slate-200 bg-slate-900/70 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40';
@@ -63,7 +64,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
 
   useEffect(() => {
     if (counselor || applicationStatus === 'approved') {
-      router.replace('/counselor/');
+      replaceWithAuthSession(router, '/counselor/');
     }
   }, [counselor, applicationStatus, router]);
 
@@ -199,18 +200,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
           </div>
         )}
 
-        {counselor ? (
-          <div className="text-center py-6 space-y-4">
-            <p className="text-emerald-200 text-sm">이미 승인된 상담사입니다.</p>
-            <Link
-              href="/counselor/"
-              className="inline-flex px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500"
-            >
-              상담사 대시보드
-            </Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>이름 *</label>
@@ -357,7 +347,6 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
               </button>
             )}
           </form>
-        )}
       </div>
 
       <p className="mt-4 text-center text-xs text-slate-500">

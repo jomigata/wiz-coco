@@ -74,6 +74,27 @@ function authUserFromSdkUser(firebaseUser: FirebaseSdkUser): AuthUser {
   };
 }
 
+function isPrivilegedRole(role: unknown): role is AppRole {
+  return role === 'counselor' || role === 'admin' || role === 'org_admin';
+}
+
+/** quick hydrate 중 privileged role을 user로 덮어쓰지 않음 */
+function resolveHydrationRole(
+  uid: string,
+  quickRole: AppRole,
+  prev: AuthUser | null,
+): AppRole {
+  if (prev?.uid === uid && isPrivilegedRole(prev.role)) return prev.role;
+  const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
+    scope: 'session',
+    maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
+  });
+  if (cached.data?.uid === uid && isPrivilegedRole(cached.data.role)) {
+    return cached.data.role as AppRole;
+  }
+  return quickRole;
+}
+
 function readCachedAuthUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
   if (!hasAuthenticatedTabSession()) return null;
@@ -211,11 +232,27 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       authExpiredOnStartupRef.current = false;
       const baseUser = authUserFromSdkUser(firebaseUser);
 
-      const quickRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';
-      const quickUser = { ...baseUser, role: quickRole };
-      setRoleHydrating(true);
-      setUser(quickUser);
-      writeSWRCache(AUTH_CACHE_KEY, quickUser, { scope: 'session' });
+      const bootstrapRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';
+      // auth 이벤트마다 role을 user로 초기화하면 RoleGuard가 상담관리 허브를 신청 페이지로 보냄
+      const cachedSnap = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
+        scope: 'session',
+        maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
+      });
+      const cachedPrivileged =
+        cachedSnap.data?.uid === firebaseUser.uid && isPrivilegedRole(cachedSnap.data.role)
+          ? (cachedSnap.data.role as AppRole)
+          : null;
+
+      setUser((prev) => {
+        const role =
+          (prev?.uid === firebaseUser.uid && isPrivilegedRole(prev.role) ? prev.role : null) ||
+          cachedPrivileged ||
+          bootstrapRole;
+        const nextUser = { ...baseUser, role };
+        writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
+        return nextUser;
+      });
+      setRoleHydrating(!(cachedPrivileged || isPrivilegedRole(bootstrapRole)));
       finishLoading();
       void firebaseUser.getIdToken().then((token) => primeCounselorIdToken(token)).catch(() => null);
 
@@ -226,7 +263,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       void (async () => {
         try {
-          let resolvedRole = quickRole;
+          let resolvedRole = bootstrapRole;
           const tokenPromise = firebaseUser.getIdToken();
           const ref = doc(db, 'users', firebaseUser.uid);
           const snapPromise = getDoc(ref);
@@ -257,7 +294,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             } catch {
               // ignore
             }
-            return quickRole;
+            return bootstrapRole;
           });
 
           const [snap, roleFromApi] = await Promise.all([snapPromise, roleFromApiPromise]);

@@ -26,15 +26,12 @@ export function canAccessCounselorProfessionalFeatures(
   return false;
 }
 
-/** 상담사 영역 접근 거부 시 이동할 경로 (승인 완료 계정은 신청 페이지로 보내지 않음) */
+/** 상담사 영역 접근 거부 시 — 신청 페이지로 보내지 않음 (허브 레이스 방지) */
 export function getCounselorAreaRedirectPath(
-  role: unknown,
-  applicationStatus: CounselorApplicationStatus | null | undefined,
+  _role?: unknown,
+  _applicationStatus?: CounselorApplicationStatus | null | undefined,
 ): string {
-  if (canAccessCounselorProfessionalFeatures(role, applicationStatus)) {
-    return '/counselor/';
-  }
-  return '/counselor-application/';
+  return '/counselor/';
 }
 
 export function canShowCounselorApplyIcon(

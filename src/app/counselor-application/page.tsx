@@ -1,12 +1,24 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { buildLoginRedirectUrl } from '@/lib/authRedirect';
 import CounselorApplicationForm from '@/components/counselor/CounselorApplicationForm';
 import Link from 'next/link';
+import { isCounselor } from '@/utils/roleUtils';
+import { replaceWithAuthSession } from '@/utils/authSessionLifecycle';
 
 export default function CounselorApplicationPage() {
   const { user, loading } = useFirebaseAuth();
+  const router = useRouter();
+  const approvedCounselor = isCounselor(user?.role);
+
+  useEffect(() => {
+    if (!loading && approvedCounselor) {
+      replaceWithAuthSession(router, '/counselor/');
+    }
+  }, [loading, approvedCounselor, router]);
 
   if (loading) {
     return (
@@ -29,6 +41,14 @@ export default function CounselorApplicationPage() {
             로그인
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (approvedCounselor) {
+    return (
+      <div className="min-h-[calc(100dvh-4rem)] bg-[#f8fafc] pt-20 flex items-center justify-center text-slate-400 text-sm">
+        상담사 대시보드로 이동 중…
       </div>
     );
   }

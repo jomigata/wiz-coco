@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import AuthLink from '@/components/auth/AuthLink';
 import type { RefObject } from 'react';
 import type { CounselorMainCategory } from '@/data/counselorMenu';
 import { getCounselorCategoryHubHref } from '@/data/counselorMenu';
@@ -33,7 +33,7 @@ export default function CounselorMainCategoryDropdown({
 
         <div className="space-y-1">
           {categories.map((category) => (
-            <Link
+            <AuthLink
               key={category.slug}
               href={getCounselorCategoryHubHref(category.slug)}
               className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
@@ -54,7 +54,7 @@ export default function CounselorMainCategoryDropdown({
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </Link>
+            </AuthLink>
           ))}
         </div>
       </div>
