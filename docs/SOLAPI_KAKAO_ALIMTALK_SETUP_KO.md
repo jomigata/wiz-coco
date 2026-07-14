@@ -49,29 +49,32 @@ gh secret set SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS
 
 ## 3. 템플릿 문구 (변수명을 그대로 사용)
 
-Solapi 콘솔에 등록할 때 **변수명을 아래와 동일하게** 작성하세요.
+> **검수 반려 시:** 문구에 `배정받으신`·`발급받으신`·`할당해 드린` 등 **수신자 행동**을 나타내는 고정 문구를 넣으세요.  
+> 전문 복사본: [SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md](./SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md)
 
 ### 3-1. 검사 미완료 (`testReminder`)
 
-**변수:** `#{name}`, `#{title}`, `#{pending}`, `#{link}`
+**변수:** `#{name}`, `#{title}`, `#{pending}`, `#{link}`  
+**발송 시점:** 상담사가 검사를 배정한 뒤 미완료일 때
 
 ```
 안녕하세요 #{name}님,
-WizCoCo 심리검사 미완료 안내입니다.
+담당 전문가 안내로 배정받으신 심리검사가 아직 완료되지 않았습니다.
 
 검사명: #{title}
 미완료: #{pending}
 
-바로 시작: #{link}
+이어서 진행: #{link}
 ```
 
 ### 3-2. 치료·과제 (`careAssignment`)
 
-**변수:** `#{name}`, `#{title}`, `#{link}`
+**변수:** `#{name}`, `#{title}`, `#{link}`  
+**발송 시점:** 상담사가 치료·과제를 할당했을 때
 
 ```
 안녕하세요 #{name}님,
-담당 전문가가 새 치료·과제를 할당했습니다.
+담당 전문가가 할당해 드린 치료·과제가 등록되었습니다.
 
 #{title}
 
@@ -80,11 +83,12 @@ WizCoCo 심리검사 미완료 안내입니다.
 
 ### 3-3. 포털 자격증명 (`portalCredentials`)
 
-**변수:** `#{name}`, `#{mycode}`, `#{pin}`, `#{joincode}`, `#{link}`
+**변수:** `#{name}`, `#{mycode}`, `#{pin}`, `#{joincode}`, `#{link}`  
+**발송 시점:** 상담사가 포털 접속 정보를 발급했을 때
 
 ```
 안녕하세요 #{name}님,
-WizCoCo 검사 접속 안내입니다.
+담당 전문가 안내로 발급받으신 WizCoCo 검사 접속 정보입니다.
 
 검사코드: #{joincode}
 나의코드: #{mycode}
@@ -149,7 +153,7 @@ curl -X POST \
 |------|-----------|
 | `alimtalk_not_configured` | API Key·Secret·Sender·pfId·템플릿 ID Secret 누락 |
 | `template_not_configured` | 해당 시나리오 템플릿 Secret 미등록 |
-| 템플릿 거절 | 변수명 `#{name}` 형식 불일치, 문구와 변수 불일치 |
+| 템플릿 거절 | 변수명 불일치, 또는 **발송 시점·수신자 행동**(`배정받으신` 등) 미기재 |
 | 발송 실패 (from) | `SOLAPI_SENDER`가 Solapi에 등록·승인된 번호인지 확인 |
 | pfId 오류 | `SOLAPI_KAKAO_PF_ID`가 채널과 일치하는지 확인 |
 
