@@ -28,8 +28,8 @@ import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import NavMenuDivider from '@/components/nav/NavMenuDivider';
 import NavMegaMenuBackdrop from '@/components/nav/NavMegaMenuBackdrop';
-import { APP_HEADER_BG, APP_HEADER_HEIGHT_CLASS } from '@/lib/appChromeLayout';
-import { NAV_MEGA_MENU_BG } from '@/components/layout/appChromeTheme';
+import { APP_HEADER_HEIGHT_CLASS } from '@/lib/appChromeLayout';
+import { navChromeClasses, navDropdownClasses } from '@/components/layout/appChromeTheme';
 
 export default function Navigation() {
   const router = useRouter();
@@ -454,7 +454,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav
-        className={`relative z-50 w-full border-b border-white/[0.06] ${APP_HEADER_BG} shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md`}
+        className={`relative z-50 w-full ${navChromeClasses.header}`}
         style={{ contain: 'layout' }}
       >
         <div className={`w-full max-w-[1800px] mx-auto px-4 sm:px-6 ${APP_HEADER_HEIGHT_CLASS} min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3`}>
@@ -464,14 +464,14 @@ export default function Navigation() {
             className="flex items-center gap-3 group shrink-0 min-w-0"
             onClick={(e) => handleNavLinkClick("/", e)}
           >
-            <span className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white/90 w-12 h-12 sm:w-14 sm:h-14 overflow-hidden ring-1 ring-white/20">
+            <span className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-white w-12 h-12 sm:w-14 sm:h-14 overflow-hidden ${navChromeClasses.logoRing}`}>
               <WizcocoLogo className="block w-full h-full object-contain" alt="Wizcoco 로고" />
             </span>
             <span className="flex flex-col items-start justify-center min-h-[2.75rem] sm:min-h-[3.25rem]">
-              <span className="font-semibold text-xl sm:text-2xl tracking-tight text-white transition-colors duration-300 leading-none group-hover:text-sky-200 whitespace-nowrap">
+              <span className={navChromeClasses.brandTitle}>
                 Wizcoco
               </span>
-              <span className="mt-0.5 text-[11px] sm:text-xs text-indigo-200/90 font-medium tracking-wide whitespace-nowrap group-hover:text-indigo-100">
+              <span className={navChromeClasses.brandSubtitle}>
                 Psychological Care
               </span>
             </span>
@@ -492,8 +492,8 @@ export default function Navigation() {
                   activeItem === '/portal' ||
                   activeItem.startsWith('/portal/') ||
                   activeItem.startsWith('/join/')
-                    ? 'text-white bg-blue-600 border-white'
-                    : 'text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white'
+                    ? navChromeClasses.navActive
+                    : navChromeClasses.navIdle
                 }`}
                 onClick={(e) =>
                   handleNavLinkClick(hasClientPortalSession ? '/portal/' : '/portal/login/', e)
@@ -519,10 +519,10 @@ export default function Navigation() {
                   href="/tests"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                     activeItem === "/tests" || activeItem.startsWith("/tests/")
-                      ? "text-white bg-blue-600 border-white"
+                      ? navChromeClasses.navActive
                       : isPsychologyTestsOpen
-                      ? "text-gray-300 border-white"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                      ? navChromeClasses.navOpen
+                      : navChromeClasses.navIdle
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
                 >
@@ -593,10 +593,10 @@ export default function Navigation() {
                   href="/counseling"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                     activeItem === "/counseling" || activeItem.startsWith("/counseling/")
-                      ? "text-white bg-blue-600 border-white"
+                      ? navChromeClasses.navActive
                       : isCounselingDropdownOpen
-                      ? "text-gray-300 border-white"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                      ? navChromeClasses.navOpen
+                      : navChromeClasses.navIdle
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
                 >
@@ -654,10 +654,10 @@ export default function Navigation() {
                   href="/ai-mind-assistant"
                   className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                     activeItem === "/ai-mind-assistant" || activeItem.startsWith("/ai-mind-assistant/")
-                      ? "text-white bg-blue-600 border-white"
+                      ? navChromeClasses.navActive
                       : isAiMindAssistantOpen
-                      ? "text-gray-300 border-white"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                      ? navChromeClasses.navOpen
+                      : navChromeClasses.navIdle
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                 >
@@ -718,8 +718,8 @@ export default function Navigation() {
                         href="/org/dashboard/"
                         className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center rounded-lg text-sm lg:text-[15px] font-semibold border-2 whitespace-nowrap ${
                           activeItem.startsWith('/org/')
-                            ? 'text-white bg-emerald-700 border-white'
-                            : 'text-gray-300 hover:text-white border-transparent hover:border-white hover:bg-emerald-900/40'
+                            ? 'text-white bg-emerald-600 border-emerald-600'
+                            : 'text-slate-600 hover:text-emerald-700 border-transparent hover:border-emerald-200 hover:bg-emerald-50'
                         }`}
                         onClick={(e) => handleNavLinkClick('/org/dashboard/', e)}
                       >
@@ -738,10 +738,10 @@ export default function Navigation() {
                           href="/counselor"
                           className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                             activeItem === "/counselor" || activeItem.startsWith("/counselor/")
-                              ? "text-white bg-blue-600 border-white"
+                              ? navChromeClasses.navActive
                               : isCounselorOpen
-                              ? "text-gray-300 border-white"
-                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                              ? navChromeClasses.navOpen
+                              : navChromeClasses.navIdle
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
                         >
@@ -786,10 +786,10 @@ export default function Navigation() {
                           href="/admin"
                           className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                             activeItem === "/admin" || activeItem.startsWith("/admin/")
-                              ? "text-white bg-blue-600 border-white"
+                              ? navChromeClasses.navActive
                               : isAdminOpen
-                              ? "text-gray-300 border-white"
-                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                              ? navChromeClasses.navOpen
+                              : navChromeClasses.navIdle
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
                         >
@@ -851,10 +851,10 @@ export default function Navigation() {
                         href="/mypage"
                         className={`relative h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center gap-1 rounded-lg text-sm lg:text-[15px] font-semibold tracking-tight transition-all duration-300 whitespace-nowrap border-2 ${
                           activeItem === "/mypage" || activeItem.startsWith("/mypage/") || activeItem.startsWith("/mypage?")
-                            ? "text-white bg-blue-600 border-white"
+                            ? navChromeClasses.navActive
                             : isDropdownOpen
-                            ? "text-gray-300 border-white"
-                            : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                            ? navChromeClasses.navOpen
+                            : navChromeClasses.navIdle
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
                       >
@@ -882,15 +882,14 @@ export default function Navigation() {
                       {isDropdownOpen && (
                         <div
                           data-dropdown-menu="user"
-                          className="absolute right-0 top-full z-[60] -mt-px w-96 min-w-[24rem] max-w-[28rem] rounded-2xl border border-sky-400/15 pt-3 pb-8 shadow-2xl animate-fadeIn"
-                          style={{ backgroundColor: NAV_MEGA_MENU_BG }}
+                          className={`${navDropdownClasses.panel} right-0 pb-8`}
                           onMouseMove={(e) => handleMouseMove('user', e)}
                         >
                           <div className="relative">
                             {/* 상단 화살표 - 스크롤 가능할 때만 표시 */}
                             {scrollStates.user?.canScrollUp && (
                               <div className="absolute top-0 right-8 transform -translate-y-4 z-20">
-                                <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-green-400 shadow-lg animate-bounce"></div>
+                                <div className="w-0 h-0 border-l-10 border-r-10 border-b-10 border-transparent border-b-blue-400 shadow-lg animate-bounce"></div>
                               </div>
                             )}
                             
@@ -899,14 +898,14 @@ export default function Navigation() {
                               onScroll={(e) => handleScroll('user', e)}
                             >
                               {/* 사용자 정보 헤더 */}
-                              <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
+                              <div className={navDropdownClasses.profileCard}>
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                                     {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
                                   </div>
                                   <div>
-                                    <div className="font-semibold text-white">{userName || '사용자'}</div>
-                                    <div className="text-sm text-green-300">{userEmail}</div>
+                                    <div className={navDropdownClasses.profileName}>{userName || '사용자'}</div>
+                                    <div className={navDropdownClasses.profileEmail}>{userEmail}</div>
                                   </div>
                                 </div>
                               </div>
@@ -923,14 +922,14 @@ export default function Navigation() {
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
+                                    className={navDropdownClasses.item}
                                     onClick={() => setActiveMenu(null)}
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                       {item.icon}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-white truncate flex items-center gap-2">
+                                      <div className={`${navDropdownClasses.itemTitle} flex items-center gap-2`}>
                                         {item.name}
                                         {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
                                           <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none shrink-0">
@@ -938,10 +937,10 @@ export default function Navigation() {
                                           </span>
                                         )}
                                       </div>
-                                      <div className="text-xs text-green-300 truncate">{item.description}</div>
+                                      <div className={navDropdownClasses.itemDesc}>{item.description}</div>
                                     </div>
                                     <svg 
-                                      className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+                                      className={navDropdownClasses.itemArrow}
                                       fill="none" 
                                       stroke="currentColor" 
                                       viewBox="0 0 24 24"
@@ -952,20 +951,20 @@ export default function Navigation() {
                                 ))}
 
                                 {/* 로그아웃 버튼 */}
-                                <div className="mt-4 pt-4 border-t border-green-500/30">
+                                <div className="mt-4 pt-4 border-t border-slate-200">
                                   <button
                                     onClick={handleLogout}
-                                    className="w-full group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 border border-transparent hover:border-red-500/30 text-left"
+                                    className="w-full group flex items-center gap-4 px-4 py-3 bg-red-50 rounded-xl hover:bg-red-100 transition-all duration-300 border border-transparent hover:border-red-200 text-left"
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                       🚪
                                     </div>
                                     <div className="flex-1">
-                                      <div className="font-medium text-white">로그아웃</div>
-                                      <div className="text-xs text-red-300">안전하게 로그아웃</div>
+                                      <div className="font-medium text-slate-900">로그아웃</div>
+                                      <div className="text-xs text-red-600">안전하게 로그아웃</div>
                                     </div>
                                     <svg 
-                                      className="w-4 h-4 text-red-300 group-hover:text-white transition-all duration-300"
+                                      className="w-4 h-4 text-red-400 group-hover:text-red-600 transition-all duration-300"
                                       fill="none" 
                                       stroke="currentColor" 
                                       viewBox="0 0 24 24"
@@ -980,7 +979,7 @@ export default function Navigation() {
                             {/* 하단 화살표 - 스크롤 가능할 때만 표시 */}
                             {scrollStates.user?.canScrollDown && (
                               <div className="absolute bottom-0 right-8 transform translate-y-4 z-20">
-                                <div className="w-0 h-0 border-l-10 border-r-10 border-t-10 border-transparent border-t-green-400 shadow-lg animate-bounce"></div>
+                                <div className="w-0 h-0 border-l-10 border-r-10 border-t-10 border-transparent border-t-blue-400 shadow-lg animate-bounce"></div>
                               </div>
                             )}
                           </div>
@@ -1007,7 +1006,7 @@ export default function Navigation() {
               type="button"
               aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-100 hover:bg-white/10 hover:text-white transition-all duration-300"
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${navChromeClasses.mobileHamburger} transition-all duration-300`}
             >
               <svg
                 className="h-6 w-6"
@@ -1046,12 +1045,12 @@ export default function Navigation() {
           />
           
           {/* 모바일 메뉴 */}
-          <div className="fixed inset-x-0 top-16 z-50 md:hidden bg-gradient-to-b from-indigo-900 to-indigo-800 border-b border-white/20 shadow-2xl">
-            <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+          <div className={`fixed inset-x-0 top-16 z-50 md:hidden ${navChromeClasses.mobilePanel}`}>
+            <div className="px-6 py-4 space-y-2 max-h-[85vh] overflow-y-auto">
 
               <Link
                 href={hasClientPortalSession ? '/portal/' : '/portal/login/'}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
+                className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 border border-blue-600"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span aria-hidden>⭐</span>
@@ -1110,7 +1109,7 @@ export default function Navigation() {
 
               {showCounselorMenu && (
                 <div className="space-y-3">
-                  <div className="border-b border-blue-500/30 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-blue-300">
+                  <div className="border-b border-slate-200 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-700">
                     👨‍⚕️ 상담관리
                   </div>
                   <div className="space-y-2 px-2">
@@ -1118,13 +1117,13 @@ export default function Navigation() {
                       <Link
                         key={category.slug}
                         href={getCounselorCategoryHubHref(category.slug)}
-                        className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 transition-all duration-300 hover:border-white/30 hover:bg-blue-500/10"
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 transition-all duration-300 hover:border-blue-300 hover:bg-blue-50"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <span className="text-xl">{category.icon}</span>
                         <div className="min-w-0 flex-1">
-                          <div className="font-medium text-white">{category.category}</div>
-                          <div className="truncate text-xs text-blue-300">{category.description}</div>
+                          <div className="font-medium text-slate-900">{category.category}</div>
+                          <div className="truncate text-xs text-slate-500">{category.description}</div>
                         </div>
                       </Link>
                     ))}
@@ -1152,8 +1151,8 @@ export default function Navigation() {
 
               {/* 사용자 메뉴 */}
               {isLoggedIn ? (
-                <div className="space-y-2 pt-4 border-t border-white/20">
-                  <div className="px-4 py-2 text-sm font-semibold text-indigo-300 uppercase tracking-wide flex items-center gap-2">
+                <div className="space-y-2 pt-4 border-t border-slate-200">
+                  <div className="px-4 py-2 text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
                     👤 마이페이지
                     {counselorResultCount > 0 && (
                       <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
@@ -1163,21 +1162,21 @@ export default function Navigation() {
                   </div>
                   <Link
                     href="/mypage"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                    className="block px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     📊 검사 기록
                   </Link>
                   <Link
                     href="/mypage?tab=profile"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                    className="block px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     👤 기본 정보
                   </Link>
                   <Link
                     href="/mypage/counseling"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-indigo-800/30 rounded-lg transition-all duration-300"
+                    className="block px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     💬 상담 예약
