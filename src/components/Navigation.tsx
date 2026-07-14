@@ -919,15 +919,11 @@ export default function Navigation() {
                                   { name: "상담 예약", href: "/mypage/counseling", description: "전문가 상담 예약", icon: "💬" },
                                   { name: "삭제된 코드", href: "/mypage?tab=deleted", description: "삭제된 테스트 코드 복구", icon: "📋" },
                                   { name: "설정", href: "/mypage/settings", description: "계정 설정", icon: "⚙️", badge: counselorResultCount }
-                                ].map((item, index) => (
+                                ].map((item) => (
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
-                                      index === 0
-                                        ? 'border-white'
-                                        : 'border-white/20 hover:border-white'
-                                    }`}
+                                    className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
                                     onClick={() => setActiveMenu(null)}
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">

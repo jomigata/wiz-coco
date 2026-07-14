@@ -32,13 +32,11 @@ export default function CounselorMainCategoryDropdown({
         <div className="mb-2 text-base font-semibold tracking-tight text-slate-300">👨‍⚕️ 상담관리</div>
 
         <div className="space-y-1">
-          {categories.map((category, index) => (
+          {categories.map((category) => (
             <Link
               key={category.slug}
               href={getCounselorCategoryHubHref(category.slug)}
-              className={`group flex items-center gap-4 rounded-xl border-2 px-4 py-3 transition-all duration-300 ${
-                index === 0 ? 'border-white' : 'border-white/20 hover:border-white'
-              }`}
+              className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
               onClick={onCloseMenu}
             >
               <div className="text-2xl transition-transform duration-300 group-hover:scale-110">
