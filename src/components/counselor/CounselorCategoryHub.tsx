@@ -16,7 +16,7 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
   return (
     <div className="space-y-8">
       <section className={`relative overflow-hidden ${counselorHubClasses.hero}`}>
-        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div
@@ -25,28 +25,28 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
               {category.icon}
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-sky-600/80">Counselor Hub</p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-800 sm:text-3xl">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-sky-300/80">Counselor Hub</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                 {category.category}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">{category.description}</p>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-sky-200/70">{category.description}</p>
             </div>
           </div>
           <div className="flex gap-3">
             <div className={counselorHubClasses.statCard}>
-              <p className="text-lg font-semibold text-slate-800">{sectionCount}</p>
-              <p className="text-[11px] text-slate-500">중분류</p>
+              <p className="text-lg font-semibold text-white">{sectionCount}</p>
+              <p className="text-[11px] text-sky-300/70">중분류</p>
             </div>
             <div className={counselorHubClasses.statCard}>
-              <p className="text-lg font-semibold text-slate-800">{actionCount}</p>
-              <p className="text-[11px] text-slate-500">바로가기</p>
+              <p className="text-lg font-semibold text-white">{actionCount}</p>
+              <p className="text-[11px] text-sky-300/70">바로가기</p>
             </div>
           </div>
         </div>
         <div className="relative mt-5">
           <AuthLink
             href="/counselor"
-            className="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-sky-700"
+            className="inline-flex items-center gap-2 text-sm text-sky-300/70 transition-colors hover:text-sky-200"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -66,9 +66,9 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
                 {subcategory.icon}
               </div>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400">중분류</p>
-                <h2 className="text-lg font-semibold text-slate-800">{subcategory.name}</h2>
-                <p className="text-xs text-slate-500">{subcategory.items.length}개 메뉴</p>
+                <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-sky-300/60">중분류</p>
+                <h2 className="text-lg font-semibold text-white">{subcategory.name}</h2>
+                <p className="text-xs text-sky-200/50">{subcategory.items.length}개 메뉴</p>
               </div>
             </div>
 
@@ -77,7 +77,7 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
                 <AuthLink
                   key={item.href}
                   href={item.href}
-                  className={`group flex items-center gap-4 ${counselorHubClasses.item} hover:shadow-md`}
+                  className={`group flex items-center gap-4 ${counselorHubClasses.item} hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)]`}
                 >
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center text-lg transition-transform duration-300 group-hover:scale-110 ${counselorHubClasses.itemIcon}`}
@@ -85,14 +85,14 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
                     {item.icon}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-slate-400">소분류</p>
-                    <div className="truncate font-medium text-slate-800 group-hover:text-sky-800">{item.name}</div>
-                    <div className="truncate text-xs text-slate-500 group-hover:text-slate-600">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-sky-300/50">소분류</p>
+                    <div className="truncate font-medium text-white group-hover:text-sky-100">{item.name}</div>
+                    <div className="truncate text-xs text-sky-200/50 group-hover:text-sky-200/70">
                       {item.description}
                     </div>
                   </div>
                   <svg
-                    className="h-4 w-4 shrink-0 text-slate-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-sky-600"
+                    className="h-4 w-4 shrink-0 text-sky-300/50 transition-all duration-300 group-hover:translate-x-1 group-hover:text-sky-200"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -107,8 +107,8 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
       </div>
 
       <section className={counselorHubClasses.footerNote}>
-        <p className="text-sm text-slate-600">
-          자주 쓰는 메뉴는 상단 네비게이션 <span className="text-sky-700 font-medium">상담관리</span>에서 대분류를
+        <p className="text-sm text-sky-200/50">
+          자주 쓰는 메뉴는 상단 네비게이션 <span className="text-sky-200/80">상담관리</span>에서 대분류를
           선택해 다시 열 수 있습니다.
         </p>
       </section>

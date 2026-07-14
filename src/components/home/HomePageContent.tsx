@@ -9,10 +9,11 @@ import MonetizationPricingSection from '@/components/monetization/MonetizationPr
 import MonetizationTrustSection from '@/components/monetization/MonetizationTrustSection';
 import MonetizationPartnerSection from '@/components/monetization/MonetizationPartnerSection';
 import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
+import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 
 export default function HomePageContent() {
   return (
-    <div className="min-h-full">
+    <div className="min-h-full" style={{ backgroundColor: HOME_PAGE_BG }}>
       <div className="pt-16">
         <main className="flex-grow">
           <HeroSection />
@@ -26,7 +27,7 @@ export default function HomePageContent() {
             <MonetizationPartnerSection />
           </ProfessionalContentGate>
 
-          <section className="border-t border-slate-200/60 px-4 py-12">
+          <section className="border-t border-white/[0.06] px-4 py-12">
             <div className="mx-auto max-w-3xl">
               <BusinessLegalBlock variant="full" />
             </div>

@@ -10,11 +10,11 @@ export const metadata = {
 /** 카카오 채널 심사·푸터 캡처용 사업자 정보 페이지 */
 export default function CompanyPage() {
   return (
-    <div className="min-h-screen bg-[#f2f6fa] text-slate-700">
+    <div className="min-h-screen bg-[#090d18] text-slate-300">
       <div className="mx-auto max-w-2xl px-4 py-16">
-        <p className="text-xs uppercase tracking-widest text-emerald-600/80">WizCoCo</p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-800">사업자 정보</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="text-xs uppercase tracking-widest text-emerald-500/80">WizCoCo</p>
+        <h1 className="mt-2 text-2xl font-semibold text-white">사업자 정보</h1>
+        <p className="mt-2 text-sm text-slate-400">
           카카오 비즈니스 채널 심사 및 이용자 고지용 공식 사업자 정보입니다.
         </p>
 

@@ -1,16 +1,15 @@
 import Link from 'next/link';
 import { privacyTrustPoints } from '@/data/monetizationCatalog';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
-import { homeContentClasses } from '@/components/layout/appChromeTheme';
 
 export default function MonetizationTrustSection() {
   return (
     <HomeSectionShell tone="monetizationTrust" className="py-16 md:py-20">
       <div className="container max-w-4xl mx-auto px-4">
-        <h2 className={`${homeContentClasses.sectionTitle} text-center mb-3`}>
+        <h2 className="text-2xl font-bold text-white text-center mb-3">
           비용·개인정보 부담을 줄이는 설계
         </h2>
-        <p className={`${homeContentClasses.sectionSubtitle} text-center mb-10`}>
+        <p className="text-slate-400 text-center mb-10 text-sm">
           &ldquo;내 돈 내고 민감한 정보를 넘겨도 되나?&rdquo; — 채널별로 결제 주체와 신원
           수집을 분리합니다.
         </p>
@@ -18,15 +17,15 @@ export default function MonetizationTrustSection() {
           {privacyTrustPoints.map((p) => (
             <div
               key={p.title}
-              className="rounded-lg border border-emerald-200/70 bg-emerald-50/60 p-5 shadow-sm"
+              className="rounded-lg border border-emerald-500/15 bg-emerald-950/15 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
             >
-              <h3 className="font-semibold text-emerald-800 mb-2">{p.title}</h3>
-              <p className={homeContentClasses.cardBody}>{p.body}</p>
+              <h3 className="font-semibold text-emerald-200 mb-2">{p.title}</h3>
+              <p className="text-slate-400 text-sm">{p.body}</p>
             </div>
           ))}
         </div>
         <p className="text-center mt-8 text-sm text-slate-500">
-          <Link href="/privacy/" className="text-blue-600 hover:text-blue-700 underline">
+          <Link href="/privacy/" className="text-blue-400 hover:text-blue-300 underline">
             개인정보처리방침
           </Link>
           {' · '}

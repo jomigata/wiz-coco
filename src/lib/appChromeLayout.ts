@@ -6,6 +6,6 @@ export const APP_FOOTER_HEIGHT_CLASS = 'h-11';
 /** 고정 푸터 위 맨 위로 버튼 위치 */
 export const APP_SCROLL_TO_TOP_BOTTOM = 'bottom-32 sm:bottom-36';
 
-export const APP_CHROME_BG = '#f2f6fa';
-export const APP_HEADER_BG = 'bg-white/92';
-export const APP_FOOTER_BG = 'bg-white/90';
+export const APP_CHROME_BG = '#0f1628';
+export const APP_HEADER_BG = 'bg-[#121c32]/92';
+export const APP_FOOTER_BG = 'bg-[#0c1220]/94';

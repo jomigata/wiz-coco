@@ -55,7 +55,7 @@ copy backend\.env.solapi.example backend\.env.solapi
 ## 5. 알림톡 템플릿 3종 등록·승인
 
 Solapi → **알림톡 템플릿**에서 아래 문구를 **변수명 그대로** 등록합니다.  
-전문 문구는 [SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md](./SOLAPI_KAKAO_ALIMTALK_SETUP_KO.md) §3 참고.
+전문 문구는 [SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md](./SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md) (복사·붙여넣기용).
 
 | 용도 | Secret 이름 | 변수 |
 |------|-------------|------|

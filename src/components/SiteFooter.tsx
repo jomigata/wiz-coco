@@ -16,16 +16,16 @@ export default function SiteFooter() {
 
   if (!isAuthenticated || !isApprovedCounselor) {
     return (
-      <footer className="border-t border-slate-200/60 bg-[#f2f6fa] py-10">
+      <footer className="border-t border-white/[0.05] bg-[#0c1220] py-10">
         <div className="container max-w-4xl mx-auto px-4 space-y-6">
           <BusinessLegalBlock variant="full" />
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
             <p>© {new Date().getFullYear()} WizCoCo · Psychological Care</p>
             <div className="flex items-center gap-4">
-              <Link href="/company/" className="hover:text-slate-700 transition-colors">
+              <Link href="/company/" className="hover:text-slate-300 transition-colors">
                 사업자정보
               </Link>
-              <Link href="/privacy/" className="hover:text-slate-700 transition-colors">
+              <Link href="/privacy/" className="hover:text-slate-300 transition-colors">
                 개인정보처리방침
               </Link>
               <Link href="/terms/" className="hover:text-slate-300 transition-colors">
@@ -39,7 +39,7 @@ export default function SiteFooter() {
   }
 
   return (
-    <footer className="border-t border-white/[0.05] bg-[#0c0f1a] text-gray-300 pt-16 pb-8">
+    <footer className="border-t border-white/[0.05] bg-[#131829] text-gray-300 pt-16 pb-8">
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>

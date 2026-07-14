@@ -28,8 +28,8 @@ import { readClientPortalSession } from '@/lib/clientPortalSession';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import NavMenuDivider from '@/components/nav/NavMenuDivider';
 import NavMegaMenuBackdrop from '@/components/nav/NavMegaMenuBackdrop';
-import { APP_HEADER_HEIGHT_CLASS } from '@/lib/appChromeLayout';
-import { NAV_MEGA_MENU_BG, appChromeClasses, navChromeClasses } from '@/components/layout/appChromeTheme';
+import { APP_HEADER_BG, APP_HEADER_HEIGHT_CLASS } from '@/lib/appChromeLayout';
+import { NAV_MEGA_MENU_BG } from '@/components/layout/appChromeTheme';
 
 export default function Navigation() {
   const router = useRouter();
@@ -454,7 +454,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav
-        className={`relative z-50 w-full ${appChromeClasses.header}`}
+        className={`relative z-50 w-full border-b border-white/[0.06] ${APP_HEADER_BG} shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md`}
         style={{ contain: 'layout' }}
       >
         <div className={`w-full max-w-[1800px] mx-auto px-4 sm:px-6 ${APP_HEADER_HEIGHT_CLASS} min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3`}>
@@ -468,7 +468,7 @@ export default function Navigation() {
               <WizcocoLogo className="block w-full h-full object-contain" alt="Wizcoco 로고" />
             </span>
             <span className="flex flex-col items-start justify-center min-h-[2.75rem] sm:min-h-[3.25rem]">
-              <span className={`font-semibold text-xl sm:text-2xl tracking-tight transition-colors duration-300 leading-none whitespace-nowrap ${navChromeClasses.logoText}`}>
+              <span className="font-semibold text-xl sm:text-2xl tracking-tight text-white transition-colors duration-300 leading-none group-hover:text-sky-200 whitespace-nowrap">
                 Wizcoco
               </span>
               <span className="mt-0.5 text-[11px] sm:text-xs text-indigo-200/90 font-medium tracking-wide whitespace-nowrap group-hover:text-indigo-100">
@@ -493,7 +493,7 @@ export default function Navigation() {
                   activeItem.startsWith('/portal/') ||
                   activeItem.startsWith('/join/')
                     ? 'text-white bg-blue-600 border-white'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80'
+                    : 'text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white'
                 }`}
                 onClick={(e) =>
                   handleNavLinkClick(hasClientPortalSession ? '/portal/' : '/portal/login/', e)
@@ -522,7 +522,7 @@ export default function Navigation() {
                       ? "text-white bg-blue-600 border-white"
                       : isPsychologyTestsOpen
                       ? "text-gray-300 border-white"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/tests", e)}
                 >
@@ -596,7 +596,7 @@ export default function Navigation() {
                       ? "text-white bg-blue-600 border-white"
                       : isCounselingDropdownOpen
                       ? "text-gray-300 border-white"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/counseling", e)}
                 >
@@ -657,7 +657,7 @@ export default function Navigation() {
                       ? "text-white bg-blue-600 border-white"
                       : isAiMindAssistantOpen
                       ? "text-gray-300 border-white"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                 >
@@ -719,7 +719,7 @@ export default function Navigation() {
                         className={`h-10 px-2.5 lg:px-3.5 inline-flex items-center justify-center rounded-lg text-sm lg:text-[15px] font-semibold border-2 whitespace-nowrap ${
                           activeItem.startsWith('/org/')
                             ? 'text-white bg-emerald-700 border-white'
-                            : 'text-slate-600 hover:text-slate-900 border-transparent hover:border-slate-200 hover:bg-emerald-50'
+                            : 'text-gray-300 hover:text-white border-transparent hover:border-white hover:bg-emerald-900/40'
                         }`}
                         onClick={(e) => handleNavLinkClick('/org/dashboard/', e)}
                       >
@@ -741,7 +741,7 @@ export default function Navigation() {
                               ? "text-white bg-blue-600 border-white"
                               : isCounselorOpen
                               ? "text-gray-300 border-white"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
                         >
@@ -789,7 +789,7 @@ export default function Navigation() {
                               ? "text-white bg-blue-600 border-white"
                               : isAdminOpen
                               ? "text-gray-300 border-white"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/admin", e)}
                         >
@@ -854,7 +854,7 @@ export default function Navigation() {
                             ? "text-white bg-blue-600 border-white"
                             : isDropdownOpen
                             ? "text-gray-300 border-white"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 border-transparent hover:border-slate-200/80"
+                            : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
                       >
@@ -882,7 +882,7 @@ export default function Navigation() {
                       {isDropdownOpen && (
                         <div
                           data-dropdown-menu="user"
-                          className="absolute right-0 top-full z-[60] -mt-px w-96 min-w-[24rem] max-w-[28rem] rounded-2xl border border-slate-200/70 pt-3 pb-8 shadow-[0_24px_64px_rgba(30,60,100,0.12)] animate-fadeIn"
+                          className="absolute right-0 top-full z-[60] -mt-px w-96 min-w-[24rem] max-w-[28rem] rounded-2xl border border-sky-400/15 pt-3 pb-8 shadow-2xl animate-fadeIn"
                           style={{ backgroundColor: NAV_MEGA_MENU_BG }}
                           onMouseMove={(e) => handleMouseMove('user', e)}
                         >
@@ -899,14 +899,14 @@ export default function Navigation() {
                               onScroll={(e) => handleScroll('user', e)}
                             >
                               {/* 사용자 정보 헤더 */}
-                              <div className="mb-4 p-4 bg-gradient-to-r from-emerald-50 to-sky-50 rounded-xl border border-emerald-200/70">
+                              <div className="mb-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
                                 <div className="flex items-center gap-3">
                                   <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                                     {userName ? userName.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
                                   </div>
                                   <div>
-                                    <div className="font-semibold text-slate-800">{userName || '사용자'}</div>
-                                    <div className="text-sm text-emerald-600">{userEmail}</div>
+                                    <div className="font-semibold text-white">{userName || '사용자'}</div>
+                                    <div className="text-sm text-green-300">{userEmail}</div>
                                   </div>
                                 </div>
                               </div>
@@ -923,14 +923,14 @@ export default function Navigation() {
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-sky-300/70 hover:bg-sky-50/80"
+                                    className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
                                     onClick={() => setActiveMenu(null)}
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                       {item.icon}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-slate-800 truncate flex items-center gap-2">
+                                      <div className="font-medium text-white truncate flex items-center gap-2">
                                         {item.name}
                                         {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && (
                                           <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none shrink-0">
@@ -938,10 +938,10 @@ export default function Navigation() {
                                           </span>
                                         )}
                                       </div>
-                                      <div className="text-xs text-slate-500 truncate">{item.description}</div>
+                                      <div className="text-xs text-green-300 truncate">{item.description}</div>
                                     </div>
                                     <svg 
-                                      className="w-4 h-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-1 transition-all duration-300"
+                                      className="w-4 h-4 text-green-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
                                       fill="none" 
                                       stroke="currentColor" 
                                       viewBox="0 0 24 24"
@@ -952,20 +952,20 @@ export default function Navigation() {
                                 ))}
 
                                 {/* 로그아웃 버튼 */}
-                                <div className="mt-4 pt-4 border-t border-slate-200/70">
+                                <div className="mt-4 pt-4 border-t border-green-500/30">
                                   <button
                                     onClick={handleLogout}
-                                    className="w-full group flex items-center gap-4 px-4 py-3 bg-red-50 rounded-xl hover:bg-red-100/80 transition-all duration-300 border border-transparent hover:border-red-200/70 text-left"
+                                    className="w-full group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-xl hover:bg-gradient-to-r hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300 border border-transparent hover:border-red-500/30 text-left"
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                       🚪
                                     </div>
                                     <div className="flex-1">
-                                      <div className="font-medium text-slate-800">로그아웃</div>
-                                      <div className="text-xs text-red-600">안전하게 로그아웃</div>
+                                      <div className="font-medium text-white">로그아웃</div>
+                                      <div className="text-xs text-red-300">안전하게 로그아웃</div>
                                     </div>
                                     <svg 
-                                      className="w-4 h-4 text-red-400 group-hover:text-red-600 transition-all duration-300"
+                                      className="w-4 h-4 text-red-300 group-hover:text-white transition-all duration-300"
                                       fill="none" 
                                       stroke="currentColor" 
                                       viewBox="0 0 24 24"
@@ -1007,7 +1007,7 @@ export default function Navigation() {
               type="button"
               aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 ${navChromeClasses.mobileMenuBtn}`}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-100 hover:bg-white/10 hover:text-white transition-all duration-300"
             >
               <svg
                 className="h-6 w-6"

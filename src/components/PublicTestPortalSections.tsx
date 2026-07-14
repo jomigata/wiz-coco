@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
-import { homeContentClasses } from '@/components/layout/appChromeTheme';
 
 const steps = [
   {
@@ -43,10 +42,10 @@ export default function PublicTestPortalSections() {
       <HomeSectionShell tone="steps" className="py-20 md:py-24">
         <div className="container max-w-5xl mx-auto px-4">
           <div className="text-center mb-14">
-            <span className={`${homeContentClasses.sectionEyebrow} mb-3 block`}>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500 mb-3 block">
               How it works
             </span>
-            <h2 className={homeContentClasses.sectionTitle}>
+            <h2 className="text-2xl md:text-3xl font-semibold text-white tracking-tight">
               검사 진행 방법
             </h2>
           </div>
@@ -54,13 +53,13 @@ export default function PublicTestPortalSections() {
             {steps.map((s) => (
               <div
                 key={s.step}
-                className={`${homeContentClasses.card} text-center`}
+                className="relative rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.035] to-white/[0.01] p-7 md:p-8 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
               >
-                <div className="text-[11px] font-medium tracking-[0.2em] text-sky-600/80 mb-4">
+                <div className="text-[11px] font-medium tracking-[0.2em] text-sky-400/75 mb-4">
                   STEP {s.step}
                 </div>
-                <h3 className={`text-lg ${homeContentClasses.cardTitle} mb-3`}>{s.title}</h3>
-                <p className={homeContentClasses.cardBody}>{s.desc}</p>
+                <h3 className="text-lg font-medium text-white mb-3">{s.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -69,24 +68,24 @@ export default function PublicTestPortalSections() {
 
       <HomeSectionShell tone="faq" className="py-20 md:py-24">
         <div className="container max-w-2xl mx-auto px-4">
-          <h2 className={`${homeContentClasses.sectionTitle} text-center mb-10`}>
+          <h2 className="text-2xl font-semibold text-white text-center mb-10 tracking-tight">
             자주 묻는 질문
           </h2>
           <div className="space-y-3">
             {faqs.map((f) => (
               <div
                 key={f.q}
-                className={homeContentClasses.cardCompact}
+                className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-6 py-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
               >
-                <h3 className={`${homeContentClasses.cardTitle} mb-2 text-[15px] text-sky-800`}>{f.q}</h3>
-                <p className={homeContentClasses.cardBody}>{f.a}</p>
+                <h3 className="font-medium text-sky-100/85 mb-2 text-[15px]">{f.q}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{f.a}</p>
               </div>
             ))}
           </div>
           <p className="text-center mt-10">
             <Link
               href="/portal/login/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-sky-600 hover:text-sky-700 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-sky-300/90 hover:text-sky-200 transition-colors"
             >
               검사 시작하기
               <span aria-hidden>→</span>

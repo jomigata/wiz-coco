@@ -1,15 +1,14 @@
 import { monetizationChannelSummaries } from '@/data/monetizationCatalog';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
-import { homeContentClasses } from '@/components/layout/appChromeTheme';
 
 export default function MonetizationChannelSection() {
   return (
     <HomeSectionShell tone="channel" className="py-16 md:py-20">
       <div className="container max-w-6xl mx-auto px-4">
-        <h2 className={`${homeContentClasses.sectionTitle} text-center mb-3`}>
+        <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-3">
           이용 방법 — 3가지 채널
         </h2>
-        <p className={`${homeContentClasses.sectionSubtitle} text-center mb-10 max-w-2xl mx-auto`}>
+        <p className="text-slate-400 text-center mb-10 max-w-2xl mx-auto text-sm md:text-base">
           협회(플랫폼)가 검사 품질·정산을 관리하고, 상담사·기관·개인 각각에 맞는 방식으로
           검사비 부담을 줄입니다.
         </p>
@@ -17,16 +16,16 @@ export default function MonetizationChannelSection() {
           {monetizationChannelSummaries.map((ch) => (
             <div
               key={ch.id}
-              className={`${homeContentClasses.card} flex flex-col`}
+              className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-6 flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
             >
-              <span className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-2">
+              <span className="text-xs font-medium text-blue-300 uppercase tracking-wide mb-2">
                 {ch.subtitle}
               </span>
-              <h3 className={`text-lg font-semibold ${homeContentClasses.cardTitle} mb-4`}>{ch.title}</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{ch.title}</h3>
               <ul className="space-y-2 flex-1">
                 {ch.bullets.map((b) => (
-                  <li key={b} className={`${homeContentClasses.cardBody} flex gap-2`}>
-                    <span className="text-blue-500 shrink-0" aria-hidden>
+                  <li key={b} className="text-slate-400 text-sm flex gap-2">
+                    <span className="text-blue-400 shrink-0" aria-hidden>
                       ✓
                     </span>
                     <span>{b}</span>
