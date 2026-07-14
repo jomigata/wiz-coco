@@ -471,7 +471,7 @@ export default function PortalCareAssignmentsPanel() {
 
       {active.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">진행 중 과제</h2>
+          <h2 className="text-lg font-semibold text-slate-900">진행 중 과제</h2>
           {active.map((item) => (
             <CareAssignmentCard key={item.assignmentId} item={item} onRefresh={() => void load()} />
           ))}

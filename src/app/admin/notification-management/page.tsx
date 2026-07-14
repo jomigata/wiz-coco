@@ -4,10 +4,10 @@ import React from 'react';
 
 export default function NotificationManagement() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
+    <div className="min-h-screen bg-[#f8fafc] p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">알림 관리</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">알림 관리</h1>
           <p className="text-gray-300">중요 알림 및 이벤트를 관리하세요</p>
         </div>
         <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">

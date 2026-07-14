@@ -334,7 +334,7 @@ export default function AdminDeletedCodesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] overflow-hidden">
       <div className="flex min-h-screen pt-4 pb-12">
         {/* 메인 콘텐츠 영역 */}
         <main className="flex-1 px-8 py-6 overflow-x-auto">
@@ -560,7 +560,7 @@ export default function AdminDeletedCodesPage() {
                           {filteredRecords.map((record) => (
                             <tr 
                               key={record.code} 
-                              className="hover:bg-white/5 transition-colors"
+                              className="hover:bg-slate-50 transition-colors"
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <input
@@ -573,7 +573,7 @@ export default function AdminDeletedCodesPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-white font-medium font-mono">{formatAccessCodeDisplay(record.code || '')}</div>
-                                <div className="text-gray-300 text-sm">{new Date(record.timestamp).toLocaleDateString()}</div>
+                                <div className="text-slate-600 text-sm">{new Date(record.timestamp).toLocaleDateString()}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-white">
                                 {record.testType || '알 수 없음'}

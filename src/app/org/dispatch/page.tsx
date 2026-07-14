@@ -170,7 +170,7 @@ export default function OrgDispatchPage() {
         <Link href="/org/dashboard/" className="text-blue-400 text-sm hover:underline">
           ← 대시보드
         </Link>
-        <h1 className="text-2xl font-bold text-white mt-4 mb-2">기관 일괄 발송</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mt-4 mb-2">기관 일괄 발송</h1>
         <p className="text-slate-400 text-sm mb-6">
           학급·부서 단위 cohort. 검사 세트 프리셋을 저장해 재사용할 수 있습니다.
         </p>
@@ -187,7 +187,7 @@ export default function OrgDispatchPage() {
         )}
 
         {templates.length > 0 && (
-          <div className="mb-6 rounded-xl border border-white/10 p-4 bg-slate-900/50">
+          <div className="mb-6 rounded-xl border border-slate-200 p-4 bg-slate-900/50">
             <h2 className="text-sm font-semibold text-white mb-3">저장된 검사 세트 프리셋</h2>
             <div className="flex flex-wrap gap-2">
               {templates.map((tpl) => (
@@ -217,13 +217,13 @@ export default function OrgDispatchPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-white/10 p-6 bg-slate-900/50">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 p-6 bg-slate-900/50">
           <div>
             <label className="block text-sm text-slate-400 mb-1">학급/부서명 (cohort)</label>
             <input
               value={cohortName}
               onChange={(e) => setCohortName(e.target.value)}
-              className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
+              className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
               placeholder="예: 3학년 2반"
               required
             />
@@ -233,13 +233,13 @@ export default function OrgDispatchPage() {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
+              className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
             />
           </div>
 
           <div>
             <label className="block text-sm text-slate-400 mb-2">포함 검사 (다중 선택)</label>
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-slate-800/50 p-3 space-y-2">
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-800/50 p-3 space-y-2">
               {testOptions.slice(0, 24).map((opt) => (
                 <label key={opt.testId} className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
                   <input
@@ -264,7 +264,7 @@ export default function OrgDispatchPage() {
               <input
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
-                className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm"
+                className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm"
                 placeholder="예: 1학기 기본 세트"
               />
             </div>
@@ -286,7 +286,7 @@ export default function OrgDispatchPage() {
               value={rowsText}
               onChange={(e) => setRowsText(e.target.value)}
               rows={8}
-              className="w-full rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white text-sm font-mono"
+              className="w-full rounded-lg bg-white border border-slate-200 px-3 py-2 text-slate-900 text-sm font-mono"
               placeholder={'홍길동, student1@school.kr\n김철수'}
               required
             />

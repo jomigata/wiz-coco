@@ -40,3 +40,19 @@ export const wizButtonClasses = {
   outline:
     'inline-flex justify-center items-center px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors',
 } as const;
+
+/** 내부 워크스페이스(마이페이지·관리자·검사·포털) */
+export const wizWorkspaceClasses = {
+  page: 'min-h-[100dvh] bg-[#f8fafc] text-slate-900',
+  main: 'relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-[#f8fafc] text-slate-900',
+  header: 'shrink-0 border-b border-slate-200 bg-white/90 py-2.5 backdrop-blur-sm',
+  headerTitle: 'truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-xl',
+  content: 'relative z-10 mx-auto flex w-full max-w-[1800px] min-w-0 min-h-0 flex-1 flex-col px-4 py-3 sm:px-6',
+  card: 'rounded-xl border border-slate-200 bg-white p-6 shadow-sm',
+  cardMuted: 'rounded-xl border border-slate-200 bg-slate-50 p-6',
+  input:
+    'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500',
+  select: 'select-theme-light w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500',
+  tabActive: 'text-slate-900 bg-white border border-b-0 border-slate-200',
+  tabIdle: 'text-slate-500 hover:text-slate-800',
+} as const;

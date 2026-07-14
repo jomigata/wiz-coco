@@ -161,7 +161,7 @@ function CounselorVerificationPageContent() {
       case 'rejected':
         return 'border border-rose-500/30 bg-rose-500/10 text-rose-100';
       default:
-        return 'border border-white/15 bg-white/5 text-slate-300';
+        return 'border border-slate-200 bg-white/5 text-slate-300';
     }
   };
 
@@ -233,7 +233,7 @@ function CounselorVerificationPageContent() {
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-2 text-slate-100">
       <motion.div
-        className="shrink-0 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2"
+        className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
@@ -265,12 +265,12 @@ function CounselorVerificationPageContent() {
       )}
 
       {busy && !reviewTarget && (
-        <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-2">
+        <div className="shrink-0 rounded-lg border border-slate-200 bg-white/5 p-2">
           <p className="text-white/80 text-sm">목록 갱신 중…</p>
         </div>
       )}
 
-      <div className="shrink-0 flex flex-col gap-2 rounded-lg border border-white/10 bg-white/[0.04] p-3 sm:flex-row sm:items-center">
+      <div className="shrink-0 flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center">
         <div className="relative min-w-0 flex-1">
           <FaSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
@@ -278,13 +278,13 @@ function CounselorVerificationPageContent() {
             placeholder="이름 · 이메일 · 기관명 · 지역 · UID · 메모 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          className="rounded-md border border-white/10 bg-slate-900/80 px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+          className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
         >
           <option value="all" className="bg-slate-900">전체 상태</option>
           <option value="pending" className="bg-slate-900">검토 중</option>
@@ -293,7 +293,7 @@ function CounselorVerificationPageContent() {
         </select>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
         {filteredApplications.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
             <FaUserCheck className="mb-2 h-10 w-10 text-slate-600" />
@@ -386,7 +386,7 @@ function CounselorVerificationPageContent() {
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
                     {filteredApplications.map((application) => (
-                      <tr key={`${application.applicantUid}-${application.id}`} className="hover:bg-white/[0.04]">
+                      <tr key={`${application.applicantUid}-${application.id}`} className="hover:bg-slate-50">
                       <td className="whitespace-nowrap px-2 py-2 text-slate-200">
                         {application.appliedDate
                           ? new Date(application.appliedDate).toLocaleDateString('ko-KR')

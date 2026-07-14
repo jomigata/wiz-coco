@@ -38,13 +38,13 @@ export type RecipientRow = { displayName: string; email: string; phone: string }
 const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
 
 const FORM_CARD =
-  'rounded-xl border border-white/10 bg-gradient-to-br from-slate-800/45 via-slate-800/25 to-slate-900/55 shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm';
+  'rounded-xl border border-slate-200 bg-gradient-to-br from-slate-800/45 via-slate-800/25 to-slate-900/55 shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm';
 const FORM_INPUT =
-  'w-full px-3 py-2 rounded-lg bg-slate-950/55 border border-white/10 text-white text-sm placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400/50 disabled:cursor-not-allowed disabled:opacity-55';
+  'w-full px-3 py-2 rounded-lg bg-slate-950/55 border border-slate-200 text-white text-sm placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400/50 disabled:cursor-not-allowed disabled:opacity-55';
 const FORM_LABEL = 'block text-xs font-medium text-slate-400 mb-1';
 /** 포함할 검사: 2열 그리드 기준 5행 높이 (약 11.5rem) */
 const TEST_PICKER_SCROLL =
-  'max-h-[11.5rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-slate-950/40 p-2';
+  'max-h-[11.5rem] overflow-y-auto overscroll-y-contain rounded-lg border border-slate-200 bg-white p-2';
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -671,7 +671,7 @@ export default function IndividualAssessmentCreateForm() {
                     type="button"
                     onClick={() => openDatePicker(usageEndDateRef)}
                     disabled={loading || usingExisting}
-                    className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-slate-200 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="사용종료일 달력 열기"
                   >
                     <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -737,7 +737,7 @@ export default function IndividualAssessmentCreateForm() {
                           className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs leading-snug transition-colors ${
                             usingExisting
                               ? 'cursor-default opacity-75'
-                              : 'cursor-pointer hover:bg-white/5'
+                              : 'cursor-pointer hover:bg-slate-50'
                           } ${lockedChecked ? 'text-red-300' : checked ? 'text-blue-100' : 'text-slate-300'}`}
                         >
                           <input
@@ -795,7 +795,7 @@ export default function IndividualAssessmentCreateForm() {
               {manualRows.map((row, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] md:grid-cols-[1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5"
+                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-slate-50 md:grid-cols-[1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5"
                 >
                   <input
                     ref={(el) => {
@@ -837,7 +837,7 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
               ))}
             </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
+            <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-200 pt-2.5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -848,7 +848,7 @@ export default function IndividualAssessmentCreateForm() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800/80"
+                className="rounded-lg border border-slate-200 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800/80"
                 disabled={loading}
               >
                 CSV/엑셀 첨부
@@ -888,7 +888,7 @@ export default function IndividualAssessmentCreateForm() {
         >
           <div className="space-y-3">
             <SectionHeading>접속 정보 발송</SectionHeading>
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-white/5 bg-slate-950/30 p-3 transition hover:border-white/10">
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-100 bg-slate-950/30 p-3 transition hover:border-slate-200">
               <input
                 type="checkbox"
                 checked={queueNotify}
@@ -901,7 +901,7 @@ export default function IndividualAssessmentCreateForm() {
               </span>
             </label>
             {queueNotify ? (
-              <div className="space-y-2 rounded-lg border border-white/5 bg-slate-950/25 p-3">
+              <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-950/25 p-3">
                 <div className="flex flex-wrap gap-3 text-xs">
                   <label className="flex cursor-pointer items-center gap-1.5">
                     <input
@@ -937,7 +937,7 @@ export default function IndividualAssessmentCreateForm() {
                           type="button"
                           onClick={() => openDatePicker(scheduledDateRef)}
                           disabled={loading}
-                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-slate-200 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="예약 날짜 달력 열기"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -972,7 +972,7 @@ export default function IndividualAssessmentCreateForm() {
                           type="button"
                           onClick={() => openDatePicker(scheduledTimeRef)}
                           disabled={loading}
-                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-slate-200 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="예약 시간 선택 열기"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -1026,7 +1026,7 @@ export default function IndividualAssessmentCreateForm() {
               type="button"
               onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
               disabled={loading}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800/70"
+              className="w-full rounded-xl border border-slate-200 bg-slate-900/50 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800/70"
             >
               취소
             </button>

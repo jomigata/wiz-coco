@@ -51,7 +51,7 @@ function statusBadge(label: string): { text: string; className: string } {
 function AssessmentCard({ item }: { item: CounselorMonitoringAssessment }) {
   const badge = statusBadge(item.progress.label);
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-white">{item.title}</h3>
@@ -103,7 +103,7 @@ function AssessmentCard({ item }: { item: CounselorMonitoringAssessment }) {
         </AuthLink>
         <AuthLink
           href="/counselor/clients"
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5"
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
         >
           내담자 보기
         </AuthLink>
@@ -209,14 +209,14 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
         <button
           type="button"
           onClick={() => setHubView('overview')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             view === 'overview'
               ? 'bg-sky-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-slate-200'
           }`}
         >
           전체
@@ -227,7 +227,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             view === 'care'
               ? 'bg-violet-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-slate-200'
           }`}
         >
           치료·과제
@@ -238,7 +238,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             view === 'cohorts'
               ? 'bg-violet-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-slate-200'
           }`}
         >
           그룹
@@ -286,7 +286,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
               <button
                 type="button"
                 onClick={() => void load()}
-                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
                 새로고침
               </button>
@@ -294,19 +294,19 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">활성 검사코드</p>
               <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.activeAssessments}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">내담자(배정)</p>
               <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.totalRecipients}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">진행 중</p>
               <p className="mt-1 text-2xl font-semibold text-sky-300">{hub.summary.inProgressRecipients}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">검사 완료</p>
               <p className="mt-1 text-2xl font-semibold text-emerald-300">{hub.summary.completedRecipients}</p>
             </div>
@@ -323,7 +323,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
             <select
               value={cohortFilter}
               onChange={(e) => setCohortFilter(e.target.value)}
-              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
             >
           <option value="">전체 그룹</option>
           <option value={INDIVIDUAL_COHORT_KEY}>개별 발급</option>
@@ -333,10 +333,10 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                 </option>
               ))}
             </select>
-            <AuthLink href="/counselor/clients" className="text-sm text-sky-400 hover:text-sky-300">
+            <AuthLink href="/counselor/clients" className="text-sm text-blue-600 hover:text-blue-700">
               내담자 CRM →
             </AuthLink>
-            <AuthLink href="/counselor/assign-tests" className="text-sm text-sky-400 hover:text-sky-300">
+            <AuthLink href="/counselor/assign-tests" className="text-sm text-blue-600 hover:text-blue-700">
               검사 할당 →
             </AuthLink>
           </div>
@@ -344,7 +344,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
           <section>
             <h2 className="mb-3 text-sm font-semibold text-slate-300">검사코드별 진행</h2>
             {hub.assessments.length === 0 ? (
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
+              <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center">
                 <p className="text-slate-300">모니터링할 검사코드가 없습니다.</p>
                 <AuthLink
                   href="/counselor/assessments/new"
@@ -367,10 +367,10 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
             {hub.recentActivity.length === 0 ? (
               <p className="text-sm text-slate-500">아직 완료된 검사가 없습니다.</p>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
                 <table className="min-w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
+                    <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                       <th className="px-4 py-3 font-medium">시각</th>
                       <th className="px-4 py-3 font-medium">내담자</th>
                       <th className="px-4 py-3 font-medium">검사코드</th>
@@ -382,7 +382,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                     {hub.recentActivity.map((row) => (
                       <tr
                         key={row.resultId}
-                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]"
+                        className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
                       >
                         <td className="px-4 py-2.5 text-xs text-slate-400">{formatDateTime(row.completedAt)}</td>
                         <td className="px-4 py-2.5">
@@ -398,7 +398,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                         <td className="px-4 py-2.5">
                           <AuthLink
                             href={progressHref(row.assessmentId)}
-                            className="text-xs text-sky-400 hover:text-sky-300"
+                            className="text-xs text-blue-600 hover:text-blue-700"
                           >
                             현황
                           </AuthLink>

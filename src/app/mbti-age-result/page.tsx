@@ -74,7 +74,7 @@ function MbtiAgeResultContent() {
           </div>
 
           {/* 결과 카드 */}
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8 border border-slate-200">
             <div className="text-center mb-6">
               <div className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-lg text-2xl font-bold mb-4">
                 {mbtiType}

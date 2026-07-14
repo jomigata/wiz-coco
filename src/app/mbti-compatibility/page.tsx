@@ -79,7 +79,7 @@ export default function MBTICompatibilityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-emerald-300 text-lg">로딩 중...</p>
@@ -90,7 +90,7 @@ export default function MBTICompatibilityPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-lg">로그인이 필요합니다.</p>
         </div>
@@ -99,12 +99,12 @@ export default function MBTICompatibilityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
+    <div className="min-h-screen bg-[#f8fafc]"><div className="pt-16 p-6">
         <div className="max-w-4xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold text-white mb-4">MBTI 궁합 분석</h1>
-            <p className="text-gray-300 text-lg">
+            <p className="text-slate-600 text-lg">
               AI 기반 최신 MBTI 궁합 분석으로 관계를 더 깊이 이해해보세요
             </p>
           </div>
@@ -227,7 +227,7 @@ export default function MBTICompatibilityPage() {
             >
               {/* 궁합 점수 */}
               <div className="bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg p-8 text-center">
-                <h3 className="text-2xl font-bold text-white mb-4">궁합 점수</h3>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4">궁합 점수</h3>
                 <div className="text-6xl font-bold text-white mb-2">{analysis.compatibilityScore}</div>
                 <div className="text-xl text-white/80">/ 100</div>
                 <div className="mt-4">

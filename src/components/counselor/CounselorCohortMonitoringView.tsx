@@ -54,7 +54,7 @@ function statusBadge(label: string): { text: string; className: string } {
 function AssessmentRow({ item }: { item: CounselorCohortMonitoringAssessment }) {
   const badge = statusBadge(item.progress.label);
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-slate-200">{item.title}</p>
         <p className="font-mono text-[11px] text-slate-500">
@@ -70,7 +70,7 @@ function AssessmentRow({ item }: { item: CounselorCohortMonitoringAssessment }) 
         </span>
         <AuthLink
           href={progressHref(item.assessmentId)}
-          className="text-sky-400 hover:text-sky-300"
+          className="text-blue-600 hover:text-blue-700"
         >
           현황
         </AuthLink>
@@ -84,7 +84,7 @@ function CohortCard({ item }: { item: CounselorCohortMonitoringItem }) {
   const isIndividual = item.cohortKey === INDIVIDUAL_COHORT_KEY;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-white">{item.cohortName}</h3>
@@ -149,7 +149,7 @@ function CohortCard({ item }: { item: CounselorCohortMonitoringItem }) {
         {item.assessments[0] ? (
           <AuthLink
             href={progressHref(item.assessments[0].assessmentId)}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
           >
             대표 검사 현황
           </AuthLink>
@@ -243,29 +243,29 @@ export default function CounselorCohortMonitoringView({
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
         >
           새로고침
         </button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs text-slate-500">그룹 수</p>
           <p className="mt-1 text-2xl font-semibold text-white">{data.summary.totalCohorts}</p>
           <p className="mt-1 text-xs text-slate-500">
             단체 {data.summary.groupCohorts} · 개별 {data.summary.individualCohorts}
           </p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs text-slate-500">내담자(배정)</p>
           <p className="mt-1 text-2xl font-semibold text-white">{data.summary.totalPortals}</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs text-slate-500">진행 중</p>
           <p className="mt-1 text-2xl font-semibold text-sky-300">{data.summary.inProgressPortals}</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs text-slate-500">검사 완료</p>
           <p className="mt-1 text-2xl font-semibold text-emerald-300">{data.summary.completedPortals}</p>
         </div>
@@ -281,7 +281,7 @@ export default function CounselorCohortMonitoringView({
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-300">그룹별 진행</h2>
         {data.cohorts.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
+          <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center">
             <p className="text-slate-300">집계할 그룹이 없습니다.</p>
             <p className="mt-2 text-sm text-slate-500">
               검사코드를 발급하고 내담자를 배정하면 그룹별 진행이 표시됩니다.

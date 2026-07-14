@@ -85,7 +85,7 @@ export default function AssessmentCreateForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-2">
+        <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-2">
           안내 제목 <span className="text-red-400">*</span>
         </label>
         <input
@@ -102,7 +102,7 @@ export default function AssessmentCreateForm() {
       </div>
 
       <div>
-        <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-300 mb-2">
+        <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-700 mb-2">
           검사코드 사용최종일 (선택)
         </label>
         <input
@@ -117,7 +117,7 @@ export default function AssessmentCreateForm() {
       </div>
 
       <div>
-        <label htmlFor="welcomeMessage" className="block text-sm font-medium text-slate-300 mb-2">
+        <label htmlFor="welcomeMessage" className="block text-sm font-medium text-slate-700 mb-2">
           안내 메시지 (선택)
         </label>
         <textarea
@@ -132,7 +132,7 @@ export default function AssessmentCreateForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">포함할 검사 선택</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">포함할 검사 선택</label>
         <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800/80 p-3 space-y-2">
           {counselorAssessmentTestOptions.map((t) => (
             <label key={t.testId} className="flex items-center gap-3 p-2 rounded hover:bg-slate-700/50 cursor-pointer">

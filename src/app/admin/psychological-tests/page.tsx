@@ -4,10 +4,10 @@ import React from 'react';
 
 export default function PsychologicalTests() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
+    <div className="min-h-screen bg-[#f8fafc] p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">심리검사 관리</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">심리검사 관리</h1>
           <p className="text-gray-300">검사 생성, 배포, 결과를 분석하세요</p>
         </div>
         <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">

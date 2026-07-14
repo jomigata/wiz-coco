@@ -60,7 +60,7 @@ export default function NotificationChannelStatus() {
     : 'Solapi 발신번호·pfId·템플릿 Secret 필요';
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-white mb-3">알림 채널 상태</h3>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <ChannelBadge

@@ -43,7 +43,7 @@ export default function OrgDashboardPage() {
   return (
     <RoleGuard allowedRoles={['org_admin', 'admin']}>
       <div className="p-6 max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-1">기관 대시보드</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">기관 대시보드</h1>
         <p className="text-slate-400 text-sm mb-6">
           {data?.organization?.name || '기관'} · B2B 선결제 · 내담자 0원 입장
         </p>
@@ -59,9 +59,9 @@ export default function OrgDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5">
                 <p className="text-xs text-emerald-300">기관 크레딧</p>
-                <p className="text-3xl font-bold text-white">{data.creditBalance}</p>
+                <p className="text-3xl font-bold text-slate-900">{data.creditBalance}</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-5 sm:col-span-2">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 sm:col-span-2">
                 <p className="text-xs text-slate-400">안내</p>
                 <p className="text-sm text-slate-300 mt-1">
                   1크레딧 = 내담자 1명. 기관 선결제로 임직원·학생은 코드만으로 무료 검사합니다.
@@ -76,12 +76,12 @@ export default function OrgDashboardPage() {
               >
                 일괄 발송 (선결제)
               </Link>
-              <Link href="/partners/" className="px-4 py-2 rounded-lg border border-white/20 text-white text-sm">
+              <Link href="/partners/" className="px-4 py-2 rounded-lg border border-slate-200 text-white text-sm">
                 B2B 안내
               </Link>
             </div>
 
-            <h2 className="text-lg font-semibold text-white mb-3">cohort · 학급/부서 현황</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-3">cohort · 학급/부서 현황</h2>
             <CohortTable cohorts={data.cohorts || []} />
           </>
         )}
@@ -95,7 +95,7 @@ function CohortTable({ cohorts }: { cohorts: OrgCohortSummary[] }) {
     return <p className="text-slate-500 text-sm">아직 cohort가 없습니다. 일괄 발송으로 시작하세요.</p>;
   }
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/10">
+    <div className="overflow-x-auto rounded-xl border border-slate-200">
       <table className="min-w-full text-sm text-slate-300">
         <thead className="bg-white/5 text-slate-400">
           <tr>
@@ -108,7 +108,7 @@ function CohortTable({ cohorts }: { cohorts: OrgCohortSummary[] }) {
         </thead>
         <tbody>
           {cohorts.map((c) => (
-            <tr key={c.cohortId} className="border-t border-white/5">
+            <tr key={c.cohortId} className="border-t border-slate-100">
               <td className="px-3 py-2">{c.cohortName}</td>
               <td className="px-3 py-2 text-right">{c.participantCount}</td>
               <td className="px-3 py-2 text-right">{c.completedCount}</td>

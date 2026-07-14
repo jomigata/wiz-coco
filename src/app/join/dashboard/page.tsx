@@ -14,7 +14,7 @@ function DashboardRedirectContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="pt-24 flex justify-center">
         <p className="text-slate-400">내 검사실로 이동 중…</p>
       </div>
@@ -27,7 +27,7 @@ export default function JoinDashboardRedirectPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
+        <div className="min-h-screen bg-[#f8fafc] pt-24 flex justify-center">
           <p className="text-slate-400">내 검사실로 이동 중…</p>
         </div>
       }

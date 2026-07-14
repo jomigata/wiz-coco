@@ -25,7 +25,7 @@ function AssessmentEditContent() {
         <AuthLink href="/counselor/assessments" className="text-slate-400 hover:text-white text-sm">
           ← 목록
         </AuthLink>
-        <h1 className="text-2xl font-bold text-white">검사코드 수정</h1>
+        <h1 className="text-2xl font-bold text-slate-900">검사코드 수정</h1>
       </div>
       <p className="text-slate-400 text-sm">
         안내 제목·대상·메시지·포함 검사를 수정할 수 있습니다. 검사코드는 변경되지 않습니다.

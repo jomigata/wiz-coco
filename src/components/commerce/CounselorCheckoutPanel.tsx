@@ -70,8 +70,8 @@ export default function CounselorCheckoutPanel({ onSuccess }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900/80 p-6 mb-6">
-      <h2 className="text-lg font-semibold text-white mb-2">크레딧 구매 · 구독</h2>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 mb-6">
+      <h2 className="text-lg font-semibold text-slate-900 mb-2">크레딧 구매 · 구독</h2>
       <p className="text-slate-400 text-sm mb-4">
         결제 완료 시 검사 크레딧이 자동 충전됩니다. 구독 상품은 월간 크레딧 + 초과 건당 요금
         정책이 적용됩니다.
@@ -90,7 +90,7 @@ export default function CounselorCheckoutPanel({ onSuccess }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {products.map((p) => (
-          <div key={p.id} className="rounded-lg border border-white/10 p-4 bg-white/5">
+          <div key={p.id} className="rounded-lg border border-slate-200 p-4 bg-white/5">
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-medium text-white">{p.name}</h3>
               <span className="text-blue-300 text-sm font-semibold">

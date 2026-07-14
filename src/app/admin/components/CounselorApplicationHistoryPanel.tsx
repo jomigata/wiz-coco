@@ -19,7 +19,7 @@ export default function CounselorApplicationHistoryPanel({
   const past = history.slice(1);
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
       <p className="text-xs font-medium text-slate-400 mb-2">
         이전 신청 내역 ({past.length}건) — 최종 결과는 최신 신청 기준
       </p>
@@ -27,7 +27,7 @@ export default function CounselorApplicationHistoryPanel({
         {past.map((item) => (
           <li
             key={item.id}
-            className="flex flex-wrap items-start justify-between gap-2 rounded-md border border-white/5 bg-black/20 px-2 py-1.5 text-xs"
+            className="flex flex-wrap items-start justify-between gap-2 rounded-md border border-slate-100 bg-black/20 px-2 py-1.5 text-xs"
           >
             <div className="min-w-0">
               <p className="text-slate-300">

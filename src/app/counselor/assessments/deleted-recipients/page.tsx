@@ -117,7 +117,7 @@ export default function DeletedRecipientsPage() {
         <AuthLink href={backHref} className="text-slate-400 hover:text-white text-sm">
           {backLabel}
         </AuthLink>
-        <h1 className="text-2xl font-bold text-white">삭제된 검사자 목록</h1>
+        <h1 className="text-2xl font-bold text-slate-900">삭제된 검사자 목록</h1>
       </div>
 
       <p className="text-sm text-slate-400">

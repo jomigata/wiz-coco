@@ -10,7 +10,7 @@ export default function JoinProfileRedirectPage() {
     router.replace('/portal/login/');
   }, [router]);
   return (
-    <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
+    <div className="min-h-screen bg-[#f8fafc] pt-24 flex justify-center">
       <p className="text-slate-400">검사시작 화면으로 이동 중…</p>
     </div>
   );

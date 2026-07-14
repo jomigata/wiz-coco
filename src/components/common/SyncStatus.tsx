@@ -117,7 +117,7 @@ export default function SyncStatus({ className = '' }: SyncStatusProps) {
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 ${getStatusColor()}`}>
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-slate-200 ${getStatusColor()}`}>
         <span className="text-sm">{getStatusIcon()}</span>
         <span className="text-xs font-medium">{getStatusText()}</span>
       </div>

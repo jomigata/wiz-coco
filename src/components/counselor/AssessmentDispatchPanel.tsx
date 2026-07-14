@@ -600,7 +600,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 px-4 py-3">
-          <h2 className="text-lg font-semibold text-white">발송 및 검사 현황</h2>
+          <h2 className="text-lg font-semibold text-slate-900">발송 및 검사 현황</h2>
           <div className="flex flex-wrap items-center gap-2">
             <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
             <button
@@ -795,7 +795,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20 align-top"
                         >
                           {tests.length === 0 ? (
-                            <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2">
+                            <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-white px-3 py-2">
                               등록된 검사 항목이 없습니다.
                             </p>
                           ) : (
@@ -946,7 +946,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-slate-600 border-t-cyan-400 animate-spin"
               aria-hidden="true"
             />
-            <h3 id="dispatch-progress-title" className="text-lg font-semibold text-white">
+            <h3 id="dispatch-progress-title" className="text-lg font-semibold text-slate-900">
               발송 진행 중…
             </h3>
             <p className="mt-2 text-sm text-slate-300">
@@ -991,7 +991,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 <span className="text-2xl">✓</span>
               )}
             </div>
-            <h3 id="dispatch-complete-title" className="text-lg font-semibold text-white">
+            <h3 id="dispatch-complete-title" className="text-lg font-semibold text-slate-900">
               {dispatchComplete.error
                 ? dispatchComplete.kind === 'delete'
                   ? '삭제 실패'
@@ -1033,7 +1033,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-slate-600">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-slate-900">
                 {confirmAction === 'remind'
                   ? '미실시 알림통보 확인'
                   : confirmAction === 'delete'
@@ -1204,7 +1204,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-slate-600 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">검사 결과 상세</h3>
+              <h3 className="text-lg font-semibold text-slate-900">검사 결과 상세</h3>
               <button
                 type="button"
                 onClick={closeModal}
@@ -1229,7 +1229,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   {detail.resultData && Object.keys(detail.resultData).length > 0 && (
                     <div>
                       <h4 className="text-slate-400 text-sm font-medium mb-2">채점/요약</h4>
-                      <pre className="bg-slate-900/80 rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
+                      <pre className="bg-white rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
                         {JSON.stringify(detail.resultData, null, 2)}
                       </pre>
                     </div>
@@ -1237,7 +1237,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   {detail.responses != null && (
                     <div>
                       <h4 className="text-slate-400 text-sm font-medium mb-2">응답</h4>
-                      <pre className="bg-slate-900/80 rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
+                      <pre className="bg-white rounded-lg p-3 text-slate-300 text-sm overflow-x-auto whitespace-pre-wrap">
                         {JSON.stringify(detail.responses, null, 2)}
                       </pre>
                     </div>

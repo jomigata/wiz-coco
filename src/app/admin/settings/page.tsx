@@ -156,7 +156,7 @@ export default function AdminSettingsPage() {
         </motion.div>
 
         {/* 탭 메뉴 */}
-        <div className="mb-6 flex border-b border-white/10">
+        <div className="mb-6 flex border-b border-slate-200">
           <button
             className={`px-4 py-2 font-medium text-sm focus:outline-none ${
               settingsTab === 'roles' 
@@ -196,8 +196,8 @@ export default function AdminSettingsPage() {
             transition={{ duration: 0.5 }}
           >
             {/* 사용자 역할 관리 섹션 */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 mb-8">
-              <div className="p-5 border-b border-white/10 flex justify-between items-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 mb-8">
+              <div className="p-5 border-b border-slate-200 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white flex items-center">
                   <ShieldCheckIcon className="h-6 w-6 mr-2 text-blue-300" />
                   사용자 역할 관리
@@ -210,7 +210,7 @@ export default function AdminSettingsPage() {
                     placeholder="사용자 검색..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-4 py-2 bg-white/5 border border-slate-200 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <svg
                     className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
@@ -252,7 +252,7 @@ export default function AdminSettingsPage() {
                 ) : (
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-white/5 border-b border-white/10 text-left">
+                      <tr className="bg-white/5 border-b border-slate-200 text-left">
                         <th 
                           className="p-4 font-medium text-gray-300 cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('name')}
@@ -323,7 +323,7 @@ export default function AdminSettingsPage() {
                     </thead>
                     <tbody>
                       {filteredUsers.map(user => (
-                        <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
+                        <tr key={user.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="p-4 text-white">{user.name}</td>
                           <td className="p-4 text-white">{user.email}</td>
                           <td className="p-4">
@@ -370,7 +370,7 @@ export default function AdminSettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6"
+            className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6"
           >
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
               <KeyIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -380,7 +380,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white/5 p-5 rounded-lg">
                 <h3 className="text-lg font-medium text-white mb-3">API 키 관리</h3>
-                <p className="text-sm text-blue-200 mb-4">시스템 API 키를 생성하고 관리합니다.</p>
+                <p className="text-sm text-slate-600 mb-4">시스템 API 키를 생성하고 관리합니다.</p>
                 <div className="flex items-center mb-4 bg-white/5 p-3 rounded">
                   <input
                     type="text"
@@ -402,13 +402,13 @@ export default function AdminSettingsPage() {
               
               <div className="bg-white/5 p-5 rounded-lg">
                 <h3 className="text-lg font-medium text-white mb-3">이메일 서비스 설정</h3>
-                <p className="text-sm text-blue-200 mb-4">이메일 발송 서비스 설정을 관리합니다.</p>
+                <p className="text-sm text-slate-600 mb-4">이메일 발송 서비스 설정을 관리합니다.</p>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">발신자 이메일</label>
                     <input
                       type="email"
-                      className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-white/10 border border-slate-200 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="noreply@example.com"
                     />
                   </div>
@@ -416,7 +416,7 @@ export default function AdminSettingsPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-1">SMTP 서버</label>
                     <input
                       type="text"
-                      className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-white/10 border border-slate-200 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="smtp.example.com"
                     />
                   </div>
@@ -431,7 +431,7 @@ export default function AdminSettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6"
+            className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6"
           >
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
               <ArrowPathIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -451,7 +451,7 @@ export default function AdminSettingsPage() {
                     ></label>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm">매일 자정에 자동으로 데이터베이스를 백업합니다.</p>
+                <p className="text-slate-600 text-sm">매일 자정에 자동으로 데이터베이스를 백업합니다.</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

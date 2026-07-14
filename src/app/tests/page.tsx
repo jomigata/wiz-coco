@@ -348,7 +348,7 @@ function TestsContent() {
     : allTestCategories.filter(test => test.category === selectedCategory);
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
+    <div className="bg-[#f8fafc] p-6 min-h-full">
         <div className="max-w-7xl mx-auto">
           {/* 페이지 헤더 */}
           <div className="mb-8">
@@ -357,8 +357,8 @@ function TestsContent() {
               🧠
             </div>
                 <div>
-              <h1 className="text-3xl font-bold text-white">AI CoCo 심리검사 대시보드</h1>
-              <p className="text-gray-300 text-lg mt-2">AI 기반 심리분석 솔루션으로 내담자를 지원하세요</p>
+              <h1 className="text-3xl font-bold text-slate-900">AI CoCo 심리검사 대시보드</h1>
+              <p className="text-slate-600 text-lg mt-2">AI 기반 심리분석 솔루션으로 내담자를 지원하세요</p>
             </div>
           </div>
 
@@ -383,7 +383,7 @@ function TestsContent() {
 
         {/* 통계 요약 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-cyan-400 text-lg">📊</span>
@@ -394,7 +394,7 @@ function TestsContent() {
               </div>
                     </div>
                   </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-green-400 text-lg">⚡</span>
@@ -405,7 +405,7 @@ function TestsContent() {
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-yellow-400 text-lg">⭐</span>
@@ -416,7 +416,7 @@ function TestsContent() {
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-slate-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-red-400 text-lg">🔥</span>
@@ -433,24 +433,24 @@ function TestsContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredTests.map((test) => (
             <Link key={test.id} href={test.href} className="block">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
+              <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col h-full cursor-pointer">
                 {/* 카드 헤더 */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-12 h-12 bg-gradient-to-r ${test.color} rounded-lg flex items-center justify-center text-lg flex-shrink-0`}>
                     {test.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-white leading-tight">{test.title}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 leading-tight">{test.title}</h3>
                     <p className="text-xs text-gray-400">{test.categoryName}</p>
                   </div>
                 </div>
 
                 {/* 카드 내용 */}
                 <div className="flex-1 flex flex-col">
-                  <p className="text-gray-300 text-sm mb-3 leading-relaxed">{test.description}</p>
+                  <p className="text-slate-600 text-sm mb-3 leading-relaxed">{test.description}</p>
                   
                   {/* 고민 예시 - 축약된 형태 */}
-                  <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
+                  <div className="bg-slate-100 rounded-lg p-3 mb-4 flex-1">
                     <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
                       <span>💭</span> 주요 고민
                     </h4>
@@ -491,10 +491,10 @@ function TestsContent() {
         </div>
 
         {/* 하단 안내 */}
-        <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+        <div className="mt-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-white mb-2">🧠 AI CoCo 심리검사 안내</h3>
-            <p className="text-gray-300 text-sm">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">🧠 AI CoCo 심리검사 안내</h3>
+            <p className="text-slate-600 text-sm">
               전문 상담사가 설계한 과학적 심리검사로 내담자의 마음을 깊이 있게 이해하고 맞춤형 상담을 제공하세요.
             </p>
           </div>
@@ -507,14 +507,14 @@ function TestsContent() {
 export default function PsychologyTestsPage() {
   return (
     <Suspense fallback={
-      <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
+      <div className="bg-[#f8fafc] p-6 min-h-full">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-3xl mx-auto mb-4">
                 🧠
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">로딩 중...</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">로딩 중...</h2>
               <p className="text-gray-300">심리검사 목록을 불러오고 있습니다.</p>
             </div>
           </div>

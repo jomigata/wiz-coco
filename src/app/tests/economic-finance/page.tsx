@@ -44,7 +44,7 @@ export default function EconomicFinancePage() {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-full">
+    <div className="bg-[#f8fafc] p-6 min-h-full">
       <div className="max-w-5xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
@@ -53,20 +53,20 @@ export default function EconomicFinancePage() {
               💰
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">경제 및 재정 문제</h1>
-              <p className="text-gray-300 text-lg mt-2">재정 스트레스, 부채 문제, 소비 패턴 등 경제적 어려움을 심리적 관점에서 해결합니다.</p>
+              <h1 className="text-3xl font-bold text-slate-900">경제 및 재정 문제</h1>
+              <p className="text-slate-600 text-lg mt-2">재정 스트레스, 부채 문제, 소비 패턴 등 경제적 어려움을 심리적 관점에서 해결합니다.</p>
             </div>
           </div>
         </div>
 
         {/* 이론적 배경 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 mb-8">
+        <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
                 <span>🧠</span> 기본 심리 이론
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed">
+              <p className="text-slate-600 text-sm leading-relaxed">
                 행동 경제학, 사회비교 이론, 스트레스 이론, 학습된 무기력 이론을 바탕으로 합니다.
               </p>
             </div>
@@ -74,7 +74,7 @@ export default function EconomicFinancePage() {
               <h3 className="text-lg font-semibold text-green-400 mb-3 flex items-center gap-2">
                 <span>📋</span> 연관 기존 검사
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed">
+              <p className="text-slate-600 text-sm leading-relaxed">
                 재정 스트레스 척도, 소비성향 검사, 투자자 성향 분석, 충동성 척도 등과 연계됩니다.
               </p>
             </div>
@@ -84,23 +84,23 @@ export default function EconomicFinancePage() {
         {/* 검사 목록 - 카드 그리드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {testItems.map((item, index) => (
-            <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 hover:bg-white/15 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
+            <div key={index} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
               {/* 카드 헤더 */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                <div className="w-10 h-10 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-lg flex-shrink-0">
                   {item.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white leading-tight">{item.name}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 leading-tight">{item.name}</h3>
                 </div>
               </div>
 
               {/* 카드 내용 */}
               <div className="flex-1 flex flex-col">
-                <p className="text-gray-300 text-sm mb-3 leading-relaxed">{item.desc}</p>
+                <p className="text-slate-600 text-sm mb-3 leading-relaxed">{item.desc}</p>
                 
                 {/* 고민 예시 - 축약된 형태 */}
-                <div className="bg-black/20 rounded-lg p-3 mb-4 flex-1">
+                <div className="bg-slate-100 rounded-lg p-3 mb-4 flex-1">
                   <h4 className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1">
                     <span>💭</span> 주요 고민
                   </h4>
@@ -145,10 +145,10 @@ export default function EconomicFinancePage() {
         </div>
 
         {/* 하단 안내 */}
-        <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+        <div className="mt-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-white mb-2">💰 경제적 웰빙 안내</h3>
-            <p className="text-gray-300 text-sm">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">💰 경제적 웰빙 안내</h3>
+            <p className="text-slate-600 text-sm">
               경제적 문제는 심리적 스트레스와 밀접한 관련이 있습니다. 전문가의 도움을 받아 건강한 재정 관리 습관을 기르세요.
             </p>
           </div>

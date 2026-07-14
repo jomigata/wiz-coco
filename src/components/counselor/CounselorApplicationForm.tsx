@@ -25,7 +25,7 @@ import type { CounselorAttachmentItem } from '@/types/counselorApplication';
 import CounselorApplicationAttachmentsField from '@/app/mypage/settings/components/CounselorApplicationAttachmentsField';
 
 const inputCls =
-  'w-full rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40';
+  'w-full rounded-xl border border-slate-200 bg-slate-900/70 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40';
 const labelCls = 'block text-xs font-medium text-slate-400 mb-1.5';
 
 type Props = {
@@ -169,7 +169,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
         <p className="mt-2 text-sm text-slate-400">{statusMessage(applicationStatus, counselor)}</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl shadow-black/20 backdrop-blur-sm">
+      <div className="rounded-2xl border border-slate-200 bg-slate-900/60 p-5 sm:p-6 shadow-2xl shadow-black/20 backdrop-blur-sm">
         {pending && (
           <div className="mb-4 rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
             <span className="font-semibold text-amber-50">승인신청중</span> — 검토가 끝날 때까지 수정할 수 없습니다.
@@ -177,7 +177,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
         )}
 
         {adminReviewNotes && (pending || applicationStatus === 'rejected') && (
-          <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200">
+          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-200">
             <p className="text-xs text-slate-500 mb-1">관리자 메모</p>
             <p className="whitespace-pre-wrap">{adminReviewNotes}</p>
           </div>
@@ -301,7 +301,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
                       className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                         active
                           ? 'bg-sky-500/25 text-sky-100 border border-sky-400/40'
-                          : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
+                          : 'bg-white/5 text-slate-400 border border-slate-200 hover:border-slate-200'
                       } ${readOnly ? 'opacity-70 cursor-default' : ''}`}
                     >
                       {item}
@@ -345,7 +345,7 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
       </div>
 
       <p className="mt-4 text-center text-xs text-slate-500">
-        <Link href="/mypage/settings/" className="text-sky-400 hover:text-sky-300">
+        <Link href="/mypage/settings/" className="text-blue-600 hover:text-blue-700">
           마이페이지 설정
         </Link>
         {' · '}

@@ -19,11 +19,11 @@ export default function RealtimeMonitoring() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
+    <div className="min-h-screen bg-[#f8fafc] p-6">
       <div className="max-w-7xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">실시간 모니터링</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">실시간 모니터링</h1>
           <p className="text-gray-300">활성 사용자와 상담 진행 상황을 실시간으로 확인하세요</p>
         </div>
 
@@ -32,7 +32,7 @@ export default function RealtimeMonitoring() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">현재 활성 사용자</p>
+                <p className="text-slate-600 text-sm">현재 활성 사용자</p>
                 <p className="text-3xl font-bold text-green-400">{activeUsers}</p>
                 <p className="text-green-400 text-sm">실시간 업데이트</p>
               </div>
@@ -45,7 +45,7 @@ export default function RealtimeMonitoring() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">진행 중인 상담</p>
+                <p className="text-slate-600 text-sm">진행 중인 상담</p>
                 <p className="text-3xl font-bold text-blue-400">{ongoingSessions}</p>
                 <p className="text-blue-400 text-sm">실시간 업데이트</p>
               </div>
@@ -58,7 +58,7 @@ export default function RealtimeMonitoring() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">시스템 부하</p>
+                <p className="text-slate-600 text-sm">시스템 부하</p>
                 <p className="text-3xl font-bold text-yellow-400">{systemLoad}%</p>
                 <p className="text-yellow-400 text-sm">정상 범위</p>
               </div>
@@ -93,7 +93,7 @@ export default function RealtimeMonitoring() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-gray-300 text-sm">{user.status}</p>
+                    <p className="text-slate-600 text-sm">{user.status}</p>
                     <p className="text-gray-400 text-xs">{user.time}</p>
                   </div>
                 </div>
@@ -130,19 +130,19 @@ export default function RealtimeMonitoring() {
           <h3 className="text-xl font-semibold text-white mb-4">시스템 상태</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-              <p className="text-gray-300 text-sm">서버 상태</p>
+              <p className="text-slate-600 text-sm">서버 상태</p>
               <p className="text-green-400 font-bold">정상</p>
             </div>
             <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-              <p className="text-gray-300 text-sm">데이터베이스</p>
+              <p className="text-slate-600 text-sm">데이터베이스</p>
               <p className="text-green-400 font-bold">정상</p>
             </div>
             <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-              <p className="text-gray-300 text-sm">API 응답시간</p>
+              <p className="text-slate-600 text-sm">API 응답시간</p>
               <p className="text-green-400 font-bold">120ms</p>
             </div>
             <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-              <p className="text-gray-300 text-sm">메모리 사용률</p>
+              <p className="text-slate-600 text-sm">메모리 사용률</p>
               <p className="text-yellow-400 font-bold">67%</p>
             </div>
           </div>

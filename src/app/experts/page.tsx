@@ -3,15 +3,15 @@
 import React from 'react';export default function ExpertsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900"><div className="pt-24 px-4 pb-12">
-        <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-white/20">
-          <h1 className="text-3xl font-bold text-white mb-6 text-center">전문가 소개</h1>
+        <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-slate-200">
+          <h1 className="text-3xl font-bold text-slate-900 mb-6 text-center">전문가 소개</h1>
           <p className="text-blue-200 mb-8 text-center">
             현재 이 페이지는 개발 중입니다. 곧 심리케어 전문가들의 정보가 업데이트될 예정입니다.
           </p>
           
           <div className="flex flex-col gap-8">
             {/* 임시 전문가 카드 예시 */}
-            <div className="bg-white/10 p-6 rounded-lg border border-white/20">
+            <div className="bg-white/10 p-6 rounded-lg border border-slate-200">
               <div className="text-center mb-4">
                 <div className="w-24 h-24 bg-blue-400/20 rounded-full mx-auto mb-3 flex items-center justify-center">
                   <span className="text-3xl text-blue-300">👨‍⚕️</span>
@@ -24,7 +24,7 @@ import React from 'react';export default function ExpertsPage() {
               </p>
             </div>
             
-            <div className="bg-white/10 p-6 rounded-lg border border-white/20">
+            <div className="bg-white/10 p-6 rounded-lg border border-slate-200">
               <div className="text-center mb-4">
                 <div className="w-24 h-24 bg-purple-400/20 rounded-full mx-auto mb-3 flex items-center justify-center">
                   <span className="text-3xl text-purple-300">👩‍⚕️</span>

@@ -164,7 +164,7 @@ export default function MbtiAnalysisPage() {
         </motion.div>
         
         {/* 필터 섹션 */}
-        <div className="mb-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg border border-white/10">
+        <div className="mb-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg border border-slate-200">
           <div className="flex items-center">
             <div>
               <label htmlFor="mbtiType" className="block text-sm font-medium text-gray-300 mb-1">
@@ -206,7 +206,7 @@ export default function MbtiAnalysisPage() {
               <>
                 <motion.div
                   variants={itemVariants}
-                  className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5 mb-8"
+                  className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5 mb-8"
                 >
                   <h2 className="text-xl font-semibold text-white mb-4">MBTI 유형별 분포</h2>
                   <div className="h-96">
@@ -237,7 +237,7 @@ export default function MbtiAnalysisPage() {
                   {/* MBTI 특성 분포 차트 */}
                   <motion.div
                     variants={itemVariants}
-                    className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                    className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
                   >
                     <h2 className="text-xl font-semibold text-white mb-4">MBTI 특성 분포</h2>
                     <div className="h-72">
@@ -264,7 +264,7 @@ export default function MbtiAnalysisPage() {
                   {/* 주요 유형 추세 차트 */}
                   <motion.div
                     variants={itemVariants}
-                    className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                    className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
                   >
                     <h2 className="text-xl font-semibold text-white mb-4">주요 유형 추세</h2>
                     <div className="h-72">
@@ -295,7 +295,7 @@ export default function MbtiAnalysisPage() {
                 {/* 척도별 분석 차트 (레이더 차트) */}
                 <motion.div
                   variants={itemVariants}
-                  className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                  className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
                 >
                   <h2 className="text-xl font-semibold text-white mb-4">MBTI 특성 척도 분포</h2>
                   <div className="h-96">
@@ -324,9 +324,9 @@ export default function MbtiAnalysisPage() {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8"
               >
                 {/* 유형 설명 카드 */}
-                <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5">
-                  <h2 className="text-2xl font-bold text-white mb-2">{detailData.type} 유형</h2>
-                  <p className="text-blue-200 mb-4">전체 검사 중 {detailData.ratio}% 차지 ({detailData.count}명)</p>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">{detailData.type} 유형</h2>
+                  <p className="text-slate-600 mb-4">전체 검사 중 {detailData.ratio}% 차지 ({detailData.count}명)</p>
                   <div className="text-white mb-6">
                     <p className="mb-4">{detailData.description}</p>
                     
@@ -354,7 +354,7 @@ export default function MbtiAnalysisPage() {
                 </div>
                 
                 {/* 월별 추세 차트 */}
-                <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5">
                   <h2 className="text-xl font-semibold text-white mb-4">{detailData.type} 유형 월별 추세</h2>
                   <div className="h-72 mb-8">
                     <ResponsiveContainer width="100%" height="100%">
@@ -385,19 +385,19 @@ export default function MbtiAnalysisPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/5 rounded-lg p-4">
                       <h3 className="text-lg font-medium text-blue-300 mb-2">검사 평균 시간</h3>
-                      <p className="text-2xl font-bold text-white">12분 35초</p>
+                      <p className="text-2xl font-bold text-slate-900">12분 35초</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4">
                       <h3 className="text-lg font-medium text-blue-300 mb-2">평균 연령</h3>
-                      <p className="text-2xl font-bold text-white">28.5세</p>
+                      <p className="text-2xl font-bold text-slate-900">28.5세</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4">
                       <h3 className="text-lg font-medium text-blue-300 mb-2">성별 비율</h3>
-                      <p className="text-2xl font-bold text-white">남성 45% / 여성 55%</p>
+                      <p className="text-2xl font-bold text-slate-900">남성 45% / 여성 55%</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4">
                       <h3 className="text-lg font-medium text-blue-300 mb-2">검사 완료율</h3>
-                      <p className="text-2xl font-bold text-white">93.2%</p>
+                      <p className="text-2xl font-bold text-slate-900">93.2%</p>
                     </div>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* 소식 받기 */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">뉴스레터 구독</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">뉴스레터 구독</h3>
             <p className="text-sm mb-4">심리 건강 정보와 프로그램 소식을 가장 먼저 받아보세요.</p>
             <div className="flex">
               <input 
@@ -19,7 +19,7 @@ export default function Footer() {
           
           {/* 주요 링크 */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">바로가기</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">바로가기</h3>
             <ul className="text-sm space-y-2">
               <li><a href="#" className="hover:text-white transition-colors">심리검사</a></li>
               <li><a href="#" className="hover:text-white transition-colors">상담 프로그램</a></li>
@@ -31,7 +31,7 @@ export default function Footer() {
           
           {/* 회사 정보 */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">심리케어</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">심리케어</h3>
             <ul className="text-sm space-y-2">
               <li><a href="#" className="hover:text-white transition-colors">회사소개</a></li>
               <li><a href="#" className="hover:text-white transition-colors">이용약관</a></li>
@@ -42,7 +42,7 @@ export default function Footer() {
           
           {/* 소셜 미디어 */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">소셜 미디어</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">소셜 미디어</h3>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" /></svg>

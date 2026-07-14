@@ -23,7 +23,7 @@ function AdminSetRoleLoading() {
     >
       <div className="text-center bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-700">
         <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-xl text-blue-200">로딩 중입니다...</p>
+        <p className="text-xl text-slate-600">로딩 중입니다...</p>
       </div>
     </motion.div>
   );

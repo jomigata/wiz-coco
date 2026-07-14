@@ -215,7 +215,7 @@ export default function TestRunnerPage() {
 
   if (!code || !isValidAccessCodeInput(code) || !testId) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-[#f8fafc]">
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">잘못된 접근입니다.</p>
@@ -230,7 +230,7 @@ export default function TestRunnerPage() {
 
   if (accessCheckLoading || (editResultId && loadingResult)) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-[#f8fafc]">
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-slate-300">
@@ -244,7 +244,7 @@ export default function TestRunnerPage() {
 
   if (accessCheckError) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-[#f8fafc]">
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-red-400 mb-4">{accessCheckError}</p>
@@ -261,7 +261,7 @@ export default function TestRunnerPage() {
   const progress = questions.length ? ((currentIndex + 1) / questions.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
           <div className="mb-4">

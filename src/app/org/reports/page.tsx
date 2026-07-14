@@ -54,7 +54,7 @@ function ReportContent() {
           ['진행 중', report.inProgressCount],
           ['완료율', `${report.completionRatePercent}%`],
         ].map(([label, val]) => (
-          <div key={String(label)} className="rounded-lg border border-white/10 p-4 bg-white/5">
+          <div key={String(label)} className="rounded-lg border border-slate-200 p-4 bg-white/5">
             <p className="text-xs text-slate-400">{label}</p>
             <p className="text-xl font-semibold text-white">{val}</p>
           </div>
@@ -65,7 +65,7 @@ function ReportContent() {
         <h3 className="text-white font-medium mb-2">검사별 완료 (익명 집계)</h3>
         <ul className="space-y-2 text-sm text-slate-300">
           {report.byTest.map((t) => (
-            <li key={t.testId} className="flex justify-between border-b border-white/5 pb-2">
+            <li key={t.testId} className="flex justify-between border-b border-slate-100 pb-2">
               <span>{t.name}</span>
               <span>{t.completedCount}건</span>
             </li>
@@ -109,7 +109,7 @@ export default function OrgReportsPage() {
         <Link href="/org/dashboard/" className="text-blue-400 text-sm hover:underline">
           ← 대시보드
         </Link>
-        <h1 className="text-2xl font-bold text-white mt-4 mb-6">그룹 통계 리포트</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mt-4 mb-6">그룹 통계 리포트</h1>
         <Suspense fallback={<AuthLoadingState message="불러오는 중…" />}>
           <ReportContent />
         </Suspense>

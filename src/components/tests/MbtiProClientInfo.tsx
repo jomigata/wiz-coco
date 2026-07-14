@@ -335,7 +335,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
-          <h1 className="text-3xl font-bold text-white mb-4">
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">
             {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
           </h1>
           <p className="text-emerald-300 max-w-lg mx-auto">
@@ -743,7 +743,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                   <label htmlFor="privacy" className="font-medium text-emerald-200 cursor-pointer select-none">
                     개인정보 활용 동의 <span className="text-red-400">*</span>
                   </label>
-                  <p className="text-emerald-300/80 mt-1 cursor-pointer select-none">
+                  <p className="text-emerald-600 mt-1 cursor-pointer select-none">
                     검사 결과 분석 및 상담을 위한 개인정보 수집·이용에 동의합니다.
                   </p>
                 </div>

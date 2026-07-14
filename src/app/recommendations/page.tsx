@@ -120,7 +120,7 @@ export default function RecommendationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#f8fafc]">
       
 {/* 메인 콘텐츠 영역 */}
       <div className="pt-16">

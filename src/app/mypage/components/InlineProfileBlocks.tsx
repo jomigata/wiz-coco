@@ -103,7 +103,7 @@ export function applySavePatch(base: UserData, data: Record<string, unknown>): U
 }
 
 // ─── 공통 스타일 ────────────────────────────────────────────────────────────
-const fieldCls = 'w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm';
+const fieldCls = 'w-full bg-white/10 border border-slate-200 rounded-lg px-3 py-2 text-blue-100 placeholder-blue-300/40 focus:outline-none focus:border-purple-400/60 focus:bg-white/15 transition-colors text-sm';
 const labelCls = 'block text-blue-200 text-xs mb-1';
 const rowCls = 'flex justify-between gap-4 items-baseline';
 const keySpan = 'text-blue-200 shrink-0 text-sm';
@@ -158,7 +158,7 @@ function BlockHeader({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium text-blue-300 bg-white/5 border border-white/15 hover:bg-white/10 disabled:opacity-50 transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-blue-300 bg-white/5 border border-slate-200 hover:bg-slate-100 disabled:opacity-50 transition-colors"
           >
             취소
           </button>
@@ -326,7 +326,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
 
   // ─── 프로필 요약 블록 ──────────────────────────────────────────────────────
   const profileBlock = (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
       <BlockHeader
         icon={<FaUser className="w-4 h-4" />}
         title="프로필 요약"
@@ -423,7 +423,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
 
   // ─── 개인 기본 정보 블록 ───────────────────────────────────────────────────
   const personalBlock = (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
       <BlockHeader
         icon={<FaHeart className="w-4 h-4" />}
         title="개인 기본 정보"
@@ -515,7 +515,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
 
   // ─── 상담/운영 정보 블록 ───────────────────────────────────────────────────
   const orgBlock = counselor ? (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
       <BlockHeader
         icon={<FaBuilding className="w-4 h-4" />}
         title="상담/운영 정보"
@@ -588,7 +588,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
 
   // ─── 리포트/공유 설정 블록 ────────────────────────────────────────────────
   const reportBlock = counselor ? (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
       <BlockHeader
         icon={<FaComment className="w-4 h-4" />}
         title="리포트/공유 설정"
@@ -672,7 +672,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
           <div className={rowCls}><span className={keySpan}>주요 대상/활용</span><span className={valSpan}>{multilineText(displayUser.clientFocus)}</span></div>
           <div className={rowCls}><span className={keySpan}>기관 정보 리포트 노출</span><span className={valSpan}>{boolLabel(displayUser.shareOrganizationInReport, '노출', '비노출')}</span></div>
           <div className={rowCls}><span className={keySpan}>연락처 리포트 노출</span><span className={valSpan}>{boolLabel(displayUser.shareContactInReport, '노출', '비노출')}</span></div>
-          <div className="pt-2 border-t border-white/10">
+          <div className="pt-2 border-t border-slate-200">
             <div className="text-blue-200 text-xs mb-1.5">리포트 서명</div>
             <div className="text-blue-100 text-sm whitespace-pre-wrap leading-relaxed">
               {multilineText(displayUser.reportSignature, '설정된 서명이 없습니다.')}
@@ -686,7 +686,7 @@ export default function InlineProfileBlocks({ user, firebaseUserRole, onUpdate }
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       {/* 계정 정보 (읽기 전용) */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+      <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
         <h3 className="text-base font-semibold text-blue-100 flex items-center gap-2 mb-4">
           <FaKey className="w-4 h-4 text-purple-400" />
           계정 정보

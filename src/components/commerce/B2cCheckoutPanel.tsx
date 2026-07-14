@@ -155,7 +155,7 @@ export default function B2cCheckoutPanel() {
             <div
               key={p.id}
               className={`rounded-xl border p-5 ${
-                highlighted ? 'border-violet-400/50 bg-violet-950/30' : 'border-white/10 bg-white/5'
+                highlighted ? 'border-violet-400/50 bg-violet-950/30' : 'border-slate-200 bg-white/5'
               }`}
             >
               <h3 className="font-semibold text-white mb-1">{p.name}</h3>

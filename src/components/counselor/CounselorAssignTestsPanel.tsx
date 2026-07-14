@@ -194,14 +194,14 @@ export default function CounselorAssignTestsPanel() {
           </AuthLink>
           <AuthLink
             href="/counselor/clients"
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
           >
             내담자 목록
           </AuthLink>
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
           >
             새로고침
           </button>
@@ -209,26 +209,26 @@ export default function CounselorAssignTestsPanel() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-medium text-slate-200">신규 내담자 + 검사코드</h3>
           <p className="mt-1 text-xs text-slate-500">
             새 검사코드를 만들면서 내담자 나의코드·PIN을 함께 발급합니다.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
-            className="mt-3 inline-flex text-sm text-sky-400 hover:text-sky-300"
+            className="mt-3 inline-flex text-sm text-blue-600 hover:text-blue-700"
           >
             검사코드 만들기 →
           </AuthLink>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-medium text-slate-200">기존 검사코드에 내담자 추가</h3>
           <p className="mt-1 text-xs text-slate-500">
             이미 만든 검사코드에 수신자를 추가할 때는 만들기 화면에서 기존 코드를 선택하세요.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
-            className="mt-3 inline-flex text-sm text-sky-400 hover:text-sky-300"
+            className="mt-3 inline-flex text-sm text-blue-600 hover:text-blue-700"
           >
             기존 코드에 추가 →
           </AuthLink>
@@ -243,19 +243,19 @@ export default function CounselorAssignTestsPanel() {
             if (e.key === 'Enter') void load();
           }}
           placeholder="이름·이메일·나의코드 검색"
-          className="w-full max-w-sm rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+          className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
         />
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
         >
           검색
         </button>
         <select
           value={testStatusFilter}
           onChange={(e) => setTestStatusFilter(e.target.value as TestStatusFilter)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="all">전체 진행 상태</option>
           <option value="not_started">미시작</option>
@@ -265,7 +265,7 @@ export default function CounselorAssignTestsPanel() {
         <select
           value={portalStatusFilter}
           onChange={(e) => setPortalStatusFilter(e.target.value as PortalStatusFilter)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="active">활성 내담자</option>
           <option value="archived">보관(삭제)됨</option>
@@ -274,7 +274,7 @@ export default function CounselorAssignTestsPanel() {
         <select
           value={cohortFilter}
           onChange={(e) => setCohortFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="">전체 그룹</option>
           {cohorts.map((c) => (
@@ -286,7 +286,7 @@ export default function CounselorAssignTestsPanel() {
         <select
           value={assessmentFilter}
           onChange={(e) => setAssessmentFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="">전체 검사코드</option>
           {assessments.map((a) => (
@@ -306,7 +306,7 @@ export default function CounselorAssignTestsPanel() {
       {loading ? (
         <p className="py-12 text-center text-sm text-slate-500">검사 할당 목록을 불러오는 중…</p>
       ) : displayItems.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 검사 할당이 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
             검사코드를 발급하면 내담자별 검사 항목이 여기에 표시됩니다.
@@ -321,7 +321,7 @@ export default function CounselorAssignTestsPanel() {
       ) : (
         <>
           {selectablePortals.length > 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-slate-400">추가 검사 push 대상 내담자 선택</p>
                 <button
@@ -333,7 +333,7 @@ export default function CounselorAssignTestsPanel() {
                         : new Set(selectablePortals.map((p) => p.portalId)),
                     )
                   }
-                  className="text-xs text-sky-400 hover:text-sky-300"
+                  className="text-xs text-blue-600 hover:text-blue-700"
                 >
                   {selectedPortalIds.size === selectablePortals.length ? '전체 해제' : '전체 선택'}
                 </button>
@@ -349,7 +349,7 @@ export default function CounselorAssignTestsPanel() {
                       className={`rounded-full border px-3 py-1 text-xs ${
                         selected
                           ? 'border-sky-500/50 bg-sky-500/20 text-sky-200'
-                          : 'border-white/15 text-slate-400 hover:bg-white/5'
+                          : 'border-slate-200 text-slate-400 hover:bg-slate-50'
                       }`}
                     >
                       {p.displayName}
@@ -371,10 +371,10 @@ export default function CounselorAssignTestsPanel() {
             />
           ) : null}
 
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="min-w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3 font-medium">내담자</th>
                 <th className="px-4 py-3 font-medium">나의코드</th>
                 <th className="px-4 py-3 font-medium">검사코드</th>
@@ -389,7 +389,7 @@ export default function CounselorAssignTestsPanel() {
                 const badge = statusLabel(row.status);
                 const rowKey = `${row.portalId}:${row.assessmentId}:${row.testId}`;
                 return (
-                  <tr key={rowKey} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
+                  <tr key={rowKey} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <Link
                         href={counselorClientDetailHref(row.portalId)}
@@ -421,11 +421,11 @@ export default function CounselorAssignTestsPanel() {
                       <div className="flex flex-wrap gap-2 text-xs">
                         <Link
                           href={counselorClientDetailHref(row.portalId)}
-                          className="text-sky-400 hover:text-sky-300"
+                          className="text-blue-600 hover:text-blue-700"
                         >
                           상세
                         </Link>
-                        <Link href={progressHref(row.assessmentId)} className="text-sky-400 hover:text-sky-300">
+                        <Link href={progressHref(row.assessmentId)} className="text-blue-600 hover:text-blue-700">
                           진행현황
                         </Link>
                       </div>

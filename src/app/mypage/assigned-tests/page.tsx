@@ -42,7 +42,7 @@ export default function AssignedTestsPage() {
 
   if (loading || counselorLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-emerald-300 text-lg">로딩 중...</p>
@@ -53,7 +53,7 @@ export default function AssignedTestsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-lg">로그인이 필요합니다.</p>
         </div>
@@ -63,7 +63,7 @@ export default function AssignedTestsPage() {
 
   if (!counselorConnection.isConnected) {
     return (
-      <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
+      <div className="min-h-screen bg-[#f8fafc]"><div className="pt-16 p-6">
           <div className="max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -108,11 +108,11 @@ export default function AssignedTestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900"><div className="pt-16 p-6">
+    <div className="min-h-screen bg-[#f8fafc]"><div className="pt-16 p-6">
         <div className="max-w-4xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">할당된 검사</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">할당된 검사</h1>
             <p className="text-gray-300">
               상담사가 할당한 검사를 확인하고 진행하세요.
             </p>
@@ -139,7 +139,7 @@ export default function AssignedTestsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">할당된 검사가 없습니다</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">할당된 검사가 없습니다</h3>
                 <p className="text-gray-400">상담사가 검사를 할당하면 여기에 표시됩니다.</p>
               </div>
             ) : (

@@ -232,7 +232,7 @@ export default function TestCodesPage() {
           >
             <div className="text-center bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-700">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-blue-200">데이터를 불러오는 중입니다...</p>
+              <p className="text-xl text-slate-600">데이터를 불러오는 중입니다...</p>
             </div>
           </motion.div>
         ) : error ? (
@@ -241,7 +241,7 @@ export default function TestCodesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-8 text-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-8 text-center">
               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-500/20 text-red-300 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -265,7 +265,7 @@ export default function TestCodesPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full py-3 px-4 bg-white/10 border border-white/20 rounded-md text-white placeholder-blue-300/70 focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full py-3 px-4 bg-white/10 border border-slate-200 rounded-md text-white placeholder-blue-300/70 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="코드, 이름, 전화번호로 검색..."
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -284,7 +284,7 @@ export default function TestCodesPage() {
               <div className="bg-slate-900 p-4 rounded-lg shadow mb-6 border border-slate-700">
                 <div className="flex flex-wrap justify-between items-center">
                   <div>
-                    <h2 className="text-lg font-semibold text-white">{selectedYearMonth} 기간 통계</h2>
+                    <h2 className="text-lg font-semibold text-slate-900">{selectedYearMonth} 기간 통계</h2>
                     <p className="text-blue-200">마지막 생성 코드: <span className="font-mono font-medium text-white">{formatAccessCodeDisplay(codeData[selectedYearMonth].lastCode || '')}</span></p>
                   </div>
                   <div className="text-blue-200">

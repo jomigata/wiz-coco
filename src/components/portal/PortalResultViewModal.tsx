@@ -58,7 +58,7 @@ export default function PortalResultViewModal({
       >
         <div className="px-4 py-3 border-b border-slate-600 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-lg font-semibold text-white truncate">검사 결과</h3>
+            <h3 className="text-lg font-semibold text-slate-900 truncate">검사 결과</h3>
             <p className="text-sm text-slate-400 mt-0.5 truncate">
               {resultView.testName}
               {resultView.roundNumber != null ? ` · ${resultView.roundNumber}회차` : ''}

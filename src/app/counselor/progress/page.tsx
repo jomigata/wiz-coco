@@ -30,7 +30,7 @@ export default function ProgressPage() {
         </AuthLink>
         <AuthLink
           href="/counselor/assessments/progress"
-          className="text-sm text-sky-400 hover:text-sky-300"
+          className="text-sm text-blue-600 hover:text-blue-700"
         >
           검사코드별 상세 현황 →
         </AuthLink>

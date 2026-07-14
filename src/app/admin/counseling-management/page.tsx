@@ -22,11 +22,11 @@ export default function CounselingManagement() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
+    <div className="min-h-screen bg-[#f8fafc] p-6">
       <div className="max-w-7xl mx-auto">
         {/* 페이지 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">상담 관리</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">상담 관리</h1>
           <p className="text-gray-300">상담 일정, 진행 상황, 결과를 관리하세요</p>
         </div>
 
@@ -35,8 +35,8 @@ export default function CounselingManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">총 상담 세션</p>
-                <p className="text-3xl font-bold text-white">{counselingSessions.length}</p>
+                <p className="text-slate-600 text-sm">총 상담 세션</p>
+                <p className="text-3xl font-bold text-slate-900">{counselingSessions.length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">💬</span>
@@ -47,7 +47,7 @@ export default function CounselingManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">진행 중</p>
+                <p className="text-slate-600 text-sm">진행 중</p>
                 <p className="text-3xl font-bold text-yellow-400">{counselingSessions.filter(s => s.status === '진행중').length}</p>
               </div>
               <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
@@ -59,7 +59,7 @@ export default function CounselingManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">예정</p>
+                <p className="text-slate-600 text-sm">예정</p>
                 <p className="text-3xl font-bold text-blue-400">{counselingSessions.filter(s => s.status === '예정').length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -71,7 +71,7 @@ export default function CounselingManagement() {
           <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-300 text-sm">완료</p>
+                <p className="text-slate-600 text-sm">완료</p>
                 <p className="text-3xl font-bold text-green-400">{counselingSessions.filter(s => s.status === '완료').length}</p>
               </div>
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">

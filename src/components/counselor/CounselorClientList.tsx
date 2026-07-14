@@ -194,7 +194,7 @@ export default function CounselorClientList() {
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
           >
             새로고침
           </button>
@@ -209,19 +209,19 @@ export default function CounselorClientList() {
             if (e.key === 'Enter') void load();
           }}
           placeholder="이름·이메일·휴대폰·나의코드 검색"
-          className="w-full max-w-sm rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+          className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
         />
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
         >
           검색
         </button>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="active">활성 내담자</option>
           <option value="archived">보관(삭제)됨</option>
@@ -230,7 +230,7 @@ export default function CounselorClientList() {
         <select
           value={progressFilter}
           onChange={(e) => setProgressFilter(e.target.value as ProgressFilter)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="all">전체 진행</option>
           <option value="in_progress">진행 중</option>
@@ -241,7 +241,7 @@ export default function CounselorClientList() {
         <select
           value={tagFilter}
           onChange={(e) => setTagFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="">전체 태그</option>
           {tags.map((tag) => (
@@ -253,7 +253,7 @@ export default function CounselorClientList() {
         <select
           value={cohortFilter}
           onChange={(e) => updateCohortFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="">전체 그룹</option>
           <option value={INDIVIDUAL_COHORT_KEY}>개별 발급</option>
@@ -274,20 +274,20 @@ export default function CounselorClientList() {
       {loading ? (
         <p className="py-12 text-center text-sm text-slate-500">내담자 목록을 불러오는 중…</p>
       ) : displayItems.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 내담자가 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
             검사코드를 발급하면 내담자가 여기에 표시됩니다.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
-            className="mt-4 inline-block text-sm text-sky-400 hover:text-sky-300"
+            className="mt-4 inline-block text-sm text-blue-600 hover:text-blue-700"
           >
             새 검사코드 만들기 →
           </AuthLink>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/50">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="min-w-full divide-y divide-white/10 text-sm">
             <thead>
               <tr className="text-left text-xs text-slate-500">
@@ -309,7 +309,7 @@ export default function CounselorClientList() {
                 const primaryAssessment = item.assessments[0];
 
                 return (
-                  <tr key={item.portalId} className="hover:bg-white/[0.02]">
+                  <tr key={item.portalId} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <div className="font-medium text-white">
                         <Link
@@ -380,21 +380,21 @@ export default function CounselorClientList() {
                       <div className="flex flex-col gap-1">
                         <Link
                           href={counselorClientDetailHref(item.portalId)}
-                          className="text-xs text-sky-400 hover:text-sky-300"
+                          className="text-xs text-blue-600 hover:text-blue-700"
                         >
                           상세 보기
                         </Link>
                         {primaryAssessment ? (
                           <Link
                             href={progressHref(primaryAssessment.assessmentId)}
-                            className="text-xs text-sky-400 hover:text-sky-300"
+                            className="text-xs text-blue-600 hover:text-blue-700"
                           >
                             진행현황
                           </Link>
                         ) : null}
                         <Link
                           href="/counselor/test-results"
-                          className="text-xs text-slate-400 hover:text-slate-200"
+                          className="text-xs text-slate-500 hover:text-slate-800"
                         >
                           검사 결과
                         </Link>

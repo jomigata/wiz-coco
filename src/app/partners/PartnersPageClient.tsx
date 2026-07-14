@@ -30,7 +30,7 @@ function PartnersContent() {
         </div>
       </section>
 
-      <section className="py-12 bg-gray-900 border-t border-white/5">
+      <section className="py-12 bg-gray-900 border-t border-slate-100">
         <div className="container max-w-3xl mx-auto px-4">
           <h2 className="text-xl font-bold text-white mb-6">파일럿 (1단계)</h2>
           <ul className="space-y-3 text-slate-300 text-sm">
@@ -55,12 +55,12 @@ function PartnersContent() {
 
       <section id="inquiry" className="py-16 bg-slate-950 scroll-mt-20">
         <div className="container max-w-xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-white text-center mb-6">문의</h2>
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-6">문의</h2>
           <p className="text-slate-400 text-sm text-center mb-8">
             아래 이메일로 &lsquo;파일럿 / B2B&rsquo;를 제목에 적어 보내 주세요. 협회
             운영팀이 영업일 기준 2~3일 내 답변합니다.
           </p>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center space-y-4">
             <p>
               <a
                 href="mailto:wizcocoai@gmail.com?subject=WizCoCo%20파트너%20문의"
@@ -86,7 +86,7 @@ function PartnersContent() {
 function PartnersLoginPrompt() {
   return (
     <main className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center rounded-2xl border border-white/10 bg-white/[0.03] p-8 md:p-10">
+      <div className="max-w-md w-full text-center rounded-2xl border border-slate-200 bg-white p-8 md:p-10">
         <h1 className="text-xl font-semibold text-white mb-3">전문가·기관 전용 안내</h1>
         <p className="text-slate-400 text-sm leading-relaxed mb-8">
           파트너 프로그램·요금·B2B 안내는 로그인한 전문가·기관 담당자에게만 표시됩니다.
@@ -102,7 +102,7 @@ function PartnersLoginPrompt() {
           <Link href="/" className="text-sm text-slate-500 hover:text-slate-300">
             홈으로
           </Link>
-          <div className="pt-4 border-t border-white/10 w-full flex justify-center">
+          <div className="pt-4 border-t border-slate-200 w-full flex justify-center">
             <ProfessionalAccessIcons variant="nav" isLoggedIn={false} />
           </div>
         </div>
@@ -116,14 +116,14 @@ export default function PartnersPageClient() {
 
   if (authPending) {
     return (
-      <div className="min-h-screen bg-gray-900 pt-16">
+      <div className="min-h-screen bg-[#f8fafc] pt-16">
         <AuthLoadingState message="확인 중…" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="pt-16">
         <CounselorProfessionalAccessGate
           loginFallback={<PartnersLoginPrompt />}

@@ -23,7 +23,7 @@ import {
 
 function PortalLoginLoading() {
   return (
-    <div className="min-h-screen bg-[#070b14] pt-24 flex justify-center">
+    <div className="min-h-screen bg-[#f8fafc] pt-24 flex justify-center">
       <p className="text-slate-400 text-sm">불러오는 중…</p>
     </div>
   );
@@ -113,19 +113,19 @@ function PortalLoginContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#070b14]">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
-          <div className="bg-slate-900/90 rounded-2xl border border-white/[0.08] p-8 shadow-2xl shadow-black/30">
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-lg shadow-slate-200/60">
             <div className="mb-6">
               <span
                 className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${
-                  isResults ? 'text-emerald-300/80' : 'text-sky-300/80'
+                  isResults ? 'text-emerald-600' : 'text-blue-600'
                 }`}
               >
                 {isResults ? 'Result Check' : 'Assessment Start'}
               </span>
-              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">{copy.title}</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 mb-2 tracking-tight">{copy.title}</h1>
               <p className="text-slate-400 text-sm leading-relaxed">{copy.description}</p>
             </div>
 
@@ -149,7 +149,7 @@ function PortalLoginContent() {
                 readOnly
               />
               <div>
-                <label htmlFor="wizcoco-portal-my-code" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="wizcoco-portal-my-code" className="block text-sm font-medium text-slate-700 mb-2">
                   나의코드
                 </label>
                 <input
@@ -166,14 +166,14 @@ function PortalLoginContent() {
                   data-1p-ignore="true"
                   data-bwignore
                   placeholder={myCodePlaceholder}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-center text-lg tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                   value={code}
                   onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}
                 />
               </div>
               <div>
-                <label htmlFor="wizcoco-portal-pin" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="wizcoco-portal-pin" className="block text-sm font-medium text-slate-700 mb-2">
                   비밀번호 (4자리)
                 </label>
                 <input
@@ -186,7 +186,7 @@ function PortalLoginContent() {
                   data-lpignore="true"
                   data-1p-ignore="true"
                   placeholder="••••"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-500 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-center text-2xl tracking-[0.5em] placeholder:text-slate-400 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                   value={pin}
                   onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
                   disabled={loading}
@@ -211,7 +211,7 @@ function PortalLoginContent() {
                 {copy.alternate.label}{' '}
                 <Link
                   href={alternateHref}
-                  className="text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline font-medium"
+                  className="text-blue-600 hover:text-blue-700 underline-offset-2 hover:underline font-medium"
                   onClick={handleAlternateClick}
                 >
                   여기

@@ -129,7 +129,7 @@ export default function CounselorPushAssessmentPanel({
   if (portalIds.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-white/10 bg-slate-950/50">
+    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -145,7 +145,7 @@ export default function CounselorPushAssessmentPanel({
       </button>
 
       {open ? (
-        <form onSubmit={handleSubmit} className="space-y-4 border-t border-white/10 px-5 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 border-t border-slate-200 px-5 py-4">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -153,7 +153,7 @@ export default function CounselorPushAssessmentPanel({
               className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
                 mode === 'existing'
                   ? 'bg-sky-600 text-white'
-                  : 'border border-white/15 text-slate-300 hover:bg-white/5'
+                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
               기존 검사코드
@@ -164,7 +164,7 @@ export default function CounselorPushAssessmentPanel({
               className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
                 mode === 'new'
                   ? 'bg-sky-600 text-white'
-                  : 'border border-white/15 text-slate-300 hover:bg-white/5'
+                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
               신규 검사코드 생성
@@ -184,7 +184,7 @@ export default function CounselorPushAssessmentPanel({
                 <select
                   value={selectedAssessmentId}
                   onChange={(e) => setSelectedAssessmentId(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
                 >
                   <option value="">검사코드를 선택하세요</option>
                   {availableAssessments.map((a) => (
@@ -202,23 +202,23 @@ export default function CounselorPushAssessmentPanel({
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
                   placeholder="예: 2차 추가 검사"
                 />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs text-slate-400">포함 검사</label>
-                <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-white/[0.02] p-2">
+                <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2">
                   {counselorAssessmentTestOptions.map((t) => (
                     <label
                       key={t.testId}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-200 hover:bg-white/5"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-200 hover:bg-slate-50"
                     >
                       <input
                         type="checkbox"
                         checked={selectedTestIds.has(t.testId)}
                         onChange={() => toggleTest(t.testId)}
-                        className="rounded border-white/20"
+                        className="rounded border-slate-300"
                       />
                       {t.name}
                     </label>
@@ -231,7 +231,7 @@ export default function CounselorPushAssessmentPanel({
                   <input
                     value={welcomeMessage}
                     onChange={(e) => setWelcomeMessage(e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
                   />
                 </div>
                 <div>
@@ -240,7 +240,7 @@ export default function CounselorPushAssessmentPanel({
                     type="date"
                     value={usageEndDate}
                     onChange={(e) => setUsageEndDate(e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
                   />
                 </div>
               </div>
@@ -252,7 +252,7 @@ export default function CounselorPushAssessmentPanel({
               type="checkbox"
               checked={notify}
               onChange={(e) => setNotify(e.target.checked)}
-              className="rounded border-white/20"
+              className="rounded border-slate-300"
             />
             내담자에게 이메일/SMS 알림 발송
           </label>

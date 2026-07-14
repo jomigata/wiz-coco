@@ -23,14 +23,14 @@ function TabBar({
   setTab: (t: 'assessment' | 'ai') => void;
 }) {
   return (
-    <div className="flex gap-2 mb-6 border-b border-white/10 pb-3">
+    <div className="flex gap-2 mb-6 border-b border-slate-200 pb-3">
       <button
         type="button"
         onClick={() => setTab('assessment')}
         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
           tab === 'assessment'
             ? 'bg-blue-600 text-white'
-            : 'text-slate-400 hover:text-white hover:bg-white/5'
+            : 'text-slate-400 hover:text-white hover:bg-slate-50'
         }`}
       >
         검사 크레딧
@@ -41,7 +41,7 @@ function TabBar({
         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
           tab === 'ai'
             ? 'bg-violet-600 text-white'
-            : 'text-slate-400 hover:text-white hover:bg-white/5'
+            : 'text-slate-400 hover:text-white hover:bg-slate-50'
         }`}
       >
         AI 크레딧
@@ -123,7 +123,7 @@ function CreditsContent() {
   if (tab === 'ai') {
     return (
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-2">크레딧 · AI</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">크레딧 · AI</h1>
         <TabBar tab={tab} setTab={setTab} />
         <CounselorAiCreditsPanel />
       </div>
@@ -136,7 +136,7 @@ function CreditsContent() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-2">크레딧 · AI</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-2">크레딧 · AI</h1>
       <TabBar tab={tab} setTab={setTab} />
       <p className="text-slate-400 text-sm mb-6">
         내담자 1명(포털 1개) 발급 = 1크레딧. 파일럿 상담사는 협회에서 {PILOT_FREE_CREDITS}
@@ -187,13 +187,13 @@ function CreditsContent() {
             </Link>
             <Link
               href="/partners/"
-              className="px-4 py-2 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
+              className="px-4 py-2 rounded-lg border border-slate-200 text-white text-sm hover:bg-slate-100"
             >
               요금 · 패키지 안내
             </Link>
           </div>
 
-          <h2 className="text-lg font-semibold text-white mb-3">최근 내역</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">최근 내역</h2>
           <ul className="space-y-2 text-sm">
             {(data.ledger || []).length === 0 && (
               <li className="text-slate-500">아직 내역이 없습니다.</li>
@@ -201,7 +201,7 @@ function CreditsContent() {
             {(data.ledger || []).map((row) => (
               <li
                 key={row.id}
-                className="flex justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-3 text-slate-300"
+                className="flex justify-between rounded-lg border border-slate-100 bg-white/5 px-4 py-3 text-slate-300"
               >
                 <span>
                   {row.delta > 0 ? '+' : ''}

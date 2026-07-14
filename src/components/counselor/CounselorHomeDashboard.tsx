@@ -42,7 +42,7 @@ function CohortRow({ cohort }: { cohort: CounselorCohortMonitoringItem }) {
       : '/counselor/clients';
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-medium text-white">{cohort.cohortName}</p>
@@ -62,7 +62,7 @@ function CohortRow({ cohort }: { cohort: CounselorCohortMonitoringItem }) {
         <span>완료 {cohort.completedPortals}</span>
         <span>진행 {cohort.inProgressPortals}</span>
         <span>미시작 {cohort.notStartedPortals}</span>
-        <AuthLink href={href} className="text-sky-400 hover:text-sky-300">
+        <AuthLink href={href} className="text-blue-600 hover:text-blue-700">
           상세 →
         </AuthLink>
       </div>
@@ -165,34 +165,34 @@ export default function CounselorHomeDashboard() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs text-slate-400">활성 내담자</p>
-          <p className="mt-1 text-2xl font-bold text-white">{summary?.activePortals ?? 0}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{summary?.activePortals ?? 0}</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs text-slate-400">활성 검사코드</p>
-          <p className="mt-1 text-2xl font-bold text-white">{summary?.activeAssessments ?? 0}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{summary?.activeAssessments ?? 0}</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs text-slate-400">검사 완료</p>
           <p className="mt-1 text-2xl font-bold text-emerald-300">{summary?.completedRecipients ?? 0}</p>
           <p className="text-xs text-slate-500">/ {summary?.totalRecipients ?? 0}명</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs text-slate-400">그룹 cohort</p>
-          <p className="mt-1 text-2xl font-bold text-white">{cohortSummary?.groupCohorts ?? 0}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{cohortSummary?.groupCohorts ?? 0}</p>
           <p className="text-xs text-slate-500">개별 {cohortSummary?.individualCohorts ?? 0}</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
         <button
           type="button"
           onClick={() => setTab('individual')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             tab === 'individual'
               ? 'bg-sky-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-slate-200'
           }`}
         >
           개별 내담자
@@ -203,14 +203,14 @@ export default function CounselorHomeDashboard() {
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             tab === 'group'
               ? 'bg-violet-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+              : 'text-slate-400 hover:bg-slate-50 hover:text-slate-200'
           }`}
         >
           그룹·기관
         </button>
         <AuthLink
           href="/counselor/progress"
-          className="ml-auto text-sm text-sky-400 hover:text-sky-300"
+          className="ml-auto text-sm text-blue-600 hover:text-blue-700"
         >
           전체 모니터링 허브 →
         </AuthLink>
@@ -219,7 +219,7 @@ export default function CounselorHomeDashboard() {
       {tab === 'individual' ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white">개별 진행 현황</h2>
+            <h2 className="text-lg font-semibold text-slate-900">개별 진행 현황</h2>
             {individualCohort ? (
               <CohortRow cohort={individualCohort} />
             ) : (
@@ -239,7 +239,7 @@ export default function CounselorHomeDashboard() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white">최근 활동</h2>
+            <h2 className="text-lg font-semibold text-slate-900">최근 활동</h2>
             {(hub?.recentActivity || []).length === 0 ? (
               <p className="text-sm text-slate-500">최근 검사 활동이 없습니다.</p>
             ) : (
@@ -247,7 +247,7 @@ export default function CounselorHomeDashboard() {
                 {(hub?.recentActivity || []).slice(0, 6).map((item, i) => (
                   <li
                     key={`${item.portalId}-${item.testId}-${i}`}
-                    className="rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-sm"
+                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
                   >
                     <span className="text-white">{item.displayName}</span>
                     <span className="text-slate-500"> · {item.assessmentTitle}</span>
@@ -260,7 +260,7 @@ export default function CounselorHomeDashboard() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white">그룹 cohort ({groupCohorts.length})</h2>
+            <h2 className="text-lg font-semibold text-slate-900">그룹 cohort ({groupCohorts.length})</h2>
             {groupCohorts.length === 0 ? (
               <p className="text-sm text-slate-500">그룹 cohort가 없습니다.</p>
             ) : (
@@ -279,7 +279,7 @@ export default function CounselorHomeDashboard() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white">담당 B2B 기관 ({liaisons.length})</h2>
+            <h2 className="text-lg font-semibold text-slate-900">담당 B2B 기관 ({liaisons.length})</h2>
             {liaisons.length === 0 ? (
               <p className="text-sm text-slate-500">liaison으로 배정된 기관이 없습니다.</p>
             ) : (
@@ -294,13 +294,13 @@ export default function CounselorHomeDashboard() {
       )}
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-white">빠른 접근</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">빠른 접근</h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {QUICK_LINKS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-xl border border-white/10 bg-white/5 p-4 text-center transition hover:bg-white/10"
+              className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center transition hover:bg-slate-100"
             >
               <span className="text-2xl">{item.icon}</span>
               <p className="mt-2 text-sm font-medium text-white">{item.title}</p>

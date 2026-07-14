@@ -44,10 +44,10 @@ export default function CounselorApplicationReviewModal({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/90 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-white/15 bg-slate-900 p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-slate-900 p-6 shadow-2xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
             {bulkCount === 1 && (
               <p className="mt-1 text-sm text-slate-400">신청자: {applicantName || '(이름 없음)'}</p>
             )}
@@ -72,7 +72,7 @@ export default function CounselorApplicationReviewModal({
           placeholder={placeholder}
           rows={5}
           disabled={busy}
-          className="w-full rounded-lg border border-white/15 bg-slate-800 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 disabled:opacity-60"
+          className="w-full rounded-lg border border-slate-200 bg-slate-800 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 disabled:opacity-60"
         />
         <p className="mt-2 text-xs text-slate-500">
           신청자는 마이페이지 설정에서 이 메모를 확인할 수 있습니다.

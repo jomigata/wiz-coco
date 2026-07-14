@@ -189,12 +189,12 @@ function InsideMbtiResultContent() {
                 </p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-slate-200">
                 
                 {/* 검사 코드 표시 */}
                 {result.resultCode && (
                   <div className="text-center mb-8">
-                    <div className="inline-block bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+                    <div className="inline-block bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-200">
                       <span className="text-blue-200 text-sm">검사 코드: </span>
                       <span className="text-white font-mono font-semibold">{formatAccessCodeDisplay(result.resultCode)}</span>
                     </div>
@@ -207,7 +207,7 @@ function InsideMbtiResultContent() {
                   <div className="flex justify-center">
                     <div className="w-72 h-72 relative">
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-64 w-64 rounded-full bg-white/5 backdrop-blur-sm border-4 border-white/20 flex items-center justify-center">
+                        <div className="h-64 w-64 rounded-full bg-white/5 backdrop-blur-sm border-4 border-slate-200 flex items-center justify-center">
                           <div className="text-center">
                             <span className="text-6xl font-bold text-white">{result.analysis?.compatibility}%</span>
                             <p className="text-blue-200 mt-2">
@@ -224,13 +224,13 @@ function InsideMbtiResultContent() {
                 
                 {/* MBTI 유형 비교 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
                     <h3 className="text-xl font-medium text-white mb-3">{result.person1.name}님의 MBTI</h3>
                     <div className="mb-2">
-                      <span className="text-2xl font-bold text-white">{result.person1.mbti}</span>
+                      <span className="text-2xl font-bold text-slate-900">{result.person1.mbti}</span>
                       <span className="text-blue-200 ml-2">{mbtiData[result.person1.mbti]?.type}</span>
                     </div>
-                    <p className="text-blue-200 mb-4">{mbtiData[result.person1.mbti]?.description}</p>
+                    <p className="text-slate-600 mb-4">{mbtiData[result.person1.mbti]?.description}</p>
                     <div className="mb-3">
                       <h4 className="text-white font-medium mb-1">강점</h4>
                       <ul className="list-disc pl-5 text-blue-200 text-sm">
@@ -245,13 +245,13 @@ function InsideMbtiResultContent() {
                     </div>
                   </div>
                   
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
                     <h3 className="text-xl font-medium text-white mb-3">{result.person2.name}님의 MBTI</h3>
                     <div className="mb-2">
-                      <span className="text-2xl font-bold text-white">{result.person2.mbti}</span>
+                      <span className="text-2xl font-bold text-slate-900">{result.person2.mbti}</span>
                       <span className="text-blue-200 ml-2">{mbtiData[result.person2.mbti]?.type}</span>
                     </div>
-                    <p className="text-blue-200 mb-4">{mbtiData[result.person2.mbti]?.description}</p>
+                    <p className="text-slate-600 mb-4">{mbtiData[result.person2.mbti]?.description}</p>
                     <div className="mb-3">
                       <h4 className="text-white font-medium mb-1">강점</h4>
                       <ul className="list-disc pl-5 text-blue-200 text-sm">
@@ -268,7 +268,7 @@ function InsideMbtiResultContent() {
                 </div>
                 
                 {/* 관계 분석 */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-10">
+                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 mb-10">
                   <h3 className="text-xl font-medium text-white mb-4">관계 역학 분석</h3>
                   
                   <div className="mb-6">
@@ -291,7 +291,7 @@ function InsideMbtiResultContent() {
                 </div>
                 
                 {/* 관계 개선 팁 */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 mb-8">
                   <h3 className="text-xl font-medium text-white mb-4">관계 개선을 위한 팁</h3>
                   
                   <ul className="space-y-3">

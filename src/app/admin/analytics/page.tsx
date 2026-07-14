@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
         </motion.div>
         
         {/* 필터 섹션 */}
-        <div className="mb-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg border border-white/10">
+        <div className="mb-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg border border-slate-200">
           <div className="flex flex-wrap gap-4 items-center">
             <div>
               <label htmlFor="timeframe" className="block text-sm font-medium text-gray-300 mb-1">
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
             {/* 주요 차트 섹션 - 검사 트렌드 */}
             <motion.div 
               variants={itemVariants}
-              className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5 mb-8"
+              className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5 mb-8"
             >
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
                 <ArrowTrendingUpIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -247,7 +247,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <motion.div 
                 variants={itemVariants}
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
               >
                 <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
                   <MapIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
               
               <motion.div 
                 variants={itemVariants}
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
               >
                 <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
                   <CalendarDaysIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -315,7 +315,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <motion.div 
                 variants={itemVariants}
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
               >
                 <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
                   <ChartPieIcon className="h-6 w-6 mr-2 text-blue-300" />
@@ -351,7 +351,7 @@ export default function AnalyticsPage() {
               
               <motion.div 
                 variants={itemVariants}
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-5"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-5"
               >
                 <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
                   <ChartBarIcon className="h-6 w-6 mr-2 text-blue-300" />

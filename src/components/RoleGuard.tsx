@@ -75,10 +75,10 @@ export default function RoleGuard({
 
   if (authPending || isChecking || (user && accessLoading)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
           <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-blue-200">권한을 확인하는 중입니다...</p>
+          <p className="text-xl text-slate-600">권한을 확인하는 중입니다...</p>
         </div>
       </div>
     );
@@ -90,8 +90,8 @@ export default function RoleGuard({
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-white/20">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">
           <h2 className="text-2xl font-bold text-red-400 mb-4">접근 권한이 없습니다</h2>
           <p className="text-red-200 mb-6">이 페이지에 접근할 권한이 없습니다.</p>
           <button

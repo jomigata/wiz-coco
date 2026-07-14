@@ -504,13 +504,13 @@ function AIProfilingPageContent() {
     const totalQuestions = chapters.reduce((sum, ch) => sum + ch.questions.length, 0);
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-blue-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-blue-700"
         >
-          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">이어하기</h2>
           <p className="text-blue-200 mb-6 text-center">
             진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
           </p>
@@ -610,15 +610,15 @@ function AIProfilingPageContent() {
               )}
             </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 mb-6">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
               <span className="text-3xl">🎭</span>
               나의 프로파일링 결과
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-3">주요 특성</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">주요 특성</h3>
                 <div className="space-y-2">
                   {profile.traits.map((trait, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -630,7 +630,7 @@ function AIProfilingPageContent() {
               </div>
               
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-3">맞춤 추천</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">맞춤 추천</h3>
                 <div className="space-y-2">
                   {profile.recommendations.map((rec, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -659,15 +659,15 @@ function AIProfilingPageContent() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
+    <div className="bg-[#f8fafc] p-6 min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* 헤더 */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-4xl mx-auto mb-4">
             🔍
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">AI 프로파일링</h1>
-          <p className="text-gray-300 text-lg">너의 모든 것을 알려줄게, 캠퍼스 라이프 시크릿 리포트</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">AI 프로파일링</h1>
+          <p className="text-slate-600 text-lg">너의 모든 것을 알려줄게, 캠퍼스 라이프 시크릿 리포트</p>
         </div>
 
         {/* 진행률 바 */}
@@ -685,11 +685,11 @@ function AIProfilingPageContent() {
         </div>
 
         {/* 현재 챕터 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 mb-6">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 mb-6">
           <div className="flex items-center gap-4 mb-6">
             <span className="text-4xl">{currentChapterData.icon}</span>
             <div>
-              <h2 className="text-2xl font-bold text-white">{currentChapterData.title}</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{currentChapterData.title}</h2>
               <p className="text-gray-300">{currentChapterData.description}</p>
             </div>
           </div>
@@ -698,7 +698,7 @@ function AIProfilingPageContent() {
           <div className="space-y-6">
             {currentChapterData.questions.map((question) => (
               <div key={question.id} className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">{question.text}</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">{question.text}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {question.options.map((option) => (
                     <button
@@ -748,7 +748,7 @@ function AIProfilingPageContent() {
 export default function AIProfilingPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
+      <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
         <div className="text-white text-lg">로딩 중...</div>
       </div>
     }>

@@ -229,7 +229,7 @@ export default function DashboardPage() {
           >
             <div className="text-center bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-700">
               <div className="w-16 h-16 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl text-blue-200">데이터를 불러오는 중입니다...</p>
+              <p className="text-xl text-slate-600">데이터를 불러오는 중입니다...</p>
             </div>
           </motion.div>
         ) : error ? (
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-8 text-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-8 text-center">
               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-500/20 text-red-300 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -263,31 +263,31 @@ export default function DashboardPage() {
               animate="visible"
             >
               <motion.div 
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6"
                 variants={itemVariants}
               >
                 <h3 className="text-lg font-semibold text-blue-200 mb-2">총 생성 코드 수</h3>
-                <p className="text-3xl font-bold text-white">{totalCodes.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-slate-900">{totalCodes.toLocaleString()}</p>
               </motion.div>
               
               <motion.div 
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6"
                 variants={itemVariants}
               >
                 <h3 className="text-lg font-semibold text-blue-200 mb-2">접두사 유형 수</h3>
-                <p className="text-3xl font-bold text-white">{prefixes.length}</p>
+                <p className="text-3xl font-bold text-slate-900">{prefixes.length}</p>
               </motion.div>
               
               <motion.div 
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6"
                 variants={itemVariants}
               >
                 <h3 className="text-lg font-semibold text-blue-200 mb-2">활성 접두사 수</h3>
-                <p className="text-3xl font-bold text-white">{activePrefixes}</p>
+                <p className="text-3xl font-bold text-slate-900">{activePrefixes}</p>
               </motion.div>
               
               <motion.div 
-                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6"
+                className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6"
                 variants={itemVariants}
               >
                 <h3 className="text-lg font-semibold text-blue-200 mb-2">마지막 업데이트</h3>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6">
                 <h3 className="text-xl font-semibold text-white mb-4">접두사별 코드 생성 수</h3>
                 <div className="bg-white/5 rounded-lg p-4" style={{ height: '300px' }}>
                   <Bar 
@@ -334,7 +334,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10 p-6">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200 p-6">
                 <h3 className="text-xl font-semibold text-white mb-4">검사 유형별 분포</h3>
                 <div className="bg-white/5 rounded-lg p-4 flex items-center justify-center" style={{ height: '300px' }}>
                   <Pie 
@@ -364,7 +364,7 @@ export default function DashboardPage() {
             
             {/* 테이블 섹션 */}
             <motion.div 
-              className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-white/10"
+              className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg border border-slate-200"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}

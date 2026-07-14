@@ -26,7 +26,7 @@ export default function DiscoverPurchaseLinks() {
       </Link>
       <Link
         href="/discover/shop/"
-        className="px-8 py-4 rounded-xl border border-white/25 font-semibold hover:bg-white/5 transition-colors"
+        className="px-8 py-4 rounded-xl border border-white/25 font-semibold hover:bg-slate-50 transition-colors"
       >
         Basic · Premium · Pro
       </Link>

@@ -167,7 +167,7 @@ export default function DataSharingPage() {
 
   if (authPending) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <AuthLoadingState message="로딩 중..." />
       </div>
     );
@@ -175,19 +175,19 @@ export default function DataSharingPage() {
 
   if (showLoginRequired) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
         <AuthRequiredState className="max-w-md w-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#f8fafc]">
 <div className="pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">데이터 공유 관리</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">데이터 공유 관리</h1>
             <p className="text-gray-300">다른 상담사와 내담자 데이터를 공유하거나 공유 요청을 관리하세요.</p>
           </div>
 
@@ -429,7 +429,7 @@ function SharingRequestCard({
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-3">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-slate-900">
               {type === 'sent' ? '보낸 요청' : '받은 요청'}
             </h3>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>

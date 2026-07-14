@@ -11,7 +11,7 @@ import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 function GoLoading() {
   return (
-    <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
+    <div className="min-h-screen bg-[#f8fafc] pt-24 flex justify-center">
       <p className="text-slate-400">접속 링크를 확인하는 중…</p>
     </div>
   );
@@ -51,7 +51,7 @@ function GoContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 pt-24 px-4">
+      <div className="min-h-screen bg-[#f8fafc] pt-24 px-4">
         <div className="max-w-md mx-auto text-center bg-slate-800/80 rounded-2xl border border-slate-600 p-8">
           <p className="text-red-400 mb-4">{error}</p>
           <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 text-sm">

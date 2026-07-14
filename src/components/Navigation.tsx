@@ -1192,7 +1192,7 @@ export default function Navigation() {
                   </button>
                 </div>
               ) : (
-                <div className="pt-4 border-t border-white/20 flex flex-col items-center gap-3">
+                <div className="pt-4 border-t border-slate-200 flex flex-col items-center gap-3">
                   <p className="text-[10px] uppercase tracking-widest text-slate-500">전문가·상담사 로그인</p>
                   <ProfessionalAccessIcons
                     variant="nav"

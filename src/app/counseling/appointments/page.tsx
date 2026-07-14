@@ -125,7 +125,7 @@ export default function CounselingAppointmentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-emerald-300 text-lg">로딩 중...</p>
@@ -136,7 +136,7 @@ export default function CounselingAppointmentsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-lg">로그인이 필요합니다.</p>
         </div>
@@ -146,7 +146,7 @@ export default function CounselingAppointmentsPage() {
 
   if (!counselorConnection.isConnected) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-[#f8fafc]">
 <div className="pt-16 p-6">
           <div className="max-w-2xl mx-auto">
             <motion.div
@@ -177,12 +177,12 @@ export default function CounselingAppointmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#f8fafc]">
 <div className="pt-16 p-6">
         <div className="max-w-6xl mx-auto">
           {/* 헤더 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">상담 예약 관리</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">상담 예약 관리</h1>
             <p className="text-gray-300">
               상담사와의 상담 일정을 예약하고 관리하세요.
             </p>
@@ -446,7 +446,7 @@ export default function CounselingAppointmentsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">예약된 상담이 없습니다</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">예약된 상담이 없습니다</h3>
                 <p className="text-gray-400">새로운 상담을 예약해보세요.</p>
               </div>
             ) : (
@@ -551,7 +551,7 @@ function AppointmentCard({ appointment }: { appointment: CounselingAppointment }
 
           {appointment.location === 'offline' && appointment.address && (
             <div className="mb-4">
-              <p className="text-gray-300 text-sm">
+              <p className="text-slate-600 text-sm">
                 <span className="font-medium">상담 장소:</span> {appointment.address}
               </p>
             </div>
@@ -559,7 +559,7 @@ function AppointmentCard({ appointment }: { appointment: CounselingAppointment }
 
           {appointment.location === 'phone' && appointment.phoneNumber && (
             <div className="mb-4">
-              <p className="text-gray-300 text-sm">
+              <p className="text-slate-600 text-sm">
                 <span className="font-medium">연락처:</span> {formatPhoneDisplay(appointment.phoneNumber)}
               </p>
             </div>
