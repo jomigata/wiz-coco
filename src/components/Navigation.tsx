@@ -657,7 +657,7 @@ export default function Navigation() {
                       ? "text-white bg-blue-600 border-white"
                       : isAiMindAssistantOpen
                       ? "text-gray-300 border-white"
-                      : "text-gray-300 border-white/25 hover:text-white hover:bg-blue-800/50 hover:border-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                 >
@@ -741,7 +741,7 @@ export default function Navigation() {
                               ? "text-white bg-blue-600 border-white"
                               : isCounselorOpen
                               ? "text-gray-300 border-white"
-                              : "text-gray-300 border-white/25 hover:text-white hover:bg-blue-800/50 hover:border-white"
+                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
                         >
@@ -854,7 +854,7 @@ export default function Navigation() {
                             ? "text-white bg-blue-600 border-white"
                             : isDropdownOpen
                             ? "text-gray-300 border-white"
-                            : "text-gray-300 border-white/25 hover:text-white hover:bg-blue-800/50 hover:border-white"
+                            : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
                       >
@@ -923,7 +923,7 @@ export default function Navigation() {
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
+                                    className="group flex items-center gap-4 rounded-xl border-2 border-white/20 px-4 py-3 transition-all duration-300 hover:border-white"
                                     onClick={() => setActiveMenu(null)}
                                   >
                                     <div className="text-2xl group-hover:scale-110 transition-transform duration-300">

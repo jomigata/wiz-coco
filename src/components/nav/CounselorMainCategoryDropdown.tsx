@@ -36,7 +36,7 @@ export default function CounselorMainCategoryDropdown({
             <AuthLink
               key={category.slug}
               href={getCounselorCategoryHubHref(category.slug)}
-              className="group flex items-center gap-4 rounded-xl border-2 border-transparent px-4 py-3 transition-all duration-300 hover:border-white"
+              className="group flex items-center gap-4 rounded-xl border-2 border-white/20 px-4 py-3 transition-all duration-300 hover:border-white"
               onClick={onCloseMenu}
             >
               <div className="text-2xl transition-transform duration-300 group-hover:scale-110">

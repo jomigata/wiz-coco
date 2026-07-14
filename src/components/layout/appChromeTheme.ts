@@ -56,7 +56,7 @@ export const navMegaMenuClasses = {
   panelTitle: 'mb-4 text-base font-semibold tracking-tight text-slate-300',
   mainItemActive: 'border-white/70 bg-white/[0.08] text-white shadow-lg shadow-black/20',
   mainItemIdle:
-    'border-white/10 text-slate-300 hover:border-white/35 hover:bg-white/[0.05] hover:text-white hover:shadow-md',
+    'border-white/20 text-slate-300 hover:border-white hover:bg-white/[0.05] hover:text-white hover:shadow-md',
   subItemActive: 'border-white/70 bg-white/[0.06]',
   subItemIdle: 'border-white/10 hover:border-white/35 hover:bg-white/[0.04]',
   leafItemActive: 'border-white/60',
