@@ -1651,7 +1651,7 @@ function MyPageContent() {
         {isPasswordModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 max-w-md w-full mx-4">
-              <h3 className="text-xl font-bold text-slate-900 mb-4">비밀번호 변경</h3>
+              <h3 className="text-xl font-bold text-white mb-4">비밀번호 변경</h3>
               
               <div className="space-y-4">
                 <div>
@@ -1663,7 +1663,7 @@ function MyPageContent() {
                     id="currentPassword"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white/10 border border-slate-200 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="현재 비밀번호를 입력하세요"
                   />
                 </div>
@@ -1677,7 +1677,7 @@ function MyPageContent() {
                     id="newPassword"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white/10 border border-slate-200 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="새 비밀번호 (6자 이상)"
                   />
                 </div>
@@ -1691,7 +1691,7 @@ function MyPageContent() {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-white/10 border border-slate-200 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="새 비밀번호를 다시 입력하세요"
                   />
                 </div>
@@ -2436,37 +2436,37 @@ function TestRecordsTabContent({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="일시 · 코드 · 검사명 검색"
-            className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/60"
+            className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500/60"
+            className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           >
-            <option value="all" className="bg-white text-slate-900">
+            <option value="all" className="bg-slate-900 text-white">
               전체
             </option>
-            <option value="incomplete" className="bg-white text-slate-900">
+            <option value="incomplete" className="bg-slate-900 text-white">
               ⚠ 미완료만
             </option>
-            <option value="mbti-personal" className="bg-white text-slate-900">
+            <option value="mbti-personal" className="bg-slate-900 text-white">
               개인용 MBTI
             </option>
-            <option value="mbti-professional" className="bg-white text-slate-900">
+            <option value="mbti-professional" className="bg-slate-900 text-white">
               전문가용 MBTI
             </option>
-            <option value="ai-profiling" className="bg-white text-slate-900">
+            <option value="ai-profiling" className="bg-slate-900 text-white">
               AI 프로파일링
             </option>
-            <option value="integrated" className="bg-white text-slate-900">
+            <option value="integrated" className="bg-slate-900 text-white">
               통합 평가
             </option>
-            <option value="ego" className="bg-white text-slate-900">
+            <option value="ego" className="bg-slate-900 text-white">
               에고그램
             </option>
-            <option value="enneagram" className="bg-white text-slate-900">
+            <option value="enneagram" className="bg-slate-900 text-white">
               에니어그램
             </option>
           </select>
@@ -2905,7 +2905,7 @@ function TestRecordsTabContent({
           onClick={() => setCounselorViewRecord(null)}
         >
           <div
-            className="max-w-lg w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+            className="max-w-lg w-full rounded-xl border border-slate-200 bg-slate-900 p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h4 className="text-lg font-semibold text-slate-900 mb-2">검사 결과 요약</h4>

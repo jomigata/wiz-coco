@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
 import { BUSINESS_LEGAL } from '@/lib/businessLegal';
-import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 
 export const metadata = {
   title: '사업자 정보 | WizCoCo',
@@ -11,10 +10,10 @@ export const metadata = {
 /** 카카오 채널 심사·푸터 캡처용 사업자 정보 페이지 */
 export default function CompanyPage() {
   return (
-    <div className="min-h-screen text-slate-700" style={{ backgroundColor: HOME_PAGE_BG }}>
+    <div className="min-h-screen bg-[#f2f6fa] text-slate-700">
       <div className="mx-auto max-w-2xl px-4 py-16">
-        <p className="text-xs uppercase tracking-widest text-emerald-600">WizCoCo</p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-900">사업자 정보</h1>
+        <p className="text-xs uppercase tracking-widest text-emerald-600/80">WizCoCo</p>
+        <h1 className="mt-2 text-2xl font-semibold text-slate-800">사업자 정보</h1>
         <p className="mt-2 text-sm text-slate-600">
           카카오 비즈니스 채널 심사 및 이용자 고지용 공식 사업자 정보입니다.
         </p>
@@ -28,18 +27,18 @@ export default function CompanyPage() {
         </p>
 
         <div className="mt-8 flex flex-wrap gap-4 text-sm">
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
+          <Link href="/" className="text-emerald-400 hover:text-emerald-300">
             홈으로
           </Link>
-          <Link href="/terms/" className="text-slate-600 hover:text-slate-800">
+          <Link href="/terms/" className="text-slate-400 hover:text-slate-300">
             이용약관
           </Link>
-          <Link href="/privacy/" className="text-slate-600 hover:text-slate-800">
+          <Link href="/privacy/" className="text-slate-400 hover:text-slate-300">
             개인정보처리방침
           </Link>
         </div>
 
-        <p className="mt-12 text-center text-[11px] text-slate-400">
+        <p className="mt-12 text-center text-[11px] text-slate-600">
           © {new Date().getFullYear()} {BUSINESS_LEGAL.brandName}. Operated by{' '}
           {BUSINESS_LEGAL.companyName}.
         </p>

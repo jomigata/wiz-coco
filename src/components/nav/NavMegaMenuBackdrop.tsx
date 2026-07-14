@@ -11,7 +11,7 @@ export default function NavMegaMenuBackdrop({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-x-0 top-16 bottom-0 z-30 hidden bg-slate-900/15 transition-opacity duration-200 md:block"
+      className="fixed inset-x-0 top-16 bottom-0 z-30 hidden bg-slate-900/8 transition-opacity duration-200 md:block"
       aria-hidden
       onClick={onClose}
     />

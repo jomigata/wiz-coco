@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
-import { wizCardClasses, wizSectionClasses } from '@/components/layout/wizDesignTokens';
+import { homeContentClasses } from '@/components/layout/appChromeTheme';
 
 const clientTrustPoints = [
   {
@@ -26,26 +26,33 @@ export default function ClientExamTrustSection() {
     <HomeSectionShell tone="trust" className="py-20 md:py-24">
       <div className="container max-w-5xl mx-auto px-4">
         <div className="text-center mb-12">
-          <span className={`inline-block ${wizSectionClasses.eyebrow} mb-3`}>Secure Assessment</span>
-          <h2 className={`${wizSectionClasses.title} mb-3`}>안심하고 검사에 집중하세요</h2>
-          <p className={`${wizSectionClasses.subtitle} max-w-xl mx-auto`}>
+          <span className={`inline-block ${homeContentClasses.sectionEyebrow} mb-3`}>
+            Secure Assessment
+          </span>
+          <h2 className={`${homeContentClasses.sectionTitle} mb-3`}>
+            안심하고 검사에 집중하세요
+          </h2>
+          <p className={`${homeContentClasses.sectionSubtitle} max-w-xl mx-auto`}>
             내담자를 위한 검사 전용 환경입니다. 불필요한 가입·결제 안내 없이 배정된 검사만
             진행할 수 있습니다.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
           {clientTrustPoints.map((p) => (
-            <div key={p.title} className={`${wizCardClasses.base} ${wizCardClasses.hover} group`}>
-              <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden />
+            <div
+              key={p.title}
+              className={`group ${homeContentClasses.card} hover:border-sky-200/90`}
+            >
+              <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200/70 flex items-center justify-center mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500" aria-hidden />
               </div>
-              <h3 className="font-medium text-slate-900 mb-2">{p.title}</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">{p.body}</p>
+              <h3 className={`${homeContentClasses.cardTitle} mb-2`}>{p.title}</h3>
+              <p className={homeContentClasses.cardBody}>{p.body}</p>
             </div>
           ))}
         </div>
         <p className="text-center mt-10 text-xs text-slate-500">
-          <Link href="/privacy/" className="text-blue-600 hover:text-blue-700 underline-offset-2 hover:underline">
+          <Link href="/privacy/" className="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline">
             개인정보처리방침
           </Link>
           {' · '}

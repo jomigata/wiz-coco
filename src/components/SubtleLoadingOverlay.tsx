@@ -21,10 +21,10 @@ export default function SubtleLoadingOverlay({
       aria-busy="true"
       role="status"
     >
-      <div className="mx-4 flex max-w-sm flex-col items-center rounded-xl border border-slate-200 bg-white px-6 py-4 text-center shadow-lg">
-        <div className="h-9 w-9 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-        <p className="mt-3 text-sm font-medium text-slate-900">{label}</p>
-        <p className="mt-1 text-xs leading-snug text-slate-500">{hint}</p>
+      <div className="mx-4 flex max-w-sm flex-col items-center rounded-xl border border-slate-200 bg-[#0f172a]/85 px-6 py-4 text-center shadow-lg backdrop-blur-md">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
+        <p className="mt-3 text-sm font-medium text-slate-100">{label}</p>
+        <p className="mt-1 text-xs leading-snug text-slate-400">{hint}</p>
       </div>
     </div>
   );

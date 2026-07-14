@@ -309,10 +309,10 @@ function ClientPortalContent() {
     <div className="min-h-screen bg-[#f8fafc]">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
             <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
               <div>
-                <h1 className="text-xl font-bold text-slate-900">내 검사실</h1>
+                <h1 className="text-xl font-bold text-white">내 검사실</h1>
                 <p className="text-slate-300 text-sm mt-1">{displayName}님, 환영합니다.</p>
               </div>
               <button
@@ -375,10 +375,10 @@ function ClientPortalContent() {
               return (
                 <section
                   key={a.assessmentId}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-sm"
+                  className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
                 >
                   <div>
-                    <h3 className="text-lg font-medium text-slate-900">{a.title}</h3>
+                    <h3 className="text-lg font-medium text-white">{a.title}</h3>
                     <p className="text-sm text-slate-400 mt-1">
                       검사코드{' '}
                       <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
@@ -444,7 +444,7 @@ function ClientPortalContent() {
           onClick={() => !actionLoading && setDeleteModal(null)}
         >
           <div
-            className="bg-white rounded-xl border border-slate-200 p-6 max-w-sm w-full shadow-lg"
+            className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h4 className="text-lg font-semibold text-slate-900 mb-2">검사 결과 삭제</h4>
@@ -456,7 +456,7 @@ function ClientPortalContent() {
               <button
                 type="button"
                 onClick={() => !actionLoading && setDeleteModal(null)}
-                className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100"
+                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-700"
               >
                 취소
               </button>
