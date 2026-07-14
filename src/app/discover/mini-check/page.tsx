@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import MiniCheckQuiz from '@/components/discover/MiniCheckQuiz';
 import DiscoverLoggedInPurchaseGate from '@/components/auth/DiscoverLoggedInPurchaseGate';
+import { APP_HEADER_PT } from '@/lib/appChromeLayout';
 
 export default function MiniCheckPage() {
   return (
     <DiscoverLoggedInPurchaseGate>
-      <main className="min-h-screen bg-gradient-to-b from-slate-950 to-violet-950/30 text-white">
-        <div className="container py-12 px-4 max-w-2xl mx-auto">
+      <main
+        className={`min-h-screen bg-gradient-to-b from-slate-950 to-violet-950/30 text-white ${APP_HEADER_PT}`}
+      >
+        <div className="container py-8 px-4 max-w-2xl mx-auto">
           <Link href="/discover/" className="text-sm text-violet-300 hover:underline mb-8 inline-block">
             ← Discover
           </Link>
