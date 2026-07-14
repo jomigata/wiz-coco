@@ -49,17 +49,16 @@ gh secret set SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS
 
 ## 3. 템플릿 문구 (변수명을 그대로 사용)
 
-> **검수 반려 시:** 문구에 `배정받으신`·`발급받으신`·`할당해 드린` 등 **수신자 행동**을 나타내는 고정 문구를 넣으세요.  
-> 전문 복사본: [SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md](./SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md)
+> **2차 반려 시:** 첫 문장에 **`접수하신`**·**`신청하신`** 등 카카오 예시 표현 필수. 변수 **예시값**도 입력.  
+> 전문: [SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md](./SOLAPI_ALIMTALK_TEMPLATES_COPY_KO.md)
 
 ### 3-1. 검사 미완료 (`testReminder`)
 
-**변수:** `#{name}`, `#{title}`, `#{pending}`, `#{link}`  
-**발송 시점:** 상담사가 검사를 배정한 뒤 미완료일 때
+**발송 시점:** 검사 참여 접수 후 미완료 시
 
 ```
 안녕하세요 #{name}님,
-담당 전문가 안내로 배정받으신 심리검사가 아직 완료되지 않았습니다.
+고객님께서 접수하신 WizCoCo 심리검사가 아직 완료되지 않았습니다.
 
 검사명: #{title}
 미완료: #{pending}
@@ -69,12 +68,12 @@ gh secret set SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS
 
 ### 3-2. 치료·과제 (`careAssignment`)
 
-**변수:** `#{name}`, `#{title}`, `#{link}`  
-**발송 시점:** 상담사가 치료·과제를 할당했을 때
+**발송 시점:** 서비스 이용 접수 내담자에게 상담사가 과제 등록 시
 
 ```
 안녕하세요 #{name}님,
-담당 전문가가 할당해 드린 치료·과제가 등록되었습니다.
+WizCoCo 상담·검사 서비스 이용을 접수하신 고객님께 안내드립니다.
+담당 전문상담사가 등록한 치료·과제입니다.
 
 #{title}
 
@@ -83,12 +82,11 @@ gh secret set SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS
 
 ### 3-3. 포털 자격증명 (`portalCredentials`)
 
-**변수:** `#{name}`, `#{mycode}`, `#{pin}`, `#{joincode}`, `#{link}`  
-**발송 시점:** 상담사가 포털 접속 정보를 발급했을 때
+**발송 시점:** 검사 참여 접수 후 접속 정보 발송 시
 
 ```
 안녕하세요 #{name}님,
-담당 전문가 안내로 발급받으신 WizCoCo 검사 접속 정보입니다.
+고객님께서 접수하신 WizCoCo 심리검사 참여에 대한 접속 정보입니다.
 
 검사코드: #{joincode}
 나의코드: #{mycode}

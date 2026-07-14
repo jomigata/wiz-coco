@@ -22,7 +22,7 @@ ALIMTALK_TEMPLATE_SPECS = {
         "variables": ["#{name}", "#{title}", "#{pending}", "#{link}"],
         "sampleBody": (
             "안녕하세요 #{name}님,\n"
-            "담당 전문가 안내로 배정받으신 심리검사가 아직 완료되지 않았습니다.\n\n"
+            "고객님께서 접수하신 WizCoCo 심리검사가 아직 완료되지 않았습니다.\n\n"
             "검사명: #{title}\n"
             "미완료: #{pending}\n\n"
             "이어서 진행: #{link}"
@@ -33,7 +33,8 @@ ALIMTALK_TEMPLATE_SPECS = {
         "variables": ["#{name}", "#{title}", "#{link}"],
         "sampleBody": (
             "안녕하세요 #{name}님,\n"
-            "담당 전문가가 할당해 드린 치료·과제가 등록되었습니다.\n\n"
+            "WizCoCo 상담·검사 서비스 이용을 접수하신 고객님께 안내드립니다.\n"
+            "담당 전문상담사가 등록한 치료·과제입니다.\n\n"
             "#{title}\n\n"
             "바로 보기: #{link}"
         ),
@@ -43,7 +44,7 @@ ALIMTALK_TEMPLATE_SPECS = {
         "variables": ["#{name}", "#{mycode}", "#{pin}", "#{joincode}", "#{link}"],
         "sampleBody": (
             "안녕하세요 #{name}님,\n"
-            "담당 전문가 안내로 발급받으신 WizCoCo 검사 접속 정보입니다.\n\n"
+            "고객님께서 접수하신 WizCoCo 심리검사 참여에 대한 접속 정보입니다.\n\n"
             "검사코드: #{joincode}\n"
             "나의코드: #{mycode}\n"
             "비밀번호: #{pin}\n\n"
@@ -147,7 +148,7 @@ def send_test_reminder_alimtalk(
         "#{pending}": (pending_summary or "미완료 검사")[:80],
         "#{link}": link,
     }
-    fallback = f"[WizCoCo] {name}님, 배정받으신 검사 미완료. {link}"
+    fallback = f"[WizCoCo] {name}님, 접수하신 검사 미완료. {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
@@ -171,7 +172,7 @@ def send_care_assignment_alimtalk(
         "#{title}": title[:40],
         "#{link}": link,
     }
-    fallback = f"[WizCoCo] {name}님, 할당된 치료·과제 안내. {link}"
+    fallback = f"[WizCoCo] {name}님, 접수하신 상담 서비스 치료·과제 안내. {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_CARE,
@@ -201,7 +202,7 @@ def send_portal_credentials_alimtalk(
         "#{joincode}": join_code,
         "#{link}": link,
     }
-    fallback = f"[WizCoCo] {name}님, 발급받으신 검사 접속 정보. 나의코드 {my_code} 비밀번호 {pin_display} {link}"
+    fallback = f"[WizCoCo] {name}님, 접수하신 검사 접속 정보. 나의코드 {my_code} 비밀번호 {pin_display} {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS,
