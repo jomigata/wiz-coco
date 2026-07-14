@@ -148,7 +148,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   const isHubPage = pathname?.startsWith('/counselor/hub/') ?? false;
 
   return (
-    <RoleGuard allowedRoles={['counselor', 'admin']} redirectTo="/counselor-application/">
+    <RoleGuard allowedRoles={['counselor', 'admin']}>
     <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">

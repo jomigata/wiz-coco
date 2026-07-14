@@ -19,10 +19,22 @@ export function canAccessCounselorProfessionalFeatures(
   applicationStatus: CounselorApplicationStatus | null | undefined,
 ): boolean {
   if (isAdmin(role)) return true;
-  // 역할이 counselor로 부여된 경우 신청서 상태(pending 등)와 무관하게 접근 허용
   if (role === 'counselor') return true;
+  // Firestore role 동기화 전에도 승인 신청서가 있으면 접근 허용
+  if (applicationStatus === 'approved') return true;
   if (isPendingCounselorApplication(applicationStatus)) return false;
   return false;
+}
+
+/** 상담사 영역 접근 거부 시 이동할 경로 (승인 완료 계정은 신청 페이지로 보내지 않음) */
+export function getCounselorAreaRedirectPath(
+  role: unknown,
+  applicationStatus: CounselorApplicationStatus | null | undefined,
+): string {
+  if (canAccessCounselorProfessionalFeatures(role, applicationStatus)) {
+    return '/counselor/';
+  }
+  return '/counselor-application/';
 }
 
 export function canShowCounselorApplyIcon(

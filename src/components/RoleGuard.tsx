@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { buildLoginRedirectUrl } from '@/lib/authRedirect';
 import {
   isAuthLoginInProgress,
@@ -10,8 +11,11 @@ import {
   replaceWithAuthSession,
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
-import { shouldShowCounselorMenu, shouldShowAdminMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
-import { canAccessCounselorProfessionalFeatures } from '@/lib/counselorProfessionalAccess';
+import { shouldShowAdminMenu, shouldShowOrgMenu } from '@/utils/roleUtils';
+import {
+  canAccessCounselorProfessionalFeatures,
+  getCounselorAreaRedirectPath,
+} from '@/lib/counselorProfessionalAccess';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 
 interface RoleGuardProps {
@@ -28,24 +32,31 @@ export default function RoleGuard({
   redirectTo = '/',
 }: RoleGuardProps) {
   const { user, authPending, showLoginRequired } = useAuthResolved();
+  const { roleHydrating } = useFirebaseAuth();
   const { loading: accessLoading, applicationStatus } = useCounselorProfessionalAccess();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const redirectedRef = useRef(false);
+
+  const needsCounselorAccess = allowedRoles.includes('counselor');
+  const sessionSettling = Boolean(user && (roleHydrating || (needsCounselorAccess && accessLoading)));
 
   useEffect(() => {
-    if (authPending) return;
-    if (user && accessLoading) return;
+    if (authPending || sessionSettling) return;
 
     if (showLoginRequired || !user) {
       setIsAuthorized(false);
       setIsChecking(false);
 
       if (isAuthLoginInProgress()) return;
+      if (redirectedRef.current) return;
 
       tryRestoreAuthenticatedTabSession();
       const timer = window.setTimeout(() => {
         if (isAuthLoginInProgress()) return;
+        if (redirectedRef.current) return;
+        redirectedRef.current = true;
         replaceWithAuthSession(router, buildLoginRedirectUrl());
       }, 400);
 
@@ -57,7 +68,7 @@ export default function RoleGuard({
 
     if (allowedRoles.includes('admin') && shouldShowAdminMenu(role)) {
       hasAccess = true;
-    } else if (allowedRoles.includes('counselor') && shouldShowCounselorMenu(role)) {
+    } else if (needsCounselorAccess) {
       hasAccess = canAccessCounselorProfessionalFeatures(role, applicationStatus);
     } else if (allowedRoles.includes('org_admin') && shouldShowOrgMenu(role) && role === 'org_admin') {
       hasAccess = true;
@@ -68,12 +79,29 @@ export default function RoleGuard({
     setIsAuthorized(hasAccess);
     setIsChecking(false);
 
-    if (!hasAccess) {
-      pushWithAuthSession(router, redirectTo);
+    if (!hasAccess && !redirectedRef.current) {
+      redirectedRef.current = true;
+      const destination =
+        needsCounselorAccess
+          ? getCounselorAreaRedirectPath(role, applicationStatus)
+          : redirectTo;
+      pushWithAuthSession(router, destination);
     }
-  }, [user, authPending, showLoginRequired, allowedRoles, router, redirectTo, accessLoading, applicationStatus]);
+  }, [
+    user,
+    authPending,
+    showLoginRequired,
+    allowedRoles,
+    router,
+    redirectTo,
+    accessLoading,
+    applicationStatus,
+    needsCounselorAccess,
+    sessionSettling,
+    roleHydrating,
+  ]);
 
-  if (authPending || isChecking || (user && accessLoading)) {
+  if (authPending || isChecking || sessionSettling) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center bg-white rounded-xl p-8 shadow-sm border border-slate-200">

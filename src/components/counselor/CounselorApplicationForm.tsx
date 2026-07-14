@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   COUNSELOR_REGIONS,
   COUNSELOR_SPECIALIZATIONS,
@@ -42,6 +43,7 @@ function statusMessage(status: CounselorApplicationStatus | null, counselor: boo
 }
 
 export default function CounselorApplicationForm({ uid, email, role }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -58,6 +60,12 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
   const counselor = isCounselor(role);
   const pending = applicationStatus === 'pending' || applicationStatus === 'under_review';
   const readOnly = pending || counselor;
+
+  useEffect(() => {
+    if (!loading && (counselor || applicationStatus === 'approved')) {
+      router.replace('/counselor/');
+    }
+  }, [loading, counselor, applicationStatus, router]);
 
   useEffect(() => {
     let cancelled = false;

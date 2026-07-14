@@ -78,10 +78,24 @@ function readCachedAuthUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
   if (!hasAuthenticatedTabSession()) return null;
 
+  const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
+    scope: 'session',
+    maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
+  });
+
   try {
     const { auth } = initializeFirebase();
     if (auth?.currentUser) {
-      return authUserFromSdkUser(auth.currentUser);
+      const base = authUserFromSdkUser(auth.currentUser);
+      if (cached.data && cached.data.uid === base.uid) {
+        return {
+          ...base,
+          role: cached.data.role || base.role,
+          displayName: cached.data.displayName ?? base.displayName,
+          photoURL: cached.data.photoURL ?? base.photoURL,
+        };
+      }
+      return base;
     }
   } catch {
     // ignore
@@ -93,10 +107,6 @@ function readCachedAuthUser(): AuthUser | null {
     return null;
   }
 
-  const cached = readSWRCache<AuthUser>(AUTH_CACHE_KEY, {
-    scope: 'session',
-    maxAgeMs: AUTH_CACHE_MAX_AGE_MS,
-  });
   if (cached.data) return cached.data;
   return null;
 }
@@ -112,6 +122,8 @@ type FirebaseAuthContextValue = {
   user: AuthUser | null;
   /** Firebase 세션 확인 중 (확정 전에는 로그인 필요 UI를 표시하지 않음) */
   loading: boolean;
+  /** Firestore/API에서 role 확정 전 — RoleGuard 등에서 조기 리다이렉트 방지 */
+  roleHydrating: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; user?: FirebaseSdkUser; error?: string }>;
   signUp: (
     email: string,
@@ -127,6 +139,7 @@ const FirebaseAuthContext = createContext<FirebaseAuthContextValue | null>(null)
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roleHydrating, setRoleHydrating] = useState(true);
   const authExpiredOnStartupRef = useRef(false);
 
   // paint 전 세션 복원 (로그인 UI 깜빡임 방지)
@@ -135,6 +148,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     if (authExpiredOnStartupRef.current) {
       setUser(null);
       setLoading(false);
+      setRoleHydrating(false);
       return;
     }
 
@@ -142,6 +156,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     if (primed) {
       setUser((prev) => prev ?? primed);
       setLoading(false);
+      setRoleHydrating(!(primed.role && primed.role !== 'user'));
       return;
     }
 
@@ -198,12 +213,16 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
       const quickRole: AppRole = getBootstrapRoleForEmail(firebaseUser.email) || 'user';
       const quickUser = { ...baseUser, role: quickRole };
+      setRoleHydrating(true);
       setUser(quickUser);
       writeSWRCache(AUTH_CACHE_KEY, quickUser, { scope: 'session' });
       finishLoading();
       void firebaseUser.getIdToken().then((token) => primeCounselorIdToken(token)).catch(() => null);
 
-      if (!db) return;
+      if (!db) {
+        setRoleHydrating(false);
+        return;
+      }
 
       void (async () => {
         try {
@@ -268,6 +287,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
             return nextUser;
           });
+          setRoleHydrating(false);
 
           if (unsubscribeUserDoc) unsubscribeUserDoc();
           unsubscribeUserDoc = onSnapshot(
@@ -288,6 +308,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           );
         } catch (e) {
           console.warn('[FirebaseAuth] role 로드 실패:', e);
+          setRoleHydrating(false);
         }
       })();
     };
@@ -324,6 +345,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         setUser(null);
         writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
         clearCounselorIdTokenCache();
+        setRoleHydrating(false);
         finishLoading();
       }, deferMs);
     };
@@ -336,6 +358,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(null);
       writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
       clearCounselorIdTokenCache();
+      setRoleHydrating(false);
     });
 
     unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -444,12 +467,13 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     () => ({
       user,
       loading,
+      roleHydrating,
       signIn,
       signUp,
       logout,
       resetPassword,
     }),
-    [user, loading, signIn, signUp, logout, resetPassword],
+    [user, loading, roleHydrating, signIn, signUp, logout, resetPassword],
   );
 
   return <FirebaseAuthContext.Provider value={value}>{children}</FirebaseAuthContext.Provider>;
