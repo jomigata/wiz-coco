@@ -454,7 +454,7 @@ export default function Navigation() {
         }
       `}</style>
       <nav
-        className={`relative z-50 w-full border-b border-white/[0.06] ${APP_HEADER_BG} shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md`}
+        className={`relative z-50 w-full border-b border-white/[0.06] ${APP_HEADER_BG} shadow-[0_8px_32px_rgba(0,0,0,0.35)]`}
         style={{ contain: 'layout' }}
       >
         <div className={`w-full max-w-[1800px] mx-auto px-4 sm:px-6 ${APP_HEADER_HEIGHT_CLASS} min-h-[4rem] flex items-center justify-between gap-2 sm:gap-3`}>
@@ -657,7 +657,7 @@ export default function Navigation() {
                       ? "text-white bg-blue-600 border-white"
                       : isAiMindAssistantOpen
                       ? "text-gray-300 border-white"
-                      : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                      : "text-gray-300 border-white/25 hover:text-white hover:bg-blue-800/50 hover:border-white"
                   }`}
                   onClick={(e) => handleNavLinkClick("/ai-mind-assistant", e)}
                 >
@@ -741,7 +741,7 @@ export default function Navigation() {
                               ? "text-white bg-blue-600 border-white"
                               : isCounselorOpen
                               ? "text-gray-300 border-white"
-                              : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                              : "text-gray-300 border-white/25 hover:text-white hover:bg-blue-800/50 hover:border-white"
                           }`}
                           onClick={(e) => handleNavLinkClick("/counselor", e)}
                         >
@@ -854,7 +854,7 @@ export default function Navigation() {
                             ? "text-white bg-blue-600 border-white"
                             : isDropdownOpen
                             ? "text-gray-300 border-white"
-                            : "text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white"
+                            : "text-gray-300 border-white/25 hover:text-white hover:bg-blue-800/50 hover:border-white"
                         }`}
                         onClick={(e) => handleNavLinkClick("/mypage", e)}
                       >

@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import WizcocoLogo from '@/components/WizcocoLogo';
-import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
 import { APP_FOOTER_BG, APP_FOOTER_HEIGHT_CLASS } from '@/lib/appChromeLayout';
 
+/** 상단 헤더와 동일 높이(h-16)의 고정 하단 바 — 불투명 배경 */
 export default function AppFooter() {
   return (
     <footer
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] ${APP_FOOTER_BG} shadow-[0_-6px_28px_rgba(0,0,0,0.4)] backdrop-blur-md`}
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] ${APP_FOOTER_BG} shadow-[0_-6px_28px_rgba(0,0,0,0.4)]`}
     >
       <div className="mx-auto w-full max-w-[1800px] px-4 sm:px-6">
         <div
@@ -39,9 +39,6 @@ export default function AppFooter() {
               이용약관
             </Link>
           </div>
-        </div>
-        <div className="hidden border-t border-white/[0.06] py-2 sm:block">
-          <BusinessLegalBlock variant="compact" />
         </div>
       </div>
     </footer>

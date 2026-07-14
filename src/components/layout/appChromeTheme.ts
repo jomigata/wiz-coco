@@ -4,16 +4,16 @@ export const APP_PAGE_BG = '#0f1628';
 export const appChromeClasses = {
   page: 'bg-[#0f1628] text-slate-100',
   header:
-    'border-b border-white/[0.06] bg-[#121c32]/92 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md',
-  headerFade: 'from-[#121c32]/70',
-  mainTopFade: 'from-[#121c32]/50',
+    'border-b border-white/[0.06] bg-[#121c32] shadow-[0_8px_32px_rgba(0,0,0,0.35)]',
+  headerFade: 'from-[#121c32]',
+  mainTopFade: 'from-[#121c32]',
   footer:
-    'border-t border-white/[0.07] bg-[#0c1220]/95 backdrop-blur-md shadow-[0_-6px_28px_rgba(0,0,0,0.28)]',
-  footerHeight: 'h-10 sm:h-11',
+    'border-t border-white/[0.07] bg-[#0c1220] shadow-[0_-6px_28px_rgba(0,0,0,0.28)]',
+  footerHeight: 'h-16',
 } as const;
 
 /** 고정 하단 푸터 높이만큼 본문 하단 여백 */
-export const APP_FOOTER_OFFSET_CLASS = 'pb-10 sm:pb-11';
+export const APP_FOOTER_OFFSET_CLASS = 'pb-16';
 
 /** 상단 헤더(#121c32)보다 한 단계 밝은 남청 블루 — 메가 메뉴 패널 전용 */
 export const NAV_MEGA_MENU_BG = '#162b4a';
