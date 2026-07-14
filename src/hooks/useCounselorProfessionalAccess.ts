@@ -21,6 +21,7 @@ export function useCounselorProfessionalAccess() {
 
   const role = user?.role || 'user';
   const uid = user?.uid || '';
+  const counselorRole = isCounselor(role);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,11 +34,25 @@ export function useCounselorProfessionalAccess() {
       return;
     }
 
+    const applyApplication = (application: Awaited<ReturnType<typeof getUserCounselorApplication>>) => {
+      if (!cancelled) setApplicationStatus(application?.status ?? null);
+    };
+
+    if (counselorRole) {
+      setAccessLoading(false);
+      void getUserCounselorApplication(uid)
+        .then(applyApplication)
+        .catch(() => {
+          if (!cancelled) setApplicationStatus(null);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     setAccessLoading(true);
     void getUserCounselorApplication(uid)
-      .then((application) => {
-        if (!cancelled) setApplicationStatus(application?.status ?? null);
-      })
+      .then(applyApplication)
       .catch(() => {
         if (!cancelled) setApplicationStatus(null);
       })
@@ -48,9 +63,9 @@ export function useCounselorProfessionalAccess() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, uid]);
+  }, [authLoading, uid, counselorRole]);
 
-  const loading = authLoading || (!!uid && accessLoading);
+  const loading = authLoading || (!!uid && accessLoading && !counselorRole);
   const isAuthenticated = !!uid;
   const isApprovedCounselor = canAccessCounselorProfessionalFeatures(role, applicationStatus);
   const isPendingApplication = isPendingCounselorApplication(applicationStatus);
@@ -70,6 +85,6 @@ export function useCounselorProfessionalAccess() {
     canShowApplyIcon,
     showPartnerIcon,
     showPendingBadge,
-    isCounselorRole: isCounselor(role),
+    isCounselorRole: counselorRole,
   };
 }

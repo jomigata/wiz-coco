@@ -287,25 +287,41 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
             return nextUser;
           });
-          setRoleHydrating(false);
+
+          const finishRoleHydration = () => setRoleHydrating(false);
+          const privilegedRole = role === 'counselor' || role === 'admin' || role === 'org_admin';
+          if (privilegedRole) {
+            finishRoleHydration();
+          }
 
           if (unsubscribeUserDoc) unsubscribeUserDoc();
+          let snapshotHandled = false;
           unsubscribeUserDoc = onSnapshot(
             ref,
             (docSnap) => {
               if (!docSnap.exists()) return;
               const data = docSnap.data() as { role?: AppRole };
-              const role = (data?.role || 'user') as AppRole;
+              const liveRole = (data?.role || 'user') as AppRole;
               setUser((prev) => {
-                const nextUser = prev ? { ...prev, role } : { ...baseUser, role };
+                const nextUser = prev ? { ...prev, role: liveRole } : { ...baseUser, role: liveRole };
                 writeSWRCache(AUTH_CACHE_KEY, nextUser, { scope: 'session' });
                 return nextUser;
               });
+              if (!snapshotHandled) {
+                snapshotHandled = true;
+                finishRoleHydration();
+              }
             },
             () => {
-              // ignore realtime errors
+              if (!snapshotHandled) finishRoleHydration();
             },
           );
+
+          if (!privilegedRole) {
+            window.setTimeout(() => {
+              if (!snapshotHandled) finishRoleHydration();
+            }, 2500);
+          }
         } catch (e) {
           console.warn('[FirebaseAuth] role 로드 실패:', e);
           setRoleHydrating(false);

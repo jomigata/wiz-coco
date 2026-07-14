@@ -152,10 +152,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-        {/* 페이지 상단 — 마이페이지 본문과 유사한 슬레이트 톤 */}
-        <header className={`shrink-0 border-b py-2.5 backdrop-blur-sm ${
-          isHubPage ? 'border-sky-400/15 bg-[#1a3358]/90' : 'border-white/10 bg-slate-950/90'
-        }`}>
+        {!isHubPage && (
+        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2.5 backdrop-blur-sm">
           <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
@@ -163,27 +161,21 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
               </h1>
               <p className="mt-0.5 text-xs text-slate-500">콘텐츠 상담 관리 시스템</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <div className="hidden text-right sm:block">
-                <p className="text-[10px] uppercase tracking-wide text-slate-500">상담사</p>
-                <p className="text-sm font-medium text-slate-200">김상담</p>
-              </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] sm:h-9 sm:w-9">
-                <span className="text-xs font-semibold text-slate-100 sm:text-sm">김</span>
-              </div>
-            </div>
           </div>
         </header>
+        )}
 
         <main className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${
           isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'
         }`}>
           <div className={`pointer-events-none absolute inset-0 ${
             isHubPage
-              ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(72,130,210,0.14),transparent)]'
+              ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(72,130,210,0.1),transparent)]'
               : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]'
           }`} />
-          <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 flex-col px-4 py-3 sm:px-6 sm:py-4">
+          <div className={`relative z-10 mx-auto flex min-h-0 w-full flex-1 flex-col ${
+            isHubPage ? 'max-w-3xl px-4 py-6 sm:px-6 sm:py-8' : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
+          }`}>
             {children}
           </div>
         </main>

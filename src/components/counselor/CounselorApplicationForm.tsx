@@ -62,10 +62,10 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
   const readOnly = pending || counselor;
 
   useEffect(() => {
-    if (!loading && (counselor || applicationStatus === 'approved')) {
+    if (counselor || applicationStatus === 'approved') {
       router.replace('/counselor/');
     }
-  }, [loading, counselor, applicationStatus, router]);
+  }, [counselor, applicationStatus, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +158,14 @@ export default function CounselorApplicationForm({ uid, email, role }: Props) {
       setSaving(false);
     }
   };
+
+  if (counselor || applicationStatus === 'approved') {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-slate-400 text-sm">
+        상담사 대시보드로 이동 중…
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -25,6 +25,8 @@ interface RoleGuardProps {
   redirectTo?: string;
 }
 
+const COUNSELOR_DENY_GRACE_MS = 500;
+
 export default function RoleGuard({
   children,
   allowedRoles,
@@ -38,12 +40,20 @@ export default function RoleGuard({
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const redirectedRef = useRef(false);
+  const userRef = useRef(user);
+  const applicationStatusRef = useRef(applicationStatus);
+
+  userRef.current = user;
+  applicationStatusRef.current = applicationStatus;
 
   const needsCounselorAccess = allowedRoles.includes('counselor');
   const sessionSettling = Boolean(user && (roleHydrating || (needsCounselorAccess && accessLoading)));
 
   useEffect(() => {
-    if (authPending || sessionSettling) return;
+    if (authPending || sessionSettling) {
+      setIsChecking(true);
+      return;
+    }
 
     if (showLoginRequired || !user) {
       setIsAuthorized(false);
@@ -79,14 +89,33 @@ export default function RoleGuard({
     setIsAuthorized(hasAccess);
     setIsChecking(false);
 
-    if (!hasAccess && !redirectedRef.current) {
+    if (hasAccess || redirectedRef.current) return;
+
+    const graceMs = needsCounselorAccess ? COUNSELOR_DENY_GRACE_MS : 0;
+    const timer = window.setTimeout(() => {
+      const latestUser = userRef.current;
+      if (!latestUser) return;
+
+      const latestRole = latestUser.role || 'user';
+      const latestStatus = applicationStatusRef.current;
+      const stillDenied = needsCounselorAccess
+        ? !canAccessCounselorProfessionalFeatures(latestRole, latestStatus)
+        : true;
+
+      if (!stillDenied) {
+        setIsAuthorized(true);
+        return;
+      }
+
+      if (redirectedRef.current) return;
       redirectedRef.current = true;
-      const destination =
-        needsCounselorAccess
-          ? getCounselorAreaRedirectPath(role, applicationStatus)
-          : redirectTo;
+      const destination = needsCounselorAccess
+        ? getCounselorAreaRedirectPath(latestRole, latestStatus)
+        : redirectTo;
       pushWithAuthSession(router, destination);
-    }
+    }, graceMs);
+
+    return () => window.clearTimeout(timer);
   }, [
     user,
     authPending,
