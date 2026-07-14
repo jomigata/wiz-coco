@@ -7,6 +7,7 @@ import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
 import RoleGuard from '@/components/RoleGuard';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
+import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -144,13 +145,17 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     setPageTitle(currentTitle);
   }, [pathname]);
 
+  const isHubPage = pathname?.startsWith('/counselor/hub/') ?? false;
+
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']} redirectTo="/counselor-application/">
-    <div className="flex min-h-[100dvh] flex-col bg-[#0b1120] text-white">
+    <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
         {/* 페이지 상단 — 마이페이지 본문과 유사한 슬레이트 톤 */}
-        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2.5 backdrop-blur-sm">
+        <header className={`shrink-0 border-b py-2.5 backdrop-blur-sm ${
+          isHubPage ? 'border-sky-400/15 bg-[#1a3358]/90' : 'border-white/10 bg-slate-950/90'
+        }`}>
           <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
@@ -170,8 +175,14 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]" />
+        <main className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${
+          isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'
+        }`}>
+          <div className={`pointer-events-none absolute inset-0 ${
+            isHubPage
+              ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(72,130,210,0.14),transparent)]'
+              : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]'
+          }`} />
           <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 flex-col px-4 py-3 sm:px-6 sm:py-4">
             {children}
           </div>

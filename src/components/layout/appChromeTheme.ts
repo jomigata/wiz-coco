@@ -18,6 +18,20 @@ export const APP_FOOTER_OFFSET_CLASS = 'pb-10 sm:pb-11';
 /** 상단 헤더(#0a1020)보다 한 단계 밝은 남청 블루 — 메가 메뉴 패널 전용 */
 export const NAV_MEGA_MENU_BG = '#162b4a';
 
+/** 상담관리 허브 페이지 — 서브메뉴와 동일 톤, 중·소분류 계층 배경 */
+export const counselorHubClasses = {
+  page: 'bg-[#162b4a]',
+  pageGlow:
+    'pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(72,130,210,0.14),transparent)]',
+  hero: 'rounded-2xl border border-sky-400/15 bg-[#1a3358] p-6 sm:p-8',
+  subsection: 'rounded-2xl border border-sky-400/12 bg-[#1a3358] p-5 sm:p-6',
+  subsectionHeader: 'border-b border-sky-400/10 pb-4',
+  item: 'rounded-xl border border-sky-400/10 bg-[#101f38] px-4 py-3.5 transition-all duration-300 hover:border-sky-300/35 hover:bg-[#142847]',
+  itemIcon: 'rounded-lg border border-sky-400/10 bg-[#162b4a]',
+  footerNote: 'rounded-2xl border border-dashed border-sky-400/15 bg-[#142847]/60 p-5',
+  statCard: 'rounded-xl border border-sky-400/12 bg-[#142847] px-4 py-3 text-center',
+} as const;
+
 /** 데스크톱 3단 메가 메뉴 패널 — 헤더와 톤은 맞추되 배경은 한 단계 밝게 */
 export const navMegaMenuClasses = {
   panel:
