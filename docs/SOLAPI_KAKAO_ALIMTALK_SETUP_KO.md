@@ -73,9 +73,9 @@ gh secret set SOLAPI_KAKAO_TEMPLATE_PORTAL_CREDENTIALS
 ```
 안녕하세요 #{name}님,
 WizCoCo 상담·검사 서비스 이용을 접수하신 고객님께 안내드립니다.
-담당 전문상담사가 등록한 치료·과제입니다.
+담당 전문상담사가 등록한 치료·과제 안내입니다.
 
-#{title}
+치료·과제명: #{title}
 
 바로 보기: #{link}
 ```
