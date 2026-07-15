@@ -83,6 +83,19 @@ export default function HeroSection() {
               검사 결과 확인
             </Link>
           </div>
+
+          <p className="mt-8 text-center">
+            <Link
+              href="/portal/guide/"
+              className="inline-flex items-center gap-1.5 text-sm text-sky-300/85 hover:text-sky-200 underline-offset-4 hover:underline transition-colors"
+            >
+              검사코드는 어떻게 받나요?
+              <span aria-hidden>→</span>
+            </Link>
+          </p>
+          <p className="mt-2 text-center text-xs text-slate-500">
+            상담사·기관 안내 / 개인 직접 구매 방법
+          </p>
         </div>
       </div>
 

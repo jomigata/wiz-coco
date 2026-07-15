@@ -24,7 +24,7 @@ const steps = [
 const faqs = [
   {
     q: '검사 코드는 어디서 받나요?',
-    a: '담당 기관·전문가에게 전달받은 코드와 비밀번호를 사용합니다.',
+    a: '담당 기관·전문가에게 전달받거나, 개인 직접 구매 경로를 이용할 수 있습니다.',
   },
   {
     q: '회원가입이 필요한가요?',
@@ -82,7 +82,13 @@ export default function PublicTestPortalSections() {
               </div>
             ))}
           </div>
-          <p className="text-center mt-10">
+          <p className="text-center mt-10 space-y-3">
+            <Link
+              href="/portal/guide/"
+              className="block text-sm font-medium text-violet-300/90 hover:text-violet-200 transition-colors"
+            >
+              검사코드 받는 방법 · 개인 직접 구매 안내 →
+            </Link>
             <Link
               href="/portal/login/"
               className="inline-flex items-center gap-2 text-sm font-medium text-sky-300/90 hover:text-sky-200 transition-colors"
