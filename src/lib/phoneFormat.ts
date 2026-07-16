@@ -100,3 +100,28 @@ export function formatPhoneDisplay(raw: unknown): string {
 export function formatPhoneDisplayOr(raw: unknown, empty = '—'): string {
   return formatPhoneDisplay(raw) || empty;
 }
+
+/** 가운데 4자리 마스킹 표시 (예: 010-****-5410) */
+export function formatPhoneMaskedDisplay(raw: unknown): string {
+  const digits = normalizePhoneDigits(raw);
+  if (!digits) return formatPhoneDisplayOr(raw);
+
+  if (digits.length === 11 && digits.startsWith('01')) {
+    return `${digits.slice(0, 3)}-****-${digits.slice(7)}`;
+  }
+  if (digits.length === 10 && digits.startsWith('01')) {
+    return `${digits.slice(0, 3)}-****-${digits.slice(6)}`;
+  }
+
+  const formatted = formatPhoneDisplay(raw);
+  const parts = formatted.split('-');
+  if (parts.length === 3) {
+    return `${parts[0]}-****-${parts[2]}`;
+  }
+
+  if (digits.length >= 8) {
+    return `${digits.slice(0, 3)}-****-${digits.slice(-4)}`;
+  }
+
+  return formatted;
+}

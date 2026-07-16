@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -29,6 +29,8 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const [rightColHeight, setRightColHeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (authPending || !user) {
@@ -58,6 +60,28 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       cancelled = true;
     };
   }, [assessmentId, authPending, user, showLoginRequired]);
+
+  useEffect(() => {
+    const leftCol = leftColRef.current;
+    if (!leftCol) return;
+
+    const syncRightHeight = () => {
+      if (window.matchMedia('(min-width: 1280px)').matches) {
+        setRightColHeight(leftCol.offsetHeight);
+      } else {
+        setRightColHeight(null);
+      }
+    };
+
+    syncRightHeight();
+    const observer = new ResizeObserver(syncRightHeight);
+    observer.observe(leftCol);
+    window.addEventListener('resize', syncRightHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', syncRightHeight);
+    };
+  }, [title, welcomeMessage, usageEndDate, initial]);
 
   const canSubmit = Boolean(user) && !authPending && !loading && !loadingData && initial;
 
@@ -125,8 +149,8 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-2 xl:items-stretch">
-        <div className="flex min-h-0 flex-col gap-4">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+        <div ref={leftColRef} className="flex min-h-0 flex-col gap-4">
           <CounselorPageSection title="검사코드">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
@@ -155,24 +179,29 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           </CounselorPageSection>
         </div>
 
-        <CounselorPageSection
-          title="포함할 검사"
-          className="flex min-h-0 flex-col xl:h-full"
-          bodyClassName="flex min-h-0 flex-1 flex-col"
+        <div
+          className="min-h-0 xl:flex xl:flex-col"
+          style={rightColHeight != null ? { height: rightColHeight } : undefined}
         >
-          <AssessmentSettingsFields
-            sections="tests"
-            title={title}
-            onTitleChange={setTitle}
-            welcomeMessage={welcomeMessage}
-            onWelcomeMessageChange={setWelcomeMessage}
-            usageEndDate={usageEndDate}
-            onUsageEndDateChange={setUsageEndDate}
-            selectedTestIds={selectedTestIds}
-            onToggleTest={toggleTest}
-            disabled={loading}
-          />
-        </CounselorPageSection>
+          <CounselorPageSection
+            title="포함할 검사"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden xl:h-full"
+            bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+          >
+            <AssessmentSettingsFields
+              sections="tests"
+              title={title}
+              onTitleChange={setTitle}
+              welcomeMessage={welcomeMessage}
+              onWelcomeMessageChange={setWelcomeMessage}
+              usageEndDate={usageEndDate}
+              onUsageEndDateChange={setUsageEndDate}
+              selectedTestIds={selectedTestIds}
+              onToggleTest={toggleTest}
+              disabled={loading}
+            />
+          </CounselorPageSection>
+        </div>
       </div>
 
       {error ? (

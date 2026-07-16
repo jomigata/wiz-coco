@@ -6,7 +6,7 @@ import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessment
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
-import { formatPhoneDisplay, formatPhoneDisplayOr } from '@/lib/phoneFormat';
+import { formatPhoneDisplay, formatPhoneDisplayOr, formatPhoneMaskedDisplay } from '@/lib/phoneFormat';
 import {
   downloadDispatchRecipientsExcel,
   printDispatchRecipients,
@@ -368,6 +368,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [revealedPhonePortalId, setRevealedPhonePortalId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -731,9 +732,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 px-4 py-3">
-          <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
+            <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
             <button
               type="button"
               onClick={() => {
@@ -745,6 +745,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             >
               + 내담자 추가
             </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
             <button
               type="button"
               onClick={toggleAll}
@@ -910,8 +913,30 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap">
-                        {formatPhoneDisplayOr(r.phone)}
+                      <td
+                        className="px-3 py-2 text-slate-300 align-top whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {r.phone?.trim() ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRevealedPhonePortalId((prev) =>
+                                prev === r.portalId ? null : r.portalId,
+                              )
+                            }
+                            className="rounded tabular-nums transition hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500"
+                            title={
+                              revealedPhonePortalId === r.portalId ? '번호 숨기기' : '번호 보기'
+                            }
+                          >
+                            {revealedPhonePortalId === r.portalId
+                              ? formatPhoneDisplayOr(r.phone)
+                              : formatPhoneMaskedDisplay(r.phone)}
+                          </button>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
