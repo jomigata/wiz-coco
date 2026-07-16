@@ -31,6 +31,7 @@ import {
   downloadGroupRecipientSampleTxt,
 } from '@/lib/groupRecipientSampleDownload';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import * as XLSX from 'xlsx';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
@@ -43,22 +44,22 @@ function recipientKey(row: Pick<RecipientRow, 'displayName' | 'email' | 'phone'>
   return `${row.displayName.trim()}|${row.email.trim()}|${row.phone.trim()}`.toLowerCase();
 }
 
-const FORM_CARD =
-  'rounded-xl border border-white/10 bg-gradient-to-br from-slate-800/45 via-slate-800/25 to-slate-900/55 shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm';
 const FORM_INPUT =
-  'w-full px-3 py-2 rounded-lg bg-slate-950/55 border border-white/10 text-white text-sm placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-400/50 disabled:cursor-not-allowed disabled:opacity-55';
-const FORM_LABEL = 'block text-xs font-medium text-slate-400 mb-1';
-/** 포함할 검사: 2열 그리드 기준 5행 높이 (약 11.5rem) */
+  'w-full rounded-lg border border-white/10 bg-[#101f38]/90 px-3 py-2.5 text-base text-white placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 disabled:cursor-not-allowed disabled:opacity-55';
+const FORM_LABEL = 'mb-1.5 block text-sm font-semibold text-slate-300';
+const FORM_HINT = 'text-sm text-slate-400 leading-relaxed';
+/** 포함할 검사 목록 스크롤 영역 */
 const TEST_PICKER_SCROLL =
-  'max-h-[11.5rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-slate-950/40 p-2';
+  'max-h-[14rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-[#101f38]/60 p-3';
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="flex items-center gap-2 text-xs font-semibold tracking-wide text-slate-200">
-      <span className="h-3.5 w-0.5 shrink-0 rounded-full bg-gradient-to-b from-blue-400 to-indigo-500" />
-      {children}
-    </h2>
-  );
+function recipientGridClass(selectMode: boolean): string {
+  return selectMode
+    ? 'grid grid-cols-[2.75rem_minmax(5.5rem,1fr)_minmax(7rem,1.2fr)_minmax(6.5rem,1fr)_3rem] items-center gap-x-2 gap-y-1'
+    : 'grid grid-cols-[minmax(5.5rem,1fr)_minmax(7rem,1.2fr)_minmax(6.5rem,1fr)_3rem] items-center gap-x-2 gap-y-1';
+}
+
+function recipientHeaderClass(selectMode: boolean): string {
+  return `${recipientGridClass(selectMode)} shrink-0 border-b border-white/10 pb-2 text-sm font-semibold text-sky-200/90`;
 }
 
 function recipientPhoneFromRaw(raw: unknown): string {
@@ -173,6 +174,8 @@ export default function IndividualAssessmentCreateForm() {
   const [scheduledAtIso, setScheduledAtIso] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
+  const [lastCreatedAssessmentId, setLastCreatedAssessmentId] = useState('');
+  const [lastSendMode, setLastSendMode] = useState<SendMode>('none');
 
   const sortedGroupAssessments = useMemo(
     () => sortCounselorAssessments(groupAssessments, listSortKey),
@@ -469,6 +472,7 @@ export default function IndividualAssessmentCreateForm() {
         willNotify && notifyTiming === 'scheduled' && scheduledAtLocal
           ? new Date(scheduledAtLocal).toISOString()
           : undefined;
+      setLastSendMode(sendMode);
       const result = await bulkCreateClientPortals({
         cohortName: cohortName.trim().slice(0, 120),
         title: (title.trim() || selectedAssessment?.title || cohortName.trim() || '검사').slice(0, 200),
@@ -514,10 +518,12 @@ export default function IndividualAssessmentCreateForm() {
         setSharedJoinCode(result.joinAccessCode || '');
         setNotifyQueued(result.notifyQueued);
         setScheduledAtIso(result.scheduledAt ?? scheduledAt ?? null);
+        setLastCreatedAssessmentId(result.assessmentId || selectedAssessmentId || '');
         return;
       }
 
       setCreated(result.created || []);
+      setLastCreatedAssessmentId(result.assessmentId || selectedAssessmentId || '');
       setSharedJoinCode(result.joinAccessCode || result.created?.[0]?.joinAccessCode || '');
       setNotifySent(result.notifySent ?? 0);
       setNotifyFailed(result.notifyFailed ?? 0);
@@ -532,6 +538,23 @@ export default function IndividualAssessmentCreateForm() {
 
   const downloadExcel = () => {
     downloadBulkPortalExcel(created, sharedJoinCode);
+  };
+
+  const resetForAnotherIssue = () => {
+    setCreated([]);
+    setSharedJoinCode('');
+    setNotifySent(0);
+    setNotifyFailed(0);
+    setNotifyQueued(0);
+    setScheduledAtIso(null);
+    setLastCreatedAssessmentId('');
+    setLastSendMode('none');
+    setError('');
+    setManualRows([{ ...EMPTY_ROW }]);
+    setFileRows([]);
+    setFileLabel('');
+    setSendMode('none');
+    setNotifySelected(new Set());
   };
 
   if (authPending) {
@@ -577,120 +600,140 @@ export default function IndividualAssessmentCreateForm() {
   }
 
   if (created.length > 0) {
+    const didNotify = lastSendMode !== 'none';
     return (
-      <div className="space-y-6 max-w-2xl">
-        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 p-4 text-emerald-200 text-sm">
-          <p className="font-medium">{created.length}명에게 나의코드·비밀번호가 발급되었습니다.</p>
-          {sharedJoinCode ? (
-            <p className="mt-2">
-              공통 검사코드:{' '}
-              <span className="font-mono font-bold text-emerald-100 tracking-wider">
-                {formatAccessCodeDisplay(sharedJoinCode)}
-              </span>
+      <div className="space-y-4">
+        <CounselorPageSection title="발급 완료">
+          <div className="space-y-4 text-base text-slate-200">
+            <p className="font-semibold text-emerald-200">
+              {created.length.toLocaleString('ko-KR')}명에게 나의코드·비밀번호가 발급되었습니다.
             </p>
-          ) : null}
-          {willNotify ? (
-            <p className="mt-1 text-emerald-300/90">
-              {sendMode === 'select' ? (
-                <span className="text-emerald-200/90">선택 {notifyTargetCount}명 · </span>
+            {sharedJoinCode ? (
+              <p>
+                공통 검사코드:{' '}
+                <span className="font-mono text-lg font-bold tracking-wider text-emerald-100">
+                  {formatAccessCodeDisplay(sharedJoinCode)}
+                </span>
+              </p>
+            ) : null}
+            {didNotify ? (
+              <p className="text-slate-300">
+                {lastSendMode === 'select' ? (
+                  <span className="text-sky-200">선택 {notifyTargetCount}명 · </span>
+                ) : null}
+                {scheduledAtIso ? (
+                  `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
+                ) : notifySent > 0 ? (
+                  <>
+                    {notifySent}명에게 즉시 이메일·문자로 발송되었습니다.
+                    {notifyFailed > 0 ? ` (${notifyFailed}명 발송 실패 — Excel 저장 후 진행현황에서 재발송)` : null}
+                  </>
+                ) : notifyQueued > 0 ? (
+                  `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다.`
+                ) : (
+                  '발송 설정이 없거나 연락처가 없습니다.'
+                )}
+              </p>
+            ) : (
+              <p className="text-slate-400">Excel에서 코드·비밀번호를 확인하거나, 아래에서 발송목록으로 이동할 수 있습니다.</p>
+            )}
+            <div className="flex flex-wrap gap-3 pt-1">
+              <button
+                type="button"
+                onClick={downloadExcel}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-blue-700"
+              >
+                Excel 다운로드
+              </button>
+              <button
+                type="button"
+                onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
+                className="rounded-lg border border-white/15 bg-slate-800/80 px-5 py-2.5 text-base font-medium text-slate-200 transition hover:bg-slate-700/80"
+              >
+                발송목록
+              </button>
+              {lastCreatedAssessmentId ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    pushWithAuthSession(router, `/counselor/assessments/${lastCreatedAssessmentId}/progress`)
+                  }
+                  className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-5 py-2.5 text-base font-medium text-sky-200 transition hover:bg-sky-500/20"
+                >
+                  진행현황
+                </button>
               ) : null}
-              {scheduledAtIso ? (
-                `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
-              ) : notifySent > 0 ? (
-                <>
-                  {notifySent}명에게 즉시 이메일·문자로 발송되었습니다.
-                  {notifyFailed > 0 ? ` (${notifyFailed}명 발송 실패 — Excel 저장 후 진행현황에서 재발송)` : null}
-                </>
-              ) : notifyQueued > 0 ? (
-                `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다.`
-              ) : (
-                '발송 설정이 없거나 연락처가 없습니다.'
-              )}
-            </p>
-          ) : (
-            <p className="mt-1 text-emerald-300/90">아래 Excel에서 코드·비밀번호를 확인하세요.</p>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={downloadExcel}
-            className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Excel 다운로드
-          </button>
-          <button
-            type="button"
-            onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
-            className="px-5 py-2.5 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600"
-          >
-            발송목록
-          </button>
-        </div>
+              <button
+                type="button"
+                onClick={resetForAnotherIssue}
+                className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-5 py-2.5 text-base font-medium text-emerald-200 transition hover:bg-emerald-500/20"
+              >
+                이 페이지에서 계속 발급
+              </button>
+            </div>
+          </div>
+        </CounselorPageSection>
       </div>
     );
   }
 
   const selectedTestCount = selectedTestIds.size;
+  const selectSendMode = sendMode === 'select';
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-      {/* 검사코드 선택 */}
-      <div
-        className={`${FORM_CARD} flex shrink-0 flex-wrap items-end gap-3 px-4 py-3`}
-      >
-        <div className="min-w-[220px] flex-1">
-          <label className={FORM_LABEL}>검사코드 선택</label>
-          <select
-            value={selectedAssessmentId}
-            onChange={(e) => handleAssessmentSelect(e.target.value)}
-            disabled={loading || loadingAssessments}
-            className={FORM_INPUT}
-          >
-            <option value="">+ 새 검사코드 만들기</option>
-            {sortedGroupAssessments.map((a) => (
-              <option key={a.id} value={a.id}>
-                {formatAssessmentSelectLabel(a)}
-              </option>
-            ))}
-          </select>
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      <CounselorPageSection title="검사코드 선택">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="min-w-[240px] flex-1">
+            <label className={FORM_LABEL}>기존 검사코드 불러오기</label>
+            <select
+              value={selectedAssessmentId}
+              onChange={(e) => handleAssessmentSelect(e.target.value)}
+              disabled={loading || loadingAssessments}
+              className={FORM_INPUT}
+            >
+              <option value="">+ 새 검사코드 만들기</option>
+              {sortedGroupAssessments.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {formatAssessmentSelectLabel(a)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <label htmlFor="assessment-sort" className="whitespace-nowrap text-sm text-slate-400">
+              정렬
+            </label>
+            <select
+              id="assessment-sort"
+              value={listSortKey}
+              onChange={(e) => setListSortKey(e.target.value as AssessmentListSortKey)}
+              disabled={loading || loadingAssessments}
+              className={`${FORM_INPUT} w-auto min-w-[9rem] py-2 text-base`}
+            >
+              {ASSESSMENT_LIST_SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {usingExisting && selectedAssessment ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
+              {formatAccessCodeDisplay(selectedAssessment.accessCode)}
+            </span>
+          ) : (
+            <span className="hidden pb-2 text-sm text-slate-400 sm:inline">
+              기존 코드 선택 시 설정이 자동으로 채워집니다.
+            </span>
+          )}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <label htmlFor="assessment-sort" className="whitespace-nowrap text-xs text-slate-500">
-            정렬
-          </label>
-          <select
-            id="assessment-sort"
-            value={listSortKey}
-            onChange={(e) => setListSortKey(e.target.value as AssessmentListSortKey)}
-            disabled={loading || loadingAssessments}
-            className={`${FORM_INPUT} w-auto min-w-[7.5rem] py-1.5 text-xs`}
-          >
-            {ASSESSMENT_LIST_SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {usingExisting && selectedAssessment ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 font-mono text-xs text-cyan-200">
-            {formatAccessCodeDisplay(selectedAssessment.accessCode)}
-          </span>
-        ) : (
-          <span className="hidden pb-2 text-xs text-slate-500 sm:inline">
-            기존 코드 선택 시 설정 자동 입력
-          </span>
-        )}
-      </div>
+      </CounselorPageSection>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_252px]">
-          {/* 검사 정보 */}
-          <section
-            className={`${FORM_CARD} flex min-h-0 shrink-0 flex-col gap-2.5 p-3 lg:col-start-1 lg:row-start-1`}
-          >
-            <SectionHeading>검사 정보</SectionHeading>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)]">
+        <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col xl:col-start-1 xl:row-start-1">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
                 <label className={FORM_LABEL}>
                   기관/단체/그룹명 <span className="text-red-400">*</span>
@@ -730,10 +773,10 @@ export default function IndividualAssessmentCreateForm() {
                     type="button"
                     onClick={() => openDatePicker(usageEndDateRef)}
                     disabled={loading || usingExisting}
-                    className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center rounded-l-lg border-r border-white/10 text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="사용종료일 달력 열기"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                       <path
                         d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
                         stroke="currentColor"
@@ -747,7 +790,7 @@ export default function IndividualAssessmentCreateForm() {
                     id="usage-end-date"
                     ref={usageEndDateRef}
                     type="date"
-                    className={`${FORM_INPUT} py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                    className={`${FORM_INPUT} py-2.5 pl-11 pr-2 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
                     value={usageEndDate}
                     onChange={(e) => setUsageEndDate(e.target.value)}
                     onClick={() => openDatePicker(usageEndDateRef)}
@@ -757,14 +800,14 @@ export default function IndividualAssessmentCreateForm() {
               </div>
             </div>
             {usingExisting ? (
-              <p className="text-[11px] text-slate-500">검사·메시지는 선택한 코드 설정을 사용합니다.</p>
+              <p className={FORM_HINT}>검사·메시지는 선택한 코드 설정을 사용합니다.</p>
             ) : null}
-            <div className="space-y-2">
+            <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
                 <label className={FORM_LABEL}>안내 메시지 (선택)</label>
                 <textarea
-                  rows={1}
-                  className={`${FORM_INPUT} min-h-[2.5rem] resize-none`}
+                  rows={2}
+                  className={`${FORM_INPUT} min-h-[3.5rem] resize-y`}
                   placeholder="내담자에게 보여줄 안내 문구"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
@@ -772,7 +815,7 @@ export default function IndividualAssessmentCreateForm() {
                 />
               </div>
               <div>
-                <div className="mb-1 flex items-center justify-between gap-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <label className={FORM_LABEL}>
                     포함할 검사
                     {usingExisting ? (
@@ -780,31 +823,31 @@ export default function IndividualAssessmentCreateForm() {
                     ) : null}
                   </label>
                   {!usingExisting ? (
-                    <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
+                    <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-sm text-slate-400">
                       {selectedTestCount}개 선택
                     </span>
                   ) : null}
                 </div>
                 <div className={TEST_PICKER_SCROLL}>
-                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                     {counselorAssessmentTestOptions.map((t) => {
                       const checked = selectedTestIds.has(t.testId);
                       const lockedChecked = usingExisting && checked;
                       return (
                         <label
                           key={t.testId}
-                          className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs leading-snug transition-colors ${
+                          className={`flex items-start gap-2.5 rounded-md px-2 py-2 text-base leading-snug transition-colors ${
                             usingExisting
                               ? 'cursor-default opacity-75'
                               : 'cursor-pointer hover:bg-white/5'
-                          } ${lockedChecked ? 'text-red-300' : checked ? 'text-blue-100' : 'text-slate-300'}`}
+                          } ${lockedChecked ? 'text-red-300' : checked ? 'text-sky-100' : 'text-slate-300'}`}
                         >
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleTest(t.testId)}
                             disabled={loading || usingExisting}
-                            className={`mt-0.5 shrink-0 rounded ${lockedChecked ? 'accent-red-500' : 'accent-blue-500'}`}
+                            className={`mt-1 shrink-0 rounded ${lockedChecked ? 'accent-red-500' : 'accent-sky-500'}`}
                           />
                           <span>{t.name}</span>
                         </label>
@@ -814,136 +857,148 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
               </div>
             </div>
-          </section>
+          </div>
+        </CounselorPageSection>
 
-          {/* 내담자 목록 */}
-          <section
-            className={`${FORM_CARD} flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3 lg:col-start-2 lg:row-start-1`}
-          >
-            <div className="flex shrink-0 items-center justify-between gap-2">
-              <SectionHeading>내담자 목록</SectionHeading>
-              <div className="flex items-center gap-2">
-                {recipients.length > 0 ? (
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      recipients.length > GROUP_RECIPIENT_MAX
-                        ? 'bg-red-500/15 text-red-300'
-                        : 'bg-emerald-500/15 text-emerald-300'
-                    }`}
-                  >
-                    {recipients.length.toLocaleString('ko-KR')}명
-                  </span>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => addRow()}
-                  className="rounded-md border border-blue-500/30 bg-blue-500/10 px-2 py-1 text-xs text-blue-300 transition hover:bg-blue-500/20"
-                  disabled={loading}
+        <CounselorPageSection
+          title="내담자 목록"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden xl:col-start-2 xl:row-start-1"
+          toolbar={
+            <div className="flex items-center gap-2">
+              {recipients.length > 0 ? (
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${
+                    recipients.length > GROUP_RECIPIENT_MAX
+                      ? 'bg-red-500/15 text-red-300'
+                      : 'bg-emerald-500/15 text-emerald-300'
+                  }`}
                 >
-                  + 행 추가
-                </button>
-              </div>
+                  {recipients.length.toLocaleString('ko-KR')}명
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => addRow()}
+                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                disabled={loading}
+              >
+                + 행 추가
+              </button>
             </div>
-            <div className="hidden shrink-0 gap-2 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[2.5rem_1fr_1fr_1fr_2.5rem]">
-              {sendMode === 'select' ? <span>발송</span> : <span />}
+          }
+        >
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+            <div className={`hidden md:grid ${recipientHeaderClass(selectSendMode)}`}>
+              {selectSendMode ? <span className="text-center">발송</span> : null}
               <span>이름 *</span>
               <span>이메일</span>
               <span>휴대폰</span>
               <span />
             </div>
-            <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
               {manualRows.map((row, idx) => {
                 const notifyKey = recipientKey(row);
-                const showNotifyCheckbox = sendMode === 'select' && Boolean(row.displayName.trim());
+                const showNotifyCheckbox = selectSendMode && Boolean(row.displayName.trim());
                 return (
-                <div
-                  key={idx}
-                  className={`grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] md:grid-cols-[2.5rem_1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5`}
-                >
-                  {sendMode === 'select' ? (
-                    <div className="flex justify-center md:justify-start">
-                      {showNotifyCheckbox ? (
-                        <input
-                          type="checkbox"
-                          checked={notifySelected.has(notifyKey)}
-                          onChange={() => toggleNotifyRecipient(row)}
-                          disabled={loading}
-                          className="rounded accent-blue-500"
-                          title="발송 대상 선택"
-                          aria-label={`${row.displayName || '내담자'} 발송 선택`}
-                        />
-                      ) : (
-                        <span className="w-4" />
-                      )}
-                    </div>
-                  ) : null}
-                  <input
-                    ref={(el) => {
-                      recipientNameRefs.current[idx] = el;
-                    }}
-                    placeholder="이름"
-                    className={FORM_INPUT}
-                    value={row.displayName}
-                    onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
-                    onKeyDown={handleRecipientFieldKeyDown}
-                    disabled={loading}
-                  />
-                  <input
-                    placeholder="이메일"
-                    type="email"
-                    className={FORM_INPUT}
-                    value={row.email}
-                    onChange={(e) => updateRow(idx, 'email', e.target.value)}
-                    onKeyDown={handleRecipientFieldKeyDown}
-                    disabled={loading}
-                  />
-                  <input
-                    placeholder="휴대폰"
-                    className={FORM_INPUT}
-                    value={row.phone}
-                    onChange={(e) => updateRow(idx, 'phone', e.target.value)}
-                    onKeyDown={handleRecipientFieldKeyDown}
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeRow(idx)}
-                    className="justify-self-end px-1 text-xs text-slate-500 transition hover:text-red-400 disabled:opacity-30"
-                    disabled={loading || manualRows.length <= 1}
-                    title="행 삭제"
+                  <div
+                    key={idx}
+                    className={`${recipientGridClass(selectSendMode)} rounded-lg border border-white/5 bg-[#101f38]/40 px-2 py-2 md:border-0 md:bg-transparent md:px-0 md:py-0.5`}
                   >
-                    삭제
-                  </button>
-                </div>
-              );
+                    {selectSendMode ? (
+                      <div className="flex items-center justify-center md:justify-center">
+                        {showNotifyCheckbox ? (
+                          <input
+                            type="checkbox"
+                            checked={notifySelected.has(notifyKey)}
+                            onChange={() => toggleNotifyRecipient(row)}
+                            disabled={loading}
+                            className="h-4 w-4 rounded accent-sky-500"
+                            title="발송 대상 선택"
+                            aria-label={`${row.displayName || '내담자'} 발송 선택`}
+                          />
+                        ) : (
+                          <span className="inline-block h-4 w-4" aria-hidden />
+                        )}
+                      </div>
+                    ) : null}
+                    <div>
+                      <span className="mb-1 block text-xs text-slate-500 md:hidden">이름 *</span>
+                      <input
+                        ref={(el) => {
+                          recipientNameRefs.current[idx] = el;
+                        }}
+                        placeholder="이름"
+                        className={FORM_INPUT}
+                        value={row.displayName}
+                        onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
+                        onKeyDown={handleRecipientFieldKeyDown}
+                        disabled={loading}
+                      />
+                    </div>
+                    <div>
+                      <span className="mb-1 block text-xs text-slate-500 md:hidden">이메일</span>
+                      <input
+                        placeholder="이메일"
+                        type="email"
+                        className={FORM_INPUT}
+                        value={row.email}
+                        onChange={(e) => updateRow(idx, 'email', e.target.value)}
+                        onKeyDown={handleRecipientFieldKeyDown}
+                        disabled={loading}
+                      />
+                    </div>
+                    <div>
+                      <span className="mb-1 block text-xs text-slate-500 md:hidden">휴대폰</span>
+                      <input
+                        placeholder="휴대폰"
+                        className={FORM_INPUT}
+                        value={row.phone}
+                        onChange={(e) => updateRow(idx, 'phone', e.target.value)}
+                        onKeyDown={handleRecipientFieldKeyDown}
+                        disabled={loading}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeRow(idx)}
+                      className="justify-self-end px-1 text-sm text-slate-500 transition hover:text-red-400 disabled:opacity-30"
+                      disabled={loading || manualRows.length <= 1}
+                      title="행 삭제"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                );
               })}
             </div>
-            {sendMode === 'select' && fileRows.length > 0 ? (
-              <div className="shrink-0 rounded-lg border border-white/5 bg-slate-950/25 p-2.5">
+            {selectSendMode && fileRows.length > 0 ? (
+              <div className="shrink-0 rounded-lg border border-white/10 bg-[#101f38]/60 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-medium text-slate-400">파일에서 불러온 내담자 ({fileRows.length}명)</p>
+                  <p className="text-sm font-semibold text-slate-300">
+                    파일에서 불러온 내담자 ({fileRows.length}명)
+                  </p>
                   <button
                     type="button"
                     onClick={toggleAllNotifyRecipients}
-                    className="text-[11px] text-blue-300 hover:text-blue-200"
+                    className="text-sm text-sky-300 hover:text-sky-200"
                     disabled={loading || recipients.length === 0}
                   >
                     {recipients.every((r) => notifySelected.has(recipientKey(r))) ? '전체 해제' : '전체 선택'}
                   </button>
                 </div>
-                <ul className="max-h-28 space-y-1 overflow-y-auto text-xs">
+                <ul className="max-h-32 space-y-1.5 overflow-y-auto text-base">
                   {fileRows.map((row, i) => (
                     <li key={`${recipientKey(row)}-${i}`}>
-                      <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-white/5">
+                      <label className="flex cursor-pointer items-center gap-2.5 rounded px-1 py-1 hover:bg-white/5">
                         <input
                           type="checkbox"
                           checked={notifySelected.has(recipientKey(row))}
                           onChange={() => toggleNotifyRecipient(row)}
                           disabled={loading}
-                          className="rounded accent-blue-500"
+                          className="h-4 w-4 rounded accent-sky-500"
                         />
-                        <span className="text-slate-300">{row.displayName}</span>
-                        <span className="truncate text-slate-500">
+                        <span className="text-slate-200">{row.displayName}</span>
+                        <span className="truncate text-slate-400">
                           {row.email || row.phone || '연락처 없음'}
                         </span>
                       </label>
@@ -952,7 +1007,7 @@ export default function IndividualAssessmentCreateForm() {
                 </ul>
               </div>
             ) : null}
-            <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
+            <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-white/10 pt-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -963,7 +1018,7 @@ export default function IndividualAssessmentCreateForm() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800/80"
+                className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
                 disabled={loading}
               >
                 CSV/엑셀 첨부
@@ -971,116 +1026,129 @@ export default function IndividualAssessmentCreateForm() {
               <button
                 type="button"
                 onClick={downloadGroupRecipientSampleCsv}
-                className="text-xs text-blue-300/90 transition hover:text-blue-200"
+                className="text-sm text-sky-300 transition hover:text-sky-200"
               >
                 샘플(CSV)
               </button>
               <button
                 type="button"
                 onClick={downloadGroupRecipientSampleTxt}
-                className="text-xs text-blue-300/90 transition hover:text-blue-200"
+                className="text-sm text-sky-300 transition hover:text-sky-200"
               >
                 샘플(TXT)
               </button>
               {fileLabel ? (
-                <span className="max-w-[200px] truncate text-xs text-slate-400" title={fileLabel}>
+                <span className="max-w-[240px] truncate text-sm text-slate-400" title={fileLabel}>
                   {fileLabel} ({fileRows.length}명)
                 </span>
               ) : (
-                <span className="text-[11px] text-slate-600">최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명</span>
+                <span className="text-sm text-slate-500">
+                  최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
+                </span>
               )}
             </div>
             {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD && willNotify ? (
-              <p className="shrink-0 text-[11px] leading-snug text-amber-200/80">
-                {GROUP_NOTIFY_WARN_THRESHOLD}명 이상은 예약 발송 또는 CSV만 받기를 권장합니다.
+              <p className="shrink-0 text-sm leading-snug text-amber-200/90">
+                {GROUP_NOTIFY_WARN_THRESHOLD}명 이상은 예약 발송 또는 Excel만 받기를 권장합니다.
               </p>
             ) : null}
-          </section>
+          </div>
+        </CounselorPageSection>
 
-        {/* 발송 설정 + 실행 */}
-        <section
-          className={`${FORM_CARD} flex shrink-0 flex-col gap-2.5 p-3 lg:col-start-3 lg:row-start-1 lg:self-stretch lg:justify-between`}
+        <CounselorPageSection
+          title="접속 정보 발송"
+          className="flex shrink-0 flex-col xl:col-start-3 xl:row-start-1 xl:self-stretch"
+          bodyClassName="flex flex-col justify-between gap-4"
         >
-          <div className="space-y-3">
-            <SectionHeading>접속 정보 발송</SectionHeading>
-            <div className="space-y-2 rounded-lg border border-white/5 bg-slate-950/25 p-3">
-              <p className="text-[11px] leading-relaxed text-slate-500">
-                발급 후 이메일·문자 발송 여부를 선택하세요. 미발송 시 Excel에서 코드를 확인할 수 있습니다.
-              </p>
-              <div className="flex flex-col gap-2 text-xs">
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white/5">
+          <div className="space-y-4">
+            <p className={FORM_HINT}>
+              발급과 동시에 이메일·문자를 보낼지 선택하세요. 미발송 시 Excel에서 코드를 확인할 수 있습니다.
+            </p>
+            <div className="space-y-2 rounded-lg border border-white/10 bg-[#101f38]/60 p-4">
+              <div className="flex flex-col gap-3 text-base">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition hover:border-white/10 hover:bg-white/[0.03] has-[:checked]:border-sky-500/40 has-[:checked]:bg-sky-500/10">
                   <input
                     type="radio"
                     name="sendMode"
                     checked={sendMode === 'none'}
                     onChange={() => handleSendModeChange('none')}
                     disabled={loading}
-                    className="accent-blue-500"
+                    className="mt-1 accent-sky-500"
                   />
-                  <span className="text-slate-300">발송 안 함 (Excel로 확인)</span>
+                  <span>
+                    <span className="block font-semibold text-slate-200">발송 안 함</span>
+                    <span className="block text-sm text-slate-400">Excel로 코드·비밀번호 확인</span>
+                  </span>
                 </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white/5">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition hover:border-white/10 hover:bg-white/[0.03] has-[:checked]:border-sky-500/40 has-[:checked]:bg-sky-500/10">
                   <input
                     type="radio"
                     name="sendMode"
                     checked={sendMode === 'all'}
                     onChange={() => handleSendModeChange('all')}
                     disabled={loading}
-                    className="accent-blue-500"
+                    className="mt-1 accent-sky-500"
                   />
-                  <span className="text-slate-300">전체 발송 ({recipients.length}명)</span>
+                  <span>
+                    <span className="block font-semibold text-slate-200">
+                      즉시 전체 발송 ({recipients.length}명)
+                    </span>
+                    <span className="block text-sm text-slate-400">등록된 모든 내담자에게 발송</span>
+                  </span>
                 </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white/5">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition hover:border-white/10 hover:bg-white/[0.03] has-[:checked]:border-sky-500/40 has-[:checked]:bg-sky-500/10">
                   <input
                     type="radio"
                     name="sendMode"
                     checked={sendMode === 'select'}
                     onChange={() => handleSendModeChange('select')}
                     disabled={loading}
-                    className="accent-blue-500"
+                    className="mt-1 accent-sky-500"
                   />
-                  <span className="text-slate-300">
-                    선택 발송
-                    {sendMode === 'select' ? ` (${notifyTargetCount}명)` : ''}
+                  <span>
+                    <span className="block font-semibold text-slate-200">
+                      선택 발송
+                      {selectSendMode ? ` (${notifyTargetCount}명)` : ''}
+                    </span>
+                    <span className="block text-sm text-slate-400">내담자 목록에서 체크한 대상만 발송</span>
                   </span>
                 </label>
               </div>
-              {sendMode === 'select' ? (
-                <p className="text-[11px] text-amber-200/80">
-                  내담자 목록에서 발송할 대상을 체크하세요.
-                </p>
+              {selectSendMode ? (
+                <p className="text-sm text-amber-200/90">내담자 목록 왼쪽 체크박스로 발송 대상을 선택하세요.</p>
               ) : null}
             </div>
             {willNotify ? (
-              <div className="space-y-2 rounded-lg border border-white/5 bg-slate-950/25 p-3">
-                <div className="flex flex-wrap gap-3 text-xs">
-                  <label className="flex cursor-pointer items-center gap-1.5">
+              <div className="space-y-3 rounded-lg border border-white/10 bg-[#101f38]/60 p-4">
+                <p className="text-sm font-semibold text-slate-300">발송 시점</p>
+                <div className="flex flex-wrap gap-4 text-base">
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="radio"
                       name="notifyTiming"
                       checked={notifyTiming === 'immediate'}
                       onChange={() => setNotifyTiming('immediate')}
                       disabled={loading}
-                      className="accent-blue-500"
+                      className="accent-sky-500"
                     />
-                    <span className="text-slate-300">즉시 발송</span>
+                    <span className="text-slate-200">즉시 발송</span>
                   </label>
-                  <label className="flex cursor-pointer items-center gap-1.5">
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="radio"
                       name="notifyTiming"
                       checked={notifyTiming === 'scheduled'}
                       onChange={() => setNotifyTiming('scheduled')}
                       disabled={loading}
-                      className="accent-blue-500"
+                      className="accent-sky-500"
                     />
-                    <span className="text-slate-300">예약 발송</span>
+                    <span className="text-slate-200">예약 발송</span>
                   </label>
                 </div>
                 {notifyTiming === 'scheduled' ? (
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label htmlFor="scheduled-date" className="mb-1 block text-[11px] text-slate-500">
+                      <label htmlFor="scheduled-date" className={FORM_LABEL}>
                         예약 날짜
                       </label>
                       <div className="relative">
@@ -1088,10 +1156,10 @@ export default function IndividualAssessmentCreateForm() {
                           type="button"
                           onClick={() => openDatePicker(scheduledDateRef)}
                           disabled={loading}
-                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center rounded-l-lg border-r border-white/10 text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="예약 날짜 달력 열기"
                         >
-                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                             <path
                               d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
                               stroke="currentColor"
@@ -1110,12 +1178,12 @@ export default function IndividualAssessmentCreateForm() {
                           onChange={(e) => setScheduledDate(e.target.value)}
                           onClick={() => openDatePicker(scheduledDateRef)}
                           disabled={loading}
-                          className={`${FORM_INPUT} w-full py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                          className={`${FORM_INPUT} py-2.5 pl-11 pr-2 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
                         />
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="scheduled-time" className="mb-1 block text-[11px] text-slate-500">
+                      <label htmlFor="scheduled-time" className={FORM_LABEL}>
                         예약 시간 (시·분)
                       </label>
                       <div className="relative">
@@ -1123,10 +1191,10 @@ export default function IndividualAssessmentCreateForm() {
                           type="button"
                           onClick={() => openDatePicker(scheduledTimeRef)}
                           disabled={loading}
-                          className="absolute inset-y-0 left-0 z-10 flex w-9 items-center justify-center rounded-l-lg border-r border-white/10 text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center rounded-l-lg border-r border-white/10 text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="예약 시간 선택 열기"
                         >
-                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                             <path
                               d="M10 5.5v4.25l2.75 1.6M10 3a7 7 0 100 14 7 7 0 000-14z"
                               stroke="currentColor"
@@ -1146,7 +1214,7 @@ export default function IndividualAssessmentCreateForm() {
                           onChange={(e) => setScheduledTime(e.target.value)}
                           onClick={() => openDatePicker(scheduledTimeRef)}
                           disabled={loading}
-                          className={`${FORM_INPUT} w-full py-2 pl-10 pr-2 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                          className={`${FORM_INPUT} py-2.5 pl-11 pr-2 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
                         />
                       </div>
                     </div>
@@ -1154,23 +1222,21 @@ export default function IndividualAssessmentCreateForm() {
                 ) : null}
               </div>
             ) : null}
-            {!willNotify ? (
-              <p className="text-[11px] leading-relaxed text-slate-500">
-                발송 없이 Excel로 코드·비밀번호를 확인할 수 있습니다.
-              </p>
-            ) : null}
             {error ? (
-              <p className="rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2 text-xs leading-snug text-red-300" role="alert">
+              <p
+                className="rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5 text-sm leading-snug text-red-300"
+                role="alert"
+              >
                 {error}
               </p>
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-2 pt-1 xl:mt-auto">
+          <div className="flex flex-col gap-2.5 border-t border-white/10 pt-3">
             <button
               type="submit"
               disabled={!canSubmit}
-              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 transition hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:shadow-none"
+              className="w-full rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-3 text-base font-bold text-white shadow-lg shadow-sky-900/30 transition hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50 disabled:shadow-none"
             >
               {loading ? '발급 중…' : `${recipients.length || 0}명 검사코드 발급`}
             </button>
@@ -1178,12 +1244,12 @@ export default function IndividualAssessmentCreateForm() {
               type="button"
               onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
               disabled={loading}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800/70"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2.5 text-base text-slate-300 transition hover:bg-slate-800/70"
             >
               취소
             </button>
           </div>
-        </section>
+        </CounselorPageSection>
       </div>
     </form>
   );
