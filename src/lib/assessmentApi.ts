@@ -512,6 +512,68 @@ export async function deleteAssessment(assessmentId: string): Promise<void> {
   }
 }
 
+export type ArchivedAssessment = {
+  id: string;
+  accessCode: string;
+  title: string;
+  targetAudience: string;
+  cohortName: string;
+  archivedAt: string | null;
+};
+
+export async function listArchivedAssessments(): Promise<{ assessments: ArchivedAssessment[] }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/assessments/archived`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '삭제 목록 조회에 실패했습니다.');
+  }
+  return data as { assessments: ArchivedAssessment[] };
+}
+
+export async function restoreArchivedAssessments(
+  assessmentIds: string[],
+): Promise<{ restored: number; failed: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/assessments/archived/restore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ assessmentIds }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '복구에 실패했습니다.');
+  }
+  return data as { restored: number; failed: number };
+}
+
+export async function permanentlyDeleteArchivedAssessments(
+  assessmentIds: string[],
+): Promise<{ deleted: number; failed: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/assessments/archived/permanent-delete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ assessmentIds }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '영구 삭제에 실패했습니다.');
+  }
+  return data as { deleted: number; failed: number };
+}
+
 /** GET /api/assessments - 상담사: 내 검사코드 목록 */
 const ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
 const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 5 * 60 * 1000;

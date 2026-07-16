@@ -8,14 +8,19 @@ function LegacyProgressRedirect() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const qs = searchParams.toString();
-    router.replace(qs ? `/counselor/assessments/progress?${qs}` : '/counselor/assessments/progress');
+    const assessmentId = (searchParams.get('assessmentId') || '').trim();
+    if (assessmentId) {
+      const params = new URLSearchParams(searchParams.toString());
+      router.replace(`/counselor/assessments/progress?${params.toString()}`);
+      return;
+    }
+    router.replace('/counselor/assessments');
   }, [router, searchParams]);
 
   return <p className="py-8 text-center text-sm text-slate-500">이동 중…</p>;
 }
 
-/** @deprecated `/counselor/assessments/progress` 로 통합 — 기존 URL 호환용 리다이렉트 */
+/** @deprecated 기존 URL 호환용 리다이렉트 */
 export default function ProgressPage() {
   return (
     <Suspense fallback={<p className="py-8 text-center text-sm text-slate-500">이동 중…</p>}>

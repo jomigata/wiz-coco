@@ -373,6 +373,26 @@ export async function restoreArchivedDispatchRecipients(
   return data as { restored: number; failed: number };
 }
 
+export async function permanentlyDeleteArchivedDispatchRecipients(
+  portalIds: string[],
+): Promise<{ deleted: number; failed: number }> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/archived/permanent-delete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ portalIds }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '영구 삭제에 실패했습니다.');
+  }
+  return data as { deleted: number; failed: number };
+}
+
 export async function resendBulkPortalNotifications(body: {
   jobId?: string;
   cohortId?: string;

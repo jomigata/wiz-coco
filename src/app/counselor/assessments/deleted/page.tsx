@@ -1,20 +1,18 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { formatPhoneDisplay } from '@/lib/phoneFormat';
 import {
-  fetchArchivedDispatchRecipients,
-  permanentlyDeleteArchivedDispatchRecipients,
-  restoreArchivedDispatchRecipients,
-  type ArchivedDispatchRecipient,
-} from '@/lib/clientPortalApi';
+  listArchivedAssessments,
+  permanentlyDeleteArchivedAssessments,
+  restoreArchivedAssessments,
+  type ArchivedAssessment,
+} from '@/lib/assessmentApi';
 
 function formatArchivedAt(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -25,10 +23,9 @@ function formatArchivedAt(iso: string | null | undefined): string {
   }
 }
 
-export default function DeletedRecipientsPage() {
-  const [filterAssessmentId, setFilterAssessmentId] = useState('');
+export default function DeletedAssessmentsPage() {
   const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
-  const [items, setItems] = useState<ArchivedDispatchRecipient[]>([]);
+  const [items, setItems] = useState<ArchivedAssessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -40,26 +37,14 @@ export default function DeletedRecipientsPage() {
     setLoading(true);
     setError('');
     try {
-      const result = await fetchArchivedDispatchRecipients(
-        filterAssessmentId || undefined,
-      );
-      setItems(result.items || []);
+      const result = await listArchivedAssessments();
+      setItems(result.assessments || []);
       setSelected(new Set());
     } catch (err) {
       setItems([]);
       setError(err instanceof Error ? err.message : '목록 조회 실패');
     } finally {
       setLoading(false);
-    }
-  }, [filterAssessmentId]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      setFilterAssessmentId((params.get('assessmentId') || '').trim());
-    } catch {
-      setFilterAssessmentId('');
     }
   }, []);
 
@@ -70,7 +55,7 @@ export default function DeletedRecipientsPage() {
 
   useRedirectOnLoginRequiredError(error);
 
-  const allIds = useMemo(() => items.map((i) => i.portalId), [items]);
+  const allIds = useMemo(() => items.map((i) => i.id), [items]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
 
   const toggleAll = () => {
@@ -92,8 +77,8 @@ export default function DeletedRecipientsPage() {
     setRestoring(true);
     setMessage('');
     try {
-      const result = await restoreArchivedDispatchRecipients(Array.from(selected));
-      setMessage(`복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
+      const result = await restoreArchivedAssessments(Array.from(selected));
+      setMessage(`복구 ${result.restored}건${result.failed ? `, 실패 ${result.failed}건` : ''}`);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : '복구에 실패했습니다.');
@@ -106,7 +91,7 @@ export default function DeletedRecipientsPage() {
     if (selected.size === 0) return;
     if (
       !window.confirm(
-        `선택 ${selected.size}명을 영구 삭제하시겠습니까?\n관리자 화면으로 이동하며 상담사 목록에서는 더 이상 보이지 않습니다.`,
+        `선택 ${selected.size}건을 영구 삭제하시겠습니까?\n관리자 화면으로 이동하며 상담사 목록에서는 더 이상 보이지 않습니다.`,
       )
     ) {
       return;
@@ -114,8 +99,8 @@ export default function DeletedRecipientsPage() {
     setDeleting(true);
     setMessage('');
     try {
-      const result = await permanentlyDeleteArchivedDispatchRecipients(Array.from(selected));
-      setMessage(`영구 삭제 ${result.deleted}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
+      const result = await permanentlyDeleteArchivedAssessments(Array.from(selected));
+      setMessage(`영구 삭제 ${result.deleted}건${result.failed ? `, 실패 ${result.failed}건` : ''}`);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : '영구 삭제에 실패했습니다.');
@@ -124,41 +109,19 @@ export default function DeletedRecipientsPage() {
     }
   };
 
-  if (authPending) {
-    return <AuthLoadingState className="py-8" />;
-  }
+  if (authPending) return <AuthLoadingState className="py-8" />;
   if (showLoginRequired) {
     return <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />;
   }
 
-  const backHref = filterAssessmentId
-    ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(filterAssessmentId)}`
-    : '/counselor/assessments';
-  const backLabel = filterAssessmentId ? '← 발송·검사 현황' : '← 검사코드 목록';
-
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <AuthLink href={backHref} className="text-sm text-sky-300/70 hover:text-sky-200">
-        {backLabel}
+      <AuthLink href="/counselor/assessments" className="text-sm text-sky-300/70 hover:text-sky-200">
+        ← 검사코드 목록
       </AuthLink>
       <CounselorPageSection
-        title="삭제된 검사자"
-        description={
-          <>
-            발송·검사 현황에서 삭제한 내담자입니다. 복구하면 발송·검사 현황에 다시 표시됩니다. 영구 삭제 시 관리자만 조회할 수 있습니다.
-            {filterAssessmentId ? (
-              <>
-                {' '}
-                <Link
-                  href="/counselor/assessments/deleted-recipients"
-                  className="text-blue-400 hover:text-blue-300 underline-offset-2 hover:underline"
-                >
-                  전체 삭제 목록 보기
-                </Link>
-              </>
-            ) : null}
-          </>
-        }
+        title="삭제된 검사코드"
+        description="목록에서 삭제한 검사코드입니다. 복구하면 검사코드 목록에 다시 표시됩니다. 영구 삭제 시 관리자만 조회할 수 있습니다."
         toolbar={
           <>
             <button
@@ -185,61 +148,43 @@ export default function DeletedRecipientsPage() {
             >
               {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
             </button>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
-            >
-              새로고침
-            </button>
           </>
         }
       >
         {message ? <p className="mb-3 text-sm text-emerald-300">{message}</p> : null}
         {error ? <p className="mb-3 text-sm text-red-400">{error}</p> : null}
-
         {loading ? (
           <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
         ) : items.length === 0 ? (
-          <p className="text-sm text-slate-400">삭제된 검사자가 없습니다.</p>
+          <p className="text-sm text-slate-400">삭제된 검사코드가 없습니다.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-white/10">
             <table className="w-full text-sm">
               <thead className="bg-[#101f38]/90 text-slate-400">
                 <tr>
                   <th className="w-10 px-3 py-2 text-left">선택</th>
-                  <th className="px-3 py-2 text-left">이름</th>
-                  <th className="px-3 py-2 text-left">이메일</th>
-                  <th className="px-3 py-2 text-left">휴대폰</th>
-                  <th className="px-3 py-2 text-left">나의코드</th>
                   <th className="px-3 py-2 text-left">검사코드</th>
                   <th className="px-3 py-2 text-left">검사명</th>
+                  <th className="px-3 py-2 text-left">유형</th>
                   <th className="px-3 py-2 text-left">삭제일시</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((row) => (
-                  <tr key={row.portalId} className="border-t border-white/10 hover:bg-white/[0.03]">
+                  <tr key={row.id} className="border-t border-white/10 hover:bg-white/[0.03]">
                     <td className="px-3 py-2">
                       <input
                         type="checkbox"
-                        checked={selected.has(row.portalId)}
-                        onChange={() => toggleOne(row.portalId)}
+                        checked={selected.has(row.id)}
+                        onChange={() => toggleOne(row.id)}
                         className="rounded accent-blue-500"
                       />
                     </td>
-                    <td className="px-3 py-2 text-white">{row.displayName || '—'}</td>
-                    <td className="px-3 py-2 text-slate-300">{row.email || '—'}</td>
-                    <td className="px-3 py-2 tabular-nums text-slate-300">
-                      {formatPhoneDisplay(row.phone || '') || '—'}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-cyan-300">{row.myCode || '—'}</td>
                     <td className="px-3 py-2 font-mono text-cyan-300">
-                      {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
+                      {formatAccessCodeDisplay(row.accessCode)}
                     </td>
-                    <td className="max-w-xs truncate px-3 py-2 text-slate-300" title={row.assessmentTitle}>
-                      {row.assessmentTitle || row.cohortName || '—'}
-                    </td>
+                    <td className="px-3 py-2 text-white">{row.title || '—'}</td>
+                    <td className="px-3 py-2 text-slate-300">{row.targetAudience || '—'}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400">
                       {formatArchivedAt(row.archivedAt)}
                     </td>

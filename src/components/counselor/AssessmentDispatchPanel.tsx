@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -362,6 +363,7 @@ interface AssessmentDispatchPanelProps {
 }
 
 export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDispatchPanelProps) {
+  const router = useRouter();
   const { authPending, isAuthenticated } = useAuthResolved();
   const [data, setData] = useState<AssessmentDispatchStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -391,6 +393,17 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   useRedirectOnLoginRequiredError(error);
   useRedirectOnLoginRequiredError(detailError);
+
+  useEffect(() => {
+    if (!revealedPhonePortalId) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('[data-phone-reveal]')) return;
+      setRevealedPhonePortalId(null);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [revealedPhonePortalId]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId) return;
@@ -627,6 +640,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     try {
       const result = await archiveDispatchRecipients(assessmentId, Array.from(selected));
       await load({ silent: true });
+      router.push(
+        `/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`,
+      );
       setDispatchComplete({
         kind: 'delete',
         summary: `삭제 ${result.archived}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
@@ -795,11 +811,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   <col className="w-10" />
                   <col className="w-10" />
                   <col className="w-12" />
+                  <col className="w-36" />
                   <col className="w-28" />
                   <col className="w-52" />
                   <col className="w-32" />
                   <col className="w-24" />
-                  <col className="w-36" />
                   <col className="w-24" />
                   <col className="w-24" />
                 </colgroup>
@@ -808,6 +824,14 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 <th className="px-3 py-2 text-left text-xs font-medium">No.</th>
                 <th className="px-3 py-2 text-left text-xs font-medium">선택</th>
                 <th className="px-3 py-2 text-left text-xs font-medium">검사현황</th>
+                <SortableColumnHeader
+                  label="발송일시"
+                  sortKey="notifyAt"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                  className="w-36"
+                />
                 <SortableColumnHeader
                   label="이름"
                   sortKey="displayName"
@@ -839,14 +863,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   direction={sortDir}
                   onSort={toggleSort}
                   className="w-24"
-                />
-                <SortableColumnHeader
-                  label="발송일시"
-                  sortKey="notifyAt"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
                 />
                 <SortableColumnHeader
                   label="발송"
@@ -901,6 +917,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <td className="px-3 py-2 align-top text-slate-400" aria-hidden="true">
                         {isOpen ? '▼' : '▶'}
                       </td>
+                      <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs tabular-nums">
+                        {formatNotifyDate(r.notifyAt)}
+                      </td>
                       <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
                         {r.displayName || '—'}
                       </td>
@@ -915,6 +934,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       </td>
                       <td
                         className="px-3 py-2 text-slate-300 align-top whitespace-nowrap"
+                        data-phone-reveal
                         onClick={(e) => e.stopPropagation()}
                       >
                         {r.phone?.trim() ? (
@@ -940,9 +960,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       </td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
-                      </td>
-                      <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs tabular-nums">
-                        {formatNotifyDate(r.notifyAt)}
                       </td>
                       <td
                         className={`px-3 py-2 align-top whitespace-nowrap ${notify.className}`}

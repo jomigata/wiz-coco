@@ -854,6 +854,25 @@ def restore_archived():
     return jsonify(result)
 
 
+@bp.route("/archived/permanent-delete", methods=["POST"])
+@require_counselor
+def permanent_delete_archived():
+    """삭제(archived)된 내담자 포털 영구 삭제 — 관리자 화면으로 이동."""
+    from utils.deletion_records import permanently_delete_archived_portals
+
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+    db = get_firestore()
+    result = permanently_delete_archived_portals(
+        db,
+        counselor_uid=g.counselor_uid,
+        portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+    )
+    return jsonify(result)
+
+
 @bp.route("/bulk/export-csv", methods=["POST"])
 @require_counselor
 def bulk_export_csv():

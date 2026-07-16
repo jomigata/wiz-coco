@@ -30,10 +30,10 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '➕',
           },
           {
-            name: '진행·모니터링',
-            href: '/counselor/assessments/progress',
-            description: '검사코드별 발송·검사 진행 현황',
-            icon: '📈',
+            name: '삭제된 검사코드',
+            href: '/counselor/assessments/deleted',
+            description: '삭제·복구·영구 삭제된 검사코드',
+            icon: '🗑️',
           },
           {
             name: '검사 크레딧',

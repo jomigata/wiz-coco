@@ -68,3 +68,51 @@ def purge_assessment_data():
         include_all_test_results=include_all,
     )
     return jsonify(result)
+
+
+@bp.route("/permanently-deleted", methods=["GET"])
+@require_admin_or_cron
+def list_permanently_deleted():
+    from utils.deletion_records import list_permanently_deleted_records
+
+    db = get_firestore()
+    return jsonify(list_permanently_deleted_records(db))
+
+
+@bp.route("/permanently-deleted/restore", methods=["POST"])
+@require_admin_or_cron
+def restore_permanently_deleted():
+    from utils.deletion_records import restore_permanently_deleted_records
+
+    body = request.get_json(silent=True) or {}
+    assessment_ids = body.get("assessmentIds") or []
+    portal_ids = body.get("portalIds") or []
+    db = get_firestore()
+    result = restore_permanently_deleted_records(
+        db,
+        assessment_ids=[str(x).strip() for x in assessment_ids if str(x).strip()],
+        portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+    )
+    return jsonify(result)
+
+
+@bp.route("/permanently-deleted/purge", methods=["POST"])
+@require_admin_or_cron
+def purge_permanently_deleted():
+    from utils.deletion_records import purge_permanently_deleted_records
+
+    body = request.get_json(silent=True) or {}
+    confirm = (body.get("confirm") or "").strip()
+    if confirm != "PURGE":
+        return jsonify(
+            {"error": "Bad Request", "message": '실행하려면 body.confirm="PURGE" 가 필요합니다.'}
+        ), 400
+    assessment_ids = body.get("assessmentIds") or []
+    portal_ids = body.get("portalIds") or []
+    db = get_firestore()
+    result = purge_permanently_deleted_records(
+        db,
+        assessment_ids=[str(x).strip() for x in assessment_ids if str(x).strip()],
+        portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+    )
+    return jsonify(result)

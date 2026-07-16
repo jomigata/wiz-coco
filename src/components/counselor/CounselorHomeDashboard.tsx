@@ -24,7 +24,6 @@ type DashboardTab = 'individual' | 'group';
 const QUICK_LINKS = [
   { title: '내담자 목록', href: '/counselor/clients', icon: '👥' },
   { title: '검사코드 목록', href: '/counselor/assessments', icon: '📦' },
-  { title: '진행·모니터링', href: '/counselor/assessments/progress', icon: '📈' },
   { title: '검사코드 관리', href: '/counselor/test-codes', icon: '🔑' },
 ];
 
@@ -216,10 +215,10 @@ export default function CounselorHomeDashboard() {
               그룹·기관
             </button>
             <AuthLink
-              href="/counselor/assessments/progress"
+              href="/counselor/assessments"
               className="text-xs text-sky-400 hover:text-sky-300 sm:text-sm"
             >
-              전체 모니터링 →
+              검사코드 목록 →
             </AuthLink>
           </div>
         }
@@ -279,10 +278,10 @@ export default function CounselorHomeDashboard() {
               </div>
             )}
             <AuthLink
-              href="/counselor/assessments/progress?view=cohorts"
+              href="/counselor/clients"
               className="text-sm text-violet-400 hover:text-violet-300"
             >
-              그룹 모니터링 상세 →
+              내담자 CRM →
             </AuthLink>
           </div>
 

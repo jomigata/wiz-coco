@@ -266,6 +266,52 @@ def delete_assessment(assessment_id):
     return jsonify({"assessmentId": assessment_id, "message": "archived"})
 
 
+@bp.route("/archived", methods=["GET"])
+@require_counselor
+def list_archived_assessments_route():
+    from utils.deletion_records import list_archived_assessments
+
+    db = get_firestore()
+    items = list_archived_assessments(db, counselor_uid=g.counselor_uid)
+    return jsonify({"assessments": items})
+
+
+@bp.route("/archived/restore", methods=["POST"])
+@require_counselor
+def restore_archived_assessments_route():
+    from utils.deletion_records import restore_archived_assessments
+
+    body = request.get_json(silent=True) or {}
+    assessment_ids = body.get("assessmentIds") or []
+    if not isinstance(assessment_ids, list) or not assessment_ids:
+        return jsonify({"error": "Bad Request", "message": "assessmentIds가 필요합니다."}), 400
+    db = get_firestore()
+    result = restore_archived_assessments(
+        db,
+        counselor_uid=g.counselor_uid,
+        assessment_ids=[str(x).strip() for x in assessment_ids if str(x).strip()],
+    )
+    return jsonify(result)
+
+
+@bp.route("/archived/permanent-delete", methods=["POST"])
+@require_counselor
+def permanent_delete_archived_assessments_route():
+    from utils.deletion_records import permanently_delete_archived_assessments
+
+    body = request.get_json(silent=True) or {}
+    assessment_ids = body.get("assessmentIds") or []
+    if not isinstance(assessment_ids, list) or not assessment_ids:
+        return jsonify({"error": "Bad Request", "message": "assessmentIds가 필요합니다."}), 400
+    db = get_firestore()
+    result = permanently_delete_archived_assessments(
+        db,
+        counselor_uid=g.counselor_uid,
+        assessment_ids=[str(x).strip() for x in assessment_ids if str(x).strip()],
+    )
+    return jsonify(result)
+
+
 @bp.route("/<assessment_id>/progress", methods=["GET"])
 @require_counselor
 def get_progress(assessment_id):

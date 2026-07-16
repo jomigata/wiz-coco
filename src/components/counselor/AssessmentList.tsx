@@ -175,6 +175,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     try {
       await deleteAssessment(deleteTarget.id);
       setDeleteTarget(null);
+      router.push('/counselor/assessments/deleted');
       router.refresh();
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : '삭제에 실패했습니다.');
@@ -250,7 +251,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               <p className="text-slate-300 mt-1">{deleteTarget.title}</p>
             </div>
             <p className="text-slate-400 mb-5 leading-relaxed">
-              목록에서 제거되며, 내담자는 더 이상 이 코드로 새로 접속할 수 없습니다. 이미 제출된 결과는 상담사 화면에서 계속 조회할 수 있습니다.
+              목록에서 제거되어 삭제된 검사코드 목록으로 이동합니다. 복구하면 검사코드 목록에 다시 표시됩니다. 이미 제출된 결과는 상담사 화면에서 계속 조회할 수 있습니다.
             </p>
             {deleteError && <p className="text-red-400 mb-4">{deleteError}</p>}
             <div className="flex justify-end gap-2">
