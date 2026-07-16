@@ -7,6 +7,7 @@ import {
   FORM_INPUT,
   FORM_LABEL,
   openDatePicker,
+  TEST_PICKER_FILL,
   TEST_PICKER_SCROLL,
 } from '@/lib/assessmentFormUi';
 
@@ -43,7 +44,13 @@ export default function AssessmentSettingsFields({
   const showTests = sections === 'all' || sections === 'tests';
 
   return (
-    <div className="space-y-4">
+    <div
+      className={
+        sections === 'tests'
+          ? 'flex h-full min-h-0 flex-1 flex-col'
+          : 'space-y-4'
+      }
+    >
       {showMeta ? (
         <>
           <div>
@@ -116,11 +123,13 @@ export default function AssessmentSettingsFields({
       ) : null}
 
       {showTests ? (
-        <div>
-          <div className="mb-1.5 flex items-center justify-end gap-2">
+        <div className={sections === 'tests' ? 'flex min-h-0 flex-1 flex-col' : 'space-y-0'}>
+          <div className="mb-1.5 flex items-center justify-end gap-2 shrink-0">
             <span className="text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
           </div>
-          <div className={`${TEST_PICKER_SCROLL} grid grid-cols-1 gap-1.5`}>
+          <div
+            className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} grid grid-cols-1 gap-1.5`}
+          >
             {counselorAssessmentTestOptions.map((t) => (
               <label
                 key={t.testId}
@@ -137,7 +146,7 @@ export default function AssessmentSettingsFields({
               </label>
             ))}
           </div>
-          <p className={`${FORM_HINT} mt-1.5`}>
+          <p className={`${FORM_HINT} mt-1.5 shrink-0`}>
             이미 제출된 결과가 있어도 안내·검사 구성은 수정할 수 있습니다.
           </p>
         </div>

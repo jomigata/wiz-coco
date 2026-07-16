@@ -6,6 +6,8 @@ export const FORM_LABEL = 'mb-1.5 block text-sm font-semibold text-slate-300';
 export const FORM_HINT = 'text-sm text-slate-400 leading-relaxed';
 export const TEST_PICKER_SCROLL =
   'max-h-[14rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-[#101f38]/60 p-3';
+export const TEST_PICKER_FILL =
+  'min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-[#101f38]/60 p-3';
 
 export function openDatePicker(ref: React.RefObject<HTMLInputElement | null>) {
   const el = ref.current;

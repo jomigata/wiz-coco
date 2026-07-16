@@ -125,7 +125,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-2 xl:items-stretch">
         <div className="flex min-h-0 flex-col gap-4">
           <CounselorPageSection title="검사코드">
             <div className="flex flex-wrap items-center gap-3">
@@ -155,7 +155,11 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           </CounselorPageSection>
         </div>
 
-        <CounselorPageSection title="포함할 검사" className="flex min-h-0 flex-col xl:sticky xl:top-4">
+        <CounselorPageSection
+          title="포함할 검사"
+          className="flex min-h-0 flex-col xl:h-full"
+          bodyClassName="flex min-h-0 flex-1 flex-col"
+        >
           <AssessmentSettingsFields
             sections="tests"
             title={title}
