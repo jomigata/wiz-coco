@@ -11,6 +11,7 @@ import {
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import type { CounselorDailyRecordListItem } from '@/types/counselor';
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -247,31 +248,28 @@ export default function CounselorDailyRecordsPanel() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-400">
-            내담자가 검사실 포털에서 작성한 일기·기록과, 마이페이지에서 공유한 일상 기록을 한곳에서
-            확인합니다. 포털 기록은 치료·과제 할당(T-2-09) 시 자동으로 연동됩니다.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <CounselorPageSection
+      title="기록 목록"
+      description="내담자가 검사실 포털·마이페이지에서 작성한 일기·기록을 확인합니다."
+      toolbar={
+        <>
           <AuthLink
             href="/counselor/treatment-plans"
-            className="rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-500"
+            className="rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-500"
           >
             일기 과제 할당
           </AuthLink>
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
+    <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs text-slate-500">전체 기록</p>
@@ -326,5 +324,6 @@ export default function CounselorDailyRecordsPanel() {
         </div>
       )}
     </div>
+    </CounselorPageSection>
   );
 }

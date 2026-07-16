@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 
 interface Student {
   id: string;
@@ -168,23 +169,9 @@ export default function CounselorTestManagementPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-3xl">
-              👨‍⚕️
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">신입생 검사 관리 시스템</h1>
-              <p className="text-gray-300 text-lg mt-2">2000명 신입생 통합 심리검사 관리</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 통계 요약 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <CounselorPageSection title="통계 요약" noBodyPadding bodyClassName="!p-0">
+        <div className="grid grid-cols-1 gap-3 p-2.5 sm:p-3 md:grid-cols-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -239,28 +226,29 @@ export default function CounselorTestManagementPage() {
             </div>
           </div>
         </div>
+      </CounselorPageSection>
 
-        {/* 학생 목록 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">신입생 목록</h2>
-            <div className="flex gap-3">
-              <select className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                <option value="all">전체</option>
-                <option value="active">활성</option>
-                <option value="pending">대기</option>
-                <option value="inactive">비활성</option>
-              </select>
-              <select className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                <option value="all">전공별</option>
-                <option value="computer">컴퓨터공학과</option>
-                <option value="psychology">심리학과</option>
-                <option value="business">경영학과</option>
-              </select>
-            </div>
+      <CounselorPageSection
+        title="신입생 목록"
+        description="2000명 신입생 통합 심리검사 관리 (데모 데이터)"
+        toolbar={
+          <div className="flex gap-2">
+            <select className="rounded-lg border border-white/10 bg-[#101f38]/90 px-3 py-1.5 text-sm text-slate-200">
+              <option value="all">전체</option>
+              <option value="active">활성</option>
+              <option value="pending">대기</option>
+              <option value="inactive">비활성</option>
+            </select>
+            <select className="rounded-lg border border-white/10 bg-[#101f38]/90 px-3 py-1.5 text-sm text-slate-200">
+              <option value="all">전공별</option>
+              <option value="computer">컴퓨터공학과</option>
+              <option value="psychology">심리학과</option>
+              <option value="business">경영학과</option>
+            </select>
           </div>
-
-          <div className="overflow-x-auto">
+        }
+      >
+        <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/20">
@@ -319,7 +307,7 @@ export default function CounselorTestManagementPage() {
               </tbody>
             </table>
           </div>
-        </div>
+      </CounselorPageSection>
 
         {/* 검사 할당 모달 */}
         {showAssignModal && selectedStudent && (
@@ -420,7 +408,6 @@ export default function CounselorTestManagementPage() {
             </button>
           </div>
         )}
-      </div>
     </div>
   );
 }

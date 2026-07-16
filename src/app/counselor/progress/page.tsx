@@ -1,5 +1,6 @@
 'use client';
 
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorMonitoringHub from '@/components/counselor/CounselorMonitoringHub';
 import NotificationChannelStatus from '@/components/counselor/NotificationChannelStatus';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -20,23 +21,31 @@ export default function ProgressPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
         <AuthLink
           href="/counselor/progress?view=care"
-          className="text-sm text-violet-400 hover:text-violet-300"
+          className="text-violet-400 hover:text-violet-300"
         >
           치료·과제 모니터링 →
         </AuthLink>
         <AuthLink
           href="/counselor/assessments/progress"
-          className="text-sm text-sky-400 hover:text-sky-300"
+          className="text-sky-400 hover:text-sky-300"
         >
           검사코드별 상세 현황 →
         </AuthLink>
       </div>
-      <NotificationChannelStatus />
-      <CounselorMonitoringHub />
+      <CounselorPageSection title="알림 채널 상태">
+        <NotificationChannelStatus />
+      </CounselorPageSection>
+      <CounselorPageSection
+        className="flex min-h-0 flex-1"
+        title="통합 모니터링"
+        description="모든 검사코드·그룹·치료 과제 진행을 한 화면에서 확인합니다."
+      >
+        <CounselorMonitoringHub />
+      </CounselorPageSection>
     </div>
   );
 }

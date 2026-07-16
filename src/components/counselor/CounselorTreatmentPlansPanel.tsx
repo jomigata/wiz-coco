@@ -13,6 +13,7 @@ import { createCareAssignments, listCareAssignments } from '@/lib/careAssignment
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import type { CareProgramCategory, CareProgramSummary } from '@/types/careProgram';
 import type { CounselorClientPortalListItem } from '@/types/clientPortal';
 import type { CounselorCareAssignmentListItem, CareAssignmentPriority } from '@/types/careAssignment';
@@ -271,40 +272,37 @@ export default function CounselorTreatmentPlansPanel() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1800px] space-y-6 px-4 py-5 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-400">
-            치료 프로그램 카탈로그에서 과제를 선택하고, 내담자 검사실에 할당합니다. 할당 후 내담자는
-            포털에서 과제를 확인할 수 있습니다 (T-2-05 탭 연동 예정).
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <AuthLink
-            href="/counselor/daily-records"
-            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
-          >
-            일상 기록
-          </AuthLink>
-          <AuthLink
-            href="/counselor/clients"
-            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
-          >
-            내담자 CRM
-          </AuthLink>
-          <button
-            type="button"
-            onClick={() => {
-              void loadClients();
-              void loadAssignments();
-            }}
-            className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
-          >
-            새로고침
-          </button>
-        </div>
-      </div>
-
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <CounselorPageSection
+        title="프로그램 할당"
+        description="치료 프로그램 카탈로그에서 과제를 선택하고, 내담자 검사실에 할당합니다."
+        toolbar={
+          <>
+            <AuthLink
+              href="/counselor/daily-records"
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            >
+              일상 기록
+            </AuthLink>
+            <AuthLink
+              href="/counselor/clients"
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            >
+              내담자 CRM
+            </AuthLink>
+            <button
+              type="button"
+              onClick={() => {
+                void loadClients();
+                void loadAssignments();
+              }}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            >
+              새로고침
+            </button>
+          </>
+        }
+      >
       {error ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
@@ -317,9 +315,9 @@ export default function CounselorTreatmentPlansPanel() {
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <section className="space-y-4">
+        <CounselorPageSection title="프로그램 카탈로그" className="!rounded-lg">
+          <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-sm font-semibold text-slate-300">프로그램 카탈로그</h2>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value as '' | CareProgramCategory)}
@@ -343,15 +341,16 @@ export default function CounselorTreatmentPlansPanel() {
               />
             ))}
           </div>
-        </section>
+          </div>
+        </CounselorPageSection>
 
-        <section className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+        <CounselorPageSection title="할당 설정" className="!rounded-lg">
           {!selectedProgram ? (
             <p className="py-16 text-center text-sm text-slate-500">왼쪽에서 치료 프로그램을 선택하세요.</p>
           ) : (
             <form onSubmit={(e) => void handleAssign(e)} className="space-y-5">
               <div>
-                <h2 className="text-lg font-semibold text-white">{selectedProgram.title}</h2>
+                <p className="text-base font-semibold text-white">{selectedProgram.title}</p>
                 <p className="mt-1 text-sm text-slate-400">{selectedProgram.description}</p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
                   <span>{selectedProgram.durationWeeks}주</span>
@@ -508,11 +507,11 @@ export default function CounselorTreatmentPlansPanel() {
               </button>
             </form>
           )}
-        </section>
+        </CounselorPageSection>
       </div>
+      </CounselorPageSection>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-300">활성 치료 할당</h2>
+      <CounselorPageSection title="활성 치료 할당">
         {loadingAssignments ? (
           <p className="text-sm text-slate-500">할당 목록을 불러오는 중…</p>
         ) : assignments.length === 0 ? (
@@ -569,14 +568,12 @@ export default function CounselorTreatmentPlansPanel() {
             </table>
           </div>
         )}
-      </section>
+      </CounselorPageSection>
 
-      <section className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5">
-        <h2 className="text-sm font-semibold text-violet-200">일기·기록 과제 할당</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          위에서 선택한 내담자에게 일기·기록 과제를 할당합니다. 내담자는 포털 「추가 과제·치료」 탭에서
-          작성하며, 상담사는 「일상 기록」 화면에서 확인할 수 있습니다.
-        </p>
+      <CounselorPageSection
+        title="일기·기록 과제 할당"
+        description="선택한 내담자에게 일기·기록 과제를 할당합니다. 상담사는 「일상 기록」 화면에서 확인할 수 있습니다."
+      >
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="block text-xs text-slate-500">
             과제 제목
@@ -626,7 +623,7 @@ export default function CounselorTreatmentPlansPanel() {
         >
           {assigningDaily ? '할당 중…' : `일기 과제 할당 (${selectedPortalIds.size}명)`}
         </button>
-      </section>
+      </CounselorPageSection>
     </div>
   );
 }

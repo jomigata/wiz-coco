@@ -91,20 +91,24 @@ export default function TestResultsPage() {
   }, [rows, queryText]);
 
   return (
-    <AdminPageLayout title="검사 결과 분석">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
+    <AdminPageLayout
+      sectionTitle="검사 결과 목록"
+      description="내담자 검사 결과를 조회하고 리포트·AI 해석을 실행합니다."
+      toolbar={
+        <>
           <input
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
             placeholder="이메일/UID/검사명/코드로 검색"
-            className="w-full max-w-md px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-white/40"
+            className="w-full min-w-[12rem] max-w-xs rounded-md border border-white/10 bg-[#101f38]/90 px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
           />
-          <div className="text-sm text-white/70">
-            총 <span className="text-white font-semibold">{filtered.length}</span>건
-          </div>
-        </div>
-
+          <span className="text-sm text-slate-400">
+            총 <span className="font-semibold text-white">{filtered.length}</span>건
+          </span>
+        </>
+      }
+    >
+      <div className="space-y-4">
         {error && (
           <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
             {error}

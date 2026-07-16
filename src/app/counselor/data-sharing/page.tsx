@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { DataSharingRequest } from '@/app/api/data-sharing/route';
 
 export default function DataSharingPage() {
@@ -166,77 +167,63 @@ export default function DataSharingPage() {
   }, [user, authPending, showLoginRequired, activeTab]);
 
   if (authPending) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <AuthLoadingState message="로딩 중..." />
-      </div>
-    );
+    return <AuthLoadingState className="py-16" message="로딩 중..." />;
   }
 
   if (showLoginRequired) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-        <AuthRequiredState className="max-w-md w-full" />
-      </div>
+      <AuthRequiredState className="max-w-md w-full mx-auto" />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-<div className="pt-16 p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* 헤더 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">데이터 공유 관리</h1>
-            <p className="text-gray-300">다른 상담사와 내담자 데이터를 공유하거나 공유 요청을 관리하세요.</p>
-          </div>
-
-          {/* 에러 메시지 */}
-          {error && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <p className="text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* 탭 메뉴 */}
-          <div className="mb-6">
-            <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
-              <button
-                onClick={() => setActiveTab('received')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'received'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                받은 요청
-              </button>
-              <button
-                onClick={() => setActiveTab('sent')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'sent'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                보낸 요청
-              </button>
-            </div>
-          </div>
-
-          {/* 새 공유 요청 버튼 (보낸 요청 탭에서만) */}
-          {activeTab === 'sent' && (
-            <div className="mb-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <CounselorPageSection
+        title={activeTab === 'received' ? '받은 요청' : '보낸 요청'}
+        description="다른 상담사와 내담자 데이터를 공유하거나 공유 요청을 관리하세요."
+        toolbar={
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('received')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium sm:text-sm ${
+                activeTab === 'received'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-white/5'
+              }`}
+            >
+              받은 요청
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('sent')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium sm:text-sm ${
+                activeTab === 'sent'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-white/5'
+              }`}
+            >
+              보낸 요청
+            </button>
+            {activeTab === 'sent' ? (
               <motion.button
+                type="button"
                 onClick={() => setShowCreateForm(!showCreateForm)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 sm:text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {showCreateForm ? '취소' : '+ 새 공유 요청'}
               </motion.button>
+            ) : null}
+          </div>
+        }
+      >
+          {error ? (
+            <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
-          )}
+          ) : null}
 
           {/* 새 공유 요청 폼 */}
           {showCreateForm && activeTab === 'sent' && (
@@ -382,8 +369,7 @@ export default function DataSharingPage() {
               ))
             )}
           </div>
-        </div>
-      </div>
+      </CounselorPageSection>
     </div>
   );
 }

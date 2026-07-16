@@ -1,25 +1,42 @@
 import React from 'react';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 
 interface AdminPageLayoutProps {
-  title: string;
+  /** @deprecated 레이아웃 상단 제목과 중복 — sectionTitle 사용 권장 */
+  title?: string;
+  /** 중분류 띠 제목 */
+  sectionTitle?: string;
+  description?: React.ReactNode;
+  toolbar?: React.ReactNode;
   children: React.ReactNode;
+  className?: string;
+  bodyClassName?: string;
+  noBodyPadding?: boolean;
 }
 
-export default function AdminPageLayout({ title, children }: AdminPageLayoutProps) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* 페이지 헤더 */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">{title}</h1>
-          <p className="text-gray-300 text-lg">전문 관리 시스템</p>
-        </div>
+/** 상담관리 하위 페이지 — CounselorPageSection 래퍼 (페이지 h1은 counselor layout이 담당) */
+export default function AdminPageLayout({
+  title,
+  sectionTitle,
+  description,
+  toolbar,
+  children,
+  className,
+  bodyClassName,
+  noBodyPadding,
+}: AdminPageLayoutProps) {
+  const bandTitle = sectionTitle ?? title ?? '콘텐츠';
 
-        {/* 메인 콘텐츠 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-          {children}
-        </div>
-      </div>
-    </div>
+  return (
+    <CounselorPageSection
+      className={className}
+      title={bandTitle}
+      description={description}
+      toolbar={toolbar}
+      bodyClassName={bodyClassName}
+      noBodyPadding={noBodyPadding}
+    >
+      {children}
+    </CounselorPageSection>
   );
 }

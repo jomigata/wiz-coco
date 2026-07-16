@@ -228,32 +228,33 @@ function TestRecommendationsContent() {
   }
 
   return (
-    <AdminPageLayout title="검사 추천">
-      <div className="space-y-6">
-        <p className="text-slate-400 text-sm">
-          완료된 검사 결과를 바탕으로 AI가 추가 검사를 추천합니다. 추천 1회 = {creditCost} AI 크레딧.
-          포털 연결 내담자는 추천 검사를 바로 할당할 수 있습니다.
-        </p>
-
-        {error && (
-          <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-            {error}
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            value={queryText}
-            onChange={(e) => setQueryText(e.target.value)}
-            placeholder="이메일/검사명/코드 검색"
-            className="w-full max-w-md px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-white/40"
-          />
-          <span className="text-sm text-white/70">
-            완료 결과 <span className="text-white font-semibold">{filtered.length}</span>건
-          </span>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <AdminPageLayout
+        sectionTitle="완료 검사 목록"
+        description={`완료된 검사 결과를 바탕으로 AI가 추가 검사를 추천합니다. 추천 1회 = ${creditCost} AI 크레딧.`}
+        toolbar={
+          <>
+            <input
+              value={queryText}
+              onChange={(e) => setQueryText(e.target.value)}
+              placeholder="이메일/검사명/코드 검색"
+              className="w-full min-w-[12rem] max-w-xs rounded-md border border-white/10 bg-[#101f38]/90 px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
+            <span className="text-sm text-slate-400">
+              완료 <span className="font-semibold text-white">{filtered.length}</span>건
+            </span>
+          </>
+        }
+        className="flex min-h-0 flex-1"
+        bodyClassName="!p-0"
+        noBodyPadding
+      >
+        <div className="grid gap-3 p-2.5 lg:grid-cols-2 sm:p-3">
+          {error ? (
+            <div className="lg:col-span-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {error}
+            </div>
+          ) : null}
           <div className="overflow-x-auto rounded-lg border border-white/10">
             {isLoading ? (
               <p className="p-4 text-sm text-white/60">불러오는 중…</p>
@@ -403,8 +404,8 @@ function TestRecommendationsContent() {
             )}
           </div>
         </div>
-      </div>
-    </AdminPageLayout>
+      </AdminPageLayout>
+    </div>
   );
 }
 

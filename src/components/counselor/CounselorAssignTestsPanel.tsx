@@ -15,6 +15,7 @@ import type {
   CounselorPortalTestAssignmentRow,
   CounselorPortalTestAssignmentStatus,
 } from '@/types/clientPortal';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorPushAssessmentPanel from '@/components/counselor/CounselorPushAssessmentPanel';
 
 type PortalStatusFilter = 'active' | 'archived' | 'all';
@@ -158,55 +159,46 @@ export default function CounselorAssignTestsPanel() {
   }, [selectablePortals, selectedPortalIds]);
 
   return (
-    <div className="mx-auto w-full max-w-[1800px] space-y-5 px-4 py-5 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-400">
-            발급된 검사코드에 연결된 내담자별 검사 항목 진행 현황입니다. 새 내담자·검사 발급은 검사코드
-            만들기에서 진행하세요.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-            <span>
-              전체 <strong className="text-slate-200">{stats.total}</strong>건
-            </span>
-            <span>
-              미시작 <strong className="text-amber-300">{stats.notStarted}</strong>건
-            </span>
-            <span>
-              진행 중 <strong className="text-sky-300">{stats.inProgress}</strong>건
-            </span>
-            <span>
-              완료 <strong className="text-emerald-300">{stats.completed}</strong>건
-            </span>
-            <CounselorLiveStatusBadge
-              isLive={isLive}
-              liveError={liveError}
-              lastUpdatedAt={lastUpdatedAt}
-            />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <CounselorPageSection
+      className="flex min-h-0 flex-1"
+      title="검사 할당 현황"
+      description="발급된 검사코드에 연결된 내담자별 검사 항목 진행 현황입니다. 새 내담자·검사 발급은 검사코드 만들기에서 진행하세요."
+      toolbar={
+        <>
+          <span className="hidden text-xs text-slate-500 lg:inline">
+            전체 <strong className="text-slate-200">{stats.total}</strong>건 · 미시작{' '}
+            <strong className="text-amber-300">{stats.notStarted}</strong> · 진행{' '}
+            <strong className="text-sky-300">{stats.inProgress}</strong> · 완료{' '}
+            <strong className="text-emerald-300">{stats.completed}</strong>
+          </span>
+          <CounselorLiveStatusBadge
+            isLive={isLive}
+            liveError={liveError}
+            lastUpdatedAt={lastUpdatedAt}
+          />
           <AuthLink
             href="/counselor/assessments/new"
-            className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
+            className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
           >
-            + 새 검사코드 발급
+            + 새 검사코드
           </AuthLink>
           <AuthLink
             href="/counselor/clients"
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
           >
             내담자 목록
           </AuthLink>
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
-        </div>
-      </div>
+        </>
+      }
+    >
+    <div className="space-y-4">
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
@@ -439,5 +431,6 @@ export default function CounselorAssignTestsPanel() {
         </>
       )}
     </div>
+    </CounselorPageSection>
   );
 }

@@ -13,6 +13,7 @@ import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useCounselorMonitoringRealtime } from '@/hooks/useCounselorMonitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import type { CounselorMonitoringAssessment } from '@/types/clientPortal';
 
 export type MonitoringHubView = 'overview' | 'cohorts' | 'care';
@@ -208,42 +209,49 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
     : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
-        <button
-          type="button"
-          onClick={() => setHubView('overview')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            view === 'overview'
-              ? 'bg-sky-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-          }`}
-        >
-          전체
-        </button>
-        <button
-          type="button"
-          onClick={() => setHubView('care')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            view === 'care'
-              ? 'bg-violet-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-          }`}
-        >
-          치료·과제
-        </button>
-        <button
-          type="button"
-          onClick={() => setHubView('cohorts')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            view === 'cohorts'
-              ? 'bg-violet-600 text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-          }`}
-        >
-          그룹
-        </button>
-      </div>
+    <CounselorPageSection
+      title="모니터링 뷰"
+      toolbar={
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setHubView('overview')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+              view === 'overview'
+                ? 'bg-sky-600 text-white'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            }`}
+          >
+            전체
+          </button>
+          <button
+            type="button"
+            onClick={() => setHubView('care')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+              view === 'care'
+                ? 'bg-violet-600 text-white'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            }`}
+          >
+            치료·과제
+          </button>
+          <button
+            type="button"
+            onClick={() => setHubView('cohorts')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+              view === 'cohorts'
+                ? 'bg-violet-600 text-white'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+            }`}
+          >
+            그룹
+          </button>
+        </div>
+      }
+      noBodyPadding
+      bodyClassName="!p-0"
+    >
+    <div className="space-y-3 p-2.5 sm:p-3">
 
       {view === 'care' ? (
         <CounselorCareMonitoringView />
@@ -341,8 +349,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
             </AuthLink>
           </div>
 
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-300">검사코드별 진행</h2>
+          <CounselorPageSection title="검사코드별 진행" className="!rounded-lg">
             {hub.assessments.length === 0 ? (
               <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
                 <p className="text-slate-300">모니터링할 검사코드가 없습니다.</p>
@@ -360,10 +367,9 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                 ))}
               </div>
             )}
-          </section>
+          </CounselorPageSection>
 
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-300">최근 검사 완료</h2>
+          <CounselorPageSection title="최근 검사 완료" className="!rounded-lg">
             {hub.recentActivity.length === 0 ? (
               <p className="text-sm text-slate-500">아직 완료된 검사가 없습니다.</p>
             ) : (
@@ -409,9 +415,10 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                 </table>
               </div>
             )}
-          </section>
+          </CounselorPageSection>
         </>
       )}
     </div>
+    </CounselorPageSection>
   );
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import {
   fetchCounselorClientPortalDetail,
   resendDispatchCredentials,
@@ -209,25 +210,10 @@ export default function CounselorClientDetail({ portalId }: Props) {
   const notify = notifyStatusLabel(portal.notifyStatus);
 
   return (
-    <div className="space-y-6 pb-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <AuthLink href="/counselor/clients" className="text-sm text-slate-400 hover:text-white">
-          ← 내담자 목록
-        </AuthLink>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={actionBusy}
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
-        >
-          새로고침
-        </button>
-        <CounselorLiveStatusBadge
-          isLive={isLive}
-          liveError={liveError}
-          lastUpdatedAt={lastUpdatedAt}
-        />
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 pb-8">
+      <AuthLink href="/counselor/clients" className="text-sm text-sky-300/70 hover:text-sky-200">
+        ← 내담자 목록
+      </AuthLink>
 
       {actionMsg ? (
         <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
@@ -236,18 +222,31 @@ export default function CounselorClientDetail({ portalId }: Props) {
       ) : null}
 
       {portal.status === 'active' ? (
-        <CounselorPushAssessmentPanel
-          portalIds={[portalId]}
-          assignedAssessmentIds={assessments.map((a) => a.assessmentId)}
-          onSuccess={() => void load()}
-        />
+        <CounselorPageSection title="검사 추가 발송">
+          <CounselorPushAssessmentPanel
+            portalIds={[portalId]}
+            assignedAssessmentIds={assessments.map((a) => a.assessmentId)}
+            onSuccess={() => void load()}
+          />
+        </CounselorPageSection>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-950/60 p-5 sm:p-6">
+      <CounselorPageSection
+        title={portal.displayName || '내담자 프로필'}
+        toolbar={
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={actionBusy}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+          >
+            새로고침
+          </button>
+        }
+      >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-white">{portal.displayName || '내담자'}</h2>
-            <p className="mt-1 font-mono text-sm text-sky-300">
+            <p className="font-mono text-sm text-sky-300">
               나의코드 {formatAccessCodeDisplay(portal.accessCode)}
             </p>
             <p className="mt-2 text-sm text-slate-400">
@@ -349,10 +348,9 @@ export default function CounselorClientDetail({ portalId }: Props) {
             </button>
           </div>
         </div>
-      </section>
+      </CounselorPageSection>
 
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-white">할당된 검사코드</h3>
+      <CounselorPageSection title="할당된 검사코드">
         {assessments.length === 0 ? (
           <p className="text-sm text-slate-500">할당된 검사가 없습니다.</p>
         ) : (
@@ -471,12 +469,11 @@ export default function CounselorClientDetail({ portalId }: Props) {
             </div>
           ))
         )}
-      </section>
+      </CounselorPageSection>
 
       {recentResults.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-white">최근 검사 결과</h3>
-          <ul className="mt-3 divide-y divide-white/5 text-sm">
+        <CounselorPageSection title="최근 검사 결과">
+          <ul className="divide-y divide-white/5 text-sm">
             {recentResults.slice(0, 10).map((r) => (
               <li key={r.resultId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span className="text-slate-200">{r.testType || r.testId}</span>
@@ -490,13 +487,12 @@ export default function CounselorClientDetail({ portalId }: Props) {
           <Link href="/counselor/test-results" className="mt-3 inline-block text-xs text-sky-400 hover:text-sky-300">
             전체 검사 결과 분석 →
           </Link>
-        </section>
+        </CounselorPageSection>
       ) : null}
 
       {linkedPortals.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-white">연결된 나의코드</h3>
-          <ul className="mt-3 space-y-2 text-sm">
+        <CounselorPageSection title="연결된 나의코드">
+          <ul className="space-y-2 text-sm">
             {linkedPortals.map((lp) => (
               <li key={lp.portalId}>
                 <Link
@@ -508,7 +504,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
               </li>
             ))}
           </ul>
-        </section>
+        </CounselorPageSection>
       ) : null}
     </div>
   );
