@@ -174,7 +174,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
               : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]'
           }`} />
           <div className={`relative z-10 mx-auto flex min-h-0 w-full flex-1 flex-col ${
-            isHubPage ? 'max-w-6xl px-4 py-5 sm:px-6 sm:py-6' : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
+            isHubPage ? 'max-w-3xl px-4 py-5 sm:px-6 sm:py-6' : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
           }`}>
             {children}
           </div>
