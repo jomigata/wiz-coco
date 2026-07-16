@@ -220,6 +220,7 @@ export type DispatchRecipient = {
   notifyError?: string | null;
   notifyAt?: string | null;
   notifySentVia?: string | null;
+  notifyKind?: string | null;
   testStatus: 'completed' | 'in_progress' | 'not_started';
   completedCount: number;
   requiredCount: number;

@@ -15,6 +15,64 @@ from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
 
 
+def _parse_notify_timestamp(value) -> float | None:
+    if not value:
+        return None
+    if hasattr(value, "timestamp"):
+        try:
+            return value.timestamp()
+        except Exception:
+            return None
+    if isinstance(value, str):
+        try:
+            from datetime import datetime
+
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                from datetime import timezone
+
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.timestamp()
+        except Exception:
+            return None
+    return None
+
+
+def _merge_notify_snapshot(notify: dict, pdata: dict) -> dict:
+    """알림 큐 vs 포털 lastNotify* 중 더 최신 스냅샷 선택."""
+    portal_ts = _parse_notify_timestamp(pdata.get("lastNotifyAt"))
+    queue_ts = _parse_notify_timestamp(notify.get("_processedAtRaw")) or _parse_notify_timestamp(
+        notify.get("processedAt")
+    )
+    use_portal = portal_ts is not None and (queue_ts is None or portal_ts >= queue_ts)
+
+    if use_portal:
+        return {
+            "status": (pdata.get("lastNotifyStatus") or "not_sent").strip(),
+            "error": pdata.get("lastNotifyError"),
+            "sentVia": pdata.get("lastNotifySentVia"),
+            "notifyKind": (pdata.get("lastNotifyKind") or "initial").strip(),
+            "processedAt": _iso_timestamp(pdata.get("lastNotifyAt")),
+        }
+
+    if notify:
+        return {
+            "status": (notify.get("status") or "not_sent").strip(),
+            "error": notify.get("error"),
+            "sentVia": notify.get("sentVia"),
+            "notifyKind": (notify.get("notifyKind") or "initial").strip(),
+            "processedAt": notify.get("processedAt"),
+        }
+
+    return {
+        "status": (pdata.get("lastNotifyStatus") or "not_sent").strip(),
+        "error": pdata.get("lastNotifyError"),
+        "sentVia": pdata.get("lastNotifySentVia"),
+        "notifyKind": (pdata.get("lastNotifyKind") or "initial").strip(),
+        "processedAt": _iso_timestamp(pdata.get("lastNotifyAt")),
+    }
+
+
 def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
     """포털별 최신 알림 — portalId IN 배치 쿼리 (N+1 방지)."""
     if not portal_ids:
@@ -40,9 +98,11 @@ def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
                     "status": (data.get("status") or "pending").strip(),
                     "error": data.get("error"),
                     "sentVia": data.get("sentVia"),
+                    "notifyKind": (data.get("notifyKind") or "initial").strip(),
                     "processedAt": _iso_timestamp(data.get("processedAt")),
                     "createdAt": _iso_timestamp(data.get("createdAt")),
                     "_createdAtRaw": data.get("createdAt"),
+                    "_processedAtRaw": data.get("processedAt"),
                 }
                 continue
             ca = data.get("createdAt")
@@ -61,12 +121,15 @@ def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
                     "status": (data.get("status") or "pending").strip(),
                     "error": data.get("error"),
                     "sentVia": data.get("sentVia"),
+                    "notifyKind": (data.get("notifyKind") or "initial").strip(),
                     "processedAt": _iso_timestamp(data.get("processedAt")),
                     "createdAt": _iso_timestamp(data.get("createdAt")),
                     "_createdAtRaw": ca,
+                    "_processedAtRaw": data.get("processedAt"),
                 }
     for pid in list(out.keys()):
         out[pid].pop("_createdAtRaw", None)
+        out[pid].pop("_processedAtRaw", None)
     return out
 
 
@@ -100,12 +163,9 @@ def _bulk_completed_tests_by_portal_assessment(
 
 
 def _resolve_notify_at(notify: dict, pdata: dict, status: str) -> str | None:
-    processed = notify.get("processedAt")
-    if processed:
-        return processed
-    last_at = pdata.get("lastNotifyAt")
-    if last_at:
-        return _iso_timestamp(last_at)
+    snap = _merge_notify_snapshot(notify, pdata)
+    if snap.get("processedAt"):
+        return snap["processedAt"]
     if status in ("pending", "not_sent") and notify.get("createdAt"):
         return notify.get("createdAt")
     return None
@@ -114,8 +174,9 @@ def _resolve_notify_at(notify: dict, pdata: dict, status: str) -> str | None:
 def _resolve_notify_status(
     notify: dict, pdata: dict, *, email: str, phone: str
 ) -> tuple[str, str | None]:
-    status = (notify.get("status") or pdata.get("lastNotifyStatus") or "not_sent").strip()
-    error = notify.get("error") or pdata.get("lastNotifyError")
+    snap = _merge_notify_snapshot(notify, pdata)
+    status = snap["status"]
+    error = snap.get("error")
     if not email and not phone:
         return "skipped", error or "no_recipient"
     return status, error
@@ -345,6 +406,7 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
         notify = notify_map.get(portal_id) or {}
         email = (pdata.get("email") or "").strip()
         phone = (pdata.get("phone") or "").strip()
+        notify_snap = _merge_notify_snapshot(notify, pdata)
         notify_status, notify_error = _resolve_notify_status(
             notify, pdata, email=email, phone=phone
         )
@@ -361,7 +423,8 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
                 "notifyStatus": notify_status,
                 "notifyError": notify_error,
                 "notifyAt": notify_at,
-                "notifySentVia": notify.get("sentVia") or pdata.get("lastNotifySentVia") or "",
+                "notifySentVia": notify_snap.get("sentVia") or "",
+                "notifyKind": notify_snap.get("notifyKind") or "initial",
                 "tests": _test_detail_rows(db, portal_id, assessment_id, test_list),
                 **test_info,
             }
@@ -443,7 +506,11 @@ def resend_portal_credentials(
             join_access_code=join_access_code,
         )
         status = result.get("status") or "failed"
-        notify_update: dict = {"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP}
+        notify_update: dict = {
+            "lastNotifyStatus": status,
+            "lastNotifyAt": SERVER_TIMESTAMP,
+            "lastNotifyKind": "resend",
+        }
         result_errors = result.get("errors") or []
         if result_errors:
             notify_update["lastNotifyError"] = "; ".join(result_errors)

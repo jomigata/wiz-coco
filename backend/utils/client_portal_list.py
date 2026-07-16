@@ -10,6 +10,7 @@ from utils.assessment_dispatch import (
     _bulk_completed_tests_by_portal_assessment,
     _iso_timestamp,
     _latest_notify_by_portal,
+    _merge_notify_snapshot,
     _resolve_notify_at,
     _resolve_notify_status,
     _test_detail_rows,
@@ -139,6 +140,7 @@ def list_counselor_client_portals(
         email = (pdata.get("email") or "").strip()
         phone = (pdata.get("phone") or "").strip()
         notify = notify_map.get(portal_id) or {}
+        notify_snap = _merge_notify_snapshot(notify, pdata)
         notify_status, notify_error = _resolve_notify_status(
             notify, pdata, email=email, phone=phone
         )
@@ -188,6 +190,7 @@ def list_counselor_client_portals(
                 "notifyStatus": notify_status,
                 "notifyError": notify_error,
                 "notifyAt": notify_at,
+                "notifyKind": notify_snap.get("notifyKind") or "initial",
                 "lastLoginAt": _iso_timestamp(pdata.get("lastLoginAt")),
                 "createdAt": _iso_timestamp(pdata.get("createdAt")),
                 "counselorTags": [
@@ -254,6 +257,7 @@ def get_counselor_client_portal_detail(
     phone = (pdata.get("phone") or "").strip()
     notify_map = _latest_notify_by_portal(db, {pid})
     notify = notify_map.get(pid) or {}
+    notify_snap = _merge_notify_snapshot(notify, pdata)
     notify_status, notify_error = _resolve_notify_status(
         notify, pdata, email=email, phone=phone
     )
@@ -352,7 +356,8 @@ def get_counselor_client_portal_detail(
             "notifyStatus": notify_status,
             "notifyError": notify_error,
             "notifyAt": notify_at,
-            "notifySentVia": notify.get("sentVia") or pdata.get("lastNotifySentVia") or "",
+            "notifySentVia": notify_snap.get("sentVia") or "",
+            "notifyKind": notify_snap.get("notifyKind") or "initial",
             "counselorTags": [
                 str(t).strip()
                 for t in (pdata.get("counselorTags") or [])

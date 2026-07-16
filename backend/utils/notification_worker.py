@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
-from config import NOTIFICATION_QUEUE_COLLECTION, PUBLIC_SITE_URL, is_email_configured
+from config import NOTIFICATION_QUEUE_COLLECTION, PUBLIC_SITE_URL, is_email_configured, CLIENT_PORTALS_COLLECTION
 from firebase_init import get_firestore
 from utils.email_notify import (
     send_portal_invite_email,
@@ -347,12 +347,28 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 elif status == "skipped":
                     skipped += 1
 
-                update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP}
+                update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP, "notifyKind": "initial"}
                 if errors:
                     update_payload["error"] = "; ".join(errors)
                 if sent_via:
                     update_payload["sentVia"] = sent_via
                 doc.reference.update(update_payload)
+
+                portal_id = (data.get("portalId") or "").strip()
+                if portal_id:
+                    portal_update: dict = {
+                        "lastNotifyStatus": status,
+                        "lastNotifyAt": SERVER_TIMESTAMP,
+                        "lastNotifyKind": "initial",
+                    }
+                    if errors:
+                        portal_update["lastNotifyError"] = "; ".join(errors)
+                    if sent_via:
+                        portal_update["lastNotifySentVia"] = sent_via
+                    get_firestore().collection(CLIENT_PORTALS_COLLECTION).document(portal_id).update(
+                        portal_update
+                    )
+
                 details.append({"id": doc.id, "status": status, "errors": errors})
                 continue
 

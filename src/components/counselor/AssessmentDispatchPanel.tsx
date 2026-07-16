@@ -65,6 +65,37 @@ function formatSentViaLabel(sentVia: string | null | undefined): string {
     .join('·');
 }
 
+type CredentialSendMode = 'initial' | 'resend' | 'mixed';
+
+function hasCredentialBeenSent(r: DispatchRecipient): boolean {
+  const status = r.notifyStatus || 'not_sent';
+  return status === 'sent' || status === 'partial' || status === 'failed' || Boolean(r.notifyAt?.trim());
+}
+
+function resolveCredentialSendMode(recipients: DispatchRecipient[]): CredentialSendMode {
+  const eligible = recipients.filter((r) => r.email || r.phone);
+  if (!eligible.length) return 'resend';
+  const sentBefore = eligible.filter(hasCredentialBeenSent);
+  if (sentBefore.length === 0) return 'initial';
+  if (sentBefore.length === eligible.length) return 'resend';
+  return 'mixed';
+}
+
+function credentialSendModeLabel(mode: CredentialSendMode): string {
+  switch (mode) {
+    case 'initial':
+      return '선택 발송';
+    case 'resend':
+      return '코드 재발송';
+    default:
+      return '접속 정보 발송';
+  }
+}
+
+function notifyKindLabel(kind: string | null | undefined): string {
+  return kind === 'resend' ? '재발송' : '최초';
+}
+
 function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className: string; title?: string } {
   const hasEmail = Boolean(r.email?.trim());
   const hasPhone = Boolean(r.phone?.trim());
@@ -80,8 +111,9 @@ function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className:
   const status = r.notifyStatus || 'not_sent';
 
   if (status === 'failed' || status === 'partial') {
+    const kindPrefix = notifyKindLabel(r.notifyKind);
     return {
-      text: status === 'partial' ? '일부 발송 실패' : '발송 실패',
+      text: status === 'partial' ? `${kindPrefix} 일부 실패` : `${kindPrefix} 실패`,
       className: 'text-red-400',
       title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
     };
@@ -103,25 +135,34 @@ function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className:
   }
 
   if (status === 'sent') {
+    const kindPrefix = notifyKindLabel(r.notifyKind);
     if (!hasEmail && hasPhone) {
       return {
-        text: '발송 성공(SMS)',
+        text: `${kindPrefix} 완료(SMS)`,
         className: 'text-emerald-300',
         title: '이메일 없음 · SMS로 발송됨',
       };
     }
     if (hasEmail && !hasPhone) {
       return {
-        text: '발송 성공(이메일)',
+        text: `${kindPrefix} 완료(이메일)`,
         className: 'text-emerald-300',
         title: '이메일로 발송됨',
       };
     }
     const viaLabel = formatSentViaLabel(r.notifySentVia);
     return {
-      text: viaLabel ? `발송 성공 (${viaLabel})` : '발송 성공',
+      text: viaLabel ? `${kindPrefix} 완료 (${viaLabel})` : `${kindPrefix} 완료`,
       className: 'text-emerald-300',
-      title: !hasEmail ? '이메일 없음' : undefined,
+      title: kindPrefix === '재발송' ? '접속 정보 재발송 완료' : '최초 접속 정보 발송 완료',
+    };
+  }
+
+  if (status === 'pending') {
+    return {
+      text: `${notifyKindLabel(r.notifyKind)} 예약`,
+      className: 'text-amber-300',
+      title: '발송 예약됨',
     };
   }
 
@@ -395,6 +436,11 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     [selectedRecipients],
   );
 
+  const credentialSendMode = useMemo(
+    () => resolveCredentialSendMode(resendEligibleSelected),
+    [resendEligibleSelected],
+  );
+
   const remindSkippedSelected = useMemo(
     () => selectedRecipients.filter((r) => !canSendReminder(r)),
     [selectedRecipients],
@@ -657,7 +703,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               disabled={resendLoading || deleteLoading || selected.size === 0}
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
-              {resendLoading ? '발송 중…' : `코드 재발송 (${selected.size})`}
+              {resendLoading
+                ? '발송 중…'
+                : `${credentialSendModeLabel(credentialSendMode)} (${selected.size})`}
             </button>
           </div>
         </div>
@@ -957,7 +1005,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 ? `미실시 알림 ${dispatchProgress.count}명에게 발송하고 있습니다.`
                 : dispatchProgress.kind === 'delete'
                   ? `선택 ${dispatchProgress.count}명을 삭제 처리하고 있습니다.`
-                  : `코드 재발송 ${dispatchProgress.count}명을 처리하고 있습니다.`}
+                  : `${credentialSendModeLabel(credentialSendMode)} ${dispatchProgress.count}명을 처리하고 있습니다.`}
             </p>
             <p className="mt-3 text-xs text-slate-500">
               {dispatchProgress.kind === 'delete'
@@ -1003,7 +1051,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   ? '미실시 알림 발송 완료'
                   : dispatchComplete.kind === 'delete'
                     ? '삭제 완료'
-                    : '코드 재발송 완료'}
+                    : `${credentialSendModeLabel(credentialSendMode)} 완료`}
             </h3>
             <p className="mt-2 text-sm text-slate-300">
               {dispatchComplete.error
@@ -1041,14 +1089,18 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   ? '미실시 알림통보 확인'
                   : confirmAction === 'delete'
                     ? '검사자 삭제 확인'
-                    : '코드 재발송 확인'}
+                    : `${credentialSendModeLabel(credentialSendMode)} 확인`}
               </h3>
               <p className="text-sm text-slate-400 mt-1">
                 {confirmAction === 'remind'
                   ? '아래 내용으로 이메일·SMS 알림을 발송합니다. 비밀번호는 변경되지 않습니다.'
                   : confirmAction === 'delete'
                     ? '선택한 검사자를 발송·검사 현황에서 제거합니다. 삭제된 목록에서 복구할 수 있습니다.'
-                    : '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'}
+                    : credentialSendMode === 'initial'
+                      ? '선택한 내담자에게 접속 정보를 발송합니다. 비밀번호가 새로 발급됩니다.'
+                      : credentialSendMode === 'resend'
+                        ? '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'
+                        : '선택 내담자 중 최초 발송·재발송이 함께 포함됩니다. 비밀번호가 새로 발급됩니다.'}
               </p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
@@ -1143,18 +1195,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       ))}
                     </ul>
                   </div>
-                  <div className="rounded-lg border border-blue-700/40 bg-blue-950/30 p-3 text-slate-300">
-                    <p className="text-blue-200 font-medium mb-2">발송 내용 (이메일/SMS)</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
-                      <li>제목: [WizCoCo] 검사시작 접속 안내 (수신자 이름)</li>
-                      <li>
-                        검사코드 {formatAccessCodeDisplay(displayData.joinAccessCode)}, 나의코드(개인별)
-                      </li>
-                      <li className="text-amber-200">새 4자리 비밀번호 (기존 비밀번호 무효화)</li>
-                      <li>검사시작 URL: {loginUrl}</li>
-                      <li>바로 시작 매직링크 (72시간 유효, 개인별 발급)</li>
-                    </ul>
-                  </div>
                 </>
               )}
             </div>
@@ -1190,7 +1230,9 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   ? '알림 발송'
                   : confirmAction === 'delete'
                     ? '삭제'
-                    : '재발송'}
+                    : credentialSendMode === 'resend'
+                      ? '재발송'
+                      : '발송'}
               </button>
             </div>
           </div>

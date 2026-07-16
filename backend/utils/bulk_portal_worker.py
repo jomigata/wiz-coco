@@ -118,6 +118,7 @@ def _enqueue_portal_notification(
         "status": "pending",
         "createdAt": SERVER_TIMESTAMP,
         "counselorId": counselor_uid,
+        "notifyKind": "initial",
     }
     if scheduled_at_iso:
         payload["scheduledAt"] = scheduled_at_iso
@@ -196,7 +197,11 @@ def create_portal_for_row(
                 join_access_code=join_access_code,
             )
             status = result.get("status") or "failed"
-            notify_update: dict = {"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP}
+            notify_update: dict = {
+                "lastNotifyStatus": status,
+                "lastNotifyAt": SERVER_TIMESTAMP,
+                "lastNotifyKind": "initial",
+            }
             result_errors = result.get("errors") or []
             if result_errors:
                 notify_update["lastNotifyError"] = "; ".join(result_errors)
