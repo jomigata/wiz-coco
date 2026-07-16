@@ -1,16 +1,30 @@
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
-import CounselorMonitoringHub from '@/components/counselor/CounselorMonitoringHub';
+import CounselorMonitoringHub, {
+  type MonitoringHubView,
+} from '@/components/counselor/CounselorMonitoringHub';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
+function parseMonitoringView(raw: string | null): MonitoringHubView {
+  if (raw === 'cohorts' || raw === 'care') return raw;
+  return 'overview';
+}
+
 function ProgressPageContent() {
+  const searchParams = useSearchParams();
   const { authPending, showLoginRequired } = useAuthResolved();
   const [assessmentId, setAssessmentId] = useState('');
+
+  const monitoringView = useMemo(
+    () => parseMonitoringView(searchParams.get('view')),
+    [searchParams],
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -20,7 +34,7 @@ function ProgressPageContent() {
     } catch {
       setAssessmentId('');
     }
-  }, []);
+  }, [searchParams]);
 
   if (authPending) {
     return <AuthLoadingState className="py-8" />;
@@ -37,7 +51,7 @@ function ProgressPageContent() {
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <AuthLink href="/counselor/assessments/progress" className="text-sky-300/70 hover:text-sky-200">
-            ← 통합 모니터링
+            ← 검사코드별 진행
           </AuthLink>
           <AuthLink href="/counselor/assessments" className="text-slate-500 hover:text-slate-300">
             검사코드 목록
@@ -62,13 +76,7 @@ function ProgressPageContent() {
       <AuthLink href="/counselor/assessments" className="text-sm text-sky-300/70 hover:text-sky-200">
         ← 검사코드 목록
       </AuthLink>
-      <CounselorPageSection
-        className="flex min-h-0 flex-1"
-        title="검사코드별 진행"
-        description="검사코드 단위로 발송·완료 현황을 확인하고 상세 진행현황으로 이동할 수 있습니다."
-      >
-        <CounselorMonitoringHub />
-      </CounselorPageSection>
+      <CounselorMonitoringHub initialView={monitoringView} />
     </div>
   );
 }

@@ -298,7 +298,7 @@ export default function CounselorDailyRecordsPanel() {
             </option>
           ))}
         </select>
-        <AuthLink href="/counselor/progress?view=care" className="text-sm text-violet-400 hover:text-violet-300">
+        <AuthLink href="/counselor/assessments/progress?view=care" className="text-sm text-violet-400 hover:text-violet-300">
           치료·과제 모니터링 →
         </AuthLink>
       </div>

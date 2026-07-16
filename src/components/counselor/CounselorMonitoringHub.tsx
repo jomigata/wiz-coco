@@ -146,7 +146,10 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
         params.set('view', next);
       }
       const qs = params.toString();
-      router.replace(qs ? `/counselor/progress?${qs}` : '/counselor/progress', { scroll: false });
+      router.replace(
+        qs ? `/counselor/assessments/progress?${qs}` : '/counselor/assessments/progress',
+        { scroll: false },
+      );
     },
     [router, searchParams],
   );

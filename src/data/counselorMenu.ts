@@ -30,6 +30,12 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '➕',
           },
           {
+            name: '진행·모니터링',
+            href: '/counselor/assessments/progress',
+            description: '검사코드별 발송·검사 진행 현황',
+            icon: '📈',
+          },
+          {
             name: '검사 크레딧',
             href: '/counselor/credits',
             description: '보유 크레딧·사용 내역 (협회 지급)',
@@ -140,12 +146,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             href: '/counselor/treatment-plans',
             description: '치료 계획 수립',
             icon: '📋',
-          },
-          {
-            name: '통합 모니터링',
-            href: '/counselor/progress',
-            description: '검사코드·내담자 진행 실시간 허브',
-            icon: '📈',
           },
         ],
       },
