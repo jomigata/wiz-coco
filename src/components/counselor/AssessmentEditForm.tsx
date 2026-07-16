@@ -8,6 +8,9 @@ import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatu
 import { getAssessment, updateAssessment, type CounselorAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import AssessmentSettingsFields from '@/components/counselor/AssessmentSettingsFields';
+import { FORM_HINT } from '@/lib/assessmentFormUi';
 
 interface AssessmentEditFormProps {
   assessmentId: string;
@@ -121,102 +124,44 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <div className="rounded-lg bg-slate-800/80 border border-slate-600 p-4 text-sm text-slate-300 space-y-2">
-        <div>
-          <span className="text-slate-400">검사코드</span>{' '}
-          <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(initial.accessCode)}</span>
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
+      <CounselorPageSection title="검사코드">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
+            {formatAccessCodeDisplay(initial.accessCode)}
+          </span>
+          <span className="text-sm text-slate-400">
+            {initial.issueType === 'individual' ? '검사코드(개별 발급)' : '일반코드(지원 종료)'}
+          </span>
         </div>
-        <p className="text-slate-500 text-xs">검사코드는 발급 후 변경할 수 없습니다.</p>
-      </div>
+        <p className={`${FORM_HINT} mt-2`}>검사코드·발급 유형은 변경할 수 없습니다.</p>
+      </CounselorPageSection>
 
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-2">
-          안내 제목 <span className="text-red-400">*</span>
-        </label>
-        <input
-          id="title"
-          type="text"
-          required
-          maxLength={200}
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+      <CounselorPageSection title="검사 정보">
+        <AssessmentSettingsFields
+          title={title}
+          onTitleChange={setTitle}
+          welcomeMessage={welcomeMessage}
+          onWelcomeMessageChange={setWelcomeMessage}
+          usageEndDate={usageEndDate}
+          onUsageEndDateChange={setUsageEndDate}
+          selectedTestIds={selectedTestIds}
+          onToggleTest={toggleTest}
           disabled={loading}
         />
-      </div>
+      </CounselorPageSection>
 
-      <div>
-        <span className="block text-sm font-medium text-slate-300 mb-2">유형</span>
-        <p className="text-white text-sm">
-          {initial.issueType === 'individual' ? '검사코드(개별 발급)' : '일반코드(지원 종료)'}
-        </p>
-        <p className="text-slate-500 text-xs mt-1">발급 유형은 변경할 수 없습니다.</p>
-      </div>
-
-      <div>
-        <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-300 mb-2">
-          검사코드 사용최종일 (선택)
-        </label>
-        <input
-          id="usageEndDate"
-          type="date"
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={usageEndDate}
-          onChange={(e) => setUsageEndDate(e.target.value)}
-          disabled={loading}
-        />
-        <p className="text-slate-500 text-xs mt-1">비워두면 무기한 사용 가능합니다.</p>
-      </div>
-
-      <div>
-        <label htmlFor="welcomeMessage" className="block text-sm font-medium text-slate-300 mb-2">
-          안내 메시지 (선택)
-        </label>
-        <textarea
-          id="welcomeMessage"
-          rows={4}
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-          placeholder="내담자에게 보여줄 환영/안내 문구"
-          value={welcomeMessage}
-          onChange={(e) => setWelcomeMessage(e.target.value)}
-          disabled={loading}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">포함할 검사 선택</label>
-        <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800/80 p-3 space-y-2">
-          {counselorAssessmentTestOptions.map((t) => (
-            <label key={t.testId} className="flex items-center gap-3 p-2 rounded hover:bg-slate-700/50 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedTestIds.has(t.testId)}
-                onChange={() => toggleTest(t.testId)}
-                disabled={loading}
-                className="rounded text-blue-500"
-              />
-              <span className="text-white">{t.name}</span>
-              <span className="text-slate-500 text-sm">({t.testId})</span>
-            </label>
-          ))}
-        </div>
-        <p className="text-slate-500 text-xs mt-1">
-          이미 제출된 결과가 있어도 안내·검사 구성은 수정할 수 있습니다. 삭제 시에는 목록에서 제거됩니다.
-        </p>
-      </div>
-
-      {error && (
+      {error ? (
         <p className="text-red-400 text-sm" role="alert">
           {error}
         </p>
-      )}
+      ) : null}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={!canSubmit}
-          className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-lg bg-sky-600 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? '저장 중…' : '변경 저장'}
         </button>
@@ -224,7 +169,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           type="button"
           onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
           disabled={loading}
-          className="px-5 py-2.5 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+          className="rounded-lg border border-white/15 bg-slate-800/80 px-5 py-2.5 text-base font-medium text-slate-200 transition hover:bg-slate-700/80 disabled:opacity-50"
         >
           취소
         </button>

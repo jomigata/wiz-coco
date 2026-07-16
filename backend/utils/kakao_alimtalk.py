@@ -11,7 +11,12 @@ from config import (
     SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
     SOLAPI_SENDER,
 )
-from utils.solapi_client import is_solapi_configured, normalize_kr_phone, solapi_send_messages
+from utils.solapi_client import (
+    is_solapi_configured,
+    normalize_kr_phone,
+    recipient_conflicts_with_sender,
+    solapi_send_messages,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +109,11 @@ def _send_alimtalk(
     phone = normalize_kr_phone(to_phone)
     if not phone:
         return False, "no_phone"
+    if recipient_conflicts_with_sender(to_phone):
+        return (
+            False,
+            "alimtalk_sender_equals_recipient",
+        )
     if not template_id:
         return False, "template_not_configured"
     if not is_alimtalk_configured():

@@ -13,6 +13,7 @@ import {
 } from '@/lib/dispatchRecipientExport';
 import {
   archiveDispatchRecipients,
+  bulkCreateClientPortals,
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
   sendDispatchTestReminders,
@@ -21,6 +22,8 @@ import {
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
+import { normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { FORM_HINT, FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -41,6 +44,12 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
   if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
   if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
+  if (err.includes('alimtalk_sender_equals_recipient') || err.includes('sms_sender_equals_recipient')) {
+    return '수신 번호가 Solapi 발신번호와 같습니다. 알림톡·문자 테스트는 다른 휴대폰 번호를 사용해 주세요.';
+  }
+  if (err.includes('3027') || err.includes('카카오톡 미사용')) {
+    return '카카오톡 수신 불가 번호입니다. 발신번호와 동일한 번호는 알림톡이 전달되지 않습니다.';
+  }
   if (err.includes('smtp_not_configured')) return '이메일 서버가 설정되지 않았습니다.';
   return err;
 }
@@ -367,6 +376,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
+  const [showAddRecipient, setShowAddRecipient] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [addPhone, setAddPhone] = useState('');
+  const [addSendNow, setAddSendNow] = useState(true);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -483,6 +499,51 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
+  };
+
+  const handleAddRecipient = async () => {
+    if (!assessmentId || !displayData) return;
+    const displayName = addName.trim();
+    const email = addEmail.trim().toLowerCase();
+    const phone = normalizeRecipientPhone(addPhone);
+    if (!displayName) {
+      setAddError('이름을 입력해 주세요.');
+      return;
+    }
+    if (!email && !phone) {
+      setAddError('이메일 또는 휴대폰 중 하나는 필수입니다.');
+      return;
+    }
+    const cohortName = (displayData.cohortName || displayData.title || '내담자').trim();
+    setAddLoading(true);
+    setAddError('');
+    try {
+      await bulkCreateClientPortals({
+        assessmentId,
+        cohortName,
+        title: displayData.title || cohortName,
+        testList: displayData.testList,
+        rows: [
+          {
+            displayName,
+            email: email || undefined,
+            phone: phone || undefined,
+            queueNotify: addSendNow,
+          },
+        ],
+        queueNotify: addSendNow,
+      });
+      setShowAddRecipient(false);
+      setAddName('');
+      setAddEmail('');
+      setAddPhone('');
+      setAddSendNow(true);
+      await load({ silent: true });
+    } catch (err) {
+      setAddError(err instanceof Error ? err.message : '내담자 추가에 실패했습니다.');
+    } finally {
+      setAddLoading(false);
+    }
   };
 
   const handleResend = async () => {
@@ -673,6 +734,17 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
           <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
+            <button
+              type="button"
+              onClick={() => {
+                setAddError('');
+                setShowAddRecipient(true);
+              }}
+              disabled={addLoading || resendLoading || deleteLoading}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-100 bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-50"
+            >
+              + 내담자 추가
+            </button>
             <button
               type="button"
               onClick={toggleAll}
@@ -1233,6 +1305,104 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     : credentialSendMode === 'resend'
                       ? '재발송'
                       : '발송'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showAddRecipient ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => !addLoading && setShowAddRecipient(false)}
+        >
+          <div
+            className="bg-slate-800 rounded-xl border border-slate-600 max-w-lg w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-600">
+              <h3 className="text-lg font-semibold text-white">내담자 추가</h3>
+              <p className="text-sm text-slate-400 mt-1">
+                이 검사코드에 새 내담자를 등록합니다. 나의코드·비밀번호가 자동 발급됩니다.
+              </p>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label htmlFor="add-recipient-name" className={FORM_LABEL}>
+                  이름 <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="add-recipient-name"
+                  type="text"
+                  className={FORM_INPUT}
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  disabled={addLoading}
+                />
+              </div>
+              <div>
+                <label htmlFor="add-recipient-email" className={FORM_LABEL}>
+                  이메일
+                </label>
+                <input
+                  id="add-recipient-email"
+                  type="email"
+                  className={FORM_INPUT}
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  disabled={addLoading}
+                />
+              </div>
+              <div>
+                <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
+                  휴대폰
+                </label>
+                <input
+                  id="add-recipient-phone"
+                  type="tel"
+                  className={FORM_INPUT}
+                  value={addPhone}
+                  onChange={(e) => setAddPhone(e.target.value)}
+                  disabled={addLoading}
+                  placeholder="010-0000-0000"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={addSendNow}
+                  onChange={(e) => setAddSendNow(e.target.checked)}
+                  disabled={addLoading}
+                  className="rounded text-sky-500"
+                />
+                추가 후 즉시 접속 정보 발송
+              </label>
+              <p className={`${FORM_HINT} text-amber-200/90`}>
+                알림톡·문자 테스트 시 수신 번호는 Solapi 발신번호(010-5182-5410)와 달라야 합니다.
+                같은 번호면 이메일만 도착할 수 있습니다.
+              </p>
+              {addError ? (
+                <p className="text-red-400 text-sm" role="alert">
+                  {addError}
+                </p>
+              ) : null}
+            </div>
+            <div className="px-4 py-3 border-t border-slate-600 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAddRecipient(false)}
+                disabled={addLoading}
+                className="px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleAddRecipient()}
+                disabled={addLoading}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {addLoading ? '추가 중…' : addSendNow ? '추가 후 발송' : '추가만'}
               </button>
             </div>
           </div>

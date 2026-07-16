@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
-import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
 import { useSearchParams } from 'next/navigation';
 import AssessmentEditForm from '@/components/counselor/AssessmentEditForm';
 
@@ -21,25 +21,25 @@ function AssessmentEditContent() {
     );
   }
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <AuthLink href="/counselor/assessments" className="text-sm text-sky-300/70 hover:text-sky-200">
-        ← 검사코드 목록
-      </AuthLink>
-      <CounselorPageSection
-        title="검사 설정"
-        description="안내 제목·대상·메시지·포함 검사를 수정할 수 있습니다. 검사코드는 변경되지 않습니다."
-      >
-        <AssessmentEditForm assessmentId={id} />
-      </CounselorPageSection>
-    </div>
-  );
+  return <AssessmentEditForm assessmentId={id} />;
 }
 
 export default function AssessmentEditPage() {
   return (
-    <Suspense fallback={<p className="text-slate-400">불러오는 중…</p>}>
-      <AssessmentEditContent />
+    <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
+      <CounselorPageBody className="gap-4">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <AuthLink
+            href="/counselor/assessments"
+            className="inline-flex items-center gap-1.5 text-base text-slate-300 transition hover:text-white"
+          >
+            <span aria-hidden>←</span>
+            검사코드 목록
+          </AuthLink>
+          <p className="text-sm text-slate-400">안내 제목·메시지·포함 검사 수정</p>
+        </div>
+        <AssessmentEditContent />
+      </CounselorPageBody>
     </Suspense>
   );
 }
