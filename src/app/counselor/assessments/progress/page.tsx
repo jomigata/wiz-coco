@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorMonitoringHub from '@/components/counselor/CounselorMonitoringHub';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -33,33 +34,41 @@ function ProgressPageContent() {
 
   if (assessmentId) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <AuthLink
-            href="/counselor/assessments/progress"
-            className="text-sm text-slate-400 hover:text-white"
-          >
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <AuthLink href="/counselor/assessments/progress" className="text-sky-300/70 hover:text-sky-200">
             ← 통합 모니터링
           </AuthLink>
-          <AuthLink href="/counselor/assessments" className="text-sm text-slate-500 hover:text-slate-300">
+          <AuthLink href="/counselor/assessments" className="text-slate-500 hover:text-slate-300">
             검사코드 목록
           </AuthLink>
-          <h1 className="text-xl font-bold text-white">검사코드 발송·진행 현황</h1>
         </div>
-        <AssessmentDispatchPanel assessmentId={assessmentId} />
+        <CounselorPageSection
+          className="flex min-h-0 flex-1"
+          bodyClassName="!p-0"
+          noBodyPadding
+          title="발송 및 검사 현황"
+        >
+          <div className="p-2.5 sm:p-3">
+            <AssessmentDispatchPanel assessmentId={assessmentId} />
+          </div>
+        </CounselorPageSection>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <AuthLink href="/counselor/assessments" className="text-sm text-slate-400 hover:text-white">
-          ← 검사코드 목록
-        </AuthLink>
-        <h1 className="text-xl font-bold text-white">통합 모니터링 허브</h1>
-      </div>
-      <CounselorMonitoringHub />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <AuthLink href="/counselor/assessments" className="text-sm text-sky-300/70 hover:text-sky-200">
+        ← 검사코드 목록
+      </AuthLink>
+      <CounselorPageSection
+        className="flex min-h-0 flex-1"
+        title="검사코드별 진행"
+        description="검사코드 단위로 발송·완료 현황을 확인하고 상세 진행현황으로 이동할 수 있습니다."
+      >
+        <CounselorMonitoringHub />
+      </CounselorPageSection>
     </div>
   );
 }

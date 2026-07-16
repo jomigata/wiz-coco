@@ -35,7 +35,13 @@ import * as XLSX from 'xlsx';
 
 export type RecipientRow = { displayName: string; email: string; phone: string };
 
+type SendMode = 'none' | 'all' | 'select';
+
 const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
+
+function recipientKey(row: Pick<RecipientRow, 'displayName' | 'email' | 'phone'>): string {
+  return `${row.displayName.trim()}|${row.email.trim()}|${row.phone.trim()}`.toLowerCase();
+}
 
 const FORM_CARD =
   'rounded-xl border border-white/10 bg-gradient-to-br from-slate-800/45 via-slate-800/25 to-slate-900/55 shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm';
@@ -152,7 +158,8 @@ export default function IndividualAssessmentCreateForm() {
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
-  const [queueNotify, setQueueNotify] = useState(true);
+  const [sendMode, setSendMode] = useState<SendMode>('none');
+  const [notifySelected, setNotifySelected] = useState<Set<string>>(new Set());
   const [notifyTiming, setNotifyTiming] = useState<'immediate' | 'scheduled'>('immediate');
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
@@ -266,6 +273,14 @@ export default function IndividualAssessmentCreateForm() {
     [manualRows, fileRows]
   );
 
+  const notifyTargetCount = useMemo(() => {
+    if (sendMode === 'none') return 0;
+    if (sendMode === 'all') return recipients.length;
+    return recipients.filter((r) => notifySelected.has(recipientKey(r))).length;
+  }, [sendMode, recipients, notifySelected]);
+
+  const willNotify = sendMode !== 'none' && notifyTargetCount > 0;
+
   const canSubmit =
     Boolean(user) &&
     !authPending &&
@@ -346,6 +361,37 @@ export default function IndividualAssessmentCreateForm() {
     setManualRows((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
   };
 
+  const toggleNotifyRecipient = (row: RecipientRow) => {
+    const key = recipientKey(row);
+    setNotifySelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleAllNotifyRecipients = () => {
+    const keys = recipients.map((r) => recipientKey(r));
+    const allOn = keys.length > 0 && keys.every((k) => notifySelected.has(k));
+    setNotifySelected(allOn ? new Set() : new Set(keys));
+  };
+
+  const handleSendModeChange = (mode: SendMode) => {
+    setSendMode(mode);
+    if (mode === 'all') {
+      setNotifySelected(new Set(recipients.map((r) => recipientKey(r))));
+    } else if (mode === 'none') {
+      setNotifySelected(new Set());
+    }
+  };
+
+  useEffect(() => {
+    if (sendMode === 'all') {
+      setNotifySelected(new Set(recipients.map((r) => recipientKey(r))));
+    }
+  }, [recipients, sendMode]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -402,7 +448,7 @@ export default function IndividualAssessmentCreateForm() {
       setError('포함할 검사를 1개 이상 선택해 주세요.');
       return;
     }
-    if (queueNotify && notifyTiming === 'scheduled') {
+    if (willNotify && notifyTiming === 'scheduled') {
       if (!scheduledDate.trim() || !scheduledTime.trim()) {
         setError('예약 발송 날짜와 시간(시·분)을 선택해 주세요.');
         return;
@@ -413,10 +459,14 @@ export default function IndividualAssessmentCreateForm() {
         return;
       }
     }
+    if (sendMode === 'select' && notifyTargetCount === 0) {
+      setError('선택 발송 대상을 1명 이상 선택해 주세요.');
+      return;
+    }
     setLoading(true);
     try {
       const scheduledAt =
-        queueNotify && notifyTiming === 'scheduled' && scheduledAtLocal
+        willNotify && notifyTiming === 'scheduled' && scheduledAtLocal
           ? new Date(scheduledAtLocal).toISOString()
           : undefined;
       const result = await bulkCreateClientPortals({
@@ -434,8 +484,14 @@ export default function IndividualAssessmentCreateForm() {
           displayName: r.displayName.trim(),
           email: r.email.trim() || undefined,
           phone: normalizeRecipientPhone(r.phone) || undefined,
+          queueNotify:
+            sendMode === 'all'
+              ? true
+              : sendMode === 'select'
+                ? notifySelected.has(recipientKey(r))
+                : false,
         })),
-        queueNotify,
+        queueNotify: willNotify,
         scheduledAt,
         assessmentId: usingExisting ? selectedAssessmentId : undefined,
       });
@@ -533,8 +589,11 @@ export default function IndividualAssessmentCreateForm() {
               </span>
             </p>
           ) : null}
-          {queueNotify ? (
+          {willNotify ? (
             <p className="mt-1 text-emerald-300/90">
+              {sendMode === 'select' ? (
+                <span className="text-emerald-200/90">선택 {notifyTargetCount}명 · </span>
+              ) : null}
               {scheduledAtIso ? (
                 `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
               ) : notifySent > 0 ? (
@@ -785,18 +844,39 @@ export default function IndividualAssessmentCreateForm() {
                 </button>
               </div>
             </div>
-            <div className="hidden shrink-0 gap-2 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[1fr_1fr_1fr_2.5rem]">
+            <div className="hidden shrink-0 gap-2 px-0.5 text-[10px] uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[2.5rem_1fr_1fr_1fr_2.5rem]">
+              {sendMode === 'select' ? <span>발송</span> : <span />}
               <span>이름 *</span>
               <span>이메일</span>
               <span>휴대폰</span>
               <span />
             </div>
             <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5">
-              {manualRows.map((row, idx) => (
+              {manualRows.map((row, idx) => {
+                const notifyKey = recipientKey(row);
+                const showNotifyCheckbox = sendMode === 'select' && Boolean(row.displayName.trim());
+                return (
                 <div
                   key={idx}
-                  className="grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] md:grid-cols-[1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5"
+                  className={`grid grid-cols-1 items-center gap-1.5 rounded-lg even:bg-white/[0.02] md:grid-cols-[2.5rem_1fr_1fr_1fr_2.5rem] md:px-1 md:py-0.5`}
                 >
+                  {sendMode === 'select' ? (
+                    <div className="flex justify-center md:justify-start">
+                      {showNotifyCheckbox ? (
+                        <input
+                          type="checkbox"
+                          checked={notifySelected.has(notifyKey)}
+                          onChange={() => toggleNotifyRecipient(row)}
+                          disabled={loading}
+                          className="rounded accent-blue-500"
+                          title="발송 대상 선택"
+                          aria-label={`${row.displayName || '내담자'} 발송 선택`}
+                        />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                    </div>
+                  ) : null}
                   <input
                     ref={(el) => {
                       recipientNameRefs.current[idx] = el;
@@ -835,8 +915,43 @@ export default function IndividualAssessmentCreateForm() {
                     삭제
                   </button>
                 </div>
-              ))}
+              );
+              })}
             </div>
+            {sendMode === 'select' && fileRows.length > 0 ? (
+              <div className="shrink-0 rounded-lg border border-white/5 bg-slate-950/25 p-2.5">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-medium text-slate-400">파일에서 불러온 내담자 ({fileRows.length}명)</p>
+                  <button
+                    type="button"
+                    onClick={toggleAllNotifyRecipients}
+                    className="text-[11px] text-blue-300 hover:text-blue-200"
+                    disabled={loading || recipients.length === 0}
+                  >
+                    {recipients.every((r) => notifySelected.has(recipientKey(r))) ? '전체 해제' : '전체 선택'}
+                  </button>
+                </div>
+                <ul className="max-h-28 space-y-1 overflow-y-auto text-xs">
+                  {fileRows.map((row, i) => (
+                    <li key={`${recipientKey(row)}-${i}`}>
+                      <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-white/5">
+                        <input
+                          type="checkbox"
+                          checked={notifySelected.has(recipientKey(row))}
+                          onChange={() => toggleNotifyRecipient(row)}
+                          disabled={loading}
+                          className="rounded accent-blue-500"
+                        />
+                        <span className="text-slate-300">{row.displayName}</span>
+                        <span className="truncate text-slate-500">
+                          {row.email || row.phone || '연락처 없음'}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
               <input
                 ref={fileInputRef}
@@ -875,7 +990,7 @@ export default function IndividualAssessmentCreateForm() {
                 <span className="text-[11px] text-slate-600">최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명</span>
               )}
             </div>
-            {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD && queueNotify ? (
+            {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD && willNotify ? (
               <p className="shrink-0 text-[11px] leading-snug text-amber-200/80">
                 {GROUP_NOTIFY_WARN_THRESHOLD}명 이상은 예약 발송 또는 CSV만 받기를 권장합니다.
               </p>
@@ -888,19 +1003,55 @@ export default function IndividualAssessmentCreateForm() {
         >
           <div className="space-y-3">
             <SectionHeading>접속 정보 발송</SectionHeading>
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-white/5 bg-slate-950/30 p-3 transition hover:border-white/10">
-              <input
-                type="checkbox"
-                checked={queueNotify}
-                onChange={(e) => setQueueNotify(e.target.checked)}
-                disabled={loading}
-                className="mt-0.5 rounded accent-blue-500"
-              />
-              <span className="text-xs leading-relaxed text-slate-300">
-                이메일·문자로 검사코드·나의코드·비밀번호 발송
-              </span>
-            </label>
-            {queueNotify ? (
+            <div className="space-y-2 rounded-lg border border-white/5 bg-slate-950/25 p-3">
+              <p className="text-[11px] leading-relaxed text-slate-500">
+                발급 후 이메일·문자 발송 여부를 선택하세요. 미발송 시 Excel에서 코드를 확인할 수 있습니다.
+              </p>
+              <div className="flex flex-col gap-2 text-xs">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white/5">
+                  <input
+                    type="radio"
+                    name="sendMode"
+                    checked={sendMode === 'none'}
+                    onChange={() => handleSendModeChange('none')}
+                    disabled={loading}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-slate-300">발송 안 함 (Excel로 확인)</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white/5">
+                  <input
+                    type="radio"
+                    name="sendMode"
+                    checked={sendMode === 'all'}
+                    onChange={() => handleSendModeChange('all')}
+                    disabled={loading}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-slate-300">전체 발송 ({recipients.length}명)</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white/5">
+                  <input
+                    type="radio"
+                    name="sendMode"
+                    checked={sendMode === 'select'}
+                    onChange={() => handleSendModeChange('select')}
+                    disabled={loading}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-slate-300">
+                    선택 발송
+                    {sendMode === 'select' ? ` (${notifyTargetCount}명)` : ''}
+                  </span>
+                </label>
+              </div>
+              {sendMode === 'select' ? (
+                <p className="text-[11px] text-amber-200/80">
+                  내담자 목록에서 발송할 대상을 체크하세요.
+                </p>
+              ) : null}
+            </div>
+            {willNotify ? (
               <div className="space-y-2 rounded-lg border border-white/5 bg-slate-950/25 p-3">
                 <div className="flex flex-wrap gap-3 text-xs">
                   <label className="flex cursor-pointer items-center gap-1.5">
@@ -1002,11 +1153,12 @@ export default function IndividualAssessmentCreateForm() {
                   </div>
                 ) : null}
               </div>
-            ) : (
+            ) : null}
+            {!willNotify ? (
               <p className="text-[11px] leading-relaxed text-slate-500">
                 발송 없이 Excel로 코드·비밀번호를 확인할 수 있습니다.
               </p>
-            )}
+            ) : null}
             {error ? (
               <p className="rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2 text-xs leading-snug text-red-300" role="alert">
                 {error}

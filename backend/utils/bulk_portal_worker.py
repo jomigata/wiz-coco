@@ -378,6 +378,7 @@ def process_bulk_job_batch(
                 break
 
             row = input_rows[idx]
+            row_notify = bool(row.get("queueNotify", queue_notify))
             created, queued, sent, failed = create_portal_for_row(
                 db,
                 row=row,
@@ -386,7 +387,7 @@ def process_bulk_job_batch(
                 cohort_name=cohort_name,
                 assessment_ref_id=assessment_id,
                 join_access_code=join_access_code,
-                queue_notify=queue_notify,
+                queue_notify=row_notify,
                 scheduled_at_iso=scheduled_at_iso,
                 bulk_job_id=job_id,
                 create_magic_link=create_magic_link,

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
@@ -181,8 +182,53 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   };
 
   return (
+    <CounselorPageSection
+      className="flex min-h-0 flex-1"
+      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+      noBodyPadding
+      title={
+        <>
+          검사코드 목록
+          <span className="ml-1.5 font-normal text-sky-200/60">({filtered.length})</span>
+        </>
+      }
+      description={
+        <>
+          전체 <span className="font-semibold text-white">{assessments.length}</span>개 · 응시자{' '}
+          <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
+          <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
+        </>
+      }
+      toolbar={
+        <>
+          <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="검사명 · 코드 · 유형 검색"
+              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
+          </div>
+          <AuthLink
+            href="/counselor/assessments/new"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            새 검사코드 만들기
+          </AuthLink>
+        </>
+      }
+    >
     <motion.div
-      className="flex min-h-0 flex-1 flex-col bg-white/[0.06] backdrop-blur-sm rounded-lg border border-white/10 p-3 sm:p-4 text-sm"
+      className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -245,43 +291,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
           </p>
         </div>
       )}
-
-      {/* 툴바 — 마이페이지 검사 기록 탭과 동일 패턴 */}
-      <div className="mb-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <h2 className="text-lg font-semibold text-slate-100 sm:w-auto">
-          검사코드 목록{' '}
-          <span className="font-normal text-slate-500">({filtered.length})</span>
-        </h2>
-        <div className="relative min-w-0 flex-1">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-            <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="검사명 · 코드 · 유형 검색"
-            className="w-full rounded-md border border-white/10 bg-white/[0.06] py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-          />
-        </div>
-        <AuthLink
-          href="/counselor/assessments/new"
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors sm:self-auto"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          새 검사코드 만들기
-        </AuthLink>
-      </div>
-
-      <p className="mb-2 text-xs text-slate-400 sm:text-sm">
-        전체 <span className="font-semibold text-white">{assessments.length}</span>개 · 응시자{' '}
-        <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
-        <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
-      </p>
 
       {filtered.length === 0 ? (
         <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
@@ -451,5 +460,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         </>
       )}
     </motion.div>
+    </CounselorPageSection>
   );
 }

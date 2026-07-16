@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
@@ -160,47 +161,39 @@ export default function CounselorClientList() {
   }, [displayItems]);
 
   return (
-    <div className="mx-auto w-full max-w-[1800px] space-y-5 px-4 py-5 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-400">
-            발급한 나의코드(내 검사실) 내담자를 한곳에서 조회합니다. 검사 진행·발송 현황은 검사코드별
-            진행현황에서 상세히 확인할 수 있습니다.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-            <span>
-              전체 <strong className="text-slate-200">{stats.total}</strong>명
-            </span>
-            <span>
-              진행 중 <strong className="text-sky-300">{stats.inProgress}</strong>명
-            </span>
-            <span>
-              완료 <strong className="text-emerald-300">{stats.completed}</strong>명
-            </span>
-            <CounselorLiveStatusBadge
-              isLive={isLive}
-              liveError={liveError}
-              lastUpdatedAt={lastUpdatedAt}
-            />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <CounselorPageSection
+      className="flex min-h-0 flex-1"
+      title="내담자 목록"
+      description="발급한 나의코드(내 검사실) 내담자를 한곳에서 조회합니다. 검사 진행·발송 현황은 검사코드별 진행현황에서 상세히 확인할 수 있습니다."
+      toolbar={
+        <>
+          <span className="hidden text-xs text-slate-500 sm:inline">
+            전체 <strong className="text-slate-200">{stats.total}</strong>명 · 진행 중{' '}
+            <strong className="text-sky-300">{stats.inProgress}</strong>명 · 완료{' '}
+            <strong className="text-emerald-300">{stats.completed}</strong>명
+          </span>
+          <CounselorLiveStatusBadge
+            isLive={isLive}
+            liveError={liveError}
+            lastUpdatedAt={lastUpdatedAt}
+          />
           <AuthLink
             href="/counselor/assessments/new"
-            className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
+            className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
           >
             + 새 검사코드 발급
           </AuthLink>
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
+      <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <input
           value={query}
@@ -407,6 +400,7 @@ export default function CounselorClientList() {
           </table>
         </div>
       )}
-    </div>
+      </div>
+    </CounselorPageSection>
   );
 }

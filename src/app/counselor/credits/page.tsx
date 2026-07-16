@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import RoleGuard from '@/components/RoleGuard';
 import CounselorCheckoutPanel from '@/components/commerce/CounselorCheckoutPanel';
 import CounselorAiCreditsPanel from '@/components/counselor/CounselorAiCreditsPanel';
@@ -122,11 +123,9 @@ function CreditsContent() {
 
   if (tab === 'ai') {
     return (
-      <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-2">크레딧 · AI</h1>
-        <TabBar tab={tab} setTab={setTab} />
+      <CounselorPageSection title="AI 크레딧" toolbar={<TabBar tab={tab} setTab={setTab} />}>
         <CounselorAiCreditsPanel />
-      </div>
+      </CounselorPageSection>
     );
   }
 
@@ -135,14 +134,11 @@ function CreditsContent() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-2">크레딧 · AI</h1>
-      <TabBar tab={tab} setTab={setTab} />
-      <p className="text-slate-400 text-sm mb-6">
-        내담자 1명(포털 1개) 발급 = 1크레딧. 파일럿 상담사는 협회에서 {PILOT_FREE_CREDITS}
-        크레딧을 지급받을 수 있습니다.
-      </p>
-
+    <CounselorPageSection
+      title="검사 크레딧"
+      description={`내담자 1명(포털 1개) 발급 = 1크레딧. 파일럿 상담사는 협회에서 ${PILOT_FREE_CREDITS}크레딧을 지급받을 수 있습니다.`}
+      toolbar={<TabBar tab={tab} setTab={setTab} />}
+    >
       {payMessage && (
         <div className="mb-4 rounded-lg bg-emerald-900/40 border border-emerald-600/40 p-4 text-emerald-200 text-sm">
           {payMessage}
@@ -193,7 +189,7 @@ function CreditsContent() {
             </Link>
           </div>
 
-          <h2 className="text-lg font-semibold text-white mb-3">최근 내역</h2>
+          <p className="mb-3 text-sm font-semibold text-slate-300">최근 내역</p>
           <ul className="space-y-2 text-sm">
             {(data.ledger || []).length === 0 && (
               <li className="text-slate-500">아직 내역이 없습니다.</li>
@@ -213,7 +209,7 @@ function CreditsContent() {
           </ul>
         </>
       )}
-    </div>
+    </CounselorPageSection>
   );
 }
 export default function CounselorCreditsPage() {

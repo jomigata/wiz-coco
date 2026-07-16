@@ -8,6 +8,7 @@ import { useRequireLoginRedirect } from '@/hooks/useRequireLoginRedirect';
 import RoleGuard from '@/components/RoleGuard';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
+import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -91,6 +92,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/notes')) return 'counseling-notes';
     if (path.startsWith('/counselor/progress')) return 'progress-tracking';
     if (path.startsWith('/counselor/daily-records')) return 'daily-records';
+    if (path.startsWith('/counselor/credits')) return 'credits';
     if (path.startsWith('/counselor/resources')) return 'resources';
     return 'dashboard';
   };
@@ -111,6 +113,10 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/clients/detail')) return '내담자 상세';
     if (path.startsWith('/counselor/clients/') && path !== '/counselor/clients') return '내담자 상세';
     if (path.startsWith('/counselor/assign-tests')) return '검사 할당';
+    if (path.startsWith('/counselor/credits')) return '크레딧 · AI';
+    if (path.startsWith('/counselor/data-sharing')) return '데이터 공유 관리';
+    if (path.startsWith('/counselor/bulk-invite')) return '일괄 초대';
+    if (path.startsWith('/counselor/test-management')) return '신입생 검사 관리';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
       '/counselor/clients': '내담자 목록',
@@ -125,7 +131,11 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       '/counselor/notes': '상담 노트',
       '/counselor/progress': '통합 모니터링',
       '/counselor/daily-records': '일상 기록',
-      '/counselor/resources': '상담 자료'
+      '/counselor/resources': '상담 자료',
+      '/counselor/credits': '크레딧 · AI',
+      '/counselor/data-sharing': '데이터 공유 관리',
+      '/counselor/bulk-invite': '일괄 초대',
+      '/counselor/test-management': '신입생 검사 관리',
     };
     return titleMap[path] || '상담사 대시보드';
   };
@@ -153,13 +163,13 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
         {!isHubPage && (
-        <header className="shrink-0 border-b border-white/10 bg-slate-950/90 py-2.5 backdrop-blur-sm">
+        <header className="shrink-0 border-b border-sky-400/20 bg-gradient-to-r from-sky-600/20 via-[#162b4a] to-[#0f172a] py-3 backdrop-blur-sm">
           <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
+              <h1 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
                 {pageTitle}
               </h1>
-              <p className="mt-0.5 text-xs text-slate-500">콘텐츠 상담 관리 시스템</p>
+              <p className="mt-0.5 text-xs text-sky-200/55">콘텐츠 상담 관리 시스템</p>
             </div>
           </div>
         </header>
@@ -176,7 +186,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
           <div className={`relative z-10 mx-auto flex min-h-0 w-full flex-1 flex-col ${
             isHubPage ? 'max-w-3xl px-4 py-5 sm:px-6 sm:py-6' : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
           }`}>
-            {children}
+            <CounselorPageBody>{children}</CounselorPageBody>
           </div>
         </main>
       </div>

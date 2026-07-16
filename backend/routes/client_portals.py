@@ -469,20 +469,6 @@ def bulk_create():
     scheduled_at_raw = (body.get("scheduledAt") or "").strip()
     scheduled_at_iso = ""
 
-    if scheduled_at_raw and queue_notify:
-        try:
-            sched = datetime.fromisoformat(scheduled_at_raw.replace("Z", "+00:00"))
-            if sched.tzinfo is None:
-                sched = sched.replace(tzinfo=timezone.utc)
-            if sched <= datetime.now(timezone.utc):
-                return (
-                    jsonify({"error": "Bad Request", "message": "예약 발송 시각은 현재 이후여야 합니다."}),
-                    400,
-                )
-            scheduled_at_iso = sched.astimezone(timezone.utc).isoformat()
-        except ValueError:
-            return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
-
     if not cohort_name:
         return jsonify({"error": "Bad Request", "message": "기관/단체/그룹명(cohortName)이 필요합니다."}), 400
     if not title:
@@ -535,9 +521,26 @@ def bulk_create():
             "displayName": (row.get("displayName") or row.get("name") or "").strip() or "내담자",
             "email": (row.get("email") or "").strip().lower(),
             "phone": normalize_recipient_phone((row.get("phone") or "").strip()),
+            "queueNotify": bool(row.get("queueNotify")) if "queueNotify" in row else queue_notify,
         }
         for row in rows
     ]
+
+    any_notify = any(bool(r.get("queueNotify")) for r in normalized_rows)
+
+    if scheduled_at_raw and any_notify:
+        try:
+            sched = datetime.fromisoformat(scheduled_at_raw.replace("Z", "+00:00"))
+            if sched.tzinfo is None:
+                sched = sched.replace(tzinfo=timezone.utc)
+            if sched <= datetime.now(timezone.utc):
+                return (
+                    jsonify({"error": "Bad Request", "message": "예약 발송 시각은 현재 이후여야 합니다."}),
+                    400,
+                )
+            scheduled_at_iso = sched.astimezone(timezone.utc).isoformat()
+        except ValueError:
+            return jsonify({"error": "Bad Request", "message": "예약 발송 시각 형식이 올바르지 않습니다."}), 400
 
     credit_required = len(normalized_rows)
     if COMMERCE_CREDITS_ENFORCE:
@@ -564,7 +567,7 @@ def bulk_create():
             assessment_id=assessment_ref_id,
             join_access_code=join_access_code,
             rows=normalized_rows,
-            queue_notify=queue_notify,
+            queue_notify=any_notify,
             scheduled_at_iso=scheduled_at_iso,
         )
         process_bulk_job_batch(
@@ -605,8 +608,9 @@ def bulk_create():
     notify_queued = 0
     notify_sent = 0
     notify_failed = 0
-    immediate = queue_notify and not scheduled_at_iso and len(normalized_rows) <= BULK_PORTAL_SYNC_MAX
+    immediate_batch = not scheduled_at_iso and len(normalized_rows) <= BULK_PORTAL_SYNC_MAX
     for row in normalized_rows:
+        row_notify = bool(row.get("queueNotify"))
         created_row, queued, sent, failed = create_portal_for_row(
             db,
             row=row,
@@ -615,11 +619,11 @@ def bulk_create():
             cohort_name=cohort_name,
             assessment_ref_id=assessment_ref_id,
             join_access_code=join_access_code,
-            queue_notify=queue_notify,
+            queue_notify=row_notify,
             scheduled_at_iso=scheduled_at_iso,
             bulk_job_id="",
             create_magic_link=_create_magic_link_token,
-            immediate_notify=immediate,
+            immediate_notify=row_notify and immediate_batch,
         )
         created.append(created_row)
         if queued:

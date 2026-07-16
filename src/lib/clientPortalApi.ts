@@ -147,7 +147,7 @@ export async function submitPortalCareProgress(
 
 export async function bulkCreateClientPortals(body: {
   cohortName: string;
-  rows: Array<{ displayName: string; email?: string; phone?: string }>;
+  rows: Array<{ displayName: string; email?: string; phone?: string; queueNotify?: boolean }>;
   title: string;
   welcomeMessage?: string;
   usageEndDate?: string;

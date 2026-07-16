@@ -600,7 +600,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 px-4 py-3">
-          <h2 className="text-lg font-semibold text-white">발송 및 검사 현황</h2>
+          <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
             <button

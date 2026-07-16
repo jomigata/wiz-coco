@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -112,109 +113,111 @@ export default function DeletedRecipientsPage() {
   const backLabel = filterAssessmentId ? '← 진행현황' : '← 검사코드 목록';
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <AuthLink href={backHref} className="text-slate-400 hover:text-white text-sm">
-          {backLabel}
-        </AuthLink>
-        <h1 className="text-2xl font-bold text-white">삭제된 검사자 목록</h1>
-      </div>
-
-      <p className="text-sm text-slate-400">
-        발송·검사 현황에서 삭제한 내담자입니다. 복구하면 해당 검사코드 진행현황에 다시 표시됩니다.
-        {filterAssessmentId ? (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <AuthLink href={backHref} className="text-sm text-sky-300/70 hover:text-sky-200">
+        {backLabel}
+      </AuthLink>
+      <CounselorPageSection
+        title="삭제된 검사자"
+        description={
           <>
-            {' '}
-            <Link
-              href="/counselor/assessments/deleted-recipients"
-              className="text-blue-400 hover:text-blue-300 underline-offset-2 hover:underline"
-            >
-              전체 삭제 목록 보기
-            </Link>
+            발송·검사 현황에서 삭제한 내담자입니다. 복구하면 해당 검사코드 진행현황에 다시 표시됩니다.
+            {filterAssessmentId ? (
+              <>
+                {' '}
+                <Link
+                  href="/counselor/assessments/deleted-recipients"
+                  className="text-blue-400 hover:text-blue-300 underline-offset-2 hover:underline"
+                >
+                  전체 삭제 목록 보기
+                </Link>
+              </>
+            ) : null}
           </>
-        ) : null}
-      </p>
+        }
+        toolbar={
+          <>
+            <button
+              type="button"
+              onClick={toggleAll}
+              disabled={loading || items.length === 0}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-50"
+            >
+              {allSelected ? '전체 해제' : '전체 선택'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleRestore()}
+              disabled={restoring || selected.size === 0}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {restoring ? '복구 중…' : `복구 (${selected.size})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            >
+              새로고침
+            </button>
+          </>
+        }
+      >
+        {message ? <p className="mb-3 text-sm text-emerald-300">{message}</p> : null}
+        {error ? <p className="mb-3 text-sm text-red-400">{error}</p> : null}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={toggleAll}
-          disabled={loading || items.length === 0}
-          className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
-        >
-          {allSelected ? '전체 해제' : '전체 선택'}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleRestore()}
-          disabled={restoring || selected.size === 0}
-          className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
-        >
-          {restoring ? '복구 중…' : `복구 (${selected.size})`}
-        </button>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600"
-        >
-          새로고침
-        </button>
-      </div>
-
-      {message ? <p className="text-emerald-300 text-sm">{message}</p> : null}
-      {error ? <p className="text-red-400 text-sm">{error}</p> : null}
-
-      {loading ? (
-        <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
-      ) : items.length === 0 ? (
-        <p className="text-slate-400 text-sm">삭제된 검사자가 없습니다.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-600">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-800 text-slate-400">
-              <tr>
-                <th className="px-3 py-2 text-left w-10">선택</th>
-                <th className="px-3 py-2 text-left">이름</th>
-                <th className="px-3 py-2 text-left">이메일</th>
-                <th className="px-3 py-2 text-left">휴대폰</th>
-                <th className="px-3 py-2 text-left">나의코드</th>
-                <th className="px-3 py-2 text-left">검사코드</th>
-                <th className="px-3 py-2 text-left">검사명</th>
-                <th className="px-3 py-2 text-left">삭제일시</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((row) => (
-                <tr key={row.portalId} className="border-t border-slate-700/80 hover:bg-slate-800/40">
-                  <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(row.portalId)}
-                      onChange={() => toggleOne(row.portalId)}
-                      className="rounded accent-blue-500"
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-white">{row.displayName || '—'}</td>
-                  <td className="px-3 py-2 text-slate-300">{row.email || '—'}</td>
-                  <td className="px-3 py-2 text-slate-300 tabular-nums">
-                    {formatPhoneDisplay(row.phone || '') || '—'}
-                  </td>
-                  <td className="px-3 py-2 font-mono text-cyan-300">{row.myCode || '—'}</td>
-                  <td className="px-3 py-2 font-mono text-cyan-300">
-                    {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-slate-300 max-w-xs truncate" title={row.assessmentTitle}>
-                    {row.assessmentTitle || row.cohortName || '—'}
-                  </td>
-                  <td className="px-3 py-2 text-slate-400 text-xs tabular-nums whitespace-nowrap">
-                    {formatArchivedAt(row.archivedAt)}
-                  </td>
+        {loading ? (
+          <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
+        ) : items.length === 0 ? (
+          <p className="text-sm text-slate-400">삭제된 검사자가 없습니다.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-white/10">
+            <table className="w-full text-sm">
+              <thead className="bg-[#101f38]/90 text-slate-400">
+                <tr>
+                  <th className="w-10 px-3 py-2 text-left">선택</th>
+                  <th className="px-3 py-2 text-left">이름</th>
+                  <th className="px-3 py-2 text-left">이메일</th>
+                  <th className="px-3 py-2 text-left">휴대폰</th>
+                  <th className="px-3 py-2 text-left">나의코드</th>
+                  <th className="px-3 py-2 text-left">검사코드</th>
+                  <th className="px-3 py-2 text-left">검사명</th>
+                  <th className="px-3 py-2 text-left">삭제일시</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {items.map((row) => (
+                  <tr key={row.portalId} className="border-t border-white/10 hover:bg-white/[0.03]">
+                    <td className="px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(row.portalId)}
+                        onChange={() => toggleOne(row.portalId)}
+                        className="rounded accent-blue-500"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-white">{row.displayName || '—'}</td>
+                    <td className="px-3 py-2 text-slate-300">{row.email || '—'}</td>
+                    <td className="px-3 py-2 tabular-nums text-slate-300">
+                      {formatPhoneDisplay(row.phone || '') || '—'}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-cyan-300">{row.myCode || '—'}</td>
+                    <td className="px-3 py-2 font-mono text-cyan-300">
+                      {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
+                    </td>
+                    <td className="max-w-xs truncate px-3 py-2 text-slate-300" title={row.assessmentTitle}>
+                      {row.assessmentTitle || row.cohortName || '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400">
+                      {formatArchivedAt(row.archivedAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CounselorPageSection>
     </div>
   );
 }
