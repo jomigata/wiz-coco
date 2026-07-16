@@ -557,45 +557,47 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     : null;
 
   return (
-    <section className="space-y-4">
-      <div className="rounded-lg border border-slate-600 bg-slate-800/60 p-4 text-sm text-slate-300 space-y-1">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-slate-500">검사 진행 모니터링</p>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {isLive ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-                실시간 연결됨
-                {liveUpdatedLabel ? <span className="text-slate-500">· {liveUpdatedLabel}</span> : null}
-              </span>
-            ) : liveError ? (
-              <span className="text-amber-300" title={liveError}>
-                실시간 일시 중단 · API 기준 표시
-              </span>
-            ) : (
-              <span className="text-slate-500">실시간 연결 중…</span>
-            )}
-          </div>
-        </div>
-        <p>
-          <span className="text-slate-500">검사코드 </span>
-          <span className="font-mono font-semibold text-cyan-300">
-            {formatAccessCodeDisplay(displayData.joinAccessCode)}
-          </span>
-        </p>
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-sky-400/20 bg-[#0f1d33]/70 px-3 py-2 text-sm">
+        <span className="font-mono text-base font-bold tracking-wide text-cyan-300">
+          {formatAccessCodeDisplay(displayData.joinAccessCode)}
+        </span>
         {displayData.cohortName ? (
-          <p>
-            <span className="text-slate-500">기관/단체/그룹명 </span>
-            {displayData.cohortName}
-          </p>
+          <>
+            <span className="text-slate-600" aria-hidden>
+              ·
+            </span>
+            <span className="font-medium text-slate-200">{displayData.cohortName}</span>
+          </>
         ) : null}
-        <p>
-          <span className="text-slate-500">검사명 </span>
-          {displayData.title || '—'}
-        </p>
-        <p className="text-slate-500">
-          검사 완료 {completedCount}명 / 전체 {displayData.recipients.length}명
-        </p>
+        <span className="text-slate-600" aria-hidden>
+          ·
+        </span>
+        <span className="min-w-0 truncate text-slate-400">{displayData.title || '—'}</span>
+        <span className="text-slate-600" aria-hidden>
+          ·
+        </span>
+        <span className="whitespace-nowrap text-slate-300">
+          완료{' '}
+          <span className="font-semibold text-white tabular-nums">{completedCount}</span>
+          <span className="text-slate-500">/</span>
+          <span className="tabular-nums">{displayData.recipients.length}</span>
+        </span>
+        <div className="ml-auto flex items-center gap-1.5 text-xs">
+          {isLive ? (
+            <span className="inline-flex items-center gap-1 text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
+              실시간
+              {liveUpdatedLabel ? <span className="text-slate-500">{liveUpdatedLabel}</span> : null}
+            </span>
+          ) : liveError ? (
+            <span className="text-amber-300/90" title={liveError}>
+              API 기준
+            </span>
+          ) : (
+            <span className="text-slate-500">연결 중…</span>
+          )}
+        </div>
       </div>
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
@@ -910,27 +912,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             </div>
           </>
         )}
-      </div>
-
-      <div className="rounded-lg border border-slate-600/80 bg-slate-800/40 px-4 py-3">
-        <p className="text-xs font-medium text-slate-400 mb-2">이용 안내</p>
-        <ul className="space-y-1.5 text-xs leading-relaxed text-slate-400">
-          <li>
-            <span className="text-slate-300">▶ 검사현황</span> 또는 행 클릭 → 검사별 진행·완료일·결과
-            확인
-          </li>
-          <li>
-            <span className="text-slate-300">상단</span> · 전체 선택 후{' '}
-            <span className="text-amber-200/90">미실시 알림통보</span>(비밀번호 유지) ·{' '}
-            <span className="text-blue-300/90">코드 재발송</span>(비밀번호 재발급)
-          </li>
-          <li>
-            <span className="text-slate-300">하단</span> · 선택 후{' '}
-            <span className="text-emerald-300/90">다운로드</span> ·{' '}
-            <span className="text-slate-300">인쇄</span>(검사 현황) ·{' '}
-            <span className="text-red-300/90">삭제</span> — 삭제는 「삭제된 목록」에서 복구
-          </li>
-        </ul>
       </div>
 
       {dispatchProgress ? (
