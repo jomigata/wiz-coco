@@ -9,11 +9,9 @@ type CounselorCategoryHubProps = {
 };
 
 export default function CounselorCategoryHub({ category }: CounselorCategoryHubProps) {
-  const itemCount = category.subcategories.reduce((sum, sub) => sum + sub.items.length, 0);
-
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header>
         <AuthLink
           href="/counselor"
           className="inline-flex items-center gap-1 text-sm text-sky-300/70 transition-colors hover:text-sky-200"
@@ -23,7 +21,6 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
           </svg>
           상담관리 홈
         </AuthLink>
-        <span className="text-xs text-sky-200/45">{itemCount}개 메뉴</span>
       </header>
 
       <div className="flex items-center gap-2.5">
@@ -38,30 +35,31 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
 
       <nav
         aria-label={`${category.category} 메뉴`}
-        className={`overflow-hidden rounded-xl border border-sky-400/12 ${counselorHubClasses.subsection} !p-0`}
+        className="flex flex-col gap-4"
       >
-        {category.subcategories.map((sub, subIdx) => (
+        {category.subcategories.map((sub) => (
           <section
             key={sub.name}
-            className={subIdx > 0 ? 'border-t border-sky-400/10' : undefined}
+            className={`overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0`}
           >
-            {/* 중분류 */}
-            <div className="flex items-center gap-2 border-l-[3px] border-sky-400/50 bg-sky-500/[0.08] px-4 py-2.5">
-              <span className="text-base leading-none" aria-hidden>
+            {/* 중분류 — 강조 헤더 띠 */}
+            <div className="flex items-center gap-2.5 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3">
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-sky-300/30 bg-sky-950/50 text-base"
+                aria-hidden
+              >
                 {sub.icon}
               </span>
-              <h2 className="text-xs font-semibold tracking-wide text-sky-100/90 sm:text-sm">
-                {sub.name}
-              </h2>
+              <h2 className="text-sm font-bold tracking-tight text-white sm:text-base">{sub.name}</h2>
             </div>
 
-            {/* 소분류 — 클릭 시 바로 이동 */}
-            <ul className="divide-y divide-sky-400/[0.07]">
+            {/* 소분류 — 들여쓰기·카드형 행 */}
+            <ul className="space-y-1.5 bg-[#0f1d33]/60 p-2.5 sm:p-3">
               {sub.items.map((item) => (
                 <li key={item.href}>
                   <AuthLink
                     href={item.href}
-                    className="group flex items-center gap-3 px-4 py-3.5 transition-all duration-200 hover:bg-sky-400/[0.12] hover:pl-5 active:bg-sky-400/[0.16]"
+                    className={`group flex items-center gap-3 rounded-lg border border-white/[0.06] bg-[#101f38]/90 px-3.5 py-3 transition-all duration-200 hover:border-sky-400/35 hover:bg-sky-500/[0.14] hover:shadow-[0_4px_20px_rgba(56,130,210,0.12)] active:scale-[0.995] sm:px-4 sm:py-3.5 ${counselorHubClasses.item}`}
                   >
                     <span
                       className={`flex h-9 w-9 shrink-0 items-center justify-center text-lg transition-transform duration-200 group-hover:scale-105 ${counselorHubClasses.itemIcon}`}
@@ -70,15 +68,15 @@ export default function CounselorCategoryHub({ category }: CounselorCategoryHubP
                       {item.icon}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-white transition-colors group-hover:text-sky-50 sm:text-[15px]">
+                      <span className="block text-sm font-semibold text-white transition-colors group-hover:text-sky-50 sm:text-[15px]">
                         {item.name}
                       </span>
-                      <span className="mt-0.5 block truncate text-xs text-sky-200/45 transition-colors group-hover:text-sky-200/65">
+                      <span className="mt-0.5 block truncate text-xs text-slate-400 transition-colors group-hover:text-sky-200/70">
                         {item.description}
                       </span>
                     </span>
                     <svg
-                      className="h-4 w-4 shrink-0 text-sky-300/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-sky-200/80"
+                      className="h-4 w-4 shrink-0 text-sky-300/35 transition-all duration-200 group-hover:translate-x-1 group-hover:text-sky-200"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
