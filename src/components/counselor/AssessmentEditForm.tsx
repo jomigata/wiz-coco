@@ -125,31 +125,51 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
-      <CounselorPageSection title="검사코드">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
-            {formatAccessCodeDisplay(initial.accessCode)}
-          </span>
-          <span className="text-sm text-slate-400">
-            {initial.issueType === 'individual' ? '검사코드(개별 발급)' : '일반코드(지원 종료)'}
-          </span>
-        </div>
-        <p className={`${FORM_HINT} mt-2`}>검사코드·발급 유형은 변경할 수 없습니다.</p>
-      </CounselorPageSection>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+        <div className="flex min-h-0 flex-col gap-4">
+          <CounselorPageSection title="검사코드">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
+                {formatAccessCodeDisplay(initial.accessCode)}
+              </span>
+              <span className="text-sm text-slate-400">
+                {initial.issueType === 'individual' ? '검사코드(개별 발급)' : '일반코드(지원 종료)'}
+              </span>
+            </div>
+            <p className={`${FORM_HINT} mt-2`}>검사코드·발급 유형은 변경할 수 없습니다.</p>
+          </CounselorPageSection>
 
-      <CounselorPageSection title="검사 정보">
-        <AssessmentSettingsFields
-          title={title}
-          onTitleChange={setTitle}
-          welcomeMessage={welcomeMessage}
-          onWelcomeMessageChange={setWelcomeMessage}
-          usageEndDate={usageEndDate}
-          onUsageEndDateChange={setUsageEndDate}
-          selectedTestIds={selectedTestIds}
-          onToggleTest={toggleTest}
-          disabled={loading}
-        />
-      </CounselorPageSection>
+          <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col">
+            <AssessmentSettingsFields
+              sections="meta"
+              title={title}
+              onTitleChange={setTitle}
+              welcomeMessage={welcomeMessage}
+              onWelcomeMessageChange={setWelcomeMessage}
+              usageEndDate={usageEndDate}
+              onUsageEndDateChange={setUsageEndDate}
+              selectedTestIds={selectedTestIds}
+              onToggleTest={toggleTest}
+              disabled={loading}
+            />
+          </CounselorPageSection>
+        </div>
+
+        <CounselorPageSection title="포함할 검사" className="flex min-h-0 flex-col xl:sticky xl:top-4">
+          <AssessmentSettingsFields
+            sections="tests"
+            title={title}
+            onTitleChange={setTitle}
+            welcomeMessage={welcomeMessage}
+            onWelcomeMessageChange={setWelcomeMessage}
+            usageEndDate={usageEndDate}
+            onUsageEndDateChange={setUsageEndDate}
+            selectedTestIds={selectedTestIds}
+            onToggleTest={toggleTest}
+            disabled={loading}
+          />
+        </CounselorPageSection>
+      </div>
 
       {error ? (
         <p className="text-red-400 text-sm" role="alert">

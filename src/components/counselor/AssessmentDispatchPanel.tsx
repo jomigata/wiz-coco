@@ -23,7 +23,7 @@ import {
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
-import { FORM_HINT, FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
+import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -1377,10 +1377,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 />
                 추가 후 즉시 접속 정보 발송
               </label>
-              <p className={`${FORM_HINT} text-amber-200/90`}>
-                알림톡·문자 테스트 시 수신 번호는 Solapi 발신번호(010-5182-5410)와 달라야 합니다.
-                같은 번호면 이메일만 도착할 수 있습니다.
-              </p>
               {addError ? (
                 <p className="text-red-400 text-sm" role="alert">
                   {addError}
