@@ -115,7 +115,7 @@ def _resolve_notify_status(
     notify: dict, pdata: dict, *, email: str, phone: str
 ) -> tuple[str, str | None]:
     status = (notify.get("status") or pdata.get("lastNotifyStatus") or "not_sent").strip()
-    error = notify.get("error")
+    error = notify.get("error") or pdata.get("lastNotifyError")
     if not email and not phone:
         return "skipped", error or "no_recipient"
     return status, error
@@ -290,7 +290,7 @@ def aggregate_assessment_list_stats(
                 continue
             if notify_status == "sent":
                 stats[aid]["dispatchSentCount"] += 1
-            elif notify_status == "failed":
+            elif notify_status in ("failed", "partial"):
                 stats[aid]["dispatchFailedCount"] += 1
 
             required = required_by_assessment.get(aid, set())
@@ -361,7 +361,7 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
                 "notifyStatus": notify_status,
                 "notifyError": notify_error,
                 "notifyAt": notify_at,
-                "notifySentVia": notify.get("sentVia") or "",
+                "notifySentVia": notify.get("sentVia") or pdata.get("lastNotifySentVia") or "",
                 "tests": _test_detail_rows(db, portal_id, assessment_id, test_list),
                 **test_info,
             }
@@ -444,6 +444,11 @@ def resend_portal_credentials(
         )
         status = result.get("status") or "failed"
         notify_update: dict = {"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP}
+        result_errors = result.get("errors") or []
+        if result_errors:
+            notify_update["lastNotifyError"] = "; ".join(result_errors)
+        if result.get("sentVia"):
+            notify_update["lastNotifySentVia"] = result.get("sentVia")
         if status == "sent":
             notify_update["pinHash"] = hash_password(new_pin)
             sent += 1

@@ -40,8 +40,29 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
   if (!err) return undefined;
   if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
+  if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
   if (err.includes('smtp_not_configured')) return '이메일 서버가 설정되지 않았습니다.';
   return err;
+}
+
+function formatSentViaLabel(sentVia: string | null | undefined): string {
+  const raw = (sentVia || '').trim();
+  if (!raw) return '';
+  return raw
+    .split(',')
+    .map((part) => {
+      switch (part.trim()) {
+        case 'email':
+          return '이메일';
+        case 'kakao_alimtalk':
+          return '알림톡';
+        case 'sms':
+          return 'SMS';
+        default:
+          return part.trim();
+      }
+    })
+    .join('·');
 }
 
 function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className: string; title?: string } {
@@ -58,9 +79,9 @@ function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className:
 
   const status = r.notifyStatus || 'not_sent';
 
-  if (status === 'failed') {
+  if (status === 'failed' || status === 'partial') {
     return {
-      text: '발송 실패',
+      text: status === 'partial' ? '일부 발송 실패' : '발송 실패',
       className: 'text-red-400',
       title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
     };
@@ -96,10 +117,9 @@ function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className:
         title: '이메일로 발송됨',
       };
     }
-    const via =
-      r.notifySentVia === 'sms' ? '(SMS)' : r.notifySentVia === 'email' ? '(이메일)' : '';
+    const viaLabel = formatSentViaLabel(r.notifySentVia);
     return {
-      text: via ? `발송 성공 ${via}` : '발송 성공',
+      text: viaLabel ? `발송 성공 (${viaLabel})` : '발송 성공',
       className: 'text-emerald-300',
       title: !hasEmail ? '이메일 없음' : undefined,
     };
@@ -122,6 +142,8 @@ function notifyLabel(status: string): { text: string; className: string } {
       return { text: '발송 성공', className: 'text-emerald-300' };
     case 'failed':
       return { text: '발송 실패', className: 'text-red-400' };
+    case 'partial':
+      return { text: '일부 발송 실패', className: 'text-amber-300' };
     case 'pending':
       return { text: '발송 대기', className: 'text-amber-300' };
     case 'skipped':

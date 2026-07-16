@@ -196,7 +196,13 @@ def create_portal_for_row(
                 join_access_code=join_access_code,
             )
             status = result.get("status") or "failed"
-            portal_ref.update({"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP})
+            notify_update: dict = {"lastNotifyStatus": status, "lastNotifyAt": SERVER_TIMESTAMP}
+            result_errors = result.get("errors") or []
+            if result_errors:
+                notify_update["lastNotifyError"] = "; ".join(result_errors)
+            if result.get("sentVia"):
+                notify_update["lastNotifySentVia"] = result.get("sentVia")
+            portal_ref.update(notify_update)
             if status == "sent":
                 notify_sent = 1
             else:

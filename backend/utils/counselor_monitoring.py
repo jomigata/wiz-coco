@@ -147,7 +147,7 @@ def get_counselor_monitoring_hub(
                 stats["inProgressRecipients"] += 1
             else:
                 stats["notStartedRecipients"] += 1
-            if notify_status == "failed":
+            if notify_status in ("failed", "partial"):
                 stats["notifyFailedCount"] += 1
 
             stats["recipients"].append(
@@ -350,7 +350,7 @@ def get_counselor_cohort_monitoring_view(
         phone = (pdata.get("phone") or "").strip()
         notify = notify_map.get(portal_id) or {}
         notify_status, _ = _resolve_notify_status(notify, pdata, email=email, phone=phone)
-        if notify_status == "failed":
+        if notify_status in ("failed", "partial"):
             bucket["notifyFailedCount"] += 1
 
         portal_total = 0

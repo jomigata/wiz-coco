@@ -25,6 +25,52 @@ from utils.kakao_alimtalk import (
 from utils.portal_magic import create_portal_magic_link_token
 
 
+def _finalize_multi_channel_delivery(
+    *,
+    email: str,
+    phone: str,
+    email_ok: bool,
+    alimtalk_ok: bool,
+    sms_ok: bool,
+    errors: list[str],
+) -> dict:
+    """이메일·휴대폰(알림톡→SMS)을 각각 독립 발송한 뒤 종합 상태 반환."""
+    phone_ok = alimtalk_ok or sms_ok
+
+    sent_via_parts: list[str] = []
+    if email_ok:
+        sent_via_parts.append("email")
+    if alimtalk_ok:
+        sent_via_parts.append("kakao_alimtalk")
+    elif sms_ok:
+        sent_via_parts.append("sms")
+    sent_via = ",".join(sent_via_parts) if sent_via_parts else None
+
+    if not email and not phone:
+        return {"status": "skipped", "errors": [*errors, "no_recipient"], "sentVia": sent_via}
+
+    channel_results: list[bool] = []
+    if email:
+        channel_results.append(email_ok)
+    if phone:
+        channel_results.append(phone_ok)
+
+    if all(channel_results):
+        status = "sent"
+    elif any(channel_results):
+        status = "partial"
+        if email and not email_ok and "email_send_failed" not in errors:
+            errors.append("email_send_failed")
+        if phone and not phone_ok and "phone_send_failed" not in errors:
+            errors.append("phone_send_failed")
+    elif errors:
+        status = "failed"
+    else:
+        status = "skipped"
+
+    return {"status": status, "errors": errors, "sentVia": sent_via}
+
+
 def deliver_portal_credentials(
     *,
     email: str = "",
@@ -60,7 +106,7 @@ def deliver_portal_credentials(
         else:
             errors.append("smtp_not_configured")
 
-    if phone and not email_ok:
+    if phone:
         alimtalk_ok, alimtalk_err = send_portal_credentials_alimtalk(
             to_phone=phone,
             display_name=display_name,
@@ -72,7 +118,7 @@ def deliver_portal_credentials(
         if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
             errors.append(alimtalk_err)
 
-    if phone and not email_ok and not alimtalk_ok:
+    if phone and not alimtalk_ok:
         sms_ok, sms_err = send_portal_credentials_sms(
             to_phone=phone,
             access_code=access_code,
@@ -84,27 +130,14 @@ def deliver_portal_credentials(
         if sms_err:
             errors.append(sms_err)
 
-    if email and email_ok:
-        status = "sent"
-        sent_via = "email"
-    elif phone and alimtalk_ok:
-        status = "sent"
-        sent_via = "kakao_alimtalk"
-    elif phone and sms_ok:
-        status = "sent"
-        sent_via = "sms"
-    elif not email and not phone:
-        status = "skipped"
-        sent_via = None
-        errors.append("no_recipient")
-    elif errors:
-        status = "failed"
-        sent_via = None
-    else:
-        status = "skipped"
-        sent_via = None
-
-    return {"status": status, "errors": errors, "sentVia": sent_via}
+    return _finalize_multi_channel_delivery(
+        email=email,
+        phone=phone,
+        email_ok=email_ok,
+        alimtalk_ok=alimtalk_ok,
+        sms_ok=sms_ok,
+        errors=errors,
+    )
 
 
 def deliver_test_reminder(
@@ -153,7 +186,7 @@ def deliver_test_reminder(
         else:
             errors.append("smtp_not_configured")
 
-    if phone and not email_ok:
+    if phone:
         alimtalk_ok, alimtalk_err = send_test_reminder_alimtalk(
             to_phone=phone,
             display_name=display_name,
@@ -164,7 +197,7 @@ def deliver_test_reminder(
         if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
             errors.append(alimtalk_err)
 
-    if phone and not email_ok and not alimtalk_ok:
+    if phone and not alimtalk_ok:
         sms_ok, sms_err = send_test_reminder_sms(
             to_phone=phone,
             display_name=display_name,
@@ -179,27 +212,14 @@ def deliver_test_reminder(
         if sms_err:
             errors.append(sms_err)
 
-    if email and email_ok:
-        status = "sent"
-        sent_via = "email"
-    elif phone and alimtalk_ok:
-        status = "sent"
-        sent_via = "kakao_alimtalk"
-    elif phone and sms_ok:
-        status = "sent"
-        sent_via = "sms"
-    elif not email and not phone:
-        status = "skipped"
-        sent_via = None
-        errors.append("no_recipient")
-    elif errors:
-        status = "failed"
-        sent_via = None
-    else:
-        status = "skipped"
-        sent_via = None
-
-    return {"status": status, "errors": errors, "sentVia": sent_via}
+    return _finalize_multi_channel_delivery(
+        email=email,
+        phone=phone,
+        email_ok=email_ok,
+        alimtalk_ok=alimtalk_ok,
+        sms_ok=sms_ok,
+        errors=errors,
+    )
 
 
 def deliver_care_assignment(
@@ -235,7 +255,7 @@ def deliver_care_assignment(
         else:
             errors.append("smtp_not_configured")
 
-    if phone and not email_ok:
+    if phone:
         alimtalk_ok, alimtalk_err = send_care_assignment_alimtalk(
             to_phone=phone,
             display_name=display_name,
@@ -245,7 +265,7 @@ def deliver_care_assignment(
         if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
             errors.append(alimtalk_err)
 
-    if phone and not email_ok and not alimtalk_ok:
+    if phone and not alimtalk_ok:
         sms_ok, sms_err = send_care_assignment_sms(
             to_phone=phone,
             display_name=display_name,
@@ -256,27 +276,14 @@ def deliver_care_assignment(
         if sms_err:
             errors.append(sms_err)
 
-    if email and email_ok:
-        status = "sent"
-        sent_via = "email"
-    elif phone and alimtalk_ok:
-        status = "sent"
-        sent_via = "kakao_alimtalk"
-    elif phone and sms_ok:
-        status = "sent"
-        sent_via = "sms"
-    elif not email and not phone:
-        status = "skipped"
-        sent_via = None
-        errors.append("no_recipient")
-    elif errors:
-        status = "failed"
-        sent_via = None
-    else:
-        status = "skipped"
-        sent_via = None
-
-    return {"status": status, "errors": errors, "sentVia": sent_via}
+    return _finalize_multi_channel_delivery(
+        email=email,
+        phone=phone,
+        email_ok=email_ok,
+        alimtalk_ok=alimtalk_ok,
+        sms_ok=sms_ok,
+        errors=errors,
+    )
 
 
 def process_notification_queue(*, limit: int = 50) -> dict:
@@ -331,13 +338,11 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 )
                 status = result["status"]
                 errors = result["errors"]
-                email_ok = result.get("sentVia") == "email"
-                sms_ok = result.get("sentVia") == "sms"
-                alimtalk_ok = result.get("sentVia") == "kakao_alimtalk"
+                sent_via = result.get("sentVia") or ""
 
                 if status == "sent":
                     sent += 1
-                elif status == "failed":
+                elif status in ("failed", "partial"):
                     failed += 1
                 elif status == "skipped":
                     skipped += 1
@@ -345,12 +350,8 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP}
                 if errors:
                     update_payload["error"] = "; ".join(errors)
-                if email_ok:
-                    update_payload["sentVia"] = "email"
-                elif alimtalk_ok:
-                    update_payload["sentVia"] = "kakao_alimtalk"
-                elif sms_ok:
-                    update_payload["sentVia"] = "sms"
+                if sent_via:
+                    update_payload["sentVia"] = sent_via
                 doc.reference.update(update_payload)
                 details.append({"id": doc.id, "status": status, "errors": errors})
                 continue
@@ -377,13 +378,11 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 )
                 status = result["status"]
                 errors = result["errors"]
-                email_ok = result.get("sentVia") == "email"
-                sms_ok = result.get("sentVia") == "sms"
-                alimtalk_ok = result.get("sentVia") == "kakao_alimtalk"
+                sent_via = result.get("sentVia") or ""
 
                 if status == "sent":
                     sent += 1
-                elif status == "failed":
+                elif status in ("failed", "partial"):
                     failed += 1
                 elif status == "skipped":
                     skipped += 1
@@ -391,12 +390,8 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                 update_payload = {"status": status, "processedAt": SERVER_TIMESTAMP}
                 if errors:
                     update_payload["error"] = "; ".join(errors)
-                if email_ok:
-                    update_payload["sentVia"] = "email"
-                elif alimtalk_ok:
-                    update_payload["sentVia"] = "kakao_alimtalk"
-                elif sms_ok:
-                    update_payload["sentVia"] = "sms"
+                if sent_via:
+                    update_payload["sentVia"] = sent_via
                 if magic_path:
                     update_payload["magicPath"] = magic_path
                 doc.reference.update(update_payload)

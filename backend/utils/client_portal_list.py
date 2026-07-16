@@ -352,7 +352,7 @@ def get_counselor_client_portal_detail(
             "notifyStatus": notify_status,
             "notifyError": notify_error,
             "notifyAt": notify_at,
-            "notifySentVia": notify.get("sentVia") or "",
+            "notifySentVia": notify.get("sentVia") or pdata.get("lastNotifySentVia") or "",
             "counselorTags": [
                 str(t).strip()
                 for t in (pdata.get("counselorTags") or [])
