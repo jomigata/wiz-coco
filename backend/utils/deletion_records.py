@@ -9,6 +9,8 @@ from utils.assessment_dispatch import _iso_timestamp
 
 
 def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
+    from utils.assessment_dispatch import aggregate_assessment_list_stats
+
     refs = (
         db.collection(ASSESSMENTS_COLLECTION)
         .where("counselorId", "==", counselor_uid)
@@ -25,10 +27,20 @@ def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
                 "title": data.get("title") or "",
                 "targetAudience": data.get("targetAudience") or "",
                 "cohortName": data.get("cohortName") or "",
+                "usageEndDate": data.get("usageEndDate") or "",
+                "createdAt": _iso_timestamp(data.get("createdAt")),
                 "archivedAt": _iso_timestamp(data.get("archivedAt")),
+                "testList": data.get("testList") or [],
             }
         )
-    items.sort(key=lambda x: x.get("archivedAt") or "", reverse=True)
+    portal_stats = aggregate_assessment_list_stats(db, counselor_uid=counselor_uid, items=items)
+    for x in items:
+        pstats = portal_stats.get(x["id"]) or {}
+        x["dispatchSentCount"] = int(pstats.get("dispatchSentCount") or 0)
+        x["dispatchFailedCount"] = int(pstats.get("dispatchFailedCount") or 0)
+        x["testCompleteCount"] = int(pstats.get("testCompleteCount") or 0)
+        x["testIncompleteCount"] = int(pstats.get("testIncompleteCount") or 0)
+    items.sort(key=lambda x: x.get("createdAt") or x.get("archivedAt") or "", reverse=True)
     return items
 
 

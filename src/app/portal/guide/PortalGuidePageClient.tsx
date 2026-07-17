@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
+import PageHierarchyBreadcrumb from '@/components/navigation/PageHierarchyBreadcrumb';
 import { APP_HEADER_PT } from '@/lib/appChromeLayout';
+import { resolvePortalHierarchy } from '@/lib/pageHierarchyNav';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
 
 const codeReceiveSteps = [
@@ -97,16 +99,15 @@ const selfPackages = [
 ];
 
 export default function PortalGuidePageClient() {
+  const nav = resolvePortalHierarchy('/portal/guide');
+
   return (
     <div className={`min-h-screen bg-[#0f1628] text-slate-100 ${APP_HEADER_PT}`}>
       <HomeSectionShell tone="hero" className="py-14 md:py-20" showBottomFade={false}>
         <div className="container mx-auto max-w-3xl px-4 text-center">
-          <Link
-            href="/"
-            className="mb-6 inline-flex items-center gap-1 text-sm text-sky-300/70 hover:text-sky-200"
-          >
-            ← 홈
-          </Link>
+          {nav ? (
+            <PageHierarchyBreadcrumb crumbs={nav.crumbs} className="mb-6 justify-center" />
+          ) : null}
           <span className="mb-4 inline-block rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-200/90">
             검사 시작 안내
           </span>
@@ -124,12 +125,12 @@ export default function PortalGuidePageClient() {
             >
               검사 시작
             </Link>
-            <a
-              href="mailto:wizcocoai@gmail.com?subject=WizCoCo%20개인%20검사코드%20구매%20문의"
+            <Link
+              href="/portal/guide/inquiry"
               className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] px-8 py-3.5 text-sm font-medium text-slate-200 hover:bg-white/[0.08]"
             >
               개인 구매 문의
-            </a>
+            </Link>
           </div>
         </div>
       </HomeSectionShell>
@@ -217,15 +218,15 @@ export default function PortalGuidePageClient() {
           <div className="mt-8 rounded-xl border border-dashed border-violet-400/25 bg-violet-950/20 p-5 text-center">
             <p className="text-sm text-slate-300">
               파일럿 단계에서는 결제·코드 발급을{' '}
-              <strong className="text-white">이메일 문의</strong>로 안내해 드립니다. PG 자동 결제는
+              <strong className="text-white">문의 접수</strong>로 안내해 드립니다. PG 자동 결제는
               순차 도입 예정입니다.
             </p>
-            <a
-              href="mailto:wizcocoai@gmail.com?subject=WizCoCo%20개인%20검사코드%20구매%20문의"
+            <Link
+              href="/portal/guide/inquiry"
               className="mt-4 inline-flex rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-500"
             >
               개인 검사코드 구매 문의
-            </a>
+            </Link>
           </div>
         </div>
       </HomeSectionShell>

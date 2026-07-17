@@ -18,7 +18,7 @@ export const ASSESSMENT_LIST_SORT_OPTIONS: { value: AssessmentListSortKey; label
   { value: 'codeDesc', label: '검사코드 내림차순' },
 ];
 
-export function getAssessmentOrgLabel(a: CounselorAssessment): string {
+export function getAssessmentOrgLabel(a: Pick<CounselorAssessment, 'cohortName' | 'title'>): string {
   return (a.cohortName || a.title || '이름 없음').trim();
 }
 

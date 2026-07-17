@@ -719,6 +719,7 @@ def list_archived_portals(
     )
     items: list[dict] = []
     assessment_cache: dict[str, dict] = {}
+    portal_rows: list[tuple[str, dict, str]] = []
 
     for doc in refs:
         pdata = doc.to_dict() or {}
@@ -728,9 +729,17 @@ def list_archived_portals(
             if assessment_id not in assigned:
                 continue
 
+        portal_rows.append((doc.id, pdata, from_aid))
+
+    portal_ids = {row[0] for row in portal_rows}
+    notify_map = _latest_notify_by_portal(db, portal_ids)
+
+    for portal_id, pdata, from_aid in portal_rows:
         join_code = ""
         assessment_title = ""
         cohort_name = ""
+        test_list: list = []
+        required: set[str] = set()
         if from_aid:
             if from_aid not in assessment_cache:
                 adoc = db.collection(ASSESSMENTS_COLLECTION).document(from_aid).get()
@@ -743,25 +752,55 @@ def list_archived_portals(
             join_code = (a.get("accessCode") or "").strip()
             assessment_title = (a.get("title") or "").strip()
             cohort_name = (a.get("cohortName") or "").strip()
+            test_list = a.get("testList") or []
+            required = {
+                str(t.get("testId") or "").strip()
+                for t in test_list
+                if t and str(t.get("testId") or "").strip()
+            }
+
+        email = (pdata.get("email") or "").strip()
+        phone = (pdata.get("phone") or "").strip()
+        notify = notify_map.get(portal_id) or {}
+        notify_snap = _merge_notify_snapshot(notify, pdata)
+        notify_status, notify_error = _resolve_notify_status(
+            notify, pdata, email=email, phone=phone
+        )
+        notify_at = _resolve_notify_at(notify, pdata, notify_status)
+        test_info = (
+            _test_status_for_portal(db, portal_id, from_aid, required)
+            if from_aid and required
+            else {"testStatus": "not_started", "completedCount": 0, "requiredCount": len(required)}
+        )
 
         archived_at = pdata.get("archivedAt")
         items.append(
             {
-                "portalId": doc.id,
+                "portalId": portal_id,
                 "displayName": pdata.get("displayName") or "",
-                "email": (pdata.get("email") or "").strip(),
-                "phone": (pdata.get("phone") or "").strip(),
+                "email": email,
+                "phone": phone,
                 "myCode": pdata.get("accessCode") or "",
                 "joinAccessCode": join_code,
                 "assessmentId": from_aid,
                 "assessmentTitle": assessment_title,
                 "cohortName": cohort_name,
                 "archivedAt": _iso_timestamp(archived_at),
+                "notifyStatus": notify_status,
+                "notifyError": notify_error,
+                "notifyAt": notify_at,
+                "notifySentVia": notify_snap.get("sentVia") or "",
+                "notifyKind": notify_snap.get("notifyKind") or "initial",
+                **test_info,
             }
         )
 
     items.sort(
-        key=lambda x: (x.get("archivedAt") or "", x.get("displayName") or ""),
+        key=lambda x: (
+            x.get("notifyAt") or "",
+            x.get("archivedAt") or "",
+            x.get("displayName") or "",
+        ),
         reverse=True,
     )
     return items

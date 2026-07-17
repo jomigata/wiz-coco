@@ -9,6 +9,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
+import CounselorPageHeader from '@/components/counselor/CounselorPageHeader';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -163,18 +164,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-        {!isHubPage && (
-        <header className="shrink-0 border-b border-sky-400/20 bg-gradient-to-r from-sky-600/20 via-[#162b4a] to-[#0f172a] py-3 backdrop-blur-sm">
-          <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6">
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
-                {pageTitle}
-              </h1>
-              <p className="mt-0.5 text-xs text-sky-200/55">콘텐츠 상담 관리 시스템</p>
-            </div>
-          </div>
-        </header>
-        )}
+        {!isHubPage && <CounselorPageHeader pageTitle={pageTitle} />}
 
         <main className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${
           isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'

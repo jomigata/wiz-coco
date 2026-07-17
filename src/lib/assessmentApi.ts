@@ -518,7 +518,13 @@ export type ArchivedAssessment = {
   title: string;
   targetAudience: string;
   cohortName: string;
+  usageEndDate?: string;
+  createdAt?: string | null;
   archivedAt: string | null;
+  dispatchSentCount?: number;
+  dispatchFailedCount?: number;
+  testCompleteCount?: number;
+  testIncompleteCount?: number;
 };
 
 export async function listArchivedAssessments(): Promise<{ assessments: ArchivedAssessment[] }> {

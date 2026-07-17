@@ -196,9 +196,6 @@ export default function CounselorClientDetail({ portalId }: Props) {
   if (error || !liveDetail) {
     return (
       <div className="space-y-4 py-8">
-        <AuthLink href="/counselor/clients" className="text-sm text-slate-400 hover:text-white">
-          ← 내담자 목록
-        </AuthLink>
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error || '내담자를 찾을 수 없습니다.'}
         </div>
@@ -211,10 +208,6 @@ export default function CounselorClientDetail({ portalId }: Props) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 pb-8">
-      <AuthLink href="/counselor/clients" className="text-sm text-sky-300/70 hover:text-sky-200">
-        ← 내담자 목록
-      </AuthLink>
-
       {actionMsg ? (
         <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
           {actionMsg}

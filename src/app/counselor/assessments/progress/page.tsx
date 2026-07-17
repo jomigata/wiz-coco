@@ -2,7 +2,6 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import AuthLink from '@/components/auth/AuthLink';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -37,10 +36,7 @@ function ProgressPageContent() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <AuthLink href="/counselor/assessments" className="text-sm text-sky-300/70 hover:text-sky-200">
-        ← 검사코드 목록
-      </AuthLink>
+    <div className="flex min-h-0 flex-1 flex-col">
       <CounselorPageSection
         className="flex min-h-0 flex-1"
         bodyClassName="!p-0"

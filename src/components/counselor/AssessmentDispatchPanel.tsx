@@ -377,8 +377,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
-  const [sortKey, setSortKey] = useState<RecipientSortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDirection>('asc');
+  const [sortKey, setSortKey] = useState<RecipientSortKey | null>('notifyAt');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [showAddRecipient, setShowAddRecipient] = useState(false);
   const [addName, setAddName] = useState('');
   const [addEmail, setAddEmail] = useState('');

@@ -311,6 +311,14 @@ export type ArchivedDispatchRecipient = {
   assessmentTitle: string;
   cohortName: string;
   archivedAt: string | null;
+  notifyStatus?: string;
+  notifyError?: string | null;
+  notifyAt?: string | null;
+  notifySentVia?: string;
+  notifyKind?: string;
+  testStatus?: 'not_started' | 'in_progress' | 'completed' | string;
+  completedCount?: number;
+  requiredCount?: number;
 };
 
 export async function archiveDispatchRecipients(
