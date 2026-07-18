@@ -9,8 +9,6 @@ import RoleGuard from '@/components/RoleGuard';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
-import { Suspense } from 'react';
-import { CounselorHierarchyDepthProvider } from '@/components/counselor/CounselorHierarchyContext';
 import CounselorPageHeader from '@/components/counselor/CounselorPageHeader';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
@@ -179,11 +177,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
           <div className={`relative z-10 mx-auto flex min-h-0 w-full flex-1 flex-col ${
             isHubPage ? 'max-w-3xl px-4 py-5 sm:px-6 sm:py-6' : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
           }`}>
-            <Suspense fallback={<CounselorPageBody>{children}</CounselorPageBody>}>
-              <CounselorHierarchyDepthProvider>
-                <CounselorPageBody>{children}</CounselorPageBody>
-              </CounselorHierarchyDepthProvider>
-            </Suspense>
+            <CounselorPageBody>{children}</CounselorPageBody>
           </div>
         </main>
       </div>

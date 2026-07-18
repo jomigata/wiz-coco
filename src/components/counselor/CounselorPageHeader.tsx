@@ -3,27 +3,17 @@
 import { Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import PageHierarchyBreadcrumb from '@/components/navigation/PageHierarchyBreadcrumb';
-import {
-  counselorBreadcrumbBarClass,
-  counselorHeaderGradientClass,
-  resolveCounselorHierarchy,
-} from '@/lib/pageHierarchyNav';
+import { resolveCounselorHierarchy } from '@/lib/pageHierarchyNav';
 
 function CounselorPageHeaderInner({ pageTitle }: { pageTitle: string }) {
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
   const nav = resolveCounselorHierarchy(pathname, searchParams);
-  const depth = nav?.depth ?? 0;
-  const headerClass = counselorHeaderGradientClass(depth);
 
   return (
-    <header className={`shrink-0 border-b py-3 backdrop-blur-sm ${headerClass}`}>
+    <header className="shrink-0 border-b border-sky-400/20 bg-gradient-to-r from-sky-600/20 via-[#162b4a] to-[#0f172a] py-3 backdrop-blur-sm">
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-1 px-4 sm:px-6">
-        {nav ? (
-          <div className={counselorBreadcrumbBarClass(depth)}>
-            <PageHierarchyBreadcrumb crumbs={nav.crumbs} useAuthLinks depth={depth} />
-          </div>
-        ) : null}
+        {nav ? <PageHierarchyBreadcrumb crumbs={nav.crumbs} useAuthLinks className="mb-1" /> : null}
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
             {pageTitle}

@@ -7,7 +7,13 @@ import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessment
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
-import { formatPhoneDisplay, formatPhoneDisplayOr, formatPhoneMaskedDisplay } from '@/lib/phoneFormat';
+import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
+import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
+import {
+  dispatchStatusDisplay,
+  formatNotifyDate,
+  testSummary,
+} from '@/lib/dispatchRecipientDisplay';
 import {
   downloadDispatchRecipientsExcel,
   printDispatchRecipients,
@@ -23,21 +29,10 @@ import {
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
-import PhoneRevealFooterHint from '@/components/counselor/PhoneRevealFooterHint';
-import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 
 function formatCompletedAt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString('ko-KR');
-  } catch {
-    return String(iso);
-  }
-}
-
-function formatNotifyDate(iso: string | null | undefined): string {
-  return formatCompletedAt(iso);
+  return formatNotifyDate(iso);
 }
 
 function notifyErrorHint(error: string | null | undefined): string | undefined {
@@ -105,119 +100,6 @@ function credentialSendModeLabel(mode: CredentialSendMode): string {
 
 function notifyKindLabel(kind: string | null | undefined): string {
   return kind === 'resend' ? '재발송' : '최초';
-}
-
-function dispatchStatusDisplay(r: DispatchRecipient): { text: string; className: string; title?: string } {
-  const hasEmail = Boolean(r.email?.trim());
-  const hasPhone = Boolean(r.phone?.trim());
-
-  if (!hasEmail && !hasPhone) {
-    return {
-      text: '연락처 없음',
-      className: 'text-red-400',
-      title: '이메일·휴대폰 정보가 없어 발송할 수 없습니다.',
-    };
-  }
-
-  const status = r.notifyStatus || 'not_sent';
-
-  if (status === 'failed' || status === 'partial') {
-    const kindPrefix = notifyKindLabel(r.notifyKind);
-    return {
-      text: status === 'partial' ? `${kindPrefix} 일부 실패` : `${kindPrefix} 실패`,
-      className: 'text-red-400',
-      title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
-    };
-  }
-
-  if (status === 'skipped') {
-    if (!hasEmail && hasPhone) {
-      return {
-        text: '발송 생략',
-        className: 'text-amber-300',
-        title: notifyErrorHint(r.notifyError) || '이메일 없음 · SMS만 등록됨',
-      };
-    }
-    return {
-      text: '발송 생략',
-      className: 'text-slate-400',
-      title: notifyErrorHint(r.notifyError),
-    };
-  }
-
-  if (status === 'sent') {
-    const kindPrefix = notifyKindLabel(r.notifyKind);
-    if (!hasEmail && hasPhone) {
-      return {
-        text: `${kindPrefix} 완료(SMS)`,
-        className: 'text-emerald-300',
-        title: '이메일 없음 · SMS로 발송됨',
-      };
-    }
-    if (hasEmail && !hasPhone) {
-      return {
-        text: `${kindPrefix} 완료(이메일)`,
-        className: 'text-emerald-300',
-        title: '이메일로 발송됨',
-      };
-    }
-    const viaLabel = formatSentViaLabel(r.notifySentVia);
-    return {
-      text: viaLabel ? `${kindPrefix} 완료 (${viaLabel})` : `${kindPrefix} 완료`,
-      className: 'text-emerald-300',
-      title: kindPrefix === '재발송' ? '접속 정보 재발송 완료' : '최초 접속 정보 발송 완료',
-    };
-  }
-
-  if (status === 'pending') {
-    return {
-      text: `${notifyKindLabel(r.notifyKind)} 예약`,
-      className: 'text-amber-300',
-      title: '발송 예약됨',
-    };
-  }
-
-  if (status === 'not_sent' && !hasEmail) {
-    return {
-      text: '미발송',
-      className: 'text-slate-500',
-      title: '이메일 없음 · 휴대폰만 등록됨',
-    };
-  }
-
-  return notifyLabel(status);
-}
-
-function notifyLabel(status: string): { text: string; className: string } {
-  switch (status) {
-    case 'sent':
-      return { text: '발송 성공', className: 'text-emerald-300' };
-    case 'failed':
-      return { text: '발송 실패', className: 'text-red-400' };
-    case 'partial':
-      return { text: '일부 발송 실패', className: 'text-amber-300' };
-    case 'pending':
-      return { text: '발송 대기', className: 'text-amber-300' };
-    case 'skipped':
-      return { text: '발송 생략', className: 'text-slate-400' };
-    case 'not_sent':
-      return { text: '미발송', className: 'text-slate-500' };
-    default:
-      return { text: status || '—', className: 'text-slate-400' };
-  }
-}
-
-function testSummary(r: DispatchRecipient): { text: string; className: string } {
-  if (r.testStatus === 'completed') {
-    return { text: '검사 완료', className: 'text-emerald-300' };
-  }
-  if (r.testStatus === 'in_progress') {
-    return {
-      text: `${r.completedCount}/${r.requiredCount}`,
-      className: 'text-amber-300',
-    };
-  }
-  return { text: '미실시', className: 'text-slate-500' };
 }
 
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
@@ -371,7 +253,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [revealedPhonePortalId, setRevealedPhonePortalId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -394,17 +275,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   useRedirectOnLoginRequiredError(error);
   useRedirectOnLoginRequiredError(detailError);
-
-  useEffect(() => {
-    if (!revealedPhonePortalId) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[data-phone-reveal]')) return;
-      setRevealedPhonePortalId(null);
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, [revealedPhonePortalId]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId) return;
@@ -888,6 +758,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 const notify = dispatchStatusDisplay(r);
                 const summary = testSummary(r);
                 const isOpen = expandedId === r.portalId;
+                const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
 
                 return (
@@ -924,40 +795,17 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
                         {r.displayName || '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-300 align-top truncate">
+                      <td className="px-3 py-2 text-slate-300 align-top truncate tabular-nums">
                         {r.email?.trim() ? (
-                          r.email
+                          displayContactEmail(r.email, contactRevealed)
                         ) : (
                           <span className="text-amber-300/90" title="이메일 주소 없음">
                             없음
                           </span>
                         )}
                       </td>
-                      <td
-                        className="px-3 py-2 text-slate-300 align-top whitespace-nowrap"
-                        data-phone-reveal
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {r.phone?.trim() ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setRevealedPhonePortalId((prev) =>
-                                prev === r.portalId ? null : r.portalId,
-                              )
-                            }
-                            className="rounded tabular-nums transition hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500"
-                            title={
-                              revealedPhonePortalId === r.portalId ? '번호 숨기기' : '번호 보기'
-                            }
-                          >
-                            {revealedPhonePortalId === r.portalId
-                              ? formatPhoneDisplayOr(r.phone)
-                              : formatPhoneMaskedDisplay(r.phone)}
-                          </button>
-                        ) : (
-                          '—'
-                        )}
+                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
+                        {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
                       </td>
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
@@ -1095,7 +943,6 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 </Link>
               </div>
             </div>
-            <PhoneRevealFooterHint className="border-t border-slate-700/80 px-4 py-2.5" />
           </>
         )}
       </div>

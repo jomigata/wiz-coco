@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
+import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
+import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -32,21 +33,6 @@ function formatDateTime(iso: string | null | undefined): string {
     });
   } catch {
     return String(iso);
-  }
-}
-
-function notifyStatusLabel(status: string): { text: string; className: string } {
-  switch (status) {
-    case 'sent':
-      return { text: '발송 완료', className: 'text-emerald-300' };
-    case 'pending':
-      return { text: '발송 대기', className: 'text-amber-300' };
-    case 'failed':
-      return { text: '발송 실패', className: 'text-red-400' };
-    case 'skipped':
-      return { text: '발송 생략', className: 'text-slate-400' };
-    default:
-      return { text: '미발송', className: 'text-slate-500' };
   }
 }
 
@@ -85,6 +71,7 @@ export default function CounselorClientList() {
   const [progressFilter, setProgressFilter] = useState<ProgressFilter>('all');
   const [tagFilter, setTagFilter] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
+  const [expandedContactId, setExpandedContactId] = useState<string | null>(null);
 
   useEffect(() => {
     const fromUrl = searchParams.get('cohortId');
@@ -297,17 +284,34 @@ export default function CounselorClientList() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {displayItems.map((item) => {
-                const notify = notifyStatusLabel(item.notifyStatus);
+                const notify = dispatchStatusDisplay(item);
                 const progress = progressLabel(item);
                 const primaryAssessment = item.assessments[0];
+                const contactRevealed = expandedContactId === item.portalId;
 
                 return (
-                  <tr key={item.portalId} className="hover:bg-white/[0.02]">
+                  <tr
+                    key={item.portalId}
+                    onClick={() =>
+                      setExpandedContactId((prev) => (prev === item.portalId ? null : item.portalId))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setExpandedContactId((prev) => (prev === item.portalId ? null : item.portalId));
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-expanded={contactRevealed}
+                    className={`cursor-pointer hover:bg-white/[0.02] ${contactRevealed ? 'bg-white/[0.03]' : ''}`}
+                  >
                     <td className="px-4 py-3">
                       <div className="font-medium text-white">
                         <Link
                           href={counselorClientDetailHref(item.portalId)}
                           className="hover:text-sky-300"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           {item.displayName || '—'}
                         </Link>
@@ -319,9 +323,9 @@ export default function CounselorClientList() {
                     <td className="px-4 py-3 font-mono text-xs text-sky-200">
                       {formatAccessCodeDisplay(item.accessCode)}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-300">
-                      <div>{item.email || '—'}</div>
-                      <div className="text-slate-500">{formatPhoneDisplayOr(item.phone, '—')}</div>
+                    <td className="px-4 py-3 text-xs text-slate-300 tabular-nums">
+                      <div>{displayContactEmail(item.email, contactRevealed)}</div>
+                      <div className="text-slate-500">{displayContactPhone(item.phone, contactRevealed)}</div>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-300">
                       {item.cohortName || '—'}
@@ -361,7 +365,9 @@ export default function CounselorClientList() {
                       ) : null}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs ${notify.className}`}>{notify.text}</span>
+                      <span className={`text-xs ${notify.className}`} title={notify.title}>
+                        {notify.text}
+                      </span>
                       {item.notifyAt ? (
                         <div className="text-[11px] text-slate-500">{formatDateTime(item.notifyAt)}</div>
                       ) : null}
@@ -369,7 +375,7 @@ export default function CounselorClientList() {
                     <td className="px-4 py-3 text-xs text-slate-400">
                       {formatDateTime(item.lastLoginAt)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col gap-1">
                         <Link
                           href={counselorClientDetailHref(item.portalId)}

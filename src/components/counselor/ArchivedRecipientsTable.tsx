@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { formatPhoneDisplayOr, formatPhoneMaskedDisplay } from '@/lib/phoneFormat';
+import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
 import type { DispatchTestResult } from '@/lib/clientPortalApi';
 import {
   compareArchivedRecipients,
@@ -14,7 +14,6 @@ import {
   type SortDirection,
 } from '@/lib/dispatchRecipientDisplay';
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
-import PhoneRevealFooterHint from '@/components/counselor/PhoneRevealFooterHint';
 
 function SortableColumnHeader({
   label,
@@ -78,21 +77,9 @@ export default function ArchivedRecipientsTable({
   const [sortKey, setSortKey] = useState<RecipientSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [revealedPhonePortalId, setRevealedPhonePortalId] = useState<string | null>(null);
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-
-  React.useEffect(() => {
-    if (!revealedPhonePortalId) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[data-phone-reveal]')) return;
-      setRevealedPhonePortalId(null);
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, [revealedPhonePortalId]);
 
   const sortedItems = useMemo(() => {
     const list = [...items];
@@ -218,6 +205,7 @@ export default function ArchivedRecipientsTable({
               const notify = dispatchStatusDisplay(row);
               const summary = testSummary(row);
               const isOpen = expandedId === row.portalId;
+              const contactRevealed = isOpen;
               const tests = row.tests ?? [];
 
               return (
@@ -253,37 +241,17 @@ export default function ArchivedRecipientsTable({
                     <td className="max-w-[7rem] truncate px-3 py-2 text-white align-top">
                       {row.displayName || '—'}
                     </td>
-                    <td className="truncate px-3 py-2 text-slate-300 align-top">
+                    <td className="truncate px-3 py-2 text-slate-300 align-top tabular-nums">
                       {row.email?.trim() ? (
-                        row.email
+                        displayContactEmail(row.email, contactRevealed)
                       ) : (
                         <span className="text-amber-300/90" title="이메일 주소 없음">
                           없음
                         </span>
                       )}
                     </td>
-                    <td
-                      className="whitespace-nowrap px-3 py-2 text-slate-300 align-top"
-                      data-phone-reveal
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {row.phone?.trim() ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setRevealedPhonePortalId((prev) =>
-                              prev === row.portalId ? null : row.portalId,
-                            )
-                          }
-                          className="rounded tabular-nums transition hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500"
-                        >
-                          {revealedPhonePortalId === row.portalId
-                            ? formatPhoneDisplayOr(row.phone)
-                            : formatPhoneMaskedDisplay(row.phone)}
-                        </button>
-                      ) : (
-                        '—'
-                      )}
+                    <td className="whitespace-nowrap px-3 py-2 text-slate-300 align-top tabular-nums">
+                      {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
                       {formatAccessCodeDisplay(row.myCode)}
@@ -386,7 +354,6 @@ export default function ArchivedRecipientsTable({
           </tbody>
         </table>
       </div>
-      <PhoneRevealFooterHint className="mt-3 px-1" />
 
       {detailLoading ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">

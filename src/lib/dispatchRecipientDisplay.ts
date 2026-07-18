@@ -1,17 +1,16 @@
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
 
-export type DispatchDisplayRecipient = Pick<
-  ArchivedDispatchRecipient,
-  | 'email'
-  | 'phone'
-  | 'notifyStatus'
-  | 'notifyError'
-  | 'notifyKind'
-  | 'notifySentVia'
-  | 'testStatus'
-  | 'completedCount'
-  | 'requiredCount'
->;
+export type DispatchDisplayRecipient = {
+  email?: string | null;
+  phone?: string | null;
+  notifyStatus?: string | null;
+  notifyError?: string | null;
+  notifyKind?: string | null;
+  notifySentVia?: string | null;
+  testStatus?: string | null;
+  completedCount?: number | null;
+  requiredCount?: number | null;
+};
 
 function notifyErrorHint(error: string | null | undefined): string | undefined {
   const err = (error || '').trim();
@@ -34,6 +33,70 @@ function formatSentViaLabel(via: string | null | undefined): string {
 
 function notifyKindLabel(kind: string | null | undefined): string {
   return kind === 'resend' ? '재발송' : '최초';
+}
+
+function parseNotifyErrors(error: string | null | undefined): {
+  emailFailed: boolean;
+  phoneFailed: boolean;
+} {
+  const err = (error || '').toLowerCase();
+  return {
+    emailFailed: err.includes('email_send_failed'),
+    phoneFailed: err.includes('phone_send_failed'),
+  };
+}
+
+function parseSentViaFlags(via: string | null | undefined): {
+  emailOk: boolean;
+  alimtalkOk: boolean;
+  smsOk: boolean;
+} {
+  const v = (via || '').toLowerCase();
+  return {
+    emailOk: v.includes('email'),
+    alimtalkOk: v.includes('alimtalk') || v.includes('kakao'),
+    smsOk: v.includes('sms'),
+  };
+}
+
+function phoneChannelLabel(flags: ReturnType<typeof parseSentViaFlags>): string {
+  if (flags.alimtalkOk) return '알림톡';
+  if (flags.smsOk) return '문자';
+  return '휴대폰';
+}
+
+/** 이메일·휴대폰 채널별 간략 상태 (예: 이메일✓·문자✗) */
+function buildChannelDetail(r: DispatchDisplayRecipient): string {
+  const hasEmail = Boolean(r.email?.trim());
+  const hasPhone = Boolean(r.phone?.trim());
+  if (!hasEmail && !hasPhone) return '';
+
+  const status = r.notifyStatus || 'not_sent';
+  const via = parseSentViaFlags(r.notifySentVia);
+  const failed = parseNotifyErrors(r.notifyError);
+  const parts: string[] = [];
+
+  if (hasEmail) {
+    if (status === 'sent' && via.emailOk) parts.push('이메일✓');
+    else if (failed.emailFailed || (status === 'partial' && !via.emailOk)) parts.push('이메일✗');
+    else if (status === 'sent') parts.push('이메일✓');
+    else if (status === 'pending') parts.push('이메일…');
+    else if (status === 'not_sent') parts.push('이메일·');
+    else parts.push('이메일?');
+  }
+
+  if (hasPhone) {
+    const phoneLabel = phoneChannelLabel(via);
+    const phoneOk = via.alimtalkOk || via.smsOk;
+    if (status === 'sent' && phoneOk) parts.push(`${phoneLabel}✓`);
+    else if (failed.phoneFailed || (status === 'partial' && !phoneOk)) parts.push(`${phoneLabel}✗`);
+    else if (status === 'sent' && !hasEmail) parts.push(`${phoneLabel}✓`);
+    else if (status === 'pending') parts.push(`${phoneLabel}…`);
+    else if (status === 'not_sent' && !hasEmail) parts.push(`${phoneLabel}·`);
+    else if (status === 'partial' || status === 'failed') parts.push(`${phoneLabel}✗`);
+  }
+
+  return parts.length ? ` (${parts.join('·')})` : '';
 }
 
 function notifyLabel(status: string): { text: string; className: string } {
@@ -73,8 +136,12 @@ export function dispatchStatusDisplay(
 
   if (status === 'failed' || status === 'partial') {
     const kindPrefix = notifyKindLabel(r.notifyKind);
+    const channelDetail = buildChannelDetail(r);
     return {
-      text: status === 'partial' ? `${kindPrefix} 일부 실패` : `${kindPrefix} 실패`,
+      text:
+        status === 'partial'
+          ? `${kindPrefix} 일부 실패${channelDetail}`
+          : `${kindPrefix} 실패${channelDetail}`,
       className: 'text-red-400',
       title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
     };
@@ -97,23 +164,28 @@ export function dispatchStatusDisplay(
 
   if (status === 'sent') {
     const kindPrefix = notifyKindLabel(r.notifyKind);
+    const channelDetail = buildChannelDetail(r);
     if (!hasEmail && hasPhone) {
       return {
-        text: `${kindPrefix} 완료(SMS)`,
+        text: `${kindPrefix} 완료${channelDetail || '(SMS)'}`,
         className: 'text-emerald-300',
         title: '이메일 없음 · SMS로 발송됨',
       };
     }
     if (hasEmail && !hasPhone) {
       return {
-        text: `${kindPrefix} 완료(이메일)`,
+        text: `${kindPrefix} 완료${channelDetail || '(이메일)'}`,
         className: 'text-emerald-300',
         title: '이메일로 발송됨',
       };
     }
     const viaLabel = formatSentViaLabel(r.notifySentVia);
     return {
-      text: viaLabel ? `${kindPrefix} 완료 (${viaLabel})` : `${kindPrefix} 완료`,
+      text: channelDetail
+        ? `${kindPrefix} 완료${channelDetail}`
+        : viaLabel
+          ? `${kindPrefix} 완료 (${viaLabel})`
+          : `${kindPrefix} 완료`,
       className: 'text-emerald-300',
       title: kindPrefix === '재발송' ? '접속 정보 재발송 완료' : '최초 접속 정보 발송 완료',
     };
