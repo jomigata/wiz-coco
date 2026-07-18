@@ -791,6 +791,7 @@ def list_archived_portals(
                 "notifyAt": notify_at,
                 "notifySentVia": notify_snap.get("sentVia") or "",
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
+                "tests": _test_detail_rows(db, portal_id, from_aid, test_list) if from_aid else [],
                 **test_info,
             }
         )

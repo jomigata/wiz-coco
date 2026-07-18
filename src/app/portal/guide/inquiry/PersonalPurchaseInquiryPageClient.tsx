@@ -7,6 +7,7 @@ import PageHierarchyBreadcrumb from '@/components/navigation/PageHierarchyBreadc
 import { APP_HEADER_PT } from '@/lib/appChromeLayout';
 import { resolvePortalHierarchy } from '@/lib/pageHierarchyNav';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
+import { submitPersonalPurchaseInquiry } from '@/lib/personalPurchaseInquiryApi';
 
 const packageOptions = [
   { value: '', label: '아직 정하지 않았어요' },
@@ -23,6 +24,7 @@ export default function PersonalPurchaseInquiryPageClient() {
   const [phone, setPhone] = useState('');
   const [packageInterest, setPackageInterest] = useState('');
   const [message, setMessage] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -32,14 +34,16 @@ export default function PersonalPurchaseInquiryPageClient() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/personal-purchase-inquiry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, packageInterest, message }),
+      const result = await submitPersonalPurchaseInquiry({
+        name,
+        email,
+        phone,
+        packageInterest,
+        message,
+        attachments,
       });
-      const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || '문의 전송에 실패했습니다.');
+      if (!result.success) {
+        throw new Error(result.error || '문의 전송에 실패했습니다.');
       }
       setSubmitted(true);
     } catch (err) {
@@ -147,6 +151,26 @@ export default function PersonalPurchaseInquiryPageClient() {
                   className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
                   placeholder="관심 검사 영역, 희망 일정, 기타 요청 사항을 적어 주세요."
                 />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm text-slate-300">첨부파일 (선택, 최대 3개·각 5MB)</span>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []).slice(0, 3);
+                    setAttachments(files);
+                  }}
+                  className="block w-full text-sm text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600/80 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-violet-500"
+                />
+                {attachments.length > 0 ? (
+                  <ul className="mt-2 space-y-1 text-xs text-slate-500">
+                    {attachments.map((file) => (
+                      <li key={`${file.name}-${file.size}`}>{file.name}</li>
+                    ))}
+                  </ul>
+                ) : null}
               </label>
               {error ? <p className="text-sm text-red-400">{error}</p> : null}
               <button

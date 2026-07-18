@@ -200,3 +200,78 @@ def checkout_mock_complete():
         actor_uid=g.auth_uid,
     )
     return jsonify({"ok": True, "mock": True, **fulfillment})
+
+
+_ALLOWED_INQUIRY_TYPES = {
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
+}
+_MAX_INQUIRY_ATTACHMENT_BYTES = 5 * 1024 * 1024
+_MAX_INQUIRY_ATTACHMENTS = 3
+
+
+@bp.route("/personal-purchase-inquiry", methods=["POST"])
+def personal_purchase_inquiry():
+    """개인 검사코드 구매 문의 (첨부파일 포함, SMTP)."""
+    from utils.email_notify import send_personal_purchase_inquiry_email
+    from config import is_email_configured
+
+    if not is_email_configured():
+        return jsonify(
+            {
+                "success": False,
+                "error": "이메일 발송 설정이 되어 있지 않습니다. 잠시 후 다시 시도해 주세요.",
+            }
+        ), 503
+
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip()
+    phone = (request.form.get("phone") or "").strip()
+    package_interest = (request.form.get("packageInterest") or "").strip()
+    message = (request.form.get("message") or "").strip()
+
+    if not name or not email or not message:
+        return jsonify({"success": False, "error": "이름, 이메일, 문의 내용은 필수입니다."}), 400
+    if "@" not in email:
+        return jsonify({"success": False, "error": "올바른 이메일 주소를 입력해 주세요."}), 400
+
+    attachments: list[tuple[str, bytes, str]] = []
+    files = request.files.getlist("attachments")
+    if len(files) > _MAX_INQUIRY_ATTACHMENTS:
+        return jsonify({"success": False, "error": f"첨부파일은 최대 {_MAX_INQUIRY_ATTACHMENTS}개까지 가능합니다."}), 400
+
+    for f in files:
+        if not f or not f.filename:
+            continue
+        payload = f.read()
+        if len(payload) > _MAX_INQUIRY_ATTACHMENT_BYTES:
+            return jsonify({"success": False, "error": "첨부파일은 개당 5MB 이하여야 합니다."}), 400
+        content_type = (f.content_type or "application/octet-stream").split(";")[0].strip().lower()
+        if content_type not in _ALLOWED_INQUIRY_TYPES:
+            return jsonify({"success": False, "error": f"허용되지 않는 파일 형식입니다: {f.filename}"}), 400
+        attachments.append((f.filename, payload, content_type))
+
+    try:
+        ok = send_personal_purchase_inquiry_email(
+            name=name,
+            email=email,
+            phone=phone,
+            package_interest=package_interest,
+            message=message,
+            attachments=attachments,
+        )
+    except Exception as exc:
+        logger.exception("personal_purchase_inquiry failed")
+        return jsonify({"success": False, "error": "문의 전송에 실패했습니다. 잠시 후 다시 시도해 주세요."}), 500
+
+    if not ok:
+        return jsonify({"success": False, "error": "문의 전송에 실패했습니다. 잠시 후 다시 시도해 주세요."}), 500
+
+    return jsonify({"success": True})

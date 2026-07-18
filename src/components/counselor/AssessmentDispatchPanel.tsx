@@ -23,6 +23,7 @@ import {
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
+import PhoneRevealFooterHint from '@/components/counselor/PhoneRevealFooterHint';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 
@@ -1094,6 +1095,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 </Link>
               </div>
             </div>
+            <PhoneRevealFooterHint className="border-t border-slate-700/80 px-4 py-2.5" />
           </>
         )}
       </div>

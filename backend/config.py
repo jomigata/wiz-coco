@@ -131,3 +131,11 @@ BOOTSTRAP_COUNSELOR_EMAILS = [x.strip().lower() for x in os.getenv("BOOTSTRAP_CO
 
 # 상담사 전환 승인 요청 알림 수신
 COUNSELOR_ADMIN_NOTIFY_EMAIL = os.getenv("COUNSELOR_ADMIN_NOTIFY_EMAIL", "jomigata@gmail.com").strip().lower()
+
+# 개인 구매 문의 알림 수신 (쉼표 구분, support@wizcoco.com 자동 전달은 메일 서버 설정에 따름)
+_PURCHASE_INQUIRY_DEFAULT = "jomigata@gmail.com,jomigata@naver.com"
+PURCHASE_INQUIRY_NOTIFY_EMAILS = [
+    x.strip().lower()
+    for x in os.getenv("PURCHASE_INQUIRY_NOTIFY_EMAILS", _PURCHASE_INQUIRY_DEFAULT).split(",")
+    if x.strip()
+]

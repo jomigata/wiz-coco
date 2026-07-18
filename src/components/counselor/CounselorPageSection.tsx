@@ -2,6 +2,11 @@
 
 import React from 'react';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
+import { useCounselorHierarchyDepth } from '@/components/counselor/CounselorHierarchyContext';
+import {
+  counselorSectionBorderClass,
+  counselorSectionHeaderClass,
+} from '@/lib/pageHierarchyNav';
 
 type CounselorPageSectionProps = {
   /** 중분류 띠 제목 */
@@ -26,14 +31,17 @@ export default function CounselorPageSection({
   bodyClassName = '',
   noBodyPadding = false,
 }: CounselorPageSectionProps) {
+  const depth = useCounselorHierarchyDepth();
   const hasHeader = Boolean(title || toolbar);
+  const sectionBorder = counselorSectionBorderClass(depth);
+  const sectionHeader = counselorSectionHeaderClass(depth);
 
   return (
     <section
-      className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0 ${className}`}
+      className={`flex min-h-0 flex-col overflow-hidden rounded-xl border ${sectionBorder} ${counselorHubClasses.subsection} !p-0 ${className}`}
     >
       {hasHeader ? (
-        <div className="flex flex-col gap-2.5 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className={`flex flex-col gap-2.5 border-b ${sectionBorder} ${sectionHeader} px-4 py-3 sm:flex-row sm:items-center sm:justify-between`}>
           {title ? (
             <h2 className="text-sm font-bold tracking-tight text-white sm:text-base">{title}</h2>
           ) : (

@@ -319,6 +319,7 @@ export type ArchivedDispatchRecipient = {
   testStatus?: 'not_started' | 'in_progress' | 'completed' | string;
   completedCount?: number;
   requiredCount?: number;
+  tests?: DispatchTestResult[];
 };
 
 export async function archiveDispatchRecipients(

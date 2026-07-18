@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import PageHierarchyBreadcrumb from '@/components/navigation/PageHierarchyBreadcrumb';
 import {
+  counselorBreadcrumbBarClass,
   counselorHeaderGradientClass,
   resolveCounselorHierarchy,
 } from '@/lib/pageHierarchyNav';
@@ -19,7 +20,9 @@ function CounselorPageHeaderInner({ pageTitle }: { pageTitle: string }) {
     <header className={`shrink-0 border-b py-3 backdrop-blur-sm ${headerClass}`}>
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-1 px-4 sm:px-6">
         {nav ? (
-          <PageHierarchyBreadcrumb crumbs={nav.crumbs} useAuthLinks />
+          <div className={counselorBreadcrumbBarClass(depth)}>
+            <PageHierarchyBreadcrumb crumbs={nav.crumbs} useAuthLinks depth={depth} />
+          </div>
         ) : null}
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">

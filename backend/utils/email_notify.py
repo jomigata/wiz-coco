@@ -1,7 +1,9 @@
 """관리자 알림 이메일 (SMTP 설정 시 발송)."""
 import smtplib
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email import encoders
 
 from utils.phone_format import format_phone_display
 
@@ -9,6 +11,7 @@ from config import (
     COUNSELOR_ADMIN_NOTIFY_EMAIL,
     MAIL_FROM,
     PUBLIC_SITE_URL,
+    PURCHASE_INQUIRY_NOTIFY_EMAILS,
     SMTP_HOST,
     SMTP_PASSWORD,
     SMTP_PORT,
@@ -380,5 +383,62 @@ WizCoCo
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.sendmail(MAIL_FROM, [email], msg.as_string())
+
+    return True
+
+
+def send_personal_purchase_inquiry_email(
+    *,
+    name: str,
+    email: str,
+    phone: str = "",
+    package_interest: str = "",
+    message: str = "",
+    attachments: list[tuple[str, bytes, str]] | None = None,
+) -> bool:
+    """개인 검사코드 구매 문의 — 관리자 수신 목록으로 SMTP 발송."""
+    if not is_email_configured():
+        return False
+
+    recipients = PURCHASE_INQUIRY_NOTIFY_EMAILS or [COUNSELOR_ADMIN_NOTIFY_EMAIL]
+    pkg = package_interest or "(미선택)"
+    phone_display = format_phone_display(phone) if phone else "(미입력)"
+    body = f"""WizCoCo 개인 검사코드 구매 문의
+
+이름: {name}
+이메일: {email}
+휴대폰: {phone_display}
+관심 패키지: {pkg}
+
+문의 내용:
+{message or '(내용 없음)'}
+
+---
+회신 시 문의자 이메일({email})로 답장해 주세요.
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = MAIL_FROM
+    msg["To"] = ", ".join(recipients)
+    msg["Subject"] = f"[WizCoCo] 개인 검사코드 구매 문의 — {name}"
+    msg["Reply-To"] = email
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    for filename, payload, content_type in attachments or []:
+        if not filename or not payload:
+            continue
+        main_type, sub_type = (
+            content_type.split("/", 1) if "/" in content_type else ("application", "octet-stream")
+        )
+        part = MIMEBase(main_type, sub_type)
+        part.set_payload(payload)
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", "attachment", filename=filename)
+        msg.attach(part)
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(MAIL_FROM, recipients, msg.as_string())
 
     return True

@@ -2,72 +2,27 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { formatPhoneDisplayOr, formatPhoneMaskedDisplay } from '@/lib/phoneFormat';
-import {
-  compareArchivedRecipients,
-  dispatchStatusDisplay,
-  formatNotifyDate,
-  testSummary,
-  type RecipientSortKey,
-  type SortDirection,
-} from '@/lib/dispatchRecipientDisplay';
 import {
   fetchArchivedDispatchRecipients,
   permanentlyDeleteArchivedDispatchRecipients,
   restoreArchivedDispatchRecipients,
-  type ArchivedDispatchRecipient,
 } from '@/lib/clientPortalApi';
-
-function SortableColumnHeader({
-  label,
-  sortKey,
-  activeKey,
-  direction,
-  onSort,
-  className = '',
-}: {
-  label: string;
-  sortKey: RecipientSortKey;
-  activeKey: RecipientSortKey;
-  direction: SortDirection;
-  onSort: (key: RecipientSortKey) => void;
-  className?: string;
-}) {
-  const active = activeKey === sortKey;
-  return (
-    <th className={`px-3 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
-      <button
-        type="button"
-        onClick={() => onSort(sortKey)}
-        className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
-      >
-        <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-cyan-400' : 'text-slate-600'}`} aria-hidden="true">
-          {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
-        </span>
-      </button>
-    </th>
-  );
-}
 
 export default function DeletedRecipientsPage() {
   const [filterAssessmentId, setFilterAssessmentId] = useState('');
   const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
-  const [items, setItems] = useState<ArchivedDispatchRecipient[]>([]);
+  const [items, setItems] = useState<Awaited<ReturnType<typeof fetchArchivedDispatchRecipients>>['items']>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState('');
-  const [sortKey, setSortKey] = useState<RecipientSortKey>('notifyAt');
-  const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [revealedPhonePortalId, setRevealedPhonePortalId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,34 +56,8 @@ export default function DeletedRecipientsPage() {
 
   useRedirectOnLoginRequiredError(error);
 
-  useEffect(() => {
-    if (!revealedPhonePortalId) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[data-phone-reveal]')) return;
-      setRevealedPhonePortalId(null);
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, [revealedPhonePortalId]);
-
   const allIds = useMemo(() => items.map((i) => i.portalId), [items]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
-
-  const sortedItems = useMemo(() => {
-    const list = [...items];
-    list.sort((a, b) => compareArchivedRecipients(a, b, sortKey, sortDir));
-    return list;
-  }, [items, sortKey, sortDir]);
-
-  const toggleSort = (key: RecipientSortKey) => {
-    if (sortKey === key) {
-      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortKey(key);
-      setSortDir(key === 'notifyAt' || key === 'archivedAt' ? 'desc' : 'asc');
-    }
-  };
 
   const toggleAll = () => {
     if (allSelected) setSelected(new Set());
@@ -253,173 +182,12 @@ export default function DeletedRecipientsPage() {
       ) : items.length === 0 ? (
         <p className="text-sm text-slate-400">삭제된 검사자가 없습니다.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-max min-w-full text-sm table-fixed">
-            <thead className="sticky top-0 z-10 bg-slate-800 text-slate-400 shadow-[0_1px_0_0_rgb(71,85,105)]">
-              <tr>
-                <th className="w-10 px-3 py-2 text-left text-xs font-medium">No.</th>
-                <th className="w-10 px-3 py-2 text-left text-xs font-medium">선택</th>
-                <SortableColumnHeader
-                  label="발송일시"
-                  sortKey="notifyAt"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
-                />
-                <SortableColumnHeader
-                  label="이름"
-                  sortKey="displayName"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-28"
-                />
-                <SortableColumnHeader
-                  label="이메일"
-                  sortKey="email"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-52"
-                />
-                <SortableColumnHeader
-                  label="휴대폰"
-                  sortKey="phone"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-32"
-                />
-                <SortableColumnHeader
-                  label="나의코드"
-                  sortKey="myCode"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-24"
-                />
-                <SortableColumnHeader
-                  label="발송"
-                  sortKey="notifyStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-24"
-                />
-                <SortableColumnHeader
-                  label="검사"
-                  sortKey="testStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-24"
-                />
-                {showAssessmentColumns ? (
-                  <>
-                    <th className="px-3 py-2 text-left text-xs font-medium">검사코드</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium">검사명</th>
-                  </>
-                ) : null}
-                <SortableColumnHeader
-                  label="삭제일시"
-                  sortKey="archivedAt"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
-                />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700">
-              {sortedItems.map((row, rowIndex) => {
-                const notify = dispatchStatusDisplay(row);
-                const summary = testSummary(row);
-                return (
-                  <tr key={row.portalId} className="hover:bg-slate-800/50">
-                    <td className="px-3 py-2 tabular-nums text-slate-400 align-top">{rowIndex + 1}</td>
-                    <td className="px-3 py-2 align-top">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(row.portalId)}
-                        onChange={() => toggleOne(row.portalId)}
-                        className="rounded text-blue-500"
-                      />
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
-                      {formatNotifyDate(row.notifyAt)}
-                    </td>
-                    <td className="max-w-[7rem] truncate px-3 py-2 text-white align-top">
-                      {row.displayName || '—'}
-                    </td>
-                    <td className="truncate px-3 py-2 text-slate-300 align-top">
-                      {row.email?.trim() ? (
-                        row.email
-                      ) : (
-                        <span className="text-amber-300/90" title="이메일 주소 없음">
-                          없음
-                        </span>
-                      )}
-                    </td>
-                    <td
-                      className="whitespace-nowrap px-3 py-2 text-slate-300 align-top"
-                      data-phone-reveal
-                    >
-                      {row.phone?.trim() ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setRevealedPhonePortalId((prev) =>
-                              prev === row.portalId ? null : row.portalId,
-                            )
-                          }
-                          className="rounded tabular-nums transition hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500"
-                          title={
-                            revealedPhonePortalId === row.portalId ? '번호 숨기기' : '번호 보기'
-                          }
-                        >
-                          {revealedPhonePortalId === row.portalId
-                            ? formatPhoneDisplayOr(row.phone)
-                            : formatPhoneMaskedDisplay(row.phone)}
-                        </button>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
-                      {formatAccessCodeDisplay(row.myCode)}
-                    </td>
-                    <td
-                      className={`whitespace-nowrap px-3 py-2 align-top ${notify.className}`}
-                      title={notify.title}
-                    >
-                      {notify.text}
-                    </td>
-                    <td className={`whitespace-nowrap px-3 py-2 align-top ${summary.className}`}>
-                      {summary.text}
-                    </td>
-                    {showAssessmentColumns ? (
-                      <>
-                        <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
-                          {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
-                        </td>
-                        <td
-                          className="max-w-xs truncate px-3 py-2 text-slate-300 align-top"
-                          title={row.assessmentTitle}
-                        >
-                          {row.assessmentTitle || row.cohortName || '—'}
-                        </td>
-                      </>
-                    ) : null}
-                    <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
-                      {formatNotifyDate(row.archivedAt)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ArchivedRecipientsTable
+          items={items}
+          selected={selected}
+          onToggleOne={toggleOne}
+          showAssessmentColumns={showAssessmentColumns}
+        />
       )}
     </CounselorPageSection>
   );
