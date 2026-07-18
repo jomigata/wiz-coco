@@ -31,8 +31,8 @@ function formatSentViaLabel(via: string | null | undefined): string {
   return via || '';
 }
 
-function notifyKindLabel(kind: string | null | undefined): string {
-  return kind === 'resend' ? '재발송' : '최초';
+function notifyKindPrefix(kind: string | null | undefined): string {
+  return kind === 'resend' ? '재발송 ' : '';
 }
 
 function parseNotifyErrors(error: string | null | undefined): {
@@ -135,13 +135,13 @@ export function dispatchStatusDisplay(
   const status = r.notifyStatus || 'not_sent';
 
   if (status === 'failed' || status === 'partial') {
-    const kindPrefix = notifyKindLabel(r.notifyKind);
+    const kindPrefix = notifyKindPrefix(r.notifyKind);
     const channelDetail = buildChannelDetail(r);
     return {
       text:
         status === 'partial'
-          ? `${kindPrefix} 일부 실패${channelDetail}`
-          : `${kindPrefix} 실패${channelDetail}`,
+          ? `${kindPrefix}일부 실패${channelDetail}`.trim()
+          : `${kindPrefix}실패${channelDetail}`.trim(),
       className: 'text-red-400',
       title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
     };
@@ -163,18 +163,18 @@ export function dispatchStatusDisplay(
   }
 
   if (status === 'sent') {
-    const kindPrefix = notifyKindLabel(r.notifyKind);
+    const kindPrefix = notifyKindPrefix(r.notifyKind);
     const channelDetail = buildChannelDetail(r);
     if (!hasEmail && hasPhone) {
       return {
-        text: `${kindPrefix} 완료${channelDetail || '(SMS)'}`,
+        text: `${kindPrefix}완료${channelDetail || '(SMS)'}`.trim(),
         className: 'text-emerald-300',
         title: '이메일 없음 · SMS로 발송됨',
       };
     }
     if (hasEmail && !hasPhone) {
       return {
-        text: `${kindPrefix} 완료${channelDetail || '(이메일)'}`,
+        text: `${kindPrefix}완료${channelDetail || '(이메일)'}`.trim(),
         className: 'text-emerald-300',
         title: '이메일로 발송됨',
       };
@@ -182,18 +182,18 @@ export function dispatchStatusDisplay(
     const viaLabel = formatSentViaLabel(r.notifySentVia);
     return {
       text: channelDetail
-        ? `${kindPrefix} 완료${channelDetail}`
+        ? `${kindPrefix}완료${channelDetail}`.trim()
         : viaLabel
-          ? `${kindPrefix} 완료 (${viaLabel})`
-          : `${kindPrefix} 완료`,
+          ? `${kindPrefix}완료 (${viaLabel})`.trim()
+          : `${kindPrefix}완료`.trim(),
       className: 'text-emerald-300',
-      title: kindPrefix === '재발송' ? '접속 정보 재발송 완료' : '최초 접속 정보 발송 완료',
+      title: kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
     };
   }
 
   if (status === 'pending') {
     return {
-      text: `${notifyKindLabel(r.notifyKind)} 예약`,
+      text: `${notifyKindPrefix(r.notifyKind)}예약`.trim(),
       className: 'text-amber-300',
       title: '발송 예약됨',
     };

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -13,8 +14,9 @@ import {
   restoreArchivedDispatchRecipients,
 } from '@/lib/clientPortalApi';
 
-export default function DeletedRecipientsPage() {
-  const [filterAssessmentId, setFilterAssessmentId] = useState('');
+function DeletedRecipientsPageContent() {
+  const searchParams = useSearchParams();
+  const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
   const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
   const [items, setItems] = useState<Awaited<ReturnType<typeof fetchArchivedDispatchRecipients>>['items']>([]);
   const [loading, setLoading] = useState(true);
@@ -38,16 +40,6 @@ export default function DeletedRecipientsPage() {
       setLoading(false);
     }
   }, [filterAssessmentId]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      setFilterAssessmentId((params.get('assessmentId') || '').trim());
-    } catch {
-      setFilterAssessmentId('');
-    }
-  }, []);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;
@@ -90,11 +82,7 @@ export default function DeletedRecipientsPage() {
 
   const handlePermanentDelete = async () => {
     if (selected.size === 0) return;
-    if (
-      !window.confirm(
-        `선택 ${selected.size}명을 영구 삭제하시겠습니까?\n관리자 화면으로 이동하며 상담사 목록에서는 더 이상 보이지 않습니다.`,
-      )
-    ) {
+    if (!window.confirm(`선택 ${selected.size}명을 영구 삭제하시겠습니까?`)) {
       return;
     }
     setDeleting(true);
@@ -118,10 +106,11 @@ export default function DeletedRecipientsPage() {
   }
 
   const showAssessmentColumns = !filterAssessmentId;
+  const pageTitle = filterAssessmentId ? '삭제된 검사자' : '전체 삭제된 검사자';
 
   return (
     <CounselorPageSection
-      title="삭제된 검사자"
+      title={pageTitle}
       description={
         <>
           발송·검사 현황에서 삭제한 내담자입니다. 복구하면 발송·검사 현황에 다시 표시됩니다.
@@ -190,5 +179,13 @@ export default function DeletedRecipientsPage() {
         />
       )}
     </CounselorPageSection>
+  );
+}
+
+export default function DeletedRecipientsPage() {
+  return (
+    <Suspense fallback={<AuthLoadingState className="py-8" message="목록을 불러오는 중…" />}>
+      <DeletedRecipientsPageContent />
+    </Suspense>
   );
 }

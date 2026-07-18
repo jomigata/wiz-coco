@@ -30,12 +30,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '➕',
           },
           {
-            name: '삭제된 검사코드',
-            href: '/counselor/assessments/deleted',
-            description: '삭제·복구·영구 삭제된 검사코드',
-            icon: '🗑️',
-          },
-          {
             name: '검사 크레딧',
             href: '/counselor/credits',
             description: '보유 크레딧·사용 내역 (협회 지급)',

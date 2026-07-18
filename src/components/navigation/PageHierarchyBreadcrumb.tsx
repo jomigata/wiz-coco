@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import type { HierarchyCrumb } from '@/lib/pageHierarchyNav';
 
@@ -15,6 +16,7 @@ export default function PageHierarchyBreadcrumb({
   className = '',
   useAuthLinks = false,
 }: PageHierarchyBreadcrumbProps) {
+  const router = useRouter();
   if (crumbs.length === 0) return null;
 
   const LinkComponent = useAuthLinks ? AuthLink : Link;
@@ -35,13 +37,21 @@ export default function PageHierarchyBreadcrumb({
                 -
               </span>
             ) : null}
-            {crumb.href && !isLast ? (
+            {crumb.href && !isLast && !crumb.navigateBack ? (
               <LinkComponent
                 href={crumb.href}
                 className="text-sky-300/80 transition-colors hover:text-sky-200 hover:underline underline-offset-2"
               >
                 {crumb.label}
               </LinkComponent>
+            ) : crumb.navigateBack && !isLast ? (
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="text-sky-300/80 transition-colors hover:text-sky-200 hover:underline underline-offset-2"
+              >
+                {crumb.label}
+              </button>
             ) : (
               <span className={isLast ? 'text-slate-300' : 'text-sky-300/80'}>{crumb.label}</span>
             )}

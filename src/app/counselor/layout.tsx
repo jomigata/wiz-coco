@@ -47,7 +47,6 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
         { id: 'assessments-list', label: '전체 목록', href: '/counselor/assessments', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
         { id: 'assessments-new', label: '새 검사코드 만들기', href: '/counselor/assessments/new', icon: 'M12 4v16m8-8H4' },
         { id: 'assessments-deleted', label: '삭제된 검사자', href: '/counselor/assessments/deleted-recipients', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' },
-        { id: 'assessments-deleted-codes', label: '삭제된 검사코드', href: '/counselor/assessments/deleted', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' }
       ]
     },
     {
@@ -77,7 +76,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path === '/counselor') return 'dashboard';
     if (path.startsWith('/counselor/hub/')) return 'dashboard';
     if (path.startsWith('/counselor/assessments/deleted-recipients')) return 'assessments-deleted';
-    if (path.startsWith('/counselor/assessments/deleted')) return 'assessments-deleted-codes';
+    if (path.startsWith('/counselor/assessments/deleted')) return 'assessments-list';
     if (path.startsWith('/counselor/assessments/new')) return 'assessments-new';
     if (path.startsWith('/counselor/assessments/progress')) return 'assessments-list';
     if (path.startsWith('/counselor/assessments/dispatch')) return 'assessments-list';

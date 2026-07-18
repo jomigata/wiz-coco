@@ -98,10 +98,6 @@ function credentialSendModeLabel(mode: CredentialSendMode): string {
   }
 }
 
-function notifyKindLabel(kind: string | null | undefined): string {
-  return kind === 'resend' ? '재발송' : '최초';
-}
-
 function testStatusLabel(status: DispatchTestResult['status']): { text: string; className: string } {
   switch (status) {
     case 'completed':
@@ -673,7 +669,15 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         </div>
 
         {displayData.recipients.length === 0 ? (
-          <p className="px-4 py-6 text-slate-400 text-sm">발송된 내담자가 없습니다.</p>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-6">
+            <p className="text-slate-400 text-sm">발송된 내담자가 없습니다.</p>
+            <Link
+              href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
+              className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 inline-flex items-center"
+            >
+              삭제된 목록
+            </Link>
+          </div>
         ) : (
           <>
             <div className="max-h-[min(28rem,calc(100dvh-20rem))] overflow-auto">
@@ -1058,12 +1062,12 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 {confirmAction === 'remind'
                   ? '아래 내용으로 이메일·SMS 알림을 발송합니다. 비밀번호는 변경되지 않습니다.'
                   : confirmAction === 'delete'
-                    ? '선택한 검사자를 발송·검사 현황에서 제거합니다. 삭제된 목록에서 복구할 수 있습니다.'
+                    ? '선택한 검사자를 발송·검사 현황에서 제거합니다.'
                     : credentialSendMode === 'initial'
                       ? '선택한 내담자에게 접속 정보를 발송합니다. 비밀번호가 새로 발급됩니다.'
                       : credentialSendMode === 'resend'
                         ? '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'
-                        : '선택 내담자 중 최초 발송·재발송이 함께 포함됩니다. 비밀번호가 새로 발급됩니다.'}
+                        : '선택 내담자 중 발송·재발송이 함께 포함됩니다. 비밀번호가 새로 발급됩니다.'}
               </p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
@@ -1134,8 +1138,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     </ul>
                   </div>
                   <p className="text-red-300/90 text-xs">
-                    삭제 후에도 검사 결과 데이터는 보관될 수 있습니다. 내담자는 내 검사실 로그인이
-                    제한됩니다. 「삭제된 목록」에서 복구할 수 있습니다.
+                    삭제 후 검사 결과 데이터는 보관되며, 내담자는 내 검사실 로그인이 제한됩니다.
+                    「삭제된 목록」에서 복구할 수 있습니다.
                   </p>
                 </>
               ) : (

@@ -16,6 +16,7 @@ import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
+import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 import {
   PORTAL_LOGIN_COPY,
   parsePortalLoginIntent,
@@ -37,6 +38,7 @@ function PortalLoginContent() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionResetDone, setSessionResetDone] = useState(false);
 
   const copy = PORTAL_LOGIN_COPY[intent];
   const normalizedCode = normalizeMyCodeInput(code);
@@ -65,12 +67,23 @@ function PortalLoginContent() {
   }, [intent]);
 
   useEffect(() => {
+    let cancelled = false;
+    void resetAllSessionsBeforePortalLinkEntry().then(() => {
+      if (!cancelled) setSessionResetDone(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionResetDone) return;
     const session = readClientPortalSession();
     if (!session?.portalToken) return;
     const target =
       intent === 'results' ? PORTAL_LOGIN_COPY.results.redirectPath : PORTAL_LOGIN_COPY.start.redirectPath;
     router.replace(target);
-  }, [intent, router]);
+  }, [intent, router, sessionResetDone]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {

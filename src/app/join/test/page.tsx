@@ -16,6 +16,7 @@ import {
   hasJoinParticipantSessionForCode,
 } from '@/lib/joinParticipantSession';
 import { clearJoinGuestSession, ensureJoinGuestSession } from '@/lib/joinGuestSession';
+import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -45,6 +46,7 @@ export default function TestRunnerPage() {
   const [error, setError] = useState('');
   const [accessCheckLoading, setAccessCheckLoading] = useState(true);
   const [accessCheckError, setAccessCheckError] = useState('');
+  const [linkEntryResetDone, setLinkEntryResetDone] = useState(false);
 
   const code = normalizeAccessCodeInput(accessCode);
   const questions = genericJoinQuestions;
@@ -69,6 +71,21 @@ export default function TestRunnerPage() {
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
+    if (fromPortal) {
+      setLinkEntryResetDone(true);
+      return;
+    }
+    let cancelled = false;
+    void resetAllSessionsBeforePortalLinkEntry().then(() => {
+      if (!cancelled) setLinkEntryResetDone(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, fromPortal]);
+
+  useEffect(() => {
     let raw: string | null = null;
     try {
       raw = sessionStorage.getItem(JOIN_STORAGE_KEY);
@@ -90,6 +107,7 @@ export default function TestRunnerPage() {
 
   useEffect(() => {
     const run = async () => {
+      if (!linkEntryResetDone) return;
       if (!code || !isValidAccessCodeInput(code)) {
         setAccessCheckError('잘못된 검사코드입니다.');
         setAccessCheckLoading(false);
@@ -123,7 +141,7 @@ export default function TestRunnerPage() {
       }
     };
     void run();
-  }, [code, hasPortal, fromPortal]);
+  }, [code, hasPortal, fromPortal, linkEntryResetDone]);
 
   useEffect(() => {
     if (!editResultId || !code || accessCheckLoading || accessCheckError) return;

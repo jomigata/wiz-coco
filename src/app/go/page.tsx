@@ -7,6 +7,7 @@ import { verifyPortalMagicToken } from '@/lib/clientPortalApi';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
+import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 
 function GoLoading() {
@@ -29,8 +30,11 @@ function GoContent() {
       return;
     }
     let cancelled = false;
-    verifyPortalMagicToken(token)
-      .then((result) => {
+    (async () => {
+      await resetAllSessionsBeforePortalLinkEntry();
+      if (cancelled) return;
+      try {
+        const result = await verifyPortalMagicToken(token);
         if (cancelled) return;
         persistClientPortalSession(result);
         clearJoinGuestSession();
@@ -39,11 +43,11 @@ function GoContent() {
         const dest = tab ? `/portal/?tab=${encodeURIComponent(tab)}` : '/portal/';
         setPortalReturnPath(dest);
         router.replace(dest);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : '링크를 사용할 수 없습니다.');
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };

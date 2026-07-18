@@ -139,7 +139,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   };
 
   const cellLinkClass =
-    'cursor-pointer text-left hover:text-sky-200 hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
+    'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const totalParticipants = assessments.reduce((sum, a) => {
     const { testComplete, testIncomplete } = resultStatusCounts(a);
@@ -216,6 +216,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
             />
           </div>
+          <AuthLink
+            href="/counselor/assessments/deleted"
+            className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/[0.08]"
+          >
+            삭제된 검사코드
+          </AuthLink>
           <AuthLink
             href="/counselor/assessments/new"
             className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
@@ -372,39 +378,29 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const orgLabel = getAssessmentOrgLabel(a);
 
                   return (
-                    <tr key={a.id} className="group hover:bg-white/[0.04]">
+                    <tr
+                      key={a.id}
+                      className="group cursor-pointer hover:bg-white/[0.06]"
+                      onClick={() => goToProgress(a.id)}
+                    >
                       <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => goToProgress(a.id)}
-                          className={`${cellLinkClass} text-slate-200`}
-                        >
-                          {formatDate(a.createdAt)}
-                        </button>
+                        <span className={cellLinkClass}>{formatDate(a.createdAt)}</span>
                       </td>
                       <td className="max-w-[10rem] truncate px-2 py-2 text-left text-sm">
-                        <button
-                          type="button"
-                          onClick={() => goToProgress(a.id)}
-                          className={`${cellLinkClass} font-mono font-semibold text-sky-300 tracking-wide`}
-                        >
+                        <span className={`${cellLinkClass} font-mono font-semibold text-sky-300 tracking-wide`}>
                           {formatAccessCodeDisplay(a.accessCode)}
-                        </button>
+                        </span>
                       </td>
                       <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => goToProgress(a.id)}
-                          className={`${cellLinkClass} text-slate-200 truncate max-w-full block`}
+                        <span
+                          className={`${cellLinkClass} truncate max-w-full block`}
                           title={orgLabel}
                         >
                           {orgLabel}
-                        </button>
+                        </span>
                       </td>
                       <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => goToProgress(a.id)}
+                        <span
                           className={`${cellLinkClass} truncate max-w-full block`}
                           title={a.title || '-'}
                         >
@@ -414,12 +410,17 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                               만료
                             </span>
                           ) : null}
-                        </button>
+                        </span>
                       </td>
-                      <td className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}>
+                      <td
+                        className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                      >
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500">
+                      <td
+                        className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         (
                         <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                         /

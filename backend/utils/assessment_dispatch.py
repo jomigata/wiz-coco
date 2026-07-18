@@ -724,9 +724,8 @@ def list_archived_portals(
     for doc in refs:
         pdata = doc.to_dict() or {}
         from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
-        if assessment_id and from_aid and from_aid != assessment_id:
-            assigned = list(pdata.get("assignedAssessmentIds") or [])
-            if assessment_id not in assigned:
+        if assessment_id:
+            if from_aid != assessment_id:
                 continue
 
         portal_rows.append((doc.id, pdata, from_aid))

@@ -2,15 +2,21 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { readClientPortalSession } from '@/lib/clientPortalSession';
+import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 
 /** 검사코드 직접 입력 플로우 제거 — 나의코드 로그인(검사시작)으로 이동 */
 export default function JoinRedirectPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const portal = readClientPortalSession();
-    router.replace(portal?.portalToken ? '/portal/' : '/portal/login/');
+    let cancelled = false;
+    void resetAllSessionsBeforePortalLinkEntry().then(() => {
+      if (cancelled) return;
+      router.replace('/portal/login/');
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return (

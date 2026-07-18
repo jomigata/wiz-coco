@@ -1,6 +1,8 @@
 export type HierarchyCrumb = {
   label: string;
   href?: string;
+  /** true이면 router.back()으로 이전 화면 이동 */
+  navigateBack?: boolean;
 };
 
 export type HierarchyNav = {
@@ -19,6 +21,7 @@ export function resolveCounselorHierarchy(
   const assessmentId = (searchParams.get('assessmentId') || '').trim();
 
   if (pathname.startsWith('/counselor/assessments/deleted-recipients')) {
+    const isFullList = !assessmentId;
     return {
       depth: 2,
       crumbs: [
@@ -26,8 +29,9 @@ export function resolveCounselorHierarchy(
         {
           label: '발송·검사 현황',
           href: assessmentId ? assessmentProgressHref(assessmentId) : undefined,
+          navigateBack: isFullList ? true : undefined,
         },
-        { label: '삭제된 검사자' },
+        { label: isFullList ? '전체 삭제된 검사자' : '삭제된 검사자' },
       ],
     };
   }
