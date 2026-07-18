@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation, hasAuthenticatedTabSession, beginAuthLoginAttempt, endAuthLoginAttempt, isAuthLoginInProgress } from '@/utils/authSessionLifecycle';
+import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 
 const LoadingLogin = () => (
@@ -70,6 +71,7 @@ const LoginContent = () => {
 
       if (result.success && result.user) {
         beginAuthLoginAttempt();
+        clearClientPortalSessionWithBroadcast();
         primeFirebaseAuthSessionCache(result.user);
         markInternalNavigation();
         router.replace(redirectUrl);

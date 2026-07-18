@@ -106,11 +106,10 @@ function DeletedRecipientsPageContent() {
   }
 
   const showAssessmentColumns = !filterAssessmentId;
-  const pageTitle = filterAssessmentId ? '삭제된 검사자' : '전체 삭제된 검사자';
 
   return (
     <CounselorPageSection
-      title={pageTitle}
+      showHierarchyBreadcrumb
       description={
         <>
           발송·검사 현황에서 삭제한 내담자입니다. 복구하면 발송·검사 현황에 다시 표시됩니다.

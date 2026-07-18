@@ -46,6 +46,36 @@ export function clearClientPortalSession(): void {
   sessionStorage.removeItem(CLIENT_PORTAL_STORAGE_KEY);
 }
 
+const PORTAL_CLEAR_CHANNEL = 'wizcoco:portal-clear';
+
+function broadcastPortalClear(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const channel = new BroadcastChannel(PORTAL_CLEAR_CHANNEL);
+    channel.postMessage({ type: 'clear' });
+    channel.close();
+  } catch {
+    // ignore
+  }
+}
+
+/** 상담사(Firebase) 로그인 시 내담자 포털 세션 정리 — 다른 탭 포함 */
+export function clearClientPortalSessionWithBroadcast(): void {
+  clearClientPortalSession();
+  broadcastPortalClear();
+}
+
+export function subscribePortalClearEvents(onClear: () => void): () => void {
+  if (typeof window === 'undefined') return () => undefined;
+  try {
+    const channel = new BroadcastChannel(PORTAL_CLEAR_CHANNEL);
+    channel.onmessage = () => onClear();
+    return () => channel.close();
+  } catch {
+    return () => undefined;
+  }
+}
+
 export function getClientPortalAuthHeader(): Record<string, string> {
   const session = readClientPortalSession();
   if (!session?.portalToken) return {};

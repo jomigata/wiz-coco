@@ -35,6 +35,7 @@ import {
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 import { primeCounselorIdToken, clearCounselorIdTokenCache } from '@/lib/counselorAuth';
+import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
 const AUTH_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
@@ -229,6 +230,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       }
 
       markAuthenticatedTabSession();
+      clearClientPortalSessionWithBroadcast();
       authExpiredOnStartupRef.current = false;
       const baseUser = authUserFromSdkUser(firebaseUser);
 

@@ -184,20 +184,16 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
 
   return (
     <CounselorPageSection
+      showHierarchyBreadcrumb
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
-      title={
-        <>
-          검사코드 목록
-          <span className="ml-1.5 font-normal text-sky-200/60">({filtered.length})</span>
-        </>
-      }
       description={
         <>
           전체 <span className="font-semibold text-white">{assessments.length}</span>개 · 응시자{' '}
           <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
           <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
+          <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
         </>
       }
       toolbar={
@@ -378,20 +374,25 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const orgLabel = getAssessmentOrgLabel(a);
 
                   return (
-                    <tr
-                      key={a.id}
-                      className="group cursor-pointer hover:bg-white/[0.06]"
-                      onClick={() => goToProgress(a.id)}
-                    >
-                      <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
+                    <tr key={a.id} className="group">
+                      <td
+                        className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 cursor-pointer hover:bg-white/[0.06]"
+                        onClick={() => goToProgress(a.id)}
+                      >
                         <span className={cellLinkClass}>{formatDate(a.createdAt)}</span>
                       </td>
-                      <td className="max-w-[10rem] truncate px-2 py-2 text-left text-sm">
+                      <td
+                        className="max-w-[10rem] truncate px-2 py-2 text-left text-sm cursor-pointer hover:bg-white/[0.06]"
+                        onClick={() => goToProgress(a.id)}
+                      >
                         <span className={`${cellLinkClass} font-mono font-semibold text-sky-300 tracking-wide`}>
                           {formatAccessCodeDisplay(a.accessCode)}
                         </span>
                       </td>
-                      <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200">
+                      <td
+                        className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer hover:bg-white/[0.06]"
+                        onClick={() => goToProgress(a.id)}
+                      >
                         <span
                           className={`${cellLinkClass} truncate max-w-full block`}
                           title={orgLabel}
@@ -399,7 +400,10 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                           {orgLabel}
                         </span>
                       </td>
-                      <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200">
+                      <td
+                        className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer hover:bg-white/[0.06]"
+                        onClick={() => goToProgress(a.id)}
+                      >
                         <span
                           className={`${cellLinkClass} truncate max-w-full block`}
                           title={a.title || '-'}
@@ -413,14 +417,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         </span>
                       </td>
                       <td
-                        className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                        className={`whitespace-nowrap px-2 py-2 text-left text-sm cursor-pointer hover:bg-white/[0.06] ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                        onClick={() => goToProgress(a.id)}
                       >
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td
-                        className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500 cursor-default">
                         (
                         <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                         /
@@ -429,11 +431,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
                         )
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <td className="whitespace-nowrap px-2 py-2 text-center cursor-default">
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           <AuthLink
                             href={progressHref(a.id)}
-                            className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
+                            className="cursor-pointer rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
                           >
                             진행현황
                           </AuthLink>

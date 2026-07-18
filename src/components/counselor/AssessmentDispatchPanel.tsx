@@ -30,6 +30,7 @@ import {
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
+import { mergeRecipients, parseRecipientFile, type RecipientRow } from '@/lib/recipientImport';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   return formatNotifyDate(iso);
@@ -264,6 +265,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [addSendNow, setAddSendNow] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
+  const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
+  const [addFileLabel, setAddFileLabel] = useState('');
 
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -384,15 +387,23 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const handleAddRecipient = async () => {
     if (!assessmentId || !displayData) return;
-    const displayName = addName.trim();
-    const email = addEmail.trim().toLowerCase();
-    const phone = normalizeRecipientPhone(addPhone);
-    if (!displayName) {
-      setAddError('이름을 입력해 주세요.');
+    const manualRows: RecipientRow[] = addName.trim()
+      ? [
+          {
+            displayName: addName.trim(),
+            email: addEmail.trim().toLowerCase(),
+            phone: normalizeRecipientPhone(addPhone),
+          },
+        ]
+      : [];
+    const rows = mergeRecipients(manualRows, addFileRows);
+    if (rows.length === 0) {
+      setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
       return;
     }
-    if (!email && !phone) {
-      setAddError('이메일 또는 휴대폰 중 하나는 필수입니다.');
+    const invalid = rows.find((r) => !r.email.trim() && !r.phone.trim());
+    if (invalid) {
+      setAddError(`「${invalid.displayName}」님의 이메일 또는 휴대폰 번호가 필요합니다.`);
       return;
     }
     const cohortName = (displayData.cohortName || displayData.title || '내담자').trim();
@@ -404,26 +415,42 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         cohortName,
         title: displayData.title || cohortName,
         testList: displayData.testList,
-        rows: [
-          {
-            displayName,
-            email: email || undefined,
-            phone: phone || undefined,
-            queueNotify: addSendNow,
-          },
-        ],
+        rows: rows.map((r) => ({
+          displayName: r.displayName.trim(),
+          email: r.email.trim() || undefined,
+          phone: normalizeRecipientPhone(r.phone) || undefined,
+          queueNotify: addSendNow,
+        })),
         queueNotify: addSendNow,
       });
       setShowAddRecipient(false);
       setAddName('');
       setAddEmail('');
       setAddPhone('');
+      setAddFileRows([]);
+      setAddFileLabel('');
       setAddSendNow(true);
       await load({ silent: true });
     } catch (err) {
       setAddError(err instanceof Error ? err.message : '내담자 추가에 실패했습니다.');
     } finally {
       setAddLoading(false);
+    }
+  };
+
+  const handleAddRecipientFile = async (file: File | null) => {
+    if (!file) return;
+    setAddError('');
+    try {
+      const parsed = await parseRecipientFile(file);
+      if (!parsed.length) {
+        setAddError('파일에서 유효한 내담자 행을 찾지 못했습니다.');
+        return;
+      }
+      setAddFileRows(parsed);
+      setAddFileLabel(file.name);
+    } catch (err) {
+      setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
     }
   };
 
@@ -1218,13 +1245,35 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <div className="px-4 py-3 border-b border-slate-600">
               <h3 className="text-lg font-semibold text-white">내담자 추가</h3>
               <p className="text-sm text-slate-400 mt-1">
-                이 검사코드에 새 내담자를 등록합니다. 나의코드·비밀번호가 자동 발급됩니다.
+                개별 입력 또는 파일(CSV·Excel)로 내담자를 등록할 수 있습니다. 나의코드·비밀번호가 자동 발급됩니다.
               </p>
             </div>
             <div className="p-4 space-y-4">
+              <div className="rounded-lg border border-slate-600 bg-slate-900/40 p-3 space-y-2">
+                <p className="text-sm font-medium text-slate-200">파일 첨부</p>
+                <input
+                  type="file"
+                  accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                  disabled={addLoading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    void handleAddRecipientFile(file);
+                    e.target.value = '';
+                  }}
+                  className="block w-full text-sm text-slate-300 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-white"
+                />
+                {addFileLabel ? (
+                  <p className="text-xs text-emerald-300">
+                    {addFileLabel} · {addFileRows.length}명
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-500">이름, 이메일, 휴대폰 열 순서 (첫 줄 헤더 가능)</p>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">또는 개별 입력</p>
               <div>
                 <label htmlFor="add-recipient-name" className={FORM_LABEL}>
-                  이름 <span className="text-red-400">*</span>
+                  이름
                 </label>
                 <input
                   id="add-recipient-name"

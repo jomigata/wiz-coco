@@ -38,10 +38,10 @@ function ProgressPageContent() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <CounselorPageSection
+        showHierarchyBreadcrumb
         className="flex min-h-0 flex-1"
         bodyClassName="!p-0"
         noBodyPadding
-        title="발송 및 검사 현황"
       >
         <div className="p-2.5 sm:p-3">
           <AssessmentDispatchPanel assessmentId={assessmentId} />

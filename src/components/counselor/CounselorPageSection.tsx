@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
+import CounselorHierarchyBreadcrumb from '@/components/counselor/CounselorHierarchyBreadcrumb';
 
 type CounselorPageSectionProps = {
   title?: React.ReactNode;
@@ -11,6 +12,7 @@ type CounselorPageSectionProps = {
   className?: string;
   bodyClassName?: string;
   noBodyPadding?: boolean;
+  showHierarchyBreadcrumb?: boolean;
 };
 
 export default function CounselorPageSection({
@@ -21,11 +23,16 @@ export default function CounselorPageSection({
   className = '',
   bodyClassName = '',
   noBodyPadding = false,
+  showHierarchyBreadcrumb = false,
 }: CounselorPageSectionProps) {
   const hasHeader = Boolean(title || toolbar);
 
   return (
-    <section
+    <>
+      {showHierarchyBreadcrumb ? (
+        <CounselorHierarchyBreadcrumb className="mb-2 shrink-0" />
+      ) : null}
+      <section
       className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0 ${className}`}
     >
       {hasHeader ? (
@@ -53,6 +60,7 @@ export default function CounselorPageSection({
         {children}
       </div>
     </section>
+    </>
   );
 }
 

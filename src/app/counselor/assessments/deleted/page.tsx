@@ -2,11 +2,16 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
+import {
+  fetchArchivedDispatchRecipients,
+  type ArchivedDispatchRecipient,
+} from '@/lib/clientPortalApi';
 import {
   listArchivedAssessments,
   permanentlyDeleteArchivedAssessments,
@@ -135,6 +140,11 @@ export default function DeletedAssessmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [recipientCache, setRecipientCache] = useState<Record<string, ArchivedDispatchRecipient[]>>({});
+  const [recipientLoadingId, setRecipientLoadingId] = useState<string | null>(null);
+  const [recipientError, setRecipientError] = useState('');
+  const emptyRecipientSelection = useMemo(() => new Set<string>(), []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -202,6 +212,28 @@ export default function DeletedAssessmentsPage() {
     });
   };
 
+  const toggleExpand = useCallback(
+    async (assessmentId: string) => {
+      if (expandedId === assessmentId) {
+        setExpandedId(null);
+        return;
+      }
+      setExpandedId(assessmentId);
+      setRecipientError('');
+      if (recipientCache[assessmentId]) return;
+      setRecipientLoadingId(assessmentId);
+      try {
+        const result = await fetchArchivedDispatchRecipients(assessmentId);
+        setRecipientCache((prev) => ({ ...prev, [assessmentId]: result.items || [] }));
+      } catch (err) {
+        setRecipientError(err instanceof Error ? err.message : '삭제된 검사자 목록을 불러오지 못했습니다.');
+      } finally {
+        setRecipientLoadingId(null);
+      }
+    },
+    [expandedId, recipientCache],
+  );
+
   const handleRestore = async () => {
     if (selected.size === 0) return;
     setRestoring(true);
@@ -219,11 +251,7 @@ export default function DeletedAssessmentsPage() {
 
   const handlePermanentDelete = async () => {
     if (selected.size === 0) return;
-    if (
-      !window.confirm(
-        `선택 ${selected.size}건을 영구 삭제하시겠습니까?\n관리자 화면으로 이동하며 상담사 목록에서는 더 이상 보이지 않습니다.`,
-      )
-    ) {
+    if (!window.confirm(`선택 ${selected.size}건을 영구 삭제하시겠습니까?`)) {
       return;
     }
     setDeleting(true);
@@ -246,16 +274,11 @@ export default function DeletedAssessmentsPage() {
 
   return (
     <CounselorPageSection
+      showHierarchyBreadcrumb
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
-      title={
-        <>
-          삭제된 검사코드
-          <span className="ml-1.5 font-normal text-sky-200/60">({filtered.length})</span>
-        </>
-      }
-      description="목록에서 삭제한 검사코드입니다. 복구하면 검사코드 목록에 다시 표시됩니다. 영구 삭제 시 관리자만 조회할 수 있습니다."
+      description="목록에서 삭제한 검사코드입니다. 복구하면 검사코드 목록에 다시 표시됩니다."
       toolbar={
         <>
           <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
@@ -318,6 +341,9 @@ export default function DeletedAssessmentsPage() {
                     <th scope="col" className="w-10 px-2 py-2 text-left text-xs font-medium text-slate-400">
                       선택
                     </th>
+                    <th scope="col" className="w-12 px-2 py-2 text-left text-xs font-medium text-slate-400">
+                      검사현황
+                    </th>
                     <SortableColumnHeader
                       label="생성 일시"
                       sortKey="createdAt"
@@ -377,50 +403,106 @@ export default function DeletedAssessmentsPage() {
                     const { dispatchSent, testComplete, dispatchTotal } = resultStatusCounts(row);
                     const expired = isExpired(row.usageEndDate);
                     const orgLabel = getAssessmentOrgLabel(row);
+                    const isOpen = expandedId === row.id;
+                    const expandedRecipients = recipientCache[row.id] || [];
 
                     return (
-                      <tr key={row.id} className="group hover:bg-white/[0.04]">
-                        <td className="px-2 py-2">
-                          <input
-                            type="checkbox"
-                            checked={selected.has(row.id)}
-                            onChange={() => toggleOne(row.id)}
-                            className="rounded accent-blue-500"
-                          />
-                        </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200">
-                          {formatDate(row.createdAt)}
-                        </td>
-                        <td className="max-w-[10rem] truncate px-2 py-2 font-mono font-semibold tracking-wide text-sky-300">
-                          {formatAccessCodeDisplay(row.accessCode)}
-                        </td>
-                        <td className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={orgLabel}>
-                          {orgLabel}
-                        </td>
-                        <td className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200" title={row.title || '-'}>
-                          <span className="font-medium text-white">{row.title || '-'}</span>
-                          {expired ? (
-                            <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
-                              만료
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className={`whitespace-nowrap px-2 py-2 text-left text-sm ${expired ? 'text-red-400' : 'text-slate-400'}`}>
-                          {formatUsageEndDate(row.usageEndDate)}
-                        </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500">
-                          (
-                          <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
-                          /
-                          <span className="px-2 font-medium tabular-nums text-emerald-400">{dispatchSent}</span>
-                          /
-                          <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
-                          )
-                        </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-left text-xs tabular-nums text-slate-400">
-                          {formatDate(row.archivedAt)}
-                        </td>
-                      </tr>
+                      <React.Fragment key={row.id}>
+                        <tr className={isOpen ? 'bg-white/[0.03]' : undefined}>
+                          <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selected.has(row.id)}
+                              onChange={() => toggleOne(row.id)}
+                              className="rounded accent-blue-500"
+                            />
+                          </td>
+                          <td
+                            className="cursor-pointer px-2 py-2 text-slate-400 hover:bg-white/[0.04]"
+                            onClick={() => void toggleExpand(row.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                void toggleExpand(row.id);
+                              }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                            aria-expanded={isOpen}
+                          >
+                            {isOpen ? '▼' : '▶'}
+                          </td>
+                          <td
+                            className="cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            {formatDate(row.createdAt)}
+                          </td>
+                          <td
+                            className="max-w-[10rem] cursor-pointer truncate px-2 py-2 font-mono font-semibold tracking-wide text-sky-300 hover:bg-white/[0.04]"
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            {formatAccessCodeDisplay(row.accessCode)}
+                          </td>
+                          <td
+                            className="max-w-[12rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
+                            title={orgLabel}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            {orgLabel}
+                          </td>
+                          <td
+                            className="max-w-[14rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
+                            title={row.title || '-'}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className="font-medium text-white">{row.title || '-'}</span>
+                            {expired ? (
+                              <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
+                                만료
+                              </span>
+                            ) : null}
+                          </td>
+                          <td
+                            className={`cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm hover:bg-white/[0.04] ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            {formatUsageEndDate(row.usageEndDate)}
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500 cursor-default">
+                            (
+                            <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
+                            /
+                            <span className="px-2 font-medium tabular-nums text-emerald-400">{dispatchSent}</span>
+                            /
+                            <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
+                            )
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2 text-left text-xs tabular-nums text-slate-400 cursor-default">
+                            {formatDate(row.archivedAt)}
+                          </td>
+                        </tr>
+                        {isOpen ? (
+                          <tr>
+                            <td colSpan={9} className="border-t border-white/10 bg-slate-950/40 px-3 py-4">
+                              {recipientLoadingId === row.id ? (
+                                <p className="text-sm text-slate-400">삭제된 검사자 목록을 불러오는 중…</p>
+                              ) : recipientError && !expandedRecipients.length ? (
+                                <p className="text-sm text-red-400">{recipientError}</p>
+                              ) : expandedRecipients.length === 0 ? (
+                                <p className="text-sm text-slate-400">삭제된 검사자가 없습니다.</p>
+                              ) : (
+                                <ArchivedRecipientsTable
+                                  items={expandedRecipients}
+                                  selected={emptyRecipientSelection}
+                                  onToggleOne={() => undefined}
+                                  showAssessmentColumns={false}
+                                />
+                              )}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
