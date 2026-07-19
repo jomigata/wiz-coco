@@ -5,6 +5,7 @@ import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessment
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
 import type { DispatchTestResult } from '@/lib/clientPortalApi';
+import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import {
   compareArchivedRecipients,
   dispatchStatusDisplay,
@@ -256,11 +257,8 @@ export default function ArchivedRecipientsTable({
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
                       {formatAccessCodeDisplay(row.myCode)}
                     </td>
-                    <td
-                      className={`whitespace-nowrap px-3 py-2 align-top ${notify.className}`}
-                      title={notify.title}
-                    >
-                      {notify.text}
+                    <td className="whitespace-nowrap px-3 py-2 align-top" title={notify.title}>
+                      <DispatchStatusText value={notify} />
                     </td>
                     <td className={`whitespace-nowrap px-3 py-2 align-top ${summary.className}`}>
                       {summary.text}

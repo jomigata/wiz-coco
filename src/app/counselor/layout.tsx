@@ -9,7 +9,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
 import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
-import CounselorPageHeader from '@/components/counselor/CounselorPageHeader';
+import CounselorPageTitle from '@/components/counselor/CounselorPageTitle';
 
 export default function CounselorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -119,6 +119,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/data-sharing')) return '데이터 공유 관리';
     if (path.startsWith('/counselor/bulk-invite')) return '일괄 초대';
     if (path.startsWith('/counselor/test-management')) return '신입생 검사 관리';
+    if (path.startsWith('/counselor/progress')) return '진행 현황';
     const titleMap: { [key: string]: string } = {
       '/counselor': '상담사 대시보드',
       '/counselor/clients': '내담자 목록',
@@ -163,8 +164,6 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
       
 <div className="flex min-h-0 flex-1 flex-col pt-16">
-        {!isHubPage && <CounselorPageHeader />}
-
         <main className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${
           isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'
         }`}>
@@ -176,6 +175,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
           <div className={`relative z-10 mx-auto flex min-h-0 w-full flex-1 flex-col ${
             isHubPage ? 'max-w-3xl px-4 py-5 sm:px-6 sm:py-6' : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
           }`}>
+            <CounselorPageTitle>{pageTitle}</CounselorPageTitle>
             <CounselorPageBody>{children}</CounselorPageBody>
           </div>
         </main>

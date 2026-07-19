@@ -9,6 +9,7 @@ import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
+import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import {
   dispatchStatusDisplay,
   formatNotifyDate,
@@ -841,11 +842,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
                       </td>
-                      <td
-                        className={`px-3 py-2 align-top whitespace-nowrap ${notify.className}`}
-                        title={notify.title}
-                      >
-                        {notify.text}
+                      <td className="px-3 py-2 align-top whitespace-nowrap" title={notify.title}>
+                        <DispatchStatusText value={notify} />
                       </td>
                       <td className={`px-3 py-2 align-top whitespace-nowrap ${summary.className}`}>{summary.text}</td>
                     </tr>

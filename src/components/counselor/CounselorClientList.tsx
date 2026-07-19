@@ -7,6 +7,7 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
+import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
@@ -365,8 +366,8 @@ export default function CounselorClientList() {
                       ) : null}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs ${notify.className}`} title={notify.title}>
-                        {notify.text}
+                      <span className="text-xs" title={notify.title}>
+                        <DispatchStatusText value={notify} />
                       </span>
                       {item.notifyAt ? (
                         <div className="text-[11px] text-slate-500">{formatDateTime(item.notifyAt)}</div>

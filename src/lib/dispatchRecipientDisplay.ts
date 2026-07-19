@@ -102,35 +102,55 @@ function phoneChannelOutcome(
   return 'fail';
 }
 
+export type ChannelDetailPart = { text: string; failed: boolean };
+
+export type DispatchStatusView = {
+  mainText: string;
+  detailParts: ChannelDetailPart[];
+  /** 전체 한 줄 (정렬·접근성용) */
+  text: string;
+  className: string;
+  title?: string;
+};
+
+function composeStatusText(mainText: string, detailParts: ChannelDetailPart[]): string {
+  if (!detailParts.length) return mainText;
+  return `${mainText} (${detailParts.map((p) => p.text).join('·')})`;
+}
+
+function pushChannelPart(parts: ChannelDetailPart[], text: string, failed: boolean): void {
+  parts.push({ text, failed });
+}
+
 /** 이메일·휴대폰 채널별 간략 상태 (예: 이메일✓·문자✗) */
-function buildChannelDetail(r: DispatchDisplayRecipient): string {
+function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
   const hasEmail = Boolean(r.email?.trim());
   const hasPhone = Boolean(r.phone?.trim());
-  if (!hasEmail && !hasPhone) return '';
+  if (!hasEmail && !hasPhone) return [];
 
   const status = r.notifyStatus || 'not_sent';
   const via = parseSentViaFlags(r.notifySentVia);
   const failed = parseNotifyErrors(r.notifyError);
-  const parts: string[] = [];
+  const parts: ChannelDetailPart[] = [];
 
   if (hasEmail) {
     const outcome = emailChannelOutcome(status, via, failed);
-    if (outcome === 'ok') parts.push('이메일✓');
-    else if (outcome === 'fail') parts.push('이메일✗');
-    else if (outcome === 'pending') parts.push('이메일…');
-    else parts.push('이메일·');
+    if (outcome === 'ok') pushChannelPart(parts, '이메일✓', false);
+    else if (outcome === 'fail') pushChannelPart(parts, '이메일✗', true);
+    else if (outcome === 'pending') pushChannelPart(parts, '이메일…', false);
+    else pushChannelPart(parts, '이메일·', false);
   }
 
   if (hasPhone) {
     const phoneLabel = phoneChannelLabel(via);
     const outcome = phoneChannelOutcome(status, via, failed);
-    if (outcome === 'ok') parts.push(`${phoneLabel}✓`);
-    else if (outcome === 'fail') parts.push(`${phoneLabel}✗`);
-    else if (outcome === 'pending') parts.push(`${phoneLabel}…`);
-    else parts.push(`${phoneLabel}·`);
+    if (outcome === 'ok') pushChannelPart(parts, `${phoneLabel}✓`, false);
+    else if (outcome === 'fail') pushChannelPart(parts, `${phoneLabel}✗`, true);
+    else if (outcome === 'pending') pushChannelPart(parts, `${phoneLabel}…`, false);
+    else pushChannelPart(parts, `${phoneLabel}·`, false);
   }
 
-  return parts.length ? ` (${parts.join('·')})` : '';
+  return parts;
 }
 
 function notifyLabel(status: string): { text: string; className: string } {
@@ -152,104 +172,132 @@ function notifyLabel(status: string): { text: string; className: string } {
   }
 }
 
-export function dispatchStatusDisplay(
-  r: DispatchDisplayRecipient,
-): { text: string; className: string; title?: string } {
+function statusView(
+  mainText: string,
+  detailParts: ChannelDetailPart[],
+  className: string,
+  title?: string,
+): DispatchStatusView {
+  return {
+    mainText,
+    detailParts,
+    text: composeStatusText(mainText, detailParts),
+    className,
+    title,
+  };
+}
+
+export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStatusView {
   const hasEmail = Boolean(r.email?.trim());
   const hasPhone = Boolean(r.phone?.trim());
 
   if (!hasEmail && !hasPhone) {
-    return {
-      text: '연락처 없음',
-      className: 'text-red-400',
-      title: '이메일·휴대폰 정보가 없어 발송할 수 없습니다.',
-    };
+    return statusView(
+      '연락처 없음',
+      [],
+      'text-red-400',
+      '이메일·휴대폰 정보가 없어 발송할 수 없습니다.',
+    );
   }
 
   const status = r.notifyStatus || 'not_sent';
 
   if (status === 'partial') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const channelDetail = buildChannelDetail(r);
+    const detailParts = buildChannelDetailParts(r);
     const mainLabel = kindPrefix ? `${kindPrefix}성공` : '발송 성공';
-    return {
-      text: `${mainLabel}${channelDetail}`.trim(),
-      className: 'text-emerald-300',
-      title: notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.',
-    };
+    return statusView(
+      mainLabel,
+      detailParts,
+      'text-emerald-300',
+      notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.',
+    );
   }
 
   if (status === 'failed') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const channelDetail = buildChannelDetail(r);
-    return {
-      text: `${kindPrefix}실패${channelDetail}`.trim(),
-      className: 'text-red-400',
-      title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
-    };
+    const detailParts = buildChannelDetailParts(r);
+    return statusView(
+      `${kindPrefix}실패`.trim(),
+      detailParts,
+      'text-red-400',
+      notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
+    );
   }
 
   if (status === 'skipped') {
     if (!hasEmail && hasPhone) {
-      return {
-        text: '발송 생략',
-        className: 'text-amber-300',
-        title: notifyErrorHint(r.notifyError) || '이메일 없음 · SMS만 등록됨',
-      };
+      return statusView(
+        '발송 생략',
+        [],
+        'text-amber-300',
+        notifyErrorHint(r.notifyError) || '이메일 없음 · SMS만 등록됨',
+      );
     }
-    return {
-      text: '발송 생략',
-      className: 'text-slate-400',
-      title: notifyErrorHint(r.notifyError),
-    };
+    return statusView('발송 생략', [], 'text-slate-400', notifyErrorHint(r.notifyError));
   }
 
   if (status === 'sent') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const channelDetail = buildChannelDetail(r);
+    const detailParts = buildChannelDetailParts(r);
     if (!hasEmail && hasPhone) {
-      return {
-        text: `${kindPrefix}완료${channelDetail || '(SMS)'}`.trim(),
-        className: 'text-emerald-300',
-        title: '이메일 없음 · SMS로 발송됨',
-      };
+      const parts = detailParts.length ? detailParts : [{ text: 'SMS', failed: false }];
+      return statusView(
+        `${kindPrefix}완료`.trim(),
+        parts,
+        'text-emerald-300',
+        '이메일 없음 · SMS로 발송됨',
+      );
     }
     if (hasEmail && !hasPhone) {
-      return {
-        text: `${kindPrefix}완료${channelDetail || '(이메일)'}`.trim(),
-        className: 'text-emerald-300',
-        title: '이메일로 발송됨',
-      };
+      const parts = detailParts.length ? detailParts : [{ text: '이메일', failed: false }];
+      return statusView(
+        `${kindPrefix}완료`.trim(),
+        parts,
+        'text-emerald-300',
+        '이메일로 발송됨',
+      );
     }
     const viaLabel = formatSentViaLabel(r.notifySentVia);
-    return {
-      text: channelDetail
-        ? `${kindPrefix}완료${channelDetail}`.trim()
-        : viaLabel
-          ? `${kindPrefix}완료 (${viaLabel})`.trim()
-          : `${kindPrefix}완료`.trim(),
-      className: 'text-emerald-300',
-      title: kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
-    };
+    if (detailParts.length) {
+      return statusView(
+        `${kindPrefix}완료`.trim(),
+        detailParts,
+        'text-emerald-300',
+        kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
+      );
+    }
+    if (viaLabel) {
+      return statusView(
+        `${kindPrefix}완료`.trim(),
+        [{ text: viaLabel, failed: false }],
+        'text-emerald-300',
+        kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
+      );
+    }
+    return statusView(
+      `${kindPrefix}완료`.trim(),
+      [],
+      'text-emerald-300',
+      kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
+    );
   }
 
   if (status === 'pending') {
-    return {
-      text: `${notifyKindPrefix(r.notifyKind)}예약`.trim(),
-      className: 'text-amber-300',
-      title: '발송 예약됨',
-    };
+    return statusView(
+      `${notifyKindPrefix(r.notifyKind)}예약`.trim(),
+      [],
+      'text-amber-300',
+      '발송 예약됨',
+    );
   }
 
   if (status === 'not_sent' && !hasEmail) {
-    return {
-      text: '미발송',
-      className: 'text-slate-500',
-      title: '이메일 없음 · 휴대폰만 등록됨',
-    };
+    return statusView('미발송', [], 'text-slate-500', '이메일 없음 · 휴대폰만 등록됨');
   }
 
-  return notifyLabel(status);
+  const fallback = notifyLabel(status);
+  return statusView(fallback.text, [], fallback.className);
 }
 
 export function testSummary(r: DispatchDisplayRecipient): { text: string; className: string } {
