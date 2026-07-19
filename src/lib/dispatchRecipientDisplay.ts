@@ -65,6 +65,43 @@ function phoneChannelLabel(flags: ReturnType<typeof parseSentViaFlags>): string 
   return '휴대폰';
 }
 
+function emailChannelOutcome(
+  status: string,
+  via: ReturnType<typeof parseSentViaFlags>,
+  failed: ReturnType<typeof parseNotifyErrors>,
+): 'ok' | 'fail' | 'pending' | 'idle' {
+  if (failed.emailFailed) return 'fail';
+  if (status === 'sent') return via.emailOk ? 'ok' : 'ok';
+  if (status === 'partial') {
+    if (failed.phoneFailed && !failed.emailFailed) return 'ok';
+    if (via.emailOk) return 'ok';
+    return 'fail';
+  }
+  if (status === 'failed') return 'fail';
+  if (status === 'pending') return 'pending';
+  if (status === 'not_sent') return 'idle';
+  return 'fail';
+}
+
+function phoneChannelOutcome(
+  status: string,
+  via: ReturnType<typeof parseSentViaFlags>,
+  failed: ReturnType<typeof parseNotifyErrors>,
+): 'ok' | 'fail' | 'pending' | 'idle' {
+  const phoneOk = via.alimtalkOk || via.smsOk;
+  if (failed.phoneFailed) return 'fail';
+  if (status === 'sent') return phoneOk || !via.emailOk ? 'ok' : 'fail';
+  if (status === 'partial') {
+    if (failed.emailFailed && !failed.phoneFailed) return phoneOk ? 'ok' : 'fail';
+    if (phoneOk) return 'ok';
+    return 'fail';
+  }
+  if (status === 'failed') return 'fail';
+  if (status === 'pending') return 'pending';
+  if (status === 'not_sent') return 'idle';
+  return 'fail';
+}
+
 /** 이메일·휴대폰 채널별 간략 상태 (예: 이메일✓·문자✗) */
 function buildChannelDetail(r: DispatchDisplayRecipient): string {
   const hasEmail = Boolean(r.email?.trim());
@@ -77,23 +114,20 @@ function buildChannelDetail(r: DispatchDisplayRecipient): string {
   const parts: string[] = [];
 
   if (hasEmail) {
-    if (status === 'sent' && via.emailOk) parts.push('이메일✓');
-    else if (failed.emailFailed || (status === 'partial' && !via.emailOk)) parts.push('이메일✗');
-    else if (status === 'sent') parts.push('이메일✓');
-    else if (status === 'pending') parts.push('이메일…');
-    else if (status === 'not_sent') parts.push('이메일·');
-    else parts.push('이메일?');
+    const outcome = emailChannelOutcome(status, via, failed);
+    if (outcome === 'ok') parts.push('이메일✓');
+    else if (outcome === 'fail') parts.push('이메일✗');
+    else if (outcome === 'pending') parts.push('이메일…');
+    else parts.push('이메일·');
   }
 
   if (hasPhone) {
     const phoneLabel = phoneChannelLabel(via);
-    const phoneOk = via.alimtalkOk || via.smsOk;
-    if (status === 'sent' && phoneOk) parts.push(`${phoneLabel}✓`);
-    else if (failed.phoneFailed || (status === 'partial' && !phoneOk)) parts.push(`${phoneLabel}✗`);
-    else if (status === 'sent' && !hasEmail) parts.push(`${phoneLabel}✓`);
-    else if (status === 'pending') parts.push(`${phoneLabel}…`);
-    else if (status === 'not_sent' && !hasEmail) parts.push(`${phoneLabel}·`);
-    else if (status === 'partial' || status === 'failed') parts.push(`${phoneLabel}✗`);
+    const outcome = phoneChannelOutcome(status, via, failed);
+    if (outcome === 'ok') parts.push(`${phoneLabel}✓`);
+    else if (outcome === 'fail') parts.push(`${phoneLabel}✗`);
+    else if (outcome === 'pending') parts.push(`${phoneLabel}…`);
+    else parts.push(`${phoneLabel}·`);
   }
 
   return parts.length ? ` (${parts.join('·')})` : '';
@@ -134,14 +168,22 @@ export function dispatchStatusDisplay(
 
   const status = r.notifyStatus || 'not_sent';
 
-  if (status === 'failed' || status === 'partial') {
+  if (status === 'partial') {
+    const kindPrefix = notifyKindPrefix(r.notifyKind);
+    const channelDetail = buildChannelDetail(r);
+    const mainLabel = kindPrefix ? `${kindPrefix}성공` : '발송 성공';
+    return {
+      text: `${mainLabel}${channelDetail}`.trim(),
+      className: 'text-emerald-300',
+      title: notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.',
+    };
+  }
+
+  if (status === 'failed') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
     const channelDetail = buildChannelDetail(r);
     return {
-      text:
-        status === 'partial'
-          ? `${kindPrefix}일부 실패${channelDetail}`.trim()
-          : `${kindPrefix}실패${channelDetail}`.trim(),
+      text: `${kindPrefix}실패${channelDetail}`.trim(),
       className: 'text-red-400',
       title: notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
     };

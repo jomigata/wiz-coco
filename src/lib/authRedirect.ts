@@ -11,6 +11,14 @@ export function buildLoginRedirectUrl(returnPath?: string): string {
   return `/login?redirect=${encodeURIComponent(path)}`;
 }
 
+/** 전문가·상담사 로그인 성공 후 이동 경로 (검사시작 `/` 기본값 방지) */
+export function resolveCounselorPostLoginRedirect(raw: string | null | undefined): string {
+  const path = (raw || '').trim();
+  if (!path || path === '/') return '/counselor';
+  if (path.startsWith('/login') || path.startsWith('/register')) return '/counselor';
+  return path;
+}
+
 export function isLoginRequiredError(message: unknown): boolean {
   const text = String(message ?? '').trim();
   if (!text) return false;

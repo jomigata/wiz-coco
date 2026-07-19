@@ -1093,7 +1093,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     : credentialSendMode === 'initial'
                       ? '선택한 내담자에게 접속 정보를 발송합니다. 비밀번호가 새로 발급됩니다.'
                       : credentialSendMode === 'resend'
-                        ? '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급됩니다.'
+                        ? '아래 내용으로 접속 정보를 재발송합니다. 비밀번호가 새로 발급되며, 이전에 안내된 비밀번호는 더 이상 사용할 수 없습니다.'
                         : '선택 내담자 중 발송·재발송이 함께 포함됩니다. 비밀번호가 새로 발급됩니다.'}
               </p>
             </div>

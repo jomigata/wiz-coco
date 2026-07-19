@@ -4,7 +4,14 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
-import { markInternalNavigation, hasAuthenticatedTabSession, beginAuthLoginAttempt, endAuthLoginAttempt, isAuthLoginInProgress } from '@/utils/authSessionLifecycle';
+import {
+  hasAuthenticatedTabSession,
+  beginAuthLoginAttempt,
+  endAuthLoginAttempt,
+  isAuthLoginInProgress,
+  replaceWithAuthSession,
+} from '@/utils/authSessionLifecycle';
+import { resolveCounselorPostLoginRedirect } from '@/lib/authRedirect';
 import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 
@@ -26,7 +33,7 @@ const LoginContent = () => {
   const { user, loading } = useFirebaseAuth();
   const registered = searchParams.get('registered') === 'true';
   const emailVerification = searchParams.get('emailVerification');
-  const redirectUrl = searchParams.get('redirect') || '/';
+  const redirectUrl = resolveCounselorPostLoginRedirect(searchParams.get('redirect'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -44,8 +51,7 @@ const LoginContent = () => {
 
   useEffect(() => {
     if (!loading && user && (hasAuthenticatedTabSession() || isAuthLoginInProgress())) {
-      markInternalNavigation();
-      router.replace(redirectUrl);
+      replaceWithAuthSession(router, redirectUrl);
     }
   }, [user, loading, router, redirectUrl]);
 
@@ -65,21 +71,22 @@ const LoginContent = () => {
 
     setIsLoading(true);
     setLoginError('');
+    beginAuthLoginAttempt();
 
     try {
       const result = await AccountIntegrationManager.unifiedSignIn(email, password);
 
       if (result.success && result.user) {
-        beginAuthLoginAttempt();
         clearClientPortalSessionWithBroadcast();
         primeFirebaseAuthSessionCache(result.user);
-        markInternalNavigation();
-        router.replace(redirectUrl);
+        replaceWithAuthSession(router, redirectUrl);
         window.setTimeout(() => endAuthLoginAttempt(), 3000);
       } else {
+        endAuthLoginAttempt();
         setLoginError(result.error || '로그인 처리 중 오류가 발생했습니다.');
       }
     } catch {
+      endAuthLoginAttempt();
       setLoginError('로그인 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);

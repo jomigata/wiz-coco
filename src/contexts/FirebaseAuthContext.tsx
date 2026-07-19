@@ -417,18 +417,22 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     });
 
     unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
+        if (firebaseUser) {
         if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
           if (authExpiredOnStartupRef.current) {
-            void clearAllAuthStorage().then(() => {
-              setUser(null);
-              writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
-              clearCounselorIdTokenCache();
-              finishLoading();
-            });
-            return;
+            if (!tryRestoreAuthenticatedTabSession()) {
+              void clearAllAuthStorage().then(() => {
+                setUser(null);
+                writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+                clearCounselorIdTokenCache();
+                finishLoading();
+              });
+              return;
+            }
+            authExpiredOnStartupRef.current = false;
+          } else {
+            tryRestoreAuthenticatedTabSession();
           }
-          tryRestoreAuthenticatedTabSession();
         }
         void applyFirebaseUser(firebaseUser);
         return;

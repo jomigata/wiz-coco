@@ -124,6 +124,10 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
+  const rowHoverCellClass = (id: string) =>
+    hoveredRowId === id ? 'bg-white/[0.06]' : '';
 
   const goToProgress = (assessmentId: string) => {
     router.push(progressHref(assessmentId));
@@ -374,15 +378,20 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   const orgLabel = getAssessmentOrgLabel(a);
 
                   return (
-                    <tr key={a.id} className="group">
+                    <tr
+                      key={a.id}
+                      className="group"
+                      onMouseEnter={() => setHoveredRowId(a.id)}
+                      onMouseLeave={() => setHoveredRowId(null)}
+                    >
                       <td
-                        className="whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 cursor-pointer hover:bg-white/[0.06]"
+                        className={`whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <span className={cellLinkClass}>{formatDate(a.createdAt)}</span>
                       </td>
                       <td
-                        className="max-w-[10rem] truncate px-2 py-2 text-left text-sm cursor-pointer hover:bg-white/[0.06]"
+                        className={`max-w-[10rem] truncate px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <span className={`${cellLinkClass} font-mono font-semibold text-sky-300 tracking-wide`}>
@@ -390,7 +399,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         </span>
                       </td>
                       <td
-                        className="max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer hover:bg-white/[0.06]"
+                        className={`max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <span
@@ -401,7 +410,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         </span>
                       </td>
                       <td
-                        className="max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer hover:bg-white/[0.06]"
+                        className={`max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <span
@@ -417,7 +426,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         </span>
                       </td>
                       <td
-                        className={`whitespace-nowrap px-2 py-2 text-left text-sm cursor-pointer hover:bg-white/[0.06] ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                        className={`whitespace-nowrap px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(a.id)} ${expired ? 'text-red-400' : 'text-slate-400'}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         {formatUsageEndDate(a.usageEndDate)}
