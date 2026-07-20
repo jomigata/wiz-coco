@@ -606,27 +606,17 @@ export default function IndividualAssessmentCreateForm() {
           title="내담자 목록"
           className="flex min-h-0 flex-1 flex-col overflow-hidden xl:col-start-2 xl:row-start-1"
           toolbar={
-            <div className="flex items-center gap-2">
-              {recipients.length > 0 ? (
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${
-                    recipients.length > GROUP_RECIPIENT_MAX
-                      ? 'bg-red-500/15 text-red-300'
-                      : 'bg-emerald-500/15 text-emerald-300'
-                  }`}
-                >
-                  {recipients.length.toLocaleString('ko-KR')}명
-                </span>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => addRow()}
-                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
-                disabled={loading}
+            recipients.length > 0 ? (
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${
+                  recipients.length > GROUP_RECIPIENT_MAX
+                    ? 'bg-red-500/15 text-red-300'
+                    : 'bg-emerald-500/15 text-emerald-300'
+                }`}
               >
-                + 행 추가
-              </button>
-            </div>
+                {recipients.length.toLocaleString('ko-KR')}명
+              </span>
+            ) : null
           }
         >
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
@@ -690,6 +680,16 @@ export default function IndividualAssessmentCreateForm() {
                     </button>
                   </div>
               ))}
+            </div>
+            <div className="shrink-0">
+              <button
+                type="button"
+                onClick={() => addRow()}
+                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                disabled={loading}
+              >
+                + 행 추가
+              </button>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-white/10 pt-3">
               <input
