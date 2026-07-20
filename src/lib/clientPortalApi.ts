@@ -221,6 +221,8 @@ export type DispatchRecipient = {
   notifyAt?: string | null;
   notifySentVia?: string | null;
   notifyKind?: string | null;
+  notifyEmailChannel?: string | null;
+  notifyPhoneChannel?: string | null;
   testStatus: 'completed' | 'in_progress' | 'not_started';
   completedCount: number;
   requiredCount: number;

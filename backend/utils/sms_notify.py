@@ -21,12 +21,12 @@ def is_sms_configured() -> bool:
     return is_twilio_configured() or is_solapi_sms_configured()
 
 
-def _send_sms_body(*, to_phone: str, body: str) -> tuple[bool, str]:
+def _send_sms_body(*, to_phone: str, body: str) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
-        return False, "no_phone"
+        return False, "no_phone", ""
     if not body.strip():
-        return False, "empty_text"
+        return False, "empty_text", ""
 
     if is_twilio_configured():
         try:
@@ -34,12 +34,12 @@ def _send_sms_body(*, to_phone: str, body: str) -> tuple[bool, str]:
 
             client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
             client.messages.create(body=body, from_=TWILIO_FROM_NUMBER, to=phone)
-            return True, ""
+            return True, "", ""
         except ImportError:
             logger.warning("twilio package not installed")
         except Exception as exc:
             logger.exception("Twilio SMS send failed")
-            return False, str(exc)[:200]
+            return False, str(exc)[:200], ""
 
     from utils.solapi_sms import send_solapi_sms
 
@@ -59,7 +59,7 @@ def send_portal_credentials_sms(
     magic_url: str,
     join_access_code: str = "",
     display_name: str = "",
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
         return False, "no_phone"
@@ -95,7 +95,7 @@ def send_test_reminder_sms(
     completed_count: int = 0,
     required_count: int = 0,
     magic_url: str,
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
         return False, "no_phone"
@@ -147,7 +147,7 @@ def send_care_assignment_sms(
     assignment_title: str = "",
     portal_access_code: str = "",
     magic_url: str,
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
         return False, "no_phone"
@@ -171,7 +171,7 @@ def send_care_assignment_sms(
     return _send_sms_body(to_phone=phone, body=body)
 
 
-def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -> tuple[bool, str]:
+def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -> tuple[bool, str, str]:
     phone = (to_phone or "").strip()
     if not phone:
         return False, "no_phone"

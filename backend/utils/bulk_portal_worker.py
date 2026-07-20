@@ -195,22 +195,13 @@ def create_portal_for_row(
                 magic_path=magic_path,
                 display_name=display_name,
                 join_access_code=join_access_code,
+                portal_ref=portal_ref,
+                notify_kind="initial",
             )
             status = result.get("status") or "failed"
-            notify_update: dict = {
-                "lastNotifyStatus": status,
-                "lastNotifyAt": SERVER_TIMESTAMP,
-                "lastNotifyKind": "initial",
-            }
-            result_errors = result.get("errors") or []
-            if result_errors:
-                notify_update["lastNotifyError"] = "; ".join(result_errors)
-            if result.get("sentVia"):
-                notify_update["lastNotifySentVia"] = result.get("sentVia")
-            portal_ref.update(notify_update)
             if status == "sent":
                 notify_sent = 1
-            else:
+            elif status in ("failed", "partial"):
                 notify_failed = 1
         else:
             _enqueue_portal_notification(

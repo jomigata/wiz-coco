@@ -91,6 +91,8 @@ def _merge_notify_snapshot(notify: dict, pdata: dict) -> dict:
             "sentVia": pdata.get("lastNotifySentVia"),
             "notifyKind": (pdata.get("lastNotifyKind") or "initial").strip(),
             "processedAt": _iso_timestamp(pdata.get("lastNotifyAt")),
+            "emailChannel": (pdata.get("lastNotifyEmailChannel") or "").strip(),
+            "phoneChannel": (pdata.get("lastNotifyPhoneChannel") or "").strip(),
         }
 
     if notify:
@@ -100,6 +102,8 @@ def _merge_notify_snapshot(notify: dict, pdata: dict) -> dict:
             "sentVia": notify.get("sentVia"),
             "notifyKind": (notify.get("notifyKind") or "initial").strip(),
             "processedAt": notify.get("processedAt"),
+            "emailChannel": (notify.get("emailChannel") or pdata.get("lastNotifyEmailChannel") or "").strip(),
+            "phoneChannel": (notify.get("phoneChannel") or pdata.get("lastNotifyPhoneChannel") or "").strip(),
         }
 
     return {
@@ -108,6 +112,8 @@ def _merge_notify_snapshot(notify: dict, pdata: dict) -> dict:
         "sentVia": pdata.get("lastNotifySentVia"),
         "notifyKind": (pdata.get("lastNotifyKind") or "initial").strip(),
         "processedAt": _iso_timestamp(pdata.get("lastNotifyAt")),
+        "emailChannel": (pdata.get("lastNotifyEmailChannel") or "").strip(),
+        "phoneChannel": (pdata.get("lastNotifyPhoneChannel") or "").strip(),
     }
 
 
@@ -139,6 +145,8 @@ def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
                     "notifyKind": (data.get("notifyKind") or "initial").strip(),
                     "processedAt": _iso_timestamp(data.get("processedAt")),
                     "createdAt": _iso_timestamp(data.get("createdAt")),
+                    "emailChannel": (data.get("emailChannel") or "").strip(),
+                    "phoneChannel": (data.get("phoneChannel") or "").strip(),
                     "_createdAtRaw": data.get("createdAt"),
                     "_processedAtRaw": data.get("processedAt"),
                 }
@@ -162,6 +170,8 @@ def _latest_notify_by_portal(db, portal_ids: set[str]) -> dict[str, dict]:
                     "notifyKind": (data.get("notifyKind") or "initial").strip(),
                     "processedAt": _iso_timestamp(data.get("processedAt")),
                     "createdAt": _iso_timestamp(data.get("createdAt")),
+                    "emailChannel": (data.get("emailChannel") or "").strip(),
+                    "phoneChannel": (data.get("phoneChannel") or "").strip(),
                     "_createdAtRaw": ca,
                     "_processedAtRaw": data.get("processedAt"),
                 }
@@ -204,7 +214,7 @@ def _resolve_notify_at(notify: dict, pdata: dict, status: str) -> str | None:
     snap = _merge_notify_snapshot(notify, pdata)
     if snap.get("processedAt"):
         return snap["processedAt"]
-    if status in ("pending", "not_sent") and notify.get("createdAt"):
+    if status in ("pending", "sending", "not_sent") and notify.get("createdAt"):
         return notify.get("createdAt")
     return None
 
@@ -463,6 +473,8 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
                 "notifyAt": notify_at,
                 "notifySentVia": notify_snap.get("sentVia") or "",
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
+                "notifyEmailChannel": notify_snap.get("emailChannel") or "",
+                "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
                 "tests": _test_detail_rows(db, portal_id, assessment_id, test_list),
                 **test_info,
             }
@@ -543,27 +555,21 @@ def resend_portal_credentials(
             magic_path=magic_path,
             display_name=(pdata.get("displayName") or "").strip(),
             join_access_code=join_access_code,
+            portal_ref=pref,
+            notify_kind="resend",
         )
         status = result.get("status") or "failed"
-        notify_update: dict = {
-            "lastNotifyStatus": status,
-            "lastNotifyAt": SERVER_TIMESTAMP,
-            "lastNotifyKind": "resend",
-        }
         result_errors = result.get("errors") or []
-        if result_errors:
-            notify_update["lastNotifyError"] = "; ".join(result_errors)
-        if result.get("sentVia"):
-            notify_update["lastNotifySentVia"] = result.get("sentVia")
         if status == "sent":
-            notify_update["pinHash"] = hash_password(new_pin)
+            pref.update({"pinHash": hash_password(new_pin)})
             sent += 1
+        elif status == "sending":
+            sent += 0
         else:
             failed += 1
         _accumulate_channel_summary(
             channel_summary, email=email, phone=phone, result=result
         )
-        pref.update(notify_update)
         details.append(
             {
                 "portalId": pid,
@@ -848,6 +854,8 @@ def list_archived_portals(
                 "notifyAt": notify_at,
                 "notifySentVia": notify_snap.get("sentVia") or "",
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
+                "notifyEmailChannel": notify_snap.get("emailChannel") or "",
+                "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
                 "tests": _test_detail_rows(db, portal_id, from_aid, test_list) if from_aid else [],
                 **test_info,
             }

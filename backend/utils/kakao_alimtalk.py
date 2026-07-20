@@ -16,6 +16,7 @@ from utils.solapi_client import (
     normalize_kr_phone,
     recipient_conflicts_with_sender,
     solapi_send_messages,
+    extract_solapi_group_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -105,21 +106,22 @@ def _send_alimtalk(
     template_id: str,
     variables: dict[str, str],
     fallback_text: str,
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     phone = normalize_kr_phone(to_phone)
     if not phone:
-        return False, "no_phone"
+        return False, "no_phone", ""
     if recipient_conflicts_with_sender(to_phone):
         return (
             False,
             "alimtalk_sender_equals_recipient",
+            "",
         )
     if not template_id:
-        return False, "template_not_configured"
+        return False, "template_not_configured", ""
     if not is_alimtalk_configured():
-        return False, "alimtalk_not_configured"
+        return False, "alimtalk_not_configured", ""
 
-    ok, err, _ = solapi_send_messages(
+    ok, err, resp = solapi_send_messages(
         [
             {
                 "to": phone,
@@ -135,10 +137,12 @@ def _send_alimtalk(
         ]
     )
     if ok:
-        return True, ""
+        return True, "", ""
     if err == "alimtalk_not_configured":
-        return False, err
-    return False, err or "alimtalk_send_failed"
+        return False, err, ""
+    if err == "solapi_delivery_pending":
+        return False, err, extract_solapi_group_id(resp)
+    return False, err or "alimtalk_send_failed", ""
 
 
 def send_test_reminder_alimtalk(
@@ -159,12 +163,13 @@ def send_test_reminder_alimtalk(
         "#{link}": link,
     }
     fallback = f"[WizCoCo] {name}님, 접수하신 검사 미완료. {link}"
-    return _send_alimtalk(
+    ok, err, _gid = _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
         variables=variables,
         fallback_text=fallback,
     )
+    return ok, err
 
 
 def send_care_assignment_alimtalk(
@@ -183,12 +188,13 @@ def send_care_assignment_alimtalk(
         "#{link}": link,
     }
     fallback = f"[WizCoCo] {name}님, 접수하신 상담 서비스 치료·과제 안내. {link}"
-    return _send_alimtalk(
+    ok, err, _gid = _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_CARE,
         variables=variables,
         fallback_text=fallback,
     )
+    return ok, err
 
 
 def send_portal_credentials_alimtalk(
@@ -199,7 +205,7 @@ def send_portal_credentials_alimtalk(
     pin: str = "",
     join_access_code: str = "",
     magic_url: str = "",
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     name = (display_name or "").strip() or "내담자"
     my_code = (access_code or "").strip().upper()
     join_code = (join_access_code or "").strip().upper() or "-"

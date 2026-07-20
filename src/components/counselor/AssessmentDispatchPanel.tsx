@@ -82,6 +82,7 @@ type CredentialSendMode = 'initial' | 'resend' | 'mixed';
 
 function hasCredentialBeenSent(r: DispatchRecipient): boolean {
   const status = r.notifyStatus || 'not_sent';
+  if (status === 'sending') return false;
   return status === 'sent' || status === 'partial' || status === 'failed' || Boolean(r.notifyAt?.trim());
 }
 
@@ -311,6 +312,19 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   } = useAssessmentDispatchRealtime(assessmentId, data, isAuthenticated && !authPending);
 
   const displayData = liveData ?? data;
+
+  const hasSendingNotify = useMemo(
+    () => (displayData?.recipients || []).some((r) => r.notifyStatus === 'sending'),
+    [displayData?.recipients],
+  );
+
+  useEffect(() => {
+    if (!hasSendingNotify || authPending || !isAuthenticated) return;
+    const timer = window.setInterval(() => {
+      void load({ silent: true });
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [hasSendingNotify, load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
     () => (displayData?.recipients || []).map((r) => r.portalId),

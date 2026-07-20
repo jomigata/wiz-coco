@@ -7,6 +7,8 @@ export type DispatchDisplayRecipient = {
   notifyError?: string | null;
   notifyKind?: string | null;
   notifySentVia?: string | null;
+  notifyEmailChannel?: string | null;
+  notifyPhoneChannel?: string | null;
   testStatus?: string | null;
   completedCount?: number | null;
   requiredCount?: number | null;
@@ -78,7 +80,7 @@ function emailChannelOutcome(
     return 'fail';
   }
   if (status === 'failed') return 'fail';
-  if (status === 'pending') return 'pending';
+  if (status === 'pending' || status === 'sending') return 'pending';
   if (status === 'not_sent') return 'idle';
   return 'fail';
 }
@@ -97,7 +99,7 @@ function phoneChannelOutcome(
     return 'fail';
   }
   if (status === 'failed') return 'fail';
-  if (status === 'pending') return 'pending';
+  if (status === 'pending' || status === 'sending') return 'pending';
   if (status === 'not_sent') return 'idle';
   return 'fail';
 }
@@ -122,7 +124,32 @@ function pushChannelPart(parts: ChannelDetailPart[], text: string, failed: boole
   parts.push({ text, failed });
 }
 
-/** 이메일·휴대폰 채널별 간략 상태 (예: 이메일✓·문자✗) */
+function pushChannelFromExplicitState(
+  parts: ChannelDetailPart[],
+  label: string,
+  channelState: string | null | undefined,
+  legacyOutcome: 'ok' | 'fail' | 'pending' | 'idle',
+): void {
+  const state = (channelState || '').trim().toLowerCase();
+  if (state === 'sent') {
+    pushChannelPart(parts, `${label}✓`, false);
+    return;
+  }
+  if (state === 'failed') {
+    pushChannelPart(parts, `${label}✗`, true);
+    return;
+  }
+  if (state === 'sending') {
+    pushChannelPart(parts, `${label}…`, false);
+    return;
+  }
+  if (legacyOutcome === 'ok') pushChannelPart(parts, `${label}✓`, false);
+  else if (legacyOutcome === 'fail') pushChannelPart(parts, `${label}✗`, true);
+  else if (legacyOutcome === 'pending') pushChannelPart(parts, `${label}…`, false);
+  else pushChannelPart(parts, `${label}·`, false);
+}
+
+/** 이메일·휴대폰 채널별 간략 상태 (예: 이메일✓·문자…) */
 function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart[] {
   const hasEmail = Boolean(r.email?.trim());
   const hasPhone = Boolean(r.phone?.trim());
@@ -134,20 +161,14 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const parts: ChannelDetailPart[] = [];
 
   if (hasEmail) {
-    const outcome = emailChannelOutcome(status, via, failed);
-    if (outcome === 'ok') pushChannelPart(parts, '이메일✓', false);
-    else if (outcome === 'fail') pushChannelPart(parts, '이메일✗', true);
-    else if (outcome === 'pending') pushChannelPart(parts, '이메일…', false);
-    else pushChannelPart(parts, '이메일·', false);
+    const legacy = emailChannelOutcome(status, via, failed);
+    pushChannelFromExplicitState(parts, '이메일', r.notifyEmailChannel, legacy);
   }
 
   if (hasPhone) {
     const phoneLabel = phoneChannelLabel(via);
-    const outcome = phoneChannelOutcome(status, via, failed);
-    if (outcome === 'ok') pushChannelPart(parts, `${phoneLabel}✓`, false);
-    else if (outcome === 'fail') pushChannelPart(parts, `${phoneLabel}✗`, true);
-    else if (outcome === 'pending') pushChannelPart(parts, `${phoneLabel}…`, false);
-    else pushChannelPart(parts, `${phoneLabel}·`, false);
+    const legacy = phoneChannelOutcome(status, via, failed);
+    pushChannelFromExplicitState(parts, phoneLabel, r.notifyPhoneChannel, legacy);
   }
 
   return parts;
@@ -163,6 +184,8 @@ function notifyLabel(status: string): { text: string; className: string } {
       return { text: '일부 발송 실패', className: 'text-amber-300' };
     case 'pending':
       return { text: '발송 대기', className: 'text-amber-300' };
+    case 'sending':
+      return { text: '발송중', className: 'text-amber-300' };
     case 'skipped':
       return { text: '발송 생략', className: 'text-slate-400' };
     case 'not_sent':
@@ -201,6 +224,17 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
   }
 
   const status = r.notifyStatus || 'not_sent';
+
+  if (status === 'sending') {
+    const kindPrefix = notifyKindPrefix(r.notifyKind);
+    const detailParts = buildChannelDetailParts(r);
+    return statusView(
+      `${kindPrefix}발송중`.trim(),
+      detailParts,
+      'text-amber-300',
+      notifyErrorHint(r.notifyError) || 'Solapi·이메일 발송 결과를 확인하는 중입니다.',
+    );
+  }
 
   if (status === 'partial') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
