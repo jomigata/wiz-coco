@@ -44,7 +44,10 @@ function PortalLoginContent() {
   const normalizedCode = normalizeMyCodeInput(code);
   const normalizedPin = normalizeJoinPinDigits(pin);
   const canSubmit =
-    isValidMyCodeInput(normalizedCode) && normalizedPin.length === 4 && !loading;
+    sessionResetDone &&
+    isValidMyCodeInput(normalizedCode) &&
+    normalizedPin.length === 4 &&
+    !loading;
 
   useEffect(() => {
     const raw = (searchParams.get('accessCode') || '').trim();
@@ -88,9 +91,11 @@ function PortalLoginContent() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      if (!sessionResetDone) return;
       setError('');
       setLoading(true);
       try {
+        await resetAllSessionsBeforePortalLinkEntry();
         const result = await loginClientPortal({
           accessCode: normalizedCode,
           pin: normalizedPin,
@@ -108,7 +113,7 @@ function PortalLoginContent() {
         setLoading(false);
       }
     },
-    [normalizedCode, normalizedPin, router, copy.redirectPath],
+    [normalizedCode, normalizedPin, router, copy.redirectPath, sessionResetDone],
   );
 
   const myCodePlaceholder = getMyCodeInputPlaceholder();

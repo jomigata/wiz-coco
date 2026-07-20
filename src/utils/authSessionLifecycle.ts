@@ -5,6 +5,8 @@
 
 import { signOut } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
+import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
+import { clearClientPortalSession } from '@/lib/clientPortalSession';
 
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
 const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
@@ -492,9 +494,15 @@ export function evaluateAuthSessionOnStartup(): boolean {
   }
   /** 내담자 포털은 별도 세션 — 전문가 Firebase 세션을 여기서 삭제하지 않음 */
   if (path.startsWith('/portal')) {
+    if (isClientPortalLinkEntryPath(path)) {
+      return false;
+    }
     if (!hasAuthenticatedTabSession()) {
       tryRestoreAuthenticatedTabSession();
     }
+    return false;
+  }
+  if (isClientPortalLinkEntryPath(path)) {
     return false;
   }
   if (sessionStorage.getItem(SKIP_AUTH_CLEAR_KEY) === '1') return false;
@@ -538,6 +546,7 @@ export function subscribeAuthClearEvents(onClear: () => void): () => void {
     channel = new BroadcastChannel(AUTH_CLEAR_CHANNEL);
     channel.onmessage = () => {
       if (shouldSkipAuthClear() || isAuthLoginInProgress()) return;
+      clearClientPortalSession();
       void clearAllAuthStorage().then(onClear);
     };
   } catch {

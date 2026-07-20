@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { initBrowserCleanup } from '@/utils/browserCleanup';
 import { evaluateAuthSessionOnStartup } from '@/utils/authSessionLifecycle';
+import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
+import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 import {
   clearClientPortalSession,
   subscribePortalClearEvents,
@@ -13,6 +15,11 @@ export default function BrowserCleanupProvider() {
   const router = useRouter();
 
   useLayoutEffect(() => {
+    const path = window.location.pathname || '';
+    if (isClientPortalLinkEntryPath(path)) {
+      void resetAllSessionsBeforePortalLinkEntry();
+      return;
+    }
     evaluateAuthSessionOnStartup();
   }, []);
 

@@ -5,6 +5,9 @@
 import { clearAllAuthStorage } from '@/utils/authSessionLifecycle';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { resetJoinStartEnvironment } from '@/lib/joinStartReset';
+import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
+
+export { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 
 let resetPromise: Promise<void> | null = null;
 
@@ -14,6 +17,7 @@ export async function resetAllSessionsBeforePortalLinkEntry(): Promise<void> {
   resetPromise = (async () => {
     resetJoinStartEnvironment();
     clearJoinFreshParticipantFlow();
+    clearClientPortalSessionWithBroadcast();
     await clearAllAuthStorage({ fullReset: true });
   })();
 
