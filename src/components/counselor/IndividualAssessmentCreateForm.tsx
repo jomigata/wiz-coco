@@ -708,19 +708,20 @@ export default function IndividualAssessmentCreateForm() {
                 >
                   텍스트/엑셀 파일 첨부하기
                 </button>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleCsv}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                >
-                  (엑셀파일)
-                </button>
+                <span className="text-sm text-slate-400">샘플</span>
                 <button
                   type="button"
                   onClick={downloadGroupRecipientSampleTxt}
                   className="text-sm text-sky-300 transition hover:text-sky-200"
                 >
                   (텍스트파일)
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleCsv}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                >
+                  (엑셀파일)
                 </button>
               </div>
               <p className="text-xs leading-relaxed text-slate-500">

@@ -1,8 +1,8 @@
 const SAMPLE_ROWS = [
   ['이름', '이메일', '휴대폰'],
-  ['홍길동', 'hong@example.com', '01012345678'],
-  ['김영희', '', '01098765432'],
-  ['이철수', 'lee@example.com', ''],
+  ['홍길동', 'smaple1@sample.com', '010512345678'],
+  ['김영희', '', '010512345679'],
+  ['이철수', 'smaple2@sample.com', ''],
 ] as const;
 
 function sampleTextContent(): string {
