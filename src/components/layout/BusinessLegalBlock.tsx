@@ -33,16 +33,17 @@ export default function BusinessLegalBlock({
           <dd className="text-slate-300">{b.businessRegistrationNumber}</dd>
           <dt className="text-slate-500">사업장 소재지</dt>
           <dd className="text-slate-300">{b.address}</dd>
+          <dt className="text-slate-500">전화번호</dt>
+          <dd className="text-slate-300">
+            <a href={`tel:${b.contactPhone.replace(/-/g, '')}`} className="text-sky-300/90 hover:text-sky-200">
+              {b.contactPhone}
+            </a>
+          </dd>
           <dt className="text-slate-500">문의</dt>
           <dd className="text-slate-300">
             <a href={`mailto:${b.contactEmail}`} className="text-sky-300/90 hover:text-sky-200">
               {b.contactEmail}
             </a>
-          </dd>
-          <dt className="text-slate-500">통신판매업 신고</dt>
-          <dd className="text-slate-300">
-            {b.mailOrderReportNumber ?? '해당 없음'}
-            <span className="mt-1 block text-[11px] text-slate-500">{b.mailOrderReportNote}</span>
           </dd>
         </dl>
         <p className="mt-4 border-t border-white/10 pt-3 text-[11px] text-slate-500">
@@ -59,7 +60,7 @@ export default function BusinessLegalBlock({
         {b.representative}
       </p>
       <p>
-        사업자등록번호 {b.businessRegistrationNumber} · {b.contactEmail}
+        사업자등록번호 {b.businessRegistrationNumber} · {b.contactPhone} · {b.contactEmail}
       </p>
       <p className="text-slate-600">{b.address}</p>
     </div>
