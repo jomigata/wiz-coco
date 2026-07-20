@@ -10,6 +10,7 @@ import {
   TEST_PICKER_FILL,
   TEST_PICKER_SCROLL,
 } from '@/lib/assessmentFormUi';
+import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 
 export interface AssessmentSettingsFieldsProps {
   title: string;
@@ -109,6 +110,10 @@ export default function AssessmentSettingsFields({
             <label htmlFor="welcome-message" className={FORM_LABEL}>
               안내 메시지 (선택)
             </label>
+            <WelcomeMessageSamplePicker
+              disabled={disabled}
+              onPick={onWelcomeMessageChange}
+            />
             <textarea
               id="welcome-message"
               rows={4}

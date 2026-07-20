@@ -30,6 +30,7 @@ import {
   type RecipientRow,
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 
 type IssueIntent = 'excel' | 'send_all' | 'goto_dispatch';
 
@@ -554,6 +555,10 @@ export default function IndividualAssessmentCreateForm() {
             <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
                 <label className={FORM_LABEL}>안내 메시지 (선택)</label>
+                <WelcomeMessageSamplePicker
+                  disabled={loading}
+                  onPick={(text) => setWelcomeMessage(text)}
+                />
                 <textarea
                   rows={2}
                   className={`${FORM_INPUT} min-h-[3.5rem] resize-y`}
