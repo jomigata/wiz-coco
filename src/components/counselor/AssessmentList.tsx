@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useRouter } from 'next/navigation';
@@ -118,6 +118,7 @@ function resultStatusCounts(a: CounselorAssessment) {
 
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
   const router = useRouter();
+  const [listItems, setListItems] = useState(assessments);
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -125,6 +126,10 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setListItems(assessments);
+  }, [assessments]);
 
   const rowHoverCellClass = (id: string) =>
     hoveredRowId === id ? 'bg-white/[0.06]' : '';
@@ -145,26 +150,26 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
-  const totalParticipants = assessments.reduce((sum, a) => {
+  const totalParticipants = listItems.reduce((sum, a) => {
     const { testComplete, testIncomplete } = resultStatusCounts(a);
     return sum + testComplete + testIncomplete;
   }, 0);
-  const totalCompleted = assessments.reduce(
+  const totalCompleted = listItems.reduce(
     (sum, a) => sum + resultStatusCounts(a).testComplete,
     0,
   );
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return assessments;
-    return assessments.filter(
+    if (!q) return listItems;
+    return listItems.filter(
       (a) =>
         (a.title || '').toLowerCase().includes(q) ||
         (a.accessCode || '').toLowerCase().includes(q) ||
         (a.targetAudience || '').toLowerCase().includes(q) ||
         getAssessmentOrgLabel(a).toLowerCase().includes(q),
     );
-  }, [assessments, searchQuery]);
+  }, [listItems, searchQuery]);
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
@@ -177,9 +182,10 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     setDeleteError('');
     setDeleteLoading(true);
     try {
-      await deleteAssessment(deleteTarget.id);
+      const removedId = deleteTarget.id;
+      await deleteAssessment(removedId);
+      setListItems((prev) => prev.filter((a) => a.id !== removedId));
       setDeleteTarget(null);
-      router.push('/counselor/assessments/deleted');
       router.refresh();
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : '삭제에 실패했습니다.');
@@ -194,7 +200,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       noBodyPadding
       description={
         <>
-          전체 <span className="font-semibold text-white">{assessments.length}</span>개 · 응시자{' '}
+          전체 <span className="font-semibold text-white">{listItems.length}</span>개 · 응시자{' '}
           <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
           <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
           <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
@@ -303,12 +309,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
           <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
           <p className="text-base text-slate-300">
-            {assessments.length === 0 ? '등록된 검사코드가 없습니다' : '검색 결과가 없습니다'}
+            {listItems.length === 0 ? '등록된 검사코드가 없습니다' : '검색 결과가 없습니다'}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            {assessments.length === 0 ? '첫 검사코드를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
+            {listItems.length === 0 ? '첫 검사코드를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
           </p>
-          {assessments.length === 0 && (
+          {listItems.length === 0 && (
             <AuthLink
               href="/counselor/assessments/new"
               className="mt-6 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
