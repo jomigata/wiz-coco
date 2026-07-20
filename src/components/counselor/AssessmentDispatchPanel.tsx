@@ -78,6 +78,35 @@ function formatSentViaLabel(sentVia: string | null | undefined): string {
     .join('·');
 }
 
+type DispatchRowOverride = Pick<
+  DispatchRecipient,
+  'notifyStatus' | 'notifyKind' | 'notifyEmailChannel' | 'notifyPhoneChannel' | 'notifySentVia' | 'notifyError'
+>;
+
+function buildSendingOverride(
+  recipient: DispatchRecipient,
+  kind: 'remind' | 'resend',
+): DispatchRowOverride {
+  const hasEmail = Boolean(recipient.email?.trim());
+  const hasPhone = Boolean(recipient.phone?.trim());
+  return {
+    notifyStatus: 'sending',
+    notifyKind: kind === 'resend' ? 'resend' : 'remind',
+    notifyEmailChannel: hasEmail ? 'sending' : undefined,
+    notifyPhoneChannel: hasPhone ? 'sending' : undefined,
+    notifySentVia: '',
+    notifyError: null,
+  };
+}
+
+function mergeDispatchOverride(
+  recipient: DispatchRecipient,
+  override: DispatchRowOverride | undefined,
+): DispatchRecipient {
+  if (!override) return recipient;
+  return { ...recipient, ...override };
+}
+
 type CredentialSendMode = 'initial' | 'resend' | 'mixed';
 
 function hasCredentialBeenSent(r: DispatchRecipient): boolean {
@@ -276,6 +305,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
   const [addFileLabel, setAddFileLabel] = useState('');
 
+  const [dispatchOverrides, setDispatchOverrides] = useState<Record<string, DispatchRowOverride>>({});
+
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
@@ -314,7 +345,42 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const displayData = liveData ?? data;
 
   const hasSendingNotify = useMemo(
-    () => (displayData?.recipients || []).some((r) => r.notifyStatus === 'sending'),
+    () =>
+      (displayData?.recipients || []).some((r) => r.notifyStatus === 'sending') ||
+      Object.keys(dispatchOverrides).length > 0,
+    [displayData?.recipients, dispatchOverrides],
+  );
+
+  useEffect(() => {
+    if (!data?.recipients?.length) return;
+    setDispatchOverrides((prev) => {
+      if (!Object.keys(prev).length) return prev;
+      const next = { ...prev };
+      let changed = false;
+      for (const portalId of Object.keys(prev)) {
+        const row = data.recipients.find((r) => r.portalId === portalId);
+        if (!row || row.notifyStatus !== 'sending') {
+          delete next[portalId];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [data]);
+
+  const applySendingOverlay = useCallback(
+    (portalIds: string[], kind: 'remind' | 'resend') => {
+      const byId = new Map((displayData?.recipients || []).map((r) => [r.portalId, r]));
+      setDispatchOverrides((prev) => {
+        const next = { ...prev };
+        for (const portalId of portalIds) {
+          const recipient = byId.get(portalId);
+          if (!recipient) continue;
+          next[portalId] = buildSendingOverride(recipient, kind);
+        }
+        return next;
+      });
+    },
     [displayData?.recipients],
   );
 
@@ -373,11 +439,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       : 'https://wizcoco.com/portal/login/';
 
   const sortedRecipients = useMemo(() => {
-    const list = [...(displayData?.recipients || [])];
+    const list = (displayData?.recipients || []).map((r) =>
+      mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
+    );
     if (!sortKey) return list;
     list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
     return list;
-  }, [displayData?.recipients, sortKey, sortDir]);
+  }, [displayData?.recipients, dispatchOverrides, sortKey, sortDir]);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -477,6 +545,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const handleResend = async () => {
     if (!assessmentId || selected.size === 0) return;
+    const ids = resendEligibleSelected.map((r) => r.portalId);
+    applySendingOverlay(ids, 'resend');
     const count = resendEligibleSelected.length || selected.size;
     setDispatchProgress({ kind: 'resend', count });
     setResendLoading(true);
@@ -505,6 +575,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const handleRemind = async (portalIds: string[]) => {
     if (!assessmentId || portalIds.length === 0) return;
+    applySendingOverlay(portalIds, 'remind');
     setDispatchProgress({ kind: 'remind', count: portalIds.length });
     setRemindLoading(true);
     try {

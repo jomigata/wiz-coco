@@ -758,6 +758,9 @@ def deliver_test_reminder(
     completed_count: int = 0,
     required_count: int = 0,
     magic_path: str = "",
+    portal_ref=None,
+    queue_ref=None,
+    notify_kind: str = "remind",
 ) -> dict:
     """미실시·미완료 검사 현황과 검사 연결 링크를 이메일·문자로 즉시 발송."""
     email = (email or "").strip().lower()
@@ -767,12 +770,31 @@ def deliver_test_reminder(
     email_ok = False
     sms_ok = False
     alimtalk_ok = False
-    errors = []
+    errors: list[str] = []
+    solapi_group_id = ""
+
+    email_channel = _notify_channel_state(bool(email), sending=bool(email))
+    phone_channel = _notify_channel_state(bool(phone), sending=bool(phone))
 
     pending_summary = ", ".join(
         (item.get("testName") or item.get("testId") or "검사").strip()
         for item in (pending_tests or [])[:5]
     )
+
+    if portal_ref is not None:
+        _apply_notify_snapshot(
+            portal_ref=portal_ref,
+            queue_ref=queue_ref,
+            email=email,
+            phone=phone,
+            email_channel=email_channel,
+            phone_channel=phone_channel,
+            status="sending",
+            errors=[],
+            sent_via=None,
+            notify_kind=notify_kind,
+            solapi_group_id="",
+        )
 
     if email:
         if is_email_configured():
@@ -787,13 +809,46 @@ def deliver_test_reminder(
                 required_count=required_count,
                 magic_url=magic_url,
             )
+            email_channel = _notify_channel_state(True, ok=email_ok)
             if not email_ok:
                 errors.append("email_send_failed")
         else:
+            email_channel = _notify_channel_state(True, ok=False)
             errors.append("smtp_not_configured")
 
+        if portal_ref is not None:
+            _apply_notify_snapshot(
+                portal_ref=portal_ref,
+                queue_ref=queue_ref,
+                email=email,
+                phone=phone,
+                email_channel=email_channel,
+                phone_channel=phone_channel,
+                status="sending",
+                errors=errors,
+                sent_via="email" if email_ok else None,
+                notify_kind=notify_kind,
+                solapi_group_id="",
+            )
+
     if phone:
-        alimtalk_ok, alimtalk_err = send_test_reminder_alimtalk(
+        phone_channel = _notify_channel_state(True, sending=True)
+        if portal_ref is not None:
+            _apply_notify_snapshot(
+                portal_ref=portal_ref,
+                queue_ref=queue_ref,
+                email=email,
+                phone=phone,
+                email_channel=email_channel,
+                phone_channel=phone_channel,
+                status="sending",
+                errors=errors,
+                sent_via="email" if email_ok else None,
+                notify_kind=notify_kind,
+                solapi_group_id="",
+            )
+
+        alimtalk_ok, alimtalk_err, pending_gid = send_test_reminder_alimtalk(
             to_phone=phone,
             display_name=display_name,
             assessment_title=assessment_title,
@@ -802,9 +857,17 @@ def deliver_test_reminder(
         )
         if alimtalk_err and alimtalk_err != "alimtalk_not_configured":
             errors.append(alimtalk_err)
+        if alimtalk_err == "solapi_delivery_pending" and pending_gid:
+            solapi_group_id = pending_gid
+            phone_channel = CHANNEL_SENDING
+        elif alimtalk_err == "solapi_delivery_pending":
+            solapi_group_id = pending_gid
+            phone_channel = CHANNEL_SENDING
+        elif alimtalk_ok:
+            phone_channel = CHANNEL_SENT
 
-    if phone and not alimtalk_ok:
-        sms_ok, sms_err, _pending_gid = send_test_reminder_sms(
+    if phone and not alimtalk_ok and not solapi_group_id:
+        sms_ok, sms_err, pending_gid = send_test_reminder_sms(
             to_phone=phone,
             display_name=display_name,
             assessment_title=assessment_title,
@@ -817,15 +880,49 @@ def deliver_test_reminder(
         )
         if sms_err:
             errors.append(sms_err)
+        if sms_err == "solapi_delivery_pending" and pending_gid:
+            solapi_group_id = pending_gid
+            phone_channel = CHANNEL_SENDING
+        elif sms_err == "solapi_delivery_pending":
+            solapi_group_id = pending_gid
+            phone_channel = CHANNEL_SENDING
+        elif sms_ok:
+            phone_channel = CHANNEL_SENT
+        elif phone_channel != CHANNEL_SENDING:
+            phone_channel = CHANNEL_FAILED
 
-    return _finalize_multi_channel_delivery(
+    if phone and not alimtalk_ok and not sms_ok and phone_channel != CHANNEL_SENDING:
+        if phone_channel != CHANNEL_SENT:
+            phone_channel = CHANNEL_FAILED
+
+    result = _finalize_delivery_result(
         email=email,
         phone=phone,
         email_ok=email_ok,
         alimtalk_ok=alimtalk_ok,
         sms_ok=sms_ok,
         errors=errors,
+        email_channel=email_channel,
+        phone_channel=phone_channel,
+        solapi_group_id=solapi_group_id,
     )
+
+    if portal_ref is not None:
+        _apply_notify_snapshot(
+            portal_ref=portal_ref,
+            queue_ref=queue_ref,
+            email=email,
+            phone=phone,
+            email_channel=email_channel,
+            phone_channel=phone_channel,
+            status=result["status"],
+            errors=result["errors"],
+            sent_via=result.get("sentVia"),
+            notify_kind=notify_kind,
+            solapi_group_id=solapi_group_id,
+        )
+
+    return result
 
 
 def deliver_care_assignment(

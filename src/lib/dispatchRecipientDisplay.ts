@@ -35,7 +35,9 @@ function formatSentViaLabel(via: string | null | undefined): string {
 }
 
 function notifyKindPrefix(kind: string | null | undefined): string {
-  return kind === 'resend' ? '재발송 ' : '';
+  if (kind === 'resend') return '재발송 ';
+  if (kind === 'remind') return '미실시 알림 ';
+  return '';
 }
 
 function parseNotifyErrors(error: string | null | undefined): {

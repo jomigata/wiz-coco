@@ -696,6 +696,8 @@ def send_test_reminders(
             completed_count=int(test_info.get("completedCount") or 0),
             required_count=int(test_info.get("requiredCount") or 0),
             magic_path=magic_path,
+            portal_ref=pref,
+            notify_kind="remind",
         )
         status = result.get("status") or "failed"
         pref.update({"lastRemindStatus": status, "lastRemindAt": SERVER_TIMESTAMP})

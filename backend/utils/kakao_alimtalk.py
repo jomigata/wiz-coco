@@ -152,7 +152,7 @@ def send_test_reminder_alimtalk(
     assessment_title: str = "",
     magic_url: str = "",
     pending_summary: str = "",
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     name = (display_name or "").strip() or "내담자"
     title = (assessment_title or "").strip() or "심리검사"
     link = magic_url or f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
@@ -163,13 +163,12 @@ def send_test_reminder_alimtalk(
         "#{link}": link,
     }
     fallback = f"[WizCoCo] {name}님, 접수하신 검사 미완료. {link}"
-    ok, err, _gid = _send_alimtalk(
+    return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,
         variables=variables,
         fallback_text=fallback,
     )
-    return ok, err
 
 
 def send_care_assignment_alimtalk(

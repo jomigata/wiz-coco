@@ -100,7 +100,7 @@ def alimtalk_test():
             magic_url=magic_url,
         )
     else:
-        ok, err = send_test_reminder_alimtalk(
+        ok, err, _gid = send_test_reminder_alimtalk(
             to_phone=to_phone,
             display_name=display_name,
             assessment_title=(body.get("title") or "테스트 심리검사").strip(),
