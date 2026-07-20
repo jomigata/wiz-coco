@@ -30,6 +30,7 @@ CHANNEL_IDLE = "idle"
 CHANNEL_SENDING = "sending"
 CHANNEL_SENT = "sent"
 CHANNEL_FAILED = "failed"
+SENDING_STALE_SECONDS = 90
 
 
 def _notify_channel_state(has_contact: bool, *, sending: bool = False, ok: bool | None = None) -> str:
@@ -236,6 +237,64 @@ def _confirm_one_solapi_sending(
     return status, outcome
 
 
+def _portal_notify_age_seconds(pdata: dict) -> float | None:
+    ts = pdata.get("lastNotifyAt")
+    if ts is None:
+        return None
+    try:
+        if hasattr(ts, "timestamp"):
+            return max(0.0, datetime.now(timezone.utc).timestamp() - ts.timestamp())
+    except Exception:
+        pass
+    return None
+
+
+def _finalize_stale_sending_portal(
+    *,
+    portal_ref,
+    queue_ref,
+    email: str,
+    phone: str,
+    email_ch: str,
+    phone_ch: str,
+    errors: list[str],
+    notify_kind: str,
+    sent_via: str,
+) -> str:
+    if phone and phone_ch == CHANNEL_SENDING:
+        phone_ch = CHANNEL_FAILED
+        if "phone_send_failed" not in errors:
+            errors.append("phone_send_failed")
+        if "solapi_delivery_timeout" not in errors:
+            errors.append("solapi_delivery_timeout")
+    result = _finalize_delivery_result(
+        email=email,
+        phone=phone,
+        email_ok=email_ch == CHANNEL_SENT,
+        alimtalk_ok="kakao" in sent_via and phone_ch == CHANNEL_SENT,
+        sms_ok="sms" in sent_via and phone_ch == CHANNEL_SENT,
+        errors=errors,
+        email_channel=email_ch,
+        phone_channel=phone_ch,
+        solapi_group_id="",
+    )
+    status = result["status"]
+    _apply_notify_snapshot(
+        portal_ref=portal_ref,
+        queue_ref=queue_ref,
+        email=email,
+        phone=phone,
+        email_channel=email_ch,
+        phone_channel=phone_ch,
+        status=status,
+        errors=result["errors"],
+        sent_via=result.get("sentVia") or sent_via or None,
+        notify_kind=notify_kind,
+        solapi_group_id="",
+    )
+    return status
+
+
 def confirm_solapi_sending_for_portals(
     db,
     portal_ids: list[str],
@@ -261,9 +320,6 @@ def confirm_solapi_sending_for_portals(
             continue
         if (pdata.get("lastNotifyStatus") or "").strip() != "sending":
             continue
-        group_id = (pdata.get("solapiGroupId") or "").strip()
-        if not group_id:
-            continue
 
         checked += 1
         email = (pdata.get("email") or "").strip().lower()
@@ -273,6 +329,65 @@ def confirm_solapi_sending_for_portals(
         errors = [e for e in (pdata.get("lastNotifyError") or "").split("; ") if e]
         notify_kind = (pdata.get("lastNotifyKind") or "initial").strip()
         sent_via = (pdata.get("lastNotifySentVia") or "").strip()
+
+        group_id = (pdata.get("solapiGroupId") or "").strip()
+        if not group_id:
+            queue_match = (
+                db.collection(NOTIFICATION_QUEUE_COLLECTION)
+                .where("portalId", "==", portal_id)
+                .where("status", "==", "sending")
+                .limit(3)
+                .stream()
+            )
+            for qdoc in queue_match:
+                qdata = qdoc.to_dict() or {}
+                q_gid = (qdata.get("solapiGroupId") or "").strip()
+                if q_gid:
+                    group_id = q_gid
+                    break
+
+        age = _portal_notify_age_seconds(pdata)
+
+        if not group_id:
+            if age is not None and age >= SENDING_STALE_SECONDS:
+                status = _finalize_stale_sending_portal(
+                    portal_ref=portal_ref,
+                    queue_ref=None,
+                    email=email,
+                    phone=phone,
+                    email_ch=email_ch,
+                    phone_ch=phone_ch,
+                    errors=errors,
+                    notify_kind=notify_kind,
+                    sent_via=sent_via,
+                )
+                if status == "sent":
+                    confirmed += 1
+                else:
+                    failed += 1
+            else:
+                still_pending += 1
+            continue
+
+        if age is not None and age >= SENDING_STALE_SECONDS:
+            outcome, _err = check_solapi_group_delivery(group_id)
+            if outcome == "pending":
+                status = _finalize_stale_sending_portal(
+                    portal_ref=portal_ref,
+                    queue_ref=None,
+                    email=email,
+                    phone=phone,
+                    email_ch=email_ch,
+                    phone_ch=phone_ch,
+                    errors=errors,
+                    notify_kind=notify_kind,
+                    sent_via=sent_via,
+                )
+                if status == "sent":
+                    confirmed += 1
+                else:
+                    failed += 1
+                continue
 
         status, outcome = _confirm_one_solapi_sending(
             portal_id=portal_id,
@@ -408,9 +523,6 @@ def confirm_pending_solapi_notifications(*, limit: int = 40) -> dict:
     extra_ids: list[str] = []
     for doc in portal_scan:
         if doc.id in processed_portals:
-            continue
-        pdata = doc.to_dict() or {}
-        if not (pdata.get("solapiGroupId") or "").strip():
             continue
         extra_ids.append(doc.id)
 
@@ -572,6 +684,9 @@ def deliver_portal_credentials(
         if alimtalk_err == "solapi_delivery_pending" and pending_gid:
             solapi_group_id = pending_gid
             phone_channel = CHANNEL_SENDING
+        elif alimtalk_err == "solapi_delivery_pending":
+            solapi_group_id = pending_gid
+            phone_channel = CHANNEL_SENDING
         elif alimtalk_ok:
             phone_channel = CHANNEL_SENT
 
@@ -587,6 +702,9 @@ def deliver_portal_credentials(
         if sms_err:
             errors.append(sms_err)
         if sms_err == "solapi_delivery_pending" and pending_gid:
+            solapi_group_id = pending_gid
+            phone_channel = CHANNEL_SENDING
+        elif sms_err == "solapi_delivery_pending":
             solapi_group_id = pending_gid
             phone_channel = CHANNEL_SENDING
         elif sms_ok:

@@ -78,11 +78,15 @@ def _parse_notify_timestamp(value) -> float | None:
 
 def _merge_notify_snapshot(notify: dict, pdata: dict) -> dict:
     """알림 큐 vs 포털 lastNotify* 중 더 최신 스냅샷 선택."""
-    portal_ts = _parse_notify_timestamp(pdata.get("lastNotifyAt"))
-    queue_ts = _parse_notify_timestamp(notify.get("_processedAtRaw")) or _parse_notify_timestamp(
-        notify.get("processedAt")
-    )
-    use_portal = portal_ts is not None and (queue_ts is None or portal_ts >= queue_ts)
+    portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
+    if portal_status == "sending":
+        use_portal = True
+    else:
+        portal_ts = _parse_notify_timestamp(pdata.get("lastNotifyAt"))
+        queue_ts = _parse_notify_timestamp(notify.get("_processedAtRaw")) or _parse_notify_timestamp(
+            notify.get("processedAt")
+        )
+        use_portal = portal_ts is not None and (queue_ts is None or portal_ts >= queue_ts)
 
     if use_portal:
         return {
@@ -452,7 +456,6 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
         pid
         for pid, pdata in rows
         if (pdata.get("lastNotifyStatus") or "").strip() == "sending"
-        and (pdata.get("solapiGroupId") or "").strip()
     ]
     if sending_portal_ids:
         confirm_solapi_sending_for_portals(db, sending_portal_ids, counselor_uid=counselor_uid)

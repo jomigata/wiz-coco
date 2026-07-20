@@ -20,6 +20,7 @@ function notifyErrorHint(error: string | null | undefined): string | undefined {
   if (err.includes('no_recipient')) return '이메일·휴대폰 정보가 없습니다.';
   if (err.includes('email_send_failed')) return '이메일 발송에 실패했습니다.';
   if (err.includes('phone_send_failed')) return '문자·알림톡 발송에 실패했습니다.';
+  if (err.includes('solapi_delivery_timeout')) return '문자 발송 결과 확인 시간이 초과되었습니다.';
   return err;
 }
 
