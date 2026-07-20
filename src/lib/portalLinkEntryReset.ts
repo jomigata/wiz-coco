@@ -1,15 +1,17 @@
 /**
  * 검사시작·매직링크 진입 시 세션 정리
- * - 같은 탭(이미 앱 사용 중): 이 탭만 로그아웃
+ * - 같은 탭 + 전문가(상담사/관리자/기관): 검사시작 화면 이동 시 로그아웃 안 함
+ * - 같은 탭 + 그 외: 이 탭만 로그아웃
  * - 새 탭에서 URL 직접 진입: 다른 모든 탭도 로그아웃
  */
-import { clearAllAuthStorage } from '@/utils/authSessionLifecycle';
+import { clearAllAuthStorage, isPrivilegedProfessionalSessionActive } from '@/utils/authSessionLifecycle';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { resetJoinStartEnvironment } from '@/lib/joinStartReset';
 import {
   clearClientPortalSession,
   clearClientPortalSessionWithBroadcast,
 } from '@/lib/clientPortalSession';
+import { isSameTabPortalStartNavigationPath } from '@/lib/clientPortalLinkEntryPaths';
 
 export { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 
@@ -52,6 +54,20 @@ function resolveNotifyOtherTabs(options?: PortalLinkEntryResetOptions): boolean 
   return !hasTabAppSessionActive();
 }
 
+function shouldSkipPortalLinkEntryReset(notifyOtherTabs: boolean): boolean {
+  if (notifyOtherTabs) return false;
+  if (typeof window === 'undefined') return false;
+  if (!isPrivilegedProfessionalSessionActive()) return false;
+  return isSameTabPortalStartNavigationPath(window.location.pathname || '');
+}
+
+/** 동일 탭 검사시작 이동 시 전문가 로그인 유지 여부 */
+export function shouldSkipPortalLinkEntryResetForCurrentTab(
+  options?: PortalLinkEntryResetOptions,
+): boolean {
+  return shouldSkipPortalLinkEntryReset(resolveNotifyOtherTabs(options));
+}
+
 async function applyPortalLinkEntrySessionReset(notifyOtherTabs: boolean): Promise<void> {
   resetJoinStartEnvironment();
   clearJoinFreshParticipantFlow();
@@ -69,6 +85,12 @@ export async function resetAllSessionsBeforePortalLinkEntry(
   options?: PortalLinkEntryResetOptions,
 ): Promise<void> {
   const notifyOtherTabs = resolveNotifyOtherTabs(options);
+
+  if (shouldSkipPortalLinkEntryReset(notifyOtherTabs)) {
+    markTabAppSessionActive();
+    return;
+  }
+
   markTabAppSessionActive();
 
   if (resetPromise) return resetPromise;

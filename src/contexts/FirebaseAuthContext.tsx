@@ -38,7 +38,7 @@ import {
 import { primeCounselorIdToken, clearCounselorIdTokenCache } from '@/lib/counselorAuth';
 import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
 import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
-import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
+import { resetAllSessionsBeforePortalLinkEntry, shouldSkipPortalLinkEntryResetForCurrentTab } from '@/lib/portalLinkEntryReset';
 
 const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
 const AUTH_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
@@ -423,15 +423,17 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         if (firebaseUser) {
         const path = typeof window !== 'undefined' ? window.location.pathname || '' : '';
         if (isClientPortalLinkEntryPath(path)) {
-          void resetAllSessionsBeforePortalLinkEntry().then(() => {
-            if (cancelled) return;
-            setUser(null);
-            writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
-            clearCounselorIdTokenCache();
-            setRoleHydrating(false);
-            finishLoading();
-          });
-          return;
+          if (!shouldSkipPortalLinkEntryResetForCurrentTab({ notifyOtherTabs: false })) {
+            void resetAllSessionsBeforePortalLinkEntry({ notifyOtherTabs: false }).then(() => {
+              if (cancelled) return;
+              setUser(null);
+              writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+              clearCounselorIdTokenCache();
+              setRoleHydrating(false);
+              finishLoading();
+            });
+            return;
+          }
         }
         if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
           if (authExpiredOnStartupRef.current) {

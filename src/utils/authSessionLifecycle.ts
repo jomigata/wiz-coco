@@ -7,6 +7,7 @@ import { signOut } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 import { clearClientPortalSession } from '@/lib/clientPortalSession';
+import { readSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
 const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
@@ -280,6 +281,26 @@ export async function clearAllAuthStorage(options?: { fullReset?: boolean }): Pr
 export function hasAuthenticatedTabSession(): boolean {
   if (typeof window === 'undefined') return false;
   return sessionStorage.getItem(AUTH_TAB_SESSION_KEY) === '1';
+}
+
+const FIREBASE_AUTH_USER_CACHE_KEY = 'swr:firebaseAuthUser';
+
+/** 상담사·기관관리자·관리자 등 전문가 Firebase 세션 (동일 탭 검사시작 이동 시 로그아웃 제외) */
+export function isPrivilegedProfessionalSessionActive(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (!hasAuthenticatedTabSession()) return false;
+  try {
+    const { auth } = initializeFirebase();
+    if (!auth?.currentUser) return false;
+  } catch {
+    return false;
+  }
+  const { data } = readSWRCache<{ role?: string }>(FIREBASE_AUTH_USER_CACHE_KEY, {
+    scope: 'session',
+    maxAgeMs: 30 * 60 * 1000,
+  });
+  const role = data?.role ?? 'user';
+  return role === 'counselor' || role === 'admin' || role === 'org_admin';
 }
 
 /** 로그인 유지 중 주기적으로 갱신 — 탭/브라우저 종료 후 stale 세션 차단 */

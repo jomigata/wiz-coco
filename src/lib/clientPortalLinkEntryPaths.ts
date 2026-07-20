@@ -6,3 +6,9 @@ export function isClientPortalLinkEntryPath(pathname: string): boolean {
   if (path === '/join') return true;
   return false;
 }
+
+/** 동일 탭에서 검사시작 화면으로 이동 (/go 매직링크 제외) */
+export function isSameTabPortalStartNavigationPath(pathname: string): boolean {
+  const path = (pathname || '/').replace(/\/+$/, '') || '/';
+  return path === '/portal/login' || path === '/join';
+}
