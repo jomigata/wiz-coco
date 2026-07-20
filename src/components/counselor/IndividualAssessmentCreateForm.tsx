@@ -794,7 +794,7 @@ export default function IndividualAssessmentCreateForm() {
                 {loadingIntent === 'excel' ? '저장 중…' : `${recipientCountLabel} 엑셀(Excel) 저장하기`}
               </span>
               <span className="mt-0.5 block text-sm text-slate-400">
-                발송 없이 이 화면에서 Excel로 코드·비밀번호 저장
+                발송 없이 Excel로 코드·비밀번호 저장
               </span>
             </button>
           </div>

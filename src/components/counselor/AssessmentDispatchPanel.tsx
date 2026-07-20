@@ -97,7 +97,7 @@ function resolveCredentialSendMode(recipients: DispatchRecipient[]): CredentialS
 function credentialSendModeLabel(mode: CredentialSendMode): string {
   switch (mode) {
     case 'initial':
-      return '선택 발송';
+      return '선택된 코드발송';
     case 'resend':
       return '코드 재발송';
     default:
