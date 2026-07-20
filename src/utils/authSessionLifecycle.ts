@@ -538,6 +538,10 @@ export function evaluateAuthSessionOnStartup(): boolean {
   return true;
 }
 
+function shouldSkipCrossTabAuthClear(): boolean {
+  return isAuthLoginInProgress();
+}
+
 export function subscribeAuthClearEvents(onClear: () => void): () => void {
   if (typeof window === 'undefined') return () => {};
 
@@ -545,7 +549,7 @@ export function subscribeAuthClearEvents(onClear: () => void): () => void {
   try {
     channel = new BroadcastChannel(AUTH_CLEAR_CHANNEL);
     channel.onmessage = () => {
-      if (shouldSkipAuthClear() || isAuthLoginInProgress()) return;
+      if (shouldSkipCrossTabAuthClear()) return;
       clearClientPortalSession();
       void clearAllAuthStorage().then(onClear);
     };

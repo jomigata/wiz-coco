@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loginClientPortal } from '@/lib/clientPortalApi';
@@ -69,7 +69,7 @@ function PortalLoginContent() {
     };
   }, [intent]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false;
     void resetAllSessionsBeforePortalLinkEntry().then(() => {
       if (!cancelled) setSessionResetDone(true);

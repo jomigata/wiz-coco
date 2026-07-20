@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useLayoutEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { initBrowserCleanup } from '@/utils/browserCleanup';
 import { evaluateAuthSessionOnStartup } from '@/utils/authSessionLifecycle';
 import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
-import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
+import {
+  resetAllSessionsBeforePortalLinkEntry,
+  resetAllSessionsFromPortalLinkEntryBroadcast,
+  subscribePortalLinkEntryResetEvents,
+} from '@/lib/portalLinkEntryReset';
 import {
   clearClientPortalSession,
   subscribePortalClearEvents,
@@ -13,15 +17,19 @@ import {
 
 export default function BrowserCleanupProvider() {
   const router = useRouter();
+  const pathname = usePathname() || '';
+  const startupEvaluatedRef = useRef(false);
 
   useLayoutEffect(() => {
-    const path = window.location.pathname || '';
-    if (isClientPortalLinkEntryPath(path)) {
+    if (isClientPortalLinkEntryPath(pathname)) {
       void resetAllSessionsBeforePortalLinkEntry();
       return;
     }
-    evaluateAuthSessionOnStartup();
-  }, []);
+    if (!startupEvaluatedRef.current) {
+      startupEvaluatedRef.current = true;
+      evaluateAuthSessionOnStartup();
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const cleanup = initBrowserCleanup();
@@ -34,6 +42,17 @@ export default function BrowserCleanupProvider() {
       if (typeof window !== 'undefined' && window.location.pathname.startsWith('/portal')) {
         router.replace('/portal/login/');
       }
+    });
+  }, [router]);
+
+  useEffect(() => {
+    return subscribePortalLinkEntryResetEvents(() => {
+      void resetAllSessionsFromPortalLinkEntryBroadcast().then(() => {
+        const path = window.location.pathname || '';
+        if (path.startsWith('/portal') && !isClientPortalLinkEntryPath(path)) {
+          router.replace('/portal/login/');
+        }
+      });
     });
   }, [router]);
 

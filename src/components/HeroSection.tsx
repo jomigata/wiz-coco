@@ -2,26 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { readClientPortalSession } from '@/lib/clientPortalSession';
+import { useRouter } from 'next/navigation';
 import { portalLoginHref } from '@/lib/portalLoginIntent';
+import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import { homeSectionTones } from '@/components/home/homeSectionStyles';
 
 export default function HeroSection() {
+  const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
-  const [examHref, setExamHref] = useState('/portal/login/');
-  const [resultsHref, setResultsHref] = useState(portalLoginHref('results'));
+  const examHref = portalLoginHref('start');
+  const resultsHref = portalLoginHref('results');
   const { isAuthenticated } = useAuthResolved();
   const { isApprovedCounselor } = useCounselorProfessionalAccess();
 
   useEffect(() => {
     setIsVisible(true);
-    const portal = readClientPortalSession();
-    if (portal?.portalToken) {
-      setExamHref('/portal/');
-      setResultsHref('/portal/?focus=results');
-    }
   }, []);
 
   return (
@@ -69,6 +66,10 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-lg mx-auto">
             <Link
               href={examHref}
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToClientPortalLogin(router, examHref);
+              }}
               className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-br from-sky-500 to-indigo-600 shadow-xl shadow-sky-900/30 border border-sky-400/20 hover:shadow-sky-800/40 hover:brightness-105 transition-all"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/15 text-lg" aria-hidden>
@@ -78,6 +79,10 @@ export default function HeroSection() {
             </Link>
             <Link
               href={resultsHref}
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToClientPortalLogin(router, resultsHref);
+              }}
               className="inline-flex items-center justify-center px-8 py-4 rounded-2xl text-base font-medium text-slate-200 border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 transition-all"
             >
               검사 결과 확인

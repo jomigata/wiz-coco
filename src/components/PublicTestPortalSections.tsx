@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ClientPortalLoginLink from '@/components/portal/ClientPortalLoginLink';
 import HomeSectionShell from '@/components/home/HomeSectionShell';
 
 const steps = [
@@ -89,13 +90,10 @@ export default function PublicTestPortalSections() {
             >
               검사코드 받는 방법 · 개인 직접 구매 안내 →
             </Link>
-            <Link
-              href="/portal/login/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-sky-300/90 hover:text-sky-200 transition-colors"
-            >
+            <ClientPortalLoginLink className="inline-flex items-center gap-2 text-sm font-medium text-sky-300/90 hover:text-sky-200 transition-colors">
               검사 시작하기
               <span aria-hidden>→</span>
-            </Link>
+            </ClientPortalLoginLink>
           </p>
         </div>
       </HomeSectionShell>

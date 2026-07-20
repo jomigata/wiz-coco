@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ClientPortalLoginLink from '@/components/portal/ClientPortalLoginLink';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useCounselorProfessionalAccess } from '@/hooks/useCounselorProfessionalAccess';
 import BusinessLegalBlock from '@/components/layout/BusinessLegalBlock';
@@ -64,9 +65,9 @@ export default function SiteFooter() {
             <h3 className="text-lg font-semibold text-white mb-4">바로가기</h3>
             <ul className="text-sm space-y-2">
               <li>
-                <Link href="/portal/login/" className="hover:text-white transition-colors">
+                <ClientPortalLoginLink className="hover:text-white transition-colors">
                   검사 시작
-                </Link>
+                </ClientPortalLoginLink>
               </li>
               <li>
                 <Link href={COUNSELOR_SALES_HUB_HREF} className="hover:text-white transition-colors">
