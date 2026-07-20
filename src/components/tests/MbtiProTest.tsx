@@ -11,6 +11,8 @@ import { generateTestCode } from '@/utils/testCodeGenerator';
 import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
 import { initializeFirebase, auth } from '@/lib/firebase';
 import { testResults } from '@/utils/firebaseIntegration';
+import { MBTI_PRO_TEST_FLOW, type MbtiProTestFlowConfig } from '@/config/mbtiProTestFlow';
+import { getMbtiProVisualTheme, resolveMbtiProPageShell } from '@/config/mbtiProVisualTheme';
 
 interface Answer {
   [key: string]: number;
@@ -31,12 +33,20 @@ interface Question {
 
 interface MbtiProTestProps {
   isLoggedIn: boolean;
+  flow?: MbtiProTestFlowConfig;
 }
 
-export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
+export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: MbtiProTestProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const uiTheme = flow.uiTheme ?? 'emerald';
+  const v = getMbtiProVisualTheme(uiTheme);
+  const pageShell = resolveMbtiProPageShell(flow.pageShellClassName, uiTheme);
+  const screenTitle = flow.testScreenTitle ?? flow.displayName;
+  const screenSubtitle =
+    flow.testScreenSubtitle ?? '깊이 생각하지 말고, 자연스럽게 떠오르는 대로 선택해주세요.';
+  const totalQuestions = flow.totalQuestions;
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Answer>({});
   const [isMouseMoved, setIsMouseMoved] = useState(false);
@@ -64,7 +74,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [hasResumeData, setHasResumeData] = useState(false);
-  const testId = generateTestId(pathname || '/tests/mbti_pro');
+  const testId = generateTestId(pathname || flow.defaultPath);
 
   // 컴포넌트 마운트 시 저장된 진행 상태 확인
   useEffect(() => {
@@ -94,7 +104,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
       // 완료 여부 확인 (100% 진행률인 경우 제외)
       const answeredCount = Object.keys(savedProgress.answers || {}).length;
-      const savedTotalQuestions = savedProgress.totalQuestions || 24; // MBTI Pro는 기본 24개 질문
+      const savedTotalQuestions = savedProgress.totalQuestions || flow.totalQuestions;
       
       // 총 문항 수가 있고, 모든 문항이 완료되었으면 이어하기 표시하지 않음
       if (savedTotalQuestions > 0 && answeredCount >= savedTotalQuestions) {
@@ -113,18 +123,18 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     if (currentStep === 'test' && Object.keys(answers).length > 0) {
       saveTestProgress({
         testId,
-        testName: '전문가용 MBTI 검사',
+        testName: flow.displayName,
         answers,
         currentQuestion,
         currentStep,
         clientInfo,
         codeData,
         timestamp: Date.now(),
-        testType: 'MBTI_PRO',
-        totalQuestions: 24 // MBTI Pro 총 질문 수
+        testType: flow.progressTestType,
+        totalQuestions: flow.totalQuestions
       });
     }
-  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId]);
+  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId, flow]);
 
   // 페이지를 벗어날 때 진행 상태 저장 (초기화 대신)
   useEffect(() => {
@@ -132,15 +142,15 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       if (typeof window !== 'undefined' && currentStep === 'test' && Object.keys(answers).length > 0) {
         saveTestProgress({
           testId,
-          testName: '전문가용 MBTI 검사',
+          testName: flow.displayName,
           answers,
           currentQuestion,
           currentStep,
           clientInfo,
           codeData,
           timestamp: Date.now(),
-          testType: 'MBTI_PRO',
-          totalQuestions: 24 // MBTI Pro 총 질문 수
+          testType: flow.progressTestType,
+          totalQuestions: flow.totalQuestions
         });
       }
     };
@@ -149,7 +159,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       window.addEventListener('beforeunload', handleBeforeUnload);
       return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }
-  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId]);
+  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId, flow]);
 
   // 이어하기 기능: 저장된 진행 상태 복원
   const handleResumeTest = () => {
@@ -257,8 +267,6 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     
     setSelectedQuestions(selected);
   }, [clientInfo]); // clientInfo가 변경될 때 실행
-
-  const totalQuestions = 24; // 총 질문 수는 24개 (각 방향별 3개씩)
 
   const handleClientInfoSubmit = (info: ClientInfo) => {
     console.log('MbtiProTest - 클라이언트 정보 제출 시작:', info);
@@ -397,7 +405,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       // 검사 코드 생성 (로그인 사용자만)
       let testCode: string | null = null;
       if (isLoggedIn) {
-        testCode = generateTestCode('PROFESSIONAL');
+        testCode = generateTestCode(flow.codePrefix);
       }
       
       // 로컬 스토리지에 검사 완료 시간 저장
@@ -442,7 +450,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
             const testRecord = {
               code: testCode,
               counselorCode: counselorCode,
-              testType: '전문가용 MBTI 검사',
+              testType: flow.firebaseTestTypeLabel,
               timestamp: completionTime,
               mbtiType: calculateMbtiType(answers),
               userId: currentUserId, // Firebase 저장을 위한 userId 추가
@@ -569,8 +577,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
       
       // 생성한 testCode를 URL 파라미터로 전달 (검사기록 목록의 코드와 일치시키기 위해)
       const queryString = encodeURIComponent(JSON.stringify(testData));
-      const testCodeParam = testCode ? `&code=${encodeURIComponent(testCode)}` : '';
-      router.push(`/tests/mbti_pro/result?data=${queryString}${testCodeParam}&from=completion`);
+      router.push(flow.buildResultUrl({ encodedData: queryString, testCode }));
     } catch (error) {
       console.error('검사 완료 중 오류 발생:', error);
       setIsLoading(false); // 오류 발생 시 로딩 상태 해제
@@ -621,28 +628,28 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
     const progressPercent = Math.round((answeredCount / totalCount) * 100);
     
     return (
-      <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4 pt-16">
+      <div className={v.resumeOuter}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-emerald-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-emerald-700"
+          className={v.resumeCard}
         >
           <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
-          <p className="text-emerald-200 mb-6 text-center">
+          <p className={`${v.resumeBody} mb-6 text-center`}>
             진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
           </p>
-          <div className="bg-emerald-800/50 rounded-lg p-4 mb-6">
+          <div className={`${v.resumePanel} rounded-lg p-4 mb-6`}>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-emerald-200 text-sm">진행률</span>
-              <span className="text-emerald-300 font-semibold">{progressPercent}%</span>
+              <span className={`${v.resumeBody} text-sm`}>진행률</span>
+              <span className={`${v.resumeHint} font-semibold`}>{progressPercent}%</span>
             </div>
-            <div className="w-full bg-emerald-900 rounded-full h-2">
+            <div className={`w-full ${v.resumeTrack} rounded-full h-2`}>
               <div
-                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                className={`${v.resumeFill} h-2 rounded-full transition-all duration-300`}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <p className="text-emerald-300/80 text-xs mt-2 text-center">
+            <p className={`${v.resumeHint} text-xs mt-2 text-center`}>
               {answeredCount}개 문항 완료 / 전체 {totalCount}개
             </p>
           </div>
@@ -651,7 +658,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               onClick={handleStartNew}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
+              className={v.resumeBtnSecondary}
             >
               처음부터 시작
             </motion.button>
@@ -659,7 +666,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               onClick={handleResumeTest}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+              className={v.resumeBtnPrimary}
             >
               이어서 계속
             </motion.button>
@@ -671,7 +678,15 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
 
   // 단계별 렌더링
   if (currentStep === 'code') {
-    return <MbtiProCodeInput onSubmit={handleCodeSubmit} initialData={codeData} />;
+    return (
+      <MbtiProCodeInput
+        onSubmit={handleCodeSubmit}
+        initialData={codeData}
+        uiTheme={uiTheme}
+        screenTitle={flow.codeStepTitle ?? flow.displayName}
+        screenSubtitle={flow.codeStepSubtitle}
+      />
+    );
   }
 
   if (currentStep === 'info') {
@@ -691,11 +706,15 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           </div>
           
           {/* Gradient orbs */}
+          {v.showOrbs && (
+            <>
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
           <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            </>
+          )}
 
-          <MbtiProClientInfo 
+          <MbtiProClientInfo
             onSubmit={handleClientInfoSubmit} 
             isPersonalTest={true}
             initialData={clientInfo}
@@ -713,11 +732,13 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
   // 검사 단계 (currentStep === 'test')
 
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = 'after:from-sky-400/60') =>
+    `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 
   // 선택된 문항이 아직 로드되지 않았으면 로딩 표시
   if (selectedQuestions.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-950 relative overflow-y-auto pt-16">
+      <div className={`${pageShell} flex flex-col items-center justify-center relative overflow-y-auto pt-16`}>
         {/* Background pattern */}
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -730,17 +751,20 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
           </svg>
         </div>
         
-        {/* Gradient orbs */}
+        {v.showOrbs && (
+          <>
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+          </>
+        )}
         <div className="relative z-10 text-white text-2xl">문항을 준비하는 중입니다...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen h-full flex flex-col relative overflow-y-auto bg-emerald-950 pt-16">
+    <div className={`${pageShell} h-full flex flex-col relative overflow-y-auto pt-16`}>
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -753,29 +777,32 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
         </svg>
       </div>
       
-      {/* Gradient orbs */}
+      {v.showOrbs && (
+        <>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        </>
+      )}
       
-      <div className="flex-1 bg-emerald-950 py-4 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
+      <div className="flex-1 py-4 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-2xl mx-auto relative z-10">
           <div className="text-center mb-5">
-            <h1 className="text-3xl font-bold text-white mb-4">전문가용 MBTI 검사</h1>
-            <p className="text-emerald-300 max-w-lg mx-auto">
-              깊이 생각하지 말고, 자연스럽게 떠오르는 대로 선택해주세요.
+            <h1 className="text-3xl font-bold text-white mb-4">{screenTitle}</h1>
+            <p className={`${v.subtitle} max-w-lg mx-auto`}>
+              {screenSubtitle}
             </p>
           </div>
 
-          <div className="bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8">
+          <div className={v.mainCard}>
             <div className="flex justify-between items-center mb-6">
-              <div className="text-emerald-200">문항 {currentQuestion + 1} / {totalQuestions}</div>
-              <div className="text-emerald-200">진행률: {Math.round(((currentQuestion + 1) / totalQuestions) * 100)}%</div>
+              <div className={v.progressLabel}>문항 {currentQuestion + 1} / {totalQuestions}</div>
+              <div className={v.progressLabel}>진행률: {Math.round(((currentQuestion + 1) / totalQuestions) * 100)}%</div>
             </div>
 
-            <div className="w-full bg-emerald-800/50 rounded-full h-2 mb-8">
+            <div className={`w-full ${v.progressTrack} rounded-full h-2 mb-8`}>
               <div
-                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                className={`${v.progressFill} h-2 rounded-full transition-all duration-300`}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -791,7 +818,7 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
                     animate="center"
                     exit="exit"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="bg-emerald-800/50 backdrop-blur-sm rounded-xl p-6 mb-8 flex items-center justify-center min-h-[120px] border border-emerald-700/20"
+                    className={v.questionCard}
                   >
                     <h2 className="text-xl text-white text-center">
                       {selectedQuestions[currentQuestion].text}
@@ -802,118 +829,118 @@ export default function MbtiProTest({ isLoggedIn }: MbtiProTestProps) {
               
               <div className="flex flex-col gap-8">
                 <div className="relative flex justify-between items-end gap-3 px-4">
-                  <div className="absolute top-0 left-0 right-0 h-24 bg-emerald-900/10 rounded-[100%/20px] -z-10"></div>
+                  <div className={v.scaleArc}></div>
                   <button
                     onClick={() => handleAnswer(6)}
-                    className={`group relative py-10 px-4 flex-1 rounded-xl bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-sky-400/60 after:to-transparent after:rounded-b-xl after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    className={answerBtnClass('rounded-xl', 'py-10')}
                   >
                     {answers[currentQuestion] === 6 && (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <div className={`w-14 h-14 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
                         <span className="text-white text-lg font-bold">A</span>
                       </div>
-                      <span className={`text-sm font-bold text-emerald-400 transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>그렇다</span>
+                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>그렇다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(5)}
-                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-sky-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]')}
                   >
                     {answers[currentQuestion] === 5 && (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <div className={`w-12 h-12 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
                         <span className="text-white text-lg font-bold">B</span>
                       </div>
-                      <span className={`text-sm font-bold text-emerald-400 transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>그렇다</span>
+                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>그렇다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(4)}
-                    className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-sky-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    className={answerBtnClass('rounded-[20px]', 'py-5')}
                   >
                     {answers[currentQuestion] === 4 && (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <div className={`w-10 h-10 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
                         <span className="text-white text-lg font-bold">C</span>
                       </div>
-                      <span className={`text-sm font-bold text-emerald-400 transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>그렇다</span>
+                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>그렇다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(3)}
-                    className={`group relative py-5 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-pink-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px]' : ''}`}
+                    className={answerBtnClass('rounded-[20px]', 'py-5', '', 'after:from-pink-400/60')}
                   >
                     {answers[currentQuestion] === 3 && (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <div className={`w-10 h-10 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
                         <span className="text-white text-lg font-bold">D</span>
                       </div>
-                      <span className={`text-sm font-bold text-emerald-400 transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>아니다</span>
+                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>아니다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(2)}
-                    className={`group relative py-[2.625rem] px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-pink-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
+                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
                   >
                     {answers[currentQuestion] === 2 && (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <div className={`w-12 h-12 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
                         <span className="text-white text-lg font-bold">E</span>
                       </div>
-                      <span className={`text-sm font-bold text-emerald-400 transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>아니다</span>
+                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>아니다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(1)}
-                    className={`group relative py-10 px-4 flex-1 rounded-[20px] bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t after:from-pink-400/60 after:to-transparent after:rounded-b-[20px] after:pointer-events-none ${isMouseMoved ? 'hover:bg-emerald-800/60 hover:translate-y-[-2px] hover:shadow-lg hover:shadow-emerald-900/20' : ''}`}
+                    className={answerBtnClass('rounded-[20px]', 'py-10', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
                   >
                     {answers[currentQuestion] === 1 && (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <div className={`w-14 h-14 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
                         <span className="text-white text-lg font-bold">F</span>
                       </div>
-                      <span className={`text-sm font-bold text-emerald-400 transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>아니다</span>
+                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>아니다</span>
                     </div>
                   </button>
                 </div>

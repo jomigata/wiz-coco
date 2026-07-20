@@ -47,6 +47,22 @@ export const TEST_SEARCH_SEED: TestSearchSeedEntry[] = [
     subcategory: '1a. 성격 및 기질 탐색',
   },
   {
+    keywords: [
+      '전문가용 이고',
+      '이고 오케이 전문',
+      'ego ok pro',
+      'ego-ok-pro',
+      '교류분석 전문',
+      'ta 검사 전문',
+    ],
+    name: '전문가용 이고-오케이그램 검사',
+    description: '상담사·전문가용 이고·오케이(OK) 자아 상태 검사',
+    href: '/tests/ego-ok-pro',
+    icon: '🔄',
+    category: '전문가용 이고-오케이그램 검사',
+    subcategory: '전문가용 이고-오케이그램',
+  },
+  {
     keywords: ['에니어그램', 'enneagram', '9유형', '9types', '성격유형9'],
     name: '에니어그램 성격 검사',
     description: '9가지 성격 유형 에니어그램 검사',

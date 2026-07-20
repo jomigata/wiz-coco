@@ -242,6 +242,8 @@ export function determineTestType(pathname?: string): DBTestType {
     return 'PROFESSIONAL';
   } else if (pathname.includes('/tests/inside-mbti')) {
     return 'AMATEUR'; // 인사이드 MBTI는 개인용으로 분류
+  } else if (pathname.includes('/tests/ego-ok-pro')) {
+    return 'EGO_PROFESSIONAL';
   } else if (pathname.includes('/tests/ego-ok')) {
     return 'EGO_AMATEUR';
   } else if (pathname.includes('/tests/enneagram')) {

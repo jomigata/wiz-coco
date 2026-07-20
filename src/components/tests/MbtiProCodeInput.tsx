@@ -7,9 +7,19 @@ interface MbtiProCodeInputProps {
   onSubmit: (codeData: { groupCode: string; groupPassword: string }) => void;
   initialData?: { groupCode: string; groupPassword: string } | null;
   isPersonalTest?: boolean;
+  uiTheme?: 'emerald' | 'portal';
+  screenTitle?: string;
+  screenSubtitle?: string;
 }
 
-const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialData, isPersonalTest = false }) => {
+const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({
+  onSubmit,
+  initialData,
+  isPersonalTest = false,
+  uiTheme = 'emerald',
+  screenTitle,
+  screenSubtitle,
+}) => {
   const [groupCode, setGroupCode] = useState<string>(initialData?.groupCode || '');
   const [groupPassword, setGroupPassword] = useState<string>(initialData?.groupPassword || '');
   const [errors, setErrors] = useState<{
@@ -120,10 +130,34 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
     }
   }, [groupPassword]);
 
+  const isPortal = uiTheme === 'portal';
+  const shellClass = isPortal
+    ? `min-h-screen bg-[#070b14] text-white py-4 px-4 overflow-hidden relative${!isPersonalTest ? ' pt-16' : ''}`
+    : `min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative${!isPersonalTest ? ' pt-16' : ''}`;
+  const defaultTitle = isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사';
+  const title = screenTitle ?? defaultTitle;
+  const subtitle =
+    screenSubtitle ??
+    (isPersonalTest
+      ? '검사코드가 없어도 검사를 진행할 수 있습니다.\n검사코드는 상담사가 제공한 경우에만 입력하세요.'
+      : '검사코드가 없어도 검사를 진행할 수 있습니다.\n검사코드는 상담사가 제공한 경우에만 입력하세요.');
+  const formCard = isPortal
+    ? 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-8'
+    : 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8';
+  const hintClass = isPortal ? 'text-slate-500' : 'text-emerald-400/70';
+  const labelMuted = isPortal ? 'text-slate-400' : 'text-emerald-300';
+  const submitBtn = isPortal
+    ? 'px-6 py-3 bg-sky-600 text-white font-medium rounded-lg shadow-md hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-[#070b14]'
+    : 'px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg shadow-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-emerald-900';
+  const inputFilled = isPortal
+    ? 'bg-sky-600/80 border border-sky-500/40 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+    : 'bg-emerald-600 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500';
+  const inputEmpty = isPortal
+    ? 'bg-slate-800/70 border border-white/[0.12] text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+    : 'bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500';
+
   return (
-    <div
-      className={`min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative${!isPersonalTest ? ' pt-16' : ''}`}
-    >
+    <div className={shellClass}>
       {/* CSS 애니메이션 추가 */}
       <style jsx>{`
         @keyframes blink {
@@ -138,19 +172,21 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
       {/* 단색 배경 유지: 그리드 제거 */}
       
       {/* Gradient orbs */}
+      {!isPortal && (
+        <>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        </>
+      )}
       
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-white mb-4">
-            {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
+            {title}
           </h1>
-          <p className="text-emerald-300 max-w-lg mx-auto">
-            검사코드가 없어도 검사를 진행할 수 있습니다.
-            <br />
-            검사코드는 상담사가 제공한 경우에만 입력하세요.
+          <p className={`${isPortal ? 'text-slate-400' : 'text-emerald-300'} max-w-lg mx-auto whitespace-pre-line`}>
+            {subtitle}
           </p>
         </div>
 
@@ -158,7 +194,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8"
+          className={formCard}
         >
           <form 
             onSubmit={handleSubmit} 
@@ -186,7 +222,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
             <div className="space-y-6 border border-blue-500/20 rounded-lg p-4 bg-blue-500/10">
               <div className="pb-2 border-b border-white/20">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium text-emerald-300">검사 코드</span>
+                  <span className={`text-sm font-medium ${labelMuted}`}>검사 코드</span>
                 </div>
               </div>
               
@@ -205,12 +241,12 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
                         setGroupCode(e.target.value);
                         const input = e.target as HTMLInputElement;
                         if (e.target.value.trim()) {
-                          input.className = `w-full px-4 py-3 rounded-lg bg-emerald-600 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`;
+                          input.className = `w-full px-4 py-3 rounded-lg ${inputFilled} transition-colors`;
                         } else {
-                          input.className = `w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`;
+                          input.className = `w-full px-4 py-3 rounded-lg ${inputEmpty} transition-colors`;
                         }
                       }}
-                      className={`w-full px-4 py-3 rounded-lg ${groupCode.trim() ? 'bg-emerald-600' : 'bg-emerald-800/70'} border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg ${groupCode.trim() ? (isPortal ? 'bg-sky-600/80 border border-sky-500/40' : 'bg-emerald-600 border border-emerald-700') : (isPortal ? 'bg-slate-800/70 border border-white/[0.12]' : 'bg-emerald-800/70 border border-emerald-700')} text-white focus:ring-2 ${isPortal ? 'focus:ring-sky-500 focus:border-sky-500' : 'focus:ring-emerald-500 focus:border-emerald-500'} transition-colors`}
                       placeholder="검사 코드 입력"
                       autoComplete="new-password"
                       autoCorrect="off"
@@ -235,12 +271,12 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
                         setGroupPassword(e.target.value);
                         const input = e.target as HTMLInputElement;
                         if (e.target.value.trim()) {
-                          input.className = `w-full px-4 py-3 rounded-lg bg-emerald-600 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`;
+                          input.className = `w-full px-4 py-3 rounded-lg ${inputFilled} transition-colors`;
                         } else {
-                          input.className = `w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`;
+                          input.className = `w-full px-4 py-3 rounded-lg ${inputEmpty} transition-colors`;
                         }
                       }}
-                      className={`w-full px-4 py-3 rounded-lg ${groupPassword.trim() ? 'bg-emerald-600' : 'bg-emerald-800/70'} border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg ${groupPassword.trim() ? (isPortal ? 'bg-sky-600/80 border border-sky-500/40' : 'bg-emerald-600 border border-emerald-700') : (isPortal ? 'bg-slate-800/70 border border-white/[0.12]' : 'bg-emerald-800/70 border border-emerald-700')} text-white focus:ring-2 ${isPortal ? 'focus:ring-sky-500 focus:border-sky-500' : 'focus:ring-emerald-500 focus:border-emerald-500'} transition-colors`}
                       placeholder="비밀번호를 입력해주세요"
                       autoComplete="new-password"
                       autoCorrect="off"
@@ -264,7 +300,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
                 type="submit"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg shadow-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-emerald-900"
+                className={submitBtn}
               >
                 다음 단계로
               </motion.button>
@@ -272,7 +308,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({ onSubmit, initialDa
           </form>
         </motion.div>
 
-        <div className="mt-8 text-center text-sm text-emerald-400/70">
+        <div className={`mt-8 text-center text-sm ${hintClass}`}>
           <p>* 검사코드가 없어도 검사를 진행할 수 있습니다.</p>
           <p>* 검사코드는 상담사가 제공한 경우에만 입력하세요.</p>
         </div>
