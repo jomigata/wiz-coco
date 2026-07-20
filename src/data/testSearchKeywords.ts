@@ -15,7 +15,7 @@ export interface TestSearchSeedEntry {
 
 /** leaf href → 실제 운영 중인 페이지 (미구현 leaf 대체) */
 export const IMPLEMENTED_TEST_HREF: Record<string, string> = {
-  '/tests/mbti-analysis': '/tests/mbti',
+  '/tests/mbti-analysis': '/tests/ego-ok',
   '/tests/strengths-growth': '/tests/personality-temperament',
   '/tests/emotional-intelligence': '/tests/personality-temperament',
   '/tests/stress-response': '/tests/anxiety-stress',

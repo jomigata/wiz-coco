@@ -141,7 +141,7 @@ export const testSubMenuItems: TestCategory[] = [
         name: "1a. 성격 및 기질 탐색",
         icon: "🔍",
         items: [
-          { name: "MBTI 성격 유형 분석", href: "/tests/mbti-analysis", description: "16가지 성격 유형을 통한 나만의 특성 발견", icon: "🧠" },
+          { name: "이고-오케이그램 검사", href: "/tests/ego-ok", description: "교류분석 기반 이고·오케이(OK) 자아 상태 검사", icon: "🔄" },
           { name: "강점 기반 성장 계획", href: "/tests/strengths-growth", description: "개인 강점을 활용한 맞춤형 성장 로드맵", icon: "💪" },
           { name: "감정 지능(EQ) 측정", href: "/tests/emotional-intelligence", description: "감정 인식, 조절, 활용 능력 종합 평가", icon: "❤️" },
           { name: "스트레스 대응 패턴 분석", href: "/tests/stress-response", description: "개인별 스트레스 반응 방식과 대처 전략", icon: "🛡️" }
