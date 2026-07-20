@@ -10,7 +10,7 @@ from config import (
     PUBLIC_SITE_URL,
     TEST_RESULTS_COLLECTION,
 )
-from utils.notification_worker import deliver_portal_credentials, deliver_test_reminder
+from utils.notification_worker import deliver_portal_credentials, deliver_test_reminder, confirm_solapi_sending_for_portals
 from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
 
@@ -447,6 +447,23 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
             continue
         portal_ids.add(doc.id)
         rows.append((doc.id, pdata))
+
+    sending_portal_ids = [
+        pid
+        for pid, pdata in rows
+        if (pdata.get("lastNotifyStatus") or "").strip() == "sending"
+        and (pdata.get("solapiGroupId") or "").strip()
+    ]
+    if sending_portal_ids:
+        confirm_solapi_sending_for_portals(db, sending_portal_ids, counselor_uid=counselor_uid)
+        refreshed: list[tuple[str, dict]] = []
+        for pid, pdata in rows:
+            if pid in sending_portal_ids:
+                fresh = db.collection(CLIENT_PORTALS_COLLECTION).document(pid).get()
+                refreshed.append((pid, fresh.to_dict() or pdata))
+            else:
+                refreshed.append((pid, pdata))
+        rows = refreshed
 
     notify_map = _latest_notify_by_portal(db, portal_ids)
     recipients = []

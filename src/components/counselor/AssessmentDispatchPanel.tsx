@@ -322,7 +322,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     if (!hasSendingNotify || authPending || !isAuthenticated) return;
     const timer = window.setInterval(() => {
       void load({ silent: true });
-    }, 4000);
+    }, 2500);
     return () => window.clearInterval(timer);
   }, [hasSendingNotify, load, authPending, isAuthenticated]);
 

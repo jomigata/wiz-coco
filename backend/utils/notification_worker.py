@@ -176,12 +176,141 @@ def _finalize_delivery_result(
     }
 
 
+def _confirm_one_solapi_sending(
+    *,
+    portal_id: str,
+    portal_ref,
+    queue_ref,
+    email: str,
+    phone: str,
+    email_ch: str,
+    phone_ch: str,
+    errors: list[str],
+    notify_kind: str,
+    sent_via: str,
+    group_id: str,
+) -> tuple[str, str]:
+    """Solapi 그룹 1회 조회 후 스냅샷 확정. 반환: (집계 상태, pending|delivered|failed)."""
+    outcome, err = check_solapi_group_delivery(group_id)
+    if outcome == "pending":
+        return "sending", "pending"
+
+    if outcome == "delivered":
+        phone_ch = CHANNEL_SENT
+        if not sent_via:
+            sent_via = "sms"
+        elif "kakao" not in sent_via and "sms" not in sent_via:
+            sent_via = f"{sent_via},sms".strip(",")
+    else:
+        phone_ch = CHANNEL_FAILED
+        if err and err not in errors:
+            errors.append(err)
+        if "phone_send_failed" not in errors:
+            errors.append("phone_send_failed")
+
+    result = _finalize_delivery_result(
+        email=email,
+        phone=phone,
+        email_ok=email_ch == CHANNEL_SENT,
+        alimtalk_ok="kakao" in sent_via and phone_ch == CHANNEL_SENT,
+        sms_ok="sms" in sent_via and phone_ch == CHANNEL_SENT,
+        errors=errors,
+        email_channel=email_ch,
+        phone_channel=phone_ch,
+        solapi_group_id="",
+    )
+    status = result["status"]
+    _apply_notify_snapshot(
+        portal_ref=portal_ref,
+        queue_ref=queue_ref,
+        email=email,
+        phone=phone,
+        email_channel=email_ch,
+        phone_channel=phone_ch,
+        status=status,
+        errors=result["errors"],
+        sent_via=result.get("sentVia") or sent_via or None,
+        notify_kind=notify_kind,
+        solapi_group_id="",
+    )
+    return status, outcome
+
+
+def confirm_solapi_sending_for_portals(
+    db,
+    portal_ids: list[str],
+    *,
+    counselor_uid: str | None = None,
+) -> dict:
+    """재발송 등 큐 없이 sending 상태인 포털 — Solapi 결과 반영."""
+    confirmed = 0
+    still_pending = 0
+    failed = 0
+    checked = 0
+
+    for pid in portal_ids:
+        portal_id = (pid or "").strip()
+        if not portal_id:
+            continue
+        portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
+        snap = portal_ref.get()
+        if not snap.exists:
+            continue
+        pdata = snap.to_dict() or {}
+        if counselor_uid and pdata.get("counselorId") != counselor_uid:
+            continue
+        if (pdata.get("lastNotifyStatus") or "").strip() != "sending":
+            continue
+        group_id = (pdata.get("solapiGroupId") or "").strip()
+        if not group_id:
+            continue
+
+        checked += 1
+        email = (pdata.get("email") or "").strip().lower()
+        phone = (pdata.get("phone") or "").strip()
+        email_ch = (pdata.get("lastNotifyEmailChannel") or CHANNEL_IDLE).strip()
+        phone_ch = (pdata.get("lastNotifyPhoneChannel") or CHANNEL_SENDING).strip()
+        errors = [e for e in (pdata.get("lastNotifyError") or "").split("; ") if e]
+        notify_kind = (pdata.get("lastNotifyKind") or "initial").strip()
+        sent_via = (pdata.get("lastNotifySentVia") or "").strip()
+
+        status, outcome = _confirm_one_solapi_sending(
+            portal_id=portal_id,
+            portal_ref=portal_ref,
+            queue_ref=None,
+            email=email,
+            phone=phone,
+            email_ch=email_ch,
+            phone_ch=phone_ch,
+            errors=errors,
+            notify_kind=notify_kind,
+            sent_via=sent_via,
+            group_id=group_id,
+        )
+        if outcome == "pending":
+            still_pending += 1
+        elif status == "sent":
+            confirmed += 1
+        elif status == "sending":
+            still_pending += 1
+        else:
+            failed += 1
+
+    return {
+        "checked": checked,
+        "confirmed": confirmed,
+        "stillPending": still_pending,
+        "failed": failed,
+    }
+
+
 def confirm_pending_solapi_notifications(*, limit: int = 40) -> dict:
-    """Solapi 그룹 결과 대기(sending) 항목 확정."""
+    """Solapi 그룹 결과 대기(sending) 항목 확정 — 큐 + 포털."""
     db = get_firestore()
     confirmed = 0
     still_pending = 0
     failed = 0
+    processed_portals: set[str] = set()
 
     queue_refs = (
         db.collection(NOTIFICATION_QUEUE_COLLECTION)
@@ -195,10 +324,6 @@ def confirm_pending_solapi_notifications(*, limit: int = 40) -> dict:
         group_id = (data.get("solapiGroupId") or "").strip()
         if not group_id:
             continue
-        outcome, err = check_solapi_group_delivery(group_id)
-        if outcome == "pending":
-            still_pending += 1
-            continue
 
         portal_id = (data.get("portalId") or "").strip()
         email = (data.get("email") or "").strip().lower()
@@ -207,64 +332,92 @@ def confirm_pending_solapi_notifications(*, limit: int = 40) -> dict:
         phone_ch = (data.get("phoneChannel") or CHANNEL_SENDING).strip()
         errors = [e for e in (data.get("error") or "").split("; ") if e]
         notify_kind = (data.get("notifyKind") or "initial").strip()
-
-        if outcome == "delivered":
-            phone_ch = CHANNEL_SENT
-        else:
-            phone_ch = CHANNEL_FAILED
-            if err and err not in errors:
-                errors.append(err)
-            if "phone_send_failed" not in errors:
-                errors.append("phone_send_failed")
-
         sent_via = (data.get("sentVia") or "").strip()
-        if phone_ch == CHANNEL_SENT and "sms" not in sent_via and "kakao" not in sent_via:
-            sent_via = f"{sent_via},sms".strip(",") if sent_via else "sms"
 
-        result = _finalize_delivery_result(
-            email=email,
-            phone=phone,
-            email_ok=email_ch == CHANNEL_SENT,
-            alimtalk_ok="kakao" in sent_via and phone_ch == CHANNEL_SENT,
-            sms_ok="sms" in sent_via and phone_ch == CHANNEL_SENT,
-            errors=errors,
-            email_channel=email_ch,
-            phone_channel=phone_ch,
-            solapi_group_id="",
+        portal_ref = (
+            db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id) if portal_id else None
         )
-        status = result["status"]
-        if portal_id:
-            portal_ref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
-            _apply_notify_snapshot(
-                portal_ref=portal_ref,
-                queue_ref=doc.reference,
+        if not portal_ref:
+            outcome, err = check_solapi_group_delivery(group_id)
+            if outcome == "pending":
+                still_pending += 1
+                continue
+            if outcome == "delivered":
+                phone_ch = CHANNEL_SENT
+            else:
+                phone_ch = CHANNEL_FAILED
+                if err and err not in errors:
+                    errors.append(err)
+                if "phone_send_failed" not in errors:
+                    errors.append("phone_send_failed")
+            result = _finalize_delivery_result(
                 email=email,
                 phone=phone,
+                email_ok=email_ch == CHANNEL_SENT,
+                alimtalk_ok="kakao" in sent_via and phone_ch == CHANNEL_SENT,
+                sms_ok="sms" in sent_via and phone_ch == CHANNEL_SENT,
+                errors=errors,
                 email_channel=email_ch,
                 phone_channel=phone_ch,
-                status=status,
-                errors=result["errors"],
-                sent_via=result.get("sentVia"),
-                notify_kind=notify_kind,
                 solapi_group_id="",
             )
-        else:
             doc.reference.update(
                 {
-                    "status": status,
+                    "status": result["status"],
                     "phoneChannel": phone_ch,
                     "processedAt": SERVER_TIMESTAMP,
                     "error": "; ".join(result["errors"]) if result["errors"] else None,
                     "solapiGroupId": None,
                 }
             )
+            if result["status"] == "sent":
+                confirmed += 1
+            elif result["status"] == "sending":
+                still_pending += 1
+            else:
+                failed += 1
+            continue
 
-        if status == "sent":
-            confirmed += 1
-        elif status == "sending":
+        status, outcome = _confirm_one_solapi_sending(
+            portal_id=portal_id,
+            portal_ref=portal_ref,
+            queue_ref=doc.reference,
+            email=email,
+            phone=phone,
+            email_ch=email_ch,
+            phone_ch=phone_ch,
+            errors=errors,
+            notify_kind=notify_kind,
+            sent_via=sent_via,
+            group_id=group_id,
+        )
+        processed_portals.add(portal_id)
+        if outcome == "pending" or status == "sending":
             still_pending += 1
+        elif status == "sent":
+            confirmed += 1
         else:
             failed += 1
+
+    portal_scan = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("lastNotifyStatus", "==", "sending")
+        .limit(limit)
+        .stream()
+    )
+    extra_ids: list[str] = []
+    for doc in portal_scan:
+        if doc.id in processed_portals:
+            continue
+        pdata = doc.to_dict() or {}
+        if not (pdata.get("solapiGroupId") or "").strip():
+            continue
+        extra_ids.append(doc.id)
+
+    portal_result = confirm_solapi_sending_for_portals(db, extra_ids)
+    confirmed += portal_result.get("confirmed", 0)
+    still_pending += portal_result.get("stillPending", 0)
+    failed += portal_result.get("failed", 0)
 
     return {"confirmed": confirmed, "stillPending": still_pending, "failed": failed}
 
