@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';interface EmergencyQuestion {
+import Link from 'next/link';
+interface EmergencyQuestion {
   id: number;
   question: string;
   options: string[];
@@ -109,7 +110,7 @@ export default function EmergencyDiagnosisPage() {
       ],
       immediateActions: [
         '즉시 신뢰할 수 있는 사람에게 연락하세요',
-        '자해나 자살 생각이 있다면 1393으로 연락하세요',
+        '자해나 자살 생각이 있다면 자살예방상담전화 등 공식 상담기관에 연락하세요',
         '응급실이나 정신건강의학과를 방문하세요'
       ],
       professionalHelp: true,
@@ -125,7 +126,7 @@ export default function EmergencyDiagnosisPage() {
         '가족이나 친구에게 즉시 도움을 요청하세요'
       ],
       immediateActions: [
-        '자해나 자살 생각이 있다면 즉시 1393으로 연락하세요',
+        '자해나 자살 생각이 있다면 즉시 자살예방상담전화 등 공식 상담기관에 연락하세요',
         '응급실이나 정신건강의학과를 즉시 방문하세요',
         '혼자 있지 마시고 누군가와 함께 있으세요'
       ],
@@ -178,7 +179,8 @@ export default function EmergencyDiagnosisPage() {
 
   if (diagnosisResult) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">{/* 헤더 */}
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+{/* 헤더 */}
         <div className={`bg-gradient-to-r ${diagnosisResult.color} text-white py-12 pt-20`}>
           <div className="container mx-auto px-6 text-center">
             <Link href="/ai-mind-assistant" className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors">
@@ -254,7 +256,7 @@ export default function EmergencyDiagnosisPage() {
                     <div className="flex items-center gap-3">
                       <div className="text-red-600 text-xl">📞</div>
                       <div>
-                        <p className="font-semibold text-red-800">자살예방상담전화: 1393</p>
+                        <p className="font-semibold text-red-800">자살예방상담전화</p>
                         <p className="text-red-700 text-sm">24시간 무료 상담</p>
                       </div>
                     </div>
@@ -296,7 +298,8 @@ export default function EmergencyDiagnosisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">{/* 헤더 */}
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+{/* 헤더 */}
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-12 pt-20">
         <div className="container mx-auto px-6 text-center">
           <Link href="/ai-mind-assistant" className="inline-flex items-center text-red-100 hover:text-white mb-4 transition-colors">
@@ -402,7 +405,7 @@ export default function EmergencyDiagnosisPage() {
             </h3>
             <ul className="text-yellow-700 space-y-2 text-sm">
               <li>• 이 진단은 참고용이며, 전문가 진단을 대체할 수 없습니다.</li>
-              <li>• 자해나 자살 생각이 있다면 즉시 1393으로 연락하세요.</li>
+              <li>• 자해나 자살 생각이 있다면 즉시 자살예방상담전화 등 공식 상담기관에 연락하세요.</li>
               <li>• 응급상황이라면 119나 가까운 응급실을 이용하세요.</li>
               <li>• 심각한 증상이 있다면 반드시 전문가와 상담하세요.</li>
             </ul>

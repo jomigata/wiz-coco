@@ -35,7 +35,9 @@ export default function BusinessLegalBlock({
           <dd className="text-slate-300">{b.address}</dd>
           <dt className="text-slate-500">문의</dt>
           <dd className="text-slate-300">
-            {b.contactEmail} · {b.contactPhone}
+            <a href={`mailto:${b.contactEmail}`} className="text-sky-300/90 hover:text-sky-200">
+              {b.contactEmail}
+            </a>
           </dd>
           <dt className="text-slate-500">통신판매업 신고</dt>
           <dd className="text-slate-300">

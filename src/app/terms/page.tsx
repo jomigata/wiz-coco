@@ -60,9 +60,13 @@ export default function TermsPage() {
             <section className="space-y-2">
               <h2 className="text-emerald-100 font-medium">6. 문의</h2>
               <p className="text-emerald-200/85">
-                이메일: <span className="text-emerald-100">{BUSINESS_LEGAL.contactEmail}</span>
-                <br />
-                전화: <span className="text-emerald-100">{BUSINESS_LEGAL.contactPhone}</span>
+                이메일:{' '}
+                <a
+                  href={`mailto:${BUSINESS_LEGAL.contactEmail}`}
+                  className="text-emerald-100 underline-offset-2 hover:underline"
+                >
+                  {BUSINESS_LEGAL.contactEmail}
+                </a>
               </p>
             </section>
 

@@ -13,7 +13,6 @@ export const BUSINESS_LEGAL = {
   address:
     '경기도 광명시 하안로 237, 806동 803호(하안동, 하안주공)',
   contactEmail: 'support@wizcoco.com',
-  contactPhone: '010-5182-5410',
   /**
    * 통신판매업 신고번호 — 미신고 시 null
    * 온라인 정보 제공(심리검사 플랫폼) 위주 서비스는 통신판매업 신고 대상이 아닐 수 있음

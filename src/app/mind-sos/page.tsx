@@ -158,19 +158,15 @@ import Link from 'next/link';export default function MindSOSPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="bg-white p-3 rounded-lg border border-blue-200">
                         <p className="font-semibold text-blue-800">생명의전화</p>
-                        <p className="text-blue-600">1588-9191</p>
+                        <p className="text-sm text-blue-600">공식 안내를 확인해 주세요</p>
                       </div>
                       <div className="bg-white p-3 rounded-lg border border-blue-200">
                         <p className="font-semibold text-blue-800">청소년전화</p>
-                        <p className="text-blue-600">1388</p>
+                        <p className="text-sm text-blue-600">공식 안내를 확인해 주세요</p>
                       </div>
-                      <div className="bg-white p-3 rounded-lg border border-red-200">
+                      <div className="bg-white p-3 rounded-lg border border-red-200 sm:col-span-2">
                         <p className="font-semibold text-red-800">긴급상황</p>
-                        <p className="text-red-600">119</p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-red-200">
-                        <p className="font-semibold text-red-800">긴급상황</p>
-                        <p className="text-red-600">119</p>
+                        <p className="text-sm text-red-600">위험 시 지역 응급·119 등 공식 구조 연락</p>
                       </div>
                     </div>
                   </div>
