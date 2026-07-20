@@ -13,7 +13,7 @@ export default function DispatchStatusText({ value }: { value: DispatchStatusVie
           {detailParts.map((part, index) => (
             <React.Fragment key={`${part.text}-${index}`}>
               {index > 0 ? '·' : null}
-              <span className={part.failed ? 'text-red-400 font-medium' : undefined}>{part.text}</span>
+              <span className={part.failed ? '!text-red-400 font-medium' : undefined}>{part.text}</span>
             </React.Fragment>
           ))}
           {')'}

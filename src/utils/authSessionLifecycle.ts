@@ -137,6 +137,27 @@ export function clearAuthStorageSync(options?: { fullReset?: boolean }): void {
 }
 
 const AUTH_LOGIN_IN_PROGRESS_LS_KEY = 'wizcoco:auth-login-in-progress-ls';
+const SKIP_STARTUP_SIGNOUT_KEY = 'wizcoco:skip-startup-signout';
+
+/** 로그인 페이지 진입 시 startup signOut 레이스 방지 */
+export function markCounselorLoginPageSession(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(SKIP_STARTUP_SIGNOUT_KEY, '1');
+  try {
+    localStorage.removeItem(AUTH_CLEARED_FLAG);
+  } catch {
+    // ignore
+  }
+}
+
+export function shouldSkipStartupSignOut(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    sessionStorage.getItem(SKIP_STARTUP_SIGNOUT_KEY) === '1' ||
+    isAuthLoginInProgress() ||
+    (window.location.pathname || '').startsWith('/login')
+  );
+}
 
 /** 로그인 시도 시작 — startup signOut·세션 정리와의 경쟁 방지 */
 export function beginAuthLoginAttempt(): void {

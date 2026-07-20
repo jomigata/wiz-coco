@@ -32,6 +32,7 @@ import {
   markAuthenticatedTabSession,
   subscribeAuthClearEvents,
   touchAuthHeartbeat,
+  shouldSkipStartupSignOut,
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 import { primeCounselorIdToken, clearCounselorIdTokenCache } from '@/lib/counselorAuth';
@@ -420,7 +421,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
         if (firebaseUser) {
         if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) {
           if (authExpiredOnStartupRef.current) {
-            if (!tryRestoreAuthenticatedTabSession()) {
+            if (shouldSkipStartupSignOut()) {
+              authExpiredOnStartupRef.current = false;
+            } else if (!tryRestoreAuthenticatedTabSession()) {
               void clearAllAuthStorage().then(() => {
                 setUser(null);
                 writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
@@ -428,8 +431,9 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
                 finishLoading();
               });
               return;
+            } else {
+              authExpiredOnStartupRef.current = false;
             }
-            authExpiredOnStartupRef.current = false;
           } else {
             tryRestoreAuthenticatedTabSession();
           }
@@ -450,6 +454,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       if (cancelled) return;
 
       if (authExpiredOnStartupRef.current && !isAuthLoginInProgress()) {
+        if (shouldSkipStartupSignOut()) {
+          authExpiredOnStartupRef.current = false;
+          finishLoading();
+          return;
+        }
         if (auth.currentUser && !hasAuthenticatedTabSession()) {
           try {
             await signOut(auth);

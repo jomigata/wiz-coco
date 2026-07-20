@@ -20,6 +20,11 @@ import {
   printDispatchRecipients,
 } from '@/lib/dispatchRecipientExport';
 import {
+  formatDispatchChannelSummary,
+  parseDispatchChannelSummary,
+  type DispatchChannelSummary,
+} from '@/lib/dispatchNotifySummary';
+import {
   archiveDispatchRecipients,
   bulkCreateClientPortals,
   fetchAssessmentDispatchStatus,
@@ -237,6 +242,7 @@ type DispatchComplete = {
   kind: 'remind' | 'resend' | 'delete';
   error?: boolean;
   summary: string;
+  channelSummary?: DispatchChannelSummary | null;
 };
 
 interface AssessmentDispatchPanelProps {
@@ -463,9 +469,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     try {
       const result = await resendDispatchCredentials(assessmentId, Array.from(selected));
       await load({ silent: true });
+      const channelSummary = parseDispatchChannelSummary(result.channelSummary);
       setDispatchComplete({
         kind: 'resend',
-        summary: `성공 ${result.sent}명, 실패 ${result.failed}명`,
+        channelSummary,
+        summary:
+          formatDispatchChannelSummary(channelSummary) ||
+          `성공 ${result.sent}명, 실패 ${result.failed}명`,
       });
     } catch (err) {
       setDispatchComplete({
@@ -486,9 +496,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     try {
       const result = await sendDispatchTestReminders(assessmentId, portalIds);
       await load({ silent: true });
+      const channelSummary = parseDispatchChannelSummary(result.channelSummary);
       setDispatchComplete({
         kind: 'remind',
-        summary: `성공 ${result.sent}명, 실패 ${result.failed}명`,
+        channelSummary,
+        summary:
+          formatDispatchChannelSummary(channelSummary) ||
+          `성공 ${result.sent}명, 실패 ${result.failed}명`,
       });
     } catch (err) {
       setDispatchComplete({
@@ -1045,16 +1059,16 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                     ? '삭제 완료'
                     : `${credentialSendModeLabel(credentialSendMode)} 완료`}
             </h3>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-slate-300 whitespace-pre-line">
               {dispatchComplete.error
                 ? dispatchComplete.summary
                 : dispatchComplete.kind === 'delete'
-                  ? '선택한 검사자가 삭제 목록으로 이동했습니다.'
-                  : '발송이 완료되었습니다.'}
+                  ? dispatchComplete.summary || '선택한 검사자가 삭제 목록으로 이동했습니다.'
+                  : dispatchComplete.summary ||
+                    (dispatchComplete.kind === 'remind'
+                      ? '미실시 알림 발송을 마쳤습니다.'
+                      : '발송을 마쳤습니다.')}
             </p>
-            {!dispatchComplete.error ? (
-              <p className="mt-2 text-xs text-slate-400">{dispatchComplete.summary}</p>
-            ) : null}
             <button
               type="button"
               onClick={() => setDispatchComplete(null)}

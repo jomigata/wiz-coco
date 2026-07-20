@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { buildLoginRedirectUrl } from '@/lib/authRedirect';
+import { buildCounselorLoginUrl } from '@/lib/authRedirect';
 import { counselorApplicationStatusLabel } from '@/lib/counselorProfessionalAccess';
 
 type AccessState = {
@@ -52,7 +52,7 @@ export default function ProfessionalAccessIcons({
 }: Props) {
   const btn = variant === 'dock' ? dockIconClass : navIconClass;
   const iconSize = variant === 'dock' ? 'h-5 w-5' : 'h-[18px] w-[18px]';
-  const loginHref = buildLoginRedirectUrl();
+  const loginHref = buildCounselorLoginUrl();
   const pendingLabel = counselorApplicationStatusLabel(access?.applicationStatus ?? null) || '승인신청중';
 
   const wrap = (node: React.ReactNode) =>

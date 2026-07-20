@@ -15,6 +15,44 @@ from utils.password import generate_four_digit_password, hash_password
 from utils.portal_magic import create_portal_magic_link_token
 
 
+def _empty_channel_summary() -> dict:
+    return {
+        "email": {"attempted": 0, "success": 0, "failed": 0},
+        "phone": {"attempted": 0, "success": 0, "failed": 0},
+    }
+
+
+def _accumulate_channel_summary(
+    summary: dict,
+    *,
+    email: str,
+    phone: str,
+    result: dict,
+) -> None:
+    """다채널 발송 결과를 이메일·휴대폰 성공/실패 건수로 집계."""
+    status = (result.get("status") or "").strip()
+    sent_via = (result.get("sentVia") or "").lower()
+    errors = [str(e).lower() for e in (result.get("errors") or [])]
+
+    if email:
+        summary["email"]["attempted"] += 1
+        if "email" in sent_via:
+            summary["email"]["success"] += 1
+        elif status in ("failed", "partial") or any(
+            k in errors for k in ("email_send_failed", "smtp_not_configured")
+        ):
+            summary["email"]["failed"] += 1
+
+    if phone:
+        summary["phone"]["attempted"] += 1
+        if "sms" in sent_via or "kakao" in sent_via or "alimtalk" in sent_via:
+            summary["phone"]["success"] += 1
+        elif status in ("failed", "partial") or any(
+            "phone" in e or "sms" in e or "alimtalk" in e for e in errors
+        ):
+            summary["phone"]["failed"] += 1
+
+
 def _parse_notify_timestamp(value) -> float | None:
     if not value:
         return None
@@ -461,6 +499,7 @@ def resend_portal_credentials(
     failed = 0
     skipped = 0
     details: list[dict] = []
+    channel_summary = _empty_channel_summary()
 
     for portal_id in portal_ids:
         pid = (portal_id or "").strip()
@@ -521,6 +560,9 @@ def resend_portal_credentials(
             sent += 1
         else:
             failed += 1
+        _accumulate_channel_summary(
+            channel_summary, email=email, phone=phone, result=result
+        )
         pref.update(notify_update)
         details.append(
             {
@@ -532,7 +574,13 @@ def resend_portal_credentials(
             }
         )
 
-    return {"sent": sent, "failed": failed, "skipped": skipped, "details": details}
+    return {
+        "sent": sent,
+        "failed": failed,
+        "skipped": skipped,
+        "details": details,
+        "channelSummary": channel_summary,
+    }
 
 
 def _pending_tests_from_rows(test_rows: list[dict]) -> list[dict]:
@@ -568,6 +616,7 @@ def send_test_reminders(
     failed = 0
     skipped = 0
     details: list[dict] = []
+    channel_summary = _empty_channel_summary()
 
     for portal_id in portal_ids:
         pid = (portal_id or "").strip()
@@ -630,6 +679,9 @@ def send_test_reminders(
             skipped += 1
         else:
             failed += 1
+        _accumulate_channel_summary(
+            channel_summary, email=email, phone=phone, result=result
+        )
         details.append(
             {
                 "portalId": pid,
@@ -639,7 +691,13 @@ def send_test_reminders(
             }
         )
 
-    return {"sent": sent, "failed": failed, "skipped": skipped, "details": details}
+    return {
+        "sent": sent,
+        "failed": failed,
+        "skipped": skipped,
+        "details": details,
+        "channelSummary": channel_summary,
+    }
 
 
 def _verify_assessment_owned(db, assessment_id: str, counselor_uid: str) -> dict:

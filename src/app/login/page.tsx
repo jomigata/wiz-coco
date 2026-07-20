@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useFirebaseAuth, primeFirebaseAuthSessionCache } from '@/hooks/useFirebaseAuth';
+import { initializeFirebase } from '@/lib/firebase';
 import {
   hasAuthenticatedTabSession,
   beginAuthLoginAttempt,
   endAuthLoginAttempt,
   isAuthLoginInProgress,
   replaceWithAuthSession,
+  markCounselorLoginPageSession,
 } from '@/utils/authSessionLifecycle';
 import { resolveCounselorPostLoginRedirect } from '@/lib/authRedirect';
 import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
@@ -41,6 +43,10 @@ const LoginContent = () => {
   const [emailVerificationMessage, setEmailVerificationMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  useLayoutEffect(() => {
+    markCounselorLoginPageSession();
+  }, []);
+
   useEffect(() => {
     if (emailVerification === 'sent') {
       setEmailVerificationMessage('회원가입이 완료되었습니다! 이메일을 확인하여 계정을 인증해주세요.');
@@ -50,9 +56,12 @@ const LoginContent = () => {
   }, [emailVerification]);
 
   useEffect(() => {
-    if (!loading && user && (hasAuthenticatedTabSession() || isAuthLoginInProgress())) {
-      replaceWithAuthSession(router, redirectUrl);
-    }
+    if (loading || !user) return;
+    if (!hasAuthenticatedTabSession() && !isAuthLoginInProgress()) return;
+    const { auth } = initializeFirebase();
+    const current = auth?.currentUser;
+    if (!current || current.uid !== user.uid) return;
+    replaceWithAuthSession(router, redirectUrl);
   }, [user, loading, router, redirectUrl]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -79,8 +88,14 @@ const LoginContent = () => {
       if (result.success && result.user) {
         clearClientPortalSessionWithBroadcast();
         primeFirebaseAuthSessionCache(result.user);
+        const { auth } = initializeFirebase();
+        try {
+          await auth?.authStateReady?.();
+        } catch {
+          // ignore
+        }
         replaceWithAuthSession(router, redirectUrl);
-        window.setTimeout(() => endAuthLoginAttempt(), 3000);
+        window.setTimeout(() => endAuthLoginAttempt(), 5000);
       } else {
         endAuthLoginAttempt();
         setLoginError(result.error || '로그인 처리 중 오류가 발생했습니다.');

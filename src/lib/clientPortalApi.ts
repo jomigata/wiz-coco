@@ -255,7 +255,12 @@ export async function fetchAssessmentDispatchStatus(
 export async function resendDispatchCredentials(
   assessmentId: string,
   portalIds: string[]
-): Promise<{ sent: number; failed: number; skipped: number }> {
+): Promise<{
+  sent: number;
+  failed: number;
+  skipped: number;
+  channelSummary?: import('@/lib/dispatchNotifySummary').DispatchChannelSummary;
+}> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
@@ -273,13 +278,23 @@ export async function resendDispatchCredentials(
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '재발송에 실패했습니다.');
   }
-  return data as { sent: number; failed: number; skipped: number };
+  return data as {
+    sent: number;
+    failed: number;
+    skipped: number;
+    channelSummary?: import('@/lib/dispatchNotifySummary').DispatchChannelSummary;
+  };
 }
 
 export async function sendDispatchTestReminders(
   assessmentId: string,
   portalIds: string[]
-): Promise<{ sent: number; failed: number; skipped: number }> {
+): Promise<{
+  sent: number;
+  failed: number;
+  skipped: number;
+  channelSummary?: import('@/lib/dispatchNotifySummary').DispatchChannelSummary;
+}> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
   const res = await fetch(
@@ -297,7 +312,12 @@ export async function sendDispatchTestReminders(
   if (!res.ok) {
     throw new Error(typeof data?.message === 'string' ? data.message : '미실시 알림 발송에 실패했습니다.');
   }
-  return data as { sent: number; failed: number; skipped: number };
+  return data as {
+    sent: number;
+    failed: number;
+    skipped: number;
+    channelSummary?: import('@/lib/dispatchNotifySummary').DispatchChannelSummary;
+  };
 }
 
 export type ArchivedDispatchRecipient = {
