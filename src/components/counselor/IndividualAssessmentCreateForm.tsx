@@ -759,25 +759,19 @@ export default function IndividualAssessmentCreateForm() {
 
         <CounselorPageSection
           title="발급 · 발송"
-          className="flex shrink-0 flex-col xl:col-start-3 xl:row-start-1 xl:self-stretch"
-          bodyClassName="flex flex-col justify-between gap-4"
+          className="flex min-h-0 flex-1 flex-col xl:col-start-3 xl:row-start-1 xl:self-stretch"
+          bodyClassName="flex min-h-0 flex-1 flex-col"
         >
-          <div className="space-y-4">
-            <p className={FORM_HINT}>
-              정보 입력 후 아래 버튼 중 하나를 선택하세요. 발송 없이 Excel로 확인하거나, 즉시 전체 발송,
-              진행현황에서 선택 발송할 수 있습니다.
+          {error ? (
+            <p
+              className="mb-3 shrink-0 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5 text-sm leading-snug text-red-300"
+              role="alert"
+            >
+              {error}
             </p>
-            {error ? (
-              <p
-                className="rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5 text-sm leading-snug text-red-300"
-                role="alert"
-              >
-                {error}
-              </p>
-            ) : null}
-          </div>
+          ) : null}
 
-          <div className="flex flex-col gap-2.5 border-t border-white/10 pt-3">
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-2.5 py-2">
             <button
               type="button"
               onClick={() => void handleIssue('excel')}
@@ -785,7 +779,7 @@ export default function IndividualAssessmentCreateForm() {
               className="w-full rounded-xl border border-white/15 bg-slate-800/80 px-4 py-3 text-left transition hover:bg-slate-700/80 disabled:opacity-50"
             >
               <span className="block text-base font-bold text-white">
-                {loadingIntent === 'excel' ? '저장 중…' : `${recipientCountLabel} 저장만하기(Excel)`}
+                {loadingIntent === 'excel' ? '저장 중…' : `${recipientCountLabel} 엑셀(Excel) 저장하기`}
               </span>
               <span className="mt-0.5 block text-sm text-slate-400">
                 발송 없이 이 화면에서 Excel로 코드·비밀번호 저장
@@ -804,19 +798,9 @@ export default function IndividualAssessmentCreateForm() {
                 발급 후 모든 내담자에게 이메일·문자 즉시 발송
               </span>
             </button>
-            <button
-              type="button"
-              onClick={() => void handleIssue('goto_dispatch')}
-              disabled={!canIssue}
-              className="w-full rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-left transition hover:bg-emerald-500/20 disabled:opacity-50"
-            >
-              <span className="block text-base font-bold text-emerald-100">
-                {loadingIntent === 'goto_dispatch' ? '발급 후 이동 중…' : `${recipientCountLabel} 발급 → 선택 발송`}
-              </span>
-              <span className="mt-0.5 block text-sm text-emerald-200/70">
-                발급 후 진행현황으로 이동해 대상을 선택해 발송
-              </span>
-            </button>
+          </div>
+
+          <div className="shrink-0 border-t border-white/10 pt-3">
             <button
               type="button"
               onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
