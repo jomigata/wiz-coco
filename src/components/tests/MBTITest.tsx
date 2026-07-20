@@ -9,9 +9,21 @@ interface Props {
   savedCurrentQuestion?: number;
   onAnswerChange?: (answers: { [key: string]: { type: string; answer: number } }, currentQuestion: number) => void;
   onBack?: () => void;
+  theme?: 'emerald' | 'portal';
+  title?: string;
+  subtitle?: string;
 }
 
-export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestion, onAnswerChange, onBack }: Props) {
+export default function MBTITest({
+  onComplete,
+  savedAnswers,
+  savedCurrentQuestion,
+  onAnswerChange,
+  onBack,
+  theme = 'emerald',
+  title = '개인용 MBTI 검사',
+  subtitle = '자신에게 맞는 답변을 선택해주세요',
+}: Props) {
   // 저장된 답변이 있으면 복원, 없으면 처음부터 시작
   const initialAnswers = savedAnswers || {};
   const initialCurrentQuestion = savedCurrentQuestion !== undefined ? savedCurrentQuestion : 0;
@@ -148,12 +160,65 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
     return answers[currentQuestion]?.answer;
   };
 
+  const isPortal = theme === 'portal';
+  const c = isPortal
+    ? {
+        spinBorder: 'border-sky-500/30 border-t-sky-500',
+        loadingText: 'text-slate-400',
+        titleSub: 'text-slate-400',
+        progressLabel: 'text-slate-300',
+        progressPct: 'text-sky-300/90',
+        progressTrack: 'bg-slate-800/80',
+        progressFill: 'bg-sky-500',
+        card: 'bg-slate-900/90 border border-white/[0.08]',
+        cardInner: 'bg-slate-800/50 border border-white/[0.08]',
+        badge: 'bg-sky-500/15 text-sky-200/90',
+        hint: 'text-slate-500',
+        scaleLabel: 'text-slate-400',
+        btnActive: 'bg-sky-600/70 text-white hover:bg-sky-600/90',
+        btnDisabled: 'bg-slate-900/40 text-slate-600 cursor-not-allowed',
+        btnNextActive: 'bg-sky-600/80 text-white hover:bg-sky-500/90',
+        btnNextDisabled: 'bg-slate-900/40 text-slate-600 cursor-not-allowed',
+        counter: 'text-slate-400',
+        circleDefault: 'bg-slate-900/60',
+        circleBorderHigh: 'border-sky-500 hover:bg-sky-500',
+        circleBorderMid: 'border-sky-400/80 hover:bg-sky-400/90',
+        circleFilledHigh: 'bg-sky-500 border-sky-500 shadow-lg shadow-sky-500/20',
+        circleFilledMid: 'bg-sky-400 border-sky-400 shadow-lg shadow-sky-400/20',
+        tooltip: 'text-sky-200/80',
+      }
+    : {
+        spinBorder: 'border-emerald-500/30 border-t-emerald-600',
+        loadingText: 'text-emerald-200',
+        titleSub: 'text-emerald-200',
+        progressLabel: 'text-emerald-200',
+        progressPct: 'text-emerald-300',
+        progressTrack: 'bg-emerald-800/50',
+        progressFill: 'bg-emerald-500',
+        card: 'bg-emerald-800/30 backdrop-blur-sm border border-emerald-700/50',
+        cardInner: 'bg-emerald-800/50 backdrop-blur-sm border border-emerald-700/50',
+        badge: 'bg-emerald-600/30 text-emerald-200',
+        hint: 'text-emerald-300',
+        scaleLabel: 'text-emerald-300',
+        btnActive: 'bg-emerald-600/70 text-emerald-100 hover:bg-emerald-600/90',
+        btnDisabled: 'bg-emerald-900/30 text-emerald-700 cursor-not-allowed',
+        btnNextActive: 'bg-emerald-700/50 text-emerald-200 hover:bg-emerald-700/80',
+        btnNextDisabled: 'bg-emerald-900/30 text-emerald-700 cursor-not-allowed',
+        counter: 'text-emerald-300',
+        circleDefault: 'bg-emerald-900/50',
+        circleBorderHigh: 'border-emerald-500 hover:bg-emerald-500',
+        circleBorderMid: 'border-emerald-400 hover:bg-emerald-400',
+        circleFilledHigh: 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20',
+        circleFilledMid: 'bg-emerald-400 border-emerald-400 shadow-lg shadow-emerald-400/20',
+        tooltip: 'text-emerald-300',
+      };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-emerald-200 text-lg">결과를 분석하고 있습니다...</p>
+          <div className={`w-16 h-16 border-4 ${c.spinBorder} rounded-full animate-spin mx-auto mb-4`}></div>
+          <p className={`${c.loadingText} text-lg`}>결과를 분석하고 있습니다...</p>
         </div>
       </div>
     );
@@ -162,7 +227,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="relative pt-16">
+    <div className={`relative ${isPortal ? 'pt-8' : 'pt-16'}`}>
       {/* 메인 컨텐츠 영역 - 모든 내용을 하나의 페이지로 통합 */}
       <div className="max-w-3xl mx-auto pt-8 px-6 pb-12"
         tabIndex={0}
@@ -171,22 +236,22 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
         {/* 상단 제목 및 진행률 표시 영역 - 메인 컨텐츠 안으로 이동 */}
         <div className="mb-8">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-white mb-2">개인용 MBTI 검사</h1>
-            <p className="text-emerald-200">자신에게 맞는 답변을 선택해주세요</p>
+            <h1 className="text-4xl font-bold text-white mb-2">{title}</h1>
+            <p className={c.titleSub}>{subtitle}</p>
           </div>
           
           <div className="mb-4">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-lg font-semibold text-emerald-200">
+              <span className={`text-lg font-semibold ${c.progressLabel}`}>
                 질문 {currentQuestion + 1} / {questions.length}
               </span>
-              <span className="text-emerald-300">
+              <span className={c.progressPct}>
                 진행률: {Math.round(progress)}%
               </span>
             </div>
-            <div className="w-full bg-emerald-800/50 rounded-full h-3">
+            <div className={`w-full ${c.progressTrack} rounded-full h-3`}>
               <div
-                className="bg-emerald-500 h-3 rounded-full transition-all duration-500 ease-out"
+                className={`${c.progressFill} h-3 rounded-full transition-all duration-500 ease-out`}
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -195,7 +260,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
         {/* 질문 표시 영역 - 더 명확하게 강조 */}
         <div 
           key={currentQuestion}
-          className="mb-12 animate-fade-in bg-emerald-800/30 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-emerald-700/50"
+          className={`mb-12 animate-fade-in ${c.card} rounded-2xl p-8 shadow-lg`}
           style={{
             animation: 'fadeInOut 0.5s ease-in-out',
           }}
@@ -217,7 +282,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
             }
           `}</style>
           <div className="text-center">
-            <span className="inline-block px-4 py-2 bg-emerald-600/30 text-emerald-200 rounded-full text-sm font-medium mb-4">
+            <span className={`inline-block px-4 py-2 ${c.badge} rounded-full text-sm font-medium mb-4`}>
               질문 {currentQuestion + 1}
             </span>
             <h2 className="text-2xl md:text-3xl text-white font-medium leading-relaxed">
@@ -227,13 +292,12 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
         </div>
 
         {/* 답변 선택 영역 */}
-        <div className="bg-emerald-800/50 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-emerald-700/50 mb-8">
+        <div className={`${c.cardInner} rounded-xl p-8 shadow-lg mb-8`}>
           <div className="flex flex-col items-center space-y-8">
             <div className="w-full max-w-2xl">
-              {/* 답변 선택지 */}
               <div className="flex items-center justify-between mb-4">
-                <span className="text-emerald-300 font-medium">그렇다</span>
-                <span className="text-emerald-300 font-medium">그렇지 않다</span>
+                <span className={`${c.scaleLabel} font-medium`}>그렇다</span>
+                <span className={`${c.scaleLabel} font-medium`}>그렇지 않다</span>
               </div>
               <div className="flex items-center justify-between gap-0">
                 {[7, 6, 5, 4, 3, 2, 1].map((value) => (
@@ -242,18 +306,18 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
                       onClick={() => handleAnswer(value)}
                       className={`${getCircleSize(value)} rounded-full border-2 transition-all duration-300 flex items-center justify-center
                         ${value > 4 
-                          ? 'border-emerald-500 hover:bg-emerald-500 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20' 
+                          ? `${c.circleBorderHigh} hover:border-sky-500 hover:shadow-lg hover:shadow-sky-500/20` 
                           : value === 4 
-                            ? 'border-emerald-400 hover:bg-emerald-400 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-400/20'
-                            : 'border-emerald-500 hover:bg-emerald-500 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20'
+                            ? `${c.circleBorderMid} hover:shadow-lg`
+                            : `${c.circleBorderHigh} hover:shadow-lg`
                         }
                         ${isAnswered(value) && showStar
                           ? value > 4 
-                            ? 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20'
+                            ? c.circleFilledHigh
                             : value === 4
-                              ? 'bg-emerald-400 border-emerald-400 shadow-lg shadow-emerald-400/20'
-                              : 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20'
-                          : 'bg-emerald-900/50 hover:scale-110'
+                              ? c.circleFilledMid
+                              : c.circleFilledHigh
+                          : `${c.circleDefault} hover:scale-110`
                         }
                         group/btn
                       `}
@@ -279,7 +343,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
                     {/* 답변 텍스트 - 마우스 오버시에만 보이도록 수정 */}
                     <p className={`text-center text-xs mt-2 transition-all duration-200 
                       opacity-0 group-hover:opacity-100 absolute top-full 
-                      text-emerald-300 whitespace-nowrap pointer-events-none`}>
+                      ${c.tooltip} whitespace-nowrap pointer-events-none`}>
                       {getAnswerText(value)}
                     </p>
                   </div>
@@ -290,7 +354,7 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
         </div>
 
         {/* 하단 설명 및 버튼 */}
-        <div className="text-center text-emerald-300 text-sm mb-8">
+        <div className={`text-center ${c.hint} text-sm mb-8`}>
           깊이 생각하지 말고 자연스럽게 떠오르는 첫 느낌으로 선택해 주세요.
         </div>
 
@@ -305,15 +369,15 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
             }}
             className={`px-5 py-2 rounded-lg font-medium 
               ${(currentQuestion > 0 || (currentQuestion === 0 && onBack))
-                ? 'bg-emerald-600/70 text-emerald-100 hover:bg-emerald-600/90' 
-                : 'bg-emerald-900/30 text-emerald-700 cursor-not-allowed'
+                ? c.btnActive
+                : c.btnDisabled
               } transition-all duration-300`}
             disabled={currentQuestion === 0 && !onBack}
           >
             {currentQuestion === 0 ? '이전페이지' : '이전 문항'}
           </button>
           
-          <div className="text-sm text-emerald-300">
+          <div className={`text-sm ${c.counter}`}>
             <span className="font-semibold">{currentQuestion + 1}</span> / {questions.length}
           </div>
           
@@ -321,8 +385,8 @@ export default function MBTITest({ onComplete, savedAnswers, savedCurrentQuestio
             onClick={handleNextQuestion}
             className={`px-5 py-2 rounded-lg font-medium 
               ${answers[currentQuestion] !== undefined
-                ? 'bg-emerald-700/50 text-emerald-200 hover:bg-emerald-700/80'
-                : 'bg-emerald-900/30 text-emerald-700 cursor-not-allowed'
+                ? c.btnNextActive
+                : c.btnNextDisabled
               } transition-all duration-300`}
             disabled={answers[currentQuestion] === undefined}
           >

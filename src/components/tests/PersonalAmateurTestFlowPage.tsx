@@ -43,11 +43,11 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
   // 개인용 MBTI 검사 단계 관리 (전문가용과 동일한 구조)
   // 초기 상태에서 resume 파라미터가 있으면 진행 상태에 따라 currentStep 설정
   const getInitialStep = (): 'code' | 'info' | 'test' => {
-    // 서버 사이드에서는 항상 'code'로 시작
-    if (typeof window === 'undefined') return 'code';
-    
-    // 클라이언트 사이드에서만 저장된 진행 상태 확인
-    if (!resumeTestId) return 'code';
+    if (typeof window === 'undefined') return config.skipCodeAndInfoSteps ? 'test' : 'code';
+
+    if (!resumeTestId) {
+      return config.skipCodeAndInfoSteps ? 'test' : 'code';
+    }
     
     try {
       const savedProgress = loadTestProgress(resumeTestId);
@@ -65,7 +65,7 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
       console.warn('[MbtiTestPage] getInitialStep 에러:', error);
     }
     
-    return 'code';
+    return config.skipCodeAndInfoSteps ? 'test' : 'code';
   };
   
   // 초기 상태에서 resume 파라미터가 있으면 진행 상태 복원
@@ -94,11 +94,12 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
   const { setTopNavHidden } = useAppChromeNav();
 
-  // 코드 입력 단계에서는 전역 상단 바 숨김(개인용 전체 화면)
+  // 코드 입력 단계에서만 전역 상단 바 숨김 (이고-오케이 등은 검사시작 화면과 동일하게 유지)
   useEffect(() => {
-    setTopNavHidden(currentStep === 'code');
+    const hideNav = !config.keepAppTopNavVisible && currentStep === 'code';
+    setTopNavHidden(hideNav);
     return () => setTopNavHidden(false);
-  }, [currentStep, setTopNavHidden]);
+  }, [currentStep, setTopNavHidden, config.keepAppTopNavVisible]);
 
   // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
   // 코드입력, 정보입력, 질문 답변 단계에서는 말풍선 숨김
@@ -502,7 +503,7 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
     setSavedAnswers(null);
     setShowResumeDialog(false);
     setHasResumeData(false);
-    setCurrentStep('code');
+    setCurrentStep(config.skipCodeAndInfoSteps ? 'test' : 'code');
     setCodeData(null);
     setClientInfo(null);
     
@@ -941,8 +942,8 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
     <>
       
       
-      <div className="bg-emerald-950 min-h-screen">
-        {currentStep === 'code' && (
+      <div className={config.pageShellClassName ?? 'bg-emerald-950 min-h-screen'}>
+        {!config.skipCodeAndInfoSteps && currentStep === 'code' && (
           <MbtiProCodeInput
             key={`code-${testId}-${codeData ? `${codeData.groupCode || 'empty'}-${codeData.groupPassword || 'empty'}` : 'null'}`}
             onSubmit={handleCodeSubmit}
@@ -951,7 +952,7 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
           />
         )}
         
-        {currentStep === 'info' && (
+        {!config.skipCodeAndInfoSteps && currentStep === 'info' && (
           <MbtiProClientInfo
             key={`info-${testId}-${clientInfo ? `${clientInfo.name || 'empty'}-${clientInfo.birthYear || 'empty'}-${clientInfo.gender || 'empty'}` : 'null'}`}
             onSubmit={handleClientInfoSubmit}
@@ -972,7 +973,7 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
             codeData={codeData}
             clientInfo={clientInfo}
             onStepChange={setCurrentStep}
-            onBack={handleBackFromTest}
+            onBack={config.skipCodeAndInfoSteps ? undefined : handleBackFromTest}
             onAnswersUpdate={(answers, currentQuestion) => {
               // 답변 변경 시 부모 컴포넌트 상태 업데이트
               setSavedAnswers(answers);
@@ -1108,6 +1109,9 @@ function MBTITestWrapper({
       savedCurrentQuestion={savedCurrentQuestion}
       onAnswerChange={handleAnswerChange}
       onBack={handleBack}
+      theme={config.testUiTheme ?? 'emerald'}
+      title={config.testScreenTitle ?? config.displayName}
+      subtitle={config.testScreenSubtitle ?? '자신에게 맞는 답변을 선택해주세요'}
     />
   );
 }

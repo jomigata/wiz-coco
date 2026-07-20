@@ -9,6 +9,14 @@ export type PersonalAmateurTestFlowConfig = {
   codePrefix: PersonalAmateurTestCodePrefix;
   matchesInProgressTestType: (testType: string) => boolean;
   buildResultPath: (code: string, results: { mbtiType?: string }) => string;
+  /** 검사코드·기본정보 단계 생략 후 바로 문항 */
+  skipCodeAndInfoSteps?: boolean;
+  /** 상단 앱 네비(검사시작 화면과 동일) 유지 */
+  keepAppTopNavVisible?: boolean;
+  pageShellClassName?: string;
+  testUiTheme?: 'emerald' | 'portal';
+  testScreenTitle?: string;
+  testScreenSubtitle?: string;
 };
 
 export const MBTI_AMATEUR_TEST_FLOW: PersonalAmateurTestFlowConfig = {
@@ -31,6 +39,12 @@ export const EGO_OK_AMATEUR_TEST_FLOW: PersonalAmateurTestFlowConfig = {
   progressTestType: 'EGO_OK',
   totalQuestions: 20,
   codePrefix: 'EGO_AMATEUR',
+  skipCodeAndInfoSteps: true,
+  keepAppTopNavVisible: true,
+  pageShellClassName: 'bg-[#070b14] min-h-screen',
+  testUiTheme: 'portal',
+  testScreenTitle: '이고-오케이그램 검사',
+  testScreenSubtitle: '각 문항에 가장 가까운 답을 선택해 주세요.',
   matchesInProgressTestType: (testType) => {
     const t = (testType || '').toLowerCase();
     return (

@@ -45,6 +45,8 @@ export function markTabAppSessionActive(): void {
 export type PortalLinkEntryResetOptions = {
   /** false: 이 탭만. true: 다른 탭 포함. 미지정 시 탭 최초 앱 로드 여부로 판단 */
   notifyOtherTabs?: boolean;
+  /** SPA로 검사시작 화면 이동 직전 (경로가 아직 /portal/login 이 아닐 때) */
+  portalStartNavigation?: boolean;
 };
 
 function resolveNotifyOtherTabs(options?: PortalLinkEntryResetOptions): boolean {
@@ -54,10 +56,14 @@ function resolveNotifyOtherTabs(options?: PortalLinkEntryResetOptions): boolean 
   return !hasTabAppSessionActive();
 }
 
-function shouldSkipPortalLinkEntryReset(notifyOtherTabs: boolean): boolean {
+function shouldSkipPortalLinkEntryReset(
+  notifyOtherTabs: boolean,
+  options?: PortalLinkEntryResetOptions,
+): boolean {
   if (notifyOtherTabs) return false;
   if (typeof window === 'undefined') return false;
   if (!isPrivilegedProfessionalSessionActive()) return false;
+  if (options?.portalStartNavigation) return true;
   return isSameTabPortalStartNavigationPath(window.location.pathname || '');
 }
 
@@ -65,7 +71,7 @@ function shouldSkipPortalLinkEntryReset(notifyOtherTabs: boolean): boolean {
 export function shouldSkipPortalLinkEntryResetForCurrentTab(
   options?: PortalLinkEntryResetOptions,
 ): boolean {
-  return shouldSkipPortalLinkEntryReset(resolveNotifyOtherTabs(options));
+  return shouldSkipPortalLinkEntryReset(resolveNotifyOtherTabs(options), options);
 }
 
 async function applyPortalLinkEntrySessionReset(notifyOtherTabs: boolean): Promise<void> {
@@ -86,7 +92,7 @@ export async function resetAllSessionsBeforePortalLinkEntry(
 ): Promise<void> {
   const notifyOtherTabs = resolveNotifyOtherTabs(options);
 
-  if (shouldSkipPortalLinkEntryReset(notifyOtherTabs)) {
+  if (shouldSkipPortalLinkEntryReset(notifyOtherTabs, options)) {
     markTabAppSessionActive();
     return;
   }

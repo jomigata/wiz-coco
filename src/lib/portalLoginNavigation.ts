@@ -1,10 +1,9 @@
-import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
+import { markInternalNavigation } from '@/utils/authSessionLifecycle';
 
 type RouterLike = { push: (href: string) => void };
 
-/** 같은 탭에서 검사시작 화면으로 이동 — 다른 탭은 유지 */
+/** 같은 탭 검사시작 — 전문가는 로그아웃 없이 이동 (세션 정리는 /portal/login 진입 시 처리) */
 export function navigateToClientPortalLogin(router: RouterLike, href = '/portal/login/'): void {
-  void resetAllSessionsBeforePortalLinkEntry({ notifyOtherTabs: false }).then(() => {
-    router.push(href);
-  });
+  markInternalNavigation();
+  router.push(href);
 }

@@ -25,6 +25,7 @@ import ThreeTierMegaMenuPanel from '@/components/nav/ThreeTierMegaMenuPanel';
 import CounselorMainCategoryDropdown from '@/components/nav/CounselorMainCategoryDropdown';
 import ThreeTierMobileMenuSection from '@/components/nav/ThreeTierMobileMenuSection';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
+import { navigateToClientPortalLogin } from '@/lib/portalLoginNavigation';
 import ProfessionalAccessIcons from '@/components/nav/ProfessionalAccessIcons';
 import NavMenuDivider from '@/components/nav/NavMenuDivider';
 import NavMegaMenuBackdrop from '@/components/nav/NavMegaMenuBackdrop';
@@ -403,6 +404,12 @@ export default function Navigation() {
     setActiveItem(href);
   };
 
+  const handlePortalStartNav = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    handleNavLinkClick(href, e);
+    navigateToClientPortalLogin(router, href);
+  };
+
   const handleAuthLinkClick = (href: string, e: React.MouseEvent) => {
     e.preventDefault();
     pushWithAuthSession(router, href);
@@ -494,9 +501,10 @@ export default function Navigation() {
                     ? 'text-white bg-blue-600 border-white'
                     : 'text-gray-300 hover:text-white hover:bg-blue-800/50 border-transparent hover:border-white'
                 }`}
-                onClick={(e) =>
-                  handleNavLinkClick(hasClientPortalSession ? '/portal/' : '/portal/login/', e)
-                }
+                onClick={(e) => {
+                  const href = hasClientPortalSession ? '/portal/' : '/portal/login/';
+                  handlePortalStartNav(e, href);
+                }}
               >
                 <span aria-hidden>⭐</span>
                 검사시작
@@ -1051,7 +1059,11 @@ export default function Navigation() {
               <Link
                 href={hasClientPortalSession ? '/portal/' : '/portal/login/'}
                 className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setIsMobileMenuOpen(false);
+                  const href = hasClientPortalSession ? '/portal/' : '/portal/login/';
+                  handlePortalStartNav(e, href);
+                }}
               >
                 <span aria-hidden>⭐</span>
                 검사시작

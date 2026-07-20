@@ -7,6 +7,7 @@ import { signOut } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 import { clearClientPortalSession } from '@/lib/clientPortalSession';
+import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
 import { readSWRCache } from '@/utils/staleWhileRevalidateCache';
 
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
@@ -289,16 +290,25 @@ const FIREBASE_AUTH_USER_CACHE_KEY = 'swr:firebaseAuthUser';
 export function isPrivilegedProfessionalSessionActive(): boolean {
   if (typeof window === 'undefined') return false;
   if (!hasAuthenticatedTabSession()) return false;
+  let uid: string | null = null;
+  let email: string | null = null;
   try {
     const { auth } = initializeFirebase();
-    if (!auth?.currentUser) return false;
+    uid = auth?.currentUser?.uid ?? null;
+    email = auth?.currentUser?.email ?? null;
+    if (!uid) return false;
   } catch {
     return false;
   }
-  const { data } = readSWRCache<{ role?: string }>(FIREBASE_AUTH_USER_CACHE_KEY, {
+  const bootstrapRole = getBootstrapRoleForEmail(email);
+  if (bootstrapRole === 'counselor' || bootstrapRole === 'admin' || bootstrapRole === 'org_admin') {
+    return true;
+  }
+  const { data } = readSWRCache<{ uid?: string; role?: string }>(FIREBASE_AUTH_USER_CACHE_KEY, {
     scope: 'session',
     maxAgeMs: 30 * 60 * 1000,
   });
+  if (data?.uid && data.uid !== uid) return false;
   const role = data?.role ?? 'user';
   return role === 'counselor' || role === 'admin' || role === 'org_admin';
 }
