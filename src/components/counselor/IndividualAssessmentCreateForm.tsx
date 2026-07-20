@@ -691,7 +691,7 @@ export default function IndividualAssessmentCreateForm() {
                 + 행 추가
               </button>
             </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-white/10 pt-3">
+            <div className="flex shrink-0 flex-col gap-2 border-t border-white/10 pt-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -699,37 +699,55 @@ export default function IndividualAssessmentCreateForm() {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
-                disabled={loading}
-              >
-                CSV/엑셀 첨부
-              </button>
-              <button
-                type="button"
-                onClick={downloadGroupRecipientSampleCsv}
-                className="text-sm text-sky-300 transition hover:text-sky-200"
-              >
-                샘플(CSV)
-              </button>
-              <button
-                type="button"
-                onClick={downloadGroupRecipientSampleTxt}
-                className="text-sm text-sky-300 transition hover:text-sky-200"
-              >
-                샘플(TXT)
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
+                  disabled={loading}
+                >
+                  CSV/엑셀 첨부
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleCsv}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                >
+                  샘플(CSV)
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleTxt}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                >
+                  샘플(TXT)
+                </button>
+                {!fileLabel ? (
+                  <span className="text-sm text-slate-500">
+                    최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
+                  </span>
+                ) : null}
+              </div>
               {fileLabel ? (
-                <span className="max-w-[240px] truncate text-sm text-slate-400" title={fileLabel}>
-                  {fileLabel} ({fileRows.length}명)
-                </span>
-              ) : (
-                <span className="text-sm text-slate-500">
-                  최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
-                </span>
-              )}
+                <div
+                  className="rounded-lg border border-sky-500/25 bg-sky-950/25 px-3 py-2.5"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
+                  <p className="mt-1 break-all text-sm font-medium leading-snug text-white">{fileLabel}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    파일에서{' '}
+                    <span className="font-semibold tabular-nums text-emerald-300">
+                      {fileRows.length.toLocaleString('ko-KR')}
+                    </span>
+                    명 인식
+                    {fileRows.length === 0 ? (
+                      <span className="text-amber-300/90"> · 유효한 행이 없습니다</span>
+                    ) : null}
+                  </p>
+                </div>
+              ) : null}
             </div>
             {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD ? (
               <p className="shrink-0 text-sm leading-snug text-amber-200/90">
