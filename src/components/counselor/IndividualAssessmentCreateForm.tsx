@@ -706,28 +706,26 @@ export default function IndividualAssessmentCreateForm() {
                   className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
                   disabled={loading}
                 >
-                  CSV/엑셀 첨부
+                  텍스트/엑셀 파일 첨부하기
                 </button>
                 <button
                   type="button"
                   onClick={downloadGroupRecipientSampleCsv}
                   className="text-sm text-sky-300 transition hover:text-sky-200"
                 >
-                  샘플(CSV)
+                  (엑셀파일)
                 </button>
                 <button
                   type="button"
                   onClick={downloadGroupRecipientSampleTxt}
                   className="text-sm text-sky-300 transition hover:text-sky-200"
                 >
-                  샘플(TXT)
+                  (텍스트파일)
                 </button>
-                {!fileLabel ? (
-                  <span className="text-sm text-slate-500">
-                    최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
-                  </span>
-                ) : null}
               </div>
+              <p className="text-xs leading-relaxed text-slate-500">
+                첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
+              </p>
               {fileLabel ? (
                 <div
                   className="rounded-lg border border-sky-500/25 bg-sky-950/25 px-3 py-2.5"
@@ -774,19 +772,6 @@ export default function IndividualAssessmentCreateForm() {
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-2.5 py-2">
             <button
               type="button"
-              onClick={() => void handleIssue('excel')}
-              disabled={!canIssue}
-              className="w-full rounded-xl border border-white/15 bg-slate-800/80 px-4 py-3 text-left transition hover:bg-slate-700/80 disabled:opacity-50"
-            >
-              <span className="block text-base font-bold text-white">
-                {loadingIntent === 'excel' ? '저장 중…' : `${recipientCountLabel} 엑셀(Excel) 저장하기`}
-              </span>
-              <span className="mt-0.5 block text-sm text-slate-400">
-                발송 없이 이 화면에서 Excel로 코드·비밀번호 저장
-              </span>
-            </button>
-            <button
-              type="button"
               onClick={() => void handleIssue('send_all')}
               disabled={!canIssue}
               className="w-full rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-3 text-left shadow-lg shadow-sky-900/30 transition hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50 disabled:shadow-none"
@@ -796,6 +781,19 @@ export default function IndividualAssessmentCreateForm() {
               </span>
               <span className="mt-0.5 block text-sm text-sky-100/80">
                 발급 후 모든 내담자에게 이메일·문자 즉시 발송
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleIssue('excel')}
+              disabled={!canIssue}
+              className="w-full rounded-xl border border-white/15 bg-slate-800/80 px-4 py-3 text-left transition hover:bg-slate-700/80 disabled:opacity-50"
+            >
+              <span className="block text-base font-bold text-white">
+                {loadingIntent === 'excel' ? '저장 중…' : `${recipientCountLabel} 엑셀(Excel) 저장하기`}
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-400">
+                발송 없이 이 화면에서 Excel로 코드·비밀번호 저장
               </span>
             </button>
           </div>
