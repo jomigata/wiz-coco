@@ -9,6 +9,7 @@ import {
   resetAllSessionsBeforePortalLinkEntry,
   resetAllSessionsFromPortalLinkEntryBroadcast,
   subscribePortalLinkEntryResetEvents,
+  markTabAppSessionActive,
 } from '@/lib/portalLinkEntryReset';
 import {
   clearClientPortalSession,
@@ -25,6 +26,7 @@ export default function BrowserCleanupProvider() {
       void resetAllSessionsBeforePortalLinkEntry();
       return;
     }
+    markTabAppSessionActive();
     if (!startupEvaluatedRef.current) {
       startupEvaluatedRef.current = true;
       evaluateAuthSessionOnStartup();

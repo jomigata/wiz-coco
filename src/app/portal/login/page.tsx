@@ -95,7 +95,7 @@ function PortalLoginContent() {
       setError('');
       setLoading(true);
       try {
-        await resetAllSessionsBeforePortalLinkEntry();
+        await resetAllSessionsBeforePortalLinkEntry({ notifyOtherTabs: false });
         const result = await loginClientPortal({
           accessCode: normalizedCode,
           pin: normalizedPin,

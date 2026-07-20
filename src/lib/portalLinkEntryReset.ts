@@ -1,6 +1,7 @@
 /**
- * 이메일·SMS·카카오 알림·검사시작(/portal/login) 진입 전
- * Firebase·포털·join 세션을 모두 정리하고 다른 탭에도 동기화합니다.
+ * 검사시작·매직링크 진입 시 세션 정리
+ * - 같은 탭(이미 앱 사용 중): 이 탭만 로그아웃
+ * - 새 탭에서 URL 직접 진입: 다른 모든 탭도 로그아웃
  */
 import { clearAllAuthStorage } from '@/utils/authSessionLifecycle';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
@@ -13,6 +14,7 @@ import {
 export { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 
 const PORTAL_LINK_ENTRY_CHANNEL = 'wizcoco:portal-link-entry';
+const TAB_APP_SESSION_ACTIVE_KEY = 'wizcoco:tab-app-session-active';
 
 let resetPromise: Promise<void> | null = null;
 
@@ -25,6 +27,29 @@ function broadcastPortalLinkEntryReset(): void {
   } catch {
     // BroadcastChannel 미지원
   }
+}
+
+/** sessionStorage — 탭마다 독립. 새 탭 첫 로드면 false */
+export function hasTabAppSessionActive(): boolean {
+  if (typeof window === 'undefined') return false;
+  return sessionStorage.getItem(TAB_APP_SESSION_ACTIVE_KEY) === '1';
+}
+
+export function markTabAppSessionActive(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(TAB_APP_SESSION_ACTIVE_KEY, '1');
+}
+
+export type PortalLinkEntryResetOptions = {
+  /** false: 이 탭만. true: 다른 탭 포함. 미지정 시 탭 최초 앱 로드 여부로 판단 */
+  notifyOtherTabs?: boolean;
+};
+
+function resolveNotifyOtherTabs(options?: PortalLinkEntryResetOptions): boolean {
+  if (options?.notifyOtherTabs !== undefined) {
+    return options.notifyOtherTabs;
+  }
+  return !hasTabAppSessionActive();
 }
 
 async function applyPortalLinkEntrySessionReset(notifyOtherTabs: boolean): Promise<void> {
@@ -40,11 +65,15 @@ async function applyPortalLinkEntrySessionReset(notifyOtherTabs: boolean): Promi
   }
 }
 
-/** 검사시작·매직링크 진입 탭 — 다른 열린 탭까지 로그아웃 */
-export async function resetAllSessionsBeforePortalLinkEntry(): Promise<void> {
+export async function resetAllSessionsBeforePortalLinkEntry(
+  options?: PortalLinkEntryResetOptions,
+): Promise<void> {
+  const notifyOtherTabs = resolveNotifyOtherTabs(options);
+  markTabAppSessionActive();
+
   if (resetPromise) return resetPromise;
 
-  resetPromise = applyPortalLinkEntrySessionReset(true);
+  resetPromise = applyPortalLinkEntrySessionReset(notifyOtherTabs);
 
   try {
     await resetPromise;
@@ -53,8 +82,9 @@ export async function resetAllSessionsBeforePortalLinkEntry(): Promise<void> {
   }
 }
 
-/** 다른 탭에서 검사시작 진입 시 — 재브로드캐스트 없이 동일 정리 */
+/** 다른 탭에서 검사시작·매직링크 새 탭 진입 시 — 재브로드캐스트 없이 동일 정리 */
 export async function resetAllSessionsFromPortalLinkEntryBroadcast(): Promise<void> {
+  markTabAppSessionActive();
   await applyPortalLinkEntrySessionReset(false);
 }
 
