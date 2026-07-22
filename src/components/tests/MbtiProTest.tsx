@@ -970,7 +970,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       </div>
 
       {/* 검사완료 버튼 (마지막 질문에 답변 후 계속 표시) */}
-      {answers[totalQuestions - 1] !== undefined && (
+      {currentQuestion === totalQuestions - 1 && answers[totalQuestions - 1] !== undefined && (
         <>
           <div className={`fixed left-0 right-0 mx-auto w-1/4 bg-blue-900/90 backdrop-blur-sm py-6 px-10 rounded-2xl shadow-lg z-50 text-center border border-blue-800/50 transition-all duration-500 transform ${popupPosition === 'bottom' ? 'bottom-[7%]' : 'bottom-[calc(7%+150px)] -translate-y-full'}`}>
             <button 
