@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -280,7 +279,6 @@ interface AssessmentDispatchPanelProps {
 }
 
 export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDispatchPanelProps) {
-  const router = useRouter();
   const { authPending, isAuthenticated } = useAuthResolved();
   const [data, setData] = useState<AssessmentDispatchStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -634,9 +632,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     try {
       const result = await archiveDispatchRecipients(assessmentId, Array.from(selected));
       await load({ silent: true });
-      router.push(
-        `/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`,
-      );
+      setExpandedId((prev) => (prev && selected.has(prev) ? null : prev));
       setDispatchComplete({
         kind: 'delete',
         summary: `삭제 ${result.archived}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
