@@ -593,6 +593,41 @@ export function readCachedAssessmentsList(): CounselorAssessment[] | null {
   return cached.data?.assessments ?? null;
 }
 
+function sortAssessmentsByCreatedDesc(items: CounselorAssessment[]): CounselorAssessment[] {
+  return [...items].sort((a, b) => {
+    const ta = new Date(a.createdAt || 0).getTime();
+    const tb = new Date(b.createdAt || 0).getTime();
+    return (Number.isNaN(tb) ? 0 : tb) - (Number.isNaN(ta) ? 0 : ta);
+  });
+}
+
+/** 서버 목록 + 세션 캐시(낙관적 추가분) 병합 — 서버 항목이 동일 id면 우선 */
+export function mergeCounselorAssessmentLists(
+  fromServer: CounselorAssessment[],
+  fromCache: CounselorAssessment[],
+): CounselorAssessment[] {
+  const byId = new Map<string, CounselorAssessment>();
+  for (const a of fromCache) {
+    if (a?.id) byId.set(a.id, a);
+  }
+  for (const a of fromServer) {
+    if (a?.id) byId.set(a.id, a);
+  }
+  return sortAssessmentsByCreatedDesc(Array.from(byId.values()));
+}
+
+/** 발급 직후 목록에 바로 보이도록 세션 캐시 앞에 추가 */
+export function prependCounselorAssessmentToListCache(item: CounselorAssessment): void {
+  if (typeof window === 'undefined' || !item.id) return;
+  const existing = readCachedAssessmentsList() ?? [];
+  const rest = existing.filter((a) => a.id !== item.id);
+  writeSWRCache(
+    ASSESSMENTS_LIST_CACHE_KEY,
+    { assessments: sortAssessmentsByCreatedDesc([item, ...rest]) },
+    { scope: 'session' },
+  );
+}
+
 export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
@@ -604,8 +639,10 @@ export async function listAssessments(): Promise<{ assessments: CounselorAssessm
     throw new Error(data?.message || data?.error || '목록 조회에 실패했습니다.');
   }
   const payload = data as { assessments: CounselorAssessment[] };
-  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, payload, { scope: 'session' });
-  return payload;
+  const cached = readCachedAssessmentsList() ?? [];
+  const merged = mergeCounselorAssessmentLists(payload.assessments || [], cached);
+  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: merged }, { scope: 'session' });
+  return { assessments: merged };
 }
 
 /** GET /api/assessments/:id/progress - 상담사: 해당 검사코드 진행 현황 */

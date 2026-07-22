@@ -10,10 +10,13 @@ import {
   fetchBulkPortalJob,
   fetchBulkPortalJobResult,
 } from '@/lib/clientPortalApi';
-import { downloadBulkPortalExcel } from '@/lib/bulkPortalExcelDownload';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import type { BulkPortalJobStatus, ClientPortalBulkRow } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import {
+  prependCounselorAssessmentToListCache,
+  type CounselorAssessment,
+} from '@/lib/assessmentApi';
 import {
   GROUP_RECIPIENT_MAX,
   GROUP_BULK_ASYNC_THRESHOLD,
@@ -338,25 +341,58 @@ export default function IndividualAssessmentCreateForm() {
     }
   };
 
-  const downloadExcel = () => {
-    downloadBulkPortalExcel(created, sharedJoinCode);
-  };
+  const confirmIssueCompleteAndGoToList = useCallback(() => {
+    const assessmentId = lastCreatedAssessmentId.trim();
+    const accessCode = sharedJoinCode.trim();
+    const testList = counselorAssessmentTestOptions
+      .filter((t) => selectedTestIds.has(t.testId))
+      .map((t) => ({ testId: t.testId, name: t.name }));
 
-  const resetForAnotherIssue = () => {
-    setCreated([]);
-    setSharedJoinCode('');
-    setNotifySent(0);
-    setNotifyFailed(0);
-    setNotifyQueued(0);
-    setScheduledAtIso(null);
-    setLastCreatedAssessmentId('');
-    setLastIssueIntent('excel');
-    setError('');
-    setManualRows([{ ...EMPTY_ROW }]);
-    setFileRows([]);
-    setFileLabel('');
-    pendingIntentRef.current = null;
-  };
+    if (assessmentId && accessCode) {
+      const optimistic: CounselorAssessment = {
+        id: assessmentId,
+        accessCode,
+        counselorId: user?.uid || '',
+        title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+        issueType: 'individual',
+        targetAudience: '그룹',
+        welcomeMessage: welcomeMessage.trim(),
+        usageEndDate: usageEndDate.trim() || undefined,
+        testList,
+        createdAt: new Date().toISOString(),
+        cohortName: cohortName.trim() || undefined,
+        dispatchSentCount: 0,
+        dispatchFailedCount: 0,
+        testCompleteCount: 0,
+        testIncompleteCount: created.length,
+      };
+      prependCounselorAssessmentToListCache(optimistic);
+      try {
+        sessionStorage.setItem(
+          'wizcoco_created_assessment',
+          JSON.stringify({ assessmentId, accessCode }),
+        );
+      } catch {
+        // ignore
+      }
+    }
+
+    const href = assessmentId
+      ? `/counselor/assessments?created=${encodeURIComponent(assessmentId)}`
+      : '/counselor/assessments';
+    pushWithAuthSession(router, href);
+  }, [
+    cohortName,
+    created.length,
+    lastCreatedAssessmentId,
+    router,
+    selectedTestIds,
+    sharedJoinCode,
+    title,
+    usageEndDate,
+    user?.uid,
+    welcomeMessage,
+  ]);
 
   if (authPending) {
     return <AuthLoadingState className="py-8" message="로그인 정보를 불러오는 중…" />;
@@ -401,11 +437,18 @@ export default function IndividualAssessmentCreateForm() {
   }
 
   if (created.length > 0) {
-    const didNotify = lastIssueIntent === 'send_all';
     return (
-      <div className="space-y-4">
-        <CounselorPageSection title="발급 완료">
-          <div className="space-y-4 text-base text-slate-200">
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="issue-complete-title"
+      >
+        <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0f1a2e] p-6 shadow-2xl">
+          <h2 id="issue-complete-title" className="text-lg font-semibold text-white">
+            발급 완료
+          </h2>
+          <div className="mt-4 space-y-3 text-base text-slate-200">
             <p className="font-semibold text-emerald-200">
               {created.length.toLocaleString('ko-KR')}명에게 나의코드·비밀번호가 발급되었습니다.
             </p>
@@ -417,63 +460,17 @@ export default function IndividualAssessmentCreateForm() {
                 </span>
               </p>
             ) : null}
-            {didNotify ? (
-              <p className="text-slate-300">
-                {lastIssueIntent === 'send_all' ? (
-                  <span className="text-sky-200">전체 {created.length}명 · </span>
-                ) : null}
-                {scheduledAtIso ? (
-                  `${notifyQueued}건이 ${new Date(scheduledAtIso).toLocaleString('ko-KR')}에 발송 예약되었습니다.`
-                ) : notifySent > 0 ? (
-                  <>
-                    {notifySent}명에게 즉시 이메일·문자로 발송되었습니다.
-                    {notifyFailed > 0 ? ` (${notifyFailed}명 발송 실패 — Excel 저장 후 진행현황에서 재발송)` : null}
-                  </>
-                ) : notifyQueued > 0 ? (
-                  `${notifyQueued}건이 알림 큐에 등록되었습니다. 몇 분 내 이메일·문자로 순차 발송됩니다.`
-                ) : (
-                  '발송 설정이 없거나 연락처가 없습니다.'
-                )}
-              </p>
-            ) : (
-              <p className="text-slate-400">Excel에서 코드·비밀번호를 확인하거나, 아래에서 발송목록으로 이동할 수 있습니다.</p>
-            )}
-            <div className="flex flex-wrap gap-3 pt-1">
-              <button
-                type="button"
-                onClick={downloadExcel}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-blue-700"
-              >
-                Excel 다운로드
-              </button>
-              <button
-                type="button"
-                onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
-                className="rounded-lg border border-white/15 bg-slate-800/80 px-5 py-2.5 text-base font-medium text-slate-200 transition hover:bg-slate-700/80"
-              >
-                발송목록
-              </button>
-              {lastCreatedAssessmentId ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    pushWithAuthSession(router, `/counselor/assessments/${lastCreatedAssessmentId}/progress`)
-                  }
-                  className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-5 py-2.5 text-base font-medium text-sky-200 transition hover:bg-sky-500/20"
-                >
-                  진행현황
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={resetForAnotherIssue}
-                className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-5 py-2.5 text-base font-medium text-emerald-200 transition hover:bg-emerald-500/20"
-              >
-                이 페이지에서 계속 발급
-              </button>
-            </div>
           </div>
-        </CounselorPageSection>
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={confirmIssueCompleteAndGoToList}
+              className="rounded-lg bg-sky-600 px-6 py-2.5 text-base font-semibold text-white transition hover:bg-sky-500"
+            >
+              확인
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

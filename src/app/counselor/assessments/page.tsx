@@ -34,9 +34,14 @@ export default function AssessmentListPage() {
           if (o.assessmentId === createdId && o.accessCode) {
             setCreatedInfo({ accessCode: o.accessCode });
             sessionStorage.removeItem('wizcoco_created_assessment');
-            return;
           }
         }
+        const cached = readCachedAssessmentsList();
+        if (cached?.length) {
+          setAssessments(cached);
+          setLoading(false);
+        }
+        return;
       }
       const legacyCode = params.get('code');
       if (legacyCode) {
