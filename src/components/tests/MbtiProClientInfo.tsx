@@ -4,12 +4,14 @@ import React, { ChangeEvent, FC, useEffect, useRef, useState, FormEvent, useMemo
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { getMbtiProClientInfoTheme } from '@/config/mbtiProClientInfoTheme';
 
 interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
   isPersonalTest?: boolean;
-  /** 설정 시 기본 MBTI 제목 대신 표시 */
+  uiTheme?: 'emerald' | 'portal';
   screenTitle?: string;
+  hidePreviousPage?: boolean;
   initialData?: ClientInfo | null;
   onBack?: (clientInfo: ClientInfo) => void;
 }
@@ -25,7 +27,22 @@ export interface ClientInfo {
   phone: string;
 }
 
-const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, screenTitle, initialData, onBack }) => {
+const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
+  onSubmit,
+  isPersonalTest,
+  uiTheme = 'emerald',
+  screenTitle,
+  hidePreviousPage = false,
+  initialData,
+  onBack,
+}) => {
+  const c = getMbtiProClientInfoTheme(uiTheme);
+  const heading =
+    screenTitle ?? (isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사');
+  const choiceClass = (selected: boolean) =>
+    `py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
+      selected ? c.choiceSelected : c.choiceIdle
+    }`;
   const router = useRouter();
   const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
   const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
@@ -66,14 +83,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
   // 개인용 검사일 때 이름 입력칸에 자동 포커스
   useEffect(() => {
-    if (isPersonalTest && nameRef.current) {
+    if ((isPersonalTest || uiTheme === 'portal') && nameRef.current) {
       // 약간의 지연을 주어 DOM이 완전히 렌더링된 후 포커스
       const timer = setTimeout(() => {
         nameRef.current?.focus();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isPersonalTest]);
+  }, [isPersonalTest, uiTheme]);
 
   // initialData가 변경되면 상태 업데이트
   useEffect(() => {
@@ -307,7 +324,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
   };
 
   return (
-    <div className="min-h-screen bg-emerald-950 text-white py-4 px-4 overflow-hidden relative pt-16">
+    <div className={c.shell}>
       <style jsx>{`
         @keyframes blink {
           0%, 50%, 100% { opacity: 1; }
@@ -318,7 +335,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
         }
       `}</style>
       
-      {!isPersonalTest && (
+      {!isPersonalTest && uiTheme !== 'portal' && (
         <div className="absolute inset-0 z-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
@@ -331,16 +348,18 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
         </div>
       )}
       
+      {c.showOrbs && (
+        <>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        </>
+      )}
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
-          <h1 className="text-3xl font-bold text-white mb-4">
-            {screenTitle ?? (isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사')}
-          </h1>
-          <p className="text-emerald-300 max-w-lg mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-4">{heading}</h1>
+          <p className={`${c.subtitle} max-w-lg mx-auto`}>
             검사 진행을 위해 기본 정보를 입력해주세요.
           </p>
         </div>
@@ -349,7 +368,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8"
+          className={c.formCard}
         >
           <form 
             onSubmit={handleSubmit} 
@@ -373,9 +392,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             )}
 
             {/* 이름(가명) */}
-            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30">
+            <div className={c.sectionBox}>
               <div className="mt-2">
-                <label htmlFor="name-field" className="block text-sm font-medium text-emerald-300 mb-1">
+                <label htmlFor="name-field" className={`block text-sm font-medium ${c.label} mb-1`}>
                   이름(가명) <span className="text-red-400">*</span>
               </label>
                   <input 
@@ -384,7 +403,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                   name="name_random_field"
                     value={name}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  className={c.input}
                   placeholder="이름(가명)을 입력하세요"
                     autoComplete="off"
                     autoCorrect="off"
@@ -399,9 +418,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             </div>
 
             {/* 출생년도 */}
-            <div className="bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 relative">
+            <div className={`${c.sectionBox} relative`}>
               <div className="mt-2">
-                <label htmlFor="birth-year-field" className="block text-sm font-medium text-emerald-300 mb-1">
+                <label htmlFor="birth-year-field" className={`block text-sm font-medium ${c.label} mb-1`}>
                   출생년도 <span className="text-red-400">*</span>
               </label>
                 
@@ -501,7 +520,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                         (birthYearRef.current as any)._blurTimeout = blurTimeout;
                       }
                     }}
-                    className="w-full px-4 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    className={c.input}
                     placeholder="4자리 연도 입력 또는 클릭하여 선택"
                     autoComplete="off"
                     autoCorrect="off"
@@ -527,13 +546,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="year-selector mt-2 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-4 shadow-lg"
+                    className={c.yearPanel}
                   >
                     <div
                       ref={yearGridRef}
                       role="grid"
                       aria-label="출생년도 선택"
-                      className="grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50"
+                      className={c.yearGrid}
                       style={{ maxHeight: '336px' }}
                       onKeyDown={handleYearKeyDown}
                       onMouseMove={handleYearGridMouseMove}
@@ -592,14 +611,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                           whileTap={{ scale: 0.95 }}
                           className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
                             isSelected
-                              ? 'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40'
-                              : `${blueBand ? 'bg-sky-700/50' : 'bg-emerald-800/70'} ${isYearEndingWith16 ? 'text-yellow-200' : 'text-emerald-200'} border border-emerald-700 hover:bg-emerald-700/70`
+                              ? c.yearSelected
+                              : `${blueBand ? 'bg-sky-700/50' : c.yearIdle} ${isYearEndingWith16 ? 'text-yellow-200' : ''}`
                           }`}
                         >
                           {isSelected && (
                             <>
-                              <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
-                              <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
+                              <span aria-hidden="true" className={`pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full ${c.yearSelectedBar}`} />
+                              <span aria-hidden="true" className={`pointer-events-none absolute inset-0 rounded-md ring-2 ${c.yearSelectedRing}`} />
                             </>
                           )}
                           <span>{year}</span>
@@ -617,9 +636,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             {/* 성별과 결혼상태 */}
             <div className={`grid grid-cols-2 gap-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {/* 성별 */}
-              <div className="bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
+              <div className={c.genderPanel}>
                 <div className="mt-2">
-                  <label className="block text-sm font-medium text-emerald-300 mb-1">
+                  <label className={`block text-sm font-medium ${c.label} mb-1`}>
                     성별 <span className="text-red-400">*</span>
               </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -628,11 +647,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       onClick={() => handleGenderSelect('남성')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                        gender === '남성'
-                          ? 'bg-teal-600 text-white border-2 border-teal-500'
-                          : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
-                      }`}
+                      className={choiceClass(gender === '남성')}
                     >
                       <div className="flex items-center justify-center">
                         <span className="mr-1">👨</span>
@@ -644,11 +659,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       onClick={() => handleGenderSelect('여성')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                        gender === '여성'
-                          ? 'bg-teal-600 text-white border-2 border-teal-500'
-                          : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
-                      }`}
+                      className={choiceClass(gender === '여성')}
                     >
                       <div className="flex items-center justify-center">
                         <span className="mr-1">👩</span>
@@ -663,9 +674,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
             </div>
 
               {/* 결혼상태 */}
-              <div className="bg-teal-500/15 p-4 rounded-lg border border-teal-400/20">
+              <div className={c.genderPanel}>
                 <div className="mt-2">
-                  <label className="block text-sm font-medium text-emerald-300 mb-1">
+                  <label className={`block text-sm font-medium ${c.label} mb-1`}>
                     결혼 상태 <span className="text-red-400">*</span>
               </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -674,11 +685,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       onClick={() => handleMaritalStatusSelect('미혼')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                    maritalStatus === '미혼'
-                          ? 'bg-teal-600 text-white border-2 border-teal-500'
-                          : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
-                      }`}
+                      className={choiceClass(maritalStatus === '미혼')}
                     >
                       <div className="flex items-center justify-center">
                         <span className="mr-1">💍</span>
@@ -690,11 +697,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                       onClick={() => handleMaritalStatusSelect('기혼')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                    maritalStatus === '기혼'
-                          ? 'bg-teal-600 text-white border-2 border-teal-500'
-                          : 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70'
-                      }`}
+                      className={choiceClass(maritalStatus === '기혼')}
                     >
                       <div className="flex items-center justify-center">
                         <span className="mr-1">💑</span>
@@ -713,7 +716,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
 
             {/* 개인정보 활용 동의 */}
             <div 
-              className={`bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
+              className={`${c.privacyBox} ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
               ref={privacyRef}
               role="button"
               aria-pressed={privacyAgreed}
@@ -738,14 +741,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
                     type="checkbox"
                     checked={privacyAgreed}
                     onChange={handlePrivacyChange}
-                    className="w-4 h-4 text-emerald-600 bg-emerald-900 border-emerald-500 rounded focus:ring-emerald-500 focus:ring-2"
+                    className={c.checkbox}
                   />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label htmlFor="privacy" className="font-medium text-emerald-200 cursor-pointer select-none">
+                  <label htmlFor="privacy" className={`font-medium ${c.privacyLabel} cursor-pointer select-none`}>
                     개인정보 활용 동의 <span className="text-red-400">*</span>
                   </label>
-                  <p className="text-emerald-300/80 mt-1 cursor-pointer select-none">
+                  <p className={`${c.privacyHint} mt-1 cursor-pointer select-none`}>
                     검사 결과 분석 및 상담을 위한 개인정보 수집·이용에 동의합니다.
                   </p>
                 </div>
@@ -755,16 +758,17 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               )}
             </div>
 
-            <div className={`flex justify-between items-center pt-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className={`flex ${hidePreviousPage ? 'justify-end' : 'justify-between'} items-center pt-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+              {!hidePreviousPage && (
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className={`px-5 py-3 font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-emerald-900 ${
-                  isPersonalTest 
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500'
-                    : 'bg-gray-700/60 text-gray-200 hover:bg-gray-700 focus:ring-gray-500'
-                }`}
+                className={
+                  isPersonalTest || uiTheme === 'portal'
+                    ? c.backBtn
+                    : 'px-5 py-3 font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 bg-gray-700/60 text-gray-200 hover:bg-gray-700 focus:ring-gray-500'
+                }
                 onClick={() => {
                   const currentInfo: ClientInfo = {
                     birthYear,
@@ -788,12 +792,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
               >
                 이전 페이지
               </motion.button>
+              )}
 
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg shadow-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-emerald-900"
+                className={c.submitBtn}
               >
                 검사 시작하기
               </motion.button>
@@ -801,7 +806,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
           </form>
         </motion.div>
 
-        <div className="mt-8 text-center text-sm text-emerald-400/70">
+        <div className={`mt-8 text-center text-sm ${c.footerHint}`}>
           <p>* 필수 항목을 모두 입력해주세요.</p>
           <p>* 개인정보는 검사 목적으로만 사용됩니다.</p>
         </div>
