@@ -107,13 +107,16 @@ export default function AssessmentSettingsFields({
           </div>
 
           <div>
-            <label htmlFor="welcome-message" className={FORM_LABEL}>
-              안내 메시지 (선택)
-            </label>
-            <WelcomeMessageSamplePicker
-              disabled={disabled}
-              onPick={onWelcomeMessageChange}
-            />
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <label htmlFor="welcome-message" className={FORM_LABEL}>
+                안내 메시지 (선택)
+              </label>
+              <WelcomeMessageSamplePicker
+                inline
+                disabled={disabled}
+                onPick={onWelcomeMessageChange}
+              />
+            </div>
             <textarea
               id="welcome-message"
               rows={4}

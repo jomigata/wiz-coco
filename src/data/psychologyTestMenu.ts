@@ -39,7 +39,7 @@ export function getVisibleTestMenuItems(): TestCategory[] {
 
 /** 대분류명 → /tests?category={slug} 경로 */
 export const TEST_CATEGORY_SLUGS: Record<string, string> = {
-  '전문가용 이고-오케이그램 검사': 'ego-ok-professional',
+  'TA 이고-오케이그램 검사': 'ego-ok-professional',
   '1. 개인 심리 및 성장': 'personal-growth',
   '2. 대인관계 및 사회적응': 'relationships-social',
   '3. 정서 문제 및 정신 건강': 'emotional-mental',
@@ -135,17 +135,17 @@ export const testSubMenuItems: TestCategory[] = [
     ]
   },
   {
-    category: "전문가용 이고-오케이그램 검사",
+    category: "TA 이고-오케이그램 검사",
     icon: "🔄",
     subcategories: [
       {
-        name: "전문가용 이고-오케이그램",
+        name: "TA 이고-오케이그램",
         icon: "📋",
         items: [
           {
-            name: "전문가용 이고-오케이그램 검사",
+            name: "TA 이고-오케이그램 검사",
             href: "/tests/ego-ok-pro",
-            description: "상담사·전문가용 교류분석 기반 이고·오케이(OK) 자아 상태 검사",
+            description: "상담사·TA 교류분석 기반 이고·오케이(OK) 자아 상태 검사",
             icon: "🔄",
           },
         ],

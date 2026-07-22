@@ -8,6 +8,7 @@ import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCo
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
+import { resolveDedicatedJoinTestPath, buildDedicatedJoinTestUrl } from '@/lib/joinDedicatedTestPaths';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { canTrackJoinResults } from '@/lib/assessmentApi';
 import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
@@ -69,6 +70,20 @@ export default function TestRunnerPage() {
     }
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const tid = (testId || '').trim();
+    const dedicated = resolveDedicatedJoinTestPath(tid);
+    if (!dedicated) return;
+    const params = new URLSearchParams(window.location.search);
+    router.replace(buildDedicatedJoinTestUrl(dedicated, {
+      accessCode: params.get('accessCode') || '',
+      testId: tid,
+      from: params.get('from') || undefined,
+      resultId: params.get('resultId') || undefined,
+    }));
+  }, [hydrated, testId, router]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -229,6 +244,17 @@ export default function TestRunnerPage() {
 
   if (!hydrated) {
     return null;
+  }
+
+  const dedicatedPath = resolveDedicatedJoinTestPath(testId);
+  if (dedicatedPath) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <div className="pt-24 flex justify-center">
+          <p className="text-slate-400">검사 페이지로 이동 중…</p>
+        </div>
+      </div>
+    );
   }
 
   if (!code || !isValidAccessCodeInput(code) || !testId) {

@@ -5,6 +5,10 @@ import { listResults, TestResultItem } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { fetchPortalDashboard } from '@/lib/clientPortalApi';
 import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
+import {
+  buildDedicatedJoinTestUrl,
+  resolveDedicatedJoinTestPath,
+} from '@/lib/joinDedicatedTestPaths';
 
 export type PortalAssessmentItem = {
   assessmentId: string;
@@ -15,8 +19,29 @@ export type PortalAssessmentItem = {
   accessCode: string;
 };
 
-export function getJoinTestPath(accessCode: string, testId: string): string {
-  return `/join/test?accessCode=${encodeURIComponent(accessCode)}&testId=${encodeURIComponent(testId)}`;
+export function getJoinTestPath(
+  accessCode: string,
+  testId: string,
+  options?: { from?: string; resultId?: string },
+): string {
+  const code = normalizeAccessCodeInput(accessCode);
+  const tid = String(testId || '').trim();
+  const dedicated = resolveDedicatedJoinTestPath(tid);
+  if (dedicated) {
+    return buildDedicatedJoinTestUrl(dedicated, {
+      accessCode: code,
+      testId: tid,
+      from: options?.from ?? 'portal',
+      resultId: options?.resultId,
+    });
+  }
+  const params = new URLSearchParams({
+    accessCode: code,
+    testId: tid,
+  });
+  if (options?.from) params.set('from', options.from);
+  if (options?.resultId) params.set('resultId', options.resultId);
+  return `/join/test?${params.toString()}`;
 }
 
 export function findFirstIncompleteTest(

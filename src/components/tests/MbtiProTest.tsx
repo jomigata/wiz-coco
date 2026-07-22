@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -13,6 +13,11 @@ import { initializeFirebase, auth } from '@/lib/firebase';
 import { testResults } from '@/utils/firebaseIntegration';
 import { MBTI_PRO_TEST_FLOW, type MbtiProTestFlowConfig } from '@/config/mbtiProTestFlow';
 import { getMbtiProVisualTheme, resolveMbtiProPageShell } from '@/config/mbtiProVisualTheme';
+import { normalizeAccessCodeInput, isValidAccessCodeInput } from '@/lib/accessCodeFormat';
+import { lookupPublicAssessment, submitResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode } from '@/lib/assessmentApi';
+import { ensureJoinGuestSession } from '@/lib/joinGuestSession';
+import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
+import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
 
 interface Answer {
   [key: string]: number;
@@ -61,7 +66,64 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     flow.skipCodeStep ? 'info' : 'code',
   );
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
+  const [joinAccessCode, setJoinAccessCode] = useState('');
+  const [joinAssessmentTestId, setJoinAssessmentTestId] = useState('');
+  const [joinFromPortal, setJoinFromPortal] = useState(false);
+  const [joinAccessReady, setJoinAccessReady] = useState(true);
+  const [joinAccessError, setJoinAccessError] = useState('');
   const testId = generateTestId(pathname || flow.defaultPath);
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const code = normalizeAccessCodeInput(params.get('accessCode') || '');
+      setJoinAccessCode(code);
+      setJoinAssessmentTestId((params.get('testId') || '').trim());
+      setJoinFromPortal((params.get('from') || '').trim() === 'portal');
+    } catch {
+      setJoinAccessCode('');
+      setJoinAssessmentTestId('');
+      setJoinFromPortal(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const code = joinAccessCode;
+    if (!code || !isValidAccessCodeInput(code)) {
+      setJoinAccessReady(true);
+      return;
+    }
+    let cancelled = false;
+    setJoinAccessReady(false);
+    setJoinAccessError('');
+    const run = async () => {
+      try {
+        await lookupPublicAssessment(code);
+        if (joinFromPortal) {
+          try {
+            await listResults(code);
+            clearForceGuestForAccessCode(code);
+          } catch {
+            await ensureJoinGuestSession(code);
+            setForceGuestForAccessCode(code);
+          }
+        } else {
+          await ensureJoinGuestSession(code);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setJoinAccessError(err instanceof Error ? err.message : '검사코드를 사용할 수 없습니다.');
+        }
+      } finally {
+        if (!cancelled) setJoinAccessReady(true);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [joinAccessCode, joinFromPortal]);
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
@@ -431,6 +493,36 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         }
         setCodeData(null);
       } catch {}
+
+      const portalCode = joinAccessCode;
+      const portalTestId = joinAssessmentTestId;
+      if (portalCode && portalTestId && isValidAccessCodeInput(portalCode)) {
+        try {
+          await submitResult({
+            accessCode: portalCode,
+            testId: portalTestId,
+            responses: answers as Record<string, unknown>,
+          });
+        } catch (submitErr) {
+          console.error('검사코드 결과 제출 실패:', submitErr);
+        }
+        if (joinFromPortal) {
+          let assessmentId = '';
+          try {
+            const raw = sessionStorage.getItem(JOIN_STORAGE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw) as { assessmentId?: string };
+              assessmentId = (parsed.assessmentId || '').trim();
+            }
+          } catch {
+            // ignore
+          }
+          const expandKey =
+            assessmentId && portalTestId ? `${assessmentId}:${portalTestId}` : '';
+          router.replace(buildPortalProgressReturnUrl(expandKey || undefined));
+          return;
+        }
+      }
       
       // 다음 페이지로 이동하기 전에 약간의 지연 추가 (UI 표시를 위해)
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -481,6 +573,28 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   };
 
   // 단계별 렌더링
+  if (joinAccessCode && isValidAccessCodeInput(joinAccessCode)) {
+    if (!joinAccessReady) {
+      return (
+        <div className={`flex min-h-screen items-center justify-center ${pageShell}`}>
+          <p className="text-lg text-slate-300">검사 정보 확인 중…</p>
+        </div>
+      );
+    }
+    if (joinAccessError) {
+      return (
+        <div className={`flex min-h-screen flex-col items-center justify-center gap-4 px-4 ${pageShell}`}>
+          <p className="text-center text-red-400">{joinAccessError}</p>
+          {joinFromPortal ? (
+            <Link href="/portal/" className="text-sky-400 hover:text-sky-300">
+              내 검사실로 돌아가기
+            </Link>
+          ) : null}
+        </div>
+      );
+    }
+  }
+
   if (currentStep === 'code' && !flow.skipCodeStep) {
     return (
       <MbtiProCodeInput

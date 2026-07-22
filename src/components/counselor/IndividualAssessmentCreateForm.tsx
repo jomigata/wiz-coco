@@ -554,11 +554,14 @@ export default function IndividualAssessmentCreateForm() {
             </div>
             <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
-                <label className={FORM_LABEL}>안내 메시지 (선택)</label>
-                <WelcomeMessageSamplePicker
-                  disabled={loading}
-                  onPick={(text) => setWelcomeMessage(text)}
-                />
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <label className={FORM_LABEL}>안내 메시지 (선택)</label>
+                  <WelcomeMessageSamplePicker
+                    inline
+                    disabled={loading}
+                    onPick={(text) => setWelcomeMessage(text)}
+                  />
+                </div>
                 <textarea
                   rows={2}
                   className={`${FORM_INPUT} min-h-[3.5rem] resize-y`}

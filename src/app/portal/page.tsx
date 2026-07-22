@@ -25,6 +25,7 @@ import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
 import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
+import { getJoinTestPath } from '@/lib/portalTestNavigation';
 
 type PortalAssessment = PortalDashboardAssessment;
 type PortalTab = 'tests' | 'care';
@@ -243,13 +244,7 @@ function ClientPortalContent() {
       usageEndDate: a.usageEndDate || '',
       testList: a.testList,
     });
-    const params = new URLSearchParams({
-      accessCode: code,
-      testId: String(testId),
-      from: 'portal',
-    });
-    if (resultId) params.set('resultId', resultId);
-    router.push(`/join/test?${params.toString()}`);
+    router.push(getJoinTestPath(code, String(testId), { from: 'portal', resultId }));
   };
 
   const openResultView = (
