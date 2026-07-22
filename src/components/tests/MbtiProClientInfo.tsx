@@ -301,7 +301,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     const idxAttr = target.getAttribute('data-year-idx');
     if (idxAttr == null) return;
     const idx = parseInt(idxAttr, 10);
-    const cols = 10;
+    const cols = 8;
     let next = idx;
     if (e.key === 'ArrowRight') next = Math.min(years.length - 1, idx + 1);
     else if (e.key === 'ArrowLeft') next = Math.max(0, idx - 1);
@@ -547,7 +547,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       role="grid"
                       aria-label="출생년도 선택"
                       className={th.yearGrid}
-                      style={{ maxHeight: '336px' }}
                       onKeyDown={handleYearKeyDown}
                       onMouseMove={handleYearGridMouseMove}
                       onMouseLeave={handleMouseLeave}
@@ -557,9 +556,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       onTouchEnd={handleTouchEnd}
                     >
                       {years.map((year, idx) => {
-                        const columnIndex = (idx % 10) + 1;
-                        const rowIndex = Math.floor(idx / 10) + 1;
-                        const blueBand = (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 6);
+                        const columnIndex = (idx % 8) + 1;
+                        const rowIndex = Math.floor(idx / 8) + 1;
+                        const blueBand = (columnIndex >= 3 && columnIndex <= 6) || (rowIndex >= 4 && rowIndex <= 6);
                         const isSelected = birthYear === year;
                         const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
                         return (
@@ -603,7 +602,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                           }}
                           whileHover={{ scale: 1.05, backgroundColor: th.yearBtnHoverRgb }}
                           whileTap={{ scale: 0.95 }}
-                          className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
+                          className={`${th.yearBtnBase} ${
                             isSelected
                               ? th.yearBtnSelected
                               : `${blueBand ? th.yearBtnBgBlueBand : th.yearBtnBgDefault} ${
