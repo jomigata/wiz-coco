@@ -34,8 +34,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   screenTitle,
   uiTheme = 'emerald',
 }) => {
+  const th = getMbtiProClientInfoTheme(uiTheme);
   const router = useRouter();
-  const t = getMbtiProClientInfoTheme(uiTheme);
   const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
   const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
   const [isYearSelected, setIsYearSelected] = useState<boolean>(false); // 년도 선택 여부 추적
@@ -316,7 +316,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   };
 
   return (
-    <div className={t.page}>
+    <div className={th.shell}>
       <style jsx>{`
         @keyframes blink {
           0%, 50%, 100% { opacity: 1; }
@@ -340,27 +340,29 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
         </div>
       )}
       
-      {t.showOrbs ? (
+      {th.showOrbs && (
         <>
-          <div className={t.orbA} />
-          <div className={t.orbB} />
-          <div className={t.orbC} />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
         </>
-      ) : null}
+      )}
 
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-white mb-4">
             {screenTitle ?? (isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사')}
           </h1>
-          <p className={t.subtitle}>검사 진행을 위해 기본 정보를 입력해주세요.</p>
+          <p className={th.subtitle}>
+            검사 진행을 위해 기본 정보를 입력해주세요.
+          </p>
         </div>
 
-        <motion.div
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={t.card}
+          className={th.formCard}
         >
           <form 
             onSubmit={handleSubmit} 
@@ -384,9 +386,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             )}
 
             {/* 이름(가명) */}
-            <div className={t.section}>
+            <div className={th.fieldBox}>
               <div className="mt-2">
-                <label htmlFor="name-field" className={t.label}>
+                <label htmlFor="name-field" className={th.label}>
                   이름(가명) <span className="text-red-400">*</span>
               </label>
                   <input 
@@ -395,7 +397,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                   name="name_random_field"
                     value={name}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                  className={t.input}
+                  className={th.input}
                   placeholder="이름(가명)을 입력하세요"
                     autoComplete="off"
                     autoCorrect="off"
@@ -410,9 +412,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             </div>
 
             {/* 출생년도 */}
-            <div className={`${t.section} relative`}>
+            <div className={`${th.fieldBox} relative`}>
               <div className="mt-2">
-                <label htmlFor="birth-year-field" className={t.label}>
+                <label htmlFor="birth-year-field" className={th.label}>
                   출생년도 <span className="text-red-400">*</span>
               </label>
                 
@@ -512,7 +514,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                         (birthYearRef.current as any)._blurTimeout = blurTimeout;
                       }
                     }}
-                    className={t.input}
+                    className={th.input}
                     placeholder="4자리 연도 입력 또는 클릭하여 선택"
                     autoComplete="off"
                     autoCorrect="off"
@@ -538,13 +540,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className={t.yearPanel}
+                    className={th.yearSelector}
                   >
                     <div
                       ref={yearGridRef}
                       role="grid"
                       aria-label="출생년도 선택"
-                      className={t.yearGridScroll}
+                      className={th.yearGrid}
                       style={{ maxHeight: '336px' }}
                       onKeyDown={handleYearKeyDown}
                       onMouseMove={handleYearGridMouseMove}
@@ -603,8 +605,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                           whileTap={{ scale: 0.95 }}
                           className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
                             isSelected
-                              ? t.yearBtnSelected
-                              : `${blueBand ? 'bg-sky-700/50' : t.yearBtnIdle} ${isYearEndingWith16 ? 'text-yellow-200' : ''}`
+                              ? th.yearBtnSelected
+                              : `${blueBand ? 'bg-sky-700/50' : th.yearBtnDefault} ${isYearEndingWith16 ? 'text-yellow-200' : ''}`
                           }`}
                         >
                           {isSelected && (
@@ -628,9 +630,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             {/* 성별과 결혼상태 */}
             <div className={`grid grid-cols-2 gap-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {/* 성별 */}
-              <div className={t.genderSection}>
+              <div className={th.choiceSection}>
                 <div className="mt-2">
-                  <label className={t.label}>
+                  <label className={th.label}>
                     성별 <span className="text-red-400">*</span>
               </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -640,7 +642,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                        gender === '남성' ? t.choiceActive : t.choiceIdle
+                        gender === '남성' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
                       <div className="flex items-center justify-center">
@@ -654,7 +656,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                        gender === '여성' ? t.choiceActive : t.choiceIdle
+                        gender === '여성' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
                       <div className="flex items-center justify-center">
@@ -670,9 +672,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             </div>
 
               {/* 결혼상태 */}
-              <div className={t.genderSection}>
+              <div className={th.choiceSection}>
                 <div className="mt-2">
-                  <label className={t.label}>
+                  <label className={th.label}>
                     결혼 상태 <span className="text-red-400">*</span>
               </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -682,7 +684,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                    maritalStatus === '미혼' ? t.choiceActive : t.choiceIdle
+                    maritalStatus === '미혼' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
                       <div className="flex items-center justify-center">
@@ -696,7 +698,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                       className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
-                    maritalStatus === '기혼' ? t.choiceActive : t.choiceIdle
+                    maritalStatus === '기혼' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
                       <div className="flex items-center justify-center">
@@ -715,8 +717,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             {/* 검사코드 입력 부분은 별도 화면으로 분리됨 */}
 
             {/* 개인정보 활용 동의 */}
-            <div
-              className={`${t.privacyBox} transition-colors ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
+            <div 
+              className={`${th.privacyBox} ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}
               ref={privacyRef}
               role="button"
               aria-pressed={privacyAgreed}
@@ -741,14 +743,14 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     type="checkbox"
                     checked={privacyAgreed}
                     onChange={handlePrivacyChange}
-                    className={t.checkbox}
+                    className={th.checkbox}
                   />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label htmlFor="privacy" className={t.privacyLabel}>
+                  <label htmlFor="privacy" className={th.privacyLabel}>
                     개인정보 활용 동의 <span className="text-red-400">*</span>
                   </label>
-                  <p className={t.privacyHint}>
+                  <p className={th.privacyHint}>
                     검사 결과 분석 및 상담을 위한 개인정보 수집·이용에 동의합니다.
                   </p>
                 </div>
@@ -764,11 +766,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                 type="button"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className={`px-5 py-3 font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-emerald-900 ${
-                  isPersonalTest 
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500'
-                    : 'bg-gray-700/60 text-gray-200 hover:bg-gray-700 focus:ring-gray-500'
-                }`}
+                className={isPersonalTest ? th.backBtn : th.backBtnDisabled}
                 onClick={() => {
                   const currentInfo: ClientInfo = {
                     birthYear,
@@ -796,7 +794,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                 type="submit"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className={t.submitPrimary}
+                className={th.submitBtn}
               >
                 검사 시작하기
               </motion.button>
@@ -804,7 +802,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
           </form>
         </motion.div>
 
-        <div className={t.footerHint}>
+        <div className={th.footer}>
           <p>* 필수 항목을 모두 입력해주세요.</p>
           <p>* 개인정보는 검사 목적으로만 사용됩니다.</p>
         </div>

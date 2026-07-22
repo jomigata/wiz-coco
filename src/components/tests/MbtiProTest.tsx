@@ -20,11 +20,7 @@ import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
-import {
-  buildDedicatedTestResultResponses,
-  parseDedicatedTestResultResponses,
-  resolveClientInfoForPortalEdit,
-} from '@/lib/dedicatedTestResultPayload';
+import { buildMbtiProJoinResponses, parseMbtiProJoinResponses } from '@/lib/mbtiProJoinResponses';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 interface Answer {
@@ -79,9 +75,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const [joinFromPortal, setJoinFromPortal] = useState(false);
   const [joinAccessReady, setJoinAccessReady] = useState(true);
   const [joinAccessError, setJoinAccessError] = useState('');
-  const [joinEditResultId, setJoinEditResultId] = useState('');
+  const [editResultId, setEditResultId] = useState('');
   const [editResultLoading, setEditResultLoading] = useState(false);
-  const [infoFormSeed, setInfoFormSeed] = useState<ClientInfo | null>(null);
   const testId = generateTestId(pathname || flow.defaultPath);
 
   useLayoutEffect(() => {
@@ -92,7 +87,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       setJoinAccessCode(code);
       setJoinAssessmentTestId((params.get('testId') || '').trim());
       setJoinFromPortal((params.get('from') || '').trim() === 'portal');
-      setJoinEditResultId((params.get('resultId') || '').trim());
+      setEditResultId((params.get('resultId') || '').trim());
     } catch {
       setJoinAccessCode('');
       setJoinAssessmentTestId('');
@@ -145,19 +140,38 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   }, [joinAccessCode, joinFromPortal]);
 
   useEffect(() => {
-    if (!joinAccessReady || !joinEditResultId || !joinAccessCode) return;
+    const code = joinAccessCode;
+    const resultId = editResultId.trim();
+    if (!resultId || !code || !isValidAccessCodeInput(code) || !joinAccessReady || joinAccessError) {
+      return;
+    }
     let cancelled = false;
     setEditResultLoading(true);
-    void getClientResult(joinEditResultId, joinAccessCode)
+    getClientResult(resultId, code)
       .then((data) => {
         if (cancelled) return;
-        const { answers: storedAnswers, clientInfo: storedInfo } = parseDedicatedTestResultResponses(
-          data.responses,
-        );
-        const info = resolveClientInfoForPortalEdit(storedInfo);
-        setInfoFormSeed(info);
-        if (Object.keys(storedAnswers).length > 0) {
-          setAnswers(storedAnswers);
+        const parsed = parseMbtiProJoinResponses(data.responses);
+        if (parsed.answers && Object.keys(parsed.answers).length > 0) {
+          setAnswers(parsed.answers);
+        }
+        let info = parsed.clientInfo;
+        if (!info || (!info.name && !info.gender && !info.birthYear)) {
+          const portal = readClientPortalSession();
+          const displayName = portal?.portal?.displayName?.trim();
+          if (displayName) {
+            info = {
+              birthYear: info?.birthYear || 0,
+              groupCode: info?.groupCode || code,
+              gender: info?.gender || '',
+              maritalStatus: info?.maritalStatus || '',
+              name: displayName,
+              privacyAgreed: info?.privacyAgreed ?? true,
+              phone: info?.phone || '',
+            };
+          }
+        }
+        if (info) {
+          setClientInfo(info);
         }
       })
       .catch((err) => {
@@ -171,20 +185,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     return () => {
       cancelled = true;
     };
-  }, [joinAccessReady, joinEditResultId, joinAccessCode]);
-
-  useEffect(() => {
-    if (joinEditResultId || infoFormSeed || !joinFromPortal || !joinAccessReady) return;
-    const portal = readClientPortalSession();
-    if (!portal?.portal?.displayName) return;
-    setInfoFormSeed((prev) =>
-      prev ??
-      resolveClientInfoForPortalEdit({
-        name: portal.portal.displayName,
-        privacyAgreed: true,
-      }),
-    );
-  }, [joinEditResultId, infoFormSeed, joinFromPortal, joinAccessReady]);
+  }, [editResultId, joinAccessCode, joinAccessReady, joinAccessError]);
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
@@ -276,14 +277,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     };
     
     console.log('MbtiProTest - 완성된 클라이언트 정보:', completeInfo);
-
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('mbti_pro_client_info', JSON.stringify(completeInfo));
-      }
-    } catch {
-      // ignore
-    }
     
     // 상태 업데이트
     setClientInfo(completeInfo);
@@ -566,15 +559,15 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       const portalCode = joinAccessCode;
       const portalTestId = joinAssessmentTestId;
       if (portalCode && portalTestId && isValidAccessCodeInput(portalCode)) {
+        const payload = buildMbtiProJoinResponses(answers, clientInfo);
         try {
-          const responses = buildDedicatedTestResultResponses(answers, clientInfo);
-          if (joinEditResultId) {
-            await updateClientResult(joinEditResultId, { responses }, portalCode);
+          if (editResultId.trim()) {
+            await updateClientResult(editResultId.trim(), { responses: payload }, portalCode);
           } else {
             await submitResult({
               accessCode: portalCode,
               testId: portalTestId,
-              responses,
+              responses: payload,
             });
           }
         } catch (submitErr) {
@@ -684,7 +677,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   if (currentStep === 'info') {
     return (
       <>
-        <div className={`relative min-h-screen pb-12 overflow-hidden ${pageShell}`}>
+        <div className="relative min-h-screen pb-12 overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -707,9 +700,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           )}
 
           <MbtiProClientInfo
-            onSubmit={handleClientInfoSubmit}
+            onSubmit={handleClientInfoSubmit} 
             isPersonalTest={true}
-            initialData={infoFormSeed ?? clientInfo}
+            initialData={clientInfo}
             uiTheme={uiTheme}
             screenTitle={flow.clientInfoScreenTitle ?? flow.testScreenTitle}
             onBack={
