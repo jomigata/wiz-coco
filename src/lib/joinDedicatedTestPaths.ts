@@ -25,3 +25,14 @@ export function buildDedicatedJoinTestUrl(
   if (params.resultId) search.set('resultId', params.resultId);
   return `${dedicatedPath}?${search.toString()}`;
 }
+
+/** 내 검사실(검사코드)에서 바로 열 수 있는 전용 검사 URL — 상담사 RoleGuard 제외 */
+export function isClientPortalDedicatedTestPath(pathname: string): boolean {
+  const path = (pathname || '').split('?')[0];
+  if (path === '/tests/ego-ok' || path.startsWith('/tests/ego-ok/')) {
+    return true;
+  }
+  return Object.values(JOIN_DEDICATED_TEST_PATHS).some(
+    (dedicated) => path === dedicated || path.startsWith(`${dedicated}/`),
+  );
+}

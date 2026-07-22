@@ -15,7 +15,9 @@ import { MBTI_PRO_TEST_FLOW, type MbtiProTestFlowConfig } from '@/config/mbtiPro
 import { getMbtiProVisualTheme, resolveMbtiProPageShell } from '@/config/mbtiProVisualTheme';
 import { normalizeAccessCodeInput, isValidAccessCodeInput } from '@/lib/accessCodeFormat';
 import { lookupPublicAssessment, submitResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode } from '@/lib/assessmentApi';
-import { ensureJoinGuestSession } from '@/lib/joinGuestSession';
+import { ensureJoinGuestSession, clearJoinGuestSession } from '@/lib/joinGuestSession';
+import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
+import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
 
@@ -100,13 +102,20 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     const run = async () => {
       try {
         await lookupPublicAssessment(code);
-        if (joinFromPortal) {
+        const hasPortal = isPortalModeForAccessCode(code);
+        if (hasPortal) {
+          clearJoinGuestSession();
+          clearJoinParticipantSession();
           try {
             await listResults(code);
             clearForceGuestForAccessCode(code);
           } catch {
-            await ensureJoinGuestSession(code);
-            setForceGuestForAccessCode(code);
+            if (joinFromPortal) {
+              await ensureJoinGuestSession(code);
+              setForceGuestForAccessCode(code);
+            } else {
+              throw new Error('이 검사코드는 현재 로그인한 나의코드에 연결되어 있지 않습니다.');
+            }
           }
         } else {
           await ensureJoinGuestSession(code);
