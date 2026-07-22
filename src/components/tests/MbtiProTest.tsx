@@ -14,12 +14,18 @@ import { testResults } from '@/utils/firebaseIntegration';
 import { MBTI_PRO_TEST_FLOW, type MbtiProTestFlowConfig } from '@/config/mbtiProTestFlow';
 import { getMbtiProVisualTheme, resolveMbtiProPageShell } from '@/config/mbtiProVisualTheme';
 import { normalizeAccessCodeInput, isValidAccessCodeInput } from '@/lib/accessCodeFormat';
-import { lookupPublicAssessment, submitResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode } from '@/lib/assessmentApi';
+import { lookupPublicAssessment, submitResult, listResults, clearForceGuestForAccessCode, setForceGuestForAccessCode, getClientResult, updateClientResult } from '@/lib/assessmentApi';
 import { ensureJoinGuestSession, clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
+import {
+  buildDedicatedTestResultResponses,
+  parseDedicatedTestResultResponses,
+  resolveClientInfoForPortalEdit,
+} from '@/lib/dedicatedTestResultPayload';
+import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 interface Answer {
   [key: string]: number;
@@ -73,6 +79,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const [joinFromPortal, setJoinFromPortal] = useState(false);
   const [joinAccessReady, setJoinAccessReady] = useState(true);
   const [joinAccessError, setJoinAccessError] = useState('');
+  const [joinEditResultId, setJoinEditResultId] = useState('');
+  const [editResultLoading, setEditResultLoading] = useState(false);
+  const [infoFormSeed, setInfoFormSeed] = useState<ClientInfo | null>(null);
   const testId = generateTestId(pathname || flow.defaultPath);
 
   useLayoutEffect(() => {
@@ -83,6 +92,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       setJoinAccessCode(code);
       setJoinAssessmentTestId((params.get('testId') || '').trim());
       setJoinFromPortal((params.get('from') || '').trim() === 'portal');
+      setJoinEditResultId((params.get('resultId') || '').trim());
     } catch {
       setJoinAccessCode('');
       setJoinAssessmentTestId('');
@@ -133,6 +143,48 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       cancelled = true;
     };
   }, [joinAccessCode, joinFromPortal]);
+
+  useEffect(() => {
+    if (!joinAccessReady || !joinEditResultId || !joinAccessCode) return;
+    let cancelled = false;
+    setEditResultLoading(true);
+    void getClientResult(joinEditResultId, joinAccessCode)
+      .then((data) => {
+        if (cancelled) return;
+        const { answers: storedAnswers, clientInfo: storedInfo } = parseDedicatedTestResultResponses(
+          data.responses,
+        );
+        const info = resolveClientInfoForPortalEdit(storedInfo);
+        setInfoFormSeed(info);
+        if (Object.keys(storedAnswers).length > 0) {
+          setAnswers(storedAnswers);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setJoinAccessError(err instanceof Error ? err.message : '기존 검사 정보를 불러오지 못했습니다.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setEditResultLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [joinAccessReady, joinEditResultId, joinAccessCode]);
+
+  useEffect(() => {
+    if (joinEditResultId || infoFormSeed || !joinFromPortal || !joinAccessReady) return;
+    const portal = readClientPortalSession();
+    if (!portal?.portal?.displayName) return;
+    setInfoFormSeed((prev) =>
+      prev ??
+      resolveClientInfoForPortalEdit({
+        name: portal.portal.displayName,
+        privacyAgreed: true,
+      }),
+    );
+  }, [joinEditResultId, infoFormSeed, joinFromPortal, joinAccessReady]);
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
@@ -224,6 +276,14 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     };
     
     console.log('MbtiProTest - 완성된 클라이언트 정보:', completeInfo);
+
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('mbti_pro_client_info', JSON.stringify(completeInfo));
+      }
+    } catch {
+      // ignore
+    }
     
     // 상태 업데이트
     setClientInfo(completeInfo);
@@ -507,11 +567,16 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       const portalTestId = joinAssessmentTestId;
       if (portalCode && portalTestId && isValidAccessCodeInput(portalCode)) {
         try {
-          await submitResult({
-            accessCode: portalCode,
-            testId: portalTestId,
-            responses: answers as Record<string, unknown>,
-          });
+          const responses = buildDedicatedTestResultResponses(answers, clientInfo);
+          if (joinEditResultId) {
+            await updateClientResult(joinEditResultId, { responses }, portalCode);
+          } else {
+            await submitResult({
+              accessCode: portalCode,
+              testId: portalTestId,
+              responses,
+            });
+          }
         } catch (submitErr) {
           console.error('검사코드 결과 제출 실패:', submitErr);
         }
@@ -583,7 +648,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   // 단계별 렌더링
   if (joinAccessCode && isValidAccessCodeInput(joinAccessCode)) {
-    if (!joinAccessReady) {
+    if (!joinAccessReady || editResultLoading) {
       return (
         <div className={`flex min-h-screen items-center justify-center ${pageShell}`}>
           <p className="text-lg text-slate-300">검사 정보 확인 중…</p>
@@ -619,7 +684,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   if (currentStep === 'info') {
     return (
       <>
-        <div className="relative min-h-screen pb-12 overflow-hidden">
+        <div className={`relative min-h-screen pb-12 overflow-hidden ${pageShell}`}>
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -642,9 +707,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           )}
 
           <MbtiProClientInfo
-            onSubmit={handleClientInfoSubmit} 
+            onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
-            initialData={clientInfo}
+            initialData={infoFormSeed ?? clientInfo}
+            uiTheme={uiTheme}
             screenTitle={flow.clientInfoScreenTitle ?? flow.testScreenTitle}
             onBack={
               flow.skipCodeStep

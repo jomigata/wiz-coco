@@ -7,7 +7,11 @@ def compute_result_data(test_id: str, responses: dict | list) -> dict:
     if isinstance(responses, list):
         count = len(responses)
     elif isinstance(responses, dict):
-        count = len(responses)
+        count = sum(
+            1
+            for k, v in responses.items()
+            if k != "clientInfo" and isinstance(v, (int, float))
+        )
     else:
         count = 0
     return {
