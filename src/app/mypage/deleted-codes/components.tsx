@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
-import { getInProgressTests } from '@/utils/testResume';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { reloadWithAuthSession } from '@/utils/authSessionLifecycle';
 
@@ -51,7 +50,6 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   const [sortOrder, setSortOrder] = useState<string>('newest');
   const [sortField, setSortField] = useState<'timestamp' | 'testType' | 'code' | 'deletedAt'>('deletedAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [inProgressCount, setInProgressCount] = useState<number>(0);
   const [testRecordsCount, setTestRecordsCount] = useState<number>(0);
   const [deletedCodesCount, setDeletedCodesCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -60,8 +58,6 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   useEffect(() => {
     if (!isEmbedded && typeof window !== 'undefined') {
       try {
-        setInProgressCount(getInProgressTests().length);
-        
         // 검사 기록 수 가져오기
         const allRecords: any[] = [];
         const globalRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
@@ -1312,9 +1308,6 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
               </Link>
               <Link href="/mypage?tab=records" className={tabLinkBase}>
                 검사 기록 ({testRecordsCount})
-              </Link>
-              <Link href="/mypage?tab=in-progress" className={tabLinkBase}>
-                진행중인 검사 ({inProgressCount})
               </Link>
               <Link href="/mypage?tab=stats" className={tabLinkBase}>
                 통계 보기

@@ -17,7 +17,6 @@ import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/cou
 import { adminMenuCategories, ADMIN_MAIN_HREF, withAdminMenuBadges } from '@/data/adminMenu';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { useHorizontalMenuPlacement } from '@/hooks/useHorizontalMenuPlacement';
-import { getInProgressTests, loadTestProgress } from '@/utils/testResume';
 import WizcocoLogo from '@/components/WizcocoLogo';
 import { pushWithAuthSession, markInternalNavigation } from '@/utils/authSessionLifecycle';
 import TestMenuSearch from '@/components/tests/TestMenuSearch';
@@ -157,15 +156,12 @@ export default function Navigation() {
   const { auth: firebaseAuth } = initializeFirebase();
   const sessionFirebaseUser = firebaseAuth?.currentUser ?? null;
   const isLoggedIn = Boolean(sessionFirebaseUser) || Boolean(user);
-  const [inProgressTestsCount, setInProgressTestsCount] = useState(0);
-  const [isTestInProgress, setIsTestInProgress] = useState(false);
   const [hasClientPortalSession, setHasClientPortalSession] = useState(false);
 
   // 기존 완료 기능은 hidden으로 네비에서 숨김. NEXT_PUBLIC_SHOW_LEGACY_TESTS=true 시 복원
   const visibleTestMenuItems = getVisibleTestMenuItems();
 
   // 심리검사 페이지인지 확인 (모든 /tests/ 경로)
-  const isTestPage = pathname?.startsWith('/tests/') || pathname === '/tests';
 
   useEffect(() => {
     const checkPortal = () => setHasClientPortalSession(Boolean(readClientPortalSession()?.portalToken));
@@ -174,59 +170,6 @@ export default function Navigation() {
     return () => window.removeEventListener('storage', checkPortal);
   }, [pathname]);
 
-  // 진행중인 검사 수 가져오기 및 실제 검사 진행 중인지 확인
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const updateCount = () => {
-        const tests = getInProgressTests();
-        setInProgressTestsCount(tests.length);
-      };
-      updateCount();
-      // 주기적으로 업데이트 (5초마다)
-      const interval = setInterval(updateCount, 5000);
-      return () => clearInterval(interval);
-    }
-  }, []);
-
-  // 실제 검사 진행 중인지 확인 (시작 페이지와 질문 답변 페이지에서는 말풍선 숨김)
-  // 검사결과 페이지(/results/)에서는 항상 표시
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      setIsTestInProgress(false);
-      return;
-    }
-
-    // 검사결과 페이지에서는 항상 팝업 표시
-    if (pathname?.startsWith('/results/') || (pathname?.startsWith('/tests/') && pathname?.includes('/result'))) {
-      setIsTestInProgress(false);
-      return;
-    }
-
-    // 검사 페이지(/tests/)에서도 기본적으로 말풍선 표시
-    // 단, 시작 페이지(코드입력, 정보입력)나 질문 답변 페이지에서는 숨김
-    if (isTestPage) {
-      // sessionStorage에서 현재 검사 단계 확인
-      const currentTestStep = sessionStorage.getItem('currentTestStep');
-      
-      // 시작 페이지나 질문 답변 페이지인 경우 말풍선 숨김
-      // 'code': 코드입력, 'info': 정보입력, 'test': 질문 답변 중
-      if (currentTestStep === 'code' || currentTestStep === 'info' || currentTestStep === 'test') {
-        setIsTestInProgress(true);
-        return;
-      }
-      
-      // 검사 대시보드나 다른 페이지에서는 말풍선 표시
-      setIsTestInProgress(false);
-      return;
-    }
-
-    setIsTestInProgress(false);
-  }, [pathname, isTestPage]);
-
-  // 진행중인 검사 팝업 클릭 핸들러
-  const handleInProgressTestsClick = () => {
-    navigateTo('/mypage?tab=in-progress');
-  };
   const userEmail = user?.email || sessionFirebaseUser?.email || '';
   const userUid = user?.uid || sessionFirebaseUser?.uid || '';
   const userRole = user?.role || 'user';
@@ -1218,34 +1161,6 @@ export default function Navigation() {
         </>
       )}
 
-      {/* 진행중인 검사 팝업 - 말풍선 형태 (상단 우측, 모든 페이지 표시, 실제 질문 진행 중일 때만 숨김) */}
-      {inProgressTestsCount > 0 && !isTestInProgress && (
-        <div 
-          className="fixed top-20 right-6 z-[9999]"
-          onClick={handleInProgressTestsClick}
-          style={{ cursor: 'pointer' }}
-        >
-          {/* 상단 우측 말풍선 형태 (300px 고정) */}
-          <div className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl w-[300px] px-5 py-4 border-2 border-purple-400/50 backdrop-blur-sm animate-pulse hover:animate-none hover:shadow-purple-500/50 transition-all duration-300">
-            <div className="flex items-center space-x-3">
-              <div className="text-3xl flex-shrink-0">📋</div>
-              <div className="flex flex-col flex-1 min-w-0">
-                <span className="font-bold text-white text-base leading-tight">
-                  진행중인 검사
-                </span>
-                <span className="text-purple-100 text-sm mt-1">
-                  {inProgressTestsCount}개 검사 대기중
-                </span>
-                <span className="text-purple-200 text-xs mt-1 italic">
-                  클릭하여 확인 →
-                </span>
-              </div>
-            </div>
-            {/* 말풍선 꼬리 (우측 하단) */}
-            <div className="absolute -bottom-2 right-12 w-4 h-4 bg-gradient-to-br from-purple-600 to-indigo-600 transform rotate-45 border-r-2 border-b-2 border-purple-400/50"></div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

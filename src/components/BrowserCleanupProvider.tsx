@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { initBrowserCleanup } from '@/utils/browserCleanup';
+import { purgeAllTestProgressStorage } from '@/utils/testResume';
 import { evaluateAuthSessionOnStartup } from '@/utils/authSessionLifecycle';
 import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 import {
@@ -34,6 +35,7 @@ export default function BrowserCleanupProvider() {
   }, [pathname]);
 
   useEffect(() => {
+    purgeAllTestProgressStorage();
     const cleanup = initBrowserCleanup();
     return cleanup;
   }, []);

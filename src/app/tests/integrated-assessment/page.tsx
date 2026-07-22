@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog } from '@/utils/testResume';
+import { clearTestProgress, generateTestId } from '@/utils/testResume';
 import { motion } from 'framer-motion';
 
 function IntegratedAssessmentPageContent() {
@@ -11,137 +11,15 @@ function IntegratedAssessmentPageContent() {
   const searchParams = useSearchParams();
   const testId = generateTestId(pathname || '/tests/integrated-assessment');
   const [currentStep, setCurrentStep] = useState(0);
-  
-  // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // currentStep이 0보다 크면 검사 진행 중으로 간주
-      if (currentStep > 0) {
-        sessionStorage.setItem('currentTestStep', 'test');
-      } else {
-        sessionStorage.removeItem('currentTestStep');
-      }
-    }
-  }, [currentStep]);
   const [answers, setAnswers] = useState<{[key: string]: any}>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [hasResumeData, setHasResumeData] = useState(false);
   const [studentInfo, setStudentInfo] = useState({
     name: '',
     major: '',
     studentId: '',
     year: '2024'
   });
-
-  // 저장된 진행 상태 확인
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // URL 파라미터로 resume이 전달된 경우 바로 진행 상태 복원
-    const resumeParam = searchParams.get('resume');
-    if (resumeParam) {
-      const savedProgress = loadTestProgress(testId);
-      if (savedProgress) {
-        setAnswers(savedProgress.answers || {});
-        // 타입 안전성 체크: number 타입인 경우에만 설정
-        if (savedProgress.currentStep !== undefined) {
-          const step = savedProgress.currentStep;
-          if (typeof step === 'number') {
-            setCurrentStep(step);
-          } else {
-            setCurrentStep(0); // 기본값
-          }
-        } else {
-          setCurrentStep(0);
-        }
-        if (savedProgress.studentInfo) setStudentInfo(savedProgress.studentInfo);
-      }
-      return; // 팝업 표시하지 않고 바로 진행
-    }
-    
-    const show = shouldShowResumeDialog(testId);
-    if (show) {
-      const savedProgress = loadTestProgress(testId);
-      setHasResumeData(true);
-      setShowResumeDialog(true);
-      if (savedProgress?.studentInfo) setStudentInfo(savedProgress.studentInfo);
-    }
-  }, [testId, searchParams]);
-
-  // 진행 상태 자동 저장
-  useEffect(() => {
-    if (Object.keys(answers).length > 0 || currentStep > 0) {
-      const totalQuestions = assessmentSteps.reduce((sum, step) => 
-        sum + (step.questions ? step.questions.length : 0), 0
-      );
-      saveTestProgress({
-        testId,
-        testName: '통합 평가 검사',
-        answers,
-        currentStep,
-        studentInfo,
-        timestamp: Date.now(),
-        testType: 'INTEGRATED_ASSESSMENT',
-        totalQuestions
-      });
-    }
-  }, [answers, currentStep, studentInfo, testId]);
-
-  // 페이지 이탈 시 저장
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (Object.keys(answers).length > 0 || currentStep > 0) {
-        const totalQuestions = assessmentSteps.reduce((sum, step) => 
-          sum + (step.questions ? step.questions.length : 0), 0
-        );
-        saveTestProgress({
-          testId,
-          testName: '통합 평가 검사',
-          answers,
-          currentStep,
-          studentInfo,
-          timestamp: Date.now(),
-          testType: 'INTEGRATED_ASSESSMENT',
-          totalQuestions
-        });
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [answers, currentStep, studentInfo, testId]);
-
-  // 이어하기
-  const handleResumeTest = () => {
-    const savedProgress = loadTestProgress(testId);
-    if (savedProgress) {
-      setAnswers(savedProgress.answers || {});
-      // 타입 안전성 체크: number 타입인 경우에만 설정
-      if (savedProgress.currentStep !== undefined) {
-        const step = savedProgress.currentStep;
-        if (typeof step === 'number') {
-          setCurrentStep(step);
-        } else {
-          setCurrentStep(0); // 기본값
-        }
-      } else {
-        setCurrentStep(0);
-      }
-      if (savedProgress.studentInfo) setStudentInfo(savedProgress.studentInfo);
-      setShowResumeDialog(false);
-    }
-  };
-
-  // 새로 시작
-  const handleStartNew = () => {
-    clearTestProgress(testId);
-    setAnswers({});
-    setCurrentStep(0);
-    setStudentInfo({ name: '', major: '', studentId: '', year: '2024' });
-    setShowResumeDialog(false);
-    setHasResumeData(false);
-  };
 
   const assessmentSteps = [
     {
@@ -498,63 +376,6 @@ function IntegratedAssessmentPageContent() {
 
   const currentStepData = assessmentSteps[currentStep];
   const report = showResult ? generateComprehensiveReport() : null;
-
-  // 이어하기 다이얼로그
-  if (showResumeDialog && hasResumeData) {
-    const savedProgress = loadTestProgress(testId);
-    const answeredCount = Object.keys(savedProgress?.answers || {}).length;
-    const totalQuestions = assessmentSteps.reduce((sum, step) => 
-      sum + (step.questions ? step.questions.length : 0), 0
-    );
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-indigo-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-indigo-700"
-        >
-          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
-          <p className="text-indigo-200 mb-6 text-center">
-            진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
-          </p>
-          <div className="bg-indigo-800/50 rounded-lg p-4 mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-indigo-200 text-sm">진행률</span>
-              <span className="text-indigo-300 font-semibold">{totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0}%</span>
-            </div>
-            <div className="w-full bg-indigo-900 rounded-full h-2">
-              <div
-                className="bg-indigo-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0}%` }}
-              />
-            </div>
-            <p className="text-indigo-300/80 text-xs mt-2 text-center">
-              {answeredCount}개 문항 완료 / 전체 {totalQuestions}개
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <motion.button
-              onClick={handleStartNew}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              처음부터 시작
-            </motion.button>
-            <motion.button
-              onClick={handleResumeTest}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              이어서 계속
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   if (showResult && report) {
     return (

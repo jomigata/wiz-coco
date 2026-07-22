@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
 import Link from 'next/link';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
 import MbtiProCodeInput from './MbtiProCodeInput';
 import { generateTestCode } from '@/utils/testCodeGenerator';
-import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId } from '@/utils/testResume';
+import { clearTestProgress, generateTestId } from '@/utils/testResume';
 import { initializeFirebase, auth } from '@/lib/firebase';
 import { testResults } from '@/utils/firebaseIntegration';
 import { MBTI_PRO_TEST_FLOW, type MbtiProTestFlowConfig } from '@/config/mbtiProTestFlow';
@@ -39,7 +39,6 @@ interface MbtiProTestProps {
 export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: MbtiProTestProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const uiTheme = flow.uiTheme ?? 'emerald';
   const v = getMbtiProVisualTheme(uiTheme);
   const pageShell = resolveMbtiProPageShell(flow.pageShellClassName, uiTheme);
@@ -59,147 +58,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   
   // 검사 단계 상태 추가
   const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
-  
-  // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // 코드입력, 정보입력, 문항선택(selectedQuestions.length === 0), 질문 답변 단계에서는 말풍선 숨김
-      if (currentStep === 'code' || currentStep === 'info' || currentStep === 'test') {
-        sessionStorage.setItem('currentTestStep', currentStep);
-      } else {
-        sessionStorage.removeItem('currentTestStep');
-      }
-    }
-  }, [currentStep, selectedQuestions.length]);
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [hasResumeData, setHasResumeData] = useState(false);
   const testId = generateTestId(pathname || flow.defaultPath);
-
-  // 컴포넌트 마운트 시 저장된 진행 상태 확인
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // 마이페이지에서 resume 파라미터로 왔을 경우 이미 팝업을 봤으므로 다시 표시하지 않음
-    const resumeParam = searchParams.get('resume');
-    if (resumeParam) {
-      // resume 파라미터가 있으면 바로 진행 상태 복원
-      const savedProgress = loadTestProgress(testId);
-      if (savedProgress) {
-        if (savedProgress.answers) setAnswers(savedProgress.answers);
-        if (savedProgress.currentQuestion !== undefined) setCurrentQuestion(savedProgress.currentQuestion);
-        if (savedProgress.currentStep) {
-          if (typeof savedProgress.currentStep === 'string' && 
-              (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-            setCurrentStep(savedProgress.currentStep);
-          }
-        }
-        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-      }
-      return; // 팝업 표시하지 않고 바로 진행
-    }
-    
-    const savedProgress = loadTestProgress(testId);
-    if (savedProgress && savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-      // 완료 여부 확인 (100% 진행률인 경우 제외)
-      const answeredCount = Object.keys(savedProgress.answers || {}).length;
-      const savedTotalQuestions = savedProgress.totalQuestions || flow.totalQuestions;
-      
-      // 총 문항 수가 있고, 모든 문항이 완료되었으면 이어하기 표시하지 않음
-      if (savedTotalQuestions > 0 && answeredCount >= savedTotalQuestions) {
-        // 완료된 검사는 진행 상태 삭제
-        clearTestProgress(testId);
-        return;
-      }
-      
-      setHasResumeData(true);
-      setShowResumeDialog(true);
-    }
-  }, [testId, searchParams]);
-
-  // 검사 진행 상태 자동 저장
-  useEffect(() => {
-    if (currentStep === 'test' && Object.keys(answers).length > 0) {
-      saveTestProgress({
-        testId,
-        testName: flow.displayName,
-        answers,
-        currentQuestion,
-        currentStep,
-        clientInfo,
-        codeData,
-        timestamp: Date.now(),
-        testType: flow.progressTestType,
-        totalQuestions: flow.totalQuestions
-      });
-    }
-  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId, flow]);
-
-  // 페이지를 벗어날 때 진행 상태 저장 (초기화 대신)
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (typeof window !== 'undefined' && currentStep === 'test' && Object.keys(answers).length > 0) {
-        saveTestProgress({
-          testId,
-          testName: flow.displayName,
-          answers,
-          currentQuestion,
-          currentStep,
-          clientInfo,
-          codeData,
-          timestamp: Date.now(),
-          testType: flow.progressTestType,
-          totalQuestions: flow.totalQuestions
-        });
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }
-  }, [answers, currentQuestion, currentStep, clientInfo, codeData, testId, flow]);
-
-  // 이어하기 기능: 저장된 진행 상태 복원
-  const handleResumeTest = () => {
-    const savedProgress = loadTestProgress(testId);
-    if (savedProgress) {
-      if (savedProgress.answers) setAnswers(savedProgress.answers);
-      if (savedProgress.currentQuestion !== undefined) setCurrentQuestion(savedProgress.currentQuestion);
-      if (savedProgress.currentStep) {
-        // 타입 안전성 체크: string 타입인 경우에만 설정
-        if (typeof savedProgress.currentStep === 'string' && 
-            (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-          setCurrentStep(savedProgress.currentStep);
-        }
-      }
-      if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-      if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-      setShowResumeDialog(false);
-    }
-  };
-
-  // 새로 시작하기
-  const handleStartNew = () => {
-    clearTestProgress(testId);
-    setAnswers({});
-    setCurrentQuestion(0);
-    setCurrentStep('code');
-    setCodeData(null);
-    setClientInfo(null);
-    setShowResumeDialog(false);
-    setHasResumeData(false);
-    
-    // localStorage에서 검사코드 데이터 삭제
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('mbti_pro_code_data');
-      }
-    } catch (e) {
-      console.error('검사코드 데이터 삭제 오류:', e);
-    }
-  };
 
   // MBTI 유형 계산 함수
   const calculateMbtiType = (answers: Answer): string => {
@@ -566,8 +426,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           localStorage.removeItem('mbti_pro_code_data');
           // 검사 완료 직후임을 표시하는 플래그 설정
           sessionStorage.setItem('testJustCompleted', 'true');
-          // 검사 완료 시 currentTestStep 정리
-          sessionStorage.removeItem('currentTestStep');
         }
         setCodeData(null);
       } catch {}
@@ -619,62 +477,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       opacity: 0
     })
   };
-
-  // 이어하기 다이얼로그
-  if (showResumeDialog && hasResumeData) {
-    const savedProgress = loadTestProgress(testId);
-    const answeredCount = savedProgress ? Object.keys(savedProgress.answers || {}).length : 0;
-    const totalCount = totalQuestions;
-    const progressPercent = Math.round((answeredCount / totalCount) * 100);
-    
-    return (
-      <div className={v.resumeOuter}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={v.resumeCard}
-        >
-          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
-          <p className={`${v.resumeBody} mb-6 text-center`}>
-            진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?
-          </p>
-          <div className={`${v.resumePanel} rounded-lg p-4 mb-6`}>
-            <div className="flex justify-between items-center mb-2">
-              <span className={`${v.resumeBody} text-sm`}>진행률</span>
-              <span className={`${v.resumeHint} font-semibold`}>{progressPercent}%</span>
-            </div>
-            <div className={`w-full ${v.resumeTrack} rounded-full h-2`}>
-              <div
-                className={`${v.resumeFill} h-2 rounded-full transition-all duration-300`}
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <p className={`${v.resumeHint} text-xs mt-2 text-center`}>
-              {answeredCount}개 문항 완료 / 전체 {totalCount}개
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <motion.button
-              onClick={handleStartNew}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={v.resumeBtnSecondary}
-            >
-              처음부터 시작
-            </motion.button>
-            <motion.button
-              onClick={handleResumeTest}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={v.resumeBtnPrimary}
-            >
-              이어서 계속
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   // 단계별 렌더링
   if (currentStep === 'code') {

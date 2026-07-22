@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import MBTITest from '@/components/tests/MBTITest';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { generateTestCode } from '@/utils/testCodeGenerator';
-import { saveTestProgress, loadTestProgress, clearTestProgress, generateTestId, shouldShowResumeDialog, getInProgressTests } from '@/utils/testResume';
-import { motion } from 'framer-motion';
+import { clearTestProgress, generateTestId } from '@/utils/testResume';
 import MbtiProCodeInput from '@/components/tests/MbtiProCodeInput';
 import MbtiProClientInfo from '@/components/tests/MbtiProClientInfo';
 import { useAppChromeNav } from '@/components/AppChrome';
@@ -14,527 +13,48 @@ import type { PersonalAmateurTestFlowConfig } from '@/config/personalAmateurTest
 function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTestFlowConfig }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  
-  // URL에서 resume 파라미터로 전달된 testId 확인 (마이페이지에서 이어하기 클릭 시)
-  const resumeTestId = searchParams.get('resume');
-  
-  // testId를 상태로 관리: resume 파라미터가 있으면 사용, 없으면 고정된 testId 사용 (다른 검사들과 동일하게)
-  const [testId, setTestId] = useState(() => {
+  const [testId] = useState(() => {
     try {
-      if (resumeTestId) {
-        // 마이페이지에서 이어하기 클릭한 경우, 전달된 testId 사용
-        console.log('[MbtiTestPage] Resume testId from URL:', resumeTestId);
-        return resumeTestId;
-      }
-      // 새로 시작하는 경우, 고정된 testId 사용 (다른 검사들과 동일하게)
-      const fixedTestId = generateTestId(pathname || config.defaultPath);
-      console.log('[MbtiTestPage] Fixed testId:', fixedTestId);
-      return fixedTestId;
-    } catch (error) {
-      console.warn('[MbtiTestPage] testId 초기화 에러:', error);
-      // 에러 발생 시 기본값 사용
+      return generateTestId(pathname || config.defaultPath);
+    } catch {
       return `${config.defaultPath.replace(/\//g, '-')}-test-default`;
     }
   });
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [hasResumeData, setHasResumeData] = useState(false);
-  
-  // 개인용 MBTI 검사 단계 관리 (전문가용과 동일한 구조)
-  // 초기 상태에서 resume 파라미터가 있으면 진행 상태에 따라 currentStep 설정
-  const getInitialStep = (): 'code' | 'info' | 'test' => {
-    if (typeof window === 'undefined') return config.skipCodeAndInfoSteps ? 'test' : 'code';
-
-    if (!resumeTestId) {
-      return config.skipCodeAndInfoSteps ? 'test' : 'code';
-    }
-    
-    try {
-      const savedProgress = loadTestProgress(resumeTestId);
-      if (savedProgress) {
-        if (savedProgress.currentStep && 
-            (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-          return savedProgress.currentStep;
-        } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-          return 'test';
-        } else if (savedProgress.clientInfo) {
-          return 'info';
-        }
-      }
-    } catch (error) {
-      console.warn('[MbtiTestPage] getInitialStep 에러:', error);
-    }
-    
-    return config.skipCodeAndInfoSteps ? 'test' : 'code';
-  };
-  
-  // 초기 상태에서 resume 파라미터가 있으면 진행 상태 복원
-  const getInitialProgress = () => {
-    if (typeof window === 'undefined' || !resumeTestId) {
-      return { codeData: null, clientInfo: null, savedAnswers: null, savedCurrentQuestion: undefined };
-    }
-    const savedProgress = loadTestProgress(resumeTestId);
-    if (savedProgress) {
-      const savedCurrent = savedProgress.currentQuestion !== undefined 
-        ? savedProgress.currentQuestion 
-        : (savedProgress.answers && Object.keys(savedProgress.answers).length > 0
-            ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
-            : 0);
-      return {
-        codeData: savedProgress.codeData || null,
-        clientInfo: savedProgress.clientInfo || null,
-        savedAnswers: savedProgress.answers || null,
-        savedCurrentQuestion: savedCurrent
-      };
-    }
-    return { codeData: null, clientInfo: null, savedAnswers: null, savedCurrentQuestion: undefined };
-  };
-  
-  const initialProgress = getInitialProgress();
-  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(getInitialStep());
+  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(() =>
+    config.skipCodeAndInfoSteps ? 'test' : 'code',
+  );
   const { setTopNavHidden } = useAppChromeNav();
 
-  // 코드 입력 단계에서만 전역 상단 바 숨김 (이고-오케이 등은 검사시작 화면과 동일하게 유지)
   useEffect(() => {
     const hideNav = !config.keepAppTopNavVisible && currentStep === 'code';
     setTopNavHidden(hideNav);
     return () => setTopNavHidden(false);
   }, [currentStep, setTopNavHidden, config.keepAppTopNavVisible]);
 
-  // currentStep 변경 시 sessionStorage에 저장 (Navigation에서 말풍선 표시 여부 판단용)
-  // 코드입력, 정보입력, 질문 답변 단계에서는 말풍선 숨김
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (currentStep === 'code' || currentStep === 'info' || currentStep === 'test') {
-        sessionStorage.setItem('currentTestStep', currentStep);
-      } else {
-        sessionStorage.removeItem('currentTestStep');
-      }
-    }
-  }, [currentStep]);
-  const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(initialProgress.codeData);
-  const [clientInfo, setClientInfo] = useState<any>(initialProgress.clientInfo);
-  const [savedAnswers, setSavedAnswers] = useState<any>(initialProgress.savedAnswers);
-  const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(initialProgress.savedCurrentQuestion);
-  // 초기 상태에서 resume 파라미터가 있고 답변이 있으면 testComponentKey 설정
-  const [testComponentKey, setTestComponentKey] = useState(() => {
-    try {
-      if (initialProgress.savedAnswers && Object.keys(initialProgress.savedAnswers).length > 0) {
-        return 1; // 초기화 시 답변이 있으면 컴포넌트 리렌더링을 위해 1로 설정
-      }
-    } catch (error) {
-      console.warn('[MbtiTestPage] testComponentKey 초기화 에러:', error);
-    }
-    return 0;
-  });
-  
-  // 검사 완료 처리 중복 방지 플래그
+  const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
+  const [clientInfo, setClientInfo] = useState<any>(null);
+  const [savedAnswers, setSavedAnswers] = useState<any>(null);
+  const [savedCurrentQuestion, setSavedCurrentQuestion] = useState<number | undefined>(undefined);
+  const [testComponentKey, setTestComponentKey] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
-  
-    // URL 파라미터 변경 시 testId 업데이트 (마이페이지에서 이어하기 클릭 시)
-    useEffect(() => {
-      const urlResumeTestId = searchParams.get('resume');
-      if (urlResumeTestId && urlResumeTestId !== testId) {
-        console.log('[MbtiTestPage] Updating testId from URL parameter:', urlResumeTestId);
-        
-        // 마이페이지에서 resume 파라미터로 왔을 경우 이미 팝업을 봤으므로 바로 진행 상태 복원
-        const savedProgress = loadTestProgress(urlResumeTestId);
-        if (savedProgress) {
-          // currentStep을 먼저 복원 (중요!) - testId 변경 전에 설정
-          if (savedProgress.currentStep) {
-            if (typeof savedProgress.currentStep === 'string' && 
-                (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-              setCurrentStep(savedProgress.currentStep);
-              console.log('[MbtiTestPage] 저장된 currentStep으로 복원:', savedProgress.currentStep);
-            }
-          } else {
-            // currentStep이 없으면 답변 상태에 따라 결정
-            if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-              setCurrentStep('test');
-              console.log('[MbtiTestPage] 답변이 있어 test 단계로 설정');
-            } else if (savedProgress.clientInfo) {
-              setCurrentStep('info');
-              console.log('[MbtiTestPage] clientInfo가 있어 info 단계로 설정');
-            } else {
-              setCurrentStep('code');
-              console.log('[MbtiTestPage] 기본값으로 code 단계 설정');
-            }
-          }
-          
-          // 다른 상태들도 복원
-          if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-            setSavedAnswers(savedProgress.answers);
-            const savedCurrent = savedProgress.currentQuestion !== undefined 
-              ? savedProgress.currentQuestion 
-              : (Object.keys(savedProgress.answers || {}).length > 0
-                  ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
-                  : 0);
-            setSavedCurrentQuestion(savedCurrent);
-            setTestComponentKey(prev => prev + 1);
-          }
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-          if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-          
-          // testId는 마지막에 설정 (다른 상태들이 먼저 설정되도록)
-          setTestId(urlResumeTestId);
-        } else {
-          // 진행 상태가 없어도 testId는 설정
-          setTestId(urlResumeTestId);
-        }
-        // resume 파라미터가 있으면 팝업 표시하지 않고 바로 진행
-        return;
-      }
-    }, [searchParams, testId]);
-  
-  // 저장된 진행 상태 확인
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // URL 파라미터로 resume이 전달된 경우는 이미 처리했으므로 건너뜀 (팝업 표시하지 않음)
-    const urlResumeTestId = searchParams.get('resume');
-    if (urlResumeTestId) {
-      // URL 파라미터에서 온 경우 이미 처리됨 (팝업 표시하지 않음)
-      return;
-    }
-    
-    // 개인용 MBTI 검사 진행 중인 검사 찾기 (모든 testId 확인)
-    const inProgressTests = getInProgressTests();
-    const mbtiTest = inProgressTests.find((test) => config.matchesInProgressTestType(test.testType || ''));
-    
-    if (mbtiTest && mbtiTest.testId !== testId) {
-      // 진행 중인 개인용 MBTI 검사 발견 (testId가 다른 경우만 업데이트)
-      const savedProgress = loadTestProgress(mbtiTest.testId);
-      if (savedProgress) {
-        // testId를 발견된 진행 중인 검사의 testId로 업데이트
-        setTestId(mbtiTest.testId);
-        
-        // 저장된 단계 정보 복원
-        if (savedProgress.currentStep === 'code') {
-          setCurrentStep('code');
-        } else if (savedProgress.currentStep === 'info') {
-          setCurrentStep('info');
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-        } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-          // 테스트 단계인 경우 이어하기 팝업 표시
-          setHasResumeData(true);
-          setShowResumeDialog(true);
-          setSavedAnswers(savedProgress.answers || {});
-          // 저장된 currentQuestion 설정
-          const savedCurrent = savedProgress.currentQuestion !== undefined 
-            ? savedProgress.currentQuestion 
-            : (Object.keys(savedProgress.answers || {}).length > 0
-                ? Math.max(...Object.keys(savedProgress.answers || {}).map(k => parseInt(k) || 0)) + 1
-                : 0);
-          setSavedCurrentQuestion(savedCurrent);
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-          if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        } else {
-          // 단계 정보만 있고 답변이 없는 경우
-          if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep as any);
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-          if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        }
-      }
-    } else {
-      // 진행 중인 개인용 MBTI 검사가 없으면 고정된 testId로 확인
-      const savedProgress = loadTestProgress(testId);
-      const show = shouldShowResumeDialog(testId);
-      
-      if (show && savedProgress) {
-        // 저장된 단계 정보 복원
-        if (savedProgress.currentStep === 'code') {
-          setCurrentStep('code');
-        } else if (savedProgress.currentStep === 'info') {
-          setCurrentStep('info');
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-        } else if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-          // 테스트 단계인 경우 이어하기 팝업 표시
-          setHasResumeData(true);
-          setShowResumeDialog(true);
-          setSavedAnswers(savedProgress.answers || {});
-          // 저장된 currentQuestion 설정
-          const savedCurrent = savedProgress.currentQuestion !== undefined 
-            ? savedProgress.currentQuestion 
-            : (Object.keys(savedProgress.answers || {}).length > 0
-                ? Math.max(...Object.keys(savedProgress.answers || {}).map(k => parseInt(k) || 0)) + 1
-                : 0);
-          setSavedCurrentQuestion(savedCurrent);
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-          if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        } else {
-          // 단계 정보만 있고 답변이 없는 경우
-          if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep as any);
-          if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-          if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        }
-      } else {
-        // 이어하기 데이터가 없으면 상태 초기화 (단, 현재 단계가 code가 아닌 경우에만)
-        if (currentStep !== 'code') {
-          setHasResumeData(false);
-          setShowResumeDialog(false);
-          setSavedAnswers(null);
-          setSavedCurrentQuestion(undefined);
-        }
-      }
-    }
-  }, [testId, searchParams]);
 
-  // 검사코드 입력 핸들러
-  const handleCodeSubmit = (codeData: { groupCode: string; groupPassword: string }) => {
-    console.log('[MbtiTestPage] 검사코드 제출:', codeData);
-    setCodeData(codeData);
-    
-    // 진행 상태 저장 (전문가용과 동일)
-    const savedProgress = loadTestProgress(testId);
-    saveTestProgress({
-      testId,
-      testName: config.displayName,
-      answers: savedProgress?.answers || {},
-      currentQuestion: savedProgress?.currentQuestion || 0,
-      currentStep: 'info',
-      codeData: codeData,
-      clientInfo: savedProgress?.clientInfo || null,
-      timestamp: Date.now(),
-      testType: config.progressTestType,
-      totalQuestions: config.totalQuestions
-    });
-    
-    // 저장된 진행 상태에서 최신 답변 가져오기
-    const latestAnswers = savedProgress?.answers || savedAnswers || {};
-    
+const handleCodeSubmit = (submitted: { groupCode: string; groupPassword: string }) => {
+    setCodeData(submitted);
     setCurrentStep('info');
-    
-    // 진행 상태 저장 (기존 답변 유지)
-    saveTestProgress({
-      testId,
-      testName: config.displayName,
-      answers: latestAnswers, // 기존 답변 유지
-      currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
-      currentStep: 'info',
-      codeData: codeData,
-      clientInfo: clientInfo, // 기존 clientInfo 유지
-      timestamp: Date.now(),
-      testType: config.progressTestType,
-      totalQuestions: config.totalQuestions
-    });
   };
 
-  // 기본정보 제출 핸들러
   const handleClientInfoSubmit = (info: any) => {
-    console.log('[MbtiTestPage] 기본정보 제출:', info);
     setClientInfo(info);
-    
-    // 진행 상태 저장 (전문가용과 동일)
-    const savedProgress = loadTestProgress(testId);
-    saveTestProgress({
-      testId,
-      testName: config.displayName,
-      answers: savedProgress?.answers || {},
-      currentQuestion: savedProgress?.currentQuestion || 0,
-      currentStep: 'test',
-      codeData: codeData,
-      clientInfo: info,
-      timestamp: Date.now(),
-      testType: config.progressTestType,
-      totalQuestions: config.totalQuestions
-    });
-    
-    // 저장된 진행 상태에서 최신 답변 가져오기
-    const latestAnswers = savedProgress?.answers || savedAnswers || {};
-    
     setCurrentStep('test');
-    
-    // 진행 상태 저장 (기존 답변 유지)
-    saveTestProgress({
-      testId,
-      testName: config.displayName,
-      answers: latestAnswers, // 기존 답변 유지
-      currentQuestion: savedProgress?.currentQuestion || savedCurrentQuestion || 0,
-      currentStep: 'test',
-      codeData: codeData,
-      clientInfo: info,
-      timestamp: Date.now(),
-      testType: config.progressTestType,
-      totalQuestions: config.totalQuestions
-    });
   };
 
-  // 이전 단계로 돌아가기 핸들러들
   const handleBackFromInfo = (currentClientInfo: any) => {
-    // 기본정보 입력에서 코드 입력으로 돌아가기
-    console.log('[MbtiTestPage] 기본정보 -> 코드 입력으로 이동');
-    
-    // 저장된 진행 상태에서 최신 데이터 가져오기
-    const savedProgress = loadTestProgress(testId);
-    
-    // 현재 입력된 정보를 상태에 저장
-    const updatedClientInfo = currentClientInfo ? { ...currentClientInfo } : null;
-    setClientInfo(updatedClientInfo);
-    
-    // 저장된 codeData 복원 (이전에 입력한 값 유지)
-    const restoredCodeData = savedProgress?.codeData || codeData;
-    console.log('[MbtiTestPage] 복원할 codeData:', restoredCodeData);
-    
-    // 상태 업데이트 (강제로 새로운 객체 생성)
-    setCodeData(restoredCodeData ? { ...restoredCodeData } : null);
-    
-    // 현재 상태 저장 (clientInfo와 codeData 모두 유지)
-    saveTestProgress({
-      testId,
-      testName: config.displayName,
-      answers: savedProgress?.answers || {},
-      currentQuestion: savedProgress?.currentQuestion || 0,
-      currentStep: 'code',
-      codeData: restoredCodeData, // 저장된 값 우선 사용
-      clientInfo: updatedClientInfo, // 현재 입력된 정보 유지
-      timestamp: Date.now(),
-      testType: config.progressTestType,
-      totalQuestions: config.totalQuestions
-    });
-    
+    setClientInfo(currentClientInfo ? { ...currentClientInfo } : null);
     setCurrentStep('code');
   };
 
   const handleBackFromTest = () => {
-    // 테스트에서 기본정보 입력으로 돌아가기
-    console.log('[MbtiTestPage] 테스트 -> 기본정보 입력으로 이동');
-    
-    // 저장된 진행 상태에서 최신 데이터 가져오기 (MBTITestWrapper에서 자동 저장된 최신 값)
-    const savedProgress = loadTestProgress(testId);
-    const latestAnswers = savedProgress?.answers || savedAnswers || {};
-    const latestCurrentQuestion = savedProgress?.currentQuestion || savedCurrentQuestion || 0;
-    
-    // 저장된 codeData와 clientInfo 복원 (이전에 입력한 값 유지)
-    const restoredCodeData = savedProgress?.codeData || codeData;
-    const restoredClientInfo = savedProgress?.clientInfo || clientInfo;
-    
-    console.log('[MbtiTestPage] 복원할 codeData:', restoredCodeData);
-    console.log('[MbtiTestPage] 복원할 clientInfo:', restoredClientInfo);
-    
-    // 상태 업데이트 (강제로 새로운 객체 생성)
-    setCodeData(restoredCodeData ? { ...restoredCodeData } : null);
-    setClientInfo(restoredClientInfo ? { ...restoredClientInfo } : null);
-    
-    // 최신 답변을 상태에 반영
-    setSavedAnswers(latestAnswers);
-    setSavedCurrentQuestion(latestCurrentQuestion);
-    
-    // 현재 상태 저장 (최신 답변과 clientInfo 모두 유지)
-    saveTestProgress({
-      testId,
-      testName: config.displayName,
-      answers: latestAnswers, // 최신 답변 사용
-      currentQuestion: latestCurrentQuestion,
-      currentStep: 'info',
-      codeData: restoredCodeData, // 저장된 값 우선 사용
-      clientInfo: restoredClientInfo, // 저장된 값 우선 사용
-      timestamp: Date.now(),
-      testType: config.progressTestType,
-      totalQuestions: config.totalQuestions
-    });
-    
     setCurrentStep('info');
-  };
-
-  // 이어하기
-  const handleResumeTest = () => {
-    setShowResumeDialog(false);
-    const savedProgress = loadTestProgress(testId);
-    
-    console.log('[MbtiTestPage] handleResumeTest - savedProgress:', savedProgress);
-    
-    if (savedProgress) {
-      // currentStep을 먼저 복원 (중요!)
-      if (savedProgress.currentStep) {
-        if (typeof savedProgress.currentStep === 'string' && 
-            (savedProgress.currentStep === 'code' || savedProgress.currentStep === 'info' || savedProgress.currentStep === 'test')) {
-          setCurrentStep(savedProgress.currentStep);
-          console.log('[MbtiTestPage] handleResumeTest - currentStep 복원:', savedProgress.currentStep);
-        }
-      } else {
-        // currentStep이 없으면 상태에 따라 결정
-        if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-          setCurrentStep('test');
-          console.log('[MbtiTestPage] handleResumeTest - 답변이 있어 test 단계로 설정');
-        } else if (savedProgress.clientInfo) {
-          setCurrentStep('info');
-          console.log('[MbtiTestPage] handleResumeTest - clientInfo가 있어 info 단계로 설정');
-        } else {
-          setCurrentStep('code');
-          console.log('[MbtiTestPage] handleResumeTest - 기본값으로 code 단계 설정');
-        }
-      }
-      
-      // 저장된 답변이 있으면 테스트 단계로 이동 (currentStep이 이미 설정되었으므로 덮어쓰지 않음)
-      if (savedProgress.answers && Object.keys(savedProgress.answers).length > 0) {
-        // currentStep이 'test'가 아니면 'test'로 설정
-        if (savedProgress.currentStep !== 'test') {
-          setCurrentStep('test');
-        }
-        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-        // 저장된 답변과 질문 번호 복원
-        setSavedAnswers(savedProgress.answers);
-        const savedCurrent = savedProgress.currentQuestion !== undefined 
-          ? savedProgress.currentQuestion 
-          : (Object.keys(savedProgress.answers || {}).length > 0
-              ? Math.max(...Object.keys(savedProgress.answers).map(k => parseInt(k) || 0)) + 1
-              : 0);
-        setSavedCurrentQuestion(savedCurrent);
-        setTestComponentKey(prev => prev + 1);
-      } else {
-        // 답변이 없으면 저장된 단계 정보를 사용 (이미 위에서 설정됨)
-        if (savedProgress.codeData) setCodeData(savedProgress.codeData);
-        if (savedProgress.clientInfo) setClientInfo(savedProgress.clientInfo);
-      }
-    }
-  };
-
-  // 새로 시작 - 완전히 새로운 testId 생성하여 이전 진행 상태와 완전히 분리
-  const handleStartNew = () => {
-    // 1. 현재 testId의 진행 상태 완전 삭제
-    clearTestProgress(testId);
-    
-    // 2. 완전히 새로운 testId 생성 (타임스탬프 포함)
-    const newTestId = generateTestId(pathname || config.defaultPath) + '_' + Date.now();
-    setTestId(newTestId);
-    
-    // 3. 모든 상태 초기화
-    setSavedAnswers(null);
-    setShowResumeDialog(false);
-    setHasResumeData(false);
-    setCurrentStep(config.skipCodeAndInfoSteps ? 'test' : 'code');
-    setCodeData(null);
-    setClientInfo(null);
-    
-    // 4. 컴포넌트 강제 리셋
-    setTestComponentKey(prev => prev + 1);
-    
-    // 5. localStorage에서 관련 데이터 모두 정리
-    if (typeof window !== 'undefined') {
-      // 이전 testId와 관련된 모든 키 삭제
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.includes(testId) || key.startsWith(`test_progress_${testId.split('_')[0]}`))) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => {
-        try {
-          localStorage.removeItem(key);
-        } catch (e) {
-          console.error(`키 삭제 실패: ${key}`, e);
-        }
-      });
-      
-      // 검사코드 데이터도 삭제
-      localStorage.removeItem('mbti_pro_code_data');
-      
-      // 진행 목록에서도 정리 (선택적)
-      // 주의: sweepAllInProgress는 모든 진행 상태를 정리하므로 신중하게 사용
-      // getInProgressTests 호출 시 자동으로 정리되므로 여기서는 호출하지 않음
-    }
   };
 
   const handleTestComplete = async (results: any) => {
@@ -780,7 +300,6 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('testJustCompleted', 'true');
         // 검사 완료 시 currentTestStep 정리
-        sessionStorage.removeItem('currentTestStep');
       }
       
       // 결과 페이지로 이동 (검사 완료 직후임을 표시하는 파라미터 추가)
@@ -800,142 +319,6 @@ function PersonalAmateurTestFlowContent({ config }: { config: PersonalAmateurTes
       setIsCompleting(false);
     }
   };
-
-  // 이어하기 다이얼로그
-  if (showResumeDialog) {
-    const savedProgress = loadTestProgress(testId);
-    const answeredCount = savedProgress ? Object.keys(savedProgress.answers || {}).length : 0;
-    const totalQuestions = config.totalQuestions;
-    const actualHasResumeData = savedProgress && Object.keys(savedProgress.answers || {}).length > 0;
-    
-    return (
-      <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-emerald-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-emerald-700"
-        >
-          <h2 className="text-2xl font-bold text-white mb-4 text-center">이어하기</h2>
-          <p className="text-emerald-200 mb-6 text-center">
-            {actualHasResumeData 
-              ? '진행 중이던 검사를 발견했습니다. 이어서 계속하시겠습니까?'
-              : '검사를 새로 시작하시겠습니까?'}
-          </p>
-          {actualHasResumeData && (
-            <div className="bg-emerald-800/50 rounded-lg p-4 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-emerald-200 text-sm">진행률</span>
-                <span className="text-emerald-300 font-semibold">{Math.round((answeredCount / totalQuestions) * 100)}%</span>
-              </div>
-              <div className="w-full bg-emerald-900 rounded-full h-2">
-                <div
-                  className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.round((answeredCount / totalQuestions) * 100)}%` }}
-                />
-              </div>
-              <p className="text-emerald-300/80 text-xs mt-2 text-center">
-                {answeredCount}개 문항 완료 / 전체 {totalQuestions}개
-              </p>
-            </div>
-          )}
-          <div className="flex gap-3">
-            {actualHasResumeData && (
-              <>
-                <motion.button
-                  onClick={handleStartNew}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 px-4 py-3 bg-gray-700/60 text-gray-200 font-medium rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  처음부터 시작
-                </motion.button>
-                <motion.button
-                  onClick={handleResumeTest}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
-                >
-                  이어서 계속
-                </motion.button>
-              </>
-            )}
-            {!actualHasResumeData && (
-              <motion.button
-                onClick={handleStartNew}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                새로 시작
-              </motion.button>
-            )}
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // currentStep 변경 시 저장된 진행 상태에서 codeData와 clientInfo 복원
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const savedProgress = loadTestProgress(testId);
-    if (savedProgress) {
-      // codeData 복원 (항상 저장된 값으로 덮어쓰기)
-      if (savedProgress.codeData) {
-        setCodeData(savedProgress.codeData);
-        console.log('[MbtiTestPage] useEffect - 저장된 codeData 복원:', savedProgress.codeData);
-      }
-      // clientInfo 복원 (항상 저장된 값으로 덮어쓰기)
-      if (savedProgress.clientInfo) {
-        setClientInfo(savedProgress.clientInfo);
-        console.log('[MbtiTestPage] useEffect - 저장된 clientInfo 복원:', savedProgress.clientInfo);
-      }
-    }
-  }, [currentStep, testId]); // currentStep이 변경될 때마다 실행
-
-  // 검사 진행 상태 자동 저장 (전문가용과 동일)
-  useEffect(() => {
-    if (currentStep === 'test' && Object.keys(savedAnswers || {}).length > 0) {
-      saveTestProgress({
-        testId,
-        testName: config.displayName,
-        answers: savedAnswers,
-        currentQuestion: savedCurrentQuestion || 0,
-        currentStep,
-        clientInfo,
-        codeData,
-        timestamp: Date.now(),
-        testType: config.progressTestType,
-        totalQuestions: config.totalQuestions
-      });
-    }
-  }, [savedAnswers, savedCurrentQuestion, currentStep, clientInfo, codeData, testId]);
-
-  // 페이지를 벗어날 때 진행 상태 저장 (전문가용과 동일)
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (typeof window !== 'undefined' && currentStep === 'test' && Object.keys(savedAnswers || {}).length > 0) {
-        saveTestProgress({
-          testId,
-          testName: config.displayName,
-          answers: savedAnswers,
-          currentQuestion: savedCurrentQuestion || 0,
-          currentStep,
-          clientInfo,
-          codeData,
-          timestamp: Date.now(),
-          testType: config.progressTestType,
-          totalQuestions: config.totalQuestions
-        });
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }
-  }, [savedAnswers, savedCurrentQuestion, currentStep, clientInfo, codeData, testId]);
 
   // 단계별 렌더링
   return (
@@ -1058,43 +441,6 @@ function MBTITestWrapper({
       onBack();
     }
   };
-
-  // 답변 변경 시 자동 저장
-  useEffect(() => {
-    if (Object.keys(trackedAnswers).length > 0) {
-      saveTestProgress({
-        testId,
-        testName: config.displayName,
-        answers: trackedAnswers,
-        currentQuestion: trackedCurrentQuestion,
-        currentStep: 'test',
-        codeData: codeData,
-        clientInfo: clientInfo,
-        timestamp: Date.now(),
-        testType: config.progressTestType,
-        totalQuestions: config.totalQuestions
-      });
-    }
-  }, [trackedAnswers, trackedCurrentQuestion, testId, codeData, clientInfo]);
-
-  // 페이지 이탈 시 저장
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (Object.keys(trackedAnswers).length > 0) {
-        saveTestProgress({
-          testId,
-          testName: config.displayName,
-          answers: trackedAnswers,
-          currentQuestion: trackedCurrentQuestion,
-          timestamp: Date.now(),
-          testType: config.progressTestType,
-          totalQuestions: config.totalQuestions
-        });
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [trackedAnswers, trackedCurrentQuestion, testId]);
 
   const handleComplete = (results: any) => {
     clearTestProgress(testId);
