@@ -8,6 +8,8 @@ import Link from 'next/link';
 interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
   isPersonalTest?: boolean;
+  /** 설정 시 기본 MBTI 제목 대신 표시 */
+  screenTitle?: string;
   initialData?: ClientInfo | null;
   onBack?: (clientInfo: ClientInfo) => void;
 }
@@ -23,7 +25,7 @@ export interface ClientInfo {
   phone: string;
 }
 
-const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, initialData, onBack }) => {
+const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTest, screenTitle, initialData, onBack }) => {
   const router = useRouter();
   const [birthYear, setBirthYear] = useState<number>(initialData?.birthYear || 0);
   const [birthYearInput, setBirthYearInput] = useState<string>(initialData?.birthYear ? String(initialData.birthYear) : '');
@@ -336,7 +338,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({ onSubmit, isPersonalTes
       <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-white mb-4">
-            {isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사'}
+            {screenTitle ?? (isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사')}
           </h1>
           <p className="text-emerald-300 max-w-lg mx-auto">
             검사 진행을 위해 기본 정보를 입력해주세요.

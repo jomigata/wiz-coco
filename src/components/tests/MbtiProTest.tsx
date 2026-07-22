@@ -57,7 +57,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const [mouseIdleTimer, setMouseIdleTimer] = useState<NodeJS.Timeout | null>(null);
   
   // 검사 단계 상태 추가
-  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>('code');
+  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(() =>
+    flow.skipCodeStep ? 'info' : 'code',
+  );
   const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
   const testId = generateTestId(pathname || flow.defaultPath);
 
@@ -479,7 +481,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   };
 
   // 단계별 렌더링
-  if (currentStep === 'code') {
+  if (currentStep === 'code' && !flow.skipCodeStep) {
     return (
       <MbtiProCodeInput
         onSubmit={handleCodeSubmit}
@@ -517,12 +519,16 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           )}
 
           <MbtiProClientInfo
-            onSubmit={handleClientInfoSubmit} 
+            onSubmit={handleClientInfoSubmit}
             isPersonalTest={true}
+            screenTitle={flow.infoStepTitle ?? flow.testScreenTitle ?? flow.displayName}
             initialData={clientInfo}
             onBack={(info) => {
-              // 입력값 유지하며 검사코드 단계로 이동
               setClientInfo(info);
+              if (flow.skipCodeStep) {
+                router.back();
+                return;
+              }
               setCurrentStep('code');
             }}
           />

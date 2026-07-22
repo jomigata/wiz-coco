@@ -13,6 +13,10 @@ export type MbtiProTestFlowConfig = {
   testScreenSubtitle?: string;
   codeStepTitle?: string;
   codeStepSubtitle?: string;
+  /** true면 검사코드 입력 단계 생략 후 기본정보부터 시작 */
+  skipCodeStep?: boolean;
+  /** MbtiProClientInfo 상단 제목 */
+  infoStepTitle?: string;
   buildResultUrl: (params: { encodedData: string; testCode: string | null }) => string;
 };
 
@@ -34,16 +38,15 @@ export const MBTI_PRO_TEST_FLOW: MbtiProTestFlowConfig = {
 
 export const EGO_OK_PRO_TEST_FLOW: MbtiProTestFlowConfig = {
   defaultPath: '/tests/ego-ok-pro',
-  displayName: '전문가용 이고-오케이그램 검사',
+  displayName: 'TA 이고-오케이그램 검사',
   progressTestType: 'EGO_OK_PRO',
-  firebaseTestTypeLabel: '전문가용 이고-오케이그램 검사',
+  firebaseTestTypeLabel: 'TA 이고-오케이그램 검사',
   totalQuestions: 24,
   codePrefix: 'EGO_PROFESSIONAL',
-  pageShellClassName: 'bg-[#070b14]',
-  uiTheme: 'portal',
-  testScreenTitle: '전문가용 이고-오케이그램 검사',
-  testScreenSubtitle: '각 문항에 가장 가까운 답을 선택해 주세요.',
-  codeStepTitle: '전문가용 이고-오케이그램 검사',
-  codeStepSubtitle: '검사코드가 없어도 검사를 진행할 수 있습니다. 검사코드는 상담사가 제공한 경우에만 입력하세요.',
+  skipCodeStep: true,
+  uiTheme: 'emerald',
+  testScreenTitle: 'TA 이고-오케이그램 검사',
+  testScreenSubtitle: '깊이 생각하지 말고, 자연스럽게 떠오르는 대로 선택해주세요.',
+  infoStepTitle: 'TA 이고-오케이그램 검사',
   buildResultUrl: buildMbtiProResultUrl,
 };

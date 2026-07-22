@@ -10,11 +10,11 @@ function EgoOkProTestContent() {
 
 export default function EgoOkProTestPage() {
   return (
-    <div className="min-h-screen h-full overflow-y-auto bg-[#070b14]">
+    <div className="min-h-screen h-full overflow-y-auto bg-emerald-950">
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center pt-16">
-            <div className="text-lg text-slate-300">로딩 중...</div>
+            <div className="text-lg text-emerald-200">로딩 중...</div>
           </div>
         }
       >
