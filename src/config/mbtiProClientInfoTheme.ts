@@ -12,8 +12,14 @@ export type MbtiProClientInfoTheme = {
   yearSelector: string;
   yearGrid: string;
   yearBtnSelected: string;
-  yearBtnDefault: string;
-  yearBtnHover: string;
+  yearBtnBgDefault: string;
+  yearBtnBgBlueBand: string;
+  yearBtnBorderHover: string;
+  yearTextNormal: string;
+  yearTextAccent: string;
+  yearSelectedUnderline: string;
+  yearSelectedRing: string;
+  yearBtnHoverRgb: string;
   privacyBox: string;
   checkbox: string;
   privacyLabel: string;
@@ -44,8 +50,14 @@ const emerald: MbtiProClientInfoTheme = {
     'grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50',
   yearBtnSelected:
     'bg-emerald-600 text-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/40',
-  yearBtnDefault: 'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70',
-  yearBtnHover: 'bg-emerald-700/70',
+  yearBtnBgDefault: 'bg-emerald-800/70',
+  yearBtnBgBlueBand: 'bg-sky-700/50',
+  yearBtnBorderHover: 'border border-emerald-700 hover:bg-emerald-700/70',
+  yearTextNormal: 'text-emerald-200',
+  yearTextAccent: 'text-yellow-200',
+  yearSelectedUnderline: 'bg-emerald-300/45',
+  yearSelectedRing: 'ring-emerald-300/30',
+  yearBtnHoverRgb: 'rgba(5, 150, 105, 0.3)',
   privacyBox: 'bg-emerald-800/30 p-4 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors',
   checkbox: 'w-4 h-4 text-emerald-600 bg-emerald-900 border-emerald-500 rounded focus:ring-emerald-500 focus:ring-2',
   privacyLabel: 'font-medium text-emerald-200 cursor-pointer select-none',
@@ -79,8 +91,14 @@ const portal: MbtiProClientInfoTheme = {
   yearGrid:
     'grid grid-cols-10 gap-x-2 gap-y-1 overflow-y-auto max-h-[336px] scrollbar-thin scrollbar-thumb-sky-600/80 scrollbar-track-slate-900/50',
   yearBtnSelected: 'bg-sky-600 text-white border-2 border-sky-500 shadow-lg shadow-sky-500/30',
-  yearBtnDefault: 'bg-[#101f38]/90 text-slate-200 border border-white/10 hover:bg-slate-800/80',
-  yearBtnHover: 'bg-slate-800/80',
+  yearBtnBgDefault: 'bg-[#101f38]/90',
+  yearBtnBgBlueBand: 'bg-sky-700/50',
+  yearBtnBorderHover: 'border border-white/10 hover:bg-slate-800/80',
+  yearTextNormal: 'text-slate-200',
+  yearTextAccent: 'text-yellow-200',
+  yearSelectedUnderline: 'bg-sky-300/45',
+  yearSelectedRing: 'ring-sky-300/30',
+  yearBtnHoverRgb: 'rgba(14, 165, 233, 0.28)',
   privacyBox:
     'bg-[#101f38]/60 p-4 rounded-lg border border-white/[0.08] hover:bg-[#101f38]/80 transition-colors',
   checkbox: 'w-4 h-4 text-sky-500 bg-slate-900 border-sky-500/50 rounded focus:ring-sky-500 focus:ring-2',

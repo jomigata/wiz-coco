@@ -601,18 +601,26 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                                 }
                               }, 0);
                           }}
-                          whileHover={{ scale: 1.05, backgroundColor: 'rgba(5, 150, 105, 0.3)' }}
+                          whileHover={{ scale: 1.05, backgroundColor: th.yearBtnHoverRgb }}
                           whileTap={{ scale: 0.95 }}
                           className={`relative flex items-center justify-center px-3 py-2.5 min-h-[44px] text-sm font-medium rounded transition-all ${
                             isSelected
                               ? th.yearBtnSelected
-                              : `${blueBand ? 'bg-sky-700/50' : th.yearBtnDefault} ${isYearEndingWith16 ? 'text-yellow-200' : ''}`
+                              : `${blueBand ? th.yearBtnBgBlueBand : th.yearBtnBgDefault} ${
+                                  isYearEndingWith16 ? th.yearTextAccent : th.yearTextNormal
+                                } ${th.yearBtnBorderHover}`
                           }`}
                         >
                           {isSelected && (
                             <>
-                              <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full bg-emerald-300/45" />
-                              <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-emerald-300/30" />
+                              <span
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-3/5 h-[3px] rounded-full ${th.yearSelectedUnderline}`}
+                              />
+                              <span
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute inset-0 rounded-md ring-2 ${th.yearSelectedRing}`}
+                              />
                             </>
                           )}
                           <span>{year}</span>
