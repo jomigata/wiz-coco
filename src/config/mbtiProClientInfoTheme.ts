@@ -33,7 +33,7 @@ export type MbtiProClientInfoTheme = {
 };
 
 const emerald: MbtiProClientInfoTheme = {
-  shell: 'min-h-0 bg-emerald-950 text-white py-1 px-3 overflow-hidden relative pt-14',
+  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-emerald-950 text-white px-3 pt-14 pb-14',
   subtitle: 'text-emerald-300 max-w-lg mx-auto text-sm',
   formCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-5',
   fieldBox: 'bg-emerald-800/30 p-2.5 rounded-lg border border-emerald-700/30',
@@ -71,12 +71,12 @@ const emerald: MbtiProClientInfoTheme = {
     'px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-emerald-900 bg-gray-700/60 text-gray-200 hover:bg-gray-700 focus:ring-gray-500',
   submitBtn:
     'px-5 py-2 text-sm bg-emerald-600 text-white font-medium rounded-lg shadow-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-emerald-900',
-  footer: 'mt-3 text-center text-xs text-emerald-400/70 leading-snug space-y-0.5',
+  footer: 'mt-3 mb-0 text-center text-xs text-emerald-400/70 leading-snug space-y-0.5',
   showOrbs: true,
 };
 
 const portal: MbtiProClientInfoTheme = {
-  shell: 'min-h-0 bg-[#070b14] text-white py-1 px-3 overflow-hidden relative pt-14',
+  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#070b14] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-400 max-w-lg mx-auto text-sm',
   formCard: 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-4 sm:p-5',
   fieldBox: 'bg-[#101f38]/60 p-2.5 rounded-lg border border-white/[0.08]',
@@ -115,7 +115,7 @@ const portal: MbtiProClientInfoTheme = {
     'px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#070b14] bg-slate-800/50 text-slate-400 focus:ring-slate-600',
   submitBtn:
     'px-5 py-2 text-sm bg-sky-600 text-white font-medium rounded-lg shadow-md hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-[#070b14]',
-  footer: 'mt-3 text-center text-xs text-slate-500 leading-snug space-y-0.5',
+  footer: 'mt-3 mb-0 text-center text-xs text-slate-500 leading-snug space-y-0.5',
   showOrbs: false,
 };
 
