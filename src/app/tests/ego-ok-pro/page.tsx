@@ -10,7 +10,7 @@ function EgoOkProTestContent() {
 
 export default function EgoOkProTestPage() {
   return (
-    <div className="min-h-screen h-full overflow-y-auto bg-[#070b14]">
+    <div className="min-h-0 h-full overflow-hidden bg-[#070b14]">
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center pt-16">

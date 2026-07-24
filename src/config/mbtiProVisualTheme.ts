@@ -26,15 +26,15 @@ export type MbtiProVisualTheme = {
 
 const emerald: MbtiProVisualTheme = {
   showOrbs: true,
-  pageShell: 'bg-emerald-950 min-h-screen',
-  subtitle: 'text-emerald-300',
-  progressLabel: 'text-emerald-200',
+  pageShell: 'bg-emerald-950 min-h-0',
+  subtitle: 'text-emerald-300 text-sm',
+  progressLabel: 'text-emerald-200 text-sm',
   progressTrack: 'bg-emerald-800/50',
   progressFill: 'bg-emerald-500',
-  mainCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8',
+  mainCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-5',
   questionCard:
-    'bg-emerald-800/50 backdrop-blur-sm rounded-xl p-6 mb-8 flex items-center justify-center min-h-[120px] border border-emerald-700/20',
-  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-emerald-900/10 rounded-[100%/20px] -z-10',
+    'bg-emerald-800/50 backdrop-blur-sm rounded-xl p-3 flex items-center justify-center min-h-[72px] border border-emerald-700/20',
+  scaleArc: 'absolute top-0 left-0 right-0 h-14 bg-emerald-900/10 rounded-[100%/16px] -z-10',
   answerBtn:
     'bg-emerald-800/40 transition-all duration-300 border border-emerald-700/20',
   answerBtnHover: 'hover:bg-emerald-800/60 hover:translate-y-[-2px]',
@@ -57,15 +57,15 @@ const emerald: MbtiProVisualTheme = {
 
 const portal: MbtiProVisualTheme = {
   showOrbs: false,
-  pageShell: 'bg-[#070b14] min-h-screen',
-  subtitle: 'text-slate-400',
-  progressLabel: 'text-slate-300',
+  pageShell: 'bg-[#070b14] min-h-0',
+  subtitle: 'text-slate-400 text-sm',
+  progressLabel: 'text-slate-300 text-sm',
   progressTrack: 'bg-slate-800/80',
   progressFill: 'bg-sky-500',
-  mainCard: 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-8',
+  mainCard: 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-4 sm:p-5',
   questionCard:
-    'bg-slate-800/50 rounded-xl p-6 mb-8 flex items-center justify-center min-h-[120px] border border-white/[0.08]',
-  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-slate-800/30 rounded-[100%/20px] -z-10',
+    'bg-slate-800/50 rounded-xl p-3 flex items-center justify-center min-h-[72px] border border-white/[0.08]',
+  scaleArc: 'absolute top-0 left-0 right-0 h-14 bg-slate-800/30 rounded-[100%/16px] -z-10',
   answerBtn: 'bg-slate-900/50 transition-all duration-300 border border-white/[0.08]',
   answerBtnHover: 'hover:bg-slate-800/70 hover:translate-y-[-2px]',
   checkDot: 'bg-sky-500',
@@ -93,6 +93,6 @@ export function resolveMbtiProPageShell(
   flowShell: string | undefined,
   uiTheme: 'emerald' | 'portal',
 ): string {
-  if (flowShell) return `${flowShell} min-h-screen`;
+  if (flowShell) return flowShell;
   return getMbtiProVisualTheme(uiTheme).pageShell;
 }

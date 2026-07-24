@@ -684,7 +684,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   if (currentStep === 'info') {
     return (
       <>
-        <div className="relative min-h-screen pb-12 overflow-hidden">
+        <div className="relative overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 z-0 opacity-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -734,7 +734,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = 'after:from-sky-400/60') =>
-    `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
+    `group relative ${py} px-2 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[10px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 
   // 선택된 문항이 아직 로드되지 않았으면 로딩 표시
   if (selectedQuestions.length === 0) {
@@ -765,7 +765,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   }
 
   return (
-    <div className={`${pageShell} h-full flex flex-col relative overflow-y-auto pt-16`}>
+    <div className={`${pageShell} flex flex-col relative overflow-hidden pt-14 pb-1`}>
       {/* Background pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -786,30 +786,30 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         </>
       )}
       
-      <div className="flex-1 py-4 px-4 sm:px-6 lg:px-8 relative z-10" onMouseMove={handleMouseMove}>
+      <div className="flex-1 min-h-0 py-1 px-3 sm:px-4 relative z-10" onMouseMove={handleMouseMove}>
         <div className="max-w-2xl mx-auto relative z-10">
-          <div className="text-center mb-5">
-            <h1 className="text-3xl font-bold text-white mb-4">{screenTitle}</h1>
+          <div className="text-center mb-2">
+            <h1 className="text-2xl font-bold text-white mb-1">{screenTitle}</h1>
             <p className={`${v.subtitle} max-w-lg mx-auto`}>
               {screenSubtitle}
             </p>
           </div>
 
           <div className={v.mainCard}>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-2">
               <div className={v.progressLabel}>문항 {currentQuestion + 1} / {totalQuestions}</div>
               <div className={v.progressLabel}>진행률: {Math.round(((currentQuestion + 1) / totalQuestions) * 100)}%</div>
             </div>
 
-            <div className={`w-full ${v.progressTrack} rounded-full h-2 mb-8`}>
+            <div className={`w-full ${v.progressTrack} rounded-full h-1.5 mb-3`}>
               <div
-                className={`${v.progressFill} h-2 rounded-full transition-all duration-300`}
+                className={`${v.progressFill} h-1.5 rounded-full transition-all duration-300`}
                 style={{ width: `${progress}%` }}
               />
             </div>
 
-            <div className="text-center mb-12">
-              <div className="h-[120px] relative overflow-hidden mb-10">
+            <div className="text-center mb-2">
+              <div className="h-[84px] relative overflow-hidden mb-2">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
@@ -821,19 +821,19 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     className={v.questionCard}
                   >
-                    <h2 className="text-xl text-white text-center">
+                    <h2 className="text-lg text-white text-center leading-snug px-1">
                       {selectedQuestions[currentQuestion].text}
                     </h2>
                   </motion.div>
                 </AnimatePresence>
               </div>
               
-              <div className="flex flex-col gap-8">
-                <div className="relative flex justify-between items-end gap-3 px-4">
+              <div className="flex flex-col gap-3">
+                <div className="relative flex justify-between items-end gap-1.5 px-1">
                   <div className={v.scaleArc}></div>
                   <button
                     onClick={() => handleAnswer(6)}
-                    className={answerBtnClass('rounded-xl', 'py-10')}
+                    className={answerBtnClass('rounded-xl', 'py-6')}
                   >
                     {answers[currentQuestion] === 6 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -842,17 +842,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                         </svg>
                       </div>
                     )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className={`w-14 h-14 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
-                        <span className="text-white text-lg font-bold">A</span>
+                    <div className="flex flex-col items-center justify-center w-full space-y-1">
+                      <div className={`w-11 h-11 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
+                        <span className="text-white text-base font-bold">A</span>
                       </div>
-                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>그렇다</span>
+                      <span className={`text-xs font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>그렇다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(5)}
-                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]')}
+                    className={answerBtnClass('rounded-[20px]', 'py-5')}
                   >
                     {answers[currentQuestion] === 5 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -861,17 +861,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                         </svg>
                       </div>
                     )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className={`w-12 h-12 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
-                        <span className="text-white text-lg font-bold">B</span>
+                    <div className="flex flex-col items-center justify-center w-full space-y-1">
+                      <div className={`w-10 h-10 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
+                        <span className="text-white text-base font-bold">B</span>
                       </div>
-                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>그렇다</span>
+                      <span className={`text-xs font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>그렇다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(4)}
-                    className={answerBtnClass('rounded-[20px]', 'py-5')}
+                    className={answerBtnClass('rounded-[20px]', 'py-4')}
                   >
                     {answers[currentQuestion] === 4 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -880,11 +880,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                         </svg>
                       </div>
                     )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className={`w-10 h-10 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
-                        <span className="text-white text-lg font-bold">C</span>
+                    <div className="flex flex-col items-center justify-center w-full space-y-1">
+                      <div className={`w-9 h-9 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
+                        <span className="text-white text-sm font-bold">C</span>
                       </div>
-                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>그렇다</span>
+                      <span className={`text-xs font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>그렇다</span>
                     </div>
                   </button>
 
@@ -899,17 +899,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                         </svg>
                       </div>
                     )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className={`w-10 h-10 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
-                        <span className="text-white text-lg font-bold">D</span>
+                    <div className="flex flex-col items-center justify-center w-full space-y-1">
+                      <div className={`w-9 h-9 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
+                        <span className="text-white text-sm font-bold">D</span>
                       </div>
-                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>아니다</span>
+                      <span className={`text-xs font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>약간<br/>아니다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(2)}
-                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
+                    className={answerBtnClass('rounded-[20px]', 'py-5', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
                   >
                     {answers[currentQuestion] === 2 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -918,17 +918,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                         </svg>
                       </div>
                     )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className={`w-12 h-12 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
-                        <span className="text-white text-lg font-bold">E</span>
+                    <div className="flex flex-col items-center justify-center w-full space-y-1">
+                      <div className={`w-10 h-10 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
+                        <span className="text-white text-base font-bold">E</span>
                       </div>
-                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>아니다</span>
+                      <span className={`text-xs font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>아니다</span>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleAnswer(1)}
-                    className={answerBtnClass('rounded-[20px]', 'py-10', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
+                    className={answerBtnClass('rounded-[20px]', 'py-6', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
                   >
                     {answers[currentQuestion] === 1 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -937,11 +937,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                         </svg>
                       </div>
                     )}
-                    <div className="flex flex-col items-center justify-center w-full space-y-3">
-                      <div className={`w-14 h-14 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
-                        <span className="text-white text-lg font-bold">F</span>
+                    <div className="flex flex-col items-center justify-center w-full space-y-1">
+                      <div className={`w-11 h-11 rounded-full ${v.answerCircle} flex items-center justify-center transform group-hover:scale-110 transition-all duration-300`}>
+                        <span className="text-white text-base font-bold">F</span>
                       </div>
-                      <span className={`text-sm font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>아니다</span>
+                      <span className={`text-xs font-bold ${v.answerLabel} transform transition-all duration-500 ${isMouseMoved ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>매우<br/>아니다</span>
                     </div>
                   </button>
                 </div>
@@ -949,23 +949,23 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 {/* G(모르겠다) 옵션 제거 */}
               </div>
 
-              <div className="text-center mt-8">
-                <p className="text-base text-gray-400 font-medium">
+              <div className="text-center mt-2">
+                <p className="text-sm text-gray-400 font-medium">
                   깊이 생각하지 않고, 자연스럽게 떠오르는 대로 선택해주세요.
                 </p>
               </div>
 
-              <div className="flex justify-between mt-8">
+              <div className="flex justify-between mt-3">
                 <button
                   onClick={handlePrevQuestion}
-                  className="px-6 py-2.5 rounded-lg font-medium transition-all duration-300 bg-gray-700/50 text-gray-300 hover:bg-gray-700/70"
+                  className="px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 bg-gray-700/50 text-gray-300 hover:bg-gray-700/70"
                 >
                   {currentQuestion === 0 ? '이전 페이지' : '이전 문항'}
                 </button>
 
                 <button
                   onClick={handleNextQuestion}
-                  className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${
+                  className={`px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 ${
                     currentQuestion < totalQuestions - 1 && answers[currentQuestion] !== undefined
                     ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70'
                     : 'bg-gray-800/30 text-gray-600 cursor-not-allowed'

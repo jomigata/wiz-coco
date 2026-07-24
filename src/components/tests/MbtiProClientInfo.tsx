@@ -349,8 +349,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
       )}
 
       <div className="max-w-2xl mx-auto relative z-10">
-        <div className="text-center mb-5">
-          <h1 className="text-3xl font-bold text-white mb-4">
+        <div className="text-center mb-2">
+          <h1 className="text-2xl font-bold text-white mb-1">
             {screenTitle ?? (isPersonalTest ? '개인용 MBTI 검사' : '전문가용 MBTI 검사')}
           </h1>
           <p className={th.subtitle}>
@@ -366,7 +366,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
         >
           <form 
             onSubmit={handleSubmit} 
-            className="space-y-6" 
+            className="space-y-3" 
             autoComplete="off" 
             autoCapitalize="off" 
             autoCorrect="off"
@@ -387,7 +387,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
 
             {/* 이름(가명) */}
             <div className={th.fieldBox}>
-              <div className="mt-2">
+              <div>
                 <label htmlFor="name-field" className={th.label}>
                   이름(가명) <span className="text-red-400">*</span>
               </label>
@@ -413,7 +413,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
 
             {/* 출생년도 */}
             <div className={`${th.fieldBox} relative`}>
-              <div className="mt-2">
+              <div>
                 <label htmlFor="birth-year-field" className={th.label}>
                   출생년도 <span className="text-red-400">*</span>
               </label>
@@ -635,10 +635,10 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             </div>
 
             {/* 성별과 결혼상태 */}
-            <div className={`grid grid-cols-2 gap-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className={`grid grid-cols-2 gap-3 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {/* 성별 */}
               <div className={th.choiceSection}>
-                <div className="mt-2">
+                <div>
                   <label className={th.label}>
                     성별 <span className="text-red-400">*</span>
               </label>
@@ -648,7 +648,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       onClick={() => handleGenderSelect('남성')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`py-2 px-2 text-sm font-medium rounded-lg transition-colors ${
                         gender === '남성' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
@@ -662,7 +662,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       onClick={() => handleGenderSelect('여성')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`py-2 px-2 text-sm font-medium rounded-lg transition-colors ${
                         gender === '여성' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
@@ -680,7 +680,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
 
               {/* 결혼상태 */}
               <div className={th.choiceSection}>
-                <div className="mt-2">
+                <div>
                   <label className={th.label}>
                     결혼 상태 <span className="text-red-400">*</span>
               </label>
@@ -690,7 +690,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       onClick={() => handleMaritalStatusSelect('미혼')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`py-2 px-2 text-sm font-medium rounded-lg transition-colors ${
                     maritalStatus === '미혼' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
@@ -704,7 +704,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       onClick={() => handleMaritalStatusSelect('기혼')}
                       whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                      className={`py-3 px-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`py-2 px-2 text-sm font-medium rounded-lg transition-colors ${
                     maritalStatus === '기혼' ? th.choiceBtnActive : th.choiceBtnInactive
                       }`}
                     >
@@ -767,7 +767,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
               )}
             </div>
 
-            <div className={`flex ${onBack ? 'justify-between' : 'justify-end'} items-center pt-4 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className={`flex ${onBack ? 'justify-between' : 'justify-end'} items-center pt-2 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {onBack && (
               <motion.button
                 type="button"
