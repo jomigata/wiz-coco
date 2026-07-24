@@ -19,7 +19,7 @@ import { ensureJoinGuestSession, clearJoinGuestSession } from '@/lib/joinGuestSe
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
-import { buildPortalProgressReturnUrl } from '@/lib/portalReturnPath';
+import { buildPortalProgressReturnUrl, setPortalReturnPath } from '@/lib/portalReturnPath';
 import { buildMbtiProJoinResponses, parseMbtiProJoinResponses } from '@/lib/mbtiProJoinResponses';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 
@@ -586,8 +586,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           }
           const expandKey =
             assessmentId && portalTestId ? `${assessmentId}:${portalTestId}` : '';
-          router.replace(buildPortalProgressReturnUrl(expandKey || undefined));
-          return;
+          setPortalReturnPath(buildPortalProgressReturnUrl(expandKey || undefined));
+          sessionStorage.setItem('returnToPortal', 'true');
         }
       }
       
