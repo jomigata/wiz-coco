@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
-import { deleteAssessment } from '@/lib/assessmentApi';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { deleteAssessment, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
+import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 
 type ListSortKey = 'createdAt' | 'accessCode' | 'orgName' | 'title';
@@ -183,8 +183,18 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     setDeleteLoading(true);
     try {
       const removedId = deleteTarget.id;
-      await deleteAssessment(removedId);
-      setListItems((prev) => prev.filter((a) => a.id !== removedId));
+      const removedCode = deleteTarget.accessCode;
+      await deleteAssessment(removedId, removedCode);
+      removeCounselorAssessmentFromListCache(removedId, removedCode);
+      setListItems((prev) =>
+        prev.filter(
+          (a) =>
+            a.id !== removedId &&
+            (!removedCode ||
+              normalizeAccessCodeInput(a.accessCode || '') !==
+                normalizeAccessCodeInput(removedCode)),
+        ),
+      );
       setDeleteTarget(null);
       router.refresh();
     } catch (e) {

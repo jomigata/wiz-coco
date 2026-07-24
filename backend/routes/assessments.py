@@ -184,18 +184,86 @@ def list_assessments():
     return jsonify({"assessments": items})
 
 
-def _get_owned_assessment(db, assessment_id):
-    """상담사 소유 + 활성 문서만. 없으면 (None, None)."""
-    ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
-    doc = ref.get()
+def _assessment_status_active(d: dict) -> bool:
+    return (d.get("status") or "active") == "active"
+
+
+def _owned_assessment_from_doc(doc):
+    """문서가 현재 상담사 소유·활성이면 (ref, doc), 아니면 (None, None)."""
     if not doc.exists:
         return None, None
-    d = doc.to_dict()
+    d = doc.to_dict() or {}
     if d.get("counselorId") != g.counselor_uid:
         return None, None
-    if (d.get("status") or "active") != "active":
+    if not _assessment_status_active(d):
         return None, None
-    return ref, doc
+    return doc.reference, doc
+
+
+def _find_owned_assessment_by_access_code(db, access_code: str, *, include_archived: bool = False):
+    """accessCode + counselorId 로 assessment 조회."""
+    code = normalize_access_code(access_code)
+    if not is_valid_access_code(code):
+        return None, None
+    refs = (
+        db.collection(ASSESSMENTS_COLLECTION)
+        .where("accessCode", "==", code)
+        .where("counselorId", "==", g.counselor_uid)
+        .limit(5)
+        .get()
+    )
+    for doc in refs:
+        d = doc.to_dict() or {}
+        if d.get("counselorId") != g.counselor_uid:
+            continue
+        status = d.get("status") or "active"
+        if status == "active" or (include_archived and status == "archived"):
+            return doc.reference, doc
+    return None, None
+
+
+def _get_owned_assessment(db, assessment_id, *, access_code_hint: str = ""):
+    """상담사 소유 + 활성 문서. doc id 우선, 실패 시 accessCode(경로·쿼리) fallback."""
+    raw = (assessment_id or "").strip()
+    if raw:
+        ref, doc = _owned_assessment_from_doc(
+            db.collection(ASSESSMENTS_COLLECTION).document(raw).get()
+        )
+        if doc:
+            return ref, doc
+        if is_valid_access_code(normalize_access_code(raw)):
+            ref, doc = _find_owned_assessment_by_access_code(db, raw)
+            if doc:
+                return ref, doc
+
+    hint = (access_code_hint or "").strip()
+    if hint:
+        return _find_owned_assessment_by_access_code(db, hint)
+    return None, None
+
+
+def _get_owned_assessment_for_delete(db, assessment_id, *, access_code_hint: str = ""):
+    """삭제용: 활성 우선 조회, 없으면 archived(이미 삭제됨)도 반환."""
+    ref, doc = _get_owned_assessment(db, assessment_id, access_code_hint=access_code_hint)
+    if doc:
+        return ref, doc
+
+    raw = (assessment_id or "").strip()
+    if raw:
+        doc = db.collection(ASSESSMENTS_COLLECTION).document(raw).get()
+        if doc.exists:
+            d = doc.to_dict() or {}
+            if d.get("counselorId") == g.counselor_uid and (d.get("status") or "active") == "archived":
+                return doc.reference, doc
+        if is_valid_access_code(normalize_access_code(raw)):
+            ref, doc = _find_owned_assessment_by_access_code(db, raw, include_archived=True)
+            if doc:
+                return ref, doc
+
+    hint = (access_code_hint or "").strip()
+    if hint:
+        return _find_owned_assessment_by_access_code(db, hint, include_archived=True)
+    return None, None
 
 
 @bp.route("/<assessment_id>", methods=["GET"])
@@ -203,7 +271,8 @@ def _get_owned_assessment(db, assessment_id):
 def get_assessment(assessment_id):
     """상담사: 단일 검사코드(세트) 조회 (수정 폼용)."""
     db = get_firestore()
-    ref, doc = _get_owned_assessment(db, assessment_id)
+    access_code_hint = (request.args.get("accessCode") or "").strip()
+    ref, doc = _get_owned_assessment(db, assessment_id, access_code_hint=access_code_hint)
     if not doc:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     out = _serialize_doc(doc)
@@ -236,7 +305,8 @@ def update_assessment(assessment_id):
         return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
 
     db = get_firestore()
-    ref, doc = _get_owned_assessment(db, assessment_id)
+    access_code_hint = (body.get("accessCode") or request.args.get("accessCode") or "").strip()
+    ref, doc = _get_owned_assessment(db, assessment_id, access_code_hint=access_code_hint)
     if not doc:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
 
@@ -258,12 +328,18 @@ def update_assessment(assessment_id):
 def delete_assessment(assessment_id):
     """상담사: 검사코드 세트 비활성화(soft delete, status=archived). 내담자 신규 접속 불가."""
     db = get_firestore()
-    ref, doc = _get_owned_assessment(db, assessment_id)
+    access_code_hint = (request.args.get("accessCode") or "").strip()
+    ref, doc = _get_owned_assessment_for_delete(db, assessment_id, access_code_hint=access_code_hint)
     if not doc:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
 
+    data = doc.to_dict() or {}
+    resolved_id = doc.id
+    if (data.get("status") or "active") == "archived":
+        return jsonify({"assessmentId": resolved_id, "message": "already_archived"})
+
     ref.update({"status": "archived", "archivedAt": SERVER_TIMESTAMP})
-    return jsonify({"assessmentId": assessment_id, "message": "archived"})
+    return jsonify({"assessmentId": resolved_id, "message": "archived"})
 
 
 @bp.route("/archived", methods=["GET"])

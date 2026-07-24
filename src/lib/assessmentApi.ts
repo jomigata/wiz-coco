@@ -499,13 +499,24 @@ export async function updateAssessment(
 }
 
 /** DELETE /api/assessments/:id - 상담사: 검사코드 세트 비활성화(archived), 신규 접속 불가 */
-export async function deleteAssessment(assessmentId: string): Promise<void> {
+export async function deleteAssessment(
+  assessmentId: string,
+  accessCode?: string,
+): Promise<void> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
-  const res = await fetch(`${getBaseUrl()}/api/assessments/${encodeURIComponent(assessmentId)}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const id = (assessmentId || '').trim();
+  const code = accessCode ? normalizeAccessCodeInput(accessCode) : '';
+  const params = code ? `?accessCode=${encodeURIComponent(code)}` : '';
+  const pathId = id || code;
+  if (!pathId) throw new Error('삭제할 검사코드 정보가 없습니다.');
+  const res = await fetch(
+    `${getBaseUrl()}/api/assessments/${encodeURIComponent(pathId)}${params}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data?.message || data?.error || '삭제에 실패했습니다.');
@@ -601,17 +612,38 @@ function sortAssessmentsByCreatedDesc(items: CounselorAssessment[]): CounselorAs
   });
 }
 
-/** 서버 목록 + 세션 캐시(낙관적 추가분) 병합 — 서버 항목이 동일 id면 우선 */
+/** API·캐시 항목 id 정규화 (assessmentId 필드만 있는 경우 대비) */
+export function normalizeCounselorAssessment(
+  a: CounselorAssessment & { assessmentId?: string },
+): CounselorAssessment {
+  const id = (a.id || a.assessmentId || '').trim();
+  return { ...a, id };
+}
+
+function assessmentAccessKey(accessCode?: string): string {
+  return accessCode ? normalizeAccessCodeInput(accessCode) : '';
+}
+
+/** 서버 목록 + 세션 캐시(낙관적 추가분) 병합 — 서버 항목이 동일 id·accessCode면 우선 */
 export function mergeCounselorAssessmentLists(
   fromServer: CounselorAssessment[],
   fromCache: CounselorAssessment[],
 ): CounselorAssessment[] {
+  const serverItems = (fromServer || []).map(normalizeCounselorAssessment).filter((a) => a.id);
+  const cacheItems = (fromCache || []).map(normalizeCounselorAssessment).filter((a) => a.id);
+
   const byId = new Map<string, CounselorAssessment>();
-  for (const a of fromCache) {
-    if (a?.id) byId.set(a.id, a);
+  const serverAccessCodes = new Set(
+    serverItems.map((a) => assessmentAccessKey(a.accessCode)).filter(Boolean),
+  );
+
+  for (const a of cacheItems) {
+    const codeKey = assessmentAccessKey(a.accessCode);
+    if (codeKey && serverAccessCodes.has(codeKey)) continue;
+    byId.set(a.id, a);
   }
-  for (const a of fromServer) {
-    if (a?.id) byId.set(a.id, a);
+  for (const a of serverItems) {
+    byId.set(a.id, a);
   }
   return sortAssessmentsByCreatedDesc(Array.from(byId.values()));
 }
@@ -619,13 +651,37 @@ export function mergeCounselorAssessmentLists(
 /** 발급 직후 목록에 바로 보이도록 세션 캐시 앞에 추가 */
 export function prependCounselorAssessmentToListCache(item: CounselorAssessment): void {
   if (typeof window === 'undefined' || !item.id) return;
+  const normalized = normalizeCounselorAssessment(item);
   const existing = readCachedAssessmentsList() ?? [];
-  const rest = existing.filter((a) => a.id !== item.id);
+  const codeKey = assessmentAccessKey(normalized.accessCode);
+  const rest = existing.filter(
+    (a) =>
+      a.id !== normalized.id &&
+      (!codeKey || assessmentAccessKey(a.accessCode) !== codeKey),
+  );
   writeSWRCache(
     ASSESSMENTS_LIST_CACHE_KEY,
-    { assessments: sortAssessmentsByCreatedDesc([item, ...rest]) },
+    { assessments: sortAssessmentsByCreatedDesc([normalized, ...rest]) },
     { scope: 'session' },
   );
+}
+
+/** 삭제 성공 후 세션 캐시에서 제거 */
+export function removeCounselorAssessmentFromListCache(
+  assessmentId: string,
+  accessCode?: string,
+): void {
+  if (typeof window === 'undefined') return;
+  const id = assessmentId.trim();
+  const codeKey = assessmentAccessKey(accessCode);
+  if (!id && !codeKey) return;
+  const existing = readCachedAssessmentsList() ?? [];
+  const filtered = existing.filter((a) => {
+    if (id && a.id === id) return false;
+    if (codeKey && assessmentAccessKey(a.accessCode) === codeKey) return false;
+    return true;
+  });
+  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: filtered }, { scope: 'session' });
 }
 
 export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
