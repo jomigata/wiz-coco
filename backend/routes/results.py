@@ -549,7 +549,6 @@ def update_result(result_id):
         "responses": responses,
         "resultData": result_data,
         "status": "completed",
-        "completedAt": SERVER_TIMESTAMP,
         "updatedAt": SERVER_TIMESTAMP,
     }
     if not d.get("submittedAt"):

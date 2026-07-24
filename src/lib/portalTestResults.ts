@@ -25,6 +25,26 @@ export function resultSubmittedLabel(r: TestResultItem): string | null {
   return r.submittedAt || r.completedAt;
 }
 
+/** 제출 시각 이후 실제 수정이 있을 때만 수정 시각 반환 (레거시 completedAt 보정 포함) */
+export function resultUpdatedLabel(r: TestResultItem): string | null {
+  const submitted = resultSubmittedLabel(r);
+  const updated = (r.updatedAt || '').trim();
+  if (updated) {
+    if (!submitted) return updated;
+    const subMs = new Date(submitted).getTime();
+    const updMs = new Date(updated).getTime();
+    if (Number.isNaN(subMs) || Number.isNaN(updMs)) return updated;
+    return updMs > subMs + 1000 ? updated : null;
+  }
+
+  const completed = (r.completedAt || '').trim();
+  if (!submitted || !completed) return null;
+  const subMs = new Date(submitted).getTime();
+  const compMs = new Date(completed).getTime();
+  if (Number.isNaN(subMs) || Number.isNaN(compMs)) return null;
+  return compMs > subMs + 1000 ? completed : null;
+}
+
 function submissionTimestamp(r: TestResultItem): number {
   const iso = resultSubmittedLabel(r);
   if (!iso) return 0;

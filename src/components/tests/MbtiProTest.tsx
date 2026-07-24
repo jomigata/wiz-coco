@@ -572,6 +572,13 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           }
         } catch (submitErr) {
           console.error('검사코드 결과 제출 실패:', submitErr);
+          if (editResultId.trim()) {
+            setIsLoading(false);
+            window.alert(
+              submitErr instanceof Error ? submitErr.message : '수정 내용 저장에 실패했습니다.',
+            );
+            return;
+          }
         }
         if (joinFromPortal) {
           let assessmentId = '';

@@ -3,7 +3,7 @@
 import React from 'react';
 import { genericJoinQuestions } from '@/data/genericJoinQuestions';
 import { getClientResult } from '@/lib/assessmentApi';
-import { formatCompletedAt } from '@/lib/portalTestResults';
+import { formatCompletedAt, resultUpdatedLabel } from '@/lib/portalTestResults';
 
 const RESPONSE_SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',

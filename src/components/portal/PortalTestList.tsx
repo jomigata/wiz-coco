@@ -8,6 +8,7 @@ import {
   makeTestExpandKey,
   pickFinalResultId,
   resultSubmittedLabel,
+  resultUpdatedLabel,
   sortCompletedResultsForDisplay,
 } from '@/lib/portalTestResults';
 
@@ -117,10 +118,10 @@ export default function PortalTestList({
                           <span className="text-slate-300 font-normal">
                             {' '}
                             · 제출 {formatCompletedAt(resultSubmittedLabel(r))}
-                            {r.updatedAt ? (
+                            {resultUpdatedLabel(r) ? (
                               <span className="text-slate-400">
                                 {' '}
-                                (수정 {formatCompletedAt(r.updatedAt)})
+                                (수정 {formatCompletedAt(resultUpdatedLabel(r))})
                               </span>
                             ) : null}
                           </span>

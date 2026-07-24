@@ -11,6 +11,7 @@ import PortalResultViewModal, { type PortalResultViewState } from '@/components/
 import {
   findFirstCompletedExpandKey,
   resultSubmittedLabel,
+  resultUpdatedLabel,
 } from '@/lib/portalTestResults';
 import {
   formatAccessCodeDisplay,
@@ -260,7 +261,7 @@ function ClientPortalContent() {
       accessCode: normalizeAccessCodeInput(accessCode),
       resultId,
       submittedAt: resultSubmittedLabel(resultItem),
-      updatedAt: resultItem.updatedAt ?? null,
+      updatedAt: resultUpdatedLabel(resultItem),
     });
   };
 
