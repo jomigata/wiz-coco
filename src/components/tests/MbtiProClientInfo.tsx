@@ -61,7 +61,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   const scrollVelocityRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
   const lastTouchYRef = useRef<number | null>(null);
-  
+  const lastEdgeScrollAtRef = useRef(0);
+  const lastMouseXRef = useRef<number | null>(null);
+
   const birthYearRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
   const maritalStatusRef = useRef<HTMLDivElement>(null);
@@ -146,36 +148,90 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     scrollVelocityRef.current = 0;
   };
 
-  // 마우스 위치에 따라 자동 스크롤 (가속도 적용, 최고 속도 50% 감속)
+  // 마우스 위치: 최상·최하단 줄에서 2줄 확장 + 좌우 이동 시 2칸 패닝
   const handleYearGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!yearGridRef.current) return;
-    
+
     const grid = yearGridRef.current;
     const rect = grid.getBoundingClientRect();
     const mouseY = e.clientY - rect.top;
     const gridHeight = rect.height;
     const scrollHeight = grid.scrollHeight;
     const scrollTop = grid.scrollTop;
-    
-    // 상단 20% 영역: 위로 스크롤
+
     const topThreshold = gridHeight * 0.2;
-    // 하단 20% 영역: 아래로 스크롤
     const bottomThreshold = gridHeight * 0.8;
-    
+
     if (mouseY < topThreshold && scrollTop > 0) {
-      // 상단에 가까울수록 더 빠르게
-      const intensity = (topThreshold - mouseY) / topThreshold; // 0~1
-      const speed = 2 + intensity * 14; // 50% 감속: 2~16px/frame
-      scrollVelocityRef.current = -speed;
+      const intensity = (topThreshold - mouseY) / topThreshold;
+      scrollVelocityRef.current = -(2 + intensity * 14);
       startAutoScroll();
     } else if (mouseY > bottomThreshold && scrollTop < scrollHeight - gridHeight) {
-      // 하단에 가까울수록 더 빠르게
-      const intensity = (mouseY - bottomThreshold) / (gridHeight - bottomThreshold); // 0~1
-      const speed = 2 + intensity * 14; // 2~16px/frame
-      scrollVelocityRef.current = speed;
+      const intensity = (mouseY - bottomThreshold) / (gridHeight - bottomThreshold);
+      scrollVelocityRef.current = 2 + intensity * 14;
       startAutoScroll();
     } else {
       scrollVelocityRef.current = 0;
+    }
+
+    const target = (e.target as HTMLElement).closest('[data-year-idx]') as HTMLElement | null;
+    if (!target) return;
+
+    const idx = parseInt(target.getAttribute('data-year-idx') || '-1', 10);
+    if (idx < 0) return;
+
+    const col = idx % 8;
+    const row = Math.floor(idx / 8);
+    const cells = yearButtonRefs.current.filter(Boolean) as HTMLButtonElement[];
+    if (cells.length === 0) return;
+
+    const gRect = grid.getBoundingClientRect();
+    let firstVisRow = Number.POSITIVE_INFINITY;
+    let lastVisRow = -1;
+    cells.forEach((cell, i) => {
+      const r = cell.getBoundingClientRect();
+      if (r.bottom > gRect.top + 1 && r.top < gRect.bottom - 1) {
+        const ri = Math.floor(i / 8);
+        firstVisRow = Math.min(firstVisRow, ri);
+        lastVisRow = Math.max(lastVisRow, ri);
+      }
+    });
+    if (!Number.isFinite(firstVisRow)) return;
+
+    const rowH = cells[0]?.offsetHeight ?? 36;
+    const colW = cells[0]?.offsetWidth ?? 48;
+    const now = Date.now();
+    const onEdgeRow = row === firstVisRow || row === lastVisRow;
+
+    if (onEdgeRow && now - lastEdgeScrollAtRef.current > 100) {
+      if (row === firstVisRow && row > 0) {
+        grid.scrollTop = Math.max(0, grid.scrollTop - rowH * 2);
+        lastEdgeScrollAtRef.current = now;
+      } else if (row === lastVisRow && row < Math.floor((years.length - 1) / 8)) {
+        grid.scrollTop = Math.min(
+          grid.scrollHeight - grid.clientHeight,
+          grid.scrollTop + rowH * 2,
+        );
+        lastEdgeScrollAtRef.current = now;
+      }
+
+      const prevX = lastMouseXRef.current;
+      lastMouseXRef.current = e.clientX;
+      if (prevX != null && Math.abs(e.clientX - prevX) > 6) {
+        const deltaX = e.clientX - prevX;
+        if (col <= 1 && deltaX < 0) {
+          grid.scrollLeft = Math.max(0, grid.scrollLeft - colW * 2);
+          lastEdgeScrollAtRef.current = now;
+        } else if (col >= 6 && deltaX > 0) {
+          grid.scrollLeft = Math.min(
+            grid.scrollWidth - grid.clientWidth,
+            grid.scrollLeft + colW * 2,
+          );
+          lastEdgeScrollAtRef.current = now;
+        }
+      }
+    } else {
+      lastMouseXRef.current = e.clientX;
     }
   };
 

@@ -48,7 +48,7 @@ const emerald: MbtiProClientInfoTheme = {
   yearSelector:
     'year-selector mt-1.5 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-2 shadow-lg',
   yearGrid:
-    'grid grid-cols-8 gap-x-1 gap-y-1 overflow-y-auto max-h-[272px] scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50',
+    'grid grid-cols-8 gap-x-1 gap-y-1 overflow-x-auto overflow-y-auto max-h-[272px] px-10 scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-900/50',
   yearBtnBase:
     'relative flex items-center justify-center px-1.5 py-1.5 min-h-0 text-xs font-medium rounded transition-all',
   yearBtnSelected:
@@ -92,7 +92,7 @@ const portal: MbtiProClientInfoTheme = {
   yearSelector:
     'year-selector mt-1.5 z-50 bg-[#0f1a2e]/98 backdrop-blur-sm border border-white/[0.1] rounded-lg p-2 shadow-lg',
   yearGrid:
-    'grid grid-cols-8 gap-x-1 gap-y-1 overflow-y-auto max-h-[272px] scrollbar-thin scrollbar-thumb-sky-600/80 scrollbar-track-slate-900/50',
+    'grid grid-cols-8 gap-x-1 gap-y-1 overflow-x-auto overflow-y-auto max-h-[272px] px-10 scrollbar-thin scrollbar-thumb-sky-600/80 scrollbar-track-slate-900/50',
   yearBtnBase:
     'relative flex items-center justify-center px-1.5 py-1.5 min-h-0 text-xs font-medium rounded transition-all',
   yearBtnSelected: 'bg-sky-600 text-white border-2 border-sky-500 shadow-lg shadow-sky-500/30',

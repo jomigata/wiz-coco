@@ -558,11 +558,6 @@ export function evaluateAuthSessionOnStartup(): boolean {
 
   if (hasTabSession && !wasClosed && heartbeatFresh) return false;
 
-  /** 다른 탭에서 로그인 중이면 이 탭에 세션 마커만 복구 (sessionStorage는 탭별) */
-  if (!hasTabSession && !wasClosed && heartbeatFresh) {
-    if (tryRestoreAuthenticatedTabSession()) return false;
-  }
-
   if (wasClosed) localStorage.removeItem(AUTH_CLEARED_FLAG);
   clearAuthStorageSync();
   console.log('[AuthSessionLifecycle] 재접속 또는 세션 만료 — 로그인 정보 초기화');
@@ -604,11 +599,16 @@ export function initAuthSessionLifecycle(): () => void {
   const handlePageHide = (event: PageTransitionEvent) => {
     if (event.persisted) {
       markInternalNavigation();
+      return;
     }
-    // 탭 전환 시에도 pagehide가 발생하며, beforeunload는 호출되지 않습니다.
-    // 여기서 clearAuthOnClose를 호출하면 다른 탭의 전문가 로그인까지 지워져
-    // 검사코드 목록 ↔ 로그인 페이지 리다이렉트 루프가 발생합니다.
-    // 탭/브라우저 종료 후 재접속 검증은 evaluateAuthSessionOnStartup(탭 마커·heartbeat)이 담당합니다.
+    // 새로고침이 아닌 종료·탭 닫기 시 heartbeat 제거 → 재실행 cold start에서 세션 복구 방지
+    if (!isPageRefreshing()) {
+      try {
+        localStorage.removeItem(AUTH_HEARTBEAT_KEY);
+      } catch {
+        // ignore
+      }
+    }
   };
 
   window.addEventListener('beforeunload', handleBeforeUnload);

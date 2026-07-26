@@ -997,7 +997,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 </svg>
               )}
             </button>
-            <p className="text-lg text-white mb-4">검사가 완료되었습니다.<br />확인을 누르면, 검사결과로 이동합니다.</p>
+            <p className="text-lg text-white mb-4">검사가 완료되었습니다.<br />확인을 누르면, 내 검사실로 이동합니다.</p>
             <button
               onClick={handleComplete}
               className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-12 rounded-xl transition-colors duration-200 mx-auto shadow-md w-3/4"
@@ -1009,7 +1009,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  결과 페이지로 이동 중...
+                  내 검사실로 이동 중...
                 </>
               ) : (
                 '확인'

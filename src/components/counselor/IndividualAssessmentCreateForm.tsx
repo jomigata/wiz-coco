@@ -71,6 +71,8 @@ export default function IndividualAssessmentCreateForm() {
   const [manualRows, setManualRows] = useState<RecipientRow[]>([{ ...EMPTY_ROW }]);
   const [fileRows, setFileRows] = useState<RecipientRow[]>([]);
   const [fileLabel, setFileLabel] = useState('');
+  const [filePreviewText, setFilePreviewText] = useState('');
+  const [showFilePreview, setShowFilePreview] = useState(false);
   const [loadingIntent, setLoadingIntent] = useState<IssueIntent | null>(null);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
@@ -229,11 +231,25 @@ export default function IndividualAssessmentCreateForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileLabel(file.name);
+    setShowFilePreview(false);
     try {
-      setFileRows(await parseRecipientFile(file));
+      const parsed = await parseRecipientFile(file);
+      setFileRows(parsed);
+      try {
+        const raw = await file.text();
+        setFilePreviewText(raw.slice(0, 4000));
+      } catch {
+        setFilePreviewText(
+          parsed
+            .slice(0, 50)
+            .map((r) => [r.displayName, r.email, r.phone].filter(Boolean).join('\t'))
+            .join('\n'),
+        );
+      }
     } catch {
       setError('파일을 읽지 못했습니다. CSV·텍스트·엑셀 형식을 확인해 주세요.');
       setFileRows([]);
+      setFilePreviewText('');
     }
   };
 
@@ -734,7 +750,32 @@ export default function IndividualAssessmentCreateForm() {
                   aria-live="polite"
                 >
                   <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
-                  <p className="mt-1 break-all text-sm font-medium leading-snug text-white">{fileLabel}</p>
+                  <div className="relative mt-1 inline-block max-w-full">
+                    <p
+                      className="cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
+                      onMouseEnter={() => setShowFilePreview(true)}
+                      onMouseLeave={() => setShowFilePreview(false)}
+                      onFocus={() => setShowFilePreview(true)}
+                      onBlur={() => setShowFilePreview(false)}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`${fileLabel} 파일 내용 미리보기`}
+                    >
+                      {fileLabel}
+                    </p>
+                    {showFilePreview && filePreviewText ? (
+                      <div
+                        className="absolute left-0 top-full z-50 mt-2 max-h-64 w-[min(100vw-2rem,28rem)] overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                        role="tooltip"
+                      >
+                        <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
+                        <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                          {filePreviewText}
+                          {filePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
+                        </pre>
+                      </div>
+                    ) : null}
+                  </div>
                   <p className="mt-1 text-xs text-slate-400">
                     파일에서{' '}
                     <span className="font-semibold tabular-nums text-emerald-300">

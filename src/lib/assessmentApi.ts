@@ -593,12 +593,13 @@ export async function permanentlyDeleteArchivedAssessments(
 
 /** GET /api/assessments - 상담사: 내 검사코드 목록 */
 const ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
-const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 5 * 60 * 1000;
+const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const ASSESSMENTS_LIST_CACHE_SCOPE = 'local' as const;
 
 export function readCachedAssessmentsList(): CounselorAssessment[] | null {
   if (typeof window === 'undefined') return null;
   const cached = readSWRCache<{ assessments: CounselorAssessment[] }>(ASSESSMENTS_LIST_CACHE_KEY, {
-    scope: 'session',
+    scope: ASSESSMENTS_LIST_CACHE_SCOPE,
     maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
   });
   return cached.data?.assessments ?? null;
@@ -662,7 +663,7 @@ export function prependCounselorAssessmentToListCache(item: CounselorAssessment)
   writeSWRCache(
     ASSESSMENTS_LIST_CACHE_KEY,
     { assessments: sortAssessmentsByCreatedDesc([normalized, ...rest]) },
-    { scope: 'session' },
+    { scope: ASSESSMENTS_LIST_CACHE_SCOPE },
   );
 }
 

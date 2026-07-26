@@ -450,8 +450,16 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
             } else {
               authExpiredOnStartupRef.current = false;
             }
-          } else {
+          } else if (hasAuthenticatedTabSession()) {
             tryRestoreAuthenticatedTabSession();
+          } else if (!shouldSkipStartupSignOut()) {
+            void clearAllAuthStorage().then(() => {
+              setUser(null);
+              writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
+              clearCounselorIdTokenCache();
+              finishLoading();
+            });
+            return;
           }
         }
         void applyFirebaseUser(firebaseUser);

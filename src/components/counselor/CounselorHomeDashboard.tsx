@@ -10,6 +10,10 @@ import {
   fetchCounselorOrgLiaisons,
   type CounselorOrgLiaison,
 } from '@/lib/clientPortalApi';
+import {
+  readCachedCounselorDashboard,
+  writeCachedCounselorDashboard,
+} from '@/lib/counselorDashboardCache';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -98,15 +102,26 @@ function OrgLiaisonCard({ org }: { org: CounselorOrgLiaison }) {
 
 export default function CounselorHomeDashboard() {
   const { authPending, showLoginRequired } = useAuthResolved();
+  const initialCache = useMemo(() => readCachedCounselorDashboard(), []);
   const [tab, setTab] = useState<DashboardTab>('individual');
-  const [hub, setHub] = useState<CounselorMonitoringHubResult | null>(null);
-  const [cohorts, setCohorts] = useState<CounselorCohortMonitoringResult | null>(null);
-  const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [hub, setHub] = useState<CounselorMonitoringHubResult | null>(
+    () => initialCache?.hub ?? null,
+  );
+  const [cohorts, setCohorts] = useState<CounselorCohortMonitoringResult | null>(
+    () => initialCache?.cohorts ?? null,
+  );
+  const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(
+    () => initialCache?.liaisons ?? [],
+  );
+  const [loading, setLoading] = useState(() => !initialCache?.hub && !initialCache?.cohorts);
+  const [revalidating, setRevalidating] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const cached = readCachedCounselorDashboard();
+    const hasCache = Boolean(cached?.hub || cached?.cohorts);
+    if (!hasCache) setLoading(true);
+    else setRevalidating(true);
     setError('');
     try {
       const [hubData, cohortData, liaisonData] = await Promise.all([
@@ -117,18 +132,26 @@ export default function CounselorHomeDashboard() {
       setHub(hubData);
       setCohorts(cohortData);
       setLiaisons(liaisonData);
+      writeCachedCounselorDashboard({
+        hub: hubData,
+        cohorts: cohortData,
+        liaisons: liaisonData,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '대시보드 데이터를 불러오지 못했습니다.');
-      setHub(null);
-      setCohorts(null);
+      if (!hasCache) {
+        setError(err instanceof Error ? err.message : '대시보드 데이터를 불러오지 못했습니다.');
+        setHub(null);
+        setCohorts(null);
+      }
     } finally {
       setLoading(false);
+      setRevalidating(false);
     }
   }, []);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {
-      setLoading(false);
+      if (!initialCache?.hub && !initialCache?.cohorts) setLoading(false);
       return;
     }
     void load();
@@ -150,11 +173,11 @@ export default function CounselorHomeDashboard() {
   const summary = hub?.summary;
   const cohortSummary = cohorts?.summary;
 
-  if (loading) {
+  if (loading && !hub && !cohorts) {
     return <p className="py-12 text-center text-sm text-slate-500">대시보드를 불러오는 중…</p>;
   }
 
-  if (error) {
+  if (error && !hub && !cohorts) {
     return (
       <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
         {error}
@@ -164,6 +187,11 @@ export default function CounselorHomeDashboard() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {revalidating ? (
+        <p className="text-xs text-sky-300/80" role="status">
+          저장된 대시보드를 표시 중… 최신 정보를 불러오고 있습니다.
+        </p>
+      ) : null}
       <CounselorPageSection title="현황 요약" noBodyPadding bodyClassName="!p-0">
         <div className="grid grid-cols-2 gap-3 p-2.5 sm:p-3 md:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-white/5 p-5">

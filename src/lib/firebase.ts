@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { browserLocalPersistence, getAuth, initializeAuth } from 'firebase/auth';
+import { browserSessionPersistence, getAuth, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 import { getStorage } from 'firebase/storage';
@@ -23,9 +23,9 @@ export function initializeFirebase() {
     try {
       app = !getApps().length ? initializeApp(getFirebaseClientConfig()) : getApp();
 
-      // IndexedDB persistence는 일부 환경에서 signInWithCustomToken 무한 대기 유발 → localStorage 사용
+      // browserSessionPersistence: 브라우저(모든 탭) 종료 시 세션 소멸 → 재실행 시 로그아웃 상태
       try {
-        auth = initializeAuth(app, { persistence: browserLocalPersistence });
+        auth = initializeAuth(app, { persistence: browserSessionPersistence });
       } catch (e: unknown) {
         const err = e as { code?: string };
         if (err?.code === 'auth/already-initialized') {

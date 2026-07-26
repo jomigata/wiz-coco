@@ -78,13 +78,16 @@ export default function AssessmentListPage() {
 
   useRedirectOnLoginRequiredError(error);
 
-  const showInitialLoader = authPending || (loading && assessments.length === 0);
+  const hasCache = assessments.length > 0;
+  const showInitialLoader = !hasCache && (authPending || loading);
+  const showAuthGate =
+    !hasCache && (showLoginRequired || (error && isLoginRequiredError(error)));
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {showInitialLoader ? (
         <AuthLoadingState />
-      ) : showLoginRequired || (error && isLoginRequiredError(error)) ? (
+      ) : showAuthGate ? (
         <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />
       ) : error ? (
         <div className="rounded-xl bg-red-900/20 border border-red-600/30 p-5">
@@ -92,7 +95,14 @@ export default function AssessmentListPage() {
           <p className="text-red-400/70 text-sm mt-0.5">Firebase에 로그인한 상태에서 다시 시도해 주세요.</p>
         </div>
       ) : (
-        <AssessmentList assessments={assessments} createdInfo={createdInfo} />
+        <>
+          {(authPending || loading) && assessments.length > 0 ? (
+            <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
+              저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
+            </p>
+          ) : null}
+          <AssessmentList assessments={assessments} createdInfo={createdInfo} />
+        </>
       )}
     </div>
   );
