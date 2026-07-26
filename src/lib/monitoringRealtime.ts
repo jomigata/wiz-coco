@@ -323,7 +323,7 @@ export function applyRealtimeToCohortMonitoring(
         const hubAss = liveHub.assessments.find((a) => a.assessmentId === entry.assessmentId);
         ass = {
           assessmentId: entry.assessmentId,
-          title: hubAss?.title || '검사코드',
+          title: hubAss?.title || '상담패키지',
           joinAccessCode: hubAss?.joinAccessCode || '',
           recipientCount: 0,
           completedRecipients: 0,

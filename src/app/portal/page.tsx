@@ -358,11 +358,11 @@ function ClientPortalContent() {
           ) : (
             <>
           <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
-            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '검사코드별 진행 현황'}
+            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '상담패키지별 진행 현황'}
           </h2>
 
           {assessments.length === 0 ? (
-            <p className="text-slate-400 text-sm">배정된 검사가 없습니다. 담당자에게 검사코드·나의코드를 확인해 주세요.</p>
+            <p className="text-slate-400 text-sm">배정된 검사가 없습니다. 담당자에게 상담패키지·나의코드를 확인해 주세요.</p>
           ) : (
             assessments.map((a) => {
               const code = normalizeAccessCodeInput(a.accessCode);
@@ -376,7 +376,7 @@ function ClientPortalContent() {
                   <div>
                     <h3 className="text-lg font-medium text-white">{a.title}</h3>
                     <p className="text-sm text-slate-400 mt-1">
-                      검사코드{' '}
+                      상담패키지{' '}
                       <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
                       {a.isLinkedShared ? (
                         <span className="ml-2 text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">

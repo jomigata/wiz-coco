@@ -69,7 +69,7 @@ export async function verifyPortalMagicToken(token: string): Promise<ClientPorta
     throw new Error(
       typeof data?.message === 'string'
         ? data.message
-        : '이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 담당자에게 새 링크를 요청해 주세요.'
+        : '이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 안내 받으신 나의코드와 비밀번호를 이용하거나 담당자에게 새 링크를 요청해 주세요.'
     );
   }
   return data as ClientPortalLoginResult;

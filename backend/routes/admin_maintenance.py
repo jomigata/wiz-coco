@@ -46,7 +46,7 @@ def require_admin_or_cron(f):
 @require_admin_or_cron
 def purge_assessment_data():
     """
-    검사코드(assessments) 및 연동 내담자 검사 기록 일괄 삭제.
+    상담패키지(assessments) 및 연동 내담자 검사 기록 일괄 삭제.
     body: { "dryRun": false, "includeAllTestResults": true, "confirm": "PURGE" }
     """
     body = request.get_json(silent=True) or {}

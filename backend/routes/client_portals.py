@@ -128,7 +128,7 @@ def _load_assessments_for_portal(db, portal_doc):
 
 
 def _load_assessments_for_portal_ecosystem(db, primary_portal_id: str):
-    """현재 + 연결된 나의코드의 검사코드 목록(중복 assessment 제거)."""
+    """현재 + 연결된 나의코드의 상담패키지 목록(중복 assessment 제거)."""
     items = []
     seen = set()
     for pid in get_portal_ecosystem_ids(db, primary_portal_id):
@@ -195,7 +195,7 @@ def list_counselor_portals():
 @bp.route("/assignments", methods=["GET"])
 @require_counselor
 def list_counselor_assignments():
-    """상담사 내담자 검사 할당 목록 (포털×검사코드×검사항목)."""
+    """상담사 내담자 검사 할당 목록 (포털×상담패키지×검사항목)."""
     status = (request.args.get("status") or "active").strip().lower()
     if status not in ("active", "archived", "all"):
         status = "active"
@@ -221,7 +221,7 @@ def list_counselor_assignments():
 @bp.route("/push-assessments", methods=["POST"])
 @require_counselor
 def push_assessments():
-    """기존 내담자 포털에 검사코드 추가 배정 + 선택 알림."""
+    """기존 내담자 포털에 상담패키지 추가 배정 + 선택 알림."""
     body = request.get_json(silent=True) or {}
     portal_ids = body.get("portalIds") or []
     if not isinstance(portal_ids, list) or not portal_ids:
@@ -236,9 +236,9 @@ def push_assessments():
 
     if not assessment_id:
         if not title:
-            return jsonify({"error": "Bad Request", "message": "신규 검사코드 생성 시 title이 필요합니다."}), 400
+            return jsonify({"error": "Bad Request", "message": "신규 상담패키지 생성 시 title이 필요합니다."}), 400
         if not isinstance(test_list, list) or not test_list:
-            return jsonify({"error": "Bad Request", "message": "신규 검사코드 생성 시 testList가 필요합니다."}), 400
+            return jsonify({"error": "Bad Request", "message": "신규 상담패키지 생성 시 testList가 필요합니다."}), 400
 
     db = get_firestore()
     try:
@@ -267,7 +267,7 @@ def push_assessments():
 @bp.route("/monitoring", methods=["GET"])
 @require_counselor
 def counselor_monitoring_hub():
-    """상담사 통합 모니터링 허브 — 전체 검사코드·진행 요약."""
+    """상담사 통합 모니터링 허브 — 전체 상담패키지·진행 요약."""
     cohort_id = (request.args.get("cohortId") or "").strip() or None
     db = get_firestore()
     result = get_counselor_monitoring_hub(db, g.counselor_uid, cohort_id=cohort_id)
@@ -322,7 +322,7 @@ def portal_login():
             }
         )
 
-    # 공유 검사코드는 검사 시작 전용 — 내 검사실은 개인 포털(코드+PIN)로만 접속
+    # 공유 상담패키지는 검사 시작 전용 — 내 검사실은 개인 포털(코드+PIN)로만 접속
     return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
 
 
@@ -430,7 +430,7 @@ def verify_magic_link():
     except SignatureExpired:
         return jsonify({
             "error": "Gone",
-            "message": "이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 기간이 지났으니 담당자에게 새 링크를 요청해 주세요.",
+            "message": "이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 안내 받으신 나의코드와 비밀번호를 이용하거나 담당자에게 새 링크를 요청해 주세요.",
         }), 410
     except BadSignature:
         return jsonify({"error": "Bad Request", "message": "링크가 유효하지 않습니다."}), 400
@@ -753,18 +753,18 @@ def resend_bulk_notifications():
 @bp.route("/assessments/<assessment_id>/dispatch", methods=["GET"])
 @require_counselor
 def get_dispatch_status(assessment_id):
-    """검사코드별 내담자 발송·검사 완료 현황."""
+    """상담패키지별 내담자 발송·검사 완료 현황."""
     db = get_firestore()
     data = get_assessment_dispatch_status(db, assessment_id, g.counselor_uid)
     if not data:
-        return jsonify({"error": "Not Found", "message": "검사코드를 찾을 수 없습니다."}), 404
+        return jsonify({"error": "Not Found", "message": "상담패키지를 찾을 수 없습니다."}), 404
     return jsonify(data)
 
 
 @bp.route("/assessments/<assessment_id>/dispatch/resend", methods=["POST"])
 @require_counselor
 def resend_dispatch(assessment_id):
-    """선택 내담자에게 검사코드·나의코드·비밀번호 재발송 (비밀번호 재발급)."""
+    """선택 내담자에게 상담패키지·나의코드·비밀번호 재발송 (비밀번호 재발급)."""
     body = request.get_json(silent=True) or {}
     portal_ids = body.get("portalIds") or []
     if not isinstance(portal_ids, list) or not portal_ids:
@@ -884,7 +884,7 @@ def bulk_export_csv():
     rows = body.get("created") or []
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["이름", "이메일", "휴대폰", "검사코드", "나의코드", "비밀번호", "매직링크경로"])
+    writer.writerow(["이름", "이메일", "휴대폰", "상담패키지", "나의코드", "비밀번호", "매직링크경로"])
     for r in rows:
         writer.writerow(
             [

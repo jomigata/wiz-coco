@@ -51,7 +51,7 @@ ALIMTALK_TEMPLATE_SPECS = {
         "sampleBody": (
             "안녕하세요 #{name}님,\n"
             "고객님께서 접수하신 WizCoCo 심리검사 참여에 대한 접속 정보입니다.\n\n"
-            "검사코드: #{joincode}\n"
+            "상담패키지: #{joincode}\n"
             "나의코드: #{mycode}\n"
             "비밀번호: #{pin}\n\n"
             "바로 시작: #{link}"

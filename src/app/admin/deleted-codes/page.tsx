@@ -357,7 +357,7 @@ export default function AdminDeletedCodesPage() {
                   transition={{ delay: 0.3, duration: 0.5 }}
                 ></motion.div>
                 <p className="mt-4 text-blue-100 max-w-2xl">
-                  삭제된 검사 코드를 관리하고 복구할 수 있습니다. 총 <span className="font-semibold">{deletedRecords.length + permanentlyDeletedRecords.length}</span>개의 삭제된 코드가 있습니다.
+                  삭제된 상담패키지를 관리하고 복구할 수 있습니다. 총 <span className="font-semibold">{deletedRecords.length + permanentlyDeletedRecords.length}</span>개의 삭제된 코드가 있습니다.
                 </p>
               </motion.div>
               
@@ -467,7 +467,7 @@ export default function AdminDeletedCodesPage() {
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="검사 코드 또는 이름으로 검색"
+                    placeholder="상담패키지 또는 이름으로 검색"
                     className="w-full pl-10 pr-4 py-2 border-none bg-white/5 text-white placeholder-red-300/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -601,8 +601,8 @@ export default function AdminDeletedCodesPage() {
                       </svg>
                       <p className="text-lg text-red-200">
                         {currentTab === 'deleted' 
-                          ? '사용자가 삭제한 검사 코드가 없습니다.' 
-                          : '영구 삭제된 검사 코드가 없습니다.'}
+                          ? '사용자가 삭제한 상담패키지가 없습니다.' 
+                          : '영구 삭제된 상담패키지가 없습니다.'}
                       </p>
                     </div>
                   )}

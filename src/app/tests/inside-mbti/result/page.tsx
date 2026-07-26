@@ -191,11 +191,11 @@ function InsideMbtiResultContent() {
 
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
                 
-                {/* 검사 코드 표시 */}
+                {/* 상담패키지 표시 */}
                 {result.resultCode && (
                   <div className="text-center mb-8">
                     <div className="inline-block bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
-                      <span className="text-blue-200 text-sm">검사 코드: </span>
+                      <span className="text-blue-200 text-sm">상담패키지: </span>
                       <span className="text-white font-mono font-semibold">{formatAccessCodeDisplay(result.resultCode)}</span>
                     </div>
                   </div>

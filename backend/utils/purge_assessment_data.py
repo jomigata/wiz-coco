@@ -1,4 +1,4 @@
-"""검사코드(assessments) 및 관련 내담자 검사 데이터 일괄 삭제."""
+"""상담패키지(assessments) 및 관련 내담자 검사 데이터 일괄 삭제."""
 from __future__ import annotations
 
 from config import (
@@ -80,7 +80,7 @@ def _delete_counselor_test_results(db, dry_run: bool) -> int:
 def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_test_results: bool = False) -> dict:
     """
     assessments, clientPortals, notificationQueue 전체 삭제.
-    testResults: include_all_test_results=True 이면 컬렉션 전체, 아니면 검사코드 연동 문서만.
+    testResults: include_all_test_results=True 이면 컬렉션 전체, 아니면 상담패키지 연동 문서만.
     """
     counts = {
         "assessments": _delete_entire_collection(db, ASSESSMENTS_COLLECTION, dry_run),

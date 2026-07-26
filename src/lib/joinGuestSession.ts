@@ -56,7 +56,7 @@ export function hasJoinGuestSessionForCode(accessCodeNorm: string): boolean {
   return session.accessCode === accessCodeNorm;
 }
 
-/** 해당 검사코드용 게스트 세션이 없으면 발급. forceNew 이면 항상 새 게스트 발급 */
+/** 해당 상담패키지용 게스트 세션이 없으면 발급. forceNew 이면 항상 새 게스트 발급 */
 export async function ensureJoinGuestSession(
   accessCodeNorm: string,
   options?: { forceNew?: boolean },

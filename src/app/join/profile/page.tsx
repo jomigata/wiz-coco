@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** 공유 검사코드 직접 입력·프로필 등록 플로우 제거 */
+/** 공유 상담패키지 직접 입력·프로필 등록 플로우 제거 */
 export default function JoinProfileRedirectPage() {
   const router = useRouter();
   useEffect(() => {

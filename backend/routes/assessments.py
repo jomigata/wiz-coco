@@ -22,10 +22,10 @@ from utils.assessment_dispatch import aggregate_assessment_list_stats
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
 MSG_PUBLIC_NOT_FOUND = (
-    "요청하신 검사코드가 확인되지 않았습니다. 검사 코드를 다시 확인해 주시기 바랍니다."
+    "요청하신 상담패키지가 확인되지 않았습니다. 상담패키지를 다시 확인해 주시기 바랍니다."
 )
-MSG_ACCESS_CODE_FORMAT = "검사 코드 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다."
-MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+MSG_ACCESS_CODE_FORMAT = "상담패키지 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다."
+MSG_ACCESS_CODE_EXPIRED = "상담패키지 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
 
 
 def _normalize_usage_end_date(raw):
@@ -74,14 +74,14 @@ def _strip_join_secrets_for_counselor_api(d: dict) -> None:
 @bp.route("", methods=["POST"])
 @require_counselor
 def create_assessment():
-    """상담사: 공동 이용(일반) 검사코드 생성 — 지원 종료. 검사코드 일괄 발급 API 사용."""
+    """상담사: 공동 이용(일반) 상담패키지 생성 — 지원 종료. 상담패키지 일괄 발급 API 사용."""
     body = request.get_json() or {}
     issue_type = (body.get("issueType") or "shared").strip()
     if issue_type != "individual":
         return jsonify(
             {
                 "error": "Gone",
-                "message": "일반코드(공유 검사코드) 생성은 지원하지 않습니다. 새 검사코드 만들기에서 내담자 목록을 등록해 주세요.",
+                "message": "일반코드(공유 상담패키지) 생성은 지원하지 않습니다. 새 상담패키지 만들기에서 내담자 목록을 등록해 주세요.",
             }
         ), 410
     return jsonify(
@@ -149,7 +149,7 @@ def list_assessments():
         return 0
     refs = sorted(refs, key=_sort_key, reverse=True)
     items = [_serialize_doc(d) for d in refs]
-    # 목록에는 활성 검사코드만 (삭제=archived 는 제외, 구문서는 status 없으면 active 로 간주)
+    # 목록에는 활성 상담패키지만 (삭제=archived 는 제외, 구문서는 status 없으면 active 로 간주)
     items = [x for x in items if (x.get("status") or "active") == "active"]
     ids = [x["id"] for x in items]
     per_testids = _aggregate_completed_testids_by_email(db, ids)
@@ -269,7 +269,7 @@ def _get_owned_assessment_for_delete(db, assessment_id, *, access_code_hint: str
 @bp.route("/<assessment_id>", methods=["GET"])
 @require_counselor
 def get_assessment(assessment_id):
-    """상담사: 단일 검사코드(세트) 조회 (수정 폼용)."""
+    """상담사: 단일 상담패키지(세트) 조회 (수정 폼용)."""
     db = get_firestore()
     access_code_hint = (request.args.get("accessCode") or "").strip()
     ref, doc = _get_owned_assessment(db, assessment_id, access_code_hint=access_code_hint)
@@ -283,7 +283,7 @@ def get_assessment(assessment_id):
 @bp.route("/<assessment_id>", methods=["PUT"])
 @require_counselor
 def update_assessment(assessment_id):
-    """상담사: 검사코드 세트 메타데이터 수정. accessCode·counselorId 는 변경 불가."""
+    """상담사: 상담패키지 세트 메타데이터 수정. accessCode·counselorId 는 변경 불가."""
     body = request.get_json() or {}
     title = (body.get("title") or "").strip()
     target_audience = body.get("targetAudience", "개인")
@@ -326,7 +326,7 @@ def update_assessment(assessment_id):
 @bp.route("/<assessment_id>", methods=["DELETE"])
 @require_counselor
 def delete_assessment(assessment_id):
-    """상담사: 검사코드 세트 비활성화(soft delete, status=archived). 내담자 신규 접속 불가."""
+    """상담사: 상담패키지 세트 비활성화(soft delete, status=archived). 내담자 신규 접속 불가."""
     db = get_firestore()
     access_code_hint = (request.args.get("accessCode") or "").strip()
     ref, doc = _get_owned_assessment_for_delete(db, assessment_id, access_code_hint=access_code_hint)
@@ -545,7 +545,7 @@ def _public_json(doc, d):
 @bp.route("/public/lookup", methods=["POST"])
 @limit_access_code
 def post_public_lookup():
-    """내담자(공개): 활성 검사코드(accessCode)만으로 세트 정보 반환. (구문서의 joinPinHash는 검증하지 않음)"""
+    """내담자(공개): 활성 상담패키지(accessCode)만으로 세트 정보 반환. (구문서의 joinPinHash는 검증하지 않음)"""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or "")
     if not is_valid_access_code(code):
@@ -570,7 +570,7 @@ def post_public_lookup():
 @bp.route("/public/<access_code>", methods=["GET"])
 @limit_access_code
 def get_public(access_code):
-    """구형 클라이언트 호환: 활성 검사코드로 공개 메타만 조회."""
+    """구형 클라이언트 호환: 활성 상담패키지로 공개 메타만 조회."""
     code = normalize_access_code(access_code)
     if not is_valid_access_code(code):
         return jsonify({"error": "Not Found", "message": MSG_PUBLIC_NOT_FOUND}), 404

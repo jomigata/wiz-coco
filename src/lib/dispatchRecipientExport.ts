@@ -60,7 +60,7 @@ export function downloadDispatchRecipientsExcel(
     '이메일',
     '휴대폰',
     '나의코드',
-    '검사코드',
+    '상담패키지',
     '발송일시',
     '발송',
     '검사',
@@ -186,7 +186,7 @@ export function printDispatchRecipients(
   <h1>검사 현황</h1>
   <div class="meta">
     ${meta.cohortName ? `<div>기관/단체/그룹명: ${escapeHtml(meta.cohortName)}</div>` : ''}
-    <div>검사코드: ${escapeHtml(joinCode)}</div>
+    <div>상담패키지: ${escapeHtml(joinCode)}</div>
     <div>검사명: ${escapeHtml(meta.title || '—')}</div>
     <div>출력: ${escapeHtml(new Date().toLocaleString('ko-KR'))} · ${recipients.length}명</div>
   </div>

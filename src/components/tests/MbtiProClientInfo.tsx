@@ -61,6 +61,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   const scrollVelocityRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
   const lastTouchYRef = useRef<number | null>(null);
+  const yearArrowScrollStartRef = useRef<number | null>(null);
+  const yearArrowDirectionRef = useRef<-1 | 1>(1);
 
   const birthYearRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
@@ -129,6 +131,19 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     const step = () => {
       if (!yearGridRef.current) return;
       const grid = yearGridRef.current;
+      const arrowStart = yearArrowScrollStartRef.current;
+      if (arrowStart != null) {
+        const elapsed = Date.now() - arrowStart;
+        const dir = yearArrowDirectionRef.current;
+        let speed = 1.5;
+        if (elapsed < 3000) {
+          speed = 1.5 + (elapsed / 3000) * 2.5;
+        } else {
+          const rampElapsed = Math.min(elapsed - 3000, 2500);
+          speed = 4 + (rampElapsed / 2500) * 12;
+        }
+        scrollVelocityRef.current = dir * speed;
+      }
       const v = scrollVelocityRef.current;
       if (Math.abs(v) > 0.1) {
         grid.scrollTop = grid.scrollTop + v;
@@ -144,10 +159,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
       rafIdRef.current = null;
     }
     scrollVelocityRef.current = 0;
+    yearArrowScrollStartRef.current = null;
   };
 
   const startYearArrowScroll = (direction: -1 | 1) => {
-    scrollVelocityRef.current = direction * 10;
+    yearArrowDirectionRef.current = direction;
+    yearArrowScrollStartRef.current = Date.now();
+    scrollVelocityRef.current = direction * 1.5;
     startAutoScroll();
   };
 
@@ -715,7 +733,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                   </div>
                 </div>
                 
-            {/* 검사코드 입력 부분은 별도 화면으로 분리됨 */}
+            {/* 상담패키지 입력 부분은 별도 화면으로 분리됨 */}
 
             {/* 개인정보 활용 동의 */}
             <div 

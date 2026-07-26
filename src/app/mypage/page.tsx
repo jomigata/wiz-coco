@@ -72,14 +72,14 @@ interface TestRecord {
   userData?: any;
   status: string;
   counselorCode?: string;
-  /** 일반(localStorage) vs 상담사 검사코드(Flask testResults) */
+  /** 일반(localStorage) vs 상담사 상담패키지(Flask testResults) */
   recordSource?: 'local' | 'counselor-assessment';
   counselorResultId?: string;
   counselorAccessCode?: string;
-  /** 목록 표시: 상담사 검사코드 플로우용 검사코드 문자열 */
+  /** 목록 표시: 상담사 상담패키지 플로우용 상담패키지 문자열 */
   counselorCodePinDisplay?: string;
   counselorTestId?: string;
-  /** 상담사 검사코드 세트의 사용최종일(YYYY-MM-DD) */
+  /** 상담사 상담패키지 세트의 사용최종일(YYYY-MM-DD) */
   usageEndDate?: string;
 }
 
@@ -644,7 +644,7 @@ function MyPageContent() {
         const [bundle] = await Promise.all([
           (async () => {
             const resultsPromise = assessmentApi.listMyAssessmentResults().catch((e) => {
-              console.warn('[MyPage] 상담사 검사코드 목록 병합 실패:', e);
+              console.warn('[MyPage] 상담사 상담패키지 목록 병합 실패:', e);
               return { results: [] as any[] };
             });
             if (!userIsCounselor) {
@@ -652,7 +652,7 @@ function MyPageContent() {
               return { results: r.results || [], assessments: [] as any[] };
             }
             const assessmentsPromise = assessmentApi.listAssessments().catch((e) => {
-              console.warn('[MyPage] 상담사 검사코드(세트) 목록 병합 실패:', e);
+              console.warn('[MyPage] 상담사 상담패키지(세트) 목록 병합 실패:', e);
               return { assessments: [] as any[] };
             });
             const [r, a] = await Promise.all([resultsPromise, assessmentsPromise]);
@@ -682,8 +682,8 @@ function MyPageContent() {
           merged.push({
             code: `counselor-${row.resultId}`,
             testType: row.assessmentTitle
-              ? `상담사 검사코드 · ${row.assessmentTitle}`
-              : '상담사 검사코드',
+              ? `상담사 상담패키지 · ${row.assessmentTitle}`
+              : '상담사 상담패키지',
             timestamp: row.completedAt || new Date().toISOString(),
             status: 'completed',
             counselorCodePinDisplay: ac || '—',
@@ -703,7 +703,7 @@ function MyPageContent() {
           if (!ac) continue;
           merged.push({
             code: `counselor-set-${String((a as any).id || ac)}`,
-            testType: (a as any).title ? `상담사 검사코드 · ${(a as any).title}` : '상담사 검사코드',
+            testType: (a as any).title ? `상담사 상담패키지 · ${(a as any).title}` : '상담사 상담패키지',
             timestamp: String((a as any).createdAt || new Date().toISOString()),
             status: String((a as any).status || 'not_started'),
             counselorCodePinDisplay: ac,
@@ -1396,7 +1396,7 @@ function TestRecordsTabContent({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 100;
 
-  // 상담사 검사코드(accessCode) 그룹 펼침 상태
+  // 상담사 상담패키지(accessCode) 그룹 펼침 상태
   const [expandedAccessCodes, setExpandedAccessCodes] = useState<Record<string, boolean>>({});
   const toggleAccessCodeGroup = React.useCallback((accessCode: string) => {
     const key = (accessCode || '').trim();
@@ -1431,10 +1431,10 @@ function TestRecordsTabContent({
       const rd = data.resultData as Record<string, unknown> | null | undefined;
       const summary =
         rd && typeof rd === 'object' && 'summary' in rd ? String(rd.summary ?? '') : '';
-      const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '') || '—';
+      const setTitle = record.testType?.replace(/^상담사 상담패키지 · /, '') || '—';
       const lines = [
         `검사 세트: ${setTitle}`,
-        `검사코드: ${formatCodePinDisplay(record)}`,
+        `상담패키지: ${formatCodePinDisplay(record)}`,
         `검사 ID: ${record.counselorTestId || data.testId || '—'}`,
         '',
         summary || '요약 정보가 없습니다.',
@@ -1511,24 +1511,24 @@ function TestRecordsTabContent({
     if (record.recordSource === 'counselor-assessment') {
       const tid = (record.counselorTestId || '').trim();
       if (tid) return counselorTestNameById.get(tid) || tid;
-      const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '').trim();
+      const setTitle = record.testType?.replace(/^상담사 상담패키지 · /, '').trim();
       return setTitle || '상담사 검사';
     }
     return (record.testType || 'N/A').toString();
   };
 
   const getAccessCodeTitleLabel = (record: TestRecord): string => {
-    // 괄호 안: 상담사 검사코드 플로우는 "안내 제목(세트 제목)"을 표시
+    // 괄호 안: 상담사 상담패키지 플로우는 "안내 제목(세트 제목)"을 표시
     if (record.recordSource === 'counselor-assessment') {
-      const setTitle = record.testType?.replace(/^상담사 검사코드 · /, '').trim();
-      return setTitle || '상담사 검사코드';
+      const setTitle = record.testType?.replace(/^상담사 상담패키지 · /, '').trim();
+      return setTitle || '상담사 상담패키지';
     }
     // 개인 기록은 수행할 검사명 사용
     return getDisplayTestName(record);
   };
 
   const getAccessCodeSetName = (record: TestRecord): string => {
-    // "검사코드" 컬럼: 코드(하이픈 없음) + (안내 제목/검사명)
+    // "상담패키지" 컬럼: 코드(하이픈 없음) + (안내 제목/검사명)
     const code = formatCodePinDisplay(record);
     const title = getAccessCodeTitleLabel(record);
     if (!code || code === '—') return '—';
@@ -1643,9 +1643,9 @@ function TestRecordsTabContent({
   const getAccessCodeGroupTitle = (accessCode: string, children: TestRecord[]): string => {
     // children 중 가장 "구체적인" 제목 우선
     const titles = children
-      .map((c) => (c.testType || '').replace(/^상담사 검사코드 · /, '').trim())
+      .map((c) => (c.testType || '').replace(/^상담사 상담패키지 · /, '').trim())
       .filter(Boolean);
-    const t = titles.find((x) => x && x !== '상담사 검사코드') || titles[0] || '상담사 검사코드';
+    const t = titles.find((x) => x && x !== '상담사 상담패키지') || titles[0] || '상담사 상담패키지';
     return t;
   };
 
@@ -1728,7 +1728,7 @@ function TestRecordsTabContent({
       return;
     }
     if (!record.code) {
-      console.warn('검사 코드가 없어 결과 페이지로 이동할 수 없습니다:', record);
+      console.warn('상담패키지가 없어 결과 페이지로 이동할 수 없습니다:', record);
       return;
     }
 
@@ -1752,7 +1752,7 @@ function TestRecordsTabContent({
 
   // 전체 선택/해제
   const toggleAllSelection = () => {
-    // 그룹 행은 체크 대상에서 제외(상담사 검사코드 일괄삭제 불가)
+    // 그룹 행은 체크 대상에서 제외(상담사 상담패키지 일괄삭제 불가)
     const selectable = paginatedRows
       .filter((r) => r.kind === 'record')
       .map((r) => (r as any).record.code)
@@ -1781,14 +1781,14 @@ function TestRecordsTabContent({
     const skipped = selectedRecords.length - localOnlyCodes.length;
     if (localOnlyCodes.length === 0) {
       alert(
-        '상담사 검사코드 기록은 일괄 삭제할 수 없습니다. 해당 행의 삭제 버튼으로 개별 삭제해 주세요.'
+        '상담사 상담패키지 기록은 일괄 삭제할 수 없습니다. 해당 행의 삭제 버튼으로 개별 삭제해 주세요.'
       );
       setShowBulkDeleteModal(false);
       return;
     }
     if (skipped > 0) {
       alert(
-        `선택한 항목 중 상담사 검사코드 ${skipped}건은 제외하고, 일반 검사 ${localOnlyCodes.length}건만 삭제합니다.`
+        `선택한 항목 중 상담사 상담패키지 ${skipped}건은 제외하고, 일반 검사 ${localOnlyCodes.length}건만 삭제합니다.`
       );
     }
 
@@ -2093,7 +2093,7 @@ function TestRecordsTabContent({
                     onClick={() => handleSort('counselorCode')}
                   >
                     <span className="inline-flex items-center gap-1">
-                      검사코드
+                      상담패키지
                       <SortIcon field="counselorCode" />
                     </span>
                   </th>
@@ -2140,7 +2140,7 @@ function TestRecordsTabContent({
                             </button>
                           </td>
                           <td className="max-w-[11rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:max-w-xs">
-                            상담사 검사코드 세트
+                            상담사 상담패키지 세트
                           </td>
                           <td className="max-w-[9rem] truncate px-2 py-2 text-left text-sm text-slate-300 sm:max-w-md">
                             완료 {row.summary.completed} · 미완료 {row.summary.inProgress} · 미검사 {row.summary.notStarted}
@@ -2202,7 +2202,7 @@ function TestRecordsTabContent({
                                     <button
                                       type="button"
                                       className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
-                                      title="클릭하여 해당 검사코드 세트 현황 펼치기"
+                                      title="클릭하여 해당 상담패키지 세트 현황 펼치기"
                                       onClick={() => handleAddTestForRecord(record)}
                                     >
                                       ⚠ 미완료
@@ -2211,7 +2211,7 @@ function TestRecordsTabContent({
                                     <button
                                       type="button"
                                       className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
-                                      title="클릭하여 검사하기로 이동 (검사코드 자동 입력)"
+                                      title="클릭하여 검사하기로 이동 (상담패키지 자동 입력)"
                                       onClick={() => handleAddTestForRecord(record)}
                                     >
                                       ➕ 미검사
@@ -2285,7 +2285,7 @@ function TestRecordsTabContent({
                             <button
                               type="button"
                               className="inline-flex items-center gap-0.5 rounded bg-amber-700/50 px-2 py-0.5 text-xs font-medium text-amber-100 hover:bg-amber-600/60 transition-colors"
-                              title="클릭하여 해당 검사코드 세트 현황 펼치기"
+                              title="클릭하여 해당 상담패키지 세트 현황 펼치기"
                               onClick={() => handleAddTestForRecord(record)}
                             >
                               ⚠ 미완료
@@ -2294,7 +2294,7 @@ function TestRecordsTabContent({
                             <button
                               type="button"
                               className="inline-flex items-center gap-0.5 rounded bg-sky-800/40 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/55 transition-colors"
-                              title="클릭하여 검사하기로 이동 (검사코드 자동 입력)"
+                              title="클릭하여 검사하기로 이동 (상담패키지 자동 입력)"
                               onClick={() => handleAddTestForRecord(record)}
                             >
                               ➕ 미검사
@@ -2425,7 +2425,7 @@ function TestRecordsTabContent({
                 </div>
                 {(deleteModalRecord.counselorCodePinDisplay || deleteModalRecord.counselorCode) && (
                   <div className="flex justify-between gap-2">
-                    <span className="text-blue-300 shrink-0">검사코드:</span>
+                    <span className="text-blue-300 shrink-0">상담패키지:</span>
                     <span className="text-blue-100 text-right break-all font-mono">
                       {formatCodePinDisplay(deleteModalRecord)}
                     </span>

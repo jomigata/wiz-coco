@@ -165,7 +165,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ user, isOpen, onClose
                 <table className="min-w-full">
                   <thead>
                     <tr className="text-left text-slate-300 text-sm">
-                      <th className="pb-2">검사 코드</th>
+                      <th className="pb-2">상담패키지</th>
                       <th className="pb-2">검사 유형</th>
                       <th className="pb-2">MBTI 결과</th>
                       <th className="pb-2">검사일</th>

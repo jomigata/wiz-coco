@@ -1,5 +1,5 @@
 /**
- * 상담사가 검사코드 세트에 넣을 수 있는 검사 목록
+ * 상담사가 상담패키지 세트에 넣을 수 있는 검사 목록
  * psychologyTestMenu에서 href 기준 testId 추출 (중복 제거)
  */
 
@@ -18,8 +18,8 @@ function testIdFromHref(href: string): string {
 const seen = new Set<string>();
 const list: CounselorTestOption[] = [];
 
-// 일반 검사코드용 문항 (genericJoinQuestions 사용)
-list.push({ testId: 'generic', name: '일반 심리 문항 (검사코드용)' });
+// 일반 상담패키지용 문항 (genericJoinQuestions 사용)
+list.push({ testId: 'generic', name: '일반 심리 문항 (상담패키지용)' });
 seen.add('generic');
 
 for (const cat of testSubMenuItems) {
@@ -34,5 +34,5 @@ for (const cat of testSubMenuItems) {
   }
 }
 
-/** 상담사 검사코드 생성 시 선택 가능한 검사 목록 (testId, name) */
+/** 상담사 상담패키지 생성 시 선택 가능한 검사 목록 (testId, name) */
 export const counselorAssessmentTestOptions: CounselorTestOption[] = list;

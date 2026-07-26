@@ -96,9 +96,8 @@ export default function IndividualAssessmentCreateForm() {
     const lines = filePreviewText.split('\n');
     const lineCount = lines.length;
     const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const widthCh = Math.min(Math.max(longestLine + 2, 28), 96);
-    const heightRem = Math.min(Math.max(lineCount * 1.2 + 2.5, 5), 32);
-    return { widthCh, heightRem, lineCount };
+    const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
+    return { widthCh, lineCount };
   }, [filePreviewText]);
 
   const samplePreviewText = useMemo(
@@ -111,9 +110,8 @@ export default function IndividualAssessmentCreateForm() {
     const lines = samplePreviewText.split('\n');
     const lineCount = lines.length;
     const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const widthCh = Math.min(Math.max(longestLine + 2, 28), 96);
-    const heightRem = Math.min(Math.max(lineCount * 1.2 + 2.5, 5), 32);
-    return { widthCh, heightRem, lineCount };
+    const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
+    return { widthCh, lineCount };
   }, [samplePreviewText]);
 
   useEffect(() => {
@@ -369,7 +367,7 @@ export default function IndividualAssessmentCreateForm() {
       pendingIntentRef.current = null;
     } catch (err) {
       pendingIntentRef.current = null;
-      setError(err instanceof Error ? err.message : '검사코드 발급에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '상담패키지 발급에 실패했습니다.');
     } finally {
       setLoadingIntent(null);
     }
@@ -444,7 +442,7 @@ export default function IndividualAssessmentCreateForm() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="rounded-lg border border-blue-500/40 bg-blue-950/30 p-5 text-blue-100">
-          <p className="font-medium">검사코드 대량 발급 진행 중…</p>
+          <p className="font-medium">상담패키지 대량 발급 진행 중…</p>
           <p className="mt-2 text-sm text-blue-200/90">
             {jobProgress.processedRows.toLocaleString('ko-KR')} /{' '}
             {jobProgress.totalRows.toLocaleString('ko-KR')}명 처리됨 ({jobProgress.progressPct}%)
@@ -457,7 +455,7 @@ export default function IndividualAssessmentCreateForm() {
           </div>
           {sharedJoinCode ? (
             <p className="mt-3 text-sm">
-              공통 검사코드:{' '}
+              공통 상담패키지:{' '}
               <span className="font-mono font-semibold">{formatAccessCodeDisplay(sharedJoinCode)}</span>
             </p>
           ) : null}
@@ -488,7 +486,7 @@ export default function IndividualAssessmentCreateForm() {
             </p>
             {sharedJoinCode ? (
               <p>
-                공통 검사코드:{' '}
+                공통 상담패키지:{' '}
                 <span className="font-mono text-lg font-bold tracking-wider text-emerald-100">
                   {formatAccessCodeDisplay(sharedJoinCode)}
                 </span>
@@ -585,17 +583,14 @@ export default function IndividualAssessmentCreateForm() {
             </div>
             <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <label className={FORM_LABEL}>안내 메시지 (선택)</label>
-                  <WelcomeMessageSamplePicker
-                    inline
-                    disabled={loading}
-                    onPick={(text) => setWelcomeMessage(text)}
-                  />
-                </div>
+                <label className={`${FORM_LABEL} mb-2 block`}>안내 메시지 (선택)</label>
+                <WelcomeMessageSamplePicker
+                  disabled={loading}
+                  onPick={(text) => setWelcomeMessage(text)}
+                />
                 <textarea
-                  rows={2}
-                  className={`${FORM_INPUT} min-h-[3.5rem] resize-y`}
+                  rows={5}
+                  className={`${FORM_INPUT} mt-2 min-h-[8.5rem] resize-y`}
                   placeholder="내담자에게 보여줄 안내 문구"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
@@ -757,11 +752,10 @@ export default function IndividualAssessmentCreateForm() {
                   </button>
                   {samplePreviewKind === 'txt' && samplePreviewText && samplePreviewLayout ? (
                     <div
-                      className="absolute left-0 top-full z-50 mt-2 overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                      className="absolute left-0 top-full z-50 mt-2 w-max max-w-[min(100vw-2rem,40rem)] rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
                       role="tooltip"
                       style={{
                         width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
-                        maxHeight: `min(70vh, ${samplePreviewLayout.heightRem}rem)`,
                       }}
                     >
                       <p className="mb-2 text-xs font-semibold text-sky-300">샘플 텍스트 미리보기</p>
@@ -785,11 +779,10 @@ export default function IndividualAssessmentCreateForm() {
                   </button>
                   {samplePreviewKind === 'csv' && samplePreviewText && samplePreviewLayout ? (
                     <div
-                      className="absolute left-0 top-full z-50 mt-2 overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                      className="absolute left-0 top-full z-50 mt-2 w-max max-w-[min(100vw-2rem,40rem)] rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
                       role="tooltip"
                       style={{
                         width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
-                        maxHeight: `min(70vh, ${samplePreviewLayout.heightRem}rem)`,
                       }}
                     >
                       <p className="mb-2 text-xs font-semibold text-sky-300">샘플 엑셀(CSV) 미리보기</p>
@@ -825,11 +818,10 @@ export default function IndividualAssessmentCreateForm() {
                     </p>
                     {showFilePreview && filePreviewText && filePreviewLayout ? (
                       <div
-                        className="mt-2 overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-lg"
+                        className="mt-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-lg"
                         role="tooltip"
                         style={{
                           width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
-                          maxHeight: `min(70vh, ${filePreviewLayout.heightRem}rem)`,
                         }}
                       >
                         <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>

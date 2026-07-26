@@ -123,7 +123,7 @@ def list_counselor_client_portals(
             continue
         assessment_cache[aid] = {
             "assessmentId": aid,
-            "title": (a.get("title") or "").strip() or "검사코드",
+            "title": (a.get("title") or "").strip() or "상담패키지",
             "testList": a.get("testList") or [],
         }
 
@@ -297,7 +297,7 @@ def get_counselor_client_portal_detail(
         assessments.append(
             {
                 "assessmentId": aid,
-                "title": (a.get("title") or "").strip() or "검사코드",
+                "title": (a.get("title") or "").strip() or "상담패키지",
                 "joinAccessCode": (a.get("accessCode") or "").strip(),
                 "cohortName": (a.get("cohortName") or pdata.get("cohortName") or "").strip(),
                 "usageEndDate": (a.get("usageEndDate") or "").strip() or None,
@@ -386,7 +386,7 @@ def list_counselor_portal_test_assignments(
     assessment_id: str | None = None,
     q: str | None = None,
 ) -> dict:
-    """상담사 내담자×검사코드×검사항목 할당 목록 (flatten)."""
+    """상담사 내담자×상담패키지×검사항목 할당 목록 (flatten)."""
     portal_status_filter = (status or "active").strip().lower()
     test_status_filter = (test_status or "all").strip().lower()
     query = (q or "").strip().lower()
@@ -435,7 +435,7 @@ def list_counselor_portal_test_assignments(
             continue
         assessment_cache[aid] = {
             "assessmentId": aid,
-            "title": (a.get("title") or "").strip() or "검사코드",
+            "title": (a.get("title") or "").strip() or "상담패키지",
             "joinAccessCode": (a.get("accessCode") or "").strip(),
             "testList": a.get("testList") or [],
         }

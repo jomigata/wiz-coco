@@ -142,7 +142,7 @@ def send_portal_credentials_email(
     display_name: str = "",
     join_access_code: str = "",
 ) -> bool:
-    """검사시작 접속 정보(검사코드·나의코드·비밀번호·링크) 발송."""
+    """검사시작 접속 정보(상담패키지·나의코드·비밀번호·링크) 발송."""
     if not is_email_configured():
         return False
 
@@ -158,7 +158,7 @@ def send_portal_credentials_email(
 
     cred_lines = [f"나의코드: {my_code}  비밀번호: {pin_display}"]
     if join_code:
-        cred_lines.insert(0, f"검사코드: {join_code}")
+        cred_lines.insert(0, f"상담패키지: {join_code}")
 
     body = f"""안녕하세요, {name}님.
 
@@ -231,7 +231,7 @@ def send_test_reminder_email(
 
     cred_lines: list[str] = []
     if join_code:
-        cred_lines.append(f"검사코드: {join_code}")
+        cred_lines.append(f"상담패키지: {join_code}")
     if portal_code:
         cred_lines.append(f"나의코드: {portal_code}")
 
@@ -348,7 +348,7 @@ WizCoCo
 
 
 def send_portal_invite_email(*, to_email: str, access_code: str, magic_url: str) -> bool:
-    """내담자 포털 초대 — 검사코드·매직 링크 안내."""
+    """내담자 포털 초대 — 상담패키지·매직 링크 안내."""
     if not is_email_configured():
         return False
 
@@ -363,7 +363,7 @@ def send_portal_invite_email(*, to_email: str, access_code: str, magic_url: str)
 ▶ 바로 시작 (추천)
 {magic_url}
 
-▶ 검사코드로 직접 접속
+▶ 상담패키지로 직접 접속
 코드: {access_code}
 접속: https://wizcoco.com/join/
 (비밀번호는 별도 안내됩니다)
@@ -396,14 +396,14 @@ def send_personal_purchase_inquiry_email(
     message: str = "",
     attachments: list[tuple[str, bytes, str]] | None = None,
 ) -> bool:
-    """개인 검사코드 구매 문의 — 관리자 수신 목록으로 SMTP 발송."""
+    """개인 상담패키지 구매 문의 — 관리자 수신 목록으로 SMTP 발송."""
     if not is_email_configured():
         return False
 
     recipients = PURCHASE_INQUIRY_NOTIFY_EMAILS or [COUNSELOR_ADMIN_NOTIFY_EMAIL]
     pkg = package_interest or "(미선택)"
     phone_display = format_phone_display(phone) if phone else "(미입력)"
-    body = f"""WizCoCo 개인 검사코드 구매 문의
+    body = f"""WizCoCo 개인 상담패키지 구매 문의
 
 이름: {name}
 이메일: {email}
@@ -420,7 +420,7 @@ def send_personal_purchase_inquiry_email(
     msg = MIMEMultipart()
     msg["From"] = MAIL_FROM
     msg["To"] = ", ".join(recipients)
-    msg["Subject"] = f"[WizCoCo] 개인 검사코드 구매 문의 — {name}"
+    msg["Subject"] = f"[WizCoCo] 개인 상담패키지 구매 문의 — {name}"
     msg["Reply-To"] = email
     msg.attach(MIMEText(body, "plain", "utf-8"))
 

@@ -75,7 +75,7 @@ def send_portal_credentials_sms(
 
     parts = [f"[WizCoCo] {name}님 검사시작"]
     if join_code:
-        parts.append(f"검사코드 {join_code}")
+        parts.append(f"상담패키지 {join_code}")
     parts.append(f"나의코드 {my_code} 비밀번호 {pin_display}")
     parts.append(login_url)
     parts.append(magic_url)
@@ -130,7 +130,7 @@ def send_test_reminder_sms(
     if pending_names:
         parts.append("미완료: " + ", ".join(pending_names))
     if join_code:
-        parts.append(f"검사코드 {join_code}")
+        parts.append(f"상담패키지 {join_code}")
     if portal_code:
         parts.append(f"나의코드 {portal_code}")
     parts.append(login_url)
@@ -181,7 +181,7 @@ def send_portal_invite_sms(*, to_phone: str, access_code: str, magic_url: str) -
 
     body = (
         f"[WizCoCo] 심리검사 안내\n"
-        f"검사코드: {access_code}\n"
+        f"상담패키지: {access_code}\n"
         f"바로 시작: {magic_url}"
     )
 

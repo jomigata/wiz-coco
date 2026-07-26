@@ -124,7 +124,7 @@ export default function TestRunnerPage() {
     const run = async () => {
       if (!linkEntryResetDone) return;
       if (!code || !isValidAccessCodeInput(code)) {
-        setAccessCheckError('잘못된 검사코드입니다.');
+        setAccessCheckError('잘못된 상담패키지입니다.');
         setAccessCheckLoading(false);
         return;
       }
@@ -143,14 +143,14 @@ export default function TestRunnerPage() {
               await ensureJoinGuestSession(code);
               setForceGuestForAccessCode(code);
             } else {
-              throw new Error('이 검사코드는 현재 로그인한 나의코드에 연결되어 있지 않습니다.');
+              throw new Error('이 상담패키지는 현재 로그인한 나의코드에 연결되어 있지 않습니다.');
             }
           }
         } else if (!hasJoinParticipantSessionForCode(code)) {
           await ensureJoinGuestSession(code);
         }
       } catch (err) {
-        setAccessCheckError(err instanceof Error ? err.message : '검사코드를 사용할 수 없습니다.');
+        setAccessCheckError(err instanceof Error ? err.message : '상담패키지를 사용할 수 없습니다.');
       } finally {
         setAccessCheckLoading(false);
       }
@@ -278,7 +278,7 @@ export default function TestRunnerPage() {
         <div className="pt-24 px-4">
           <div className="max-w-lg mx-auto text-center">
             <p className="text-slate-300">
-              {editResultId ? '기존 응답을 불러오는 중…' : '검사코드 사용 가능 여부를 확인 중입니다…'}
+              {editResultId ? '기존 응답을 불러오는 중…' : '상담패키지 사용 가능 여부를 확인 중입니다…'}
             </p>
           </div>
         </div>
@@ -330,7 +330,7 @@ export default function TestRunnerPage() {
             {!hasPortal && !hasParticipant && accessCheckLoading ? (
               <p className="text-slate-400 text-sm mb-4">검사 세션 준비 중…</p>
             ) : !canSubmitAuth ? (
-              <p className="text-amber-400/95 text-sm mb-4">검사 세션을 시작할 수 없습니다. 검사 코드 입력부터 다시 시도해 주세요.</p>
+              <p className="text-amber-400/95 text-sm mb-4">검사 세션을 시작할 수 없습니다. 상담패키지 입력부터 다시 시도해 주세요.</p>
             ) : null}
 
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-6">

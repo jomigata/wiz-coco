@@ -36,7 +36,7 @@ export function downloadBulkPortalExcel(
   if (!rows.length) return;
 
   const ws: XLSX.WorkSheet = {};
-  const headers = ['이름', '이메일', '휴대폰', '검사코드', '나의코드', '비밀번호', '매직링크'];
+  const headers = ['이름', '이메일', '휴대폰', '상담패키지', '나의코드', '비밀번호', '매직링크'];
   headers.forEach((h, c) => {
     ws[XLSX.utils.encode_cell({ r: 0, c })] = textCell(h);
   });

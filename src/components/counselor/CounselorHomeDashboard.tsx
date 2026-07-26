@@ -27,8 +27,8 @@ type DashboardTab = 'individual' | 'group';
 
 const QUICK_LINKS = [
   { title: '내담자 목록', href: '/counselor/clients', icon: '👥' },
-  { title: '검사코드 목록', href: '/counselor/assessments', icon: '📦' },
-  { title: '검사코드 관리', href: '/counselor/test-codes', icon: '🔑' },
+  { title: '상담패키지 목록', href: '/counselor/assessments', icon: '📦' },
+  { title: '상담패키지 관리', href: '/counselor/test-codes', icon: '🔑' },
 ];
 
 function progressColor(percent: number): string {
@@ -199,7 +199,7 @@ export default function CounselorHomeDashboard() {
             <p className="mt-1 text-2xl font-bold text-white">{summary?.activePortals ?? 0}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <p className="text-xs text-slate-400">활성 검사코드</p>
+            <p className="text-xs text-slate-400">활성 상담패키지</p>
             <p className="mt-1 text-2xl font-bold text-white">{summary?.activeAssessments ?? 0}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 p-5">
@@ -246,7 +246,7 @@ export default function CounselorHomeDashboard() {
               href="/counselor/assessments"
               className="text-xs text-sky-400 hover:text-sky-300 sm:text-sm"
             >
-              검사코드 목록 →
+              상담패키지 목록 →
             </AuthLink>
           </div>
         }

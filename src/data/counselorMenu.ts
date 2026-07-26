@@ -10,23 +10,23 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: 'psych-tests',
     category: '1. 심리검사 관리',
-    description: '검사코드 발급·결과 분석·추천',
+    description: '상담패키지 발급·결과 분석·추천',
     icon: '📦',
     subcategories: [
       {
-        name: '1a. 검사코드',
+        name: '1a. 상담패키지',
         icon: '📋',
         items: [
           {
-            name: '검사코드 목록',
+            name: '상담패키지 목록',
             href: '/counselor/assessments',
-            description: '검사코드 발급·목록·진행현황',
+            description: '상담패키지 발급·목록·진행현황',
             icon: '📦',
           },
           {
-            name: '새 검사코드 만들기',
+            name: '상담패키지 구성',
             href: '/counselor/assessments/new',
-            description: '내담자별 나의코드 검사코드 발급',
+            description: '내담자별 나의코드 상담패키지 발급',
             icon: '➕',
           },
           {

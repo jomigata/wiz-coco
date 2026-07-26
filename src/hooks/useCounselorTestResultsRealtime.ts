@@ -11,7 +11,7 @@ export type UseCounselorTestResultsRealtimeResult = {
   lastUpdatedAt: Date | null;
 };
 
-/** 상담사 CRM·모니터링 — 검사코드별 testResults 실시간 구독 */
+/** 상담사 CRM·모니터링 — 상담패키지별 testResults 실시간 구독 */
 export function useCounselorTestResultsRealtime(
   assessmentIds: string[],
   enabled: boolean,

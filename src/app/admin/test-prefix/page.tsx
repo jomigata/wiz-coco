@@ -261,7 +261,7 @@ export default function TestPrefixPage() {
             transition={{ delay: 0.3, duration: 0.5 }}
           ></motion.div>
           <p className="mt-4 text-blue-100 max-w-2xl">
-            검사 코드 생성을 위한 접두사를 관리하고 설정할 수 있습니다.
+            상담패키지 생성을 위한 접두사를 관리하고 설정할 수 있습니다.
           </p>
         </motion.div>
 

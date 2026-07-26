@@ -1291,7 +1291,7 @@ function TestRecordsContent() {
       resultPath = `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
     }
     
-    // 검사 코드를 로컬 스토리지에 저장하여 결과 페이지가 확인할 수 있도록 함
+    // 상담패키지를 로컬 스토리지에 저장하여 결과 페이지가 확인할 수 있도록 함
     try {
       localStorage.setItem('last_viewed_test_code', code);
       // 바로 결과 페이지가 보이도록 추가 데이터 저장
@@ -1413,7 +1413,7 @@ function TestRecordsContent() {
                       id="search"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="검사 코드, 유형 등으로 검색"
+                      placeholder="상담패키지, 유형 등으로 검색"
                       className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-blue-300/70 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -1492,7 +1492,7 @@ function TestRecordsContent() {
               {/* 통계 보기 또는 일반 기록 테이블 */}
               {showStats ? (
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-white mb-5 border-b border-white/10 pb-2">검사 코드 통계 대시보드</h3>
+                  <h3 className="text-xl font-semibold text-white mb-5 border-b border-white/10 pb-2">상담패키지 통계 대시보드</h3>
                   
                   {codeStats.lastGeneratedTime && (
                     <div className="mb-4">
@@ -1655,7 +1655,7 @@ function TestRecordsContent() {
                             onClick={() => handleSort('code')}
                           >
                             <div className="flex items-center justify-center gap-1">
-                              검사코드
+                              상담패키지
                               <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-blue-300'}`}>
                                 <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-blue-300/50'}>▲</span>
                                 <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-blue-300/50'}>▼</span>

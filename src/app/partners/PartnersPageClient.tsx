@@ -46,7 +46,7 @@ function PartnersContent() {
             </li>
             <li className="flex gap-2">
               <span className="text-blue-400">2.</span>
-              검사코드 일괄 발송·진행률·결과 조회 (기존 상담사 대시보드)
+              상담패키지 일괄 발송·진행률·결과 조회 (기존 상담사 대시보드)
             </li>
             <li className="flex gap-2">
               <span className="text-blue-400">3.</span>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-검사코드(assessments) 및 내담자 검사 기록 일괄 삭제.
+상담패키지(assessments) 및 내담자 검사 기록 일괄 삭제.
 
 사용 (저장소 루트):
   python backend/scripts/purge_assessment_data.py --dry-run

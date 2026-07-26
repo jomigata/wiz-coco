@@ -76,36 +76,36 @@ const emerald: MbtiProClientInfoTheme = {
 };
 
 const portal: MbtiProClientInfoTheme = {
-  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#0f1628] text-white px-3 pt-14 pb-14',
+  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#080d18] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-400 max-w-lg mx-auto text-sm',
-  formCard: 'rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5',
-  fieldBox: 'rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5',
+  formCard: 'rounded-2xl border border-white/[0.12] bg-[#151f33] shadow-lg shadow-black/20 p-4 sm:p-5',
+  fieldBox: 'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5',
   fieldBoxMuted:
-    'rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5 hover:bg-white/[0.06] transition-colors',
+    'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5 hover:bg-[#1f2f4d] transition-colors',
   label: 'block text-sm font-medium text-sky-200/90 mb-0.5',
   input:
-    'w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 transition-colors',
-  choiceSection: 'rounded-xl border border-sky-400/20 bg-sky-500/10 p-2.5',
+    'w-full px-3 py-2 rounded-lg bg-[#101f38]/90 border border-white/12 text-white focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 transition-colors',
+  choiceSection: 'rounded-xl border border-sky-400/25 bg-sky-500/12 p-2.5',
   choiceBtnActive: 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border border-sky-400/30',
   choiceBtnInactive:
-    'bg-white/[0.04] text-slate-200 border border-white/[0.08] hover:bg-white/[0.07]',
+    'bg-[#1a2740] text-slate-200 border border-white/[0.12] hover:bg-[#1f2f4d]',
   yearSelector:
-    'year-selector mt-1.5 z-50 rounded-xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-2 shadow-lg',
+    'year-selector mt-1.5 z-50 rounded-xl border border-white/[0.12] bg-[#151f33] backdrop-blur-sm p-2 shadow-lg',
   yearGrid:
     'grid grid-cols-8 gap-x-1 gap-y-1 overflow-y-auto max-h-[272px] px-1 scrollbar-thin scrollbar-thumb-sky-600/80 scrollbar-track-slate-900/50',
   yearBtnBase:
     'relative flex items-center justify-center px-1.5 py-1.5 min-h-0 text-xs font-medium rounded transition-all',
   yearBtnSelected: 'bg-sky-600 text-white border-2 border-sky-500 shadow-lg shadow-sky-500/30',
-  yearBtnBgDefault: 'bg-white/[0.04]',
-  yearBtnBgBlueBand: 'bg-sky-500/15',
-  yearBtnBorderHover: 'border border-white/[0.08] hover:bg-white/[0.07]',
+  yearBtnBgDefault: 'bg-[#1a2740]',
+  yearBtnBgBlueBand: 'bg-sky-500/18',
+  yearBtnBorderHover: 'border border-white/[0.12] hover:bg-[#1f2f4d]',
   yearTextNormal: 'text-slate-200',
   yearTextAccent: 'text-yellow-200',
   yearSelectedUnderline: 'bg-sky-300/45',
   yearSelectedRing: 'ring-sky-300/30',
   yearBtnHoverRgb: 'rgba(14, 165, 233, 0.28)',
   privacyBox:
-    'rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5 hover:bg-white/[0.06] transition-colors',
+    'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5 hover:bg-[#1f2f4d] transition-colors',
   checkbox: 'w-4 h-4 text-sky-500 bg-slate-900 border-sky-500/50 rounded focus:ring-sky-500 focus:ring-2',
   privacyLabel: 'font-medium text-slate-200 cursor-pointer select-none text-sm',
   privacyHint: 'text-slate-400 mt-0.5 cursor-pointer select-none text-xs leading-snug',

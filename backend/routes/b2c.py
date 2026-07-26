@@ -219,7 +219,7 @@ _MAX_INQUIRY_ATTACHMENTS = 3
 
 @bp.route("/personal-purchase-inquiry", methods=["POST"])
 def personal_purchase_inquiry():
-    """개인 검사코드 구매 문의 (첨부파일 포함, SMTP)."""
+    """개인 상담패키지 구매 문의 (첨부파일 포함, SMTP)."""
     from utils.email_notify import send_personal_purchase_inquiry_email
     from config import is_email_configured
 

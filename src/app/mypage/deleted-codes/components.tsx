@@ -320,7 +320,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
   // 검사 기록 클릭 핸들러
   const handleRecordClick = (record: DeletedTestRecord) => {
     if (!record.code) {
-      console.warn('검사 코드가 없어 결과 페이지로 이동할 수 없습니다:', record);
+      console.warn('상담패키지가 없어 결과 페이지로 이동할 수 없습니다:', record);
       return;
     }
     
@@ -818,7 +818,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="검사 코드 · 유형 · 이름 검색"
+                  placeholder="상담패키지 · 유형 · 이름 검색"
                   className="w-full rounded-md border border-white/10 bg-white/[0.06] py-2 pl-9 pr-3 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
                 />
               </div>
@@ -918,7 +918,7 @@ export function DeletedCodesContent({ isEmbedded = false }: { isEmbedded?: boole
                         onClick={() => handleSort('code')}
                       >
                         <div className="flex items-center justify-center gap-1">
-                          검사코드
+                          상담패키지
                           <span className={`text-xs ${sortField === 'code' ? 'text-red-500' : 'text-slate-400'}`}>
                             <span className={sortField === 'code' && sortDirection === 'asc' ? 'text-red-500' : 'text-slate-500'}>▲</span>
                             <span className={sortField === 'code' && sortDirection === 'desc' ? 'text-red-500' : 'text-slate-500'}>▼</span>

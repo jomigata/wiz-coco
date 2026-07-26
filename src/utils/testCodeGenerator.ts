@@ -248,7 +248,7 @@ function formatCode(prefix: TestPrefix, year: string, data: LastCodeData): strin
 }
 
 /**
- * 검사 코드 생성 메인 함수
+ * 상담패키지 생성 메인 함수
  */
 export function generateTestCode(testType: 'PROFESSIONAL' | 'GROUP' | 'AMATEUR' | 'INSIDE_MBTI' | 'EGO_PROFESSIONAL' | 'EGO_AMATEUR' | 'EGO_GROUP' | 'ENNEAGRAM_PROFESSIONAL' | 'ENNEAGRAM_AMATEUR' | 'ENNEAGRAM_GROUP'): string {
   try {
@@ -306,7 +306,7 @@ export function generateTestCode(testType: 'PROFESSIONAL' | 'GROUP' | 'AMATEUR' 
 }
 
 /**
- * 검사 코드 파싱
+ * 상담패키지 파싱
  */
 export function parseTestCode(code: string): TestCodeInfo | null {
   try {
@@ -333,7 +333,7 @@ export function parseTestCode(code: string): TestCodeInfo | null {
 }
 
 /**
- * 검사 코드 유효성 검사
+ * 상담패키지 유효성 검사
  */
 export function isValidTestCode(code: string): boolean {
   return parseTestCode(code) !== null;

@@ -1,5 +1,5 @@
 /**
- * 검사코드 참여 세션: 브라우저 sessionStorage에 세트 메타만 보관합니다.
+ * 상담패키지 참여 세션: 브라우저 sessionStorage에 세트 메타만 보관합니다.
  */
 import { lookupPublicAssessment } from '@/lib/assessmentApi';
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
@@ -40,7 +40,7 @@ export function clearJoinAssessmentSession(): void {
   sessionStorage.removeItem(JOIN_STORAGE_KEY);
 }
 
-/** @deprecated 검사코드 직접 입력 제거 — 검사시작(포털 로그인) */
+/** @deprecated 상담패키지 직접 입력 제거 — 검사시작(포털 로그인) */
 export function getJoinEntryPath(accessCodeNorm: string, autoStart = false): string {
   void accessCodeNorm;
   void autoStart;
@@ -68,14 +68,14 @@ export function pushToJoinDashboard(
   pushWithAuthSession(router, getJoinDashboardPath(accessCodeNorm));
 }
 
-/** 검사코드 조회 후 검사 선택(대시보드) 화면으로 이동 */
+/** 상담패키지 조회 후 검사 선택(대시보드) 화면으로 이동 */
 export async function startJoinAssessmentFromAccessCode(
   router: { push: (href: string) => void },
   accessCodeNorm: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const code = normalizeAccessCodeInput(accessCodeNorm);
   if (!code) {
-    return { ok: false, error: '검사 코드가 없습니다.' };
+    return { ok: false, error: '상담패키지가 없습니다.' };
   }
   try {
     const data = await lookupPublicAssessment(code);
@@ -85,7 +85,7 @@ export async function startJoinAssessmentFromAccessCode(
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : '검사 코드 확인에 실패했습니다.',
+      error: err instanceof Error ? err.message : '상담패키지 확인에 실패했습니다.',
     };
   }
 }

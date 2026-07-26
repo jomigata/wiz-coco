@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Firestore·저장 데이터에서 검사코드·검사결과 코드의 하이픈(-) 제거.
+Firestore·저장 데이터에서 상담패키지·검사결과 코드의 하이픈(-) 제거.
 
 사용 (저장소 루트에서):
   python backend/scripts/migrate_strip_code_hyphens.py --dry-run

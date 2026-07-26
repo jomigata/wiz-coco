@@ -60,7 +60,7 @@ function GoContent() {
           <p className="text-amber-200/95 text-sm leading-relaxed mb-2">링크를 사용할 수 없습니다</p>
           <p className="text-slate-300 text-sm leading-relaxed mb-6">{error}</p>
           <Link href="/portal/login/" className="text-sky-400 hover:text-sky-300 text-sm">
-            검사 코드로 직접 들어가기
+            나의코드로 직접 들어가기
           </Link>
         </div>
       </div>

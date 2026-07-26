@@ -1,6 +1,6 @@
 /**
  * Firestore 데이터 모델 타입 정의
- * 상담사 중심 검사 코드 플랫폼: assessments, testResults 컬렉션
+ * 상담사 중심 상담패키지 플랫폼: assessments, testResults 컬렉션
  */
 
 import type { Timestamp } from 'firebase/firestore';
@@ -11,7 +11,7 @@ export type TargetAudience = '개인' | '그룹';
 /** assessment 상태 */
 export type AssessmentStatus = 'active' | 'archived';
 
-/** 검사 목록 항목 (검사코드 세트에 포함된 개별 검사) */
+/** 검사 목록 항목 (상담패키지 세트에 포함된 개별 검사) */
 export interface AssessmentTestItem {
   testId: string;
   name: string;
@@ -22,15 +22,15 @@ export interface AssessmentTestItem {
  * 경로: /assessments/{assessmentId}
  */
 export interface Assessment {
-  /** 유일 검사코드 (신규: CVC+숫자 3자리~, 구형: 영숫자 6자리) */
+  /** 유일 상담패키지 (신규: CVC+숫자 3자리~, 구형: 영숫자 6자리) */
   accessCode: string;
-  /** @deprecated 구 데이터 — 신규 검사코드는 PIN 없음 */
+  /** @deprecated 구 데이터 — 신규 상담패키지는 PIN 없음 */
   joinPinHash?: string;
   /** @deprecated */
   joinPin?: string;
   /** 상담사 Firebase UID */
   counselorId: string;
-  /** 검사코드 세트 안내 제목 */
+  /** 상담패키지 세트 안내 제목 */
   title: string;
   /** 대상: 개인 | 그룹 */
   targetAudience: TargetAudience;
@@ -68,7 +68,7 @@ export type TestResultStatus = 'in-progress' | 'completed';
  * 경로: /testResults/{resultId}
  */
 export interface TestResult {
-  /** 검사코드 (assessments.accessCode와 동일 규칙) */
+  /** 상담패키지 (assessments.accessCode와 동일 규칙) */
   accessCode: string;
   /** assessment 문서 ID */
   assessmentId: string;

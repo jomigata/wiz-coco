@@ -19,7 +19,7 @@ from utils.portal_linking import get_portal_ecosystem_ids, result_visible_to_por
 from utils.test_result_queries import query_results_shared_to_assessment
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
-MSG_ACCESS_CODE_EXPIRED = "검사코드 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+MSG_ACCESS_CODE_EXPIRED = "상담패키지 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
 
 
 def _iso_timestamp(value) -> str | None:
@@ -114,16 +114,16 @@ def submit_result():
     elif participant_session:
         token_code = normalize_access_code(participant_session.get("accessCode") or "")
         if token_code != access_code:
-            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+            return jsonify({"error": "Forbidden", "message": "상담패키지가 세션과 일치하지 않습니다."}), 403
     elif guest_session:
         token_code = normalize_access_code(guest_session.get("accessCode") or "")
         if token_code != access_code:
-            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+            return jsonify({"error": "Forbidden", "message": "상담패키지가 세션과 일치하지 않습니다."}), 403
     elif not client_uid:
         return jsonify(
             {
                 "error": "Unauthorized",
-                "message": "검사를 시작하려면 검사코드를 다시 입력해 주세요.",
+                "message": "검사를 시작하려면 상담패키지를 다시 입력해 주세요.",
             }
         ), 401
     if not is_valid_access_code(access_code):
@@ -217,11 +217,11 @@ def list_results():
     elif participant_session:
         token_code = normalize_access_code(participant_session.get("accessCode") or "")
         if token_code != access_code:
-            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+            return jsonify({"error": "Forbidden", "message": "상담패키지가 세션과 일치하지 않습니다."}), 403
     elif guest_session:
         token_code = normalize_access_code(guest_session.get("accessCode") or "")
         if token_code != access_code:
-            return jsonify({"error": "Forbidden", "message": "검사 코드가 세션과 일치하지 않습니다."}), 403
+            return jsonify({"error": "Forbidden", "message": "상담패키지가 세션과 일치하지 않습니다."}), 403
     elif not client_uid:
         return jsonify(
             {"error": "Unauthorized", "message": "참여 세션이 필요합니다."}
@@ -374,7 +374,7 @@ def list_results():
 @bp.route("/mine", methods=["GET"])
 @limit_access_code
 def list_my_results():
-    """로그인 사용자(토큰 uid)의 검사코드 세트 제출 결과 전부 (accessCode 무관)."""
+    """로그인 사용자(토큰 uid)의 상담패키지 세트 제출 결과 전부 (accessCode 무관)."""
     client_uid = get_bearer_uid()
     token_email = get_bearer_email_optional()
     if not client_uid:

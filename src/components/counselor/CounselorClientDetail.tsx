@@ -258,7 +258,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
               </p>
             </div>
             <div className="rounded-lg bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-500">검사코드</p>
+              <p className="text-xs text-slate-500">상담패키지</p>
               <p className="mt-1 text-lg font-semibold text-white">{assessments.length}</p>
             </div>
             <div className="rounded-lg bg-white/5 px-4 py-3">
@@ -343,7 +343,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
         </div>
       </CounselorPageSection>
 
-      <CounselorPageSection title="할당된 검사코드">
+      <CounselorPageSection title="할당된 상담패키지">
         {assessments.length === 0 ? (
           <p className="text-sm text-slate-500">할당된 검사가 없습니다.</p>
         ) : (
@@ -356,7 +356,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                 <div>
                   <h4 className="font-medium text-white">{assessment.title}</h4>
                   <p className="mt-1 text-xs text-slate-500">
-                    검사코드 {formatAccessCodeDisplay(assessment.joinAccessCode)}
+                    상담패키지 {formatAccessCodeDisplay(assessment.joinAccessCode)}
                     {assessment.usageEndDate ? ` · 사용기한 ${assessment.usageEndDate}` : ''}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">

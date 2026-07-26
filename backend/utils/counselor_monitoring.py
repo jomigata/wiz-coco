@@ -1,4 +1,4 @@
-"""상담사 통합 모니터링 허브 — 검사코드·내담자·진행 요약."""
+"""상담사 통합 모니터링 허브 — 상담패키지·내담자·진행 요약."""
 from __future__ import annotations
 
 from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION, TEST_RESULTS_COLLECTION
@@ -28,7 +28,7 @@ def get_counselor_monitoring_hub(
     *,
     cohort_id: str | None = None,
 ) -> dict:
-    """상담사 전체 검사코드·내담자 진행 통합 요약."""
+    """상담사 전체 상담패키지·내담자 진행 통합 요약."""
     cohort_filter = (cohort_id or "").strip()
 
     assessment_docs: list[tuple[str, dict]] = []
@@ -54,7 +54,7 @@ def get_counselor_monitoring_hub(
         }
         assessment_cache[aid] = {
             "assessmentId": aid,
-            "title": (a.get("title") or "").strip() or "검사코드",
+            "title": (a.get("title") or "").strip() or "상담패키지",
             "joinAccessCode": (a.get("accessCode") or "").strip(),
             "cohortName": (a.get("cohortName") or "").strip(),
             "testList": test_list,
@@ -196,7 +196,7 @@ def get_counselor_monitoring_hub(
     portal_name_map = {row[0]: (row[1].get("displayName") or "") for row in portal_rows}
 
     for aid in active_assessment_ids[:30]:
-        title = assessment_cache.get(aid, {}).get("title") or "검사코드"
+        title = assessment_cache.get(aid, {}).get("title") or "상담패키지"
         refs = (
             db.collection(TEST_RESULTS_COLLECTION)
             .where("assessmentId", "==", aid)
@@ -285,7 +285,7 @@ def get_counselor_cohort_monitoring_view(
         }
         assessment_cache[aid] = {
             "assessmentId": aid,
-            "title": (a.get("title") or "").strip() or "검사코드",
+            "title": (a.get("title") or "").strip() or "상담패키지",
             "joinAccessCode": (a.get("accessCode") or "").strip(),
             "testList": test_list,
             "requiredTestIds": required,

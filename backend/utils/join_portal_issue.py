@@ -1,4 +1,4 @@
-"""공동 검사코드 참여자 — 검사 1건 이상 완료 시 개인 포털(코드+PIN) 발급."""
+"""공동 상담패키지 참여자 — 검사 1건 이상 완료 시 개인 포털(코드+PIN) 발급."""
 from firebase_admin.firestore import SERVER_TIMESTAMP
 from itsdangerous import URLSafeTimedSerializer
 
@@ -33,7 +33,7 @@ def _create_magic_link_token(portal_id: str, access_code: str) -> str:
 
 def try_issue_portal_for_participant(db, participant_id: str, assessment_id: str) -> dict:
     """
-    공동 검사코드 참여자에게 검사 1건 이상 완료 시 내 검사실 자격 증명 발급.
+    공동 상담패키지 참여자에게 검사 1건 이상 완료 시 내 검사실 자격 증명 발급.
     이미 발급된 경우 credentialsSent=True 로 반환.
     """
     pref = db.collection(JOIN_PARTICIPANTS_COLLECTION).document(participant_id).get()
@@ -51,7 +51,7 @@ def try_issue_portal_for_participant(db, participant_id: str, assessment_id: str
 
     ass_doc = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id).get()
     if not ass_doc.exists:
-        return {"ok": False, "error": "assessment_not_found", "message": "검사코드를 찾을 수 없습니다."}
+        return {"ok": False, "error": "assessment_not_found", "message": "상담패키지를 찾을 수 없습니다."}
 
     ass_data = ass_doc.to_dict() or {}
     issue_type = (ass_data.get("issueType") or "shared").strip()
@@ -60,7 +60,7 @@ def try_issue_portal_for_participant(db, participant_id: str, assessment_id: str
             "ok": True,
             "credentialsSent": False,
             "skipped": True,
-            "message": "개별 발급 검사코드는 발급 시 접속 정보가 전달됩니다.",
+            "message": "개별 발급 상담패키지는 발급 시 접속 정보가 전달됩니다.",
         }
 
     done_ids = _completed_test_ids(db, assessment_id, participant_id)

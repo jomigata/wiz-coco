@@ -1,5 +1,5 @@
 /**
- * 검사코드(포털)에서 선택한 testId → 전용 검사 페이지 경로
+ * 상담패키지(포털)에서 선택한 testId → 전용 검사 페이지 경로
  * genericJoinQuestions(/join/test) 대신 실제 /tests/* 플로우로 연결
  */
 export const JOIN_DEDICATED_TEST_PATHS: Record<string, string> = {
@@ -26,7 +26,7 @@ export function buildDedicatedJoinTestUrl(
   return `${dedicatedPath}?${search.toString()}`;
 }
 
-/** 내 검사실(검사코드)에서 바로 열 수 있는 전용 검사 URL — 상담사 RoleGuard 제외 */
+/** 내 검사실(상담패키지)에서 바로 열 수 있는 전용 검사 URL — 상담사 RoleGuard 제외 */
 export function isClientPortalDedicatedTestPath(pathname: string): boolean {
   const path = (pathname || '').split('?')[0];
   if (path === '/tests/ego-ok' || path.startsWith('/tests/ego-ok/')) {

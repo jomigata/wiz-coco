@@ -9,7 +9,7 @@ export type PersonalAmateurTestFlowConfig = {
   codePrefix: PersonalAmateurTestCodePrefix;
   matchesInProgressTestType: (testType: string) => boolean;
   buildResultPath: (code: string, results: { mbtiType?: string }) => string;
-  /** 검사코드·기본정보 단계 생략 후 바로 문항 */
+  /** 상담패키지·기본정보 단계 생략 후 바로 문항 */
   skipCodeAndInfoSteps?: boolean;
   /** 상단 앱 네비(검사시작 화면과 동일) 유지 */
   keepAppTopNavVisible?: boolean;

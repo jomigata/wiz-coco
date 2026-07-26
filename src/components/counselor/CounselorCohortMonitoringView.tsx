@@ -109,7 +109,7 @@ function CohortCard({ item }: { item: CounselorCohortMonitoringItem }) {
           내담자 <strong className="text-slate-200">{item.portalCount}</strong>명
         </span>
         <span>
-          검사코드 <strong className="text-slate-200">{item.assessmentCount}</strong>건
+          상담패키지 <strong className="text-slate-200">{item.assessmentCount}</strong>건
         </span>
         <span>
           완료 <strong className="text-emerald-300">{item.completedPortals}</strong>
@@ -129,7 +129,7 @@ function CohortCard({ item }: { item: CounselorCohortMonitoringItem }) {
 
       {item.assessments.length > 0 ? (
         <div className="mt-4 space-y-2">
-          <p className="text-xs font-medium text-slate-500">검사코드별 진행</p>
+          <p className="text-xs font-medium text-slate-500">상담패키지별 진행</p>
           {item.assessments.slice(0, 4).map((a) => (
             <AssessmentRow key={a.assessmentId} item={a} />
           ))}
@@ -273,7 +273,7 @@ export default function CounselorCohortMonitoringView({
 
       {data.summary.notifyFailedCount > 0 ? (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          자격증명 발송 실패 {data.summary.notifyFailedCount}건 — 검사코드별 「발송·검사 현황」에서 재발송할 수
+          자격증명 발송 실패 {data.summary.notifyFailedCount}건 — 상담패키지별 「발송·검사 현황」에서 재발송할 수
           있습니다.
         </div>
       ) : null}
@@ -284,7 +284,7 @@ export default function CounselorCohortMonitoringView({
           <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
             <p className="text-slate-300">집계할 그룹이 없습니다.</p>
             <p className="mt-2 text-sm text-slate-500">
-              검사코드를 발급하고 내담자를 배정하면 그룹별 진행이 표시됩니다.
+              상담패키지를 발급하고 내담자를 배정하면 그룹별 진행이 표시됩니다.
             </p>
           </div>
         ) : (

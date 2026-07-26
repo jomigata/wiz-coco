@@ -1,4 +1,4 @@
-"""검사코드별 내담자 발송·검사 진행 현황."""
+"""상담패키지별 내담자 발송·검사 진행 현황."""
 from __future__ import annotations
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
@@ -347,7 +347,7 @@ def aggregate_assessment_list_stats(
     counselor_uid: str,
     items: list[dict],
 ) -> dict[str, dict]:
-    """검사코드 목록용 — 포털별 발송·검사 완료 집계."""
+    """상담패키지 목록용 — 포털별 발송·검사 완료 집계."""
     if not items:
         return {}
 
@@ -521,7 +521,7 @@ def resend_portal_credentials(
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
-        raise ValueError("검사코드를 찾을 수 없습니다.")
+        raise ValueError("상담패키지를 찾을 수 없습니다.")
     ass = ass_doc.to_dict() or {}
     if ass.get("counselorId") != counselor_uid:
         raise PermissionError("접근 권한이 없습니다.")
@@ -624,7 +624,7 @@ def send_test_reminders(
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
-        raise ValueError("검사코드를 찾을 수 없습니다.")
+        raise ValueError("상담패키지를 찾을 수 없습니다.")
     ass = ass_doc.to_dict() or {}
     if ass.get("counselorId") != counselor_uid:
         raise PermissionError("접근 권한이 없습니다.")
@@ -732,7 +732,7 @@ def _verify_assessment_owned(db, assessment_id: str, counselor_uid: str) -> dict
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
-        raise ValueError("검사코드를 찾을 수 없습니다.")
+        raise ValueError("상담패키지를 찾을 수 없습니다.")
     ass = ass_doc.to_dict() or {}
     if ass.get("counselorId") != counselor_uid:
         raise PermissionError("접근 권한이 없습니다.")

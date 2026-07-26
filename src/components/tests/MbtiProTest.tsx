@@ -128,7 +128,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               await ensureJoinGuestSession(code);
               setForceGuestForAccessCode(code);
             } else {
-              throw new Error('이 검사코드는 현재 로그인한 나의코드에 연결되어 있지 않습니다.');
+              throw new Error('이 상담패키지는 현재 로그인한 나의코드에 연결되어 있지 않습니다.');
             }
           }
         } else {
@@ -136,7 +136,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         }
       } catch (err) {
         if (!cancelled) {
-          setJoinAccessError(err instanceof Error ? err.message : '검사코드를 사용할 수 없습니다.');
+          setJoinAccessError(err instanceof Error ? err.message : '상담패키지를 사용할 수 없습니다.');
         }
       } finally {
         if (!cancelled) setJoinAccessReady(true);
@@ -227,9 +227,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     return type;
   };
 
-  // 검사코드 입력 핸들러
+  // 상담패키지 입력 핸들러
   const handleCodeSubmit = (codeData: { groupCode: string; groupPassword: string }) => {
-    console.log('MbtiProTest - 검사코드 제출:', codeData);
+    console.log('MbtiProTest - 상담패키지 제출:', codeData);
     setCodeData(codeData);
     setCurrentStep('info');
   };
@@ -277,7 +277,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       return;
     }
     
-    // 검사코드 데이터와 클라이언트 정보를 결합
+    // 상담패키지 데이터와 클라이언트 정보를 결합
     const completeInfo: ClientInfo = {
       ...info,
       groupCode: codeData?.groupCode || '',
@@ -397,7 +397,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         timestamp: completionTime // 검사 완료 시간 기록
       };
       
-      // 검사 코드 생성 (로그인 사용자만)
+      // 상담패키지 생성 (로그인 사용자만)
       let testCode: string | null = null;
       if (isLoggedIn) {
         testCode = generateTestCode(flow.codePrefix);
@@ -580,7 +580,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             });
           }
         } catch (submitErr) {
-          console.error('검사코드 결과 제출 실패:', submitErr);
+          console.error('상담패키지 결과 제출 실패:', submitErr);
           if (editResultId.trim()) {
             setIsLoading(false);
             window.alert(

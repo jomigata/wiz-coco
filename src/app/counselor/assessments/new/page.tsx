@@ -14,7 +14,7 @@ function NewAssessmentContent() {
           className="inline-flex items-center gap-1.5 text-base text-slate-300 transition hover:text-white"
         >
           <span aria-hidden>←</span>
-          검사코드 목록
+          상담패키지 목록
         </AuthLink>
       </div>
 

@@ -278,7 +278,7 @@ export default function DeletedAssessmentsPage() {
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
-      description="목록에서 삭제한 검사코드입니다. 복구하면 검사코드 목록에 다시 표시됩니다."
+      description="목록에서 삭제한 상담패키지입니다. 복구하면 상담패키지 목록에 다시 표시됩니다."
       toolbar={
         <>
           <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
@@ -330,7 +330,7 @@ export default function DeletedAssessmentsPage() {
           <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
         ) : filtered.length === 0 ? (
           <p className="text-sm text-slate-400">
-            {items.length === 0 ? '삭제된 검사코드가 없습니다.' : '검색 결과가 없습니다.'}
+            {items.length === 0 ? '삭제된 상담패키지가 없습니다.' : '검색 결과가 없습니다.'}
           </p>
         ) : (
           <>
@@ -353,7 +353,7 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="검사코드"
+                      label="상담패키지"
                       sortKey="accessCode"
                       activeKey={sortKey}
                       direction={sortDir}

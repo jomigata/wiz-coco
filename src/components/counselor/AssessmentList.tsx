@@ -236,7 +236,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             href="/counselor/assessments/deleted"
             className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/[0.08]"
           >
-            삭제된 검사코드
+            삭제된 상담패키지
           </AuthLink>
           <AuthLink
             href="/counselor/assessments/new"
@@ -245,7 +245,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            새 검사코드 만들기
+            상담패키지 구성
           </AuthLink>
         </>
       }
@@ -266,14 +266,14 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-white">검사코드 삭제</h2>
+              <h2 className="text-xl font-semibold text-white">상담패키지 삭제</h2>
             </div>
             <div className="bg-white/[0.06] rounded-xl p-4 mb-4 border border-white/10">
               <p className="text-cyan-400 font-mono font-bold tracking-wider">{formatAccessCodeDisplay(deleteTarget.accessCode)}</p>
               <p className="text-slate-300 mt-1">{deleteTarget.title}</p>
             </div>
             <p className="text-slate-400 mb-5 leading-relaxed">
-              목록에서 제거되어 삭제된 검사코드 목록으로 이동합니다. 복구하면 검사코드 목록에 다시 표시됩니다. 이미 제출된 결과는 상담사 화면에서 계속 조회할 수 있습니다.
+              목록에서 제거되어 삭제된 상담패키지 목록으로 이동합니다. 복구하면 상담패키지 목록에 다시 표시됩니다. 이미 제출된 결과는 상담사 화면에서 계속 조회할 수 있습니다.
             </p>
             {deleteError && <p className="text-red-400 mb-4">{deleteError}</p>}
             <div className="flex justify-end gap-2">
@@ -296,7 +296,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
 
       {createdInfo && (
         <div className="mb-2 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3 py-2">
-          <p className="text-emerald-200 font-medium">검사코드가 발급되었습니다</p>
+          <p className="text-emerald-200 font-medium">상담패키지가 발급되었습니다</p>
           <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <p>
               <span className="text-emerald-400/80">코드 </span>
@@ -319,10 +319,10 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
           <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
           <p className="text-base text-slate-300">
-            {listItems.length === 0 ? '등록된 검사코드가 없습니다' : '검색 결과가 없습니다'}
+            {listItems.length === 0 ? '등록된 상담패키지가 없습니다' : '검색 결과가 없습니다'}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            {listItems.length === 0 ? '첫 검사코드를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
+            {listItems.length === 0 ? '첫 상담패키지를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
           </p>
           {listItems.length === 0 && (
             <AuthLink
@@ -332,7 +332,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              첫 검사코드 만들기
+              첫 상담패키지 구성
             </AuthLink>
           )}
         </div>
@@ -351,7 +351,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     className="whitespace-nowrap"
                   />
                   <SortableColumnHeader
-                    label="검사코드"
+                    label="상담패키지"
                     sortKey="accessCode"
                     activeKey={sortKey}
                     direction={sortDir}

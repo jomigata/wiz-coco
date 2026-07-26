@@ -179,7 +179,7 @@ function CreditsContent() {
               href="/counselor/assessments/new/"
               className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500"
             >
-              새 검사코드 만들기
+              상담패키지 구성
             </Link>
             <Link
               href="/partners/"
