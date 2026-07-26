@@ -43,7 +43,6 @@ export const EGO_OK_PRO_TEST_FLOW: MbtiProTestFlowConfig = {
   firebaseTestTypeLabel: 'TA 이고-오케이그램 검사',
   totalQuestions: 24,
   codePrefix: 'EGO_PROFESSIONAL',
-  pageShellClassName: 'bg-[#070b14]',
   uiTheme: 'portal',
   skipCodeStep: true,
   testScreenTitle: 'TA 이고-오케이그램 검사',

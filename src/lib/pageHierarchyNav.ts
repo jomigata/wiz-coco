@@ -76,36 +76,6 @@ export function resolveCounselorHierarchy(
     };
   }
 
-  if (pathname.startsWith('/counselor/assessments/easy')) {
-    return {
-      depth: 1,
-      crumbs: [
-        { label: '검사코드 목록', href: '/counselor/assessments' },
-        { label: '쉬운 목록 (카드형)' },
-      ],
-    };
-  }
-
-  if (pathname.startsWith('/counselor/assessments/simple')) {
-    return {
-      depth: 1,
-      crumbs: [
-        { label: '검사코드 목록', href: '/counselor/assessments' },
-        { label: '간편 목록 (큰 글씨)' },
-      ],
-    };
-  }
-
-  if (pathname.startsWith('/counselor/assessments/senior')) {
-    return {
-      depth: 1,
-      crumbs: [
-        { label: '검사코드 목록', href: '/counselor/assessments' },
-        { label: '어르신용 (고대비)' },
-      ],
-    };
-  }
-
   if (pathname === '/counselor/assessments') {
     return {
       depth: 0,

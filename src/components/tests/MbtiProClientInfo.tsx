@@ -148,31 +148,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     scrollVelocityRef.current = 0;
   };
 
-  // 마우스 위치: 최상·최하단 줄에서 2줄 확장 + 좌우 이동 시 2칸 패닝
+  // 마우스 위치: 최상·최하단 줄에서 2줄 확장 + 같은 줄 좌우 이동 시 2줄 상하 스크롤
   const handleYearGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!yearGridRef.current) return;
 
     const grid = yearGridRef.current;
-    const rect = grid.getBoundingClientRect();
-    const mouseY = e.clientY - rect.top;
-    const gridHeight = rect.height;
-    const scrollHeight = grid.scrollHeight;
-    const scrollTop = grid.scrollTop;
-
-    const topThreshold = gridHeight * 0.2;
-    const bottomThreshold = gridHeight * 0.8;
-
-    if (mouseY < topThreshold && scrollTop > 0) {
-      const intensity = (topThreshold - mouseY) / topThreshold;
-      scrollVelocityRef.current = -(2 + intensity * 14);
-      startAutoScroll();
-    } else if (mouseY > bottomThreshold && scrollTop < scrollHeight - gridHeight) {
-      const intensity = (mouseY - bottomThreshold) / (gridHeight - bottomThreshold);
-      scrollVelocityRef.current = 2 + intensity * 14;
-      startAutoScroll();
-    } else {
-      scrollVelocityRef.current = 0;
-    }
 
     const target = (e.target as HTMLElement).closest('[data-year-idx]') as HTMLElement | null;
     if (!target) return;
@@ -180,7 +160,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     const idx = parseInt(target.getAttribute('data-year-idx') || '-1', 10);
     if (idx < 0) return;
 
-    const col = idx % 8;
     const row = Math.floor(idx / 8);
     const cells = yearButtonRefs.current.filter(Boolean) as HTMLButtonElement[];
     if (cells.length === 0) return;
@@ -199,7 +178,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     if (!Number.isFinite(firstVisRow)) return;
 
     const rowH = cells[0]?.offsetHeight ?? 36;
-    const colW = cells[0]?.offsetWidth ?? 48;
     const now = Date.now();
     const onEdgeRow = row === firstVisRow || row === lastVisRow;
 
@@ -219,16 +197,15 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
       lastMouseXRef.current = e.clientX;
       if (prevX != null && Math.abs(e.clientX - prevX) > 6) {
         const deltaX = e.clientX - prevX;
-        if (col <= 1 && deltaX < 0) {
-          grid.scrollLeft = Math.max(0, grid.scrollLeft - colW * 2);
-          lastEdgeScrollAtRef.current = now;
-        } else if (col >= 6 && deltaX > 0) {
-          grid.scrollLeft = Math.min(
-            grid.scrollWidth - grid.clientWidth,
-            grid.scrollLeft + colW * 2,
+        if (deltaX > 0) {
+          grid.scrollTop = Math.min(
+            grid.scrollHeight - grid.clientHeight,
+            grid.scrollTop + rowH * 2,
           );
-          lastEdgeScrollAtRef.current = now;
+        } else {
+          grid.scrollTop = Math.max(0, grid.scrollTop - rowH * 2);
         }
+        lastEdgeScrollAtRef.current = now;
       }
     } else {
       lastMouseXRef.current = e.clientX;
@@ -401,6 +378,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        </>
+      )}
+
+      {uiTheme === 'portal' && (
+        <>
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(56,189,248,0.11),transparent)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_85%_100%,rgba(99,102,241,0.09),transparent)]" />
         </>
       )}
 

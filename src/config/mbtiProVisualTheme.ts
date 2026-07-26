@@ -57,23 +57,25 @@ const emerald: MbtiProVisualTheme = {
 
 const portal: MbtiProVisualTheme = {
   showOrbs: false,
-  pageShell: 'bg-[#070b14] min-h-0',
+  pageShell: 'bg-gradient-to-b from-[#070b14] via-[#0a1220] to-[#070912] min-h-0',
   subtitle: 'text-slate-400 text-sm',
   progressLabel: 'text-slate-300 text-sm',
   progressTrack: 'bg-slate-800/80',
   progressFill: 'bg-sky-500',
-  mainCard: 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-4 sm:p-5',
+  mainCard:
+    'bg-gradient-to-br from-slate-900/95 via-[#121f35]/90 to-slate-900/85 border border-sky-500/15 rounded-xl shadow-lg shadow-black/25 p-4 sm:p-5',
   questionCard:
-    'bg-slate-800/50 rounded-xl p-3 flex items-center justify-center min-h-[72px] border border-white/[0.08]',
-  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-slate-800/30 rounded-[100%/20px] -z-10',
-  answerBtn: 'bg-slate-900/50 transition-all duration-300 border border-white/[0.08]',
-  answerBtnHover: 'hover:bg-slate-800/70 hover:translate-y-[-2px]',
+    'bg-gradient-to-b from-slate-800/75 to-[#0f1a2e]/85 rounded-xl p-3 flex items-center justify-center min-h-[72px] border border-sky-400/12',
+  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-900/20 to-transparent rounded-[100%/20px] -z-10',
+  answerBtn:
+    'bg-gradient-to-b from-slate-900/70 to-[#0c1528]/80 transition-all duration-300 border border-sky-500/10',
+  answerBtnHover: 'hover:from-slate-800/80 hover:to-[#101f38]/90 hover:translate-y-[-2px]',
   checkDot: 'bg-sky-500',
   answerCircle: 'bg-sky-600/90',
   answerLabel: 'text-sky-300/90',
-  resumeOuter: 'min-h-screen bg-[#070b14] flex items-center justify-center p-4 pt-16',
+  resumeOuter: 'min-h-screen bg-gradient-to-b from-[#070b14] via-[#0a1220] to-[#070912] flex items-center justify-center p-4 pt-16',
   resumeCard:
-    'bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-white/[0.08]',
+    'bg-gradient-to-br from-slate-900/95 via-[#121f35]/90 to-slate-900/85 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-sky-500/15',
   resumeBody: 'text-slate-300',
   resumePanel: 'bg-slate-800/50 rounded-lg',
   resumeTrack: 'bg-slate-900',

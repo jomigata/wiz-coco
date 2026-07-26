@@ -76,12 +76,15 @@ const emerald: MbtiProClientInfoTheme = {
 };
 
 const portal: MbtiProClientInfoTheme = {
-  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#070b14] text-white px-3 pt-14 pb-14',
+  shell:
+    'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-gradient-to-b from-[#070b14] via-[#0a1220] to-[#070912] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-400 max-w-lg mx-auto text-sm',
-  formCard: 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-4 sm:p-5',
-  fieldBox: 'bg-[#101f38]/60 p-2.5 rounded-lg border border-white/[0.08]',
+  formCard:
+    'bg-gradient-to-br from-slate-900/95 via-[#121f35]/90 to-slate-900/85 border border-sky-500/15 rounded-xl shadow-lg shadow-black/25 p-4 sm:p-5',
+  fieldBox:
+    'bg-gradient-to-br from-[#101f38]/80 to-[#0c1528]/70 p-2.5 rounded-lg border border-sky-500/10',
   fieldBoxMuted:
-    'bg-[#101f38]/60 p-2.5 rounded-lg border border-white/[0.08] hover:bg-[#101f38]/80 transition-colors',
+    'bg-gradient-to-br from-[#101f38]/80 to-[#0c1528]/70 p-2.5 rounded-lg border border-sky-500/10 hover:from-[#101f38]/90 hover:to-[#121f38]/80 transition-colors',
   label: 'block text-sm font-medium text-sky-200/90 mb-0.5',
   input:
     'w-full px-3 py-2 rounded-lg bg-[#101f38]/90 border border-white/10 text-white focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 transition-colors',
@@ -90,7 +93,7 @@ const portal: MbtiProClientInfoTheme = {
   choiceBtnInactive:
     'bg-[#101f38]/80 text-slate-200 border border-white/10 hover:bg-slate-800/80',
   yearSelector:
-    'year-selector mt-1.5 z-50 bg-[#0f1a2e]/98 backdrop-blur-sm border border-white/[0.1] rounded-lg p-2 shadow-lg',
+    'year-selector mt-1.5 z-50 bg-gradient-to-b from-[#0f1a2e]/98 to-[#0a1220]/98 backdrop-blur-sm border border-sky-500/15 rounded-lg p-2 shadow-lg',
   yearGrid:
     'grid grid-cols-8 gap-x-1 gap-y-1 overflow-x-auto overflow-y-auto max-h-[272px] px-10 scrollbar-thin scrollbar-thumb-sky-600/80 scrollbar-track-slate-900/50',
   yearBtnBase:
@@ -105,7 +108,7 @@ const portal: MbtiProClientInfoTheme = {
   yearSelectedRing: 'ring-sky-300/30',
   yearBtnHoverRgb: 'rgba(14, 165, 233, 0.28)',
   privacyBox:
-    'bg-[#101f38]/60 p-2.5 rounded-lg border border-white/[0.08] hover:bg-[#101f38]/80 transition-colors',
+    'bg-gradient-to-br from-[#101f38]/80 to-[#0c1528]/70 p-2.5 rounded-lg border border-sky-500/10 hover:from-[#101f38]/90 hover:to-[#121f38]/80 transition-colors',
   checkbox: 'w-4 h-4 text-sky-500 bg-slate-900 border-sky-500/50 rounded focus:ring-sky-500 focus:ring-2',
   privacyLabel: 'font-medium text-slate-200 cursor-pointer select-none text-sm',
   privacyHint: 'text-slate-400 mt-0.5 cursor-pointer select-none text-xs leading-snug',

@@ -24,24 +24,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '📦',
           },
           {
-            name: '쉬운 목록 (카드형)',
-            href: '/counselor/assessments/easy',
-            description: '큰 글씨 카드형 — 읽기 쉬운 검사코드 목록',
-            icon: '🃏',
-          },
-          {
-            name: '간편 목록 (큰 글씨)',
-            href: '/counselor/assessments/simple',
-            description: '한 줄씩 큰 글씨로 보는 간편 목록',
-            icon: '📃',
-          },
-          {
-            name: '어르신용 (고대비)',
-            href: '/counselor/assessments/senior',
-            description: '고대비·큰 버튼 — 어르신도 쉽게',
-            icon: '👴',
-          },
-          {
             name: '새 검사코드 만들기',
             href: '/counselor/assessments/new',
             description: '내담자별 나의코드 검사코드 발급',

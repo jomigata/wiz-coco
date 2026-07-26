@@ -88,6 +88,16 @@ export default function IndividualAssessmentCreateForm() {
 
   const loading = loadingIntent !== null;
 
+  const filePreviewLayout = useMemo(() => {
+    if (!filePreviewText) return null;
+    const lines = filePreviewText.split('\n');
+    const lineCount = lines.length;
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const widthCh = Math.min(Math.max(longestLine + 2, 28), 96);
+    const heightRem = Math.min(Math.max(lineCount * 1.2 + 2.5, 5), 32);
+    return { widthCh, heightRem, lineCount };
+  }, [filePreviewText]);
+
   useEffect(() => {
     if (!activeJobId) return undefined;
     let cancelled = false;
@@ -750,9 +760,9 @@ export default function IndividualAssessmentCreateForm() {
                   aria-live="polite"
                 >
                   <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
-                  <div className="relative mt-1 inline-block max-w-full">
+                  <div className="mt-1 max-w-full">
                     <p
-                      className="cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
+                      className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
                       onMouseEnter={() => setShowFilePreview(true)}
                       onMouseLeave={() => setShowFilePreview(false)}
                       onFocus={() => setShowFilePreview(true)}
@@ -763,10 +773,14 @@ export default function IndividualAssessmentCreateForm() {
                     >
                       {fileLabel}
                     </p>
-                    {showFilePreview && filePreviewText ? (
+                    {showFilePreview && filePreviewText && filePreviewLayout ? (
                       <div
-                        className="absolute left-0 top-full z-50 mt-2 max-h-64 w-[min(100vw-2rem,28rem)] overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                        className="mt-2 overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-lg"
                         role="tooltip"
+                        style={{
+                          width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
+                          maxHeight: `min(70vh, ${filePreviewLayout.heightRem}rem)`,
+                        }}
                       >
                         <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
                         <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">

@@ -23,6 +23,15 @@ import { buildPortalProgressReturnUrl, getPortalReturnPath, setPortalReturnPath 
 import { buildMbtiProJoinResponses, parseMbtiProJoinResponses } from '@/lib/mbtiProJoinResponses';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 
+function PortalAmbientBackground() {
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(56,189,248,0.11),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_85%_100%,rgba(99,102,241,0.09),transparent)]" />
+    </>
+  );
+}
+
 interface Answer {
   [key: string]: number;
 }
@@ -600,7 +609,13 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       
       // 다음 페이지로 이동하기 전에 약간의 지연 추가 (UI 표시를 위해)
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
+      if (flow.defaultPath === '/tests/ego-ok-pro') {
+        router.push(getPortalReturnPath());
+        setIsLoading(false);
+        return;
+      }
+
       // 생성한 testCode를 URL 파라미터로 전달 (검사기록 목록의 코드와 일치시키기 위해)
       const queryString = encodeURIComponent(JSON.stringify(testData));
       router.push(flow.buildResultUrl({ encodedData: queryString, testCode }));
@@ -705,6 +720,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
             </>
           )}
+          {uiTheme === 'portal' && <PortalAmbientBackground />}
 
           <MbtiProClientInfo
             onSubmit={handleClientInfoSubmit} 
@@ -759,6 +775,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
           </>
         )}
+        {uiTheme === 'portal' && <PortalAmbientBackground />}
         <div className="relative z-10 text-white text-2xl">문항을 준비하는 중입니다...</div>
       </div>
     );
@@ -785,6 +802,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
         </>
       )}
+      {uiTheme === 'portal' && <PortalAmbientBackground />}
       
       <div className="max-w-2xl mx-auto relative z-10" onMouseMove={handleMouseMove}>
           <div className="text-center mb-2">
