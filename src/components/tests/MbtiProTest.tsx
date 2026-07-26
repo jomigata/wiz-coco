@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { questions } from '@/data/mbtiProQuestions';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -770,7 +770,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   // 검사 단계 (currentStep === 'test')
 
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  const answeredCount = useMemo(
+    () => Object.values(answers).filter((v) => v !== undefined).length,
+    [answers],
+  );
+  const progress = (answeredCount / totalQuestions) * 100;
   const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = 'after:from-sky-400/60') =>
     `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 
@@ -837,18 +841,18 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           <div className={v.mainCard}>
             <div className="flex justify-between items-center mb-2">
               <div className={v.progressLabel}>문항 {currentQuestion + 1} / {totalQuestions}</div>
-              <div className={v.progressLabel}>진행률: {Math.round(((currentQuestion + 1) / totalQuestions) * 100)}%</div>
+              <div className={v.progressLabel}>진행률: {Math.round(progress)}%</div>
             </div>
 
-            <div className={`w-full ${v.progressTrack} rounded-full h-1.5 mb-3`}>
+            <div className={`w-full ${v.progressTrack} rounded-full h-1.5 mb-5`}>
               <div
                 className={`${v.progressFill} h-1.5 rounded-full transition-all duration-300`}
                 style={{ width: `${progress}%` }}
               />
             </div>
 
-            <div className="text-center mb-2">
-              <div className="h-[84px] relative overflow-hidden mb-2">
+            <div className="text-center mb-3">
+              <div className="h-[84px] relative overflow-hidden mb-4">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
@@ -867,7 +871,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 </AnimatePresence>
               </div>
               
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <div className="relative flex justify-between items-end gap-3 px-4">
                   <div className={v.scaleArc}></div>
                   <button

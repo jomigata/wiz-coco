@@ -10,6 +10,10 @@ import {
 } from '@/lib/assessmentReportPrint';
 import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
 import AssessmentComprehensiveReportButton from '@/components/counselor/AssessmentComprehensiveReportButton';
+import {
+  readCachedTestResults,
+  writeCachedTestResults,
+} from '@/lib/counselorSessionCache';
 
 type CounselorResultRow = {
   id: string;
@@ -50,7 +54,13 @@ export default function TestResultsPage() {
         return;
       }
 
-      setIsLoading(true);
+      const cached = readCachedTestResults<CounselorResultRow>(user.uid);
+      if (cached?.length) {
+        setRows(cached);
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
       setError('');
       try {
         const { queryDocuments } = await import('@/utils/firebaseFirestore');
@@ -61,10 +71,14 @@ export default function TestResultsPage() {
           'desc',
           200
         );
-        setRows((docs || []).map((d: any) => ({ id: d.id, ...d })));
+        const nextRows = (docs || []).map((d: any) => ({ id: d.id, ...d }));
+        writeCachedTestResults(user.uid, nextRows);
+        setRows(nextRows);
       } catch (e: any) {
         console.error('[CounselorTestResults] load failed', e);
-        setError('검사 결과를 불러오지 못했습니다. 권한/규칙을 확인해 주세요.');
+        if (!cached?.length) {
+          setError('검사 결과를 불러오지 못했습니다. 권한/규칙을 확인해 주세요.');
+        }
       } finally {
         setIsLoading(false);
       }

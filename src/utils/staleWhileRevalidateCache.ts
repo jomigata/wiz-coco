@@ -54,3 +54,25 @@ export function writeSWRCache<T>(key: string, data: T | null, opts?: { scope?: '
   }
 }
 
+export function clearSWRCacheByPrefix(
+  prefix: string,
+  scopes: ('session' | 'local')[] = ['session', 'local'],
+): void {
+  for (const scope of scopes) {
+    const storage = getStorage(scope);
+    if (!storage) continue;
+    const keys: string[] = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key?.startsWith(prefix)) keys.push(key);
+    }
+    keys.forEach((key) => {
+      try {
+        storage.removeItem(key);
+      } catch {
+        // ignore
+      }
+    });
+  }
+}
+

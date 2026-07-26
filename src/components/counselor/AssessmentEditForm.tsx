@@ -6,6 +6,10 @@ import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { getAssessment, updateAssessment, type CounselorAssessment } from '@/lib/assessmentApi';
+import {
+  readCachedAssessmentDetail,
+  writeCachedAssessmentDetail,
+} from '@/lib/counselorSessionCache';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
@@ -19,14 +23,23 @@ interface AssessmentEditFormProps {
 export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormProps) {
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
-  const [loadingData, setLoadingData] = useState(true);
+  const [loadingData, setLoadingData] = useState(() => !readCachedAssessmentDetail(assessmentId));
   const [loadError, setLoadError] = useState('');
-  const [initial, setInitial] = useState<CounselorAssessment | null>(null);
+  const [initial, setInitial] = useState<CounselorAssessment | null>(
+    () => readCachedAssessmentDetail(assessmentId),
+  );
 
-  const [title, setTitle] = useState('');
-  const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [usageEndDate, setUsageEndDate] = useState('');
-  const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set());
+  const [title, setTitle] = useState(() => readCachedAssessmentDetail(assessmentId)?.title || '');
+  const [welcomeMessage, setWelcomeMessage] = useState(
+    () => readCachedAssessmentDetail(assessmentId)?.welcomeMessage || '',
+  );
+  const [usageEndDate, setUsageEndDate] = useState(
+    () => (readCachedAssessmentDetail(assessmentId)?.usageEndDate || '').trim(),
+  );
+  const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(() => {
+    const cached = readCachedAssessmentDetail(assessmentId);
+    return new Set((cached?.testList || []).map((t) => t.testId).filter(Boolean));
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const leftColRef = useRef<HTMLDivElement>(null);
@@ -38,11 +51,13 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       return;
     }
     let cancelled = false;
-    setLoadingData(true);
+    const hasCache = Boolean(readCachedAssessmentDetail(assessmentId));
+    if (!hasCache) setLoadingData(true);
     setLoadError('');
     getAssessment(assessmentId)
       .then((data) => {
         if (cancelled) return;
+        writeCachedAssessmentDetail(assessmentId, data);
         setInitial(data);
         setTitle(data.title || '');
         setWelcomeMessage(data.welcomeMessage || '');
@@ -124,7 +139,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
     }
   };
 
-  if (authPending || loadingData) {
+  if (authPending || (loadingData && !initial)) {
     return <AuthLoadingState className="py-8" />;
   }
   if (showLoginRequired) {
@@ -148,8 +163,13 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      {loadingData && initial ? (
+        <p className="text-xs text-sky-300/80" role="status">
+          저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
+        </p>
+      ) : null}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
         <div ref={leftColRef} className="flex min-h-0 flex-col gap-4">
           <CounselorPageSection title="상담(코드)">
             <div className="flex flex-wrap items-center gap-3">

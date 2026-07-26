@@ -15,6 +15,10 @@ import {
 import { PILOT_FREE_CREDITS } from '@/data/monetizationCatalog';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
+import {
+  readCachedCredits,
+  writeCachedCredits,
+} from '@/lib/counselorSessionCache';
 
 function TabBar({
   tab,
@@ -61,9 +65,12 @@ function CreditsContent() {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     fetchMyCredits()
-      .then(setData)
+      .then((res) => {
+        writeCachedCredits(user.uid, res);
+        setData(res);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : '조회 실패'));
   }, [user]);
 
@@ -73,10 +80,19 @@ function CreditsContent() {
       return;
     }
     let cancelled = false;
-    setLoading(true);
+    const cached = user.uid ? readCachedCredits<CounselorCreditsResponse>(user.uid) : null;
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     fetchMyCredits()
       .then((res) => {
-        if (!cancelled) setData(res);
+        if (!cancelled) {
+          writeCachedCredits(user.uid, res);
+          setData(res);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : '조회 실패');

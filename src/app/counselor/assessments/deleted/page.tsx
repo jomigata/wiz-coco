@@ -9,6 +9,10 @@ import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
+  readCachedArchivedAssessments,
+  writeCachedArchivedAssessments,
+} from '@/lib/counselorSessionCache';
+import {
   fetchArchivedDispatchRecipients,
   type ArchivedDispatchRecipient,
 } from '@/lib/clientPortalApi';
@@ -130,8 +134,12 @@ function SortableColumnHeader({
 
 export default function DeletedAssessmentsPage() {
   const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
-  const [items, setItems] = useState<ArchivedAssessment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<ArchivedAssessment[]>(
+    () => readCachedArchivedAssessments<ArchivedAssessment>() ?? [],
+  );
+  const [loading, setLoading] = useState(
+    () => !(readCachedArchivedAssessments<ArchivedAssessment>()?.length),
+  );
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [restoring, setRestoring] = useState(false);
@@ -147,15 +155,19 @@ export default function DeletedAssessmentsPage() {
   const emptyRecipientSelection = useMemo(() => new Set<string>(), []);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const cached = readCachedArchivedAssessments<ArchivedAssessment>();
+    if (!cached?.length) setLoading(true);
     setError('');
     try {
       const result = await listArchivedAssessments();
+      writeCachedArchivedAssessments(result.assessments || []);
       setItems(result.assessments || []);
       setSelected(new Set());
     } catch (err) {
-      setItems([]);
-      setError(err instanceof Error ? err.message : '목록 조회 실패');
+      if (!cached?.length) {
+        setItems([]);
+        setError(err instanceof Error ? err.message : '목록 조회 실패');
+      }
     } finally {
       setLoading(false);
     }

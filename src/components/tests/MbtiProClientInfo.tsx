@@ -316,18 +316,16 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
         }
       `}</style>
       
-      {!isPersonalTest && (
-        <div className="absolute inset-0 z-0 opacity-10">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100" height="100" fill="url(#grid)" />
-          </svg>
-        </div>
-      )}
+      <div className="absolute inset-0 z-0 opacity-10">
+        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100" height="100" fill="url(#grid)" />
+        </svg>
+      </div>
       
       {th.showOrbs && (
         <>
@@ -541,7 +539,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     <button
                       type="button"
                       aria-label="이전 연도 보기"
-                      className="mb-1 flex h-6 w-full items-center justify-center rounded border border-emerald-700/60 bg-emerald-900/60 text-xs text-emerald-200/90 transition hover:bg-emerald-800/70"
+                      className="mb-1 flex h-6 w-full items-center justify-center rounded border border-sky-600/60 bg-sky-900/60 text-xs text-sky-200/90 transition hover:bg-sky-800/70"
                       onMouseEnter={() => startYearArrowScroll(-1)}
                       onMouseLeave={stopYearArrowScroll}
                     >
@@ -626,7 +624,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                               />
                             </>
                           )}
-                          <span>{year}</span>
+                          <span className={isSelected ? 'text-sm sm:text-base font-bold leading-none' : ''}>
+                            {year}
+                          </span>
                         </motion.button>
                         );
                       })}
@@ -634,7 +634,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     <button
                       type="button"
                       aria-label="다음 연도 보기"
-                      className="mt-1 flex h-6 w-full items-center justify-center rounded border border-emerald-700/60 bg-emerald-900/60 text-xs text-emerald-200/90 transition hover:bg-emerald-800/70"
+                      className="mt-1 flex h-6 w-full items-center justify-center rounded border border-sky-600/60 bg-sky-900/60 text-xs text-sky-200/90 transition hover:bg-sky-800/70"
                       onMouseEnter={() => startYearArrowScroll(1)}
                       onMouseLeave={stopYearArrowScroll}
                     >

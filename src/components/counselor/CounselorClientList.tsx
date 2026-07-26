@@ -17,6 +17,11 @@ import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResults
 import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import {
+  buildClientPortalsCacheKey,
+  readCachedClientPortals,
+  writeCachedClientPortals,
+} from '@/lib/counselorSessionCache';
 import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@/types/clientPortal';
 
 type StatusFilter = 'active' | 'archived' | 'all';
@@ -59,13 +64,6 @@ export default function CounselorClientList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
-  const [items, setItems] = useState<CounselorClientPortalListItem[]>([]);
-  const [assessmentMeta, setAssessmentMeta] = useState<
-    Record<string, { testList: { testId: string; name: string }[] }>
-  >({});
-  const [cohorts, setCohorts] = useState<{ cohortId: string; cohortName: string }[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
@@ -73,6 +71,32 @@ export default function CounselorClientList() {
   const [tagFilter, setTagFilter] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
   const [expandedContactId, setExpandedContactId] = useState<string | null>(null);
+
+  const cacheKey = useMemo(
+    () =>
+      buildClientPortalsCacheKey({
+        status: statusFilter,
+        cohortId: cohortFilter || undefined,
+        progress: progressFilter,
+        tag: tagFilter || undefined,
+        q: query.trim() || undefined,
+      }),
+    [statusFilter, cohortFilter, progressFilter, tagFilter, query],
+  );
+
+  const initialCached = useMemo(() => readCachedClientPortals(cacheKey), [cacheKey]);
+
+  const [items, setItems] = useState<CounselorClientPortalListItem[]>(
+    () => initialCached?.items ?? [],
+  );
+  const [assessmentMeta, setAssessmentMeta] = useState<
+    Record<string, { testList: { testId: string; name: string }[] }>
+  >(() => initialCached?.assessmentMeta ?? {});
+  const [cohorts, setCohorts] = useState<{ cohortId: string; cohortName: string }[]>(
+    () => initialCached?.cohorts ?? [],
+  );
+  const [tags, setTags] = useState<string[]>(() => initialCached?.tags ?? []);
+  const [loading, setLoading] = useState(() => !initialCached?.items?.length);
 
   useEffect(() => {
     const fromUrl = searchParams.get('cohortId');
@@ -97,7 +121,15 @@ export default function CounselorClientList() {
   );
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const cached = readCachedClientPortals(cacheKey);
+    if (cached?.items?.length) {
+      setItems(cached.items);
+      setCohorts(cached.cohorts || []);
+      setTags(cached.tags || []);
+      setAssessmentMeta(cached.assessmentMeta || {});
+    } else {
+      setLoading(true);
+    }
     setError('');
     try {
       const data = await listCounselorClientPortals({
@@ -107,17 +139,20 @@ export default function CounselorClientList() {
         tag: tagFilter || undefined,
         q: query.trim() || undefined,
       });
+      writeCachedClientPortals(cacheKey, data);
       setItems(data.items || []);
       setCohorts(data.cohorts || []);
       setTags(data.tags || []);
       setAssessmentMeta(data.assessmentMeta || {});
     } catch (err) {
-      setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
-      setItems([]);
+      if (!cached?.items?.length) {
+        setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+        setItems([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, cohortFilter, progressFilter, tagFilter, query]);
+  }, [cacheKey, statusFilter, cohortFilter, progressFilter, tagFilter, query]);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {
@@ -252,7 +287,7 @@ export default function CounselorClientList() {
         </div>
       ) : null}
 
-      {loading ? (
+      {loading && displayItems.length === 0 ? (
         <p className="py-12 text-center text-sm text-slate-500">내담자 목록을 불러오는 중…</p>
       ) : displayItems.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
@@ -268,6 +303,12 @@ export default function CounselorClientList() {
           </AuthLink>
         </div>
       ) : (
+        <>
+          {loading ? (
+            <p className="mb-2 text-xs text-sky-300/80" role="status">
+              저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
+            </p>
+          ) : null}
         <div className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/50">
           <table className="min-w-full divide-y divide-white/10 text-sm">
             <thead>
@@ -406,6 +447,7 @@ export default function CounselorClientList() {
             </tbody>
           </table>
         </div>
+        </>
       )}
       </div>
     </CounselorPageSection>

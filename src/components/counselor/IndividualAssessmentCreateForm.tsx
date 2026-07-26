@@ -61,6 +61,8 @@ export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usageEndDateRef = useRef<HTMLInputElement>(null);
+  const cohortNameRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const pendingIntentRef = useRef<IssueIntent | null>(null);
   const { user, authPending, showLoginRequired } = useAuthResolved();
@@ -78,6 +80,9 @@ export default function IndividualAssessmentCreateForm() {
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [loadingIntent, setLoadingIntent] = useState<IssueIntent | null>(null);
   const [error, setError] = useState('');
+  const [validationField, setValidationField] = useState<
+    'cohortName' | 'title' | 'recipients' | 'tests' | null
+  >(null);
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
   const [sharedJoinCode, setSharedJoinCode] = useState('');
   const [notifySent, setNotifySent] = useState(0);
@@ -90,6 +95,34 @@ export default function IndividualAssessmentCreateForm() {
   const [lastIssueIntent, setLastIssueIntent] = useState<IssueIntent>('excel');
 
   const loading = loadingIntent !== null;
+
+  const focusValidationField = useCallback(
+    (field: 'cohortName' | 'title' | 'recipients' | 'tests') => {
+      setValidationField(field);
+      window.setTimeout(() => {
+        if (field === 'cohortName') {
+          cohortNameRef.current?.focus();
+          cohortNameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (field === 'title') {
+          titleRef.current?.focus();
+          titleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (field === 'recipients') {
+          recipientNameRefs.current[0]?.focus();
+          recipientNameRefs.current[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 0);
+    },
+    [],
+  );
+
+  const showValidationError = useCallback(
+    (message: string, field?: 'cohortName' | 'title' | 'recipients' | 'tests') => {
+      setError(message);
+      if (field) focusValidationField(field);
+      else setValidationField(null);
+    },
+    [focusValidationField],
+  );
 
   const filePreviewLayout = useMemo(() => {
     if (!filePreviewText) return null;
@@ -272,35 +305,39 @@ export default function IndividualAssessmentCreateForm() {
 
   const handleIssue = async (intent: IssueIntent) => {
     setError('');
+    setValidationField(null);
     setCreated([]);
     setSharedJoinCode('');
 
     if (!cohortName.trim()) {
-      setError('기관/단체/그룹명을 입력해 주세요.');
+      showValidationError('기관/단체/그룹명을 입력해 주세요.', 'cohortName');
       return;
     }
     if (!title.trim()) {
-      setError('안내 제목을 입력해 주세요.');
+      showValidationError('안내 제목을 입력해 주세요.', 'title');
       return;
     }
     if (recipients.length === 0) {
-      setError('내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 파일을 첨부해 주세요.');
+      showValidationError(
+        '내담자 1명 이상(이름·이메일 또는 휴대폰)을 입력하거나 파일을 첨부해 주세요.',
+        'recipients',
+      );
       return;
     }
     if (recipients.length > GROUP_RECIPIENT_MAX) {
-      setError(`한 번에 최대 ${GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명까지 발급할 수 있습니다.`);
+      showValidationError(`한 번에 최대 ${GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명까지 발급할 수 있습니다.`);
       return;
     }
     const invalid = recipients.find((r) => !r.email.trim() && !r.phone.trim());
     if (invalid) {
-      setError(`「${invalid.displayName}」님의 이메일 또는 휴대폰 번호가 필요합니다.`);
+      showValidationError(`「${invalid.displayName}」님의 이메일 또는 휴대폰 번호가 필요합니다.`, 'recipients');
       return;
     }
     const testList = counselorAssessmentTestOptions
       .filter((t) => selectedTestIds.has(t.testId))
       .map((t) => ({ testId: t.testId, name: t.name }));
     if (testList.length === 0) {
-      setError('포함할 검사를 1개 이상 선택해 주세요.');
+      showValidationError('포함할 검사를 1개 이상 선택해 주세요.', 'tests');
       return;
     }
 
@@ -522,13 +559,17 @@ export default function IndividualAssessmentCreateForm() {
                   기관/단체/그룹명 <span className="text-red-400">*</span>
                 </label>
                 <input
+                  ref={cohortNameRef}
                   type="text"
                   required
                   maxLength={120}
-                  className={FORM_INPUT}
+                  className={`${FORM_INPUT}${validationField === 'cohortName' ? ' ring-2 ring-amber-400/70 border-amber-400/60' : ''}`}
                   placeholder="예: 2025 OO고 3학년"
                   value={cohortName}
-                  onChange={(e) => setCohortName(e.target.value)}
+                  onChange={(e) => {
+                    setCohortName(e.target.value);
+                    if (validationField === 'cohortName') setValidationField(null);
+                  }}
                   disabled={loading}
                 />
               </div>
@@ -537,13 +578,17 @@ export default function IndividualAssessmentCreateForm() {
                   안내 제목 <span className="text-red-400">*</span>
                 </label>
                 <input
+                  ref={titleRef}
                   type="text"
                   required
                   maxLength={200}
-                  className={FORM_INPUT}
+                  className={`${FORM_INPUT}${validationField === 'title' ? ' ring-2 ring-amber-400/70 border-amber-400/60' : ''}`}
                   placeholder="예: 개인 심리검사"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (validationField === 'title') setValidationField(null);
+                  }}
                   disabled={loading}
                 />
               </div>
@@ -739,63 +784,46 @@ export default function IndividualAssessmentCreateForm() {
                   텍스트/엑셀 파일 첨부하기
                 </button>
                 <span className="text-sm text-slate-400">샘플받기</span>
-                <div className="relative inline-block">
-                  <button
-                    type="button"
-                    onClick={downloadGroupRecipientSampleTxt}
-                    onMouseEnter={() => setSamplePreviewKind('txt')}
-                    onMouseLeave={() => setSamplePreviewKind(null)}
-                    onFocus={() => setSamplePreviewKind('txt')}
-                    onBlur={() => setSamplePreviewKind(null)}
-                    className="text-sm text-sky-300 transition hover:text-sky-200"
-                  >
-                    (텍스트파일)
-                  </button>
-                  {samplePreviewKind === 'txt' && samplePreviewText && samplePreviewLayout ? (
-                    <div
-                      className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
-                      role="tooltip"
-                      style={{
-                        width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
-                        minHeight: `${samplePreviewLayout.heightRem}rem`,
-                      }}
-                    >
-                      <p className="mb-2 text-xs font-semibold text-sky-300">샘플 텍스트 미리보기</p>
-                      <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                        {samplePreviewText}
-                      </pre>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="relative inline-block">
-                  <button
-                    type="button"
-                    onClick={downloadGroupRecipientSampleCsv}
-                    onMouseEnter={() => setSamplePreviewKind('csv')}
-                    onMouseLeave={() => setSamplePreviewKind(null)}
-                    onFocus={() => setSamplePreviewKind('csv')}
-                    onBlur={() => setSamplePreviewKind(null)}
-                    className="text-sm text-sky-300 transition hover:text-sky-200"
-                  >
-                    (엑셀파일)
-                  </button>
-                  {samplePreviewKind === 'csv' && samplePreviewText && samplePreviewLayout ? (
-                    <div
-                      className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
-                      role="tooltip"
-                      style={{
-                        width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
-                        minHeight: `${samplePreviewLayout.heightRem}rem`,
-                      }}
-                    >
-                      <p className="mb-2 text-xs font-semibold text-sky-300">샘플 엑셀(CSV) 미리보기</p>
-                      <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                        {samplePreviewText}
-                      </pre>
-                    </div>
-                  ) : null}
-                </div>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleTxt}
+                  onMouseEnter={() => setSamplePreviewKind('txt')}
+                  onMouseLeave={() => setSamplePreviewKind(null)}
+                  onFocus={() => setSamplePreviewKind('txt')}
+                  onBlur={() => setSamplePreviewKind(null)}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                >
+                  (텍스트파일)
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGroupRecipientSampleCsv}
+                  onMouseEnter={() => setSamplePreviewKind('csv')}
+                  onMouseLeave={() => setSamplePreviewKind(null)}
+                  onFocus={() => setSamplePreviewKind('csv')}
+                  onBlur={() => setSamplePreviewKind(null)}
+                  className="text-sm text-sky-300 transition hover:text-sky-200"
+                >
+                  (엑셀파일)
+                </button>
               </div>
+              {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
+                <div
+                  className="rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                  role="tooltip"
+                  style={{
+                    width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
+                    minHeight: `${samplePreviewLayout.heightRem}rem`,
+                  }}
+                >
+                  <p className="mb-2 text-xs font-semibold text-sky-300">
+                    {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
+                  </p>
+                  <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                    {samplePreviewText}
+                  </pre>
+                </div>
+              ) : null}
               <p className="text-xs leading-relaxed text-slate-500">
                 첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
               </p>
@@ -862,12 +890,21 @@ export default function IndividualAssessmentCreateForm() {
           bodyClassName="flex min-h-0 flex-1 flex-col"
         >
           {error ? (
-            <p
-              className="mb-3 shrink-0 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5 text-sm leading-snug text-red-300"
+            <div
+              className="mb-3 shrink-0 rounded-xl border-2 border-amber-400/50 bg-amber-950/40 px-4 py-3 shadow-lg shadow-amber-950/30"
               role="alert"
             >
-              {error}
-            </p>
+              <p className="text-sm font-semibold text-amber-100">{error}</p>
+              <p className="mt-1 text-xs text-amber-200/80">
+                {validationField === 'cohortName' || validationField === 'title'
+                  ? '왼쪽 검사 정보 영역의 입력란을 확인해 주세요.'
+                  : validationField === 'recipients'
+                    ? '내담자 목록에 정보를 입력하거나 파일을 첨부해 주세요.'
+                    : validationField === 'tests'
+                      ? '포함할 검사를 1개 이상 선택해 주세요.'
+                      : '빈 항목을 채운 뒤 다시 시도해 주세요.'}
+              </p>
+            </div>
           ) : null}
 
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-2.5 py-2">
@@ -911,6 +948,32 @@ export default function IndividualAssessmentCreateForm() {
           </div>
         </CounselorPageSection>
       </div>
+
+      {loadingIntent && !activeJobId ? (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 backdrop-blur-[2px]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="issue-progress-title"
+        >
+          <div className="mx-4 w-full max-w-sm rounded-2xl border border-sky-500/35 bg-[#121f38] px-6 py-8 text-center shadow-2xl shadow-black/50">
+            <div
+              className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-sky-500/30 border-t-sky-400"
+              aria-hidden="true"
+            />
+            <p id="issue-progress-title" className="text-lg font-bold text-white">
+              발급 진행 중…
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              {loadingIntent === 'excel'
+                ? '엑셀 저장을 위해 상담(코드)를 발급하고 있습니다.'
+                : '내담자에게 발급·발송을 처리하고 있습니다.'}
+              <br />
+              창을 닫지 말고 잠시만 기다려 주세요.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

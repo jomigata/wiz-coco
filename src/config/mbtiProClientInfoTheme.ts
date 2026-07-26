@@ -79,31 +79,32 @@ const portal: MbtiProClientInfoTheme = {
   shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#060a12] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-300 max-w-lg mx-auto text-sm',
   formCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-4 sm:p-5',
-  fieldBox: 'rounded-xl border border-emerald-700/35 bg-emerald-950/40 p-2.5',
+  fieldBox: 'rounded-xl border border-sky-400/30 bg-sky-950/35 p-2.5',
   fieldBoxMuted:
-    'rounded-xl border border-emerald-700/35 bg-emerald-950/40 p-2.5 hover:bg-emerald-900/35 transition-colors',
-  label: 'block text-sm font-medium text-emerald-200/95 mb-0.5',
+    'rounded-xl border border-sky-400/30 bg-sky-950/35 p-2.5 hover:bg-sky-900/40 transition-colors',
+  label: 'block text-sm font-medium text-sky-200/95 mb-0.5',
   input:
-    'w-full px-3 py-2 rounded-lg bg-emerald-950/50 border border-emerald-700/50 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400/60 transition-colors',
+    'w-full px-3 py-2 rounded-lg bg-sky-950/45 border border-sky-500/45 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60 transition-colors',
   choiceSection: 'rounded-xl border border-sky-400/25 bg-sky-500/12 p-2.5',
   choiceBtnActive: 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border border-sky-400/30',
   choiceBtnInactive:
     'bg-[#1a2740] text-slate-200 border border-white/[0.12] hover:bg-[#1f2f4d]',
   yearSelector:
-    'year-selector mt-1.5 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700/80 rounded-lg p-2 shadow-lg shadow-black/30',
+    'year-selector mt-1.5 z-50 bg-sky-900/95 backdrop-blur-sm border border-sky-600/65 rounded-lg p-2 shadow-lg shadow-black/30',
   yearGrid:
-    'grid grid-cols-10 gap-x-0.5 gap-y-0.5 overflow-y-auto max-h-[272px] px-1 scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-950/80',
+    'grid grid-cols-10 gap-x-0.5 gap-y-0.5 overflow-y-auto max-h-[272px] px-1 scrollbar-thin scrollbar-thumb-sky-600 scrollbar-track-sky-950/80',
   yearBtnBase:
     'relative flex items-center justify-center px-0.5 py-1.5 min-h-0 text-[11px] sm:text-xs font-medium rounded transition-all',
-  yearBtnSelected: 'bg-emerald-600 text-white border-2 border-emerald-400 shadow-lg shadow-emerald-500/40',
-  yearBtnBgDefault: 'bg-emerald-800/75',
-  yearBtnBgBlueBand: 'bg-sky-700/45',
-  yearBtnBorderHover: 'border border-emerald-700/80 hover:bg-emerald-700/70',
-  yearTextNormal: 'text-emerald-100',
-  yearTextAccent: 'text-yellow-200 font-semibold',
-  yearSelectedUnderline: 'bg-emerald-300/45',
-  yearSelectedRing: 'ring-emerald-300/30',
-  yearBtnHoverRgb: 'rgba(5, 150, 105, 0.35)',
+  yearBtnSelected:
+    'bg-sky-500 text-white border-2 border-sky-300 shadow-lg shadow-sky-400/45 scale-[1.08] z-[1]',
+  yearBtnBgDefault: 'bg-sky-800/60',
+  yearBtnBgBlueBand: 'bg-sky-700/50',
+  yearBtnBorderHover: 'border border-sky-600/70 hover:bg-sky-700/65',
+  yearTextNormal: 'text-sky-100',
+  yearTextAccent: 'text-sky-50 font-semibold',
+  yearSelectedUnderline: 'bg-sky-300/45',
+  yearSelectedRing: 'ring-sky-300/35',
+  yearBtnHoverRgb: 'rgba(14, 165, 233, 0.35)',
   privacyBox:
     'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5 hover:bg-[#1f2f4d] transition-colors',
   checkbox: 'w-4 h-4 text-sky-500 bg-slate-900 border-sky-500/50 rounded focus:ring-sky-500 focus:ring-2',

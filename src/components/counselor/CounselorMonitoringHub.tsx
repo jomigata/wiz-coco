@@ -13,6 +13,10 @@ import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { useCounselorMonitoringRealtime } from '@/hooks/useCounselorMonitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import {
+  readCachedMonitoringHub,
+  writeCachedMonitoringHub,
+} from '@/lib/counselorSessionCache';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import type { CounselorMonitoringAssessment } from '@/types/clientPortal';
 
@@ -123,9 +127,9 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
   const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
   const [view, setView] = useState<MonitoringHubView>(initialView);
   const [baseData, setBaseData] = useState<Awaited<ReturnType<typeof fetchCounselorMonitoringHub>> | null>(
-    null,
+    () => readCachedMonitoringHub(),
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !readCachedMonitoringHub());
   const [error, setError] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
 
@@ -155,14 +159,18 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
   );
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const cached = readCachedMonitoringHub();
+    if (!cached) setLoading(true);
     setError('');
     try {
       const data = await fetchCounselorMonitoringHub();
+      writeCachedMonitoringHub(data);
       setBaseData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '모니터링 데이터를 불러오지 못했습니다.');
-      setBaseData(null);
+      if (!cached) {
+        setError(err instanceof Error ? err.message : '모니터링 데이터를 불러오지 못했습니다.');
+        setBaseData(null);
+      }
     } finally {
       setLoading(false);
     }

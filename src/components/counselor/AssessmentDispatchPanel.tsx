@@ -36,6 +36,10 @@ import {
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 import { mergeRecipients, parseRecipientFile, type RecipientRow } from '@/lib/recipientImport';
+import {
+  readCachedDispatchStatus,
+  writeCachedDispatchStatus,
+} from '@/lib/counselorSessionCache';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   return formatNotifyDate(iso);
@@ -280,8 +284,10 @@ interface AssessmentDispatchPanelProps {
 
 export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDispatchPanelProps) {
   const { authPending, isAuthenticated } = useAuthResolved();
-  const [data, setData] = useState<AssessmentDispatchStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<AssessmentDispatchStatus | null>(
+    () => readCachedDispatchStatus(assessmentId),
+  );
+  const [loading, setLoading] = useState(() => !readCachedDispatchStatus(assessmentId));
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -314,14 +320,16 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!assessmentId) return;
-    if (!opts?.silent) setLoading(true);
+    const cached = readCachedDispatchStatus(assessmentId);
+    if (!opts?.silent && !cached) setLoading(true);
     setError('');
     try {
       const result = await fetchAssessmentDispatchStatus(assessmentId);
+      writeCachedDispatchStatus(assessmentId, result);
       setData(result);
       setSelected(new Set());
     } catch (err) {
-      if (!opts?.silent) setData(null);
+      if (!opts?.silent && !cached) setData(null);
       setError(err instanceof Error ? err.message : '불러오기 실패');
     } finally {
       if (!opts?.silent) setLoading(false);

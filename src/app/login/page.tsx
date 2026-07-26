@@ -18,12 +18,12 @@ import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 
 const LoadingLogin = () => (
-  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
+  <div className="min-h-screen bg-[#060a12] flex flex-col">
     <div className="h-20" />
     <div className="flex-grow flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-emerald-300 text-lg">로그인 페이지를 로딩 중입니다...</p>
+        <div className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-sky-300 text-lg">로그인 페이지를 로딩 중입니다...</p>
       </div>
     </div>
   </div>
@@ -109,16 +109,26 @@ const LoginContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
+    <div className="min-h-screen bg-[#060a12] flex flex-col">
+      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
+        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <pattern id="login-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100" height="100" fill="url(#login-grid)" />
+        </svg>
+      </div>
+      <div className="relative z-10 flex-grow flex items-center justify-center px-4 py-12">
+        <div className="max-w-sm w-full space-y-5 bg-[#182438]/90 p-6 rounded-xl border border-white/[0.14] shadow-xl shadow-black/30">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-emerald-100 mb-1">전문가·상담사 로그인</h2>
-            <p className="text-sm text-emerald-500/90">상담(코드) 관리를 위한 전문가·상담사 계정</p>
+            <h2 className="text-2xl font-semibold text-white mb-1">전문가·상담사 로그인</h2>
+            <p className="text-sm text-slate-400">상담(코드) 관리를 위한 전문가·상담사 계정</p>
           </div>
 
           {registrationSuccess && !emailVerificationMessage && (
-            <div className="bg-emerald-800/50 text-emerald-200 p-4 rounded-lg text-center text-sm">
+            <div className="bg-sky-900/40 text-sky-200 p-4 rounded-lg text-center text-sm border border-sky-600/30">
               회원가입이 완료되었습니다. 로그인해주세요.
             </div>
           )}
@@ -156,7 +166,7 @@ const LoginContent = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
+              className="w-full px-3 py-2.5 text-sm border border-white/15 bg-[#121f38]/95 placeholder-slate-500 text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60"
               placeholder="이메일"
             />
             <label htmlFor="password" className="sr-only">
@@ -170,12 +180,12 @@ const LoginContent = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
+              className="w-full px-3 py-2.5 text-sm border border-white/15 bg-[#121f38]/95 placeholder-slate-500 text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60"
               placeholder="비밀번호"
             />
             <button
               type="submit"
-              className="w-full py-2.5 text-sm font-medium rounded-md text-emerald-50 bg-emerald-700/80 border border-emerald-600/40 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-500/60 disabled:opacity-60"
+              className="w-full py-2.5 text-sm font-medium rounded-md text-white bg-sky-600 border border-sky-500/40 hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 disabled:opacity-60"
               disabled={isLoading}
             >
               {isLoading ? '처리 중…' : '로그인'}
@@ -183,17 +193,17 @@ const LoginContent = () => {
           </form>
 
           <div className="text-center pt-1">
-            <p className="text-xs text-emerald-600">
+            <p className="text-xs text-slate-500">
               <Link
                 href="/register"
-                className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
+                className="text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline"
               >
                 전문가·상담사 등록
               </Link>
-              <span className="mx-2 text-emerald-800">·</span>
+              <span className="mx-2 text-slate-600">·</span>
               <Link
                 href="/forgot-password"
-                className="text-emerald-500 hover:text-emerald-400 underline-offset-2 hover:underline"
+                className="text-sky-400/80 hover:text-sky-300 underline-offset-2 hover:underline"
               >
                 비밀번호 찾기
               </Link>
