@@ -44,7 +44,7 @@ def _find_portal_by_my_code(db, my_code: str):
 
 
 def portal_ecosystem_can_use_assessment(db, portal_id: str, access_code: str):
-    """연결된 나의코드 포함 — 해당 상담패키지 사용 가능 여부."""
+    """연결된 나의코드 포함 — 해당 상담(코드) 사용 가능 여부."""
     code = normalize_access_code(access_code or "")
     if not code or not portal_id:
         return None

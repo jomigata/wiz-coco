@@ -14,8 +14,8 @@ export const ASSESSMENT_LIST_SORT_OPTIONS: { value: AssessmentListSortKey; label
   { value: 'createdAsc', label: '오래된 순' },
   { value: 'orgNameAsc', label: '기관/단체/그룹명 가나다순' },
   { value: 'orgNameDesc', label: '기관/단체/그룹명 역순' },
-  { value: 'codeAsc', label: '상담패키지 오름차순' },
-  { value: 'codeDesc', label: '상담패키지 내림차순' },
+  { value: 'codeAsc', label: '상담(코드) 오름차순' },
+  { value: 'codeDesc', label: '상담(코드) 내림차순' },
 ];
 
 export function getAssessmentOrgLabel(a: Pick<CounselorAssessment, 'cohortName' | 'title'>): string {

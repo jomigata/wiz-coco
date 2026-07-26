@@ -197,7 +197,7 @@ function AIProfilingPageContent() {
       setIsCompleted(true);
       setShowResult(true);
       
-      // 상담패키지 생성 및 검사기록 목록에 저장
+      // 상담(코드) 생성 및 검사기록 목록에 저장
       const generatedCode = generateTestCode('AMATEUR'); // AI 프로파일링은 개인용으로 분류
       setTestCode(generatedCode);
       

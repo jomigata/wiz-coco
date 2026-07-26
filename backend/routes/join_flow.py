@@ -23,9 +23,9 @@ from utils.join_portal_issue import try_issue_portal_for_participant
 bp = Blueprint("join_flow", __name__, url_prefix="/api/join")
 
 MSG_NOT_FOUND = (
-    "요청하신 상담패키지가 확인되지 않습니다. 상담패키지를 다시 확인해 주시기 바랍니다."
+    "요청하신 상담(코드)가 확인되지 않습니다. 상담(코드)를 다시 확인해 주시기 바랍니다."
 )
-MSG_EXPIRED = "상담패키지 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+MSG_EXPIRED = "상담(코드) 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
 MSG_COMPLETE_TEST_FIRST = "검사를 1건 이상 완료한 후 정보를 입력해 주세요."
 
 
@@ -101,7 +101,7 @@ def _link_guest_results(db, guest_id: str, participant_id: str, assessment_id: s
 @bp.route("/guest-start", methods=["POST"])
 @limit_access_code
 def guest_start():
-    """상담패키지 확인 후 프로필 등록 전 게스트 세션 발급."""
+    """상담(코드) 확인 후 프로필 등록 전 게스트 세션 발급."""
     body = request.get_json() or {}
     code = normalize_access_code(body.get("accessCode") or "")
     if not is_valid_access_code(code):

@@ -85,12 +85,12 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({
       groupPassword?: string;
     } = {};
 
-    // 상담패키지는 선택사항이므로 빈 값도 허용
+    // 상담(코드)는 선택사항이므로 빈 값도 허용
     if (groupCode.trim() && groupCode.length < 3) {
-      newErrors.groupCode = '상담패키지는 최소 3자리 이상이어야 합니다.';
+      newErrors.groupCode = '상담(코드)는 최소 3자리 이상이어야 합니다.';
     }
 
-    // 비밀번호는 상담패키지가 있을 때만 필수
+    // 비밀번호는 상담(코드)가 있을 때만 필수
     if (groupCode.trim() && !groupPassword.trim()) {
       newErrors.groupPassword = '비밀번호를 입력해주세요.';
     }
@@ -139,8 +139,8 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({
   const subtitle =
     screenSubtitle ??
     (isPersonalTest
-      ? '상담패키지가 없어도 검사를 진행할 수 있습니다.\n상담패키지는 상담사가 제공한 경우에만 입력하세요.'
-      : '상담패키지가 없어도 검사를 진행할 수 있습니다.\n상담패키지는 상담사가 제공한 경우에만 입력하세요.');
+      ? '상담(코드)가 없어도 검사를 진행할 수 있습니다.\n상담(코드)는 상담사가 제공한 경우에만 입력하세요.'
+      : '상담(코드)가 없어도 검사를 진행할 수 있습니다.\n상담(코드)는 상담사가 제공한 경우에만 입력하세요.');
   const formCard = isPortal
     ? 'bg-slate-900/90 border border-white/[0.08] rounded-xl shadow-lg p-8'
     : 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-8';
@@ -218,17 +218,17 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({
               </div>
             )}
 
-            {/* 상담패키지 입력 섹션 */}
+            {/* 상담(코드) 입력 섹션 */}
             <div className="space-y-6 border border-blue-500/20 rounded-lg p-4 bg-blue-500/10">
               <div className="pb-2 border-b border-white/20">
                 <div className="flex justify-between items-center mb-1">
-                  <span className={`text-sm font-medium ${labelMuted}`}>상담패키지</span>
+                  <span className={`text-sm font-medium ${labelMuted}`}>상담(코드)</span>
                 </div>
               </div>
               
               <div>
                 <label htmlFor="group-password-field" className="block text-sm font-medium text-blue-300 mb-1">
-                  상담패키지 / 비밀번호 <span className="text-blue-400/50 text-xs">(선택)</span>
+                  상담(코드) / 비밀번호 <span className="text-blue-400/50 text-xs">(선택)</span>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="autocomplete-blocker">
@@ -247,7 +247,7 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({
                         }
                       }}
                       className={`w-full px-4 py-3 rounded-lg ${groupCode.trim() ? (isPortal ? 'bg-sky-600/80 border border-sky-500/40' : 'bg-emerald-600 border border-emerald-700') : (isPortal ? 'bg-slate-800/70 border border-white/[0.12]' : 'bg-emerald-800/70 border border-emerald-700')} text-white focus:ring-2 ${isPortal ? 'focus:ring-sky-500 focus:border-sky-500' : 'focus:ring-emerald-500 focus:border-emerald-500'} transition-colors`}
-                      placeholder="상담패키지 입력"
+                      placeholder="상담(코드) 입력"
                       autoComplete="new-password"
                       autoCorrect="off"
                       autoCapitalize="off"
@@ -309,8 +309,8 @@ const MbtiProCodeInput: React.FC<MbtiProCodeInputProps> = ({
         </motion.div>
 
         <div className={`mt-8 text-center text-sm ${hintClass}`}>
-          <p>* 상담패키지가 없어도 검사를 진행할 수 있습니다.</p>
-          <p>* 상담패키지는 상담사가 제공한 경우에만 입력하세요.</p>
+          <p>* 상담(코드)가 없어도 검사를 진행할 수 있습니다.</p>
+          <p>* 상담(코드)는 상담사가 제공한 경우에만 입력하세요.</p>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import HomeSectionShell from '@/components/home/HomeSectionShell';
 const clientTrustPoints = [
   {
     title: '회원가입 없이 시작',
-    body: '안내 받은 상담패키지와 4자리 PIN만으로 검사실에 입장합니다.',
+    body: '안내 받은 상담(코드)와 4자리 PIN만으로 검사실에 입장합니다.',
   },
   {
     title: '전문 검사 환경',

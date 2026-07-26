@@ -151,7 +151,7 @@ export default function InsideMbtiPage() {
     if (inputMode[person]) {
       return form[person].mbti;
     } else {
-      // 상담패키지를 선택했을 때, 해당 코드의 MBTI 결과 가져오기
+      // 상담(코드)를 선택했을 때, 해당 코드의 MBTI 결과 가져오기
       if (form[person].testCode) {
         const selectedTest = testResults.find(test => test.code === form[person].testCode);
         return selectedTest?.result || '';
@@ -169,7 +169,7 @@ export default function InsideMbtiPage() {
       }
     });
 
-    // 상담패키지를 선택했을 때 해당 결과의 이름을 자동으로 반영
+    // 상담(코드)를 선택했을 때 해당 결과의 이름을 자동으로 반영
     if (field === 'testCode') {
       const selectedTest = testResults.find(test => test.code === value);
       if (selectedTest) {
@@ -261,14 +261,14 @@ export default function InsideMbtiPage() {
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <label htmlFor="person1TestCode" className="block text-sm font-medium text-blue-200">
-                            {inputMode.person1 ? 'MBTI 유형 직접입력' : '상담패키지 선택'}
+                            {inputMode.person1 ? 'MBTI 유형 직접입력' : '상담(코드) 선택'}
                           </label>
                           <button 
                             type="button"
                             className="text-xs text-blue-300 hover:text-blue-100 underline"
                             onClick={() => toggleInputMode('person1')}
                           >
-                            {inputMode.person1 ? '상담패키지로 선택하기' : '직접 입력하기'}
+                            {inputMode.person1 ? '상담(코드)로 선택하기' : '직접 입력하기'}
                           </button>
                         </div>
                         
@@ -289,7 +289,7 @@ export default function InsideMbtiPage() {
                             value={form.person1.testCode}
                             onChange={(e) => handleChange('person1', 'testCode', e.target.value)}
                           >
-                            <option value="">상담패키지 선택</option>
+                            <option value="">상담(코드) 선택</option>
                             {isLoading ? (
                               <option value="" disabled>불러오는 중...</option>
                             ) : sortedTestResults.length > 0 ? (
@@ -325,14 +325,14 @@ export default function InsideMbtiPage() {
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <label htmlFor="person2TestCode" className="block text-sm font-medium text-blue-200">
-                            {inputMode.person2 ? 'MBTI 유형 직접입력' : '상담패키지 선택'}
+                            {inputMode.person2 ? 'MBTI 유형 직접입력' : '상담(코드) 선택'}
                           </label>
                           <button 
                             type="button"
                             className="text-xs text-blue-300 hover:text-blue-100 underline"
                             onClick={() => toggleInputMode('person2')}
                           >
-                            {inputMode.person2 ? '상담패키지로 선택하기' : '직접 입력하기'}
+                            {inputMode.person2 ? '상담(코드)로 선택하기' : '직접 입력하기'}
                           </button>
                         </div>
                         
@@ -353,7 +353,7 @@ export default function InsideMbtiPage() {
                             value={form.person2.testCode}
                             onChange={(e) => handleChange('person2', 'testCode', e.target.value)}
                           >
-                            <option value="">상담패키지 선택</option>
+                            <option value="">상담(코드) 선택</option>
                             {isLoading ? (
                               <option value="" disabled>불러오는 중...</option>
                             ) : sortedTestResults.length > 0 ? (

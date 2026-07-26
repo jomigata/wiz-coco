@@ -733,7 +733,7 @@ function MbtiResultContent() {
                 개인용 MBTI 검사 결과
               </h1>
               <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-              {/* 상담패키지와 검사결과 코드 표시 */}
+              {/* 상담(코드)와 검사결과 코드 표시 */}
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
                 {(() => {
                   const counselorCode = testResult?.counselorCode || 
@@ -747,7 +747,7 @@ function MbtiResultContent() {
                     <>
                       {counselorCode && (
                         <p className="text-blue-200">
-                          상담패키지: <span className="font-mono font-semibold">{formatAccessCodeDisplay(counselorCode)}</span>
+                          상담(코드): <span className="font-mono font-semibold">{formatAccessCodeDisplay(counselorCode)}</span>
                         </p>
                       )}
                       {testCode && (

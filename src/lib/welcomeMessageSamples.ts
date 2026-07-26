@@ -1,4 +1,4 @@
-/** 상담패키지 안내 메시지 — 새 구성·수정 폼 예시 버튼용 */
+/** 상담(코드) 안내 메시지 — 새 구성·수정 폼 예시 버튼용 */
 
 export type WelcomeMessageSample = {
   label: string;

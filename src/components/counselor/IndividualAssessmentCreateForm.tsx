@@ -42,12 +42,12 @@ type IssueIntent = 'excel' | 'send_all' | 'goto_dispatch';
 const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
 
 const FORM_INPUT =
-  'w-full rounded-lg border border-white/10 bg-[#101f38]/90 px-3 py-2.5 text-base text-white placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 disabled:cursor-not-allowed disabled:opacity-55';
-const FORM_LABEL = 'mb-1.5 block text-sm font-semibold text-slate-300';
-const FORM_HINT = 'text-sm text-slate-400 leading-relaxed';
+  'w-full rounded-lg border border-white/15 bg-[#121f38]/95 px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/35 focus:border-sky-400/55 disabled:cursor-not-allowed disabled:opacity-55';
+const FORM_LABEL = 'mb-1.5 block text-sm font-semibold text-slate-200';
+const FORM_HINT = 'text-sm text-slate-300 leading-relaxed';
 /** 포함할 검사 목록 스크롤 영역 */
 const TEST_PICKER_SCROLL =
-  'max-h-[14rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/10 bg-[#101f38]/60 p-3';
+  'max-h-[14rem] overflow-y-auto overscroll-y-contain rounded-lg border border-white/12 bg-[#121f38]/75 p-3';
 
 function recipientGridClass(): string {
   return 'grid grid-cols-[minmax(5.5rem,1fr)_minmax(7rem,1.2fr)_minmax(6.5rem,1fr)_3rem] items-center gap-x-2 gap-y-1';
@@ -110,8 +110,9 @@ export default function IndividualAssessmentCreateForm() {
     const lines = samplePreviewText.split('\n');
     const lineCount = lines.length;
     const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    const widthCh = Math.min(Math.max(longestLine + 2, 28), 120);
-    return { widthCh, lineCount };
+    const widthCh = Math.min(Math.max(longestLine + 2, 32), 120);
+    const heightRem = Math.max(lineCount * 1.35 + 2.5, 8);
+    return { widthCh, lineCount, heightRem };
   }, [samplePreviewText]);
 
   useEffect(() => {
@@ -367,7 +368,7 @@ export default function IndividualAssessmentCreateForm() {
       pendingIntentRef.current = null;
     } catch (err) {
       pendingIntentRef.current = null;
-      setError(err instanceof Error ? err.message : '상담패키지 발급에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '상담(코드) 발급에 실패했습니다.');
     } finally {
       setLoadingIntent(null);
     }
@@ -442,7 +443,7 @@ export default function IndividualAssessmentCreateForm() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="rounded-lg border border-blue-500/40 bg-blue-950/30 p-5 text-blue-100">
-          <p className="font-medium">상담패키지 대량 발급 진행 중…</p>
+          <p className="font-medium">상담(코드) 대량 발급 진행 중…</p>
           <p className="mt-2 text-sm text-blue-200/90">
             {jobProgress.processedRows.toLocaleString('ko-KR')} /{' '}
             {jobProgress.totalRows.toLocaleString('ko-KR')}명 처리됨 ({jobProgress.progressPct}%)
@@ -455,7 +456,7 @@ export default function IndividualAssessmentCreateForm() {
           </div>
           {sharedJoinCode ? (
             <p className="mt-3 text-sm">
-              공통 상담패키지:{' '}
+              공통 상담(코드):{' '}
               <span className="font-mono font-semibold">{formatAccessCodeDisplay(sharedJoinCode)}</span>
             </p>
           ) : null}
@@ -486,7 +487,7 @@ export default function IndividualAssessmentCreateForm() {
             </p>
             {sharedJoinCode ? (
               <p>
-                공통 상담패키지:{' '}
+                공통 상담(코드):{' '}
                 <span className="font-mono text-lg font-bold tracking-wider text-emerald-100">
                   {formatAccessCodeDisplay(sharedJoinCode)}
                 </span>
@@ -589,8 +590,8 @@ export default function IndividualAssessmentCreateForm() {
                   onPick={(text) => setWelcomeMessage(text)}
                 />
                 <textarea
-                  rows={5}
-                  className={`${FORM_INPUT} mt-2 min-h-[8.5rem] resize-y`}
+                  rows={4}
+                  className={`${FORM_INPUT} mt-2 min-h-[5.5rem] max-h-[5.5rem] resize-none overflow-y-auto`}
                   placeholder="내담자에게 보여줄 안내 문구"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
@@ -752,10 +753,11 @@ export default function IndividualAssessmentCreateForm() {
                   </button>
                   {samplePreviewKind === 'txt' && samplePreviewText && samplePreviewLayout ? (
                     <div
-                      className="absolute left-0 top-full z-50 mt-2 w-max max-w-[min(100vw-2rem,40rem)] rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                      className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
                       role="tooltip"
                       style={{
                         width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
+                        minHeight: `${samplePreviewLayout.heightRem}rem`,
                       }}
                     >
                       <p className="mb-2 text-xs font-semibold text-sky-300">샘플 텍스트 미리보기</p>
@@ -779,10 +781,11 @@ export default function IndividualAssessmentCreateForm() {
                   </button>
                   {samplePreviewKind === 'csv' && samplePreviewText && samplePreviewLayout ? (
                     <div
-                      className="absolute left-0 top-full z-50 mt-2 w-max max-w-[min(100vw-2rem,40rem)] rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                      className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
                       role="tooltip"
                       style={{
                         width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
+                        minHeight: `${samplePreviewLayout.heightRem}rem`,
                       }}
                     >
                       <p className="mb-2 text-xs font-semibold text-sky-300">샘플 엑셀(CSV) 미리보기</p>

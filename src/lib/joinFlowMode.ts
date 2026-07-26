@@ -1,5 +1,5 @@
 /**
- * /join 상담패키지 입력 — 신규 내담자 참여 플로우 (기존 내 검사실 세션과 분리)
+ * /join 상담(코드) 입력 — 신규 내담자 참여 플로우 (기존 내 검사실 세션과 분리)
  */
 import { normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
@@ -26,7 +26,7 @@ export function clearJoinFreshParticipantFlow(accessCodeNorm?: string): void {
   }
 }
 
-/** 상담패키지 입력(/join)으로 시작한 신규 참여 — 내 검사실 세션보다 우선 */
+/** 상담(코드) 입력(/join)으로 시작한 신규 참여 — 내 검사실 세션보다 우선 */
 export function isJoinFreshParticipantFlow(accessCodeNorm?: string): boolean {
   if (typeof window === 'undefined') return false;
   const stored = sessionStorage.getItem(JOIN_FRESH_PARTICIPANT_KEY);

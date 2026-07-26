@@ -13,7 +13,7 @@ export type MbtiProTestFlowConfig = {
   testScreenSubtitle?: string;
   codeStepTitle?: string;
   codeStepSubtitle?: string;
-  /** true면 상담패키지 입력 단계 생략 후 기본정보부터 시작 */
+  /** true면 상담(코드) 입력 단계 생략 후 기본정보부터 시작 */
   skipCodeStep?: boolean;
   /** 기본정보 입력 화면 제목 (미설정 시 testScreenTitle 또는 MBTI 기본 문구) */
   clientInfoScreenTitle?: string;

@@ -34,15 +34,15 @@ def portal_can_use_assessment(db, portal_id: str, access_code: str):
 
 
 def link_shared_assessment_to_portal(db, portal_id: str, shared_access_code: str) -> tuple[bool, str, str | None]:
-    """공유 상담패키지를 포털에 연결. (ok, message, assessment_id)"""
+    """공유 상담(코드)를 포털에 연결. (ok, message, assessment_id)"""
     ass_doc = find_active_assessment_by_code(db, shared_access_code)
     if not ass_doc:
-        return False, "공유 상담패키지를 찾을 수 없습니다.", None
+        return False, "공유 상담(코드)를 찾을 수 없습니다.", None
 
     ass_data = ass_doc.to_dict() or {}
     issue_type = (ass_data.get("issueType") or "shared").strip()
     if issue_type not in ("shared", "individual"):
-        return False, "연결할 수 없는 상담패키지입니다.", None
+        return False, "연결할 수 없는 상담(코드)입니다.", None
 
     portal_doc = get_portal_doc(db, portal_id)
     if not portal_doc:

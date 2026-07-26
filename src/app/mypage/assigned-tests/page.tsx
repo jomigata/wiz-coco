@@ -77,7 +77,7 @@ export default function AssignedTestsPage() {
               </div>
               <h1 className="text-2xl font-bold text-blue-400 mb-2">상담사와 연결이 필요합니다</h1>
               <p className="text-gray-300 mb-4">
-                할당된 검사를 확인하려면 담당 전문가가 안내한 상담패키지로 검사실에 접속해 주세요.
+                할당된 검사를 확인하려면 담당 전문가가 안내한 상담(코드)로 검사실에 접속해 주세요.
               </p>
               <a
                 href="/portal/login/"

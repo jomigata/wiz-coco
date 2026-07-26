@@ -370,7 +370,7 @@ function MbtiGraphResults() {
               MBTI 테스트 결과
             </h1>
             <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-            {/* 상담패키지와 검사결과 코드 표시 */}
+            {/* 상담(코드)와 검사결과 코드 표시 */}
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
             {code && (
                 <p className="text-blue-200">

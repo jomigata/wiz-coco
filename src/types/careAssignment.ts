@@ -48,7 +48,7 @@ export type CareAssignment = {
   priority: CareAssignmentPriority;
   /** treatment_program — T-2-02 카탈로그 programId */
   programId?: string;
-  /** additional_assessment — 기존 상담패키지 연결 */
+  /** additional_assessment — 기존 상담(코드) 연결 */
   assessmentId?: string;
   /** additional_assessment — 신규 미니 검사 세트(assessmentId 없을 때) */
   testList?: CareAssignmentTestItem[];

@@ -1,4 +1,4 @@
-"""상담패키지 대량 발급 — Firestore job + 배치 처리."""
+"""상담(코드) 대량 발급 — Firestore job + 배치 처리."""
 from __future__ import annotations
 
 import time
@@ -48,14 +48,14 @@ def prepare_bulk_assessment(
     if existing_assessment_id:
         assessment_doc = db.collection(ASSESSMENTS_COLLECTION).document(existing_assessment_id).get()
         if not assessment_doc.exists:
-            raise ValueError("선택한 상담패키지를 찾을 수 없습니다.")
+            raise ValueError("선택한 상담(코드)를 찾을 수 없습니다.")
         ass_data = assessment_doc.to_dict() or {}
         if ass_data.get("counselorId") != counselor_uid:
-            raise PermissionError("선택한 상담패키지에 접근할 수 없습니다.")
+            raise PermissionError("선택한 상담(코드)에 접근할 수 없습니다.")
         if (ass_data.get("status") or "active") != "active":
-            raise ValueError("비활성화된 상담패키지입니다.")
+            raise ValueError("비활성화된 상담(코드)입니다.")
         if (ass_data.get("issueType") or "individual") != "individual":
-            raise ValueError("상담패키지(개별 발급) 검사만 선택할 수 있습니다.")
+            raise ValueError("상담(코드)(개별 발급) 검사만 선택할 수 있습니다.")
         join_access_code = ass_data.get("accessCode", "")
         cohort_id = ass_data.get("clientPortalCohortId") or cohort_id
         return existing_assessment_id, join_access_code, cohort_id

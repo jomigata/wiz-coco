@@ -146,7 +146,7 @@ export default function ProgressDashboard({
             <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
           )}
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">상담패키지:</span>
+            <span className="text-slate-400">상담(코드):</span>
             <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
           </div>
         </div>

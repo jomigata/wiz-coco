@@ -1,5 +1,5 @@
 /**
- * 상담패키지 표시·검증 (백엔드 utils/access_code.py 와 동일 규칙)
+ * 상담(코드) 표시·검증 (백엔드 utils/access_code.py 와 동일 규칙)
  * 신규: CVC(자음+모음+자음, L/I/O/0/1 제외) + 숫자 2~9만 3자리 이상
  * 구형: 영숫자 6자리
  *
@@ -123,7 +123,7 @@ export function normalizeJoinPinDigits(raw: unknown): string {
 }
 
 /**
- * 상담패키지·검사결과 코드 UI 표시용 (하이픈 등 비영숫자 제거).
+ * 상담(코드)·검사결과 코드 UI 표시용 (하이픈 등 비영숫자 제거).
  * 구형 MP250-AA001 형식도 MP250AA001 로 표시합니다.
  */
 export function formatAccessCodeDisplay(canonical: string): string {
@@ -153,7 +153,7 @@ export function formatJoinAccessCodeWhileTyping(raw: string): string {
 export const INSPECTION_CODE_MIGRATION_STORAGE_KEY = 'wizcoco_inspection_code_no_hyphen_data_v2';
 
 /**
- * 상담패키지·검사결과 코드 저장·조회용 정규화 (하이픈·공백 제거).
+ * 상담(코드)·검사결과 코드 저장·조회용 정규화 (하이픈·공백 제거).
  * accessCode(CVC)와 MBTI 결과코드(MP250AA001) 공통.
  */
 export function normalizeInspectionCode(raw: string): string {

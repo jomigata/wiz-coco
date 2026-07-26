@@ -76,34 +76,34 @@ const emerald: MbtiProClientInfoTheme = {
 };
 
 const portal: MbtiProClientInfoTheme = {
-  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#080d18] text-white px-3 pt-14 pb-14',
-  subtitle: 'text-slate-400 max-w-lg mx-auto text-sm',
-  formCard: 'rounded-2xl border border-white/[0.12] bg-[#151f33] shadow-lg shadow-black/20 p-4 sm:p-5',
-  fieldBox: 'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5',
+  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#060a12] text-white px-3 pt-14 pb-14',
+  subtitle: 'text-slate-300 max-w-lg mx-auto text-sm',
+  formCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-4 sm:p-5',
+  fieldBox: 'rounded-xl border border-emerald-700/35 bg-emerald-950/40 p-2.5',
   fieldBoxMuted:
-    'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5 hover:bg-[#1f2f4d] transition-colors',
-  label: 'block text-sm font-medium text-sky-200/90 mb-0.5',
+    'rounded-xl border border-emerald-700/35 bg-emerald-950/40 p-2.5 hover:bg-emerald-900/35 transition-colors',
+  label: 'block text-sm font-medium text-emerald-200/95 mb-0.5',
   input:
-    'w-full px-3 py-2 rounded-lg bg-[#101f38]/90 border border-white/12 text-white focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 transition-colors',
+    'w-full px-3 py-2 rounded-lg bg-emerald-950/50 border border-emerald-700/50 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400/60 transition-colors',
   choiceSection: 'rounded-xl border border-sky-400/25 bg-sky-500/12 p-2.5',
   choiceBtnActive: 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border border-sky-400/30',
   choiceBtnInactive:
     'bg-[#1a2740] text-slate-200 border border-white/[0.12] hover:bg-[#1f2f4d]',
   yearSelector:
-    'year-selector mt-1.5 z-50 rounded-xl border border-white/[0.12] bg-[#151f33] backdrop-blur-sm p-2 shadow-lg',
+    'year-selector mt-1.5 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700/80 rounded-lg p-2 shadow-lg shadow-black/30',
   yearGrid:
-    'grid grid-cols-8 gap-x-1 gap-y-1 overflow-y-auto max-h-[272px] px-1 scrollbar-thin scrollbar-thumb-sky-600/80 scrollbar-track-slate-900/50',
+    'grid grid-cols-10 gap-x-0.5 gap-y-0.5 overflow-y-auto max-h-[272px] px-1 scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-emerald-950/80',
   yearBtnBase:
-    'relative flex items-center justify-center px-1.5 py-1.5 min-h-0 text-xs font-medium rounded transition-all',
-  yearBtnSelected: 'bg-sky-600 text-white border-2 border-sky-500 shadow-lg shadow-sky-500/30',
-  yearBtnBgDefault: 'bg-[#1a2740]',
-  yearBtnBgBlueBand: 'bg-sky-500/18',
-  yearBtnBorderHover: 'border border-white/[0.12] hover:bg-[#1f2f4d]',
-  yearTextNormal: 'text-slate-200',
-  yearTextAccent: 'text-yellow-200',
-  yearSelectedUnderline: 'bg-sky-300/45',
-  yearSelectedRing: 'ring-sky-300/30',
-  yearBtnHoverRgb: 'rgba(14, 165, 233, 0.28)',
+    'relative flex items-center justify-center px-0.5 py-1.5 min-h-0 text-[11px] sm:text-xs font-medium rounded transition-all',
+  yearBtnSelected: 'bg-emerald-600 text-white border-2 border-emerald-400 shadow-lg shadow-emerald-500/40',
+  yearBtnBgDefault: 'bg-emerald-800/75',
+  yearBtnBgBlueBand: 'bg-sky-700/45',
+  yearBtnBorderHover: 'border border-emerald-700/80 hover:bg-emerald-700/70',
+  yearTextNormal: 'text-emerald-100',
+  yearTextAccent: 'text-yellow-200 font-semibold',
+  yearSelectedUnderline: 'bg-emerald-300/45',
+  yearSelectedRing: 'ring-emerald-300/30',
+  yearBtnHoverRgb: 'rgba(5, 150, 105, 0.35)',
   privacyBox:
     'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5 hover:bg-[#1f2f4d] transition-colors',
   checkbox: 'w-4 h-4 text-sky-500 bg-slate-900 border-sky-500/50 rounded focus:ring-sky-500 focus:ring-2',
@@ -122,3 +122,6 @@ const portal: MbtiProClientInfoTheme = {
 export function getMbtiProClientInfoTheme(uiTheme: 'emerald' | 'portal' = 'emerald'): MbtiProClientInfoTheme {
   return uiTheme === 'portal' ? portal : emerald;
 }
+
+export const YEAR_GRID_COLS = 10;
+export const YEAR_GRID_VISIBLE_ROWS = 8;

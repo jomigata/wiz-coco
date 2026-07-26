@@ -4,7 +4,7 @@ import React, { ChangeEvent, FC, useEffect, useRef, useState, FormEvent, useMemo
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { getMbtiProClientInfoTheme } from '@/config/mbtiProClientInfoTheme';
+import { getMbtiProClientInfoTheme, YEAR_GRID_COLS } from '@/config/mbtiProClientInfoTheme';
 
 interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
@@ -290,7 +290,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     const idxAttr = target.getAttribute('data-year-idx');
     if (idxAttr == null) return;
     const idx = parseInt(idxAttr, 10);
-    const cols = 8;
+    const cols = YEAR_GRID_COLS;
     let next = idx;
     if (e.key === 'ArrowRight') next = Math.min(years.length - 1, idx + 1);
     else if (e.key === 'ArrowLeft') next = Math.max(0, idx - 1);
@@ -541,7 +541,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     <button
                       type="button"
                       aria-label="이전 연도 보기"
-                      className="mb-1 flex h-6 w-full items-center justify-center rounded border border-white/[0.08] bg-white/[0.04] text-xs text-sky-300/80 transition hover:bg-white/[0.08]"
+                      className="mb-1 flex h-6 w-full items-center justify-center rounded border border-emerald-700/60 bg-emerald-900/60 text-xs text-emerald-200/90 transition hover:bg-emerald-800/70"
                       onMouseEnter={() => startYearArrowScroll(-1)}
                       onMouseLeave={stopYearArrowScroll}
                     >
@@ -559,9 +559,10 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       onTouchEnd={handleTouchEnd}
                     >
                       {years.map((year, idx) => {
-                        const columnIndex = (idx % 8) + 1;
-                        const rowIndex = Math.floor(idx / 8) + 1;
-                        const blueBand = (columnIndex >= 3 && columnIndex <= 6) || (rowIndex >= 4 && rowIndex <= 6);
+                        const columnIndex = (idx % YEAR_GRID_COLS) + 1;
+                        const rowIndex = Math.floor(idx / YEAR_GRID_COLS) + 1;
+                        const blueBand =
+                          (columnIndex >= 4 && columnIndex <= 7) || (rowIndex >= 4 && rowIndex <= 7);
                         const isSelected = birthYear === year;
                         const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
                         return (
@@ -633,7 +634,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     <button
                       type="button"
                       aria-label="다음 연도 보기"
-                      className="mt-1 flex h-6 w-full items-center justify-center rounded border border-white/[0.08] bg-white/[0.04] text-xs text-sky-300/80 transition hover:bg-white/[0.08]"
+                      className="mt-1 flex h-6 w-full items-center justify-center rounded border border-emerald-700/60 bg-emerald-900/60 text-xs text-emerald-200/90 transition hover:bg-emerald-800/70"
                       onMouseEnter={() => startYearArrowScroll(1)}
                       onMouseLeave={stopYearArrowScroll}
                     >
@@ -733,7 +734,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                   </div>
                 </div>
                 
-            {/* 상담패키지 입력 부분은 별도 화면으로 분리됨 */}
+            {/* 상담(코드) 입력 부분은 별도 화면으로 분리됨 */}
 
             {/* 개인정보 활용 동의 */}
             <div 

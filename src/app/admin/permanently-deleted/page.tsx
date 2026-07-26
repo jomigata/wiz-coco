@@ -81,7 +81,7 @@ export default function AdminPermanentlyDeletedPage() {
         portalIds: Array.from(selectedPortals),
       });
       setMessage(
-        `복구 완료 — 상담패키지 ${result.restoredAssessments}건, 내담자 ${result.restoredPortals}명`,
+        `복구 완료 — 상담(코드) ${result.restoredAssessments}건, 내담자 ${result.restoredPortals}명`,
       );
       await load();
     } catch (err) {
@@ -109,7 +109,7 @@ export default function AdminPermanentlyDeletedPage() {
         confirm: 'PURGE',
       });
       setMessage(
-        `완전 삭제 — 상담패키지 ${result.purgedAssessments}건, 내담자 ${result.purgedPortals}명`,
+        `완전 삭제 — 상담(코드) ${result.purgedAssessments}건, 내담자 ${result.purgedPortals}명`,
       );
       await load();
     } catch (err) {
@@ -125,7 +125,7 @@ export default function AdminPermanentlyDeletedPage() {
   return (
     <AdminPageLayout
       title="영구 삭제 보관함"
-      description="상담사가 영구 삭제한 상담패키지·내담자 기록입니다. 삭제 목록으로 되돌리거나 DB에서 완전히 제거할 수 있습니다."
+      description="상담사가 영구 삭제한 상담(코드)·내담자 기록입니다. 삭제 목록으로 되돌리거나 DB에서 완전히 제거할 수 있습니다."
       toolbar={
         <>
           <button
@@ -161,16 +161,16 @@ export default function AdminPermanentlyDeletedPage() {
       ) : (
         <div className="space-y-8">
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-200">상담패키지 ({assessmentRows.length})</h2>
+            <h2 className="mb-3 text-sm font-semibold text-slate-200">상담(코드) ({assessmentRows.length})</h2>
             {assessmentRows.length === 0 ? (
-              <p className="text-sm text-slate-500">영구 삭제된 상담패키지가 없습니다.</p>
+              <p className="text-sm text-slate-500">영구 삭제된 상담(코드)가 없습니다.</p>
             ) : (
               <div className="overflow-x-auto rounded-lg border border-white/10">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-900/60 text-slate-400">
                     <tr>
                       <th className="px-3 py-2 text-left">선택</th>
-                      <th className="px-3 py-2 text-left">상담패키지</th>
+                      <th className="px-3 py-2 text-left">상담(코드)</th>
                       <th className="px-3 py-2 text-left">검사명</th>
                       <th className="px-3 py-2 text-left">상담사 UID</th>
                       <th className="px-3 py-2 text-left">영구 삭제일시</th>

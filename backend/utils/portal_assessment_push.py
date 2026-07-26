@@ -1,4 +1,4 @@
-"""기존 내담자 포털에 상담패키지(assessment) 추가 push."""
+"""기존 내담자 포털에 상담(코드)(assessment) 추가 push."""
 from __future__ import annotations
 
 from firebase_admin.firestore import ArrayUnion, SERVER_TIMESTAMP
@@ -28,17 +28,17 @@ def _verify_push_assessment(db, assessment_id: str, counselor_uid: str) -> dict:
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
-        raise ValueError("상담패키지를 찾을 수 없습니다.")
+        raise ValueError("상담(코드)를 찾을 수 없습니다.")
     ass = ass_doc.to_dict() or {}
     if ass.get("counselorId") != counselor_uid:
-        raise PermissionError("선택한 상담패키지에 접근할 수 없습니다.")
+        raise PermissionError("선택한 상담(코드)에 접근할 수 없습니다.")
     if (ass.get("status") or "active") != "active":
-        raise ValueError("비활성화된 상담패키지입니다.")
+        raise ValueError("비활성화된 상담(코드)입니다.")
     if (ass.get("issueType") or "individual") != "individual":
-        raise ValueError("개별 발급 상담패키지만 push할 수 있습니다.")
+        raise ValueError("개별 발급 상담(코드)만 push할 수 있습니다.")
     return {
         "assessmentId": assessment_id,
-        "title": (ass.get("title") or "").strip() or "상담패키지",
+        "title": (ass.get("title") or "").strip() or "상담(코드)",
         "joinAccessCode": (ass.get("accessCode") or "").strip(),
         "testList": ass.get("testList") or [],
     }
@@ -150,9 +150,9 @@ def push_assessments_to_portals(
     notify: bool = True,
 ) -> dict:
     """
-    기존 내담자 포털에 상담패키지를 추가 배정하고 선택적으로 알림을 발송합니다.
+    기존 내담자 포털에 상담(코드)를 추가 배정하고 선택적으로 알림을 발송합니다.
 
-    assessment_id가 있으면 기존 상담패키지를, 없으면 testList로 신규 상담패키지를 생성합니다.
+    assessment_id가 있으면 기존 상담(코드)를, 없으면 testList로 신규 상담(코드)를 생성합니다.
     """
     normalized_portal_ids = [str(pid).strip() for pid in (portal_ids or []) if str(pid).strip()]
     if not normalized_portal_ids:

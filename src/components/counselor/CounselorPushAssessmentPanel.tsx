@@ -43,7 +43,7 @@ export default function CounselorPushAssessmentPanel({
       );
       setAssessments(individual);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '상담패키지 목록을 불러오지 못했습니다.');
+      setError(err instanceof Error ? err.message : '상담(코드) 목록을 불러오지 못했습니다.');
     } finally {
       setLoadingAssessments(false);
     }
@@ -95,12 +95,12 @@ export default function CounselorPushAssessmentPanel({
             };
 
       if (mode === 'existing' && !selectedAssessmentId) {
-        setError('상담패키지를 선택해 주세요.');
+        setError('상담(코드)를 선택해 주세요.');
         return;
       }
       if (mode === 'new') {
         if (!title.trim()) {
-          setError('상담패키지 제목을 입력해 주세요.');
+          setError('상담(코드) 제목을 입력해 주세요.');
           return;
         }
         if (selectedTestIds.size === 0) {
@@ -138,7 +138,7 @@ export default function CounselorPushAssessmentPanel({
         <div>
           <h3 className="text-sm font-semibold text-white">추가 검사 push</h3>
           <p className="mt-0.5 text-xs text-slate-500">
-            {portalIds.length}명 내담자에게 상담패키지를 추가 배정하고 알림을 보냅니다.
+            {portalIds.length}명 내담자에게 상담(코드)를 추가 배정하고 알림을 보냅니다.
           </p>
         </div>
         <span className="text-slate-400">{open ? '▲' : '▼'}</span>
@@ -156,7 +156,7 @@ export default function CounselorPushAssessmentPanel({
                   : 'border border-white/15 text-slate-300 hover:bg-white/5'
               }`}
             >
-              기존 상담패키지
+              기존 상담(코드)
             </button>
             <button
               type="button"
@@ -167,18 +167,18 @@ export default function CounselorPushAssessmentPanel({
                   : 'border border-white/15 text-slate-300 hover:bg-white/5'
               }`}
             >
-              신규 상담패키지 생성
+              신규 상담(코드) 생성
             </button>
           </div>
 
           {mode === 'existing' ? (
             <div>
-              <label className="mb-1.5 block text-xs text-slate-400">상담패키지 선택</label>
+              <label className="mb-1.5 block text-xs text-slate-400">상담(코드) 선택</label>
               {loadingAssessments ? (
-                <p className="text-xs text-slate-500">상담패키지 목록 불러오는 중…</p>
+                <p className="text-xs text-slate-500">상담(코드) 목록 불러오는 중…</p>
               ) : availableAssessments.length === 0 ? (
                 <p className="text-xs text-amber-300">
-                  배정 가능한 기존 상담패키지가 없습니다. 신규 상담패키지를 생성해 주세요.
+                  배정 가능한 기존 상담(코드)가 없습니다. 신규 상담(코드)를 생성해 주세요.
                 </p>
               ) : (
                 <select
@@ -186,7 +186,7 @@ export default function CounselorPushAssessmentPanel({
                   onChange={(e) => setSelectedAssessmentId(e.target.value)}
                   className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
                 >
-                  <option value="">상담패키지를 선택하세요</option>
+                  <option value="">상담(코드)를 선택하세요</option>
                   {availableAssessments.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.title} ({(a.testList || []).length}개 검사)
@@ -198,7 +198,7 @@ export default function CounselorPushAssessmentPanel({
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="mb-1.5 block text-xs text-slate-400">상담패키지 제목</label>
+                <label className="mb-1.5 block text-xs text-slate-400">상담(코드) 제목</label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}

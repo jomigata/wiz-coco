@@ -1439,10 +1439,10 @@ const MbtiProResult: React.FC = () => {
               전문가용 MBTI 검사 결과
             </h1>
           <div className="h-1.5 w-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full mt-2 shadow-lg"></div>
-          {/* 상담패키지 표시 (상단에 1개만) */}
+          {/* 상담(코드) 표시 (상단에 1개만) */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             {(() => {
-              // 상담패키지 추출 (여러 위치에서 확인)
+              // 상담(코드) 추출 (여러 위치에서 확인)
               let counselorCode = null;
               
               // 1. clientInfo에서 확인
@@ -1495,7 +1495,7 @@ const MbtiProResult: React.FC = () => {
                     }
                   }
                 } catch (e) {
-                  console.error('상담패키지 추출 오류:', e);
+                  console.error('상담(코드) 추출 오류:', e);
                 }
               }
               
@@ -1503,7 +1503,7 @@ const MbtiProResult: React.FC = () => {
                 <>
                   {counselorCode && (
                     <p className="text-blue-200">
-                      상담패키지: <span className="font-mono font-semibold">{formatAccessCodeDisplay(counselorCode)}</span>
+                      상담(코드): <span className="font-mono font-semibold">{formatAccessCodeDisplay(counselorCode)}</span>
                     </p>
                   )}
                 </>
@@ -1545,7 +1545,7 @@ const MbtiProResult: React.FC = () => {
               
               {clientInfo.groupCode && (
                 <div className="bg-white/10 p-4 rounded-lg border border-white/15">
-                  <h3 className="text-sm font-medium text-blue-300">상담패키지</h3>
+                  <h3 className="text-sm font-medium text-blue-300">상담(코드)</h3>
                   <p className="text-xl font-semibold text-white font-mono">{formatAccessCodeDisplay(clientInfo.groupCode)}</p>
                 </div>
               )}

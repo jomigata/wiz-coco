@@ -64,7 +64,7 @@ export default function AssessmentCreateForm() {
       }
       pushWithAuthSession(router, `/counselor/assessments?created=${result.assessmentId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '상담패키지 구성에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '상담(코드)생성에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export default function AssessmentCreateForm() {
 
       <div>
         <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-300 mb-2">
-          상담패키지 사용최종일 (선택)
+          상담(코드) 사용최종일 (선택)
         </label>
         <input
           id="usageEndDate"
@@ -165,7 +165,7 @@ export default function AssessmentCreateForm() {
           disabled={!canSubmit}
           className="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? '생성 중…' : '상담패키지 구성'}
+          {loading ? '생성 중…' : '상담(코드)생성'}
         </button>
         <button
           type="button"

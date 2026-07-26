@@ -112,7 +112,7 @@ export default function PortalGuidePageClient() {
             검사 시작 안내
           </span>
           <h1 className="mb-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-            상담패키지 받는 방법
+            상담(코드) 받는 방법
           </h1>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-400 md:text-base">
             상담사·기관을 통해 코드를 받는 일반적인 방법과, 개인이 직접 구매해 검사하는 방법을
@@ -168,7 +168,7 @@ export default function PortalGuidePageClient() {
           <div className="mb-10 text-center">
             <h2 className="text-2xl font-semibold text-white">② 개인이 직접 구매해 진행하기</h2>
             <p className="mt-2 text-sm text-slate-400">
-              상담 전문가를 거치지 않고, 본인이 패키지를 선택·결제 후 상담패키지를 받는 방법입니다.
+              상담 전문가를 거치지 않고, 본인이 패키지를 선택·결제 후 상담(코드)를 받는 방법입니다.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -225,7 +225,7 @@ export default function PortalGuidePageClient() {
               href="/portal/guide/inquiry"
               className="mt-4 inline-flex rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-500"
             >
-              개인 상담패키지 구매 문의
+              개인 상담(코드) 구매 문의
             </Link>
           </div>
         </div>

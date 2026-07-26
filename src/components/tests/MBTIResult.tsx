@@ -43,7 +43,7 @@ export default function MBTIResult({ results, onRetake }: Props) {
         setTestDateTime(now);
       }
       
-      // 상담패키지 생성 또는 가져오기
+      // 상담(코드) 생성 또는 가져오기
       let savedTestCode = localStorage.getItem('mbti_test_code');
       if (!savedTestCode) {
         savedTestCode = generateTestCode('AMATEUR');
@@ -326,7 +326,7 @@ export default function MBTIResult({ results, onRetake }: Props) {
             </div>
             {testCode && (
               <div className="inline-block px-4 py-2 bg-blue-600/30 rounded-full text-blue-200 text-sm font-medium mb-4 ml-2">
-                상담패키지: {formatAccessCodeDisplay(testCode)}
+                상담(코드): {formatAccessCodeDisplay(testCode)}
               </div>
             )}
             <h1 className="text-4xl sm:text-5xl font-bold text-white mt-2 mb-2">{typeResult.type}</h1>

@@ -1,4 +1,4 @@
-# 상담패키지(accessCode) 생성·검증
+# 상담(코드)(accessCode) 생성·검증
 # 신규: CVC(자음-모음-자음, L/I/O/0/1 제외) + 숫자(2~9만), 숫자 자릿수는 3부터 시작.
 # 충돌이 잦으면 Firestore system_meta에 numeric_length를 올려 4자리·5자리… 로 확장.
 # 구형: 기존 6자리 영숫자 코드 호환.
@@ -68,7 +68,7 @@ def _bump_numeric_length(db, current: int) -> int:
 
 
 def reset_access_code_generation_meta(db, *, dry_run: bool = False) -> bool:
-    """상담패키지 숫자 자릿수를 3자리로 초기화."""
+    """상담(코드) 숫자 자릿수를 3자리로 초기화."""
     if dry_run:
         return True
     db.collection(SYSTEM_META_COLLECTION).document(ACCESS_CODE_CONFIG_DOC).set(

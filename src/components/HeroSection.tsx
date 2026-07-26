@@ -60,7 +60,7 @@ export default function HeroSection() {
               ? isApprovedCounselor
                 ? '배정된 검사를 진행하거나, 상담관리 → 영업 · 파트너에서 Discover·요금·크레딧 도구를 이용할 수 있습니다.'
                 : '배정된 검사를 진행하거나, 상담사 승인 후 전문가 기능을 이용할 수 있습니다.'
-              : '안내 받으신 상담패키지와 비밀번호만 입력하면, 별도 가입 없이 배정된 검사를 바로 진행할 수 있습니다.'}
+              : '안내 받으신 상담(코드)와 비밀번호만 입력하면, 별도 가입 없이 배정된 검사를 바로 진행할 수 있습니다.'}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-lg mx-auto">
@@ -94,7 +94,7 @@ export default function HeroSection() {
               href="/portal/guide/"
               className="inline-flex items-center gap-1.5 text-sm text-sky-300/85 hover:text-sky-200 underline-offset-4 hover:underline transition-colors"
             >
-              상담패키지는 어떻게 받나요?
+              상담(코드)는 어떻게 받나요?
               <span aria-hidden>→</span>
             </Link>
           </p>

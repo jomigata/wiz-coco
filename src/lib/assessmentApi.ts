@@ -1,5 +1,5 @@
 /**
- * 상담패키지 플로우용 Flask 백엔드 API 클라이언트
+ * 상담(코드) 플로우용 Flask 백엔드 API 클라이언트
  * NEXT_PUBLIC_FLASK_API_URL 미설정 시 개발용 localhost:5000 사용
  */
 
@@ -120,7 +120,7 @@ export interface PublicAssessment {
 }
 
 const MSG_LOOKUP_DEFAULT =
-  '요청하신 상담패키지가 확인되지 않았습니다. 상담패키지를 다시 확인해 주시기 바랍니다.';
+  '요청하신 상담(코드)가 확인되지 않았습니다. 상담(코드)를 다시 확인해 주시기 바랍니다.';
 
 export interface TestResultItem {
   resultId: string;
@@ -133,11 +133,11 @@ export interface TestResultItem {
   sourceAccessCode?: string;
 }
 
-/** POST /api/assessments/public/lookup — 활성 상담패키지만으로 세트 정보 조회 */
+/** POST /api/assessments/public/lookup — 활성 상담(코드)만으로 세트 정보 조회 */
 export async function lookupPublicAssessment(accessCode: string): Promise<PublicAssessment> {
   const code = normalizeAccessCodeInput(accessCode || '');
   if (!isValidAccessCodeInput(code)) {
-    throw new Error('상담패키지 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다.');
+    throw new Error('상담(코드) 형식이 올바르지 않습니다. 입력 내용을 다시 확인해 주시기 바랍니다.');
   }
   const res = await fetch(`${getBaseUrl()}/api/assessments/public/lookup`, {
     method: 'POST',
@@ -167,7 +167,7 @@ export async function submitResult(body: {
   const code = normalizeAccessCodeInput(body.accessCode || '');
   const authHeaders = await getClientResultAuthHeaders(code);
   if (!authHeaders.Authorization) {
-    throw new Error('검사 세션이 없습니다. 상담패키지 입력부터 다시 시작해 주세요.');
+    throw new Error('검사 세션이 없습니다. 상담(코드) 입력부터 다시 시작해 주세요.');
   }
   const res = await fetch(`${getBaseUrl()}/api/results`, {
     method: 'POST',
@@ -203,13 +203,13 @@ export async function getResult(
   return data;
 }
 
-/** 로그인 사용자 본인의 상담패키지 세트 제출 결과 전체 (마이페이지용) */
+/** 로그인 사용자 본인의 상담(코드) 세트 제출 결과 전체 (마이페이지용) */
 export interface MyAssessmentResultRow {
   resultId: string;
   accessCode: string;
   assessmentId: string;
   assessmentTitle?: string | null;
-  /** 상담패키지 사용최종일 YYYY-MM-DD, 미설정 시 무기한 */
+  /** 상담(코드) 사용최종일 YYYY-MM-DD, 미설정 시 무기한 */
   usageEndDate?: string | null;
   testId: string;
   status?: string;
@@ -317,10 +317,10 @@ export async function getResultAsAuthenticatedOwner(resultId: string): Promise<{
 export async function listResults(accessCode: string): Promise<{ results: TestResultItem[] }> {
   const code = normalizeAccessCodeInput(accessCode || '');
   if (!isValidAccessCodeInput(code)) {
-    throw new Error('상담패키지를 확인해 주세요.');
+    throw new Error('상담(코드)를 확인해 주세요.');
   }
   const authHeaders = await getClientResultAuthHeaders(code);
-  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 상담패키지 입력부터 다시 시도해 주세요.');
+  if (!authHeaders.Authorization) throw new Error('검사 참여 세션이 필요합니다. 상담(코드) 입력부터 다시 시도해 주세요.');
   const params = new URLSearchParams({ accessCode: code });
   const res = await fetch(`${getBaseUrl()}/api/results?${params}`, {
     headers: authHeaders,
@@ -402,11 +402,11 @@ export interface CounselorAssessment {
   dispatchFailedCount?: number;
   testCompleteCount?: number;
   testIncompleteCount?: number;
-  /** 기관/단체/그룹명 (상담패키지 세트) */
+  /** 기관/단체/그룹명 (상담(코드) 세트) */
   cohortName?: string;
 }
 
-/** 상담패키지 발급 직후 목록 상단 배너용(세션에서 전달) */
+/** 상담(코드) 발급 직후 목록 상단 배너용(세션에서 전달) */
 export interface CreatedAssessmentBannerInfo {
   accessCode: string;
 }
@@ -418,7 +418,7 @@ export interface ProgressByClient {
   results: { resultId: string; testId: string; status: string; completedAt: string | null }[];
 }
 
-/** POST /api/assessments - 상담사: 공동 이용 상담패키지(세트) 생성 */
+/** POST /api/assessments - 상담사: 공동 이용 상담(코드)(세트) 생성 */
 export async function createAssessment(body: {
   title: string;
   issueType?: 'shared' | 'individual';
@@ -445,12 +445,12 @@ export async function createAssessment(body: {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.message || data?.error || '상담패키지 구성에 실패했습니다.');
+    throw new Error(data?.message || data?.error || '상담(코드)생성에 실패했습니다.');
   }
   return data;
 }
 
-/** GET /api/assessments/:id - 상담사: 단일 상담패키지(세트) 조회 */
+/** GET /api/assessments/:id - 상담사: 단일 상담(코드)(세트) 조회 */
 export async function getAssessment(assessmentId: string): Promise<CounselorAssessment> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
@@ -464,7 +464,7 @@ export async function getAssessment(assessmentId: string): Promise<CounselorAsse
   return data as CounselorAssessment;
 }
 
-/** PUT /api/assessments/:id - 상담사: 상담패키지 세트 수정 (코드 문자열 불변) */
+/** PUT /api/assessments/:id - 상담사: 상담(코드) 세트 수정 (코드 문자열 불변) */
 export async function updateAssessment(
   assessmentId: string,
   body: {
@@ -498,7 +498,7 @@ export async function updateAssessment(
   return data;
 }
 
-/** DELETE /api/assessments/:id - 상담사: 상담패키지 세트 비활성화(archived), 신규 접속 불가 */
+/** DELETE /api/assessments/:id - 상담사: 상담(코드) 세트 비활성화(archived), 신규 접속 불가 */
 export async function deleteAssessment(
   assessmentId: string,
   accessCode?: string,
@@ -509,7 +509,7 @@ export async function deleteAssessment(
   const code = accessCode ? normalizeAccessCodeInput(accessCode) : '';
   const params = code ? `?accessCode=${encodeURIComponent(code)}` : '';
   const pathId = id || code;
-  if (!pathId) throw new Error('삭제할 상담패키지 정보가 없습니다.');
+  if (!pathId) throw new Error('삭제할 상담(코드) 정보가 없습니다.');
   const res = await fetch(
     `${getBaseUrl()}/api/assessments/${encodeURIComponent(pathId)}${params}`,
     {
@@ -591,7 +591,7 @@ export async function permanentlyDeleteArchivedAssessments(
   return data as { deleted: number; failed: number };
 }
 
-/** GET /api/assessments - 상담사: 내 상담패키지 목록 */
+/** GET /api/assessments - 상담사: 내 상담(코드) 목록 */
 const ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
 const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const ASSESSMENTS_LIST_CACHE_SCOPE = 'local' as const;
@@ -702,7 +702,7 @@ export async function listAssessments(): Promise<{ assessments: CounselorAssessm
   return { assessments: merged };
 }
 
-/** GET /api/assessments/:id/progress - 상담사: 해당 상담패키지 진행 현황 */
+/** GET /api/assessments/:id/progress - 상담사: 해당 상담(코드) 진행 현황 */
 export async function getProgress(
   assessmentId: string
 ): Promise<{ accessCode: string; byClient: ProgressByClient[] }> {

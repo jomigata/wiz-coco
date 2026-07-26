@@ -1,5 +1,5 @@
 /**
- * 기존 상담패키지·검사결과 코드에서 하이픈 제거 후 로컬 기록·키 재저장.
+ * 기존 상담(코드)·검사결과 코드에서 하이픈 제거 후 로컬 기록·키 재저장.
  * Firestore 서버 데이터는 backend/scripts/migrate_strip_code_hyphens.py 실행.
  */
 
@@ -248,7 +248,7 @@ async function migrateIndexedDb(report: InspectionCodeMigrationReport): Promise<
 }
 
 /**
- * 브라우저 localStorage(및 IndexedDB) 내 상담패키지·결과코드 하이픈 제거 (1회).
+ * 브라우저 localStorage(및 IndexedDB) 내 상담(코드)·결과코드 하이픈 제거 (1회).
  */
 export async function migrateLocalInspectionCodes(): Promise<InspectionCodeMigrationReport> {
   const report: InspectionCodeMigrationReport = {
@@ -313,7 +313,7 @@ export async function migrateLocalInspectionCodes(): Promise<InspectionCodeMigra
 
   localStorage.setItem(INSPECTION_CODE_MIGRATION_STORAGE_KEY, 'done');
   if (report.ran && (report.storageKeysRenamed > 0 || report.recordsFieldsUpdated > 0)) {
-    console.info('[상담패키지 마이그레이션] 로컬 저장소 갱신 완료', report);
+    console.info('[상담(코드) 마이그레이션] 로컬 저장소 갱신 완료', report);
   }
 
   return report;

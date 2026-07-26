@@ -8,7 +8,7 @@ const steps = [
   {
     step: '01',
     title: '코드 입력',
-    desc: '안내 받은 상담패키지와 4자리 비밀번호를 입력합니다.',
+    desc: '안내 받은 상담(코드)와 4자리 비밀번호를 입력합니다.',
   },
   {
     step: '02',
@@ -24,12 +24,12 @@ const steps = [
 
 const faqs = [
   {
-    q: '상담패키지는 어디서 받나요?',
+    q: '상담(코드)는 어디서 받나요?',
     a: '담당 기관·전문가에게 전달받거나, 개인 직접 구매 경로를 이용할 수 있습니다.',
   },
   {
     q: '회원가입이 필요한가요?',
-    a: '별도 회원가입 없이 상담패키지와 비밀번호만으로 진행할 수 있습니다.',
+    a: '별도 회원가입 없이 상담(코드)와 비밀번호만으로 진행할 수 있습니다.',
   },
   {
     q: '링크로 바로 들어갈 수 있나요?',
@@ -88,7 +88,7 @@ export default function PublicTestPortalSections() {
               href="/portal/guide/"
               className="block text-sm font-medium text-violet-300/90 hover:text-violet-200 transition-colors"
             >
-              상담패키지 받는 방법 · 개인 직접 구매 안내 →
+              상담(코드) 받는 방법 · 개인 직접 구매 안내 →
             </Link>
             <ClientPortalLoginLink className="inline-flex items-center gap-2 text-sm font-medium text-sky-300/90 hover:text-sky-200 transition-colors">
               검사 시작하기

@@ -1,5 +1,5 @@
 /**
- * 내담자 포털 — 1인 1 상담패키지+PIN (Firebase Auth와 분리)
+ * 내담자 포털 — 1인 1 상담(코드)+PIN (Firebase Auth와 분리)
  * Firestore: clientPortals/{portalId}
  */
 
@@ -48,7 +48,7 @@ export interface ClientPortalBulkRow {
   displayName: string;
   email?: string;
   phone?: string;
-  /** 검사 시작용 공유 상담패키지 */
+  /** 검사 시작용 공유 상담(코드) */
   joinAccessCode?: string;
   /** 내 검사실 나의코드 */
   accessCode: string;

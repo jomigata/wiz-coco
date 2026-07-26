@@ -25,7 +25,7 @@ export function resolveCounselorHierarchy(
     return {
       depth: 2,
       crumbs: [
-        { label: '상담패키지 목록', href: '/counselor/assessments' },
+        { label: '상담(코드) 목록', href: '/counselor/assessments' },
         {
           label: '발송·검사 현황',
           href: assessmentId ? assessmentProgressHref(assessmentId) : undefined,
@@ -40,8 +40,8 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담패키지 목록', href: '/counselor/assessments' },
-        { label: '삭제된 상담패키지' },
+        { label: '상담(코드) 목록', href: '/counselor/assessments' },
+        { label: '삭제된 상담(코드)' },
       ],
     };
   }
@@ -50,7 +50,7 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담패키지 목록', href: '/counselor/assessments' },
+        { label: '상담(코드) 목록', href: '/counselor/assessments' },
         { label: '발송·검사 현황' },
       ],
     };
@@ -60,8 +60,8 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담패키지 목록', href: '/counselor/assessments' },
-        { label: '상담패키지 구성' },
+        { label: '상담(코드) 목록', href: '/counselor/assessments' },
+        { label: '상담(코드)생성' },
       ],
     };
   }
@@ -70,8 +70,8 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담패키지 목록', href: '/counselor/assessments' },
-        { label: '상담패키지 수정' },
+        { label: '상담(코드) 목록', href: '/counselor/assessments' },
+        { label: '상담(코드) 수정' },
       ],
     };
   }
@@ -79,7 +79,7 @@ export function resolveCounselorHierarchy(
   if (pathname === '/counselor/assessments') {
     return {
       depth: 0,
-      crumbs: [{ label: '상담패키지 목록' }],
+      crumbs: [{ label: '상담(코드) 목록' }],
     };
   }
 
