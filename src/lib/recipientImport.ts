@@ -64,6 +64,14 @@ export function mergeRecipients(manual: RecipientRow[], fromFile: RecipientRow[]
   });
 }
 
+export function formatRecipientRowsPreview(rows: RecipientRow[], maxRows = 50): string {
+  const header = '이름\t이메일\t휴대폰';
+  const lines = rows.slice(0, maxRows).map((row) =>
+    [row.displayName, row.email, row.phone].filter(Boolean).join('\t'),
+  );
+  return [header, ...lines].join('\n');
+}
+
 export async function parseRecipientFile(file: File): Promise<RecipientRow[]> {
   const lowerName = file.name.toLowerCase();
   if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {

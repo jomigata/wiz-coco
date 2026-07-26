@@ -67,7 +67,9 @@ export async function verifyPortalMagicToken(token: string): Promise<ClientPorta
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(
-      typeof data?.message === 'string' ? data.message : '링크가 만료되었거나 유효하지 않습니다.'
+      typeof data?.message === 'string'
+        ? data.message
+        : '이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 담당자에게 새 링크를 요청해 주세요.'
     );
   }
   return data as ClientPortalLoginResult;

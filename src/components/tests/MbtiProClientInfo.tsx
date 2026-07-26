@@ -61,8 +61,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   const scrollVelocityRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
   const lastTouchYRef = useRef<number | null>(null);
-  const lastEdgeScrollAtRef = useRef(0);
-  const lastMouseXRef = useRef<number | null>(null);
 
   const birthYearRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
@@ -148,68 +146,13 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     scrollVelocityRef.current = 0;
   };
 
-  // 마우스 위치: 최상·최하단 줄에서 2줄 확장 + 같은 줄 좌우 이동 시 2줄 상하 스크롤
-  const handleYearGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!yearGridRef.current) return;
+  const startYearArrowScroll = (direction: -1 | 1) => {
+    scrollVelocityRef.current = direction * 10;
+    startAutoScroll();
+  };
 
-    const grid = yearGridRef.current;
-
-    const target = (e.target as HTMLElement).closest('[data-year-idx]') as HTMLElement | null;
-    if (!target) return;
-
-    const idx = parseInt(target.getAttribute('data-year-idx') || '-1', 10);
-    if (idx < 0) return;
-
-    const row = Math.floor(idx / 8);
-    const cells = yearButtonRefs.current.filter(Boolean) as HTMLButtonElement[];
-    if (cells.length === 0) return;
-
-    const gRect = grid.getBoundingClientRect();
-    let firstVisRow = Number.POSITIVE_INFINITY;
-    let lastVisRow = -1;
-    cells.forEach((cell, i) => {
-      const r = cell.getBoundingClientRect();
-      if (r.bottom > gRect.top + 1 && r.top < gRect.bottom - 1) {
-        const ri = Math.floor(i / 8);
-        firstVisRow = Math.min(firstVisRow, ri);
-        lastVisRow = Math.max(lastVisRow, ri);
-      }
-    });
-    if (!Number.isFinite(firstVisRow)) return;
-
-    const rowH = cells[0]?.offsetHeight ?? 36;
-    const now = Date.now();
-    const onEdgeRow = row === firstVisRow || row === lastVisRow;
-
-    if (onEdgeRow && now - lastEdgeScrollAtRef.current > 100) {
-      if (row === firstVisRow && row > 0) {
-        grid.scrollTop = Math.max(0, grid.scrollTop - rowH * 2);
-        lastEdgeScrollAtRef.current = now;
-      } else if (row === lastVisRow && row < Math.floor((years.length - 1) / 8)) {
-        grid.scrollTop = Math.min(
-          grid.scrollHeight - grid.clientHeight,
-          grid.scrollTop + rowH * 2,
-        );
-        lastEdgeScrollAtRef.current = now;
-      }
-
-      const prevX = lastMouseXRef.current;
-      lastMouseXRef.current = e.clientX;
-      if (prevX != null && Math.abs(e.clientX - prevX) > 6) {
-        const deltaX = e.clientX - prevX;
-        if (deltaX > 0) {
-          grid.scrollTop = Math.min(
-            grid.scrollHeight - grid.clientHeight,
-            grid.scrollTop + rowH * 2,
-          );
-        } else {
-          grid.scrollTop = Math.max(0, grid.scrollTop - rowH * 2);
-        }
-        lastEdgeScrollAtRef.current = now;
-      }
-    } else {
-      lastMouseXRef.current = e.clientX;
-    }
+  const stopYearArrowScroll = () => {
+    stopAutoScroll();
   };
 
   // 휠 스크롤 스무스 처리
@@ -218,11 +161,6 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     e.preventDefault();
     const grid = yearGridRef.current;
     grid.scrollBy({ top: e.deltaY, behavior: 'smooth' });
-  };
-
-  // 마우스가 영역을 벗어나면 자동 스크롤 중지
-  const handleMouseLeave = () => {
-    stopAutoScroll();
   };
 
   // 터치 스와이프 가속 스크롤
@@ -383,8 +321,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
 
       {uiTheme === 'portal' && (
         <>
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(56,189,248,0.11),transparent)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_85%_100%,rgba(99,102,241,0.09),transparent)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(56,189,248,0.08),transparent)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_85%_100%,rgba(99,102,241,0.06),transparent)]" />
         </>
       )}
 
@@ -582,14 +520,21 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                     exit={{ opacity: 0, y: -10 }}
                     className={th.yearSelector}
                   >
+                    <button
+                      type="button"
+                      aria-label="이전 연도 보기"
+                      className="mb-1 flex h-6 w-full items-center justify-center rounded border border-white/[0.08] bg-white/[0.04] text-xs text-sky-300/80 transition hover:bg-white/[0.08]"
+                      onMouseEnter={() => startYearArrowScroll(-1)}
+                      onMouseLeave={stopYearArrowScroll}
+                    >
+                      ▲
+                    </button>
                     <div
                       ref={yearGridRef}
                       role="grid"
                       aria-label="출생년도 선택"
                       className={th.yearGrid}
                       onKeyDown={handleYearKeyDown}
-                      onMouseMove={handleYearGridMouseMove}
-                      onMouseLeave={handleMouseLeave}
                       onWheel={handleYearGridWheel}
                       onTouchStart={handleTouchStart}
                       onTouchMove={handleTouchMove}
@@ -667,6 +612,15 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                         );
                       })}
                     </div>
+                    <button
+                      type="button"
+                      aria-label="다음 연도 보기"
+                      className="mt-1 flex h-6 w-full items-center justify-center rounded border border-white/[0.08] bg-white/[0.04] text-xs text-sky-300/80 transition hover:bg-white/[0.08]"
+                      onMouseEnter={() => startYearArrowScroll(1)}
+                      onMouseLeave={stopYearArrowScroll}
+                    >
+                      ▼
+                    </button>
                   </motion.div>
                 </AnimatePresence>
                 )}

@@ -428,7 +428,10 @@ def verify_magic_link():
     try:
         data = verify_portal_magic_link_token(token)
     except SignatureExpired:
-        return jsonify({"error": "Gone", "message": "링크가 만료되었습니다. 담당자에게 새 링크를 요청해 주세요."}), 410
+        return jsonify({
+            "error": "Gone",
+            "message": "이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 기간이 지났으니 담당자에게 새 링크를 요청해 주세요.",
+        }), 410
     except BadSignature:
         return jsonify({"error": "Bad Request", "message": "링크가 유효하지 않습니다."}), 400
 

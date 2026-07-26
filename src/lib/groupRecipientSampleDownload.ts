@@ -9,6 +9,10 @@ function sampleTextContent(): string {
   return SAMPLE_ROWS.map((row) => row.join(',')).join('\r\n') + '\r\n';
 }
 
+export function getGroupRecipientSamplePreviewText(): string {
+  return sampleTextContent().trimEnd();
+}
+
 function triggerDownload(filename: string, content: string, mimeType: string, withBom: boolean) {
   const payload = withBom ? `\uFEFF${content}` : content;
   const blob = new Blob([payload], { type: `${mimeType};charset=utf-8` });

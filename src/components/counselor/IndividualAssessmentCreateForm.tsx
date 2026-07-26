@@ -25,9 +25,11 @@ import {
 import {
   downloadGroupRecipientSampleCsv,
   downloadGroupRecipientSampleTxt,
+  getGroupRecipientSamplePreviewText,
 } from '@/lib/groupRecipientSampleDownload';
 import { formatPhoneDisplay, normalizeRecipientPhone } from '@/lib/phoneFormat';
 import {
+  formatRecipientRowsPreview,
   mergeRecipients,
   parseRecipientFile,
   type RecipientRow,
@@ -73,6 +75,7 @@ export default function IndividualAssessmentCreateForm() {
   const [fileLabel, setFileLabel] = useState('');
   const [filePreviewText, setFilePreviewText] = useState('');
   const [showFilePreview, setShowFilePreview] = useState(false);
+  const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
   const [loadingIntent, setLoadingIntent] = useState<IssueIntent | null>(null);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<ClientPortalBulkRow[]>([]);
@@ -97,6 +100,21 @@ export default function IndividualAssessmentCreateForm() {
     const heightRem = Math.min(Math.max(lineCount * 1.2 + 2.5, 5), 32);
     return { widthCh, heightRem, lineCount };
   }, [filePreviewText]);
+
+  const samplePreviewText = useMemo(
+    () => (samplePreviewKind ? getGroupRecipientSamplePreviewText() : ''),
+    [samplePreviewKind],
+  );
+
+  const samplePreviewLayout = useMemo(() => {
+    if (!samplePreviewText) return null;
+    const lines = samplePreviewText.split('\n');
+    const lineCount = lines.length;
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const widthCh = Math.min(Math.max(longestLine + 2, 28), 96);
+    const heightRem = Math.min(Math.max(lineCount * 1.2 + 2.5, 5), 32);
+    return { widthCh, heightRem, lineCount };
+  }, [samplePreviewText]);
 
   useEffect(() => {
     if (!activeJobId) return undefined;
@@ -245,17 +263,7 @@ export default function IndividualAssessmentCreateForm() {
     try {
       const parsed = await parseRecipientFile(file);
       setFileRows(parsed);
-      try {
-        const raw = await file.text();
-        setFilePreviewText(raw.slice(0, 4000));
-      } catch {
-        setFilePreviewText(
-          parsed
-            .slice(0, 50)
-            .map((r) => [r.displayName, r.email, r.phone].filter(Boolean).join('\t'))
-            .join('\n'),
-        );
-      }
+      setFilePreviewText(formatRecipientRowsPreview(parsed));
     } catch {
       setError('파일을 읽지 못했습니다. CSV·텍스트·엑셀 형식을 확인해 주세요.');
       setFileRows([]);
@@ -734,21 +742,63 @@ export default function IndividualAssessmentCreateForm() {
                 >
                   텍스트/엑셀 파일 첨부하기
                 </button>
-                <span className="text-sm text-slate-400">샘플</span>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleTxt}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                >
-                  (텍스트파일)
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleCsv}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                >
-                  (엑셀파일)
-                </button>
+                <span className="text-sm text-slate-400">샘플받기</span>
+                <div className="relative inline-block">
+                  <button
+                    type="button"
+                    onClick={downloadGroupRecipientSampleTxt}
+                    onMouseEnter={() => setSamplePreviewKind('txt')}
+                    onMouseLeave={() => setSamplePreviewKind(null)}
+                    onFocus={() => setSamplePreviewKind('txt')}
+                    onBlur={() => setSamplePreviewKind(null)}
+                    className="text-sm text-sky-300 transition hover:text-sky-200"
+                  >
+                    (텍스트파일)
+                  </button>
+                  {samplePreviewKind === 'txt' && samplePreviewText && samplePreviewLayout ? (
+                    <div
+                      className="absolute left-0 top-full z-50 mt-2 overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                      role="tooltip"
+                      style={{
+                        width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
+                        maxHeight: `min(70vh, ${samplePreviewLayout.heightRem}rem)`,
+                      }}
+                    >
+                      <p className="mb-2 text-xs font-semibold text-sky-300">샘플 텍스트 미리보기</p>
+                      <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                        {samplePreviewText}
+                      </pre>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="relative inline-block">
+                  <button
+                    type="button"
+                    onClick={downloadGroupRecipientSampleCsv}
+                    onMouseEnter={() => setSamplePreviewKind('csv')}
+                    onMouseLeave={() => setSamplePreviewKind(null)}
+                    onFocus={() => setSamplePreviewKind('csv')}
+                    onBlur={() => setSamplePreviewKind(null)}
+                    className="text-sm text-sky-300 transition hover:text-sky-200"
+                  >
+                    (엑셀파일)
+                  </button>
+                  {samplePreviewKind === 'csv' && samplePreviewText && samplePreviewLayout ? (
+                    <div
+                      className="absolute left-0 top-full z-50 mt-2 overflow-auto rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-xl"
+                      role="tooltip"
+                      style={{
+                        width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
+                        maxHeight: `min(70vh, ${samplePreviewLayout.heightRem}rem)`,
+                      }}
+                    >
+                      <p className="mb-2 text-xs font-semibold text-sky-300">샘플 엑셀(CSV) 미리보기</p>
+                      <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                        {samplePreviewText}
+                      </pre>
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <p className="text-xs leading-relaxed text-slate-500">
                 첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명

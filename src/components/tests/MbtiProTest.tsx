@@ -26,8 +26,8 @@ import { readClientPortalSession } from '@/lib/clientPortalSession';
 function PortalAmbientBackground() {
   return (
     <>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(56,189,248,0.11),transparent)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_85%_100%,rgba(99,102,241,0.09),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(56,189,248,0.08),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_85%_100%,rgba(99,102,241,0.06),transparent)]" />
     </>
   );
 }
@@ -625,6 +625,28 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     }
   };
 
+  const handleEditComplete = async () => {
+    const portalCode = joinAccessCode;
+    const resultId = editResultId.trim();
+    if (!resultId || !portalCode || !isValidAccessCodeInput(portalCode)) {
+      router.push(getPortalReturnPath());
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const payload = buildMbtiProJoinResponses(answers, clientInfo);
+      await updateClientResult(resultId, { responses: payload }, portalCode);
+      clearTestProgress(testId);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      router.push(getPortalReturnPath());
+    } catch (err) {
+      console.error('수정 저장 실패:', err);
+      window.alert(err instanceof Error ? err.message : '수정 내용 저장에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePrevQuestion = () => {
     if (currentQuestion > 0) {
       setDirection(-1);
@@ -992,12 +1014,25 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                   {currentQuestion === totalQuestions - 1 ? '결과 확인' : '다음 문항'}
                 </button>
               </div>
+
+              {editResultId.trim() ? (
+                <div className="mt-3 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleEditComplete}
+                    disabled={isLoading}
+                    className="rounded-lg border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isLoading ? '저장 중…' : '수정완료'}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
       </div>
 
       {/* 검사완료 버튼 (마지막 질문에 답변 후 계속 표시) */}
-      {currentQuestion === totalQuestions - 1 && answers[totalQuestions - 1] !== undefined && (
+      {!editResultId.trim() && currentQuestion === totalQuestions - 1 && answers[totalQuestions - 1] !== undefined && (
         <>
           <div className={`fixed left-0 right-0 mx-auto w-1/4 bg-blue-900/90 backdrop-blur-sm py-6 px-10 rounded-2xl shadow-lg z-50 text-center border border-blue-800/50 transition-all duration-500 transform ${popupPosition === 'bottom' ? 'bottom-[7%]' : 'bottom-[calc(7%+150px)] -translate-y-full'}`}>
             <button 

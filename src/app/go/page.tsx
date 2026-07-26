@@ -55,10 +55,11 @@ function GoContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 pt-24 px-4">
-        <div className="max-w-md mx-auto text-center bg-slate-800/80 rounded-2xl border border-slate-600 p-8">
-          <p className="text-red-400 mb-4">{error}</p>
-          <Link href="/portal/login/" className="text-blue-400 hover:text-blue-300 text-sm">
+      <div className="min-h-screen bg-[#0f1628] pt-24 px-4">
+        <div className="max-w-md mx-auto text-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8">
+          <p className="text-amber-200/95 text-sm leading-relaxed mb-2">링크를 사용할 수 없습니다</p>
+          <p className="text-slate-300 text-sm leading-relaxed mb-6">{error}</p>
+          <Link href="/portal/login/" className="text-sky-400 hover:text-sky-300 text-sm">
             검사 코드로 직접 들어가기
           </Link>
         </div>

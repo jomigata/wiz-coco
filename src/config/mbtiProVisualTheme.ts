@@ -57,25 +57,23 @@ const emerald: MbtiProVisualTheme = {
 
 const portal: MbtiProVisualTheme = {
   showOrbs: false,
-  pageShell: 'bg-gradient-to-b from-[#070b14] via-[#0a1220] to-[#070912] min-h-0',
+  pageShell: 'bg-[#0f1628] min-h-0',
   subtitle: 'text-slate-400 text-sm',
   progressLabel: 'text-slate-300 text-sm',
-  progressTrack: 'bg-slate-800/80',
-  progressFill: 'bg-sky-500',
-  mainCard:
-    'bg-gradient-to-br from-slate-900/95 via-[#121f35]/90 to-slate-900/85 border border-sky-500/15 rounded-xl shadow-lg shadow-black/25 p-4 sm:p-5',
+  progressTrack: 'bg-white/[0.06]',
+  progressFill: 'bg-gradient-to-r from-sky-500 to-indigo-500',
+  mainCard: 'rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5',
   questionCard:
-    'bg-gradient-to-b from-slate-800/75 to-[#0f1a2e]/85 rounded-xl p-3 flex items-center justify-center min-h-[72px] border border-sky-400/12',
-  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-900/20 to-transparent rounded-[100%/20px] -z-10',
-  answerBtn:
-    'bg-gradient-to-b from-slate-900/70 to-[#0c1528]/80 transition-all duration-300 border border-sky-500/10',
-  answerBtnHover: 'hover:from-slate-800/80 hover:to-[#101f38]/90 hover:translate-y-[-2px]',
+    'flex items-center justify-center min-h-[72px] px-1 py-2 bg-white/[0.02]',
+  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-500/[0.06] to-transparent rounded-[100%/20px] -z-10',
+  answerBtn: 'bg-white/[0.02] transition-all duration-300 border border-white/[0.06]',
+  answerBtnHover: 'hover:bg-white/[0.05] hover:border-white/[0.1] hover:translate-y-[-2px]',
   checkDot: 'bg-sky-500',
-  answerCircle: 'bg-sky-600/90',
+  answerCircle: 'bg-gradient-to-br from-sky-500 to-indigo-600',
   answerLabel: 'text-sky-300/90',
-  resumeOuter: 'min-h-screen bg-gradient-to-b from-[#070b14] via-[#0a1220] to-[#070912] flex items-center justify-center p-4 pt-16',
+  resumeOuter: 'min-h-screen bg-[#0f1628] flex items-center justify-center p-4 pt-16',
   resumeCard:
-    'bg-gradient-to-br from-slate-900/95 via-[#121f35]/90 to-slate-900/85 backdrop-blur-sm rounded-xl shadow-2xl p-8 max-w-md w-full border border-sky-500/15',
+    'rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm shadow-2xl p-8 max-w-md w-full',
   resumeBody: 'text-slate-300',
   resumePanel: 'bg-slate-800/50 rounded-lg',
   resumeTrack: 'bg-slate-900',
