@@ -801,56 +801,63 @@ export default function IndividualAssessmentCreateForm() {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
-                  disabled={loading}
-                >
-                  텍스트/엑셀 파일 첨부하기
-                </button>
-                <span className="text-sm text-slate-400">샘플받기</span>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleTxt}
-                  onMouseEnter={() => setSamplePreviewKind('txt')}
-                  onMouseLeave={() => setSamplePreviewKind(null)}
-                  onFocus={() => setSamplePreviewKind('txt')}
-                  onBlur={() => setSamplePreviewKind(null)}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                >
-                  (텍스트파일)
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadGroupRecipientSampleCsv}
-                  onMouseEnter={() => setSamplePreviewKind('csv')}
-                  onMouseLeave={() => setSamplePreviewKind(null)}
-                  onFocus={() => setSamplePreviewKind('csv')}
-                  onBlur={() => setSamplePreviewKind(null)}
-                  className="text-sm text-sky-300 transition hover:text-sky-200"
-                >
-                  (엑셀파일)
-                </button>
-              </div>
-              {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
-                <div
-                  className="rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
-                  role="tooltip"
-                  style={{
-                    width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
-                    minHeight: `${samplePreviewLayout.heightRem}rem`,
-                  }}
-                >
-                  <p className="mb-2 text-xs font-semibold text-sky-300">
-                    {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
-                  </p>
-                  <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                    {samplePreviewText}
-                  </pre>
+              <div
+                className="relative"
+                onMouseLeave={() => setSamplePreviewKind(null)}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-lg border border-white/10 bg-[#101f38]/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800/80"
+                    disabled={loading}
+                  >
+                    텍스트/엑셀 파일 첨부하기
+                  </button>
+                  <span className="text-sm text-slate-400">샘플받기</span>
+                  <button
+                    type="button"
+                    onClick={downloadGroupRecipientSampleTxt}
+                    onMouseEnter={() => setSamplePreviewKind('txt')}
+                    onFocus={() => setSamplePreviewKind('txt')}
+                    onBlur={() => setSamplePreviewKind(null)}
+                    className="text-sm text-sky-300 transition hover:text-sky-200"
+                  >
+                    (텍스트파일)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadGroupRecipientSampleCsv}
+                    onMouseEnter={() => setSamplePreviewKind('csv')}
+                    onFocus={() => setSamplePreviewKind('csv')}
+                    onBlur={() => setSamplePreviewKind(null)}
+                    className="text-sm text-sky-300 transition hover:text-sky-200"
+                  >
+                    (엑셀파일)
+                  </button>
                 </div>
-              ) : null}
+                {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
+                  <div
+                    className="absolute left-0 top-full z-30 pt-1.5"
+                    role="tooltip"
+                  >
+                    <div
+                      className="rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                      style={{
+                        width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
+                        minHeight: `${samplePreviewLayout.heightRem}rem`,
+                      }}
+                    >
+                      <p className="mb-2 text-xs font-semibold text-sky-300">
+                        {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
+                      </p>
+                      <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                        {samplePreviewText}
+                      </pre>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
               <p className="text-xs leading-relaxed text-slate-500">
                 첨부파일은 1개만 가능합니다. 최대 {GROUP_RECIPIENT_MAX.toLocaleString('ko-KR')}명
               </p>
