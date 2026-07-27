@@ -71,7 +71,7 @@ const portal: MbtiProVisualTheme = {
   answerBtnHover: 'hover:bg-[#121a28]/85 hover:border-white/[0.1]',
   checkDot: 'bg-sky-500/80',
   answerCircle: 'bg-gradient-to-br from-sky-600/75 to-indigo-700/75 opacity-90',
-  answerLabel: 'text-slate-400/70',
+  answerLabel: 'text-slate-200/90',
   resumeOuter: 'min-h-screen bg-[#080d18] flex items-center justify-center p-4 pt-16',
   resumeCard:
     'rounded-2xl border border-white/[0.12] bg-[#151f33] backdrop-blur-sm shadow-2xl p-8 max-w-md w-full',
