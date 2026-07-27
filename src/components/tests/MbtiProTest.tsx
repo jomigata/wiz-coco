@@ -1044,8 +1044,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
           <div className={`fixed left-0 right-0 mx-auto w-1/4 bg-blue-900/90 backdrop-blur-sm py-6 px-10 rounded-2xl shadow-lg z-50 text-center border border-blue-800/50 transition-all duration-500 transform ${popupPosition === 'bottom' ? 'bottom-[7%]' : 'bottom-[calc(7%+150px)] -translate-y-full'}`}>
             <button 
               onClick={() => setPopupPosition(popupPosition === 'bottom' ? 'up' : 'bottom')}
-              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-blue-700/80 flex items-center justify-center hover:bg-blue-600/80 transition-colors"
-              aria-label="팝업 위치 변경"
+              className={`absolute right-2 w-6 h-6 rounded-full bg-blue-700/80 flex items-center justify-center hover:bg-blue-600/80 transition-all duration-500 ${popupPosition === 'bottom' ? 'top-2' : 'bottom-2'}`}
+              aria-label={popupPosition === 'bottom' ? '팝업 위로 이동' : '팝업 아래로 이동'}
             >
               {popupPosition === 'bottom' ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
