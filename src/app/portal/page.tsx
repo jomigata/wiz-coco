@@ -21,6 +21,7 @@ import {
   clearClientPortalSession,
   readClientPortalSession,
 } from '@/lib/clientPortalSession';
+import { stripPortalWelcomeBoilerplate } from '@/lib/welcomeMessageSamples';
 import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
@@ -358,7 +359,7 @@ function ClientPortalContent() {
           ) : (
             <>
           <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
-            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '상담(코드)별 진행 현황'}
+            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '상담코드 진행 현황'}
           </h2>
 
           {assessments.length === 0 ? (
@@ -376,7 +377,7 @@ function ClientPortalContent() {
                   <div>
                     <h3 className="text-lg font-medium text-white">{a.title}</h3>
                     <p className="text-sm text-slate-400 mt-1">
-                      상담(코드){' '}
+                      상담코드{' '}
                       <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
                       {a.isLinkedShared ? (
                         <span className="ml-2 text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
@@ -391,9 +392,12 @@ function ClientPortalContent() {
                     </p>
                   </div>
 
-                  {a.welcomeMessage ? (
-                    <p className="text-slate-400 text-sm whitespace-pre-wrap">{a.welcomeMessage}</p>
-                  ) : null}
+                  {(() => {
+                    const welcomeText = stripPortalWelcomeBoilerplate(a.welcomeMessage || '');
+                    return welcomeText ? (
+                      <p className="text-slate-400 text-sm whitespace-pre-wrap">{welcomeText}</p>
+                    ) : null;
+                  })()}
 
                   {!a.testList?.length ? (
                     <p className="text-slate-500 text-sm">등록된 검사가 없습니다.</p>

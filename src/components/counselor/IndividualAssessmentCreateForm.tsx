@@ -501,7 +501,7 @@ export default function IndividualAssessmentCreateForm() {
           </div>
           {sharedJoinCode ? (
             <p className="mt-3 text-sm">
-              공통 상담코드:{' '}
+              적용 상담코드:{' '}
               <span className="font-mono font-semibold">{formatAccessCodeDisplay(sharedJoinCode)}</span>
             </p>
           ) : null}
@@ -532,7 +532,7 @@ export default function IndividualAssessmentCreateForm() {
             </p>
             {sharedJoinCode ? (
               <p>
-                공통 상담코드:{' '}
+                적용 상담코드:{' '}
                 <span className="font-mono text-lg font-bold tracking-wider text-emerald-100">
                   {formatAccessCodeDisplay(sharedJoinCode)}
                 </span>

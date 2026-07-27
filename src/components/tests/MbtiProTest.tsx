@@ -853,7 +853,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             </div>
 
             <div className="text-center mb-3">
-              <div className="h-[84px] relative overflow-hidden mb-4">
+              <div className="h-[84px] relative overflow-hidden mb-8">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}

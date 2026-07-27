@@ -14,7 +14,7 @@ export const WELCOME_MESSAGE_SAMPLES: WelcomeMessageSample[] = [
   {
     label: '샘플 2',
     text:
-      '본 검사는 안내된 기한 내에 완료해 주시기 바랍니다. 한 번에 끝내지 않아도 되며, 중간 저장 후 이어서 진행할 수 있습니다. 검사 결과는 상담·코칭 목적으로만 활용되며, 개인정보는 관련 법령에 따라 보호됩니다.',
+      '검사는 나눠서 진행해도 되며, 저장 후 이어서 완료할 수 있습니다. 궁금한 점은 담당 상담사에게 문의해 주세요.',
   },
   {
     label: '샘플 3',
@@ -22,3 +22,19 @@ export const WELCOME_MESSAGE_SAMPLES: WelcomeMessageSample[] = [
       '[접속 안내] ① 이메일·문자로 받은 나의코드·비밀번호 확인 ② 내 검사실에 로그인 ③ 검사 목록에서 순서대로 실시. 검사 중 어려움이 있으면 담당자에게 연락해 주세요.',
   },
 ];
+
+/** 내 검사실 진행 현황에서 표시하지 않을 안내 문구(구 샘플·기본 문구) */
+const PORTAL_WELCOME_BOILERPLATE =
+  '본 검사는 안내된 기한 내에 완료해 주시기 바랍니다. 한 번에 끝내지 않아도 되며, 중간 저장 후 이어서 진행할 수 있습니다. 검사 결과는 상담·코칭 목적으로만 활용되며, 개인정보는 관련 법령에 따라 보호됩니다.';
+
+export function stripPortalWelcomeBoilerplate(message: string): string {
+  const trimmed = (message || '').trim();
+  if (!trimmed) return '';
+  if (trimmed === PORTAL_WELCOME_BOILERPLATE) return '';
+  return trimmed
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => line && line !== PORTAL_WELCOME_BOILERPLATE)
+    .join('\n')
+    .trim();
+}
