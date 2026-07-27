@@ -64,13 +64,14 @@ const portal: MbtiProVisualTheme = {
   progressFill: 'bg-gradient-to-r from-sky-500 to-indigo-500',
   mainCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-4 sm:p-5',
   questionCard:
-    'flex items-center justify-center min-h-[84px] px-4 py-3 rounded-xl border border-white/[0.1] bg-gradient-to-b from-[#1f2f42] to-[#141c2e] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_6px_20px_rgba(0,0,0,0.35)]',
-  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-500/[0.08] to-transparent rounded-[100%/20px] -z-10',
-  answerBtn: 'bg-[#1e2d45]/90 transition-all duration-300 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  answerBtnHover: 'hover:bg-[#243552]/95 hover:border-white/[0.2] hover:translate-y-[-2px]',
-  checkDot: 'bg-sky-500',
-  answerCircle: 'bg-gradient-to-br from-sky-500 to-indigo-600',
-  answerLabel: 'text-sky-300/90',
+    'flex items-center justify-center min-h-[84px] px-5 py-4 rounded-xl border-2 border-sky-400/45 bg-gradient-to-b from-[#243552] to-[#182438] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(56,189,248,0.12),0_8px_28px_rgba(0,0,0,0.45)] ring-1 ring-sky-300/20',
+  scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-500/[0.05] to-transparent rounded-[100%/20px] -z-10',
+  answerBtn:
+    'bg-[#0d1420]/75 transition-all duration-300 border border-white/[0.06] shadow-none opacity-85',
+  answerBtnHover: 'hover:bg-[#121a28]/85 hover:border-white/[0.1]',
+  checkDot: 'bg-sky-500/80',
+  answerCircle: 'bg-gradient-to-br from-sky-600/75 to-indigo-700/75 opacity-90',
+  answerLabel: 'text-slate-400/70',
   resumeOuter: 'min-h-screen bg-[#080d18] flex items-center justify-center p-4 pt-16',
   resumeCard:
     'rounded-2xl border border-white/[0.12] bg-[#151f33] backdrop-blur-sm shadow-2xl p-8 max-w-md w-full',

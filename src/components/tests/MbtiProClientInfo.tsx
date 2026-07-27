@@ -559,7 +559,8 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                       {years.map((year, idx) => {
                         const columnIndex = (idx % YEAR_GRID_COLS) + 1;
                         const rowIndex = Math.floor(idx / YEAR_GRID_COLS) + 1;
-                        const blueBand = rowIndex >= 4 && rowIndex <= 7;
+                        const blueBand =
+                          (rowIndex >= 4 && rowIndex <= 7) || (columnIndex >= 4 && columnIndex <= 7);
                         const isSelected = birthYear === year;
                         const isYearEndingWith16 = year % 10 === 1 || year % 10 === 6;
                         return (

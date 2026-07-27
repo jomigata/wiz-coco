@@ -97,9 +97,9 @@ const portal: MbtiProClientInfoTheme = {
     'relative flex items-center justify-center px-0.5 py-1.5 min-h-0 text-[11px] sm:text-xs font-medium rounded transition-all',
   yearBtnSelected:
     'bg-sky-500 text-white border-2 border-sky-300 shadow-lg shadow-sky-400/45 scale-[1.08] z-[1]',
-  yearBtnBgDefault: 'bg-sky-800/60',
+  yearBtnBgDefault: 'bg-sky-950/45 text-sky-100/80',
   yearBtnBgBlueBand: 'bg-blue-950/90 text-sky-100/95 border border-blue-800/50',
-  yearBtnBorderHover: 'border border-sky-600/70 hover:bg-sky-700/65',
+  yearBtnBorderHover: 'border border-sky-500/45 hover:border-sky-400/55 hover:bg-sky-950/55',
   yearTextNormal: 'text-sky-100',
   yearTextAccent: 'text-sky-50 font-semibold',
   yearSelectedUnderline: 'bg-sky-300/45',

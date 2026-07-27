@@ -35,6 +35,13 @@ function cacheOpts() {
   return { scope: COUNSELOR_CACHE_SCOPE, maxAgeMs: COUNSELOR_CACHE_MAX_AGE_MS };
 }
 
+function readFreshCounselorCache<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null;
+  const cached = readSWRCache<T>(key, cacheOpts());
+  if (!cached.isFresh || cached.data == null) return null;
+  return cached.data;
+}
+
 export function buildClientPortalsCacheKey(params: {
   status: string;
   cohortId?: string;
@@ -48,8 +55,7 @@ export function buildClientPortalsCacheKey(params: {
 export function readCachedClientPortals(
   cacheKey: string,
 ): CounselorClientPortalListResult | null {
-  if (typeof window === 'undefined') return null;
-  return readSWRCache<CounselorClientPortalListResult>(cacheKey, cacheOpts()).data;
+  return readFreshCounselorCache<CounselorClientPortalListResult>(cacheKey);
 }
 
 export function writeCachedClientPortals(
@@ -61,8 +67,8 @@ export function writeCachedClientPortals(
 }
 
 export function readCachedAssessmentDetail(assessmentId: string): CounselorAssessment | null {
-  if (typeof window === 'undefined' || !assessmentId) return null;
-  return readSWRCache<CounselorAssessment>(`${ASSESSMENT_DETAIL_PREFIX}${assessmentId}`, cacheOpts()).data;
+  if (!assessmentId) return null;
+  return readFreshCounselorCache<CounselorAssessment>(`${ASSESSMENT_DETAIL_PREFIX}${assessmentId}`);
 }
 
 export function writeCachedAssessmentDetail(assessmentId: string, data: CounselorAssessment): void {
@@ -71,8 +77,8 @@ export function writeCachedAssessmentDetail(assessmentId: string, data: Counselo
 }
 
 export function readCachedDispatchStatus(assessmentId: string): AssessmentDispatchStatus | null {
-  if (typeof window === 'undefined' || !assessmentId) return null;
-  return readSWRCache<AssessmentDispatchStatus>(`${DISPATCH_PREFIX}${assessmentId}`, cacheOpts()).data;
+  if (!assessmentId) return null;
+  return readFreshCounselorCache<AssessmentDispatchStatus>(`${DISPATCH_PREFIX}${assessmentId}`);
 }
 
 export function writeCachedDispatchStatus(
@@ -84,8 +90,7 @@ export function writeCachedDispatchStatus(
 }
 
 export function readCachedMonitoringHub(): CounselorMonitoringHubResult | null {
-  if (typeof window === 'undefined') return null;
-  return readSWRCache<CounselorMonitoringHubResult>(`${COUNSELOR_SWR_PREFIX}MonitoringHub`, cacheOpts()).data;
+  return readFreshCounselorCache<CounselorMonitoringHubResult>(`${COUNSELOR_SWR_PREFIX}MonitoringHub`);
 }
 
 export function writeCachedMonitoringHub(data: CounselorMonitoringHubResult): void {
@@ -94,8 +99,8 @@ export function writeCachedMonitoringHub(data: CounselorMonitoringHubResult): vo
 }
 
 export function readCachedTestResults<T>(uid: string): T[] | null {
-  if (typeof window === 'undefined' || !uid) return null;
-  const cached = readSWRCache<{ rows: T[] }>(`${TEST_RESULTS_PREFIX}${uid}`, cacheOpts()).data;
+  if (!uid) return null;
+  const cached = readFreshCounselorCache<{ rows: T[] }>(`${TEST_RESULTS_PREFIX}${uid}`);
   return cached?.rows ?? null;
 }
 
@@ -105,8 +110,7 @@ export function writeCachedTestResults<T>(uid: string, rows: T[]): void {
 }
 
 export function readCachedArchivedAssessments<T>(): T[] | null {
-  if (typeof window === 'undefined') return null;
-  const cached = readSWRCache<{ items: T[] }>(ARCHIVED_PREFIX, cacheOpts()).data;
+  const cached = readFreshCounselorCache<{ items: T[] }>(ARCHIVED_PREFIX);
   return cached?.items ?? null;
 }
 
@@ -116,8 +120,8 @@ export function writeCachedArchivedAssessments<T>(items: T[]): void {
 }
 
 export function readCachedCredits<T>(uid: string): T | null {
-  if (typeof window === 'undefined' || !uid) return null;
-  return readSWRCache<T>(`${CREDITS_PREFIX}${uid}`, cacheOpts()).data;
+  if (!uid) return null;
+  return readFreshCounselorCache<T>(`${CREDITS_PREFIX}${uid}`);
 }
 
 export function writeCachedCredits<T>(uid: string, data: T): void {

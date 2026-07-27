@@ -36,7 +36,6 @@ import {
   tryRestoreAuthenticatedTabSession,
 } from '@/utils/authSessionLifecycle';
 import { primeCounselorIdToken, clearCounselorIdTokenCache } from '@/lib/counselorAuth';
-import { clearAllCounselorSessionCache } from '@/lib/counselorSessionCache';
 import { clearClientPortalSessionWithBroadcast } from '@/lib/clientPortalSession';
 import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 import { resetAllSessionsBeforePortalLinkEntry, shouldSkipPortalLinkEntryResetForCurrentTab } from '@/lib/portalLinkEntryReset';
@@ -539,7 +538,6 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(null);
       writeSWRCache(AUTH_CACHE_KEY, null, { scope: 'session' });
       clearCounselorIdTokenCache();
-      clearAllCounselorSessionCache();
       return { success: true };
     } catch (error: unknown) {
       return { success: false, error: error instanceof Error ? error.message : String(error) };

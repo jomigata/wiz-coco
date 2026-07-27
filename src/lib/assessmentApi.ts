@@ -604,7 +604,7 @@ export function readCachedAssessmentsList(): CounselorAssessment[] | null {
     scope: ASSESSMENTS_LIST_CACHE_SCOPE,
     maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
   });
-  if (cached.data?.assessments?.length) {
+  if (cached.isFresh && cached.data?.assessments?.length) {
     return cached.data.assessments;
   }
   // legacy: 이전 버전이 sessionStorage에만 저장한 캐시 마이그레이션
@@ -612,7 +612,7 @@ export function readCachedAssessmentsList(): CounselorAssessment[] | null {
     scope: 'session',
     maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
   });
-  if (legacy.data?.assessments?.length) {
+  if (legacy.isFresh && legacy.data?.assessments?.length) {
     writeSWRCache(
       ASSESSMENTS_LIST_CACHE_KEY,
       { assessments: legacy.data.assessments },

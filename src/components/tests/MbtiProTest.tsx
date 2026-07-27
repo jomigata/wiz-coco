@@ -776,7 +776,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   // 검사 단계 (currentStep === 'test')
 
-  const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = 'after:from-sky-400/60') =>
+  const answerGlowSky = uiTheme === 'portal' ? 'after:from-sky-400/15' : 'after:from-sky-400/60';
+  const answerGlowPink = uiTheme === 'portal' ? 'after:from-pink-400/15' : 'after:from-pink-400/60';
+  const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = answerGlowSky) =>
     `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 
   // 선택된 문항이 아직 로드되지 않았으면 로딩 표시
@@ -865,7 +867,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     className={v.questionCard}
                   >
-                    <h2 className="text-lg text-slate-50 text-center leading-snug px-2 font-medium">
+                    <h2 className={`text-lg text-center leading-snug px-2 ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}>
                       {selectedQuestions[currentQuestion].text}
                     </h2>
                   </motion.div>
@@ -934,7 +936,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(3)}
-                    className={answerBtnClass('rounded-[20px]', 'py-5', '', 'after:from-pink-400/60')}
+                    className={answerBtnClass('rounded-[20px]', 'py-5', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 3 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -953,7 +955,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(2)}
-                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
+                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 2 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -972,7 +974,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(1)}
-                    className={answerBtnClass('rounded-[20px]', 'py-10', 'hover:shadow-lg hover:shadow-black/20', 'after:from-pink-400/60')}
+                    className={answerBtnClass('rounded-[20px]', 'py-10', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 1 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>

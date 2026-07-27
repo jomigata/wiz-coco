@@ -9,7 +9,6 @@ import { isClientPortalLinkEntryPath } from '@/lib/clientPortalLinkEntryPaths';
 import { clearClientPortalSession } from '@/lib/clientPortalSession';
 import { getBootstrapRoleForEmail } from '@/constants/bootstrapAccounts';
 import { readSWRCache } from '@/utils/staleWhileRevalidateCache';
-import { clearAllCounselorSessionCache } from '@/lib/counselorSessionCache';
 
 const AUTH_CLEAR_CHANNEL = 'wizcoco:auth-clear';
 const AUTH_CLEARED_FLAG = 'wizcoco:auth-cleared';
@@ -107,7 +106,7 @@ export function clearAuthStorageSync(options?: { fullReset?: boolean }): void {
     if (fullReset) {
       clearGoogleOAuthPending();
       endAuthLoginAttempt();
-      clearAllCounselorSessionCache();
+      // Counselor SWR cache (localStorage, 24h) is preserved across logout for same-device re-login.
       AUTH_SESSION_KEYS.forEach((key) => {
         sessionStorage.removeItem(key);
       });

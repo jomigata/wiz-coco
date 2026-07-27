@@ -20,18 +20,21 @@ export type CounselorDashboardCacheSnapshot = {
 
 export function readCachedCounselorDashboard(): CounselorDashboardCacheSnapshot | null {
   if (typeof window === 'undefined') return null;
-  const hub = readSWRCache<CounselorMonitoringHubResult>(HUB_KEY, {
+  const hubCached = readSWRCache<CounselorMonitoringHubResult>(HUB_KEY, {
     scope: CACHE_SCOPE,
     maxAgeMs: CACHE_MAX_AGE_MS,
-  }).data;
-  const cohorts = readSWRCache<CounselorCohortMonitoringResult>(COHORTS_KEY, {
+  });
+  const cohortsCached = readSWRCache<CounselorCohortMonitoringResult>(COHORTS_KEY, {
     scope: CACHE_SCOPE,
     maxAgeMs: CACHE_MAX_AGE_MS,
-  }).data;
-  const liaisons = readSWRCache<CounselorOrgLiaison[]>(LIAISONS_KEY, {
+  });
+  const liaisonsCached = readSWRCache<CounselorOrgLiaison[]>(LIAISONS_KEY, {
     scope: CACHE_SCOPE,
     maxAgeMs: CACHE_MAX_AGE_MS,
-  }).data;
+  });
+  const hub = hubCached.isFresh ? hubCached.data : null;
+  const cohorts = cohortsCached.isFresh ? cohortsCached.data : null;
+  const liaisons = liaisonsCached.isFresh ? liaisonsCached.data : null;
   if (!hub && !cohorts && !liaisons) return null;
   return {
     hub: hub ?? null,
