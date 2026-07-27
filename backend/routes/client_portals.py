@@ -468,6 +468,7 @@ def bulk_create():
     welcome_message = (body.get("welcomeMessage") or "").strip()
     usage_end_date = (body.get("usageEndDate") or "").strip()
     test_list = body.get("testList") or []
+    code_category = (body.get("codeCategory") or body.get("code_category") or "").strip()
     queue_notify = bool(body.get("queueNotify"))
     scheduled_at_raw = (body.get("scheduledAt") or "").strip()
     scheduled_at_iso = ""
@@ -511,6 +512,7 @@ def bulk_create():
             existing_assessment_id=existing_assessment_id,
             cohort_id=cohort_id,
             cohort_name=cohort_name,
+            code_category=code_category,
         )
     except PermissionError as exc:
         return jsonify({"error": "Forbidden", "message": str(exc)}), 403

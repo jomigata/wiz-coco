@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -1201,7 +1201,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
               <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
                 <p>
-                  <span className="text-slate-500">상담(코드) </span>
+                  <span className="text-slate-500">상담코드 </span>
                   <span className="font-mono text-cyan-300">
                     {formatAccessCodeDisplay(displayData.joinAccessCode)}
                   </span>
@@ -1243,7 +1243,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       <li>제목: [WizCoCo] 미실시 알림 (수신자 이름)</li>
                       <li>검사명, 진행 현황, 미완료 검사 목록</li>
                       <li>
-                        상담(코드) {formatAccessCodeDisplay(displayData.joinAccessCode)}, 나의코드(개인별)
+                        상담코드 {formatAccessCodeDisplay(displayData.joinAccessCode)}, 나의코드(개인별)
                       </li>
                       <li>검사시작 URL: {loginUrl}</li>
                       <li>바로 시작 매직링크 (72시간 유효, 개인별 발급)</li>

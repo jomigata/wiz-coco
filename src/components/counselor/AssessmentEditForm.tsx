@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -148,7 +148,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   if (loadError || !initial) {
     return (
       <div className="rounded-lg bg-red-900/20 border border-red-600/50 p-4 text-red-300">
-        {loadError || '상담(코드)를 찾을 수 없습니다.'}
+        {loadError || '상담코드를 찾을 수 없습니다.'}
         <div className="mt-3">
           <button
             type="button"
@@ -171,16 +171,16 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       ) : null}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
         <div ref={leftColRef} className="flex min-h-0 flex-col gap-4">
-          <CounselorPageSection title="상담(코드)">
+          <CounselorPageSection title="상담코드">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
                 {formatAccessCodeDisplay(initial.accessCode)}
               </span>
               <span className="text-sm text-slate-400">
-                {initial.issueType === 'individual' ? '상담(코드)(개별 발급)' : '일반코드(지원 종료)'}
+                {initial.issueType === 'individual' ? '상담코드(개별 발급)' : '일반코드(지원 종료)'}
               </span>
             </div>
-            <p className={`${FORM_HINT} mt-2`}>상담(코드)·발급 유형은 변경할 수 없습니다.</p>
+            <p className={`${FORM_HINT} mt-2`}>상담코드·발급 유형은 변경할 수 없습니다.</p>
           </CounselorPageSection>
 
           <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col">

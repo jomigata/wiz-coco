@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -278,7 +278,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm text-slate-400">
-                모든 상담(코드)의 발송·검사 진행을 한 화면에서 확인합니다. 상담(코드)를 선택하면 알림·재발송·상세
+                모든 상담코드의 발송·검사 진행을 한 화면에서 확인합니다. 상담코드를 선택하면 알림·재발송·상세
                 모니터링으로 이동합니다.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -300,7 +300,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                 href="/counselor/assessments/new"
                 className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
               >
-                +상담(코드)생성
+                +상담코드생성
               </AuthLink>
               <button
                 type="button"
@@ -314,7 +314,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs text-slate-500">활성 상담(코드)</p>
+              <p className="text-xs text-slate-500">활성 상담코드</p>
               <p className="mt-1 text-2xl font-semibold text-white">{hub.summary.activeAssessments}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
@@ -333,7 +333,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
 
           {hub.summary.notifyFailedCount > 0 ? (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              자격증명 발송 실패 {hub.summary.notifyFailedCount}건 — 상담(코드)별 「발송·검사 현황」에서 재발송할 수
+              자격증명 발송 실패 {hub.summary.notifyFailedCount}건 — 상담코드별 「발송·검사 현황」에서 재발송할 수
               있습니다.
             </div>
           ) : null}
@@ -360,15 +360,15 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
             </AuthLink>
           </div>
 
-          <CounselorPageSection title="상담(코드)별 진행" className="!rounded-lg">
+          <CounselorPageSection title="상담코드별 진행" className="!rounded-lg">
             {hub.assessments.length === 0 ? (
               <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
-                <p className="text-slate-300">모니터링할 상담(코드)가 없습니다.</p>
+                <p className="text-slate-300">모니터링할 상담코드가 없습니다.</p>
                 <AuthLink
                   href="/counselor/assessments/new"
                   className="mt-4 inline-flex rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
                 >
-                  상담(코드) 발급하기
+                  상담코드 발급하기
                 </AuthLink>
               </div>
             ) : (
@@ -390,7 +390,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
                     <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
                       <th className="px-4 py-3 font-medium">시각</th>
                       <th className="px-4 py-3 font-medium">내담자</th>
-                      <th className="px-4 py-3 font-medium">상담(코드)</th>
+                      <th className="px-4 py-3 font-medium">상담코드</th>
                       <th className="px-4 py-3 font-medium">검사</th>
                       <th className="px-4 py-3 font-medium">액션</th>
                     </tr>

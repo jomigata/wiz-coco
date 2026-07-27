@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** 레거시 경로 → 개별 발급 상담(코드) 생성으로 이동 */
+/** 레거시 경로 → 개별 발급 상담코드 생성으로 이동 */
 export default function BulkInviteRedirectPage() {
   const router = useRouter();
   useEffect(() => {

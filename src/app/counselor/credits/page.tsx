@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -195,7 +195,7 @@ function CreditsContent() {
               href="/counselor/assessments/new/"
               className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500"
             >
-              상담(코드)생성
+              상담코드생성
             </Link>
             <Link
               href="/partners/"

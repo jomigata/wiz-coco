@@ -20,12 +20,16 @@ const CREDITS_PREFIX = `${COUNSELOR_SWR_PREFIX}Credits:`;
 export function clearAllCounselorSessionCache(): void {
   if (typeof window === 'undefined') return;
   clearSWRCacheByPrefix(COUNSELOR_SWR_PREFIX, ['local', 'session']);
+  // legacy dashboard cache keys (same prefix)
   try {
     sessionStorage.removeItem('wizcoco_created_assessment');
   } catch {
     // ignore
   }
 }
+
+/** assessments 목록 캐시 키 (listAssessments와 동일 scope) */
+export const ASSESSMENTS_LIST_CACHE_KEY = `${COUNSELOR_SWR_PREFIX}AssessmentsList`;
 
 function cacheOpts() {
   return { scope: COUNSELOR_CACHE_SCOPE, maxAgeMs: COUNSELOR_CACHE_MAX_AGE_MS };

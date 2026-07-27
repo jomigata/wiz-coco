@@ -98,7 +98,7 @@ const portal: MbtiProClientInfoTheme = {
   yearBtnSelected:
     'bg-sky-500 text-white border-2 border-sky-300 shadow-lg shadow-sky-400/45 scale-[1.08] z-[1]',
   yearBtnBgDefault: 'bg-sky-800/60',
-  yearBtnBgBlueBand: 'bg-sky-700/50',
+  yearBtnBgBlueBand: 'bg-indigo-600/55 text-sky-50',
   yearBtnBorderHover: 'border border-sky-600/70 hover:bg-sky-700/65',
   yearTextNormal: 'text-sky-100',
   yearTextAccent: 'text-sky-50 font-semibold',

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -36,6 +36,7 @@ import {
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
+import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
 type IssueIntent = 'excel' | 'send_all' | 'goto_dispatch';
 
@@ -68,6 +69,7 @@ export default function IndividualAssessmentCreateForm() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
 
   const [cohortName, setCohortName] = useState('');
+  const [codeCategory, setCodeCategory] = useState<CounselingCodeType>('group');
   const [title, setTitle] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [usageEndDate, setUsageEndDate] = useState('');
@@ -313,6 +315,10 @@ export default function IndividualAssessmentCreateForm() {
       showValidationError('기관/단체/그룹명을 입력해 주세요.', 'cohortName');
       return;
     }
+    if (!codeCategory) {
+      showValidationError('코드유형을 선택해 주세요.', 'cohortName');
+      return;
+    }
     if (!title.trim()) {
       showValidationError('안내 제목을 입력해 주세요.', 'title');
       return;
@@ -352,6 +358,7 @@ export default function IndividualAssessmentCreateForm() {
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
         testList,
+        codeCategory,
         rows: recipients.map((r) => ({
           displayName: r.displayName.trim(),
           email: r.email.trim() || undefined,
@@ -405,7 +412,7 @@ export default function IndividualAssessmentCreateForm() {
       pendingIntentRef.current = null;
     } catch (err) {
       pendingIntentRef.current = null;
-      setError(err instanceof Error ? err.message : '상담(코드) 발급에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '상담코드 발급에 실패했습니다.');
     } finally {
       setLoadingIntent(null);
     }
@@ -431,6 +438,7 @@ export default function IndividualAssessmentCreateForm() {
         testList,
         createdAt: new Date().toISOString(),
         cohortName: cohortName.trim() || undefined,
+        codeCategory,
         dispatchSentCount: 0,
         dispatchFailedCount: 0,
         testCompleteCount: 0,
@@ -480,7 +488,7 @@ export default function IndividualAssessmentCreateForm() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="rounded-lg border border-blue-500/40 bg-blue-950/30 p-5 text-blue-100">
-          <p className="font-medium">상담(코드) 대량 발급 진행 중…</p>
+          <p className="font-medium">상담코드 대량 발급 진행 중…</p>
           <p className="mt-2 text-sm text-blue-200/90">
             {jobProgress.processedRows.toLocaleString('ko-KR')} /{' '}
             {jobProgress.totalRows.toLocaleString('ko-KR')}명 처리됨 ({jobProgress.progressPct}%)
@@ -493,7 +501,7 @@ export default function IndividualAssessmentCreateForm() {
           </div>
           {sharedJoinCode ? (
             <p className="mt-3 text-sm">
-              공통 상담(코드):{' '}
+              공통 상담코드:{' '}
               <span className="font-mono font-semibold">{formatAccessCodeDisplay(sharedJoinCode)}</span>
             </p>
           ) : null}
@@ -524,7 +532,7 @@ export default function IndividualAssessmentCreateForm() {
             </p>
             {sharedJoinCode ? (
               <p>
-                공통 상담(코드):{' '}
+                공통 상담코드:{' '}
                 <span className="font-mono text-lg font-bold tracking-wider text-emerald-100">
                   {formatAccessCodeDisplay(sharedJoinCode)}
                 </span>
@@ -627,6 +635,23 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
               </div>
             </div>
+            <div>
+              <label className={FORM_LABEL}>
+                코드유형 <span className="text-red-400">*</span>
+              </label>
+              <select
+                className={FORM_INPUT}
+                value={codeCategory}
+                onChange={(e) => setCodeCategory(e.target.value as CounselingCodeType)}
+                disabled={loading}
+              >
+                {COUNSELING_CODE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label} — {t.description}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-4 border-t border-white/10 pt-4">
               <div>
                 <label className={`${FORM_LABEL} mb-2 block`}>안내 메시지 (선택)</label>
@@ -636,7 +661,7 @@ export default function IndividualAssessmentCreateForm() {
                 />
                 <textarea
                   rows={4}
-                  className={`${FORM_INPUT} mt-2 min-h-[5.5rem] max-h-[5.5rem] resize-none overflow-y-auto`}
+                  className={`${FORM_INPUT} mt-2 min-h-[5.5rem] max-h-[5.5rem] resize-none overflow-y-auto text-sm leading-relaxed`}
                   placeholder="내담자에게 보여줄 안내 문구"
                   value={welcomeMessage}
                   onChange={(e) => setWelcomeMessage(e.target.value)}
@@ -645,7 +670,9 @@ export default function IndividualAssessmentCreateForm() {
               </div>
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <label className={FORM_LABEL}>포함할 검사</label>
+                  <label className={FORM_LABEL}>
+                    포함할 검사 <span className="text-red-400">*</span>
+                  </label>
                   <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-sm text-slate-400">
                     {selectedTestCount}개 선택
                   </span>
@@ -966,7 +993,7 @@ export default function IndividualAssessmentCreateForm() {
             </p>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               {loadingIntent === 'excel'
-                ? '엑셀 저장을 위해 상담(코드)를 발급하고 있습니다.'
+                ? '엑셀 저장을 위해 상담코드를 발급하고 있습니다.'
                 : '내담자에게 발급·발송을 처리하고 있습니다.'}
               <br />
               창을 닫지 말고 잠시만 기다려 주세요.

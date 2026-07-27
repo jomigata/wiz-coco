@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useMemo, useState } from 'react';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
@@ -103,7 +103,7 @@ export default function ArchivedRecipientsTable({
 
   const openResultDetail = async (resultId: string, assessmentId: string) => {
     if (!assessmentId) {
-      setDetailError('상담(코드) 정보가 없어 결과를 열 수 없습니다.');
+      setDetailError('상담코드 정보가 없어 결과를 열 수 없습니다.');
       return;
     }
     setDetailLoading(true);
@@ -187,7 +187,7 @@ export default function ArchivedRecipientsTable({
               />
               {showAssessmentColumns ? (
                 <>
-                  <th className="px-3 py-2 text-left text-xs font-medium">상담(코드)</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">상담코드</th>
                   <th className="px-3 py-2 text-left text-xs font-medium">검사명</th>
                 </>
               ) : null}

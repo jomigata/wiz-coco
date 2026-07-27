@@ -263,6 +263,12 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setSelectedQuestions(selected);
   }, [clientInfo]); // clientInfo가 변경될 때 실행
 
+  const answeredCount = useMemo(
+    () => Object.values(answers).filter((v) => v !== undefined).length,
+    [answers],
+  );
+  const progress = (answeredCount / totalQuestions) * 100;
+
   const handleClientInfoSubmit = (info: ClientInfo) => {
     console.log('MbtiProTest - 클라이언트 정보 제출 시작:', info);
     
@@ -770,11 +776,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   // 검사 단계 (currentStep === 'test')
 
-  const answeredCount = useMemo(
-    () => Object.values(answers).filter((v) => v !== undefined).length,
-    [answers],
-  );
-  const progress = (answeredCount / totalQuestions) * 100;
   const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = 'after:from-sky-400/60') =>
     `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 

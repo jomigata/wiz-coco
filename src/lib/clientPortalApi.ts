@@ -154,6 +154,7 @@ export async function bulkCreateClientPortals(body: {
   welcomeMessage?: string;
   usageEndDate?: string;
   testList: { testId: string; name: string }[];
+  codeCategory?: string;
   queueNotify?: boolean;
   scheduledAt?: string;
   /** 기존 그룹코드(개별 발급) 검사 세트 재사용 */

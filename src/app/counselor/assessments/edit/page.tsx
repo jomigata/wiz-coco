@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { Suspense } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
@@ -13,7 +13,7 @@ function AssessmentEditContent() {
   if (!id) {
     return (
       <div className="text-red-400">
-        수정할 상담(코드)를 선택해 주세요.{' '}
+        수정할 상담코드를 선택해 주세요.{' '}
         <AuthLink href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
           목록으로
         </AuthLink>
@@ -34,7 +34,7 @@ export default function AssessmentEditPage() {
             className="inline-flex items-center gap-1.5 text-base text-slate-300 transition hover:text-white"
           >
             <span aria-hidden>←</span>
-            상담(코드) 목록
+            상담코드 목록
           </AuthLink>
           <p className="text-sm text-slate-400">안내 제목·메시지·포함 검사 수정</p>
         </div>

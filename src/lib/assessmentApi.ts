@@ -402,8 +402,10 @@ export interface CounselorAssessment {
   dispatchFailedCount?: number;
   testCompleteCount?: number;
   testIncompleteCount?: number;
-  /** 기관/단체/그룹명 (상담(코드) 세트) */
+  /** 기관/단체/그룹명 (상담코드 세트) */
   cohortName?: string;
+  /** 상담코드 유형: individual | group | school | corporate | community | other */
+  codeCategory?: string;
 }
 
 /** 상담(코드) 발급 직후 목록 상단 배너용(세션에서 전달) */
@@ -602,7 +604,23 @@ export function readCachedAssessmentsList(): CounselorAssessment[] | null {
     scope: ASSESSMENTS_LIST_CACHE_SCOPE,
     maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
   });
-  return cached.data?.assessments ?? null;
+  if (cached.data?.assessments?.length) {
+    return cached.data.assessments;
+  }
+  // legacy: 이전 버전이 sessionStorage에만 저장한 캐시 마이그레이션
+  const legacy = readSWRCache<{ assessments: CounselorAssessment[] }>(ASSESSMENTS_LIST_CACHE_KEY, {
+    scope: 'session',
+    maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
+  });
+  if (legacy.data?.assessments?.length) {
+    writeSWRCache(
+      ASSESSMENTS_LIST_CACHE_KEY,
+      { assessments: legacy.data.assessments },
+      { scope: ASSESSMENTS_LIST_CACHE_SCOPE },
+    );
+    return legacy.data.assessments;
+  }
+  return null;
 }
 
 function sortAssessmentsByCreatedDesc(items: CounselorAssessment[]): CounselorAssessment[] {
@@ -682,7 +700,7 @@ export function removeCounselorAssessmentFromListCache(
     if (codeKey && assessmentAccessKey(a.accessCode) === codeKey) return false;
     return true;
   });
-  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: filtered }, { scope: 'session' });
+  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: filtered }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
 }
 
 export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
@@ -698,7 +716,7 @@ export async function listAssessments(): Promise<{ assessments: CounselorAssessm
   const payload = data as { assessments: CounselorAssessment[] };
   const cached = readCachedAssessmentsList() ?? [];
   const merged = mergeCounselorAssessmentLists(payload.assessments || [], cached);
-  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: merged }, { scope: 'session' });
+  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: merged }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
   return { assessments: merged };
 }
 

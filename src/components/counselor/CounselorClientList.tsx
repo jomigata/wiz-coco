@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -187,7 +187,7 @@ export default function CounselorClientList() {
     <CounselorPageSection
       className="flex min-h-0 flex-1"
       title="내담자 목록"
-      description="발급한 나의코드(내 검사실) 내담자를 한곳에서 조회합니다. 검사 진행·발송 현황은 상담(코드)별 진행현황에서 상세히 확인할 수 있습니다."
+      description="발급한 나의코드(내 검사실) 내담자를 한곳에서 조회합니다. 검사 진행·발송 현황은 상담코드별 진행현황에서 상세히 확인할 수 있습니다."
       toolbar={
         <>
           <span className="hidden text-xs text-slate-500 sm:inline">
@@ -204,7 +204,7 @@ export default function CounselorClientList() {
             href="/counselor/assessments/new"
             className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
           >
-            +상담(코드)생성
+            +상담코드생성
           </AuthLink>
           <button
             type="button"
@@ -293,13 +293,13 @@ export default function CounselorClientList() {
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 내담자가 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
-            상담(코드)를 발급하면 내담자가 여기에 표시됩니다.
+            상담코드를 발급하면 내담자가 여기에 표시됩니다.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
             className="mt-4 inline-block text-sm text-sky-400 hover:text-sky-300"
           >
-            상담(코드)생성 →
+            상담코드생성 →
           </AuthLink>
         </div>
       ) : (
@@ -372,7 +372,7 @@ export default function CounselorClientList() {
                     <td className="px-4 py-3 text-xs text-slate-300">
                       {item.cohortName || '—'}
                       {item.assignedAssessmentCount > 0 ? (
-                        <div className="text-slate-500">상담(코드) {item.assignedAssessmentCount}건</div>
+                        <div className="text-slate-500">상담코드 {item.assignedAssessmentCount}건</div>
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-400">

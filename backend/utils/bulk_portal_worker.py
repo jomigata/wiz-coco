@@ -41,6 +41,7 @@ def prepare_bulk_assessment(
     existing_assessment_id: str,
     cohort_id: str,
     cohort_name: str = "",
+    code_category: str = "",
     organization_id: str = "",
     prepaid_by_org: bool = False,
 ) -> tuple[str, str, str]:
@@ -79,6 +80,7 @@ def prepare_bulk_assessment(
             "status": "active",
             "clientPortalCohortId": cohort_id,
             "cohortName": cohort_name,
+            **({"codeCategory": code_category} if code_category else {}),
             **(
                 {"organizationId": organization_id, "prepaidByOrg": True}
                 if organization_id

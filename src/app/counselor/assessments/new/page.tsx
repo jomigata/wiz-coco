@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { Suspense } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
@@ -14,7 +14,7 @@ function NewAssessmentContent() {
           className="inline-flex items-center gap-1.5 text-base text-slate-300 transition hover:text-white"
         >
           <span aria-hidden>←</span>
-          상담(코드) 목록
+          상담코드 목록
         </AuthLink>
       </div>
 

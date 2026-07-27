@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -162,7 +162,7 @@ export default function CounselorAssignTestsPanel() {
     <CounselorPageSection
       className="flex min-h-0 flex-1"
       title="검사 할당 현황"
-      description="발급된 상담(코드)에 연결된 내담자별 검사 항목 진행 현황입니다. 새 내담자·검사 발급은 상담(코드)생성에서 진행하세요."
+      description="발급된 상담코드에 연결된 내담자별 검사 항목 진행 현황입니다. 새 내담자·검사 발급은 상담코드생성에서 진행하세요."
       toolbar={
         <>
           <span className="hidden text-xs text-slate-500 lg:inline">
@@ -180,7 +180,7 @@ export default function CounselorAssignTestsPanel() {
             href="/counselor/assessments/new"
             className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
           >
-            +상담(코드)생성
+            +상담코드생성
           </AuthLink>
           <AuthLink
             href="/counselor/clients"
@@ -202,21 +202,21 @@ export default function CounselorAssignTestsPanel() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <h3 className="text-sm font-medium text-slate-200">신규 내담자 + 상담(코드)</h3>
+          <h3 className="text-sm font-medium text-slate-200">신규 내담자 + 상담코드</h3>
           <p className="mt-1 text-xs text-slate-500">
-            상담(코드)를 구성하면서 내담자 나의코드·PIN을 함께 발급합니다.
+            상담코드를 구성하면서 내담자 나의코드·PIN을 함께 발급합니다.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
             className="mt-3 inline-flex text-sm text-sky-400 hover:text-sky-300"
           >
-            상담(코드)생성 →
+            상담코드생성 →
           </AuthLink>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <h3 className="text-sm font-medium text-slate-200">기존 상담(코드)에 내담자 추가</h3>
+          <h3 className="text-sm font-medium text-slate-200">기존 상담코드에 내담자 추가</h3>
           <p className="mt-1 text-xs text-slate-500">
-            이미 만든 상담(코드)에 수신자를 추가할 때는 만들기 화면에서 기존 코드를 선택하세요.
+            이미 만든 상담코드에 수신자를 추가할 때는 만들기 화면에서 기존 코드를 선택하세요.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
@@ -280,7 +280,7 @@ export default function CounselorAssignTestsPanel() {
           onChange={(e) => setAssessmentFilter(e.target.value)}
           className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"
         >
-          <option value="">전체 상담(코드)</option>
+          <option value="">전체 상담코드</option>
           {assessments.map((a) => (
             <option key={a.assessmentId} value={a.assessmentId}>
               {a.title}
@@ -301,13 +301,13 @@ export default function CounselorAssignTestsPanel() {
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
           <p className="text-slate-300">조건에 맞는 검사 할당이 없습니다.</p>
           <p className="mt-2 text-sm text-slate-500">
-            상담(코드)를 발급하면 내담자별 검사 항목이 여기에 표시됩니다.
+            상담코드를 발급하면 내담자별 검사 항목이 여기에 표시됩니다.
           </p>
           <AuthLink
             href="/counselor/assessments/new"
             className="mt-4 inline-flex rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
           >
-            상담(코드) 발급하기
+            상담코드 발급하기
           </AuthLink>
         </div>
       ) : (
@@ -369,7 +369,7 @@ export default function CounselorAssignTestsPanel() {
               <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3 font-medium">내담자</th>
                 <th className="px-4 py-3 font-medium">나의코드</th>
-                <th className="px-4 py-3 font-medium">상담(코드)</th>
+                <th className="px-4 py-3 font-medium">상담코드</th>
                 <th className="px-4 py-3 font-medium">검사 항목</th>
                 <th className="px-4 py-3 font-medium">상태</th>
                 <th className="px-4 py-3 font-medium">완료일</th>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
 import { getCounselorResult, type ProgressByClient, type CounselorResultDetail } from '@/lib/assessmentApi';
@@ -146,7 +146,7 @@ export default function ProgressDashboard({
             <h2 className="text-lg font-semibold text-white">{assessmentTitle}</h2>
           )}
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">상담(코드):</span>
+            <span className="text-slate-400">상담코드:</span>
             <span className="font-mono text-cyan-400 tracking-wider">{formatAccessCodeDisplay(accessCode)}</span>
           </div>
         </div>

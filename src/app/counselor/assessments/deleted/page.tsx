@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
@@ -290,7 +290,7 @@ export default function DeletedAssessmentsPage() {
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
-      description="목록에서 삭제한 상담(코드)입니다. 복구하면 상담(코드) 목록에 다시 표시됩니다."
+      description="목록에서 삭제한 상담코드입니다. 복구하면 상담코드 목록에 다시 표시됩니다."
       toolbar={
         <>
           <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
@@ -342,7 +342,7 @@ export default function DeletedAssessmentsPage() {
           <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
         ) : filtered.length === 0 ? (
           <p className="text-sm text-slate-400">
-            {items.length === 0 ? '삭제된 상담(코드)가 없습니다.' : '검색 결과가 없습니다.'}
+            {items.length === 0 ? '삭제된 상담코드가 없습니다.' : '검색 결과가 없습니다.'}
           </p>
         ) : (
           <>
@@ -365,7 +365,7 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="상담(코드)"
+                      label="상담코드"
                       sortKey="accessCode"
                       activeKey={sortKey}
                       direction={sortDir}
