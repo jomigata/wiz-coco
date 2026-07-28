@@ -474,6 +474,7 @@ export async function updateAssessment(
     targetAudience?: '개인' | '그룹';
     welcomeMessage?: string;
     usageEndDate?: string;
+    codeCategory?: string;
     testList: { testId: string; name: string }[];
   }
 ): Promise<{ assessmentId: string; message: string }> {
@@ -490,6 +491,7 @@ export async function updateAssessment(
       targetAudience: body.targetAudience || '개인',
       welcomeMessage: (body.welcomeMessage || '').trim(),
       usageEndDate: (body.usageEndDate || '').trim(),
+      codeCategory: (body.codeCategory || '').trim(),
       testList: body.testList || [],
     }),
   });

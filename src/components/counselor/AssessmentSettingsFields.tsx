@@ -11,6 +11,7 @@ import {
   TEST_PICKER_SCROLL,
 } from '@/lib/assessmentFormUi';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
+import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
 export interface AssessmentSettingsFieldsProps {
   title: string;
@@ -23,6 +24,8 @@ export interface AssessmentSettingsFieldsProps {
   onToggleTest: (testId: string) => void;
   disabled?: boolean;
   titleRequired?: boolean;
+  codeCategory?: CounselingCodeType;
+  onCodeCategoryChange?: (value: CounselingCodeType) => void;
   /** meta: 제목·종료일·메시지 / tests: 검사 선택만 / all: 전체(기본) */
   sections?: 'all' | 'meta' | 'tests';
 }
@@ -38,6 +41,8 @@ export default function AssessmentSettingsFields({
   onToggleTest,
   disabled = false,
   titleRequired = true,
+  codeCategory,
+  onCodeCategoryChange,
   sections = 'all',
 }: AssessmentSettingsFieldsProps) {
   const usageEndDateRef = useRef<HTMLInputElement>(null);
@@ -105,6 +110,28 @@ export default function AssessmentSettingsFields({
             </div>
             <p className={`${FORM_HINT} mt-1.5`}>비워두면 무기한 사용 가능합니다.</p>
           </div>
+
+          {onCodeCategoryChange ? (
+            <div>
+              <label htmlFor="code-category" className={FORM_LABEL}>
+                코드유형 <span className="text-red-400">*</span>
+              </label>
+              <select
+                id="code-category"
+                className={FORM_INPUT}
+                value={codeCategory || 'group'}
+                onChange={(e) => onCodeCategoryChange(e.target.value as CounselingCodeType)}
+                disabled={disabled}
+                required
+              >
+                {COUNSELING_CODE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label} — {t.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

@@ -11,6 +11,7 @@ import {
   writeCachedAssessmentDetail,
 } from '@/lib/counselorSessionCache';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
+import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AssessmentSettingsFields from '@/components/counselor/AssessmentSettingsFields';
@@ -36,6 +37,11 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   const [usageEndDate, setUsageEndDate] = useState(
     () => (readCachedAssessmentDetail(assessmentId)?.usageEndDate || '').trim(),
   );
+  const [codeCategory, setCodeCategory] = useState<CounselingCodeType>(() => {
+    const cached = readCachedAssessmentDetail(assessmentId)?.codeCategory?.trim();
+    const valid = COUNSELING_CODE_TYPES.some((t) => t.value === cached);
+    return (valid ? cached : 'group') as CounselingCodeType;
+  });
   const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(() => {
     const cached = readCachedAssessmentDetail(assessmentId);
     return new Set((cached?.testList || []).map((t) => t.testId).filter(Boolean));
@@ -62,6 +68,9 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         setTitle(data.title || '');
         setWelcomeMessage(data.welcomeMessage || '');
         setUsageEndDate((data.usageEndDate || '').trim());
+        const category = (data.codeCategory || '').trim();
+        const validCategory = COUNSELING_CODE_TYPES.some((t) => t.value === category);
+        setCodeCategory((validCategory ? category : 'group') as CounselingCodeType);
         const ids = new Set((data.testList || []).map((t) => t.testId).filter(Boolean));
         setSelectedTestIds(ids);
       })
@@ -96,7 +105,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       observer.disconnect();
       window.removeEventListener('resize', syncRightHeight);
     };
-  }, [title, welcomeMessage, usageEndDate, initial]);
+  }, [title, welcomeMessage, usageEndDate, codeCategory, initial]);
 
   const canSubmit = Boolean(user) && !authPending && !loading && !loadingData && initial;
 
@@ -118,6 +127,10 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       setError('안내 제목을 입력해 주세요.');
       return;
     }
+    if (!codeCategory) {
+      setError('코드유형을 선택해 주세요.');
+      return;
+    }
     const testList = counselorAssessmentTestOptions
       .filter((t) => selectedTestIds.has(t.testId))
       .map((t) => ({ testId: t.testId, name: t.name }));
@@ -128,6 +141,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         targetAudience: initial.issueType === 'individual' ? '개인' : '그룹',
         welcomeMessage: welcomeMessage.trim(),
         usageEndDate: usageEndDate.trim(),
+        codeCategory,
         testList,
       });
       pushWithAuthSession(router, '/counselor/assessments');
@@ -192,6 +206,8 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
               onWelcomeMessageChange={setWelcomeMessage}
               usageEndDate={usageEndDate}
               onUsageEndDateChange={setUsageEndDate}
+              codeCategory={codeCategory}
+              onCodeCategoryChange={setCodeCategory}
               selectedTestIds={selectedTestIds}
               onToggleTest={toggleTest}
               disabled={loading}

@@ -21,6 +21,10 @@ from utils.assessment_dispatch import aggregate_assessment_list_stats
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
+VALID_CODE_CATEGORIES = frozenset(
+    {"individual", "group", "school", "corporate", "community", "other"}
+)
+
 MSG_PUBLIC_NOT_FOUND = (
     "요청하신 상담(코드)가 확인되지 않았습니다. 상담(코드)를 다시 확인해 주시기 바랍니다."
 )
@@ -291,6 +295,7 @@ def update_assessment(assessment_id):
         target_audience = "개인"
     welcome_message = (body.get("welcomeMessage") or "").strip()
     usage_end_date = _normalize_usage_end_date(body.get("usageEndDate"))
+    code_category = (body.get("codeCategory") or body.get("code_category") or "").strip()
     test_list = body.get("testList") or []
     if not isinstance(test_list, list):
         test_list = []
@@ -303,6 +308,10 @@ def update_assessment(assessment_id):
         return jsonify({"error": "Bad Request", "message": "title required"}), 400
     if usage_end_date is None:
         return jsonify({"error": "Bad Request", "message": "usageEndDate must be YYYY-MM-DD"}), 400
+    if not code_category:
+        return jsonify({"error": "Bad Request", "message": "codeCategory required"}), 400
+    if code_category not in VALID_CODE_CATEGORIES:
+        return jsonify({"error": "Bad Request", "message": "invalid codeCategory"}), 400
 
     db = get_firestore()
     access_code_hint = (body.get("accessCode") or request.args.get("accessCode") or "").strip()
@@ -316,6 +325,7 @@ def update_assessment(assessment_id):
             "targetAudience": target_audience,
             "welcomeMessage": welcome_message,
             "usageEndDate": usage_end_date or "",
+            "codeCategory": code_category,
             "testList": test_list,
             "updatedAt": SERVER_TIMESTAMP,
         }
