@@ -15,3 +15,14 @@ export function counselingCodeTypeLabel(value: string | undefined | null): strin
   const found = COUNSELING_CODE_TYPES.find((t) => t.value === v);
   return found?.label ?? (v || '—');
 }
+
+/** 목록 표시: 개인상담(RAR338) */
+export function formatCounselingCodeTypeWithCode(
+  codeCategory: string | undefined | null,
+  formattedAccessCode: string,
+): string {
+  const typeLabel = counselingCodeTypeLabel(codeCategory || 'group');
+  const code = (formattedAccessCode || '').trim();
+  if (!code || code === '—') return typeLabel;
+  return `${typeLabel}(${code})`;
+}

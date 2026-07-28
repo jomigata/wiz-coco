@@ -9,7 +9,10 @@ import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
-import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
+import {
+  counselingCodeTypeLabel,
+  formatCounselingCodeTypeWithCode,
+} from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 
 type ListSortKey = 'createdAt' | 'accessCode' | 'orgName' | 'title';
@@ -31,8 +34,14 @@ function compareAssessments(
   switch (key) {
     case 'createdAt':
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
-    case 'accessCode':
+    case 'accessCode': {
+      const typeCmp = counselingCodeTypeLabel(a.codeCategory || 'group').localeCompare(
+        counselingCodeTypeLabel(b.codeCategory || 'group'),
+        'ko',
+      );
+      if (typeCmp !== 0) return mult * typeCmp;
       return mult * (a.accessCode || '').localeCompare(b.accessCode || '');
+    }
     case 'orgName':
       return mult * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
     case 'title':
@@ -108,14 +117,6 @@ function isExpired(iso: string | undefined): boolean {
   try { return new Date(`${s}T23:59:59`) < new Date(); } catch { return false; }
 }
 
-function counselingCodeTypeDisplay(a: CounselorAssessment): string {
-  return counselingCodeTypeLabel(a.codeCategory || 'group');
-}
-
-function formatCounselingCodeWithType(a: CounselorAssessment): string {
-  return `${counselingCodeTypeDisplay(a)}(${formatAccessCodeDisplay(a.accessCode)})`;
-}
-
 function resultStatusCounts(a: CounselorAssessment) {
   const dispatchSent = a.dispatchSentCount ?? 0;
   const dispatchFailed = a.dispatchFailedCount ?? 0;
@@ -175,7 +176,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       (a) =>
         (a.title || '').toLowerCase().includes(q) ||
         (a.accessCode || '').toLowerCase().includes(q) ||
-        counselingCodeTypeDisplay(a).toLowerCase().includes(q) ||
+        counselingCodeTypeLabel(a.codeCategory).toLowerCase().includes(q) ||
         (a.targetAudience || '').toLowerCase().includes(q) ||
         getAssessmentOrgLabel(a).toLowerCase().includes(q),
     );
@@ -238,7 +239,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사명 · 코드 · 유형 검색"
+              placeholder="검사명 · 코드유형 · 코드 · 기관명 검색"
               className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
             />
           </div>
@@ -348,7 +349,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     className="whitespace-nowrap"
                   />
                   <SortableColumnHeader
-                    label="상담코드"
+                    label="코드유형(상담코드)"
                     sortKey="accessCode"
                     activeKey={sortKey}
                     direction={sortDir}
@@ -406,10 +407,15 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <td
                         className={`max-w-[16rem] truncate px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
-                        title={formatCounselingCodeWithType(a)}
+                        title={formatCounselingCodeTypeWithCode(
+                          a.codeCategory,
+                          formatAccessCodeDisplay(a.accessCode),
+                        )}
                       >
                         <span className={`${cellLinkClass} truncate max-w-full block`}>
-                          <span className="text-slate-200">{counselingCodeTypeDisplay(a)}</span>
+                          <span className="text-slate-200">
+                            {counselingCodeTypeLabel(a.codeCategory || 'group')}
+                          </span>
                           <span className="font-mono font-semibold text-sky-300 tracking-wide">
                             ({formatAccessCodeDisplay(a.accessCode)})
                           </span>
