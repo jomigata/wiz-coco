@@ -233,12 +233,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
             />
           </div>
           <AuthLink
-            href="/counselor/assessments/deleted"
-            className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/[0.08]"
-          >
-            삭제된 상담코드
-          </AuthLink>
-          <AuthLink
             href="/counselor/assessments/new"
             className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
           >
