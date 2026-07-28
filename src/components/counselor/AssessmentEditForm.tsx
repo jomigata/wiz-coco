@@ -15,7 +15,7 @@ import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselin
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AssessmentSettingsFields from '@/components/counselor/AssessmentSettingsFields';
-import { FORM_HINT } from '@/lib/assessmentFormUi';
+import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 
 interface AssessmentEditFormProps {
   assessmentId: string;
@@ -177,37 +177,51 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
       {loadingData && initial ? (
         <p className="text-xs text-sky-300/80" role="status">
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
         </p>
       ) : null}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
-        <div ref={leftColRef} className="flex min-h-0 flex-col gap-4">
-          <CounselorPageSection title="상담코드">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-base text-cyan-200">
+      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2 xl:items-start">
+        <div ref={leftColRef} className="flex min-h-0 flex-col gap-2">
+          <CounselorPageSection title="상담코드" dense>
+            <div className="mb-2">
+              <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 font-mono text-sm text-cyan-200">
                 {formatAccessCodeDisplay(initial.accessCode)}
               </span>
-              <span className="text-sm text-slate-400">
-                {initial.issueType === 'individual' ? '상담코드(개별 발급)' : '일반코드(지원 종료)'}
-              </span>
             </div>
-            <p className={`${FORM_HINT} mt-2`}>상담코드·발급 유형은 변경할 수 없습니다.</p>
+            <div>
+              <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1 text-xs`}>
+                코드유형 <span className="text-red-400">*</span>
+              </label>
+              <select
+                id="edit-code-category"
+                className={`${FORM_INPUT} py-2 text-sm`}
+                value={codeCategory}
+                onChange={(e) => setCodeCategory(e.target.value as CounselingCodeType)}
+                disabled={loading}
+                required
+              >
+                {COUNSELING_CODE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label} — {t.description}
+                  </option>
+                ))}
+              </select>
+            </div>
           </CounselorPageSection>
 
-          <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col">
+          <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col" dense>
             <AssessmentSettingsFields
               sections="meta"
+              compact
               title={title}
               onTitleChange={setTitle}
               welcomeMessage={welcomeMessage}
               onWelcomeMessageChange={setWelcomeMessage}
               usageEndDate={usageEndDate}
               onUsageEndDateChange={setUsageEndDate}
-              codeCategory={codeCategory}
-              onCodeCategoryChange={setCodeCategory}
               selectedTestIds={selectedTestIds}
               onToggleTest={toggleTest}
               disabled={loading}
@@ -221,11 +235,13 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         >
           <CounselorPageSection
             title="포함할 검사"
+            dense
             className="flex min-h-0 flex-1 flex-col overflow-hidden xl:h-full"
             bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
           >
             <AssessmentSettingsFields
               sections="tests"
+              compact
               title={title}
               onTitleChange={setTitle}
               welcomeMessage={welcomeMessage}
@@ -246,11 +262,11 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         <button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-lg bg-sky-600 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? '저장 중…' : '변경 저장'}
         </button>
@@ -258,7 +274,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           type="button"
           onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
           disabled={loading}
-          className="rounded-lg border border-white/15 bg-slate-800/80 px-5 py-2.5 text-base font-medium text-slate-200 transition hover:bg-slate-700/80 disabled:opacity-50"
+          className="rounded-lg border border-white/15 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700/80 disabled:opacity-50"
         >
           취소
         </button>

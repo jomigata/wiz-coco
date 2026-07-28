@@ -27,16 +27,15 @@ function AssessmentEditContent() {
 export default function AssessmentEditPage() {
   return (
     <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
-      <CounselorPageBody className="gap-2">
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <CounselorPageBody className="gap-1.5">
+        <div className="flex shrink-0">
           <AuthLink
             href="/counselor/assessments"
-            className="inline-flex items-center gap-1.5 text-base text-slate-300 transition hover:text-white"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-300 transition hover:text-white"
           >
             <span aria-hidden>←</span>
             상담코드 목록
           </AuthLink>
-          <p className="text-sm text-slate-400">안내 제목·메시지·포함 검사 수정</p>
         </div>
         <AssessmentEditContent />
       </CounselorPageBody>

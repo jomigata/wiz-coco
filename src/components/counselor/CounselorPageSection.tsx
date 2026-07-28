@@ -13,6 +13,8 @@ type CounselorPageSectionProps = {
   bodyClassName?: string;
   noBodyPadding?: boolean;
   showHierarchyBreadcrumb?: boolean;
+  /** 헤더·본문 패딩 축소 (수정 폼 등) */
+  dense?: boolean;
 };
 
 export default function CounselorPageSection({
@@ -24,6 +26,7 @@ export default function CounselorPageSection({
   bodyClassName = '',
   noBodyPadding = false,
   showHierarchyBreadcrumb = false,
+  dense = false,
 }: CounselorPageSectionProps) {
   const hasHeader = Boolean(title || toolbar);
 
@@ -36,9 +39,15 @@ export default function CounselorPageSection({
       className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 ${counselorHubClasses.subsection} !p-0 ${className}`}
     >
       {hasHeader ? (
-        <div className="flex flex-col gap-2.5 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`flex flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${
+            dense ? 'px-3 py-2' : 'px-4 py-3 sm:gap-2.5'
+          }`}
+        >
           {title ? (
-            <h2 className="text-sm font-bold tracking-tight text-white sm:text-base">{title}</h2>
+            <h2 className={`font-bold tracking-tight text-white ${dense ? 'text-sm' : 'text-sm sm:text-base'}`}>
+              {title}
+            </h2>
           ) : (
             <span />
           )}
@@ -55,7 +64,7 @@ export default function CounselorPageSection({
         </p>
       ) : null}
       <div
-        className={`min-h-0 flex-1 bg-[#0f1d33]/60 ${noBodyPadding ? '' : 'p-2.5 sm:p-3'} ${bodyClassName}`}
+        className={`min-h-0 flex-1 bg-[#0f1d33]/60 ${noBodyPadding ? '' : dense ? 'p-2' : 'p-2.5 sm:p-3'} ${bodyClassName}`}
       >
         {children}
       </div>
