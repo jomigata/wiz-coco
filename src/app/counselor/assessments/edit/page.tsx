@@ -27,7 +27,7 @@ function AssessmentEditContent() {
 export default function AssessmentEditPage() {
   return (
     <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
-      <CounselorPageBody className="gap-1.5">
+      <CounselorPageBody className="gap-2">
         <div className="flex shrink-0">
           <AuthLink
             href="/counselor/assessments"

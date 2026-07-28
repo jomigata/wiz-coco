@@ -177,22 +177,22 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       {loadingData && initial ? (
         <p className="text-xs text-sky-300/80" role="status">
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
         </p>
       ) : null}
-      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2 xl:items-start">
-        <div ref={leftColRef} className="flex min-h-0 flex-col gap-2">
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 xl:items-start">
+        <div ref={leftColRef} className="flex min-h-0 flex-col gap-3">
           <CounselorPageSection title="상담코드" dense>
-            <div className="mb-2">
+            <div className="mb-3">
               <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 font-mono text-sm text-cyan-200">
                 {formatAccessCodeDisplay(initial.accessCode)}
               </span>
             </div>
             <div>
-              <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1 text-xs`}>
+              <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5 text-xs`}>
                 코드유형 <span className="text-red-400">*</span>
               </label>
               <select
@@ -262,7 +262,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5 pt-0.5">
         <button
           type="submit"
           disabled={!canSubmit}

@@ -46,8 +46,8 @@ export default function AssessmentSettingsFields({
   const usageEndDateRef = useRef<HTMLInputElement>(null);
   const showMeta = sections === 'all' || sections === 'meta';
   const showTests = sections === 'all' || sections === 'tests';
-  const fieldGap = compact ? 'space-y-2' : 'space-y-4';
-  const labelClass = compact ? 'mb-1 block text-xs font-semibold text-slate-300' : FORM_LABEL;
+  const fieldGap = compact ? 'space-y-3' : 'space-y-4';
+  const labelClass = compact ? 'mb-1.5 block text-xs font-semibold text-slate-300' : FORM_LABEL;
   const inputClass = compact ? `${FORM_INPUT} py-2 text-sm` : FORM_INPUT;
   const hintClass = compact ? 'mt-1 text-xs text-slate-500' : `${FORM_HINT} mt-1.5`;
 
@@ -116,7 +116,7 @@ export default function AssessmentSettingsFields({
           </div>
 
           <div>
-            <div className={`flex flex-wrap items-center justify-between gap-2 ${compact ? 'mb-1' : 'mb-2'}`}>
+            <div className={`flex flex-wrap items-center justify-between gap-2 ${compact ? 'mb-1.5' : 'mb-2'}`}>
               <label htmlFor="welcome-message" className={labelClass}>
                 안내 메시지 (선택)
               </label>
@@ -128,8 +128,8 @@ export default function AssessmentSettingsFields({
             </div>
             <textarea
               id="welcome-message"
-              rows={compact ? 2 : 4}
-              className={`${inputClass} ${compact ? 'min-h-[3.25rem] max-h-[3.25rem] resize-none' : 'resize-y'}`}
+              rows={compact ? 3 : 4}
+              className={`${inputClass} ${compact ? 'min-h-[4.5rem] max-h-[4.5rem] resize-none' : 'resize-y'}`}
               placeholder="내담자에게 보여줄 환영/안내 문구"
               value={welcomeMessage}
               onChange={(e) => onWelcomeMessageChange(e.target.value)}
@@ -141,17 +141,17 @@ export default function AssessmentSettingsFields({
 
       {showTests ? (
         <div className={sections === 'tests' ? 'flex min-h-0 flex-1 flex-col' : 'space-y-0'}>
-          <div className={`flex items-center justify-end gap-2 shrink-0 ${compact ? 'mb-1' : 'mb-1.5'}`}>
+          <div className={`flex items-center justify-end gap-2 shrink-0 ${compact ? 'mb-1.5' : 'mb-1.5'}`}>
             <span className="text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
           </div>
           <div
-            className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} grid grid-cols-1 ${compact ? 'gap-1 p-2' : 'gap-1.5'}`}
+            className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} grid grid-cols-1 ${compact ? 'gap-1.5 p-2.5' : 'gap-1.5'}`}
           >
             {counselorAssessmentTestOptions.map((t) => (
               <label
                 key={t.testId}
                 className={`flex cursor-pointer items-center gap-2 rounded-lg border border-transparent transition hover:border-sky-500/20 hover:bg-sky-500/5 ${
-                  compact ? 'px-1.5 py-1' : 'px-2 py-1.5'
+                  compact ? 'px-2 py-1.5' : 'px-2 py-1.5'
                 }`}
               >
                 <input

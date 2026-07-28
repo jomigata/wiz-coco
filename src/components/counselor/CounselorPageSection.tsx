@@ -41,7 +41,7 @@ export default function CounselorPageSection({
       {hasHeader ? (
         <div
           className={`flex flex-col gap-2 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent sm:flex-row sm:items-center sm:justify-between ${
-            dense ? 'px-3 py-2' : 'px-4 py-3 sm:gap-2.5'
+            dense ? 'px-3 py-2.5' : 'px-4 py-3 sm:gap-2.5'
           }`}
         >
           {title ? (
@@ -64,7 +64,7 @@ export default function CounselorPageSection({
         </p>
       ) : null}
       <div
-        className={`min-h-0 flex-1 bg-[#0f1d33]/60 ${noBodyPadding ? '' : dense ? 'p-2' : 'p-2.5 sm:p-3'} ${bodyClassName}`}
+        className={`min-h-0 flex-1 bg-[#0f1d33]/60 ${noBodyPadding ? '' : dense ? 'p-2.5' : 'p-2.5 sm:p-3'} ${bodyClassName}`}
       >
         {children}
       </div>
