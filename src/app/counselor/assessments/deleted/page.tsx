@@ -290,7 +290,6 @@ export default function DeletedAssessmentsPage() {
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
-      description="목록에서 삭제한 상담코드입니다. 복구하면 상담코드 목록에 다시 표시됩니다."
       toolbar={
         <>
           <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
