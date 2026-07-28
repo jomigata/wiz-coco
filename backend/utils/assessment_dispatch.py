@@ -567,6 +567,9 @@ def resend_portal_credentials(
         magic_path = f"/go?t={magic}"
         magic_url = f"{PUBLIC_SITE_URL.rstrip('/')}{magic_path}"
 
+        portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
+        notify_kind = "initial" if portal_status == "not_sent" else "resend"
+
         result = deliver_portal_credentials(
             email=email,
             phone=phone,
@@ -576,7 +579,7 @@ def resend_portal_credentials(
             display_name=(pdata.get("displayName") or "").strip(),
             join_access_code=join_access_code,
             portal_ref=pref,
-            notify_kind="resend",
+            notify_kind=notify_kind,
         )
         status = result.get("status") or "failed"
         result_errors = result.get("errors") or []
@@ -678,6 +681,12 @@ def send_test_reminders(
         if not email and not phone:
             skipped += 1
             details.append({"portalId": pid, "status": "skipped", "message": "no_contact"})
+            continue
+
+        portal_status = (pdata.get("lastNotifyStatus") or "not_sent").strip()
+        if portal_status == "not_sent":
+            skipped += 1
+            details.append({"portalId": pid, "status": "skipped", "message": "not_sent"})
             continue
 
         portal_access_code = (pdata.get("accessCode") or "").strip()

@@ -35,7 +35,7 @@ import {
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
-import { mergeRecipients, parseRecipientFile, type RecipientRow } from '@/lib/recipientImport';
+import { mergeRecipients, parseRecipientFile, formatRecipientRowsPreview, type RecipientRow } from '@/lib/recipientImport';
 import {
   readCachedDispatchStatus,
   writeCachedDispatchStatus,
@@ -150,6 +150,8 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 }
 
 function canSendReminder(r: DispatchRecipient): boolean {
+  const notifyStatus = r.notifyStatus || 'not_sent';
+  if (notifyStatus === 'not_sent') return false;
   if (r.testStatus === 'completed') return false;
   const pending = (r.tests ?? []).some((t) => t.status !== 'completed');
   if (!pending && r.requiredCount > 0) return false;
@@ -263,6 +265,7 @@ function pendingTestsFor(r: DispatchRecipient): DispatchTestResult[] {
 }
 
 function skipRemindReason(r: DispatchRecipient): string {
+  if ((r.notifyStatus || 'not_sent') === 'not_sent') return '미발송';
   if (r.testStatus === 'completed') return '검사 완료';
   if (!pendingTestsFor(r).length && r.requiredCount > 0) return '미완료 검사 없음';
   if (!r.email && !r.phone) return '연락처 없음';
@@ -308,6 +311,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   const [addError, setAddError] = useState('');
   const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
   const [addFileLabel, setAddFileLabel] = useState('');
+  const [addFilePreviewText, setAddFilePreviewText] = useState('');
+  const [showAddFilePreview, setShowAddFilePreview] = useState(false);
 
   const [dispatchOverrides, setDispatchOverrides] = useState<Record<string, DispatchRowOverride>>({});
 
@@ -434,6 +439,23 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     [resendEligibleSelected],
   );
 
+  const resendInitialSelected = useMemo(
+    () => resendEligibleSelected.filter((r) => !hasCredentialBeenSent(r)),
+    [resendEligibleSelected],
+  );
+
+  const resendResendOnlySelected = useMemo(
+    () => resendEligibleSelected.filter((r) => hasCredentialBeenSent(r)),
+    [resendEligibleSelected],
+  );
+
+  const addFilePreviewLayout = useMemo(() => {
+    if (!addFilePreviewText) return null;
+    const lines = addFilePreviewText.split('\n');
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    return { widthCh: Math.min(Math.max(longestLine + 2, 32), 120) };
+  }, [addFilePreviewText]);
+
   const remindSkippedSelected = useMemo(
     () => selectedRecipients.filter((r) => !canSendReminder(r)),
     [selectedRecipients],
@@ -524,6 +546,8 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       setAddPhone('');
       setAddFileRows([]);
       setAddFileLabel('');
+      setAddFilePreviewText('');
+      setShowAddFilePreview(false);
       setAddSendNow(true);
       await load({ silent: true });
     } catch (err) {
@@ -544,8 +568,10 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       }
       setAddFileRows(parsed);
       setAddFileLabel(file.name);
+      setAddFilePreviewText(formatRecipientRowsPreview(parsed));
     } catch (err) {
       setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
+      setAddFilePreviewText('');
     }
   };
 
@@ -557,7 +583,10 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     setDispatchProgress({ kind: 'resend', count });
     setResendLoading(true);
     try {
-      const result = await resendDispatchCredentials(assessmentId, Array.from(selected));
+      const result = await resendDispatchCredentials(
+        assessmentId,
+        resendEligibleSelected.map((r) => r.portalId),
+      );
       await load({ silent: true });
       const channelSummary = parseDispatchChannelSummary(result.channelSummary);
       setDispatchComplete({
@@ -789,12 +818,12 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <button
               type="button"
               onClick={() => setConfirmAction('resend')}
-              disabled={resendLoading || deleteLoading || selected.size === 0}
+              disabled={resendLoading || deleteLoading || resendEligibleSelected.length === 0}
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
               {resendLoading
                 ? '발송 중…'
-                : `${credentialSendModeLabel(credentialSendMode)} (${selected.size})`}
+                : `${credentialSendModeLabel(credentialSendMode)} (${resendEligibleSelected.length})`}
             </button>
           </div>
         </div>
@@ -829,7 +858,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium">No.</th>
                 <th className="px-3 py-2 text-left text-xs font-medium">선택</th>
-                <th className="px-3 py-2 text-left text-xs font-medium">검사현황</th>
+                <th className="px-3 py-2 text-left text-xs font-medium">상세</th>
                 <SortableColumnHeader
                   label="발송일시"
                   sortKey="notifyAt"
@@ -871,7 +900,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   className="w-24"
                 />
                 <SortableColumnHeader
-                  label="발송"
+                  label="발송현황"
                   sortKey="notifyStatus"
                   activeKey={sortKey}
                   direction={sortDir}
@@ -879,7 +908,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   className="w-24"
                 />
                 <SortableColumnHeader
-                  label="검사"
+                  label="검사현황"
                   sortKey="testStatus"
                   activeKey={sortKey}
                   direction={sortDir}
@@ -1286,10 +1315,25 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                           className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
                         >
                           <RecipientTargetLine recipient={r} />
+                          <p className="mt-1 text-xs text-slate-500">
+                            {hasCredentialBeenSent(r)
+                              ? '접속 정보 재발송 (비밀번호 재발급)'
+                              : '최초 접속 정보 발송 (미발송)'}
+                          </p>
                         </li>
                       ))}
                     </ul>
                   </div>
+                  {credentialSendMode === 'mixed' ? (
+                    <div className="rounded-lg border border-blue-700/40 bg-blue-950/30 p-3 text-xs text-slate-400 space-y-1">
+                      <p>
+                        <span className="text-sky-300">최초 발송 {resendInitialSelected.length}명</span>
+                        {' · '}
+                        <span className="text-sky-300">재발송 {resendResendOnlySelected.length}명</span>
+                      </p>
+                      <p>미발송 내담자는 접속 정보(나의코드·비밀번호)를, 이미 발송된 내담자는 재발송 메시지를 받습니다.</p>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>
@@ -1364,9 +1408,40 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   className="block w-full text-sm text-slate-300 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-white"
                 />
                 {addFileLabel ? (
-                  <p className="text-xs text-emerald-300">
-                    {addFileLabel} · {addFileRows.length}명
-                  </p>
+                  <div
+                    className="relative"
+                    onMouseLeave={() => setShowAddFilePreview(false)}
+                  >
+                    <p className="text-xs text-emerald-300">
+                      <span
+                        className="cursor-help underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
+                        onMouseEnter={() => setShowAddFilePreview(true)}
+                        onFocus={() => setShowAddFilePreview(true)}
+                        onBlur={() => setShowAddFilePreview(false)}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`${addFileLabel} 파일 내용 미리보기`}
+                      >
+                        {addFileLabel}
+                      </span>
+                      {' · '}
+                      {addFileRows.length}명
+                    </p>
+                    {showAddFilePreview && addFilePreviewText && addFilePreviewLayout ? (
+                      <div className="absolute left-0 top-full z-30 pt-1.5" role="tooltip">
+                        <div
+                          className="rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                          style={{ width: `min(calc(100vw - 3rem), ${addFilePreviewLayout.widthCh}ch)` }}
+                        >
+                          <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
+                          <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                            {addFilePreviewText}
+                            {addFilePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
+                          </pre>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : (
                   <p className="text-xs text-slate-500">이름, 이메일, 휴대폰 열 순서 (첫 줄 헤더 가능)</p>
                 )}
