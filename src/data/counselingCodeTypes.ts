@@ -1,4 +1,4 @@
-/** 상담코드 생성 시 상담사가 선택하는 코드 유형 (관리·분류용) */
+/** 상담코드 생성 시 상담사가 선택하는 상담 유형 (관리·분류용) */
 export const COUNSELING_CODE_TYPES = [
   { value: 'individual', label: '개인상담', description: '1:1 개인 내담자 대상' },
   { value: 'group', label: '그룹상담', description: '소그룹·집단 프로그램' },
@@ -16,7 +16,7 @@ export function counselingCodeTypeLabel(value: string | undefined | null): strin
   return found?.label ?? (v || '—');
 }
 
-/** 목록 표시: 개인상담(RAR338) */
+/** 목록 표시: 개인상담(RAR338) — 괄호 형식 */
 export function formatCounselingCodeTypeWithCode(
   codeCategory: string | undefined | null,
   formattedAccessCode: string,
@@ -25,4 +25,15 @@ export function formatCounselingCodeTypeWithCode(
   const code = (formattedAccessCode || '').trim();
   if (!code || code === '—') return typeLabel;
   return `${typeLabel}(${code})`;
+}
+
+/** 목록 표시: 개인상담/RAR338 — 슬래시 형식 */
+export function formatCounselingTypeWithCodeSlash(
+  codeCategory: string | undefined | null,
+  formattedAccessCode: string,
+): string {
+  const typeLabel = counselingCodeTypeLabel(codeCategory || 'group');
+  const code = (formattedAccessCode || '').trim();
+  if (!code || code === '—') return typeLabel;
+  return `${typeLabel}/${code}`;
 }

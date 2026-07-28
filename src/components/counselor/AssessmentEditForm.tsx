@@ -128,7 +128,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       return;
     }
     if (!codeCategory) {
-      setError('코드유형을 선택해 주세요.');
+      setError('상담유형을 선택해 주세요.');
       return;
     }
     const testList = counselorAssessmentTestOptions
@@ -193,7 +193,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
             </div>
             <div>
               <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5 text-xs`}>
-                코드유형 <span className="text-red-400">*</span>
+                상담유형 <span className="text-red-400">*</span>
               </label>
               <select
                 id="edit-code-category"

@@ -124,6 +124,10 @@ def list_counselor_client_portals(
         assessment_cache[aid] = {
             "assessmentId": aid,
             "title": (a.get("title") or "").strip() or "상담(코드)",
+            "codeCategory": (a.get("codeCategory") or "").strip(),
+            "joinAccessCode": (a.get("accessCode") or "").strip(),
+            "cohortName": (a.get("cohortName") or "").strip(),
+            "targetAudience": (a.get("targetAudience") or "").strip(),
             "testList": a.get("testList") or [],
         }
 
@@ -184,7 +188,15 @@ def list_counselor_client_portals(
                 "status": pdata.get("status") or "active",
                 "assignedAssessmentCount": len(assigned_ids),
                 "assessments": [
-                    {"assessmentId": a["assessmentId"], "title": a["title"]}
+                    {
+                        "assessmentId": a["assessmentId"],
+                        "title": a["title"],
+                        "codeCategory": a.get("codeCategory") or "",
+                        "joinAccessCode": a.get("joinAccessCode") or "",
+                        "orgName": (
+                            (a.get("cohortName") or a.get("targetAudience") or "").strip()
+                        ),
+                    }
                     for a in assessments
                 ],
                 "notifyStatus": notify_status,

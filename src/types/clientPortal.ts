@@ -103,7 +103,13 @@ export type CounselorClientPortalListItem = {
   cohortName?: string | null;
   status: ClientPortalStatus;
   assignedAssessmentCount: number;
-  assessments: { assessmentId: string; title: string }[];
+  assessments: {
+    assessmentId: string;
+    title: string;
+    codeCategory?: string;
+    joinAccessCode?: string;
+    orgName?: string;
+  }[];
   notifyStatus: string;
   notifyError?: string | null;
   notifyAt?: string | null;

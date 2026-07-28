@@ -94,11 +94,8 @@ export function resolveCounselorHierarchy(
   if (pathname.startsWith('/counselor/clients/detail') || pathname.startsWith('/counselor/clients/')) {
     if (pathname !== '/counselor/clients') {
       return {
-        depth: 1,
-        crumbs: [
-          { label: '내담자 목록', href: '/counselor/clients' },
-          { label: '내담자 상세' },
-        ],
+        depth: 0,
+        crumbs: [{ label: '내담자 목록' }],
       };
     }
     return {

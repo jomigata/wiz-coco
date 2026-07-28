@@ -1,17 +1,19 @@
 ﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaUsers } from 'react-icons/fa';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
-import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
-import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
-import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
+import { displayContactPhone } from '@/lib/contactPrivacy';
+import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
+import {
+  counselingCodeTypeLabel,
+  formatCounselingTypeWithCodeSlash,
+} from '@/data/counselingCodeTypes';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -28,7 +30,7 @@ import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@
 
 type StatusFilter = 'active' | 'archived' | 'all';
 type ProgressFilter = 'all' | ClientPortalProgressLabel;
-type ListSortKey = 'createdAt' | 'displayName' | 'accessCode' | 'cohortName' | 'progress' | 'lastLoginAt';
+type ListSortKey = 'displayName' | 'counselingCode' | 'counselInfo' | 'progress' | 'lastLoginAt' | 'notifyAt';
 type SortDirection = 'asc' | 'desc';
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -76,6 +78,14 @@ function progressSortValue(item: CounselorClientPortalListItem): number {
   return order[item.progress.label] * 1000 + item.progress.percent;
 }
 
+function counselInfoLabel(item: CounselorClientPortalListItem): string {
+  const primary = item.assessments[0];
+  if (!primary) return '—';
+  const title = (primary.title || '—').trim();
+  const org = (primary.orgName || item.cohortName || '—').trim();
+  return `${title}/${org}`;
+}
+
 function compareRows(
   a: CounselorClientPortalListItem,
   b: CounselorClientPortalListItem,
@@ -84,18 +94,28 @@ function compareRows(
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
-    case 'createdAt':
-      return mult * (parseDate(a.createdAt) - parseDate(b.createdAt));
     case 'displayName':
       return mult * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
-    case 'accessCode':
-      return mult * (a.accessCode || '').localeCompare(b.accessCode || '');
-    case 'cohortName':
-      return mult * (a.cohortName || '').localeCompare(b.cohortName || '', 'ko');
+    case 'counselingCode': {
+      const primaryA = a.assessments[0];
+      const primaryB = b.assessments[0];
+      const typeCmp = counselingCodeTypeLabel(primaryA?.codeCategory || 'group').localeCompare(
+        counselingCodeTypeLabel(primaryB?.codeCategory || 'group'),
+        'ko',
+      );
+      if (typeCmp !== 0) return mult * typeCmp;
+      const codeA = primaryA?.joinAccessCode || a.accessCode || '';
+      const codeB = primaryB?.joinAccessCode || b.accessCode || '';
+      return mult * codeA.localeCompare(codeB);
+    }
+    case 'counselInfo':
+      return mult * counselInfoLabel(a).localeCompare(counselInfoLabel(b), 'ko');
     case 'progress':
       return mult * (progressSortValue(a) - progressSortValue(b));
     case 'lastLoginAt':
       return mult * (parseDate(a.lastLoginAt) - parseDate(b.lastLoginAt));
+    case 'notifyAt':
+      return mult * (parseDate(a.notifyAt) - parseDate(b.notifyAt));
     default:
       return 0;
   }
@@ -147,8 +167,8 @@ export default function CounselorClientList() {
   const [progressFilter, setProgressFilter] = useState<ProgressFilter>('all');
   const [tagFilter, setTagFilter] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
-  const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
-  const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [sortKey, setSortKey] = useState<ListSortKey>('displayName');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
   const cacheKey = useMemo(
@@ -262,7 +282,8 @@ export default function CounselorClientList() {
         item.accessCode || '',
         item.cohortName || '',
         ...(item.counselorTags || []),
-        ...item.assessments.map((a) => a.title),
+        ...item.assessments.map((a) => `${a.title} ${a.orgName || ''} ${a.joinAccessCode || ''}`),
+        counselingCodeTypeLabel(item.assessments[0]?.codeCategory),
       ]
         .join(' ')
         .toLowerCase();
@@ -287,7 +308,7 @@ export default function CounselorClientList() {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDir(key === 'createdAt' || key === 'lastLoginAt' ? 'desc' : 'asc');
+      setSortDir(key === 'lastLoginAt' || key === 'notifyAt' ? 'desc' : 'asc');
     }
   };
 
@@ -327,7 +348,7 @@ export default function CounselorClientList() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="이름 · 연락처 · 나의코드 · 검사명 · 태그"
+              placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
               className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
             />
           </div>
@@ -436,14 +457,6 @@ export default function CounselorClientList() {
                 <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
                   <tr>
                     <SortableColumnHeader
-                      label="등록 일시"
-                      sortKey="createdAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
                       label="내담자"
                       sortKey="displayName"
                       activeKey={sortKey}
@@ -451,35 +464,37 @@ export default function CounselorClientList() {
                       onSort={toggleSort}
                     />
                     <SortableColumnHeader
-                      label="나의코드"
-                      sortKey="accessCode"
+                      label="상담유형/상담코드"
+                      sortKey="counselingCode"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                     />
                     <SortableColumnHeader
-                      label="그룹/기관"
-                      sortKey="cohortName"
+                      label="상담정보"
+                      sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <th scope="col" className="max-w-[12rem] px-2 py-2 text-left text-xs font-medium text-slate-400">
-                      연결 상담코드
-                    </th>
                     <SortableColumnHeader
-                      label="검사 진행"
+                      label="검사진행"
                       sortKey="progress"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">
-                      발송현황
-                    </th>
                     <SortableColumnHeader
-                      label="최근 접속"
+                      label="최근접속"
                       sortKey="lastLoginAt"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
+                    <SortableColumnHeader
+                      label="발송일시"
+                      sortKey="notifyAt"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -492,9 +507,19 @@ export default function CounselorClientList() {
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
                   {sortedFiltered.map((item) => {
-                    const notify = dispatchStatusDisplay(item);
                     const progress = progressLabel(item);
                     const primaryAssessment = item.assessments[0];
+                    const phoneMasked = displayContactPhone(item.phone, false);
+                    const phoneFull = item.phone?.trim()
+                      ? formatPhoneDisplayOr(item.phone)
+                      : undefined;
+                    const counselTypeCode = primaryAssessment
+                      ? formatCounselingTypeWithCodeSlash(
+                          primaryAssessment.codeCategory,
+                          formatAccessCodeDisplay(primaryAssessment.joinAccessCode || ''),
+                        )
+                      : '—';
+                    const counselInfo = counselInfoLabel(item);
 
                     return (
                       <tr
@@ -504,76 +529,50 @@ export default function CounselorClientList() {
                         onMouseLeave={() => setHoveredRowId(null)}
                       >
                         <td
-                          className={`whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`max-w-[12rem] px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
-                          <span className={cellLinkClass}>{formatDateTime(item.createdAt)}</span>
-                        </td>
-                        <td
-                          className={`max-w-[10rem] px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          <span className={`${cellLinkClass} font-medium text-white`}>
-                            {item.displayName || '—'}
+                          <span
+                            className={`${cellLinkClass} block truncate`}
+                            title={phoneFull}
+                          >
+                            <span className="font-medium text-white">{item.displayName || '—'}</span>
+                            <span className="text-slate-400"> / </span>
+                            <span className="text-slate-300 tabular-nums">{phoneMasked}</span>
                           </span>
-                          {(item.counselorTags || []).length > 0 ? (
-                            <div className="mt-0.5 flex flex-wrap gap-1">
-                              {(item.counselorTags || []).slice(0, 2).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="rounded bg-violet-500/15 px-1 py-0.5 text-[10px] text-violet-200"
-                                >
-                                  #{tag}
-                                </span>
-                              ))}
-                            </div>
-                          ) : null}
-                          <div className="mt-0.5 text-[11px] text-slate-500">
-                            {displayContactEmail(item.email, false)} ·{' '}
-                            {displayContactPhone(item.phone, false)}
-                          </div>
                         </td>
                         <td
-                          className={`whitespace-nowrap px-2 py-2 font-mono text-sm font-semibold tracking-wide text-sky-300 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`max-w-[14rem] truncate px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
+                          title={counselTypeCode}
                         >
-                          {formatAccessCodeDisplay(item.accessCode)}
-                        </td>
-                        <td
-                          className={`max-w-[10rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
-                          title={item.cohortName || '—'}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          {item.cohortName || '개별 발급'}
-                          {item.assignedAssessmentCount > 1 ? (
-                            <div className="text-[11px] text-slate-500">
-                              상담코드 {item.assignedAssessmentCount}건
-                            </div>
-                          ) : null}
-                        </td>
-                        <td
-                          className={`max-w-[12rem] truncate px-2 py-2 text-left text-xs text-slate-300 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          {item.assessments.length === 0 ? (
-                            <span className="text-slate-500">—</span>
+                          {primaryAssessment ? (
+                            <span className={`${cellLinkClass} truncate max-w-full block`}>
+                              <span className="text-slate-200">
+                                {counselingCodeTypeLabel(primaryAssessment.codeCategory || 'group')}
+                              </span>
+                              <span className="text-slate-400"> / </span>
+                              <span className="font-mono font-semibold text-sky-300 tracking-wide">
+                                {formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')}
+                              </span>
+                            </span>
                           ) : (
-                            <>
-                              {item.assessments.slice(0, 2).map((a) => (
-                                <div key={a.assessmentId} className="truncate">
-                                  <Link
-                                    href={progressHref(a.assessmentId)}
-                                    className="text-sky-300 hover:text-sky-200"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {a.title || '상담코드'}
-                                  </Link>
-                                </div>
-                              ))}
-                              {item.assessments.length > 2 ? (
-                                <div className="text-slate-500">외 {item.assessments.length - 2}건</div>
-                              ) : null}
-                            </>
+                            <span className="text-slate-500">—</span>
+                          )}
+                        </td>
+                        <td
+                          className={`max-w-[16rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          onClick={() => goToDetail(item.portalId)}
+                          title={counselInfo}
+                        >
+                          {primaryAssessment ? (
+                            <span className={`${cellLinkClass} truncate max-w-full block`}>
+                              <span className="font-medium text-white">{primaryAssessment.title || '—'}</span>
+                              <span className="text-slate-400"> / </span>
+                              <span>{primaryAssessment.orgName || item.cohortName || '—'}</span>
+                            </span>
+                          ) : (
+                            <span className="text-slate-500">—</span>
                           )}
                         </td>
                         <td
@@ -583,19 +582,16 @@ export default function CounselorClientList() {
                           {progress.text}
                         </td>
                         <td
-                          className={`whitespace-nowrap px-2 py-2 text-left text-xs cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          <DispatchStatusText value={notify} />
-                          {item.notifyAt ? (
-                            <div className="text-[11px] text-slate-500">{formatDateTime(item.notifyAt)}</div>
-                          ) : null}
-                        </td>
-                        <td
                           className={`whitespace-nowrap px-2 py-2 text-left text-xs text-slate-400 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           {formatDateTime(item.lastLoginAt)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap px-2 py-2 text-left text-xs text-slate-300 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          onClick={() => goToDetail(item.portalId)}
+                        >
+                          {formatDateTime(item.notifyAt)}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-center cursor-default">
                           <div className="flex flex-wrap items-center justify-center gap-1">

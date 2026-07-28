@@ -313,7 +313,7 @@ export default function DeletedAssessmentsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사명 · 코드유형 · 코드 · 기관명 검색"
+              placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
               className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
             />
           </div>
@@ -375,7 +375,7 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="코드유형(상담코드)"
+                      label="상담유형/상담코드"
                       sortKey="accessCode"
                       activeKey={sortKey}
                       direction={sortDir}

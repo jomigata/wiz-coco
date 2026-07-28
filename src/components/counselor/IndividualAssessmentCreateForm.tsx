@@ -316,7 +316,7 @@ export default function IndividualAssessmentCreateForm() {
       return;
     }
     if (!codeCategory) {
-      showValidationError('코드유형을 선택해 주세요.', 'cohortName');
+      showValidationError('상담유형을 선택해 주세요.', 'cohortName');
       return;
     }
     if (!title.trim()) {
@@ -637,7 +637,7 @@ export default function IndividualAssessmentCreateForm() {
             </div>
             <div>
               <label className={FORM_LABEL}>
-                코드유형 <span className="text-red-400">*</span>
+                상담유형 <span className="text-red-400">*</span>
               </label>
               <select
                 className={FORM_INPUT}
