@@ -24,6 +24,7 @@ def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
             {
                 "id": doc.id,
                 "accessCode": data.get("accessCode") or "",
+                "codeCategory": data.get("codeCategory") or "",
                 "title": data.get("title") or "",
                 "targetAudience": data.get("targetAudience") or "",
                 "cohortName": data.get("cohortName") or "",

@@ -530,6 +530,7 @@ export async function deleteAssessment(
 export type ArchivedAssessment = {
   id: string;
   accessCode: string;
+  codeCategory?: string;
   title: string;
   targetAudience: string;
   cohortName: string;

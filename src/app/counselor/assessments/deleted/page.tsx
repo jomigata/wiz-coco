@@ -7,6 +7,10 @@ import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatu
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import {
+  counselingCodeTypeLabel,
+  formatCounselingCodeTypeWithCode,
+} from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
   readCachedArchivedAssessments,
@@ -44,8 +48,14 @@ function compareRows(
       return mult * (parseDate(a.createdAt) - parseDate(b.createdAt));
     case 'archivedAt':
       return mult * (parseDate(a.archivedAt) - parseDate(b.archivedAt));
-    case 'accessCode':
+    case 'accessCode': {
+      const typeCmp = counselingCodeTypeLabel(a.codeCategory || 'group').localeCompare(
+        counselingCodeTypeLabel(b.codeCategory || 'group'),
+        'ko',
+      );
+      if (typeCmp !== 0) return mult * typeCmp;
       return mult * (a.accessCode || '').localeCompare(b.accessCode || '');
+    }
     case 'orgName':
       return mult * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
     case 'title':
@@ -190,6 +200,7 @@ export default function DeletedAssessmentsPage() {
       (a) =>
         (a.title || '').toLowerCase().includes(q) ||
         (a.accessCode || '').toLowerCase().includes(q) ||
+        counselingCodeTypeLabel(a.codeCategory).toLowerCase().includes(q) ||
         (a.targetAudience || '').toLowerCase().includes(q) ||
         getAssessmentOrgLabel(a).toLowerCase().includes(q),
     );
@@ -302,7 +313,7 @@ export default function DeletedAssessmentsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사명 · 코드 · 유형 검색"
+              placeholder="검사명 · 코드유형 · 코드 · 기관명 검색"
               className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
             />
           </div>
@@ -364,7 +375,7 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="상담코드"
+                      label="코드유형(상담코드)"
                       sortKey="accessCode"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -450,10 +461,21 @@ export default function DeletedAssessmentsPage() {
                             {formatDate(row.createdAt)}
                           </td>
                           <td
-                            className="max-w-[10rem] cursor-pointer truncate px-2 py-2 font-mono font-semibold tracking-wide text-sky-300 hover:bg-white/[0.04]"
+                            className="max-w-[16rem] cursor-pointer truncate px-2 py-2 text-left text-sm hover:bg-white/[0.04]"
                             onClick={() => void toggleExpand(row.id)}
+                            title={formatCounselingCodeTypeWithCode(
+                              row.codeCategory,
+                              formatAccessCodeDisplay(row.accessCode),
+                            )}
                           >
-                            {formatAccessCodeDisplay(row.accessCode)}
+                            <span className="truncate max-w-full block">
+                              <span className="text-slate-200">
+                                {counselingCodeTypeLabel(row.codeCategory || 'group')}
+                              </span>
+                              <span className="font-mono font-semibold text-sky-300 tracking-wide">
+                                ({formatAccessCodeDisplay(row.accessCode)})
+                              </span>
+                            </span>
                           </td>
                           <td
                             className="max-w-[12rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
