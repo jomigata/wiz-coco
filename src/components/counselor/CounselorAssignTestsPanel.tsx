@@ -160,45 +160,64 @@ export default function CounselorAssignTestsPanel() {
 
   return (
     <CounselorPageSection
+      showHierarchyBreadcrumb
       className="flex min-h-0 flex-1"
-      title="검사 할당 현황"
-      description="발급된 상담코드에 연결된 내담자별 검사 항목 진행 현황입니다. 새 내담자·검사 발급은 상담코드생성에서 진행하세요."
+      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+      noBodyPadding
+      description={
+        <>
+          전체 <strong className="text-slate-200">{stats.total}</strong>건 · 미시작{' '}
+          <strong className="text-amber-300">{stats.notStarted}</strong> · 진행{' '}
+          <strong className="text-sky-300">{stats.inProgress}</strong> · 완료{' '}
+          <strong className="text-emerald-300">{stats.completed}</strong>
+        </>
+      }
       toolbar={
         <>
-          <span className="hidden text-xs text-slate-500 lg:inline">
-            전체 <strong className="text-slate-200">{stats.total}</strong>건 · 미시작{' '}
-            <strong className="text-amber-300">{stats.notStarted}</strong> · 진행{' '}
-            <strong className="text-sky-300">{stats.inProgress}</strong> · 완료{' '}
-            <strong className="text-emerald-300">{stats.completed}</strong>
-          </span>
+          <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void load();
+              }}
+              placeholder="내담자 · 검사명 · 상담코드 검색"
+              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
+          </div>
           <CounselorLiveStatusBadge
             isLive={isLive}
             liveError={liveError}
             lastUpdatedAt={lastUpdatedAt}
           />
           <AuthLink
-            href="/counselor/assessments/new"
-            className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
-          >
-            +상담코드생성
-          </AuthLink>
-          <AuthLink
             href="/counselor/clients"
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-md border border-white/15 px-2.5 py-1.5 text-sm text-slate-300 hover:bg-white/5"
           >
             내담자 목록
+          </AuthLink>
+          <AuthLink
+            href="/counselor/assessments/new"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
+          >
+            +상담코드생성
           </AuthLink>
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            className="inline-flex items-center rounded-md border border-white/15 px-2.5 py-1.5 text-sm text-slate-300 hover:bg-white/5"
           >
             새로고침
           </button>
         </>
       }
     >
-    <div className="space-y-4">
+    <div className="space-y-4 p-2.5 sm:p-3">
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">

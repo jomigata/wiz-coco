@@ -1,9 +1,12 @@
 'use client';
 
-import AdminPageLayout from '@/components/AdminPageLayout';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import {
   buildDefaultResultSections,
   printAssessmentReport,
@@ -24,6 +27,7 @@ type CounselorResultRow = {
   status?: string;
   createdAt?: any;
   counselorCode?: string;
+  portalId?: string;
 };
 
 function formatCreatedAt(v: any): string {
@@ -41,6 +45,8 @@ function formatCreatedAt(v: any): string {
 
 export default function TestResultsPage() {
   const { user, loading } = useFirebaseAuth();
+  const searchParams = useSearchParams();
+  const filterPortalId = (searchParams.get('portalId') || '').trim();
   const [rows, setRows] = useState<CounselorResultRow[]>([]);
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -88,8 +94,12 @@ export default function TestResultsPage() {
 
   const filtered = useMemo(() => {
     const q = queryText.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => {
+    let list = rows;
+    if (filterPortalId) {
+      list = list.filter((r) => (r.portalId || '') === filterPortalId);
+    }
+    if (!q) return list;
+    return list.filter((r) => {
       const hay = [
         r.email || '',
         r.uid || '',
@@ -97,32 +107,62 @@ export default function TestResultsPage() {
         r.code || '',
         r.counselorCode || '',
         r.status || '',
+        r.portalId || '',
       ]
         .join(' ')
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [rows, queryText]);
+  }, [rows, queryText, filterPortalId]);
 
   return (
-    <AdminPageLayout
-      sectionTitle="검사 결과 목록"
-      description="내담자 검사 결과를 조회하고 리포트·AI 해석을 실행합니다."
+    <CounselorPageSection
+      showHierarchyBreadcrumb
+      className="flex min-h-0 flex-1"
+      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+      noBodyPadding
+      description={
+        filterPortalId ? (
+          <>
+            선택 내담자 결과만 표시 중 ·{' '}
+            <Link href="/counselor/test-results" className="text-sky-400 hover:text-sky-300">
+              전체 결과 보기
+            </Link>
+          </>
+        ) : (
+          <>내담자 검사 결과를 조회하고 리포트·AI 해석을 실행합니다.</>
+        )
+      }
       toolbar={
         <>
-          <input
-            value={queryText}
-            onChange={(e) => setQueryText(e.target.value)}
-            placeholder="이메일/UID/검사명/코드로 검색"
-            className="w-full min-w-[12rem] max-w-xs rounded-md border border-white/10 bg-[#101f38]/90 px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-          />
+          <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              value={queryText}
+              onChange={(e) => setQueryText(e.target.value)}
+              placeholder="이메일 · 검사명 · 코드 검색"
+              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
+          </div>
           <span className="text-sm text-slate-400">
             총 <span className="font-semibold text-white">{filtered.length}</span>건
           </span>
+          {filterPortalId ? (
+            <Link
+              href={counselorClientDetailHref(filterPortalId)}
+              className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-sky-300 hover:bg-white/5"
+            >
+              내담자 상세
+            </Link>
+          ) : null}
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 p-2.5 sm:p-3">
         {error && (
           <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
             {error}
@@ -132,33 +172,42 @@ export default function TestResultsPage() {
         {isLoading ? (
           <div className="text-white/70 text-sm">불러오는 중…</div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-white/10">
-            <table className="min-w-full text-sm text-white/90">
-              <thead className="bg-white/5 text-white/70">
-                <tr>
-                  <th className="px-3 py-2 text-left">일시</th>
-                  <th className="px-3 py-2 text-left">내담자</th>
-                  <th className="px-3 py-2 text-left">검사</th>
-                  <th className="px-3 py-2 text-left">상태</th>
-                  <th className="px-3 py-2 text-left">코드</th>
-                  <th className="px-3 py-2 text-left">리포트</th>
+          <div className="overflow-x-auto rounded-md border border-white/10">
+            <table className="min-w-full divide-y divide-white/10 text-sm text-white/90">
+              <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+                <tr className="text-left text-xs text-slate-400">
+                  <th className="px-2 py-2 font-medium">일시</th>
+                  <th className="px-2 py-2 font-medium">내담자</th>
+                  <th className="px-2 py-2 font-medium">검사</th>
+                  <th className="px-2 py-2 font-medium">상태</th>
+                  <th className="px-2 py-2 font-medium">코드</th>
+                  <th className="px-2 py-2 font-medium">리포트</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-white/[0.06]">
                 {filtered.map((r) => (
-                  <tr key={r.id} className="border-t border-white/10 hover:bg-white/5">
-                    <td className="px-3 py-2 whitespace-nowrap">{formatCreatedAt(r.createdAt)}</td>
-                    <td className="px-3 py-2">
-                      <div className="text-white">{r.email || '—'}</div>
+                  <tr key={r.id} className="hover:bg-white/[0.03]">
+                    <td className="whitespace-nowrap px-2 py-2">{formatCreatedAt(r.createdAt)}</td>
+                    <td className="px-2 py-2">
+                      {r.portalId ? (
+                        <Link
+                          href={counselorClientDetailHref(r.portalId)}
+                          className="text-sky-300 hover:text-sky-200"
+                        >
+                          {r.email || '내담자 상세'}
+                        </Link>
+                      ) : (
+                        <div className="text-white">{r.email || '—'}</div>
+                      )}
                       <div className="text-xs text-white/50">{r.uid || '—'}</div>
                     </td>
-                    <td className="px-3 py-2">{r.testType || '—'}</td>
-                    <td className="px-3 py-2">{r.status || 'completed'}</td>
-                    <td className="px-3 py-2">
-                      <div className="text-xs text-white/70 font-mono">{formatAccessCodeDisplay(r.code || '') || '—'}</div>
-                      {r.counselorCode && <div className="text-xs text-white/40 font-mono">연결코드: {formatAccessCodeDisplay(r.counselorCode)}</div>}
+                    <td className="px-2 py-2">{r.testType || '—'}</td>
+                    <td className="px-2 py-2">{r.status || 'completed'}</td>
+                    <td className="px-2 py-2">
+                      <div className="font-mono text-xs text-white/70">{formatAccessCodeDisplay(r.code || '') || '—'}</div>
+                      {r.counselorCode && <div className="font-mono text-xs text-white/40">연결: {formatAccessCodeDisplay(r.counselorCode)}</div>}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-2">
                       <div className="flex flex-wrap gap-2 items-center">
                         <button
                           type="button"
@@ -200,7 +249,7 @@ export default function TestResultsPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td className="px-3 py-6 text-center text-white/60" colSpan={6}>
+                    <td className="px-2 py-6 text-center text-white/60" colSpan={6}>
                       표시할 결과가 없습니다.
                     </td>
                   </tr>
@@ -210,6 +259,6 @@ export default function TestResultsPage() {
           </div>
         )}
       </div>
-    </AdminPageLayout>
+    </CounselorPageSection>
   );
 }

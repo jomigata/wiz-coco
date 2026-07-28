@@ -44,5 +44,9 @@ export default function ClientDetailPage() {
     return <p className="py-12 text-center text-sm text-slate-500">내담자를 선택해 주세요.</p>;
   }
 
-  return <CounselorClientDetail portalId={portalId} />;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <CounselorClientDetail portalId={portalId} />
+    </div>
+  );
 }

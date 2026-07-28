@@ -10,7 +10,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: 'psych-tests',
     category: '1. 심리검사 관리',
-    description: '상담코드 발급·결과 분석·추천',
+    description: '상담코드 발급·내담자·결과 분석',
     icon: '📦',
     subcategories: [
       {
@@ -44,20 +44,38 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         ],
       },
       {
-        name: '1b. 결과·추천',
-        icon: '📊',
+        name: '1b. 내담자 관리',
+        icon: '👥',
         items: [
+          {
+            name: '내담자 목록',
+            href: '/counselor/clients',
+            description: '발급 내담자 조회·검사·상담코드 연결 추적',
+            icon: '👥',
+          },
+          {
+            name: '검사 할당',
+            href: '/counselor/assign-tests',
+            description: '내담자별 검사 항목 진행·추가 발송',
+            icon: '📋',
+          },
           {
             name: '검사 결과 분석',
             href: '/counselor/test-results',
-            description: '내담자 검사 결과 분석',
+            description: '내담자 검사 결과·리포트·AI 해석',
             icon: '📊',
           },
           {
             name: '검사 추천',
             href: '/counselor/test-recommendations',
-            description: '맞춤 검사 추천',
+            description: '결과 기반 맞춤 검사 추천·할당',
             icon: '🎯',
+          },
+          {
+            name: '삭제된 검사자',
+            href: '/counselor/assessments/deleted-recipients',
+            description: '상담코드별 삭제된 검사자 복구·영구 삭제',
+            icon: '🗑️',
           },
         ],
       },
@@ -66,29 +84,11 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: 'clients',
     category: '2. 내담자 관리',
-    description: '내담자·상담 일정·기록 운영',
+    description: '상담 일정·기록·케어 운영',
     icon: '👥',
     subcategories: [
       {
-        name: '2a. 내담자',
-        icon: '👤',
-        items: [
-          {
-            name: '내담자 목록',
-            href: '/counselor/clients',
-            description: '담당 내담자 관리',
-            icon: '👥',
-          },
-          {
-            name: '검사 할당',
-            href: '/counselor/assign-tests',
-            description: '내담자별 검사 항목 진행 현황',
-            icon: '📋',
-          },
-        ],
-      },
-      {
-        name: '2b. 상담 운영',
+        name: '2a. 상담 운영',
         icon: '📅',
         items: [
           {

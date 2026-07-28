@@ -1,10 +1,11 @@
 'use client';
 
-import AdminPageLayout from '@/components/AdminPageLayout';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import RoleGuard from '@/components/RoleGuard';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import {
@@ -55,6 +56,8 @@ function priorityBadge(p: TestRecommendationItem['priority']) {
 
 function TestRecommendationsContent() {
   const { user, loading } = useFirebaseAuth();
+  const searchParams = useSearchParams();
+  const filterPortalId = (searchParams.get('portalId') || '').trim();
   const [rows, setRows] = useState<CounselorResultRow[]>([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -115,14 +118,18 @@ function TestRecommendationsContent() {
 
   const filtered = useMemo(() => {
     const q = queryText.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => {
+    let list = rows;
+    if (filterPortalId) {
+      list = list.filter((r) => (r.portalId || '') === filterPortalId);
+    }
+    if (!q) return list;
+    return list.filter((r) => {
       const hay = [r.email || '', r.uid || '', r.testType || '', r.code || '', r.status || '']
         .join(' ')
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [rows, queryText]);
+  }, [rows, queryText, filterPortalId]);
 
   const selectedRow = filtered.find((r) => r.id === selectedId) || rows.find((r) => r.id === selectedId);
 
@@ -229,25 +236,51 @@ function TestRecommendationsContent() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <AdminPageLayout
-        sectionTitle="완료 검사 목록"
-        description={`완료된 검사 결과를 바탕으로 AI가 추가 검사를 추천합니다. 추천 1회 = ${creditCost} AI 크레딧.`}
+      <CounselorPageSection
+        showHierarchyBreadcrumb
+        className="flex min-h-0 flex-1"
+        bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+        noBodyPadding
+        description={
+          filterPortalId ? (
+            <>
+              선택 내담자 완료 검사만 표시 · AI 추천 1회 = {creditCost} 크레딧 ·{' '}
+              <Link href="/counselor/test-recommendations" className="text-sky-400 hover:text-sky-300">
+                전체 보기
+              </Link>
+            </>
+          ) : (
+            <>완료된 검사 결과를 바탕으로 AI가 추가 검사를 추천합니다. 추천 1회 = {creditCost} AI 크레딧.</>
+          )
+        }
         toolbar={
           <>
-            <input
-              value={queryText}
-              onChange={(e) => setQueryText(e.target.value)}
-              placeholder="이메일/검사명/코드 검색"
-              className="w-full min-w-[12rem] max-w-xs rounded-md border border-white/10 bg-[#101f38]/90 px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-            />
+            <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+                <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <input
+                value={queryText}
+                onChange={(e) => setQueryText(e.target.value)}
+                placeholder="이메일 · 검사명 · 코드 검색"
+                className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+              />
+            </div>
             <span className="text-sm text-slate-400">
               완료 <span className="font-semibold text-white">{filtered.length}</span>건
             </span>
+            {filterPortalId ? (
+              <Link
+                href={counselorClientDetailHref(filterPortalId)}
+                className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-sky-300 hover:bg-white/5"
+              >
+                내담자 상세
+              </Link>
+            ) : null}
           </>
         }
-        className="flex min-h-0 flex-1"
-        bodyClassName="!p-0"
-        noBodyPadding
       >
         <div className="grid gap-3 p-2.5 lg:grid-cols-2 sm:p-3">
           {error ? (
@@ -404,7 +437,7 @@ function TestRecommendationsContent() {
             )}
           </div>
         </div>
-      </AdminPageLayout>
+      </CounselorPageSection>
     </div>
   );
 }

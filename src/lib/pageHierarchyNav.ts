@@ -22,16 +22,24 @@ export function resolveCounselorHierarchy(
 
   if (pathname.startsWith('/counselor/assessments/deleted-recipients')) {
     const isFullList = !assessmentId;
+    if (isFullList) {
+      return {
+        depth: 1,
+        crumbs: [
+          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '삭제된 검사자' },
+        ],
+      };
+    }
     return {
       depth: 2,
       crumbs: [
         { label: '상담코드 목록', href: '/counselor/assessments' },
         {
           label: '발송·검사 현황',
-          href: assessmentId ? assessmentProgressHref(assessmentId) : undefined,
-          navigateBack: isFullList ? true : undefined,
+          href: assessmentProgressHref(assessmentId),
         },
-        { label: isFullList ? '전체 삭제된 검사자' : '삭제된 검사자' },
+        { label: '삭제된 검사자' },
       ],
     };
   }
@@ -101,11 +109,42 @@ export function resolveCounselorHierarchy(
 
   if (pathname.startsWith('/counselor/assign-tests')) {
     return {
-      depth: 1,
-      crumbs: [
-        { label: '내담자 목록', href: '/counselor/clients' },
-        { label: '검사 할당' },
-      ],
+      depth: 0,
+      crumbs: [{ label: '검사 할당' }],
+    };
+  }
+
+  if (pathname.startsWith('/counselor/test-results')) {
+    const portalId = (searchParams.get('portalId') || '').trim();
+    if (portalId) {
+      return {
+        depth: 1,
+        crumbs: [
+          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '검사 결과 분석' },
+        ],
+      };
+    }
+    return {
+      depth: 0,
+      crumbs: [{ label: '검사 결과 분석' }],
+    };
+  }
+
+  if (pathname.startsWith('/counselor/test-recommendations')) {
+    const portalId = (searchParams.get('portalId') || '').trim();
+    if (portalId) {
+      return {
+        depth: 1,
+        crumbs: [
+          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '검사 추천' },
+        ],
+      };
+    }
+    return {
+      depth: 0,
+      crumbs: [{ label: '검사 추천' }],
     };
   }
 

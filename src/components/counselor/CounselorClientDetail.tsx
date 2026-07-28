@@ -207,7 +207,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
   const notify = notifyStatusLabel(portal.notifyStatus);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 pb-8">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 pb-4">
       {actionMsg ? (
         <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
           {actionMsg}
@@ -215,7 +215,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
       ) : null}
 
       {portal.status === 'active' ? (
-        <CounselorPageSection title="검사 추가 발송">
+        <CounselorPageSection title="검사 추가 발송" dense>
           <CounselorPushAssessmentPanel
             portalIds={[portalId]}
             assignedAssessmentIds={assessments.map((a) => a.assessmentId)}
@@ -225,54 +225,93 @@ export default function CounselorClientDetail({ portalId }: Props) {
       ) : null}
 
       <CounselorPageSection
-        title={portal.displayName || '내담자 프로필'}
+        showHierarchyBreadcrumb
+        className="flex min-h-0 flex-1"
+        bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+        noBodyPadding
+        description={
+          <>
+            나의코드{' '}
+            <span className="font-mono font-semibold text-sky-300">
+              {formatAccessCodeDisplay(portal.accessCode)}
+            </span>
+            {portal.cohortName ? (
+              <>
+                {' '}
+                · 그룹 <span className="text-slate-200">{portal.cohortName}</span>
+              </>
+            ) : (
+              ' · 개별 발급'
+            )}
+            {portal.status === 'archived' ? (
+              <span className="ml-2 text-amber-400">(보관됨)</span>
+            ) : null}
+          </>
+        }
         toolbar={
-          <button
-            type="button"
-            onClick={() => void load()}
-            disabled={actionBusy}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
-          >
-            새로고침
-          </button>
+          <>
+            <CounselorLiveStatusBadge isLive={isLive} liveError={liveError} lastUpdatedAt={lastUpdatedAt} />
+            <Link
+              href={`/counselor/test-results?portalId=${encodeURIComponent(portalId)}`}
+              className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5"
+            >
+              검사 결과
+            </Link>
+            <Link
+              href={`/counselor/test-recommendations?portalId=${encodeURIComponent(portalId)}`}
+              className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5"
+            >
+              검사 추천
+            </Link>
+            <Link
+              href="/counselor/assign-tests"
+              className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5"
+            >
+              검사 할당
+            </Link>
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={actionBusy}
+              className="rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+            >
+              새로고침
+            </button>
+          </>
         }
       >
+        <div className="space-y-4 p-2.5 sm:p-3">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-sm text-sky-300">
-              나의코드 {formatAccessCodeDisplay(portal.accessCode)}
-            </p>
-            <p className="mt-2 text-sm text-slate-400">
-              {portal.cohortName ? `그룹 · ${portal.cohortName}` : '개별 발급'}
-              {portal.status === 'archived' ? (
-                <span className="ml-2 text-amber-400">(보관됨)</span>
-              ) : null}
+            <h2 className="text-lg font-bold text-white">{portal.displayName || '내담자'}</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              등록 {formatDateTime(portal.createdAt)} · 발송 {formatDateTime(portal.notifyAt)}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
-            <div className="rounded-lg bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-500">검사 진행</p>
-              <p className="mt-1 text-lg font-semibold text-white">{progress.percent}%</p>
-              <p className="text-[11px] text-slate-500">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+              <p className="text-[10px] text-slate-500">검사 진행</p>
+              <p className="mt-0.5 text-base font-semibold text-white">{progress.percent}%</p>
+              <p className="text-[10px] text-slate-500">
                 {progress.completedTests}/{progress.totalTests}
               </p>
             </div>
-            <div className="rounded-lg bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-500">상담코드</p>
-              <p className="mt-1 text-lg font-semibold text-white">{assessments.length}</p>
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+              <p className="text-[10px] text-slate-500">상담코드</p>
+              <p className="mt-0.5 text-base font-semibold text-white">{assessments.length}</p>
             </div>
-            <div className="rounded-lg bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-500">자격증명</p>
-              <p className={`mt-1 text-sm font-medium ${notify.className}`}>{notify.text}</p>
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+              <p className="text-[10px] text-slate-500">자격증명</p>
+              <p className={`mt-0.5 text-xs font-medium ${notify.className}`}>{notify.text}</p>
             </div>
-            <div className="rounded-lg bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-500">최근 접속</p>
-              <p className="mt-1 text-xs text-slate-200">{formatDateTime(portal.lastLoginAt)}</p>
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+              <p className="text-[10px] text-slate-500">최근 접속</p>
+              <p className="mt-0.5 text-[11px] text-slate-200">{formatDateTime(portal.lastLoginAt)}</p>
             </div>
           </div>
         </div>
 
-        <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <dt className="text-xs text-slate-500">이메일</dt>
             <dd className="text-slate-200">{portal.email || '—'}</dd>
@@ -291,9 +330,9 @@ export default function CounselorClientDetail({ portalId }: Props) {
           </div>
         </dl>
 
-        <div className="mt-5 rounded-lg border border-violet-500/20 bg-violet-950/20 p-4">
-          <p className="text-xs text-violet-300 mb-2">관리 태그 (최대 10개)</p>
-          <div className="flex flex-wrap gap-2 mb-3">
+        <div className="rounded-lg border border-violet-500/20 bg-violet-950/20 p-3">
+          <p className="mb-2 text-xs text-violet-300">관리 태그 (최대 10개)</p>
+          <div className="mb-3 flex flex-wrap gap-2">
             {tagsDraft.map((tag) => (
               <span
                 key={tag}
@@ -321,7 +360,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
                 }
               }}
               placeholder="예: 고위험, 재상담"
-              className="flex-1 min-w-[10rem] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
+              className="min-w-[10rem] flex-1 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
             />
             <button
               type="button"
@@ -341,16 +380,18 @@ export default function CounselorClientDetail({ portalId }: Props) {
             </button>
           </div>
         </div>
+        </div>
       </CounselorPageSection>
 
-      <CounselorPageSection title="할당된 상담코드">
+      <CounselorPageSection title="할당된 상담코드" dense>
         {assessments.length === 0 ? (
           <p className="text-sm text-slate-500">할당된 검사가 없습니다.</p>
         ) : (
-          assessments.map((assessment) => (
+          <div className="overflow-x-auto rounded-md border border-white/10">
+            {assessments.map((assessment) => (
             <div
               key={assessment.assessmentId}
-              className="rounded-xl border border-white/10 bg-slate-950/40 p-4 sm:p-5"
+              className="border-b border-white/[0.06] last:border-b-0 p-3 sm:p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -460,12 +501,13 @@ export default function CounselorClientDetail({ portalId }: Props) {
                 </table>
               </div>
             </div>
-          ))
+            ))}
+          </div>
         )}
       </CounselorPageSection>
 
       {recentResults.length > 0 ? (
-        <CounselorPageSection title="최근 검사 결과">
+        <CounselorPageSection title="최근 검사 결과" dense>
           <ul className="divide-y divide-white/5 text-sm">
             {recentResults.slice(0, 10).map((r) => (
               <li key={r.resultId} className="flex flex-wrap items-center justify-between gap-2 py-2">
@@ -477,14 +519,17 @@ export default function CounselorClientDetail({ portalId }: Props) {
               </li>
             ))}
           </ul>
-          <Link href="/counselor/test-results" className="mt-3 inline-block text-xs text-sky-400 hover:text-sky-300">
-            전체 검사 결과 분석 →
+          <Link
+            href={`/counselor/test-results?portalId=${encodeURIComponent(portalId)}`}
+            className="mt-3 inline-block text-xs text-sky-400 hover:text-sky-300"
+          >
+            이 내담자 검사 결과 분석 →
           </Link>
         </CounselorPageSection>
       ) : null}
 
       {linkedPortals.length > 0 ? (
-        <CounselorPageSection title="연결된 나의코드">
+        <CounselorPageSection title="연결된 나의코드" dense>
           <ul className="space-y-2 text-sm">
             {linkedPortals.map((lp) => (
               <li key={lp.portalId}>
