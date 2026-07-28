@@ -838,22 +838,18 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="absolute bottom-full left-0 z-50 pb-1.5"
+                    className="mt-2 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
                     role="tooltip"
+                    style={{
+                      width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
+                    }}
                   >
-                    <div
-                      className="max-h-48 overflow-y-auto rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-xl"
-                      style={{
-                        width: `min(calc(100vw - 2rem), ${samplePreviewLayout.widthCh}ch)`,
-                      }}
-                    >
-                      <p className="mb-2 text-xs font-semibold text-sky-300">
-                        {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
-                      </p>
-                      <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                        {samplePreviewText}
-                      </pre>
-                    </div>
+                    <p className="mb-2 text-xs font-semibold text-sky-300">
+                      {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
+                    </p>
+                    <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                      {samplePreviewText}
+                    </pre>
                   </div>
                 ) : null}
               </div>
