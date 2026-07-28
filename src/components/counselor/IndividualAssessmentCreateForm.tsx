@@ -838,14 +838,13 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="absolute left-0 top-full z-30 pt-1.5"
+                    className="absolute bottom-full left-0 z-50 pb-1.5"
                     role="tooltip"
                   >
                     <div
-                      className="rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                      className="max-h-48 overflow-y-auto rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-xl"
                       style={{
-                        width: `min(100vw - 2rem, ${samplePreviewLayout.widthCh}ch)`,
-                        minHeight: `${samplePreviewLayout.heightRem}rem`,
+                        width: `min(calc(100vw - 2rem), ${samplePreviewLayout.widthCh}ch)`,
                       }}
                     >
                       <p className="mb-2 text-xs font-semibold text-sky-300">

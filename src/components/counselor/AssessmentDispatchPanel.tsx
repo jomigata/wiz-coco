@@ -150,8 +150,7 @@ function testStatusLabel(status: DispatchTestResult['status']): { text: string; 
 }
 
 function canSendReminder(r: DispatchRecipient): boolean {
-  const notifyStatus = r.notifyStatus || 'not_sent';
-  if (notifyStatus === 'not_sent') return false;
+  if (!hasCredentialBeenSent(r)) return false;
   if (r.testStatus === 'completed') return false;
   const pending = (r.tests ?? []).some((t) => t.status !== 'completed');
   if (!pending && r.requiredCount > 0) return false;
@@ -265,11 +264,17 @@ function pendingTestsFor(r: DispatchRecipient): DispatchTestResult[] {
 }
 
 function skipRemindReason(r: DispatchRecipient): string {
-  if ((r.notifyStatus || 'not_sent') === 'not_sent') return '미발송';
+  if (!hasCredentialBeenSent(r)) return '미발송';
   if (r.testStatus === 'completed') return '검사 완료';
   if (!pendingTestsFor(r).length && r.requiredCount > 0) return '미완료 검사 없음';
   if (!r.email && !r.phone) return '연락처 없음';
   return '발송 불가';
+}
+
+function skipCredentialReason(r: DispatchRecipient, mode: CredentialSendMode): string {
+  if (!r.email && !r.phone) return '연락처 없음';
+  if (mode === 'initial' && hasCredentialBeenSent(r)) return '이미 발송됨';
+  return '발송 대상 아님';
 }
 
 type BulkConfirmAction = 'remind' | 'resend' | 'delete' | null;
@@ -449,6 +454,18 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
     [resendEligibleSelected],
   );
 
+  const credentialTargetSelected = useMemo(() => {
+    if (credentialSendMode === 'initial') {
+      return resendInitialSelected;
+    }
+    return resendEligibleSelected;
+  }, [credentialSendMode, resendInitialSelected, resendEligibleSelected]);
+
+  const credentialSkippedSelected = useMemo(
+    () => selectedRecipients.filter((r) => !credentialTargetSelected.some((t) => t.portalId === r.portalId)),
+    [selectedRecipients, credentialTargetSelected],
+  );
+
   const addFilePreviewLayout = useMemo(() => {
     if (!addFilePreviewText) return null;
     const lines = addFilePreviewText.split('\n');
@@ -576,17 +593,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   };
 
   const handleResend = async () => {
-    if (!assessmentId || selected.size === 0) return;
-    const ids = resendEligibleSelected.map((r) => r.portalId);
+    if (!assessmentId || credentialTargetSelected.length === 0) return;
+    const ids = credentialTargetSelected.map((r) => r.portalId);
     applySendingOverlay(ids, 'resend');
-    const count = resendEligibleSelected.length || selected.size;
-    setDispatchProgress({ kind: 'resend', count });
+    setDispatchProgress({ kind: 'resend', count: ids.length });
     setResendLoading(true);
     try {
-      const result = await resendDispatchCredentials(
-        assessmentId,
-        resendEligibleSelected.map((r) => r.portalId),
-      );
+      const result = await resendDispatchCredentials(assessmentId, ids);
       await load({ silent: true });
       const channelSummary = parseDispatchChannelSummary(result.channelSummary);
       setDispatchComplete({
@@ -818,12 +831,12 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
             <button
               type="button"
               onClick={() => setConfirmAction('resend')}
-              disabled={resendLoading || deleteLoading || resendEligibleSelected.length === 0}
+              disabled={resendLoading || deleteLoading || credentialTargetSelected.length === 0}
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
               {resendLoading
                 ? '발송 중…'
-                : `${credentialSendModeLabel(credentialSendMode)} (${resendEligibleSelected.length})`}
+                : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
             </button>
           </div>
         </div>
@@ -1303,13 +1316,16 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                 <>
                   <div>
                     <p className="text-slate-300 font-medium mb-2">
-                      발송 대상 {resendEligibleSelected.length}명
+                      발송 대상 {credentialTargetSelected.length}명
+                      {credentialSkippedSelected.length > 0
+                        ? ` · 제외 ${credentialSkippedSelected.length}명`
+                        : ''}
                       {resendSkippedSelected.length > 0
-                        ? ` · 제외 ${resendSkippedSelected.length}명(연락처 없음)`
+                        ? ` · 연락처 없음 ${resendSkippedSelected.length}명`
                         : ''}
                     </p>
                     <ul className="space-y-2 max-h-48 overflow-y-auto">
-                      {resendEligibleSelected.map((r) => (
+                      {credentialTargetSelected.map((r) => (
                         <li
                           key={r.portalId}
                           className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2"
@@ -1324,6 +1340,14 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                       ))}
                     </ul>
                   </div>
+                  {credentialSkippedSelected.length > 0 ? (
+                    <p className="text-slate-500 text-xs">
+                      선택했으나 제외 {credentialSkippedSelected.length}명:{' '}
+                      {credentialSkippedSelected
+                        .map((r) => `${r.displayName || '—'}(${skipCredentialReason(r, credentialSendMode)})`)
+                        .join(', ')}
+                    </p>
+                  ) : null}
                   {credentialSendMode === 'mixed' ? (
                     <div className="rounded-lg border border-blue-700/40 bg-blue-950/30 p-3 text-xs text-slate-400 space-y-1">
                       <p>
@@ -1354,7 +1378,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
                   resendLoading ||
                   deleteLoading ||
                   (confirmAction === 'remind' && remindEligibleSelected.length === 0) ||
-                  (confirmAction === 'resend' && resendEligibleSelected.length === 0) ||
+                  (confirmAction === 'resend' && credentialTargetSelected.length === 0) ||
                   (confirmAction === 'delete' && selectedRecipients.length === 0)
                 }
                 className={`px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 ${
