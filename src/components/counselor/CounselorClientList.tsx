@@ -7,6 +7,8 @@ import { FaUsers } from 'react-icons/fa';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { displayContactPhone } from '@/lib/contactPrivacy';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
@@ -14,6 +16,16 @@ import {
   counselingCodeTypeLabel,
   formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
+import {
+  counselorListNoThClass,
+  counselorListSortActiveClass,
+  counselorListSortIdleClass,
+  counselorListTableWrapperClass,
+  counselorListTdClass,
+  counselorListThClass,
+  counselorListTheadClass,
+} from '@/lib/counselorListTableStyles';
+import { useListPagination } from '@/hooks/useListPagination';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -30,7 +42,7 @@ import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@
 
 type StatusFilter = 'active' | 'archived' | 'all';
 type ProgressFilter = 'all' | ClientPortalProgressLabel;
-type ListSortKey = 'displayName' | 'counselingCode' | 'counselInfo' | 'progress' | 'lastLoginAt' | 'notifyAt';
+type ListSortKey = 'displayName' | 'counselInfo' | 'progress' | 'notifyAt';
 type SortDirection = 'asc' | 'desc';
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -96,24 +108,10 @@ function compareRows(
   switch (key) {
     case 'displayName':
       return mult * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
-    case 'counselingCode': {
-      const primaryA = a.assessments[0];
-      const primaryB = b.assessments[0];
-      const typeCmp = counselingCodeTypeLabel(primaryA?.codeCategory || 'group').localeCompare(
-        counselingCodeTypeLabel(primaryB?.codeCategory || 'group'),
-        'ko',
-      );
-      if (typeCmp !== 0) return mult * typeCmp;
-      const codeA = primaryA?.joinAccessCode || a.accessCode || '';
-      const codeB = primaryB?.joinAccessCode || b.accessCode || '';
-      return mult * codeA.localeCompare(codeB);
-    }
     case 'counselInfo':
       return mult * counselInfoLabel(a).localeCompare(counselInfoLabel(b), 'ko');
     case 'progress':
       return mult * (progressSortValue(a) - progressSortValue(b));
-    case 'lastLoginAt':
-      return mult * (parseDate(a.lastLoginAt) - parseDate(b.lastLoginAt));
     case 'notifyAt':
       return mult * (parseDate(a.notifyAt) - parseDate(b.notifyAt));
     default:
@@ -121,8 +119,10 @@ function compareRows(
   }
 }
 
-function progressHref(assessmentId: string): string {
-  return `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`;
+function progressHref(assessmentId: string, portalId?: string): string {
+  const params = new URLSearchParams({ assessmentId });
+  if (portalId) params.set('portalId', portalId);
+  return `/counselor/assessments/progress?${params.toString()}`;
 }
 
 function SortableColumnHeader({
@@ -142,14 +142,17 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th scope="col" className={`px-2 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
       >
         <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-sky-400' : 'text-slate-600'}`} aria-hidden="true">
+        <span
+          className={`text-[10px] ${active ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+          aria-hidden="true"
+        >
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </button>
@@ -297,6 +300,16 @@ export default function CounselorClientList() {
     return list;
   }, [filtered, sortKey, sortDir]);
 
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount,
+    startIndex,
+    paginatedItems,
+    currentCount,
+  } = useListPagination(sortedFiltered);
+
   const stats = useMemo(() => {
     const completed = displayItems.filter((i) => i.progress.label === 'completed').length;
     const inProgress = displayItems.filter((i) => i.progress.label === 'in_progress').length;
@@ -308,7 +321,7 @@ export default function CounselorClientList() {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDir(key === 'lastLoginAt' || key === 'notifyAt' ? 'desc' : 'asc');
+      setSortDir(key === 'notifyAt' ? 'desc' : 'asc');
     }
   };
 
@@ -452,10 +465,11 @@ export default function CounselorClientList() {
                 저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
               </p>
             ) : null}
-            <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
-              <table className="min-w-full divide-y divide-white/10 text-sm">
-                <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+            <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
+              <table className="w-max min-w-full table-fixed text-sm">
+                <thead className={counselorListTheadClass}>
                   <tr>
+                    <th className={counselorListNoThClass}>No.</th>
                     <SortableColumnHeader
                       label="내담자"
                       sortKey="displayName"
@@ -464,14 +478,7 @@ export default function CounselorClientList() {
                       onSort={toggleSort}
                     />
                     <SortableColumnHeader
-                      label="상담유형/상담코드"
-                      sortKey="counselingCode"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <SortableColumnHeader
-                      label="상담정보"
+                      label="안내정보"
                       sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -485,41 +492,32 @@ export default function CounselorClientList() {
                       onSort={toggleSort}
                     />
                     <SortableColumnHeader
-                      label="최근접속"
-                      sortKey="lastLoginAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="발송일시"
+                      label="발송·접속"
                       sortKey="notifyAt"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    <th scope="col" className="px-2 py-2 text-center text-xs font-medium text-slate-400">
-                      작업
-                    </th>
+                    <th className={`${counselorListThClass} text-center`}>작업</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
-                  {sortedFiltered.map((item) => {
+                  {paginatedItems.map((item, idx) => {
                     const progress = progressLabel(item);
                     const primaryAssessment = item.assessments[0];
                     const phoneMasked = displayContactPhone(item.phone, false);
                     const phoneFull = item.phone?.trim()
                       ? formatPhoneDisplayOr(item.phone)
                       : undefined;
-                    const counselTypeCode = primaryAssessment
+                    const infoPrimary = primaryAssessment?.title || '—';
+                    const infoSecondary = primaryAssessment?.orgName || item.cohortName || '—';
+                    const hoverTypeCode = primaryAssessment
                       ? formatCounselingTypeWithCodeSlash(
                           primaryAssessment.codeCategory,
                           formatAccessCodeDisplay(primaryAssessment.joinAccessCode || ''),
                         )
-                      : '—';
-                    const counselInfo = counselInfoLabel(item);
+                      : '';
 
                     return (
                       <tr
@@ -528,72 +526,50 @@ export default function CounselorClientList() {
                         onMouseEnter={() => setHoveredRowId(item.portalId)}
                         onMouseLeave={() => setHoveredRowId(null)}
                       >
+                        <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                          {startIndex + idx + 1}
+                        </td>
                         <td
-                          className={`max-w-[12rem] px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`max-w-[12rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
-                          <span
-                            className={`${cellLinkClass} block truncate`}
-                            title={phoneFull}
-                          >
+                          <span className={`${cellLinkClass} block truncate`} title={phoneFull}>
                             <span className="font-medium text-white">{item.displayName || '—'}</span>
-                            <span className="text-slate-400"> / </span>
+                            <span className="text-slate-300">/</span>
                             <span className="text-slate-300 tabular-nums">{phoneMasked}</span>
                           </span>
                         </td>
                         <td
-                          className={`max-w-[14rem] truncate px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
-                          title={counselTypeCode}
                         >
                           {primaryAssessment ? (
-                            <span className={`${cellLinkClass} truncate max-w-full block`}>
-                              <span className="text-slate-200">
-                                {counselingCodeTypeLabel(primaryAssessment.codeCategory || 'group')}
-                              </span>
-                              <span className="text-slate-400"> / </span>
-                              <span className="font-mono font-semibold text-sky-300 tracking-wide">
-                                {formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')}
-                              </span>
-                            </span>
+                            <CounselorSlashInfoCell
+                              primary={infoPrimary}
+                              secondary={infoSecondary}
+                              hoverExtra={hoverTypeCode}
+                              className={cellLinkClass}
+                            />
                           ) : (
                             <span className="text-slate-500">—</span>
                           )}
                         </td>
                         <td
-                          className={`max-w-[16rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
-                          onClick={() => goToDetail(item.portalId)}
-                          title={counselInfo}
-                        >
-                          {primaryAssessment ? (
-                            <span className={`${cellLinkClass} truncate max-w-full block`}>
-                              <span className="font-medium text-white">{primaryAssessment.title || '—'}</span>
-                              <span className="text-slate-400"> / </span>
-                              <span>{primaryAssessment.orgName || item.cohortName || '—'}</span>
-                            </span>
-                          ) : (
-                            <span className="text-slate-500">—</span>
-                          )}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap px-2 py-2 text-left text-xs cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)} ${progress.className}`}
+                          className={`whitespace-nowrap ${counselorListTdClass} text-xs cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)} ${progress.className}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           {progress.text}
                         </td>
                         <td
-                          className={`whitespace-nowrap px-2 py-2 text-left text-xs text-slate-400 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`whitespace-nowrap ${counselorListTdClass} text-xs cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
-                          {formatDateTime(item.lastLoginAt)}
+                          <div className="text-slate-300">{formatDateTime(item.notifyAt)}</div>
+                          <div className="mt-0.5 text-[11px] text-slate-500">
+                            {formatDateTime(item.lastLoginAt)}
+                          </div>
                         </td>
-                        <td
-                          className={`whitespace-nowrap px-2 py-2 text-left text-xs text-slate-300 cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          {formatDateTime(item.notifyAt)}
-                        </td>
-                        <td className="whitespace-nowrap px-2 py-2 text-center cursor-default">
+                        <td className={`${counselorListTdClass} text-center cursor-default`}>
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             <AuthLink
                               href={counselorClientDetailHref(item.portalId)}
@@ -603,7 +579,7 @@ export default function CounselorClientList() {
                             </AuthLink>
                             {primaryAssessment ? (
                               <AuthLink
-                                href={progressHref(primaryAssessment.assessmentId)}
+                                href={progressHref(primaryAssessment.assessmentId, item.portalId)}
                                 className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
                               >
                                 진행현황
@@ -623,7 +599,14 @@ export default function CounselorClientList() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-2 shrink-0 text-xs text-slate-500 sm:text-sm">총 {filtered.length}명</div>
+            <CounselorListPagination
+              page={page}
+              totalPages={totalPages}
+              currentCount={currentCount}
+              totalCount={totalCount}
+              onPageChange={setPage}
+              unit="명"
+            />
           </>
         )}
       </motion.div>

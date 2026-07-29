@@ -3,10 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { setTempData, getTempData } from '@/utils/localStorageManager';
+import CounselorAuthPageShell, {
+  counselorAuthButtonClass,
+  counselorAuthCardClass,
+  counselorAuthInputClass,
+  counselorAuthLinkClass,
+} from '@/components/auth/CounselorAuthPageShell';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -68,72 +73,58 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <div className="h-20" />
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full space-y-8 bg-emerald-900/30 p-8 rounded-2xl backdrop-blur-sm border border-emerald-800/50">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-emerald-200 mb-2">비밀번호 재설정</h2>
-            <p className="text-emerald-400">가입하신 이메일로 재설정 링크를 보내드립니다.</p>
+    <CounselorAuthPageShell>
+      <div className={`${counselorAuthCardClass} max-w-md`}>
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-white mb-1">비밀번호 재설정</h2>
+          <p className="text-sm text-slate-400">가입하신 이메일로 재설정 링크를 보내드립니다.</p>
+        </div>
+
+        {submitStatus === 'success' ? (
+          <div className="rounded-lg border border-sky-600/30 bg-sky-900/40 p-4 text-center text-sm text-sky-200">
+            <p className="font-medium mb-2">이메일이 발송되었습니다!</p>
+            <p>비밀번호 재설정 링크가 이메일로 전송되었습니다.</p>
+            <p className="text-sky-400/80 text-xs mt-3">5초 후 로그인 페이지로 이동합니다…</p>
           </div>
+        ) : (
+          <form className="space-y-3" onSubmit={handleSubmit}>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={counselorAuthInputClass}
+              placeholder="가입하신 이메일 주소"
+              disabled={isSubmitting}
+            />
 
-          {submitStatus === 'success' ? (
-            <div className="bg-emerald-800/50 text-emerald-200 p-4 rounded-lg text-center">
-              <p className="font-medium mb-2">이메일이 발송되었습니다!</p>
-              <p className="text-sm">비밀번호 재설정 링크가 이메일로 전송되었습니다.</p>
-              <p className="text-emerald-400 text-xs mt-3">5초 후 로그인 페이지로 이동합니다...</p>
-            </div>
-          ) : (
-            <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-emerald-700/50 bg-emerald-900/30 placeholder-emerald-500 text-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="가입하신 이메일 주소"
-                disabled={isSubmitting}
-              />
+            {errorMessage ? (
+              <div className="text-red-300/95 text-xs text-center bg-red-500/15 border border-red-500/25 rounded-md px-3 py-2">
+                {errorMessage}
+              </div>
+            ) : null}
 
-              {errorMessage && (
-                <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                  {errorMessage}
-                </div>
-              )}
+            <button type="submit" className={counselorAuthButtonClass} disabled={isSubmitting}>
+              {isSubmitting ? '처리 중…' : '비밀번호 재설정 링크 받기'}
+            </button>
+          </form>
+        )}
 
-              <motion.button
-                type="submit"
-                className="w-full py-3 text-lg font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60"
-                whileTap={{ scale: 0.98 }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '처리 중...' : '비밀번호 재설정 링크 받기'}
-              </motion.button>
-            </form>
-          )}
-
-          <div className="text-center pt-1">
-            <p className="text-xs text-emerald-600">
-              <Link
-                href="/login"
-                className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
-              >
-                전문가·상담사 로그인
-              </Link>
-              <span className="mx-2 text-emerald-800">·</span>
-              <Link
-                href="/register"
-                className="text-emerald-500 hover:text-emerald-400 underline-offset-2 hover:underline"
-              >
-                전문가·상담사 회원가입
-              </Link>
-            </p>
-          </div>
+        <div className="text-center pt-1">
+          <p className="text-xs text-slate-500">
+            <Link href="/login" className={counselorAuthLinkClass}>
+              전문가·상담사 로그인
+            </Link>
+            <span className="mx-2 text-slate-600">·</span>
+            <Link href="/register" className={counselorAuthLinkClass}>
+              전문가·상담사 등록
+            </Link>
+          </p>
         </div>
       </div>
-    </div>
+    </CounselorAuthPageShell>
   );
 }

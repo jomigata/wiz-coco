@@ -288,9 +288,13 @@ type DispatchComplete = {
 
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
+  filterPortalId?: string;
 }
 
-export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDispatchPanelProps) {
+export default function AssessmentDispatchPanel({
+  assessmentId,
+  filterPortalId,
+}: AssessmentDispatchPanelProps) {
   const { authPending, isAuthenticated } = useAuthResolved();
   const [data, setData] = useState<AssessmentDispatchStatus | null>(
     () => readCachedDispatchStatus(assessmentId),
@@ -360,11 +364,28 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const displayData = liveData ?? data;
 
+  const visibleData = useMemo(() => {
+    if (!displayData) return null;
+    const portalFilter = (filterPortalId || '').trim();
+    if (!portalFilter) return displayData;
+    return {
+      ...displayData,
+      recipients: (displayData.recipients || []).filter((r) => r.portalId === portalFilter),
+    };
+  }, [displayData, filterPortalId]);
+
+  useEffect(() => {
+    const portalFilter = (filterPortalId || '').trim();
+    if (portalFilter) {
+      setExpandedId(portalFilter);
+    }
+  }, [filterPortalId]);
+
   const hasSendingNotify = useMemo(
     () =>
-      (displayData?.recipients || []).some((r) => r.notifyStatus === 'sending') ||
+      (visibleData?.recipients || []).some((r) => r.notifyStatus === 'sending') ||
       Object.keys(dispatchOverrides).length > 0,
-    [displayData?.recipients, dispatchOverrides],
+    [visibleData?.recipients, dispatchOverrides],
   );
 
   useEffect(() => {
@@ -386,7 +407,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
 
   const applySendingOverlay = useCallback(
     (portalIds: string[], kind: 'remind' | 'resend') => {
-      const byId = new Map((displayData?.recipients || []).map((r) => [r.portalId, r]));
+      const byId = new Map((visibleData?.recipients || []).map((r) => [r.portalId, r]));
       setDispatchOverrides((prev) => {
         const next = { ...prev };
         for (const portalId of portalIds) {
@@ -397,7 +418,7 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
         return next;
       });
     },
-    [displayData?.recipients],
+    [visibleData?.recipients],
   );
 
   useEffect(() => {
@@ -409,24 +430,24 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
   }, [hasSendingNotify, load, authPending, isAuthenticated]);
 
   const allIds = useMemo(
-    () => (displayData?.recipients || []).map((r) => r.portalId),
-    [displayData?.recipients],
+    () => (visibleData?.recipients || []).map((r) => r.portalId),
+    [visibleData?.recipients],
   );
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
 
   const completedCount = useMemo(
-    () => (displayData?.recipients || []).filter((r) => r.testStatus === 'completed').length,
-    [displayData?.recipients],
+    () => (visibleData?.recipients || []).filter((r) => r.testStatus === 'completed').length,
+    [visibleData?.recipients],
   );
 
   const remindEligibleSelected = useMemo(
-    () => (displayData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
-    [displayData?.recipients, selected],
+    () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
+    [visibleData?.recipients, selected],
   );
 
   const selectedRecipients = useMemo(
-    () => (displayData?.recipients || []).filter((r) => selected.has(r.portalId)),
-    [displayData?.recipients, selected],
+    () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId)),
+    [visibleData?.recipients, selected],
   );
 
   const resendEligibleSelected = useMemo(
@@ -484,13 +505,13 @@ export default function AssessmentDispatchPanel({ assessmentId }: AssessmentDisp
       : 'https://wizcoco.com/portal/login/';
 
   const sortedRecipients = useMemo(() => {
-    const list = (displayData?.recipients || []).map((r) =>
+    const list = (visibleData?.recipients || []).map((r) =>
       mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
     );
     if (!sortKey) return list;
     list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
     return list;
-  }, [displayData?.recipients, dispatchOverrides, sortKey, sortDir]);
+  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir]);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {

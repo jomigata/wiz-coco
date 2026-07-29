@@ -6,18 +6,13 @@ import Link from 'next/link';
 import { AccountIntegrationManager } from '@/utils/accountIntegration';
 import { primeFirebaseAuthSessionCache, useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { markInternalNavigation } from '@/utils/authSessionLifecycle';
-
-const LoadingRegister = () => (
-  <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-    <div className="h-20" />
-    <div className="flex-grow flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-emerald-300 text-lg">회원가입 페이지를 로딩 중입니다...</p>
-      </div>
-    </div>
-  </div>
-);
+import CounselorAuthPageShell, {
+  CounselorAuthLoading,
+  counselorAuthButtonClass,
+  counselorAuthCardClass,
+  counselorAuthInputClass,
+  counselorAuthLinkClass,
+} from '@/components/auth/CounselorAuthPageShell';
 
 const RegisterContent = () => {
   const router = useRouter();
@@ -80,104 +75,79 @@ const RegisterContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-950 flex flex-col">
-      <div className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="max-w-sm w-full space-y-5 bg-emerald-900/25 p-6 rounded-xl border border-emerald-800/40">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-emerald-100 mb-1">전문가·상담사 계정 등록</h2>
-            <p className="text-sm text-emerald-500/90 leading-snug">
-              <span className="block whitespace-nowrap">상담(코드) 관리를 위한</span>
-              <span className="block whitespace-nowrap">전문가·상담사 계정을 등록합니다.</span>
-            </p>
+    <CounselorAuthPageShell>
+      <div className={counselorAuthCardClass}>
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-white mb-1">전문가·상담사 계정 등록</h2>
+          <p className="text-sm text-slate-400">상담(코드) 관리를 위한 전문가·상담사 계정</p>
+        </div>
+
+        {registerError ? (
+          <div
+            className="text-red-300/95 text-xs text-center bg-red-500/15 border border-red-500/25 rounded-md px-3 py-2"
+            aria-live="assertive"
+          >
+            {registerError}
           </div>
+        ) : null}
 
-          {registerError && (
-            <div
-              className="text-red-300/95 text-xs text-center bg-red-500/15 border border-red-500/25 rounded-md px-3 py-2"
-              aria-live="assertive"
-            >
-              {registerError}
-            </div>
-          )}
+        <form className="space-y-3" onSubmit={handleRegister}>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={counselorAuthInputClass}
+            placeholder="이름"
+          />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={counselorAuthInputClass}
+            placeholder="이메일"
+          />
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={counselorAuthInputClass}
+            placeholder="비밀번호 (6자 이상)"
+          />
+          <button type="submit" className={counselorAuthButtonClass} disabled={isLoading}>
+            {isLoading ? '처리 중…' : '등록하기'}
+          </button>
+        </form>
 
-          <form className="space-y-3" onSubmit={handleRegister}>
-            <label htmlFor="name" className="sr-only">
-              이름
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              autoComplete="name"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
-              placeholder="이름"
-            />
-            <label htmlFor="email" className="sr-only">
-              이메일
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
-              placeholder="이메일"
-            />
-            <label htmlFor="password" className="sr-only">
-              비밀번호
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-emerald-800/60 bg-emerald-950/40 placeholder-emerald-600 text-emerald-100 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
-              placeholder="비밀번호 (6자 이상)"
-            />
-
-            <button
-              type="submit"
-              className="w-full py-2.5 text-sm font-medium rounded-md text-emerald-50 bg-emerald-700/80 border border-emerald-600/40 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-500/60 disabled:opacity-60"
-              disabled={isLoading}
-            >
-              {isLoading ? '처리 중…' : '등록하기'}
-            </button>
-          </form>
-
-          <div className="text-center pt-1">
-            <p className="text-xs text-emerald-600">
-              <Link
-                href="/login"
-                className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline"
-              >
-                전문가·상담사 로그인
-              </Link>
-              <span className="mx-2 text-emerald-800">·</span>
-              <Link
-                href="/forgot-password"
-                className="text-emerald-500 hover:text-emerald-400 underline-offset-2 hover:underline"
-              >
-                비밀번호 찾기
-              </Link>
-            </p>
-          </div>
+        <div className="text-center pt-1">
+          <p className="text-xs text-slate-500">
+            <Link href="/login" className={counselorAuthLinkClass}>
+              전문가·상담사 로그인
+            </Link>
+            <span className="mx-2 text-slate-600">·</span>
+            <Link href="/forgot-password" className={counselorAuthLinkClass}>
+              비밀번호 찾기
+            </Link>
+          </p>
         </div>
       </div>
-    </div>
+    </CounselorAuthPageShell>
   );
 };
 
 const RegisterPage: React.FC = () => (
-  <Suspense fallback={<LoadingRegister />}>
+  <Suspense fallback={<CounselorAuthLoading message="회원가입 페이지를 로딩 중입니다..." />}>
     <RegisterContent />
   </Suspense>
 );

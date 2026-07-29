@@ -10,7 +10,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: 'psych-tests',
     category: '1. 심리검사 관리',
-    description: '상담코드 발급·내담자·결과 분석',
+    description: '상담코드 발급·진행 관리',
     icon: '📦',
     subcategories: [
       {
@@ -43,8 +43,16 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
           },
         ],
       },
+    ],
+  },
+  {
+    slug: 'clients',
+    category: '2. 내담자 관리',
+    description: '내담자·검사·상담 운영',
+    icon: '👥',
+    subcategories: [
       {
-        name: '1b. 내담자 관리',
+        name: '2a. 내담자 관리',
         icon: '👥',
         items: [
           {
@@ -79,16 +87,8 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    slug: 'clients',
-    category: '2. 내담자 관리',
-    description: '상담 일정·기록·케어 운영',
-    icon: '👥',
-    subcategories: [
       {
-        name: '2a. 상담 운영',
+        name: '2b. 상담 운영',
         icon: '📅',
         items: [
           {

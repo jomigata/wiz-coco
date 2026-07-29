@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { useMemo, useState } from 'react';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { displayContactEmail, displayContactPhone } from '@/lib/contactPrivacy';
@@ -15,6 +16,16 @@ import {
   type SortDirection,
 } from '@/lib/dispatchRecipientDisplay';
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
+import {
+  counselorListNoThClass,
+  counselorListSortActiveClass,
+  counselorListSortIdleClass,
+  counselorListTableWrapperClass,
+  counselorListTdClass,
+  counselorListThClass,
+  counselorListTheadClass,
+} from '@/lib/counselorListTableStyles';
+import { useListPagination } from '@/hooks/useListPagination';
 
 function SortableColumnHeader({
   label,
@@ -33,14 +44,17 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th className={`px-3 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+    <th className={`${counselorListThClass} ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
       >
         <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-cyan-400' : 'text-slate-600'}`} aria-hidden="true">
+        <span
+          className={`text-[10px] ${active ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+          aria-hidden="true"
+        >
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </button>
@@ -88,6 +102,16 @@ export default function ArchivedRecipientsTable({
     return list;
   }, [items, sortKey, sortDir]);
 
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount,
+    startIndex,
+    paginatedItems,
+    currentCount,
+  } = useListPagination(sortedItems);
+
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -122,13 +146,13 @@ export default function ArchivedRecipientsTable({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border border-white/10">
+      <div className={counselorListTableWrapperClass}>
         <table className="w-max min-w-full table-fixed text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-800 text-slate-400 shadow-[0_1px_0_0_rgb(71,85,105)]">
+          <thead className={counselorListTheadClass}>
             <tr>
-              <th className="w-10 px-3 py-2 text-left text-xs font-medium">No.</th>
-              <th className="w-10 px-3 py-2 text-left text-xs font-medium">선택</th>
-              <th className="w-12 px-3 py-2 text-left text-xs font-medium">검사현황</th>
+              <th className={counselorListNoThClass}>No.</th>
+              <th className={`${counselorListThClass} w-10`}>선택</th>
+              <th className={`${counselorListThClass} w-12`}>검사현황</th>
               <SortableColumnHeader
                 label="발송일시"
                 sortKey="notifyAt"
@@ -187,8 +211,8 @@ export default function ArchivedRecipientsTable({
               />
               {showAssessmentColumns ? (
                 <>
-                  <th className="px-3 py-2 text-left text-xs font-medium">상담코드</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">검사명</th>
+                  <th className={counselorListThClass}>상담코드</th>
+                  <th className={counselorListThClass}>검사명</th>
                 </>
               ) : null}
               <SortableColumnHeader
@@ -202,7 +226,7 @@ export default function ArchivedRecipientsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
-            {sortedItems.map((row, rowIndex) => {
+            {paginatedItems.map((row, rowIndex) => {
               const notify = dispatchStatusDisplay(row);
               const summary = testSummary(row);
               const isOpen = expandedId === row.portalId;
@@ -224,8 +248,10 @@ export default function ArchivedRecipientsTable({
                     aria-expanded={isOpen}
                     className={`cursor-pointer hover:bg-slate-800/50 ${isOpen ? 'border-b border-slate-700/60 bg-slate-800/40' : ''}`}
                   >
-                    <td className="px-3 py-2 tabular-nums text-slate-400 align-top">{rowIndex + 1}</td>
-                    <td className="px-3 py-2 align-top" onClick={(e) => e.stopPropagation()}>
+                    <td className={`${counselorListTdClass} tabular-nums text-slate-400 align-top`}>
+                      {startIndex + rowIndex + 1}
+                    </td>
+                    <td className={`${counselorListTdClass} align-top`} onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selected.has(row.portalId)}
@@ -352,6 +378,14 @@ export default function ArchivedRecipientsTable({
           </tbody>
         </table>
       </div>
+      <CounselorListPagination
+        page={page}
+        totalPages={totalPages}
+        currentCount={currentCount}
+        totalCount={totalCount}
+        onPageChange={setPage}
+        unit="명"
+      />
 
       {detailLoading ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">

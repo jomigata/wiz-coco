@@ -13,10 +13,19 @@ import {
 } from '@/lib/assessmentReportPrint';
 import AssessmentAiInterpretButton from '@/components/counselor/AssessmentAiInterpretButton';
 import AssessmentComprehensiveReportButton from '@/components/counselor/AssessmentComprehensiveReportButton';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import {
+  counselorListNoThClass,
+  counselorListTableWrapperClass,
+  counselorListTdClass,
+  counselorListThClass,
+  counselorListTheadClass,
+} from '@/lib/counselorListTableStyles';
 import {
   readCachedTestResults,
   writeCachedTestResults,
 } from '@/lib/counselorSessionCache';
+import { useListPagination } from '@/hooks/useListPagination';
 
 type CounselorResultRow = {
   id: string;
@@ -115,6 +124,16 @@ export default function TestResultsPage() {
     });
   }, [rows, queryText, filterPortalId]);
 
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount,
+    startIndex,
+    paginatedItems,
+    currentCount,
+  } = useListPagination(filtered);
+
   return (
     <CounselorPageSection
       showHierarchyBreadcrumb
@@ -149,7 +168,7 @@ export default function TestResultsPage() {
             />
           </div>
           <span className="text-sm text-slate-400">
-            총 <span className="font-semibold text-white">{filtered.length}</span>건
+            필터 결과 <span className="font-semibold text-white">{filtered.length}</span>건
           </span>
           {filterPortalId ? (
             <Link
@@ -171,24 +190,31 @@ export default function TestResultsPage() {
 
         {isLoading ? (
           <div className="text-white/70 text-sm">불러오는 중…</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-white/70 text-sm">표시할 결과가 없습니다.</div>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-white/10">
-            <table className="min-w-full divide-y divide-white/10 text-sm text-white/90">
-              <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
-                <tr className="text-left text-xs text-slate-400">
-                  <th className="px-2 py-2 font-medium">일시</th>
-                  <th className="px-2 py-2 font-medium">내담자</th>
-                  <th className="px-2 py-2 font-medium">검사</th>
-                  <th className="px-2 py-2 font-medium">상태</th>
-                  <th className="px-2 py-2 font-medium">코드</th>
-                  <th className="px-2 py-2 font-medium">리포트</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.06]">
-                {filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-white/[0.03]">
-                    <td className="whitespace-nowrap px-2 py-2">{formatCreatedAt(r.createdAt)}</td>
-                    <td className="px-2 py-2">
+          <>
+            <div className={counselorListTableWrapperClass}>
+              <table className="w-max min-w-full table-fixed text-sm text-white/90">
+                <thead className={counselorListTheadClass}>
+                  <tr>
+                    <th className={counselorListNoThClass}>No.</th>
+                    <th className={counselorListThClass}>일시</th>
+                    <th className={counselorListThClass}>내담자</th>
+                    <th className={counselorListThClass}>검사</th>
+                    <th className={counselorListThClass}>상태</th>
+                    <th className={counselorListThClass}>코드</th>
+                    <th className={counselorListThClass}>리포트</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.06]">
+                  {paginatedItems.map((r, idx) => (
+                    <tr key={r.id} className="hover:bg-white/[0.03]">
+                      <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                        {startIndex + idx + 1}
+                      </td>
+                      <td className={`whitespace-nowrap ${counselorListTdClass}`}>{formatCreatedAt(r.createdAt)}</td>
+                      <td className={counselorListTdClass}>
                       {r.portalId ? (
                         <Link
                           href={counselorClientDetailHref(r.portalId)}
@@ -201,13 +227,13 @@ export default function TestResultsPage() {
                       )}
                       <div className="text-xs text-white/50">{r.uid || '—'}</div>
                     </td>
-                    <td className="px-2 py-2">{r.testType || '—'}</td>
-                    <td className="px-2 py-2">{r.status || 'completed'}</td>
-                    <td className="px-2 py-2">
+                    <td className={counselorListTdClass}>{r.testType || '—'}</td>
+                    <td className={counselorListTdClass}>{r.status || 'completed'}</td>
+                    <td className={counselorListTdClass}>
                       <div className="font-mono text-xs text-white/70">{formatAccessCodeDisplay(r.code || '') || '—'}</div>
                       {r.counselorCode && <div className="font-mono text-xs text-white/40">연결: {formatAccessCodeDisplay(r.counselorCode)}</div>}
                     </td>
-                    <td className="px-2 py-2">
+                    <td className={counselorListTdClass}>
                       <div className="flex flex-wrap gap-2 items-center">
                         <button
                           type="button"
@@ -247,16 +273,17 @@ export default function TestResultsPage() {
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td className="px-2 py-6 text-center text-white/60" colSpan={6}>
-                      표시할 결과가 없습니다.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
+          <CounselorListPagination
+            page={page}
+            totalPages={totalPages}
+            currentCount={currentCount}
+            totalCount={totalCount}
+            onPageChange={setPage}
+          />
+          </>
         )}
       </div>
     </CounselorPageSection>

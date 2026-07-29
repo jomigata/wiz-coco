@@ -9,19 +9,35 @@ import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   counselingCodeTypeLabel,
-  formatCounselingCodeTypeWithCode,
+  formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
+import {
+  counselorListNoThClass,
+  counselorListSortActiveClass,
+  counselorListSortIdleClass,
+  counselorListTableWrapperClass,
+  counselorListTdClass,
+  counselorListThClass,
+  counselorListTheadClass,
+} from '@/lib/counselorListTableStyles';
+import { useListPagination } from '@/hooks/useListPagination';
 
-type ListSortKey = 'createdAt' | 'accessCode' | 'orgName' | 'title';
+type ListSortKey = 'createdAt' | 'counselInfo';
 type SortDirection = 'asc' | 'desc';
 
 function parseCreatedAt(iso?: string): number {
   if (!iso) return 0;
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? 0 : t;
+}
+
+function assessmentInfoLabel(a: CounselorAssessment): string {
+  return `${(a.title || '—').trim()}/${getAssessmentOrgLabel(a)}`;
 }
 
 function compareAssessments(
@@ -34,18 +50,8 @@ function compareAssessments(
   switch (key) {
     case 'createdAt':
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
-    case 'accessCode': {
-      const typeCmp = counselingCodeTypeLabel(a.codeCategory || 'group').localeCompare(
-        counselingCodeTypeLabel(b.codeCategory || 'group'),
-        'ko',
-      );
-      if (typeCmp !== 0) return mult * typeCmp;
-      return mult * (a.accessCode || '').localeCompare(b.accessCode || '');
-    }
-    case 'orgName':
-      return mult * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
-    case 'title':
-      return mult * (a.title || '').localeCompare(b.title || '', 'ko');
+    case 'counselInfo':
+      return mult * assessmentInfoLabel(a).localeCompare(assessmentInfoLabel(b), 'ko');
     default:
       return 0;
   }
@@ -72,14 +78,17 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th scope="col" className={`px-2 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className="inline-flex items-center gap-1 hover:text-slate-200 transition-colors"
       >
         <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-sky-400' : 'text-slate-600'}`} aria-hidden="true">
+        <span
+          className={`text-[10px] ${active ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+          aria-hidden="true"
+        >
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </button>
@@ -187,6 +196,16 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     list.sort((a, b) => compareAssessments(a, b, sortKey, sortDir));
     return list;
   }, [filtered, sortKey, sortDir]);
+
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount,
+    startIndex,
+    paginatedItems,
+    currentCount,
+  } = useListPagination(sortedFiltered);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -336,10 +355,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         </div>
       ) : (
         <>
-          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
-            <table className="min-w-full divide-y divide-white/10 text-sm">
-              <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+          <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
+            <table className="w-max min-w-full table-fixed text-sm">
+              <thead className={counselorListTheadClass}>
                 <tr>
+                  <th className={counselorListNoThClass}>No.</th>
                   <SortableColumnHeader
                     label="생성 일시"
                     sortKey="createdAt"
@@ -349,28 +369,14 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     className="whitespace-nowrap"
                   />
                   <SortableColumnHeader
-                    label="상담유형/상담코드"
-                    sortKey="accessCode"
+                    label="안내정보"
+                    sortKey="counselInfo"
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={toggleSort}
                   />
-                  <SortableColumnHeader
-                    label="기관/단체/그룹명"
-                    sortKey="orgName"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                  />
-                  <SortableColumnHeader
-                    label="검사명"
-                    sortKey="title"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                  />
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">코드 사용 마감일</th>
-                  <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 사용 마감일</th>
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
                       (
@@ -382,14 +388,19 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       )
                     </span>
                   </th>
-                  <th scope="col" className="px-2 py-2 text-center text-xs font-medium text-slate-400">작업</th>
+                  <th scope="col" className={`${counselorListThClass} text-center`}>작업</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
-                {sortedFiltered.map((a) => {
+                {paginatedItems.map((a, idx) => {
                   const { dispatchSent, testComplete, dispatchTotal } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
-                  const orgLabel = getAssessmentOrgLabel(a);
+                  const infoPrimary = (a.title || '—').trim();
+                  const infoSecondary = getAssessmentOrgLabel(a);
+                  const hoverTypeCode = formatCounselingTypeWithCodeSlash(
+                    a.codeCategory,
+                    formatAccessCodeDisplay(a.accessCode),
+                  );
 
                   return (
                     <tr
@@ -398,63 +409,38 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       onMouseEnter={() => setHoveredRowId(a.id)}
                       onMouseLeave={() => setHoveredRowId(null)}
                     >
+                      <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                        {startIndex + idx + 1}
+                      </td>
                       <td
-                        className={`whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
+                        className={`whitespace-nowrap ${counselorListTdClass} text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <span className={cellLinkClass}>{formatDate(a.createdAt)}</span>
                       </td>
                       <td
-                        className={`max-w-[16rem] truncate px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
+                        className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
-                        title={formatCounselingCodeTypeWithCode(
-                          a.codeCategory,
-                          formatAccessCodeDisplay(a.accessCode),
-                        )}
                       >
-                        <span className={`${cellLinkClass} truncate max-w-full block`}>
-                          <span className="text-slate-200">
-                            {counselingCodeTypeLabel(a.codeCategory || 'group')}
+                        <CounselorSlashInfoCell
+                          primary={infoPrimary}
+                          secondary={infoSecondary}
+                          hoverExtra={hoverTypeCode}
+                          className={cellLinkClass}
+                        />
+                        {expired ? (
+                          <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
+                            만료
                           </span>
-                          <span className="font-mono font-semibold text-sky-300 tracking-wide">
-                            ({formatAccessCodeDisplay(a.accessCode)})
-                          </span>
-                        </span>
+                        ) : null}
                       </td>
                       <td
-                        className={`max-w-[12rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
-                        onClick={() => goToProgress(a.id)}
-                      >
-                        <span
-                          className={`${cellLinkClass} truncate max-w-full block`}
-                          title={orgLabel}
-                        >
-                          {orgLabel}
-                        </span>
-                      </td>
-                      <td
-                        className={`max-w-[14rem] truncate px-2 py-2 text-left text-sm text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
-                        onClick={() => goToProgress(a.id)}
-                      >
-                        <span
-                          className={`${cellLinkClass} truncate max-w-full block`}
-                          title={a.title || '-'}
-                        >
-                          <span className="font-medium text-white">{a.title || '-'}</span>
-                          {expired ? (
-                            <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
-                              만료
-                            </span>
-                          ) : null}
-                        </span>
-                      </td>
-                      <td
-                        className={`whitespace-nowrap px-2 py-2 text-left text-sm cursor-pointer transition-colors ${rowHoverCellClass(a.id)} ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                        className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)} ${expired ? 'text-red-400' : 'text-slate-400'}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500 cursor-default">
+                      <td className={`whitespace-nowrap ${counselorListTdClass} text-center text-slate-500 cursor-default`}>
                         (
                         <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                         /
@@ -463,7 +449,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
                         )
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-center cursor-default">
+                      <td className={`whitespace-nowrap ${counselorListTdClass} text-center cursor-default`}>
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           <AuthLink
                             href={progressHref(a.id)}
@@ -492,7 +478,13 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               </tbody>
             </table>
           </div>
-          <div className="mt-2 shrink-0 text-xs text-slate-500 sm:text-sm">총 {filtered.length}건</div>
+          <CounselorListPagination
+            page={page}
+            totalPages={totalPages}
+            currentCount={currentCount}
+            totalCount={totalCount}
+            onPageChange={setPage}
+          />
         </>
       )}
     </motion.div>

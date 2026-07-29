@@ -12,10 +12,13 @@ function ProgressPageContent() {
   const searchParams = useSearchParams();
   const { authPending, showLoginRequired } = useAuthResolved();
   const [assessmentId, setAssessmentId] = useState('');
+  const [portalId, setPortalId] = useState('');
 
   useEffect(() => {
     const id = (searchParams.get('assessmentId') || '').trim();
+    const pid = (searchParams.get('portalId') || '').trim();
     setAssessmentId(id);
+    setPortalId(pid);
     if (!id) {
       router.replace('/counselor/assessments');
     }
@@ -44,7 +47,7 @@ function ProgressPageContent() {
         noBodyPadding
       >
         <div className="p-2.5 sm:p-3">
-          <AssessmentDispatchPanel assessmentId={assessmentId} />
+          <AssessmentDispatchPanel assessmentId={assessmentId} filterPortalId={portalId || undefined} />
         </div>
       </CounselorPageSection>
     </div>

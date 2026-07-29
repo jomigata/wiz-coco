@@ -7,11 +7,23 @@ import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatu
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
+import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   counselingCodeTypeLabel,
-  formatCounselingCodeTypeWithCode,
+  formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
+import {
+  counselorListNoThClass,
+  counselorListSortActiveClass,
+  counselorListSortIdleClass,
+  counselorListTableWrapperClass,
+  counselorListTdClass,
+  counselorListThClass,
+  counselorListTheadClass,
+} from '@/lib/counselorListTableStyles';
+import { useListPagination } from '@/hooks/useListPagination';
 import {
   readCachedArchivedAssessments,
   writeCachedArchivedAssessments,
@@ -27,13 +39,17 @@ import {
   type ArchivedAssessment,
 } from '@/lib/assessmentApi';
 
-type ListSortKey = 'createdAt' | 'accessCode' | 'orgName' | 'title' | 'archivedAt';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'archivedAt';
 type SortDirection = 'asc' | 'desc';
 
 function parseDate(iso?: string | null): number {
   if (!iso) return 0;
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? 0 : t;
+}
+
+function assessmentInfoLabel(a: ArchivedAssessment): string {
+  return `${(a.title || '—').trim()}/${getAssessmentOrgLabel(a)}`;
 }
 
 function compareRows(
@@ -48,18 +64,8 @@ function compareRows(
       return mult * (parseDate(a.createdAt) - parseDate(b.createdAt));
     case 'archivedAt':
       return mult * (parseDate(a.archivedAt) - parseDate(b.archivedAt));
-    case 'accessCode': {
-      const typeCmp = counselingCodeTypeLabel(a.codeCategory || 'group').localeCompare(
-        counselingCodeTypeLabel(b.codeCategory || 'group'),
-        'ko',
-      );
-      if (typeCmp !== 0) return mult * typeCmp;
-      return mult * (a.accessCode || '').localeCompare(b.accessCode || '');
-    }
-    case 'orgName':
-      return mult * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
-    case 'title':
-      return mult * (a.title || '').localeCompare(b.title || '', 'ko');
+    case 'counselInfo':
+      return mult * assessmentInfoLabel(a).localeCompare(assessmentInfoLabel(b), 'ko');
     default:
       return 0;
   }
@@ -127,14 +133,17 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th scope="col" className={`px-2 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
       >
         <span>{label}</span>
-        <span className={`text-[10px] ${active ? 'text-sky-400' : 'text-slate-600'}`} aria-hidden="true">
+        <span
+          className={`text-[10px] ${active ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+          aria-hidden="true"
+        >
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
         </span>
       </button>
@@ -211,6 +220,16 @@ export default function DeletedAssessmentsPage() {
     list.sort((a, b) => compareRows(a, b, sortKey, sortDir));
     return list;
   }, [filtered, sortKey, sortDir]);
+
+  const {
+    page,
+    setPage,
+    totalPages,
+    totalCount,
+    startIndex,
+    paginatedItems,
+    currentCount,
+  } = useListPagination(sortedFiltered);
 
   const toggleSort = (key: ListSortKey) => {
     if (sortKey === key) {
@@ -356,16 +375,13 @@ export default function DeletedAssessmentsPage() {
           </p>
         ) : (
           <>
-            <div className="min-h-0 flex-1 overflow-auto rounded-md border border-white/10">
-              <table className="min-w-full divide-y divide-white/10 text-sm">
-                <thead className="sticky top-0 z-[1] bg-[#0f172a]/95 backdrop-blur-sm">
+            <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
+              <table className="w-max min-w-full table-fixed text-sm">
+                <thead className={counselorListTheadClass}>
                   <tr>
-                    <th scope="col" className="w-10 px-2 py-2 text-left text-xs font-medium text-slate-400">
-                      선택
-                    </th>
-                    <th scope="col" className="w-12 px-2 py-2 text-left text-xs font-medium text-slate-400">
-                      검사현황
-                    </th>
+                    <th className={counselorListNoThClass}>No.</th>
+                    <th scope="col" className={`${counselorListThClass} w-10`}>선택</th>
+                    <th scope="col" className={`${counselorListThClass} w-12`}>검사현황</th>
                     <SortableColumnHeader
                       label="생성 일시"
                       sortKey="createdAt"
@@ -375,30 +391,14 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="상담유형/상담코드"
-                      sortKey="accessCode"
+                      label="안내정보"
+                      sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <SortableColumnHeader
-                      label="기관/단체/그룹명"
-                      sortKey="orgName"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <SortableColumnHeader
-                      label="검사명"
-                      sortKey="title"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <th scope="col" className="whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-slate-400">
-                      코드 사용 마감일
-                    </th>
-                    <th scope="col" className="whitespace-nowrap px-2 py-2 text-center text-xs font-medium text-slate-400">
+                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 사용 마감일</th>
+                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                       <span className="block">결과현황</span>
                       <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
                         (
@@ -421,17 +421,25 @@ export default function DeletedAssessmentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
-                  {sortedFiltered.map((row) => {
+                  {paginatedItems.map((row, idx) => {
                     const { dispatchSent, testComplete, dispatchTotal } = resultStatusCounts(row);
                     const expired = isExpired(row.usageEndDate);
-                    const orgLabel = getAssessmentOrgLabel(row);
+                    const infoPrimary = (row.title || '—').trim();
+                    const infoSecondary = getAssessmentOrgLabel(row);
+                    const hoverTypeCode = formatCounselingTypeWithCodeSlash(
+                      row.codeCategory,
+                      formatAccessCodeDisplay(row.accessCode),
+                    );
                     const isOpen = expandedId === row.id;
                     const expandedRecipients = recipientCache[row.id] || [];
 
                     return (
                       <React.Fragment key={row.id}>
                         <tr className={isOpen ? 'bg-white/[0.03]' : undefined}>
-                          <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                          <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                            {startIndex + idx + 1}
+                          </td>
+                          <td className={counselorListTdClass} onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
                               checked={selected.has(row.id)}
@@ -440,7 +448,7 @@ export default function DeletedAssessmentsPage() {
                             />
                           </td>
                           <td
-                            className="cursor-pointer px-2 py-2 text-slate-400 hover:bg-white/[0.04]"
+                            className={`${counselorListTdClass} cursor-pointer text-slate-400 hover:bg-white/[0.04]`}
                             onClick={() => void toggleExpand(row.id)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
@@ -455,41 +463,20 @@ export default function DeletedAssessmentsPage() {
                             {isOpen ? '▼' : '▶'}
                           </td>
                           <td
-                            className="cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
+                            className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200 hover:bg-white/[0.04]`}
                             onClick={() => void toggleExpand(row.id)}
                           >
                             {formatDate(row.createdAt)}
                           </td>
                           <td
-                            className="max-w-[16rem] cursor-pointer truncate px-2 py-2 text-left text-sm hover:bg-white/[0.04]"
-                            onClick={() => void toggleExpand(row.id)}
-                            title={formatCounselingCodeTypeWithCode(
-                              row.codeCategory,
-                              formatAccessCodeDisplay(row.accessCode),
-                            )}
-                          >
-                            <span className="truncate max-w-full block">
-                              <span className="text-slate-200">
-                                {counselingCodeTypeLabel(row.codeCategory || 'group')}
-                              </span>
-                              <span className="font-mono font-semibold text-sky-300 tracking-wide">
-                                ({formatAccessCodeDisplay(row.accessCode)})
-                              </span>
-                            </span>
-                          </td>
-                          <td
-                            className="max-w-[12rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
-                            title={orgLabel}
+                            className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer hover:bg-white/[0.04]`}
                             onClick={() => void toggleExpand(row.id)}
                           >
-                            {orgLabel}
-                          </td>
-                          <td
-                            className="max-w-[14rem] cursor-pointer truncate px-2 py-2 text-left text-sm text-slate-200 hover:bg-white/[0.04]"
-                            title={row.title || '-'}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className="font-medium text-white">{row.title || '-'}</span>
+                            <CounselorSlashInfoCell
+                              primary={infoPrimary}
+                              secondary={infoSecondary}
+                              hoverExtra={hoverTypeCode}
+                            />
                             {expired ? (
                               <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
                                 만료
@@ -497,12 +484,12 @@ export default function DeletedAssessmentsPage() {
                             ) : null}
                           </td>
                           <td
-                            className={`cursor-pointer whitespace-nowrap px-2 py-2 text-left text-sm hover:bg-white/[0.04] ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                            className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer hover:bg-white/[0.04] ${expired ? 'text-red-400' : 'text-slate-400'}`}
                             onClick={() => void toggleExpand(row.id)}
                           >
                             {formatUsageEndDate(row.usageEndDate)}
                           </td>
-                          <td className="whitespace-nowrap px-2 py-2 text-center text-sm text-slate-500 cursor-default">
+                          <td className={`whitespace-nowrap ${counselorListTdClass} text-center text-slate-500 cursor-default`}>
                             (
                             <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                             /
@@ -511,13 +498,13 @@ export default function DeletedAssessmentsPage() {
                             <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
                             )
                           </td>
-                          <td className="whitespace-nowrap px-2 py-2 text-left text-xs tabular-nums text-slate-400 cursor-default">
+                          <td className={`whitespace-nowrap ${counselorListTdClass} text-xs tabular-nums text-slate-400 cursor-default`}>
                             {formatDate(row.archivedAt)}
                           </td>
                         </tr>
                         {isOpen ? (
                           <tr>
-                            <td colSpan={9} className="border-t border-white/10 bg-slate-950/40 px-3 py-4">
+                            <td colSpan={8} className="border-t border-white/10 bg-slate-950/40 px-3 py-4">
                               {recipientLoadingId === row.id ? (
                                 <p className="text-sm text-slate-400">삭제된 검사자 목록을 불러오는 중…</p>
                               ) : recipientError && !expandedRecipients.length ? (
@@ -541,7 +528,13 @@ export default function DeletedAssessmentsPage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-2 shrink-0 text-xs text-slate-500 sm:text-sm">총 {filtered.length}건</div>
+            <CounselorListPagination
+              page={page}
+              totalPages={totalPages}
+              currentCount={currentCount}
+              totalCount={totalCount}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>
