@@ -47,9 +47,9 @@ export default function AssessmentSettingsFields({
   const showMeta = sections === 'all' || sections === 'meta';
   const showTests = sections === 'all' || sections === 'tests';
   const fieldGap = compact ? 'space-y-3' : 'space-y-4';
-  const labelClass = compact ? 'mb-1.5 block text-xs font-semibold text-slate-300' : FORM_LABEL;
+  const labelClass = compact ? 'mb-1.5 block text-sm font-semibold text-slate-300' : FORM_LABEL;
   const inputClass = compact ? `${FORM_INPUT} py-2 text-sm` : FORM_INPUT;
-  const hintClass = compact ? 'mt-1 text-xs text-slate-500' : `${FORM_HINT} mt-1.5`;
+  const hintClass = compact ? 'mt-1 text-sm text-slate-400 leading-relaxed' : `${FORM_HINT} mt-1.5`;
 
   return (
     <div

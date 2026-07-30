@@ -227,7 +227,7 @@ function SortableColumnHeader({
 }) {
   const active = activeKey === sortKey;
   return (
-    <th className={`px-3 py-2 text-left text-xs font-medium text-slate-400 ${className}`}>
+    <th className={`px-3 py-2.5 text-left text-sm font-medium text-slate-400 ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
@@ -879,20 +879,26 @@ export default function AssessmentDispatchPanel({
                 <colgroup>
                   <col className="w-10" />
                   <col className="w-10" />
-                  <col className="w-12" />
+                  <col className="w-36" />
                   <col className="w-36" />
                   <col className="w-28" />
                   <col className="w-52" />
                   <col className="w-32" />
                   <col className="w-24" />
                   <col className="w-24" />
-                  <col className="w-24" />
                 </colgroup>
                 <thead className="sticky top-0 z-10 bg-slate-800 text-slate-400 shadow-[0_1px_0_0_rgb(71,85,105)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium">No.</th>
-                <th className="px-3 py-2 text-left text-xs font-medium">선택</th>
-                <th className="px-3 py-2 text-left text-xs font-medium">상세</th>
+                <th className="px-3 py-2.5 text-left text-sm font-medium">No.</th>
+                <th className="px-3 py-2.5 text-left text-sm font-medium">선택</th>
+                <SortableColumnHeader
+                  label="검사현황보기"
+                  sortKey="testStatus"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                  className="w-36"
+                />
                 <SortableColumnHeader
                   label="발송일시"
                   sortKey="notifyAt"
@@ -941,14 +947,6 @@ export default function AssessmentDispatchPanel({
                   onSort={toggleSort}
                   className="w-24"
                 />
-                <SortableColumnHeader
-                  label="검사현황"
-                  sortKey="testStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-24"
-                />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
@@ -975,8 +973,8 @@ export default function AssessmentDispatchPanel({
                       aria-label={`${r.displayName || '내담자'} 검사 현황 ${isOpen ? '접기' : '펼치기'}`}
                       className={`cursor-pointer hover:bg-slate-800/50 ${isOpen ? 'bg-slate-800/40 border-b border-slate-700/60' : ''}`}
                     >
-                      <td className="px-3 py-2 text-slate-400 align-top tabular-nums">{rowIndex + 1}</td>
-                      <td className="px-3 py-2 align-top" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-3 py-2.5 align-top tabular-nums text-slate-400">{rowIndex + 1}</td>
+                      <td className="px-3 py-2.5 align-top" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selected.has(r.portalId)}
@@ -984,10 +982,13 @@ export default function AssessmentDispatchPanel({
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 align-top text-slate-400" aria-hidden="true">
-                        {isOpen ? '▼' : '▶'}
+                      <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
+                        <span className="text-slate-400" aria-hidden="true">
+                          {isOpen ? '▼' : '▶'}{' '}
+                        </span>
+                        <span>{summary.text}</span>
                       </td>
-                      <td className="px-3 py-2 text-slate-400 align-top whitespace-nowrap text-xs tabular-nums">
+                      <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {formatNotifyDate(r.notifyAt)}
                       </td>
                       <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
@@ -1008,21 +1009,20 @@ export default function AssessmentDispatchPanel({
                       <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
                         {formatAccessCodeDisplay(r.myCode)}
                       </td>
-                      <td className="px-3 py-2 align-top whitespace-nowrap" title={notify.title}>
+                      <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm" title={notify.title}>
                         <DispatchStatusText value={notify} />
                       </td>
-                      <td className={`px-3 py-2 align-top whitespace-nowrap ${summary.className}`}>{summary.text}</td>
                     </tr>
                     {isOpen ? (
                       <tr>
                         <td
                           colSpan={2}
-                          className="p-0 border-b border-slate-700/60 bg-slate-900/20"
+                          className="border-b border-slate-700/60 bg-slate-900/20 p-0"
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={8}
-                          className="px-3 py-3 pb-4 border-b border-slate-700/60 bg-slate-900/20 align-top"
+                          colSpan={7}
+                          className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (
                             <p className="text-slate-500 text-sm rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2">

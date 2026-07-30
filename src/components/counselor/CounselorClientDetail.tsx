@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
+import CounselorHierarchyBreadcrumb from '@/components/counselor/CounselorHierarchyBreadcrumb';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import {
   fetchCounselorClientPortalDetail,
@@ -208,6 +209,7 @@ export default function CounselorClientDetail({ portalId }: Props) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 pb-4">
+      <CounselorHierarchyBreadcrumb className="shrink-0" />
       {actionMsg ? (
         <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
           {actionMsg}
@@ -225,7 +227,6 @@ export default function CounselorClientDetail({ portalId }: Props) {
       ) : null}
 
       <CounselorPageSection
-        showHierarchyBreadcrumb
         className="flex min-h-0 flex-1"
         bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
         noBodyPadding

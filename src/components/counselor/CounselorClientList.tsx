@@ -43,7 +43,7 @@ import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@
 
 type StatusFilter = 'active' | 'archived' | 'all';
 type ProgressFilter = 'all' | ClientPortalProgressLabel;
-type ListSortKey = 'displayName' | 'counselInfo' | 'progress' | 'notifyAt';
+type ListSortKey = 'displayName' | 'counselInfo' | 'progress' | 'notifyAt' | 'lastLoginAt';
 type SortDirection = 'asc' | 'desc';
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -124,6 +124,8 @@ function compareRows(
       return mult * (progressSortValue(a) - progressSortValue(b));
     case 'notifyAt':
       return mult * (parseDate(a.notifyAt) - parseDate(b.notifyAt));
+    case 'lastLoginAt':
+      return mult * (parseDate(a.lastLoginAt) - parseDate(b.lastLoginAt));
     default:
       return 0;
   }
@@ -133,6 +135,49 @@ function progressHref(assessmentId: string, portalId?: string): string {
   const params = new URLSearchParams({ assessmentId, from: 'clients' });
   if (portalId) params.set('portalId', portalId);
   return `/counselor/assessments/progress?${params.toString()}`;
+}
+
+function DualSortColumnHeader({
+  title,
+  lines,
+  activeKey,
+  direction,
+  onSort,
+  className = '',
+}: {
+  title: string;
+  lines: { label: string; sortKey: ListSortKey }[];
+  activeKey: ListSortKey;
+  direction: SortDirection;
+  onSort: (key: ListSortKey) => void;
+  className?: string;
+}) {
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <div className="mb-1 text-slate-400">{title}</div>
+      <div className="flex flex-col gap-0.5">
+        {lines.map(({ label, sortKey }) => {
+          const active = activeKey === sortKey;
+          return (
+            <button
+              key={sortKey}
+              type="button"
+              onClick={() => onSort(sortKey)}
+              className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
+            >
+              <span>{label}</span>
+              <span
+                className={`text-[10px] ${active ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+                aria-hidden="true"
+              >
+                {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </th>
+  );
 }
 
 function SortableColumnHeader({
@@ -331,7 +376,7 @@ export default function CounselorClientList() {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDir(key === 'notifyAt' ? 'desc' : 'asc');
+      setSortDir(key === 'notifyAt' || key === 'lastLoginAt' ? 'desc' : 'asc');
     }
   };
 
@@ -501,9 +546,12 @@ export default function CounselorClientList() {
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <SortableColumnHeader
-                      label="발송·접속"
-                      sortKey="notifyAt"
+                    <DualSortColumnHeader
+                      title="발송·최신접속"
+                      lines={[
+                        { label: '발송', sortKey: 'notifyAt' },
+                        { label: '최신접속', sortKey: 'lastLoginAt' },
+                      ]}
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -586,7 +634,7 @@ export default function CounselorClientList() {
                               href={counselorClientDetailHref(item.portalId)}
                               className={`${counselorListActionBtnClass} bg-sky-800/50 text-sky-100 hover:bg-sky-700/60`}
                             >
-                              상세
+                              상세보기
                             </AuthLink>
                             {primaryAssessment ? (
                               <AuthLink
@@ -607,7 +655,7 @@ export default function CounselorClientList() {
                               href={`/counselor/test-results?portalId=${encodeURIComponent(item.portalId)}`}
                               className={`${counselorListActionBtnClass} bg-white/10 text-slate-200 hover:bg-white/15`}
                             >
-                              결과
+                              결과보기
                             </AuthLink>
                           </div>
                         </td>

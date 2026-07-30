@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
-import { CounselorPageBody } from '@/components/counselor/CounselorPageSection';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useSearchParams } from 'next/navigation';
 import AssessmentEditForm from '@/components/counselor/AssessmentEditForm';
 
@@ -12,7 +12,7 @@ function AssessmentEditContent() {
 
   if (!id) {
     return (
-      <div className="text-red-400">
+      <div className="text-sm text-red-400">
         수정할 상담코드를 선택해 주세요.{' '}
         <AuthLink href="/counselor/assessments" className="text-blue-400 hover:text-blue-300">
           목록으로
@@ -27,18 +27,11 @@ function AssessmentEditContent() {
 export default function AssessmentEditPage() {
   return (
     <Suspense fallback={<div className="text-slate-400 py-4 text-sm">불러오는 중…</div>}>
-      <CounselorPageBody className="gap-2">
-        <div className="flex shrink-0">
-          <AuthLink
-            href="/counselor/assessments"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-300 transition hover:text-white"
-          >
-            <span aria-hidden>←</span>
-            상담코드 목록
-          </AuthLink>
+      <CounselorPageSection showHierarchyBreadcrumb dense bodyClassName="!p-0" noBodyPadding>
+        <div className="p-2.5 sm:p-3">
+          <AssessmentEditContent />
         </div>
-        <AssessmentEditContent />
-      </CounselorPageBody>
+      </CounselorPageSection>
     </Suspense>
   );
 }

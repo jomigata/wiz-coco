@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
-import { getAssessment, updateAssessment, type CounselorAssessment } from '@/lib/assessmentApi';
+import { getAssessment, updateAssessment, deleteAssessment, removeCounselorAssessmentFromListCache, type CounselorAssessment } from '@/lib/assessmentApi';
 import {
   readCachedAssessmentDetail,
   writeCachedAssessmentDetail,
@@ -48,6 +48,9 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const leftColRef = useRef<HTMLDivElement>(null);
   const [rightColHeight, setRightColHeight] = useState<number | null>(null);
 
@@ -153,6 +156,22 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
     }
   };
 
+  const handleDelete = async () => {
+    if (!initial) return;
+    setDeleteError('');
+    setDeleteLoading(true);
+    try {
+      await deleteAssessment(initial.id, initial.accessCode);
+      removeCounselorAssessmentFromListCache(initial.id, initial.accessCode);
+      pushWithAuthSession(router, '/counselor/assessments');
+      router.refresh();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   if (authPending || (loadingData && !initial)) {
     return <AuthLoadingState className="py-8" />;
   }
@@ -177,9 +196,45 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
   }
 
   return (
+    <>
+      {deleteOpen ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 p-6 text-sm shadow-2xl">
+            <h2 className="mb-3 text-lg font-semibold text-white">상담코드 삭제</h2>
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+              <p className="font-mono font-bold tracking-wider text-cyan-400">
+                {formatAccessCodeDisplay(initial.accessCode)}
+              </p>
+              <p className="mt-1 text-slate-300">{initial.title}</p>
+            </div>
+            <p className="mb-5 leading-relaxed text-slate-400">
+              목록에서 제거되어 삭제된 상담코드 목록으로 이동합니다. 복구하면 상담코드 목록에 다시 표시됩니다.
+            </p>
+            {deleteError ? <p className="mb-4 text-red-400">{deleteError}</p> : null}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setDeleteOpen(false); setDeleteError(''); }}
+                disabled={deleteLoading}
+                className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={deleteLoading}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+              >
+                {deleteLoading ? '처리 중…' : '삭제 확인'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       {loadingData && initial ? (
-        <p className="text-xs text-sky-300/80" role="status">
+        <p className="text-sm text-sky-300/80" role="status">
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
         </p>
       ) : null}
@@ -192,7 +247,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
               </span>
             </div>
             <div>
-              <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5 text-xs`}>
+              <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5`}>
                 상담유형 <span className="text-red-400">*</span>
               </label>
               <select
@@ -262,23 +317,34 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2.5 pt-0.5">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? '저장 중…' : '변경 저장'}
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
+        <div className="flex flex-wrap gap-2.5">
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? '저장 중…' : '변경 저장'}
+          </button>
+          <button
+            type="button"
+            onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
+            disabled={loading}
+            className="rounded-lg border border-white/15 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700/80 disabled:opacity-50"
+          >
+            취소
+          </button>
+        </div>
         <button
           type="button"
-          onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
-          disabled={loading}
-          className="rounded-lg border border-white/15 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700/80 disabled:opacity-50"
+          onClick={() => { setDeleteError(''); setDeleteOpen(true); }}
+          disabled={loading || deleteLoading}
+          className="rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-2 text-sm font-medium text-red-300 transition hover:bg-red-900/40 disabled:opacity-50"
         >
-          취소
+          상담코드 삭제
         </button>
       </div>
     </form>
+    </>
   );
 }

@@ -7,8 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
-import { deleteAssessment, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
-import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
+import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
@@ -139,9 +138,6 @@ function resultStatusCounts(a: CounselorAssessment) {
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
   const router = useRouter();
   const [listItems, setListItems] = useState(assessments);
-  const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
@@ -208,31 +204,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     currentCount,
   } = useListPagination(sortedFiltered);
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleteError('');
-    setDeleteLoading(true);
-    try {
-      const removedId = deleteTarget.id;
-      const removedCode = deleteTarget.accessCode;
-      await deleteAssessment(removedId, removedCode);
-      removeCounselorAssessmentFromListCache(removedId, removedCode);
-      setListItems((prev) =>
-        prev.filter(
-          (a) =>
-            a.id !== removedId &&
-            (!removedCode ||
-              normalizeAccessCodeInput(a.accessCode || '') !==
-                normalizeAccessCodeInput(removedCode)),
-        ),
-      );
-      setDeleteTarget(null);
-      router.refresh();
-    } catch (e) {
-      setDeleteError(e instanceof Error ? e.message : '삭제에 실패했습니다.');
-    } finally { setDeleteLoading(false); }
-  };
-
   return (
     <CounselorPageSection
       showHierarchyBreadcrumb
@@ -281,44 +252,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      {/* 삭제 모달 */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-white/10 rounded-xl max-w-md w-full p-6 shadow-2xl text-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-white">상담코드 삭제</h2>
-            </div>
-            <div className="bg-white/[0.06] rounded-xl p-4 mb-4 border border-white/10">
-              <p className="text-cyan-400 font-mono font-bold tracking-wider">{formatAccessCodeDisplay(deleteTarget.accessCode)}</p>
-              <p className="text-slate-300 mt-1">{deleteTarget.title}</p>
-            </div>
-            <p className="text-slate-400 mb-5 leading-relaxed">
-              목록에서 제거되어 삭제된 상담코드 목록으로 이동합니다. 복구하면 상담코드 목록에 다시 표시됩니다. 이미 제출된 결과는 상담사 화면에서 계속 조회할 수 있습니다.
-            </p>
-            {deleteError && <p className="text-red-400 mb-4">{deleteError}</p>}
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => { setDeleteTarget(null); setDeleteError(''); }}
-                disabled={deleteLoading}
-                className="px-4 py-2 rounded-lg text-slate-300 bg-slate-800 border border-white/10 hover:bg-slate-700 disabled:opacity-50 transition-colors"
-              >취소</button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                disabled={deleteLoading}
-                className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-500 disabled:opacity-50 font-medium transition-colors"
-              >{deleteLoading ? '처리 중…' : '삭제 확인'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {createdInfo && (
         <div className="mb-2 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3 py-2">
           <p className="text-emerald-200 font-medium">상담코드가 발급되었습니다</p>
@@ -451,7 +384,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         )
                       </td>
                       <td className={`whitespace-nowrap ${counselorListTdClass} cursor-default`}>
-                        <div className="grid min-w-[12.5rem] grid-cols-3 gap-1">
+                        <div className="grid min-w-[10rem] grid-cols-2 gap-1">
                           <AuthLink
                             href={progressHref(a.id)}
                             className={`${counselorListActionBtnClass} bg-sky-800/50 text-sky-100 hover:bg-sky-700/60`}
@@ -464,13 +397,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                           >
                             수정
                           </AuthLink>
-                          <button
-                            type="button"
-                            onClick={() => { setDeleteError(''); setDeleteTarget(a); }}
-                            className={`${counselorListActionBtnClass} bg-white/10 text-slate-200 hover:bg-white/15`}
-                          >
-                            삭제
-                          </button>
                         </div>
                       </td>
                     </tr>
