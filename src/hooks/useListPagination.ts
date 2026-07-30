@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-export const COUNSELOR_LIST_PAGE_SIZE = 15;
+export const COUNSELOR_LIST_PAGE_SIZE = 10;
 
 export function useListPagination<T>(items: T[], pageSize = COUNSELOR_LIST_PAGE_SIZE) {
   const [page, setPage] = useState(1);

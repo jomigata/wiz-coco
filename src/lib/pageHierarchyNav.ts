@@ -55,6 +55,17 @@ export function resolveCounselorHierarchy(
   }
 
   if (pathname.startsWith('/counselor/assessments/progress')) {
+    const portalId = (searchParams.get('portalId') || '').trim();
+    const fromClients = (searchParams.get('from') || '').trim() === 'clients' || Boolean(portalId);
+    if (fromClients) {
+      return {
+        depth: 1,
+        crumbs: [
+          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '발송·검사 현황' },
+        ],
+      };
+    }
     return {
       depth: 1,
       crumbs: [

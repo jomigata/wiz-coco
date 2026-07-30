@@ -17,6 +17,7 @@ import {
 } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
+  counselorListActionBtnClass,
   counselorListNoThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
@@ -449,24 +450,24 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
                         )
                       </td>
-                      <td className={`whitespace-nowrap ${counselorListTdClass} text-center cursor-default`}>
-                        <div className="flex flex-wrap items-center justify-center gap-1">
+                      <td className={`whitespace-nowrap ${counselorListTdClass} cursor-default`}>
+                        <div className="grid min-w-[12.5rem] grid-cols-3 gap-1">
                           <AuthLink
                             href={progressHref(a.id)}
-                            className="cursor-pointer rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
+                            className={`${counselorListActionBtnClass} bg-sky-800/50 text-sky-100 hover:bg-sky-700/60`}
                           >
                             진행현황
                           </AuthLink>
                           <AuthLink
                             href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
-                            className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
+                            className={`${counselorListActionBtnClass} bg-emerald-800/50 text-emerald-100 hover:bg-emerald-700/60`}
                           >
                             수정
                           </AuthLink>
                           <button
                             type="button"
                             onClick={() => { setDeleteError(''); setDeleteTarget(a); }}
-                            className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15 transition-colors"
+                            className={`${counselorListActionBtnClass} bg-white/10 text-slate-200 hover:bg-white/15`}
                           >
                             삭제
                           </button>

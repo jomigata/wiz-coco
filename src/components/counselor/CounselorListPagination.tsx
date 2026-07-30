@@ -28,19 +28,19 @@ export default function CounselorListPagination({
       : pages.filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1);
 
   return (
-    <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-2 text-xs text-slate-500 sm:text-sm">
-      <span>
+    <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
+      <span className="text-sm text-slate-500 sm:justify-self-start">
         {currentCount}
         {unit}/총{totalCount}
         {unit}
       </span>
       {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center justify-center gap-1 sm:col-start-2">
           <button
             type="button"
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            className="rounded border border-white/10 px-2 py-0.5 text-slate-300 hover:bg-white/5 disabled:opacity-40"
+            className="rounded border border-white/10 px-2 py-0.5 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-40"
           >
             이전
           </button>
@@ -53,7 +53,7 @@ export default function CounselorListPagination({
                 <button
                   type="button"
                   onClick={() => onPageChange(p)}
-                  className={`min-w-[1.75rem] rounded border px-2 py-0.5 tabular-nums ${
+                  className={`min-w-[1.75rem] rounded border px-2 py-0.5 text-sm tabular-nums ${
                     p === page
                       ? 'border-sky-500/50 bg-sky-600/30 text-sky-200'
                       : 'border-white/10 text-slate-300 hover:bg-white/5'
@@ -68,12 +68,15 @@ export default function CounselorListPagination({
             type="button"
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
-            className="rounded border border-white/10 px-2 py-0.5 text-slate-300 hover:bg-white/5 disabled:opacity-40"
+            className="rounded border border-white/10 px-2 py-0.5 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-40"
           >
             다음
           </button>
         </div>
-      ) : null}
+      ) : (
+        <span className="hidden sm:block sm:col-start-2" aria-hidden="true" />
+      )}
+      <span className="hidden sm:block" aria-hidden="true" />
     </div>
   );
 }

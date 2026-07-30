@@ -17,6 +17,7 @@ import {
   formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
 import {
+  counselorListActionBtnClass,
   counselorListNoThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
@@ -69,15 +70,24 @@ function parseDate(iso?: string | null): number {
 function progressLabel(item: CounselorClientPortalListItem): { text: string; className: string } {
   const { label, percent, completedTests, totalTests } = item.progress;
   if (label === 'completed') {
-    return { text: `완료 (${completedTests}/${totalTests})`, className: 'text-emerald-300' };
+    return {
+      text: `완료 (${completedTests}/${totalTests})`,
+      className: 'font-medium text-emerald-200',
+    };
   }
   if (label === 'in_progress') {
-    return { text: `진행 ${percent}% (${completedTests}/${totalTests})`, className: 'text-sky-300' };
+    return {
+      text: `진행 ${percent}% (${completedTests}/${totalTests})`,
+      className: 'font-medium text-sky-200',
+    };
   }
   if (label === 'not_started') {
-    return { text: `미시작 (0/${totalTests})`, className: 'text-amber-300' };
+    return {
+      text: `미시작 (0/${totalTests})`,
+      className: 'font-medium text-amber-200',
+    };
   }
-  return { text: '검사 없음', className: 'text-slate-500' };
+  return { text: '검사 없음', className: 'font-medium text-slate-400' };
 }
 
 function progressSortValue(item: CounselorClientPortalListItem): number {
@@ -120,7 +130,7 @@ function compareRows(
 }
 
 function progressHref(assessmentId: string, portalId?: string): string {
-  const params = new URLSearchParams({ assessmentId });
+  const params = new URLSearchParams({ assessmentId, from: 'clients' });
   if (portalId) params.set('portalId', portalId);
   return `/counselor/assessments/progress?${params.toString()}`;
 }
@@ -533,10 +543,11 @@ export default function CounselorClientList() {
                           className={`max-w-[12rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
-                          <span className={`${cellLinkClass} block truncate`} title={phoneFull}>
+                          <span className={`${cellLinkClass} block truncate`}>
                             <span className="font-medium text-white">{item.displayName || '—'}</span>
                             <span className="text-slate-300">/</span>
                             <span className="text-slate-300 tabular-nums">{phoneMasked}</span>
+                            {phoneFull ? <span className="sr-only">{phoneFull}</span> : null}
                           </span>
                         </td>
                         <td
@@ -555,39 +566,46 @@ export default function CounselorClientList() {
                           )}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} text-xs cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)} ${progress.className}`}
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)} ${progress.className}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           {progress.text}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} text-xs cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
-                          <div className="text-slate-300">{formatDateTime(item.notifyAt)}</div>
-                          <div className="mt-0.5 text-[11px] text-slate-500">
+                          <div className="font-medium text-slate-100">{formatDateTime(item.notifyAt)}</div>
+                          <div className="mt-0.5 text-sm text-slate-300">
                             {formatDateTime(item.lastLoginAt)}
                           </div>
                         </td>
-                        <td className={`${counselorListTdClass} text-center cursor-default`}>
-                          <div className="flex flex-wrap items-center justify-center gap-1">
+                        <td className={`${counselorListTdClass} cursor-default`}>
+                          <div className="grid min-w-[12.5rem] grid-cols-3 gap-1">
                             <AuthLink
                               href={counselorClientDetailHref(item.portalId)}
-                              className="rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60 transition-colors"
+                              className={`${counselorListActionBtnClass} bg-sky-800/50 text-sky-100 hover:bg-sky-700/60`}
                             >
                               상세
                             </AuthLink>
                             {primaryAssessment ? (
                               <AuthLink
                                 href={progressHref(primaryAssessment.assessmentId, item.portalId)}
-                                className="rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60 transition-colors"
+                                className={`${counselorListActionBtnClass} bg-emerald-800/50 text-emerald-100 hover:bg-emerald-700/60`}
                               >
                                 진행현황
                               </AuthLink>
-                            ) : null}
+                            ) : (
+                              <span
+                                className={`${counselorListActionBtnClass} invisible pointer-events-none`}
+                                aria-hidden="true"
+                              >
+                                진행현황
+                              </span>
+                            )}
                             <AuthLink
                               href={`/counselor/test-results?portalId=${encodeURIComponent(item.portalId)}`}
-                              className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-slate-300 hover:bg-white/15 transition-colors"
+                              className={`${counselorListActionBtnClass} bg-white/10 text-slate-200 hover:bg-white/15`}
                             >
                               결과
                             </AuthLink>
