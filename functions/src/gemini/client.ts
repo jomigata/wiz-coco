@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { SYSTEM_PROMPT } from './prompts'
 import type { GeminiUsage } from '../types'
+import { costSaverGeminiStub, isCostSaverMode } from '../config/costSaver'
 
 export const DEFAULT_COUNSEL_MODEL = 'gemini-2.5-flash-lite'
 
@@ -77,6 +78,9 @@ export async function generateCounselReply(
   userMessage: string,
   options?: { knowledgeContext?: string }
 ): Promise<{ text: string; modelId: string; usage?: GeminiUsage }> {
+  if (isCostSaverMode()) {
+    return costSaverGeminiStub()
+  }
   let lastError: Error | null = null
   const prompt = options?.knowledgeContext
     ? `${options.knowledgeContext}\n\n---\n\n[사용자 메시지]\n${userMessage}`
@@ -103,6 +107,9 @@ export async function generateCounselReply(
 export async function generateSessionSummary(
   transcript: string
 ): Promise<{ text: string; modelId: string; usage?: GeminiUsage }> {
+  if (isCostSaverMode()) {
+    return costSaverGeminiStub()
+  }
   let lastError: Error | null = null
 
   for (const modelId of MODEL_CANDIDATES) {

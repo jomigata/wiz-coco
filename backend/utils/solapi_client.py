@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from urllib import error, request
 
-from config import SOLAPI_API_KEY, SOLAPI_API_SECRET, SOLAPI_SENDER
+from config import COST_SAVER_MODE, SOLAPI_API_KEY, SOLAPI_API_SECRET, SOLAPI_SENDER
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +242,8 @@ def _wait_solapi_group_delivery(
     """SMS·알림톡 모두 send-many 직후 비동기 결과 — Solapi 그룹 상태로 확정."""
     if not group_id:
         return True, ""
+    if COST_SAVER_MODE and str(group_id).strip().startswith("cost-saver"):
+        return True, ""
 
     deadline = time.monotonic() + (
         0.0 if single_check else (timeout_sec if timeout_sec is not None else KAKAO_GROUP_POLL_TIMEOUT_SEC)
@@ -275,6 +277,9 @@ def _wait_solapi_group_delivery(
 
 def check_solapi_group_delivery(group_id: str) -> tuple[str, str]:
     """delivered | failed | pending — 메시지·그룹 API 종합."""
+    gid = (group_id or "").strip()
+    if COST_SAVER_MODE and gid.startswith("cost-saver"):
+        return "delivered", ""
     return _evaluate_solapi_delivery(group_id)
 
 
@@ -309,6 +314,12 @@ def extract_solapi_group_id(body: dict | None) -> str:
 
 def solapi_send_messages(messages: list[dict]) -> tuple[bool, str, dict | None]:
     """POST /messages/v4/send-many — 성공 여부, 오류 메시지, 응답 본문."""
+    if COST_SAVER_MODE:
+        logger.info(
+            "COST_SAVER_MODE: Solapi send skipped (%d message(s))",
+            len(messages or []),
+        )
+        return True, "", {"groupId": "cost-saver-dry-run", "costSaver": True}
     if not is_solapi_configured():
         return False, "solapi_not_configured", None
     if not messages:

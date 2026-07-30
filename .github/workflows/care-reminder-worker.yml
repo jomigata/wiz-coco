@@ -1,9 +1,7 @@
 name: Care assignment due reminders
 
 on:
-  schedule:
-    # 매일 13:00 KST (04:00 UTC)
-    - cron: '0 4 * * *'
+  # 비용 절감: 제작 단계에서는 수동 실행만
   workflow_dispatch: {}
 
 concurrency:

@@ -3,6 +3,9 @@ name: 🚀 Deploy Flask API to Cloud Run
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
   workflow_dispatch: {}
 
 # 연속 push 시 이전 실행 취소 → Cloud Build 분 낭비 방지
@@ -88,7 +91,7 @@ jobs:
             exit 1
           fi
 
-          ENV_VARS="FLASK_ENV=production"
+          ENV_VARS="FLASK_ENV=production,COST_SAVER_MODE=true"
           if [ -n "${SMTP_HOST}" ]; then ENV_VARS="${ENV_VARS},SMTP_HOST=${SMTP_HOST}"; fi
           if [ -n "${SMTP_PORT}" ]; then ENV_VARS="${ENV_VARS},SMTP_PORT=${SMTP_PORT}"; else ENV_VARS="${ENV_VARS},SMTP_PORT=587"; fi
           if [ -n "${SMTP_USER}" ]; then ENV_VARS="${ENV_VARS},SMTP_USER=${SMTP_USER}"; fi
@@ -138,7 +141,7 @@ jobs:
             --port 5000 \
             --min-instances=0 \
             --max-instances=3 \
-            --memory=512Mi \
+            --memory=256Mi \
             --cpu=1 \
             --concurrency=80 \
             --cpu-throttling \

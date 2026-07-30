@@ -3,7 +3,21 @@ name: 🚀 WizCoCo CI/CD Pipeline - GitHub Actions 전용
 on:
   push:
     branches: [ main ]
-    # pull_request 제거하여 중복 실행 방지
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'functions/**'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'storage.rules'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.js'
+      - 'tailwind.config.js'
+      - 'tsconfig.json'
+      - 'jsconfig.json'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       environment:
@@ -405,7 +419,7 @@ jobs:
         if [ -z "$SHEET_ID" ]; then SHEET_ID="unset"; fi
         GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
         if [ -z "$GID" ]; then GID="0"; fi
-        printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\n' "$SHEET_ID" "$GID" > functions/.env
+        printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\nCOST_SAVER_MODE=true\n' "$SHEET_ID" "$GID" > functions/.env
         # defineSecret(GEMINI_API_KEY) Functions는 Firebase Secret이 없으면 비대화형 배포가 실패함
         if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
           printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt

@@ -1,9 +1,7 @@
 name: 📬 Process notification queue
 
 on:
-  schedule:
-    # 5분마다 pending 통지·대량 발급 job 처리
-    - cron: '*/5 * * * *'
+  # 비용 절감: 제작 단계에서는 수동 실행만 (Cloud Run cold start·호출 절감)
   workflow_dispatch: {}
 
 concurrency:

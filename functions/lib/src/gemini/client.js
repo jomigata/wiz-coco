@@ -6,6 +6,7 @@ exports.generateCounselReply = generateCounselReply;
 exports.generateSessionSummary = generateSessionSummary;
 const generative_ai_1 = require("@google/generative-ai");
 const prompts_1 = require("./prompts");
+const costSaver_1 = require("../config/costSaver");
 exports.DEFAULT_COUNSEL_MODEL = 'gemini-2.5-flash-lite';
 const MODEL_CANDIDATES = [
     'gemini-2.5-flash-lite',
@@ -63,6 +64,9 @@ function extractUsage(response) {
     };
 }
 async function generateCounselReply(history, userMessage, options) {
+    if ((0, costSaver_1.isCostSaverMode)()) {
+        return (0, costSaver_1.costSaverGeminiStub)();
+    }
     let lastError = null;
     const prompt = (options === null || options === void 0 ? void 0 : options.knowledgeContext)
         ? `${options.knowledgeContext}\n\n---\n\n[사용자 메시지]\n${userMessage}`
@@ -85,6 +89,9 @@ async function generateCounselReply(history, userMessage, options) {
     throw lastError !== null && lastError !== void 0 ? lastError : new Error('Gemini model call failed');
 }
 async function generateSessionSummary(transcript) {
+    if ((0, costSaver_1.isCostSaverMode)()) {
+        return (0, costSaver_1.costSaverGeminiStub)();
+    }
     let lastError = null;
     for (const modelId of MODEL_CANDIDATES) {
         try {

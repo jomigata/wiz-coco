@@ -100,6 +100,9 @@ COHORT_REMINDER_MIN_HOURS = int(os.getenv("COHORT_REMINDER_MIN_HOURS", "72"))
 INDIVIDUAL_REMINDER_MIN_HOURS = int(os.getenv("INDIVIDUAL_REMINDER_MIN_HOURS", "48"))
 CARE_REMINDER_MIN_HOURS = int(os.getenv("CARE_REMINDER_MIN_HOURS", "24"))
 
+# 제작·개발 단계 비용 절감 (Solapi 실발송·외부 SMS API 차단)
+COST_SAVER_MODE = os.getenv("COST_SAVER_MODE", "true").lower() in ("1", "true", "yes")
+
 # Wave 6 — Solapi SMS·카카오 알림톡 (선택)
 SOLAPI_API_KEY = os.getenv("SOLAPI_API_KEY", "").strip()
 SOLAPI_API_SECRET = os.getenv("SOLAPI_API_SECRET", "").strip()

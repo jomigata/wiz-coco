@@ -1,9 +1,7 @@
 name: Cohort incomplete reminders
 
 on:
-  schedule:
-    # 매일 09:00 KST (00:00 UTC)
-    - cron: '0 0 * * *'
+  # 비용 절감: 제작 단계에서는 수동 실행만
   workflow_dispatch: {}
 
 concurrency:
