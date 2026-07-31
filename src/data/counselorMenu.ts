@@ -10,7 +10,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   {
     slug: 'psych-tests',
     category: '1. 심리검사 관리',
-    description: '상담코드 발급·진행 관리',
+    description: '상담코드·내담자·검사·상담 운영',
     icon: '📦',
     subcategories: [
       {
@@ -43,16 +43,8 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    slug: 'clients',
-    category: '2. 내담자 관리',
-    description: '내담자·검사·상담 운영',
-    icon: '👥',
-    subcategories: [
       {
-        name: '2a. 내담자 관리',
+        name: '1b. 내담자 관리',
         icon: '👥',
         items: [
           {
@@ -88,7 +80,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         ],
       },
       {
-        name: '2b. 상담 운영',
+        name: '1c. 상담 운영',
         icon: '📅',
         items: [
           {
@@ -115,12 +107,12 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   },
   {
     slug: 'tools',
-    category: '3. 상담 도구',
+    category: '2. 상담 도구',
     description: '채팅·노트·치료 계획·모니터링',
     icon: '💬',
     subcategories: [
       {
-        name: '3a. 소통',
+        name: '2a. 소통',
         icon: '💬',
         items: [
           {
@@ -138,7 +130,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         ],
       },
       {
-        name: '3b. 치료 관리',
+        name: '2b. 치료 관리',
         icon: '📈',
         items: [
           {
@@ -153,12 +145,12 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   },
   {
     slug: 'data',
-    category: '4. 데이터 관리',
+    category: '3. 데이터 관리',
     description: '데이터 공유·일상 기록 관리',
     icon: '🤝',
     subcategories: [
       {
-        name: '4a. 공유·기록',
+        name: '3a. 공유·기록',
         icon: '📊',
         items: [
           {
@@ -179,12 +171,12 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
   },
   {
     slug: 'sales',
-    category: '5. 영업 · 파트너',
+    category: '4. 영업 · 파트너',
     description: '내담자 유입·요금·크레딧 영업 도구',
     icon: '📣',
     subcategories: [
       {
-        name: '5a. Discover · D2C',
+        name: '4a. Discover · D2C',
         icon: '✨',
         items: [
           {
@@ -208,7 +200,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         ],
       },
       {
-        name: '5b. 요금 · 크레딧',
+        name: '4b. 요금 · 크레딧',
         icon: '💳',
         items: [
           {

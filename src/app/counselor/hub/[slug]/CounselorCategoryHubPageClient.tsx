@@ -1,8 +1,14 @@
 'use client';
 
 import { notFound } from 'next/navigation';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import CounselorCategoryHub from '@/components/counselor/CounselorCategoryHub';
 import { getCounselorCategoryBySlug } from '@/data/counselorMenu';
+import {
+  COUNSELOR_PSYCH_TESTS_SLUG,
+  getPsychTestsDefaultHref,
+} from '@/lib/counselorManageShell';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
@@ -11,11 +17,22 @@ type Props = {
 };
 
 export default function CounselorCategoryHubPageClient({ slug }: Props) {
+  const router = useRouter();
   const { authPending, showLoginRequired } = useAuthResolved();
   const category = getCounselorCategoryBySlug(slug);
 
+  useEffect(() => {
+    if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
+      router.replace(getPsychTestsDefaultHref());
+    }
+  }, [slug, router]);
+
   if (!category) {
     notFound();
+  }
+
+  if (slug === COUNSELOR_PSYCH_TESTS_SLUG) {
+    return <AuthLoadingState className="py-8" message="심리검사 관리로 이동 중…" />;
   }
 
   if (authPending) {
