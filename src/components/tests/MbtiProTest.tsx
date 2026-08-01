@@ -776,8 +776,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   // 검사 단계 (currentStep === 'test')
 
-  const answerGlowSky = uiTheme === 'portal' ? 'after:from-sky-400/15' : 'after:from-sky-400/60';
-  const answerGlowPink = uiTheme === 'portal' ? 'after:from-pink-400/15' : 'after:from-pink-400/60';
+  const answerGlowSky = 'after:from-sky-400/60';
+  const answerGlowPink = 'after:from-pink-400/60';
   const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = answerGlowSky) =>
     `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 

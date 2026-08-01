@@ -36,12 +36,12 @@ const emerald: MbtiProClientInfoTheme = {
   shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-emerald-950 text-white px-3 pt-14 pb-14',
   subtitle: 'text-emerald-300 max-w-lg mx-auto text-sm',
   formCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-5',
-  fieldBox: 'bg-emerald-800/30 p-2.5 rounded-lg border border-emerald-700/30',
-  fieldBoxMuted: 'bg-emerald-800/30 p-2.5 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors',
+  fieldBox: 'py-0.5',
+  fieldBoxMuted: 'py-0.5',
   label: 'block text-sm font-medium text-emerald-300 mb-0.5',
   input:
     'w-full px-3 py-2 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
-  choiceSection: 'bg-teal-500/15 p-2.5 rounded-lg border border-teal-400/20',
+  choiceSection: 'py-0.5',
   choiceBtnActive: 'bg-teal-600 text-white border-2 border-teal-500',
   choiceBtnInactive:
     'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70',
@@ -79,13 +79,12 @@ const portal: MbtiProClientInfoTheme = {
   shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#060a12] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-300 max-w-lg mx-auto text-sm',
   formCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-4 sm:p-5',
-  fieldBox: 'rounded-xl border border-sky-400/30 bg-sky-950/35 p-2.5',
-  fieldBoxMuted:
-    'rounded-xl border border-sky-400/30 bg-sky-950/35 p-2.5 hover:bg-sky-900/40 transition-colors',
+  fieldBox: 'py-0.5',
+  fieldBoxMuted: 'py-0.5',
   label: 'block text-sm font-medium text-sky-200/95 mb-0.5',
   input:
     'w-full px-3 py-2 rounded-lg bg-sky-950/45 border border-sky-500/45 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60 transition-colors',
-  choiceSection: 'rounded-xl border border-sky-400/25 bg-sky-500/12 p-2.5',
+  choiceSection: 'py-0.5',
   choiceBtnActive: 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border border-sky-400/30',
   choiceBtnInactive:
     'bg-[#1a2740] text-slate-200 border border-white/[0.12] hover:bg-[#1f2f4d]',
