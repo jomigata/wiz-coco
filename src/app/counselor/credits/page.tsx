@@ -152,6 +152,7 @@ function CreditsContent() {
   return (
     <CounselorPageSection
       title="검사 크레딧"
+      dense
       description={`내담자 1명(포털 1개) 발급 = 1크레딧. 파일럿 상담사는 협회에서 ${PILOT_FREE_CREDITS}크레딧을 지급받을 수 있습니다.`}
       toolbar={<TabBar tab={tab} setTab={setTab} />}
     >

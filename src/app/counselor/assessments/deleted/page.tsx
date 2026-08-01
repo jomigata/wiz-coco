@@ -49,7 +49,14 @@ function parseDate(iso?: string | null): number {
 }
 
 function assessmentInfoLabel(a: ArchivedAssessment): string {
-  return `${(a.title || '—').trim()}/${getAssessmentOrgLabel(a)}`;
+  return `${getAssessmentOrgLabel(a)}/${(a.title || '—').trim()}`;
+}
+
+function resultMetricClass(value: number, total: number): string {
+  if (total <= 0 && value <= 0) return 'text-emerald-400';
+  if (value === 0) return 'text-emerald-400';
+  if (value === total) return 'text-emerald-400';
+  return 'text-red-400';
 }
 
 function compareRows(
@@ -113,7 +120,8 @@ function resultStatusCounts(a: ArchivedAssessment) {
   const testComplete = a.testCompleteCount ?? 0;
   const testIncomplete = a.testIncompleteCount ?? 0;
   const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent);
-  return { dispatchSent, testComplete, dispatchTotal };
+  const dispatchFailed = Math.max(0, dispatchTotal - dispatchSent);
+  return { dispatchFailed, testIncomplete, dispatchTotal };
 }
 
 function SortableColumnHeader({
@@ -381,7 +389,7 @@ export default function DeletedAssessmentsPage() {
                   <tr>
                     <th className={counselorListNoThClass}>No.</th>
                     <th scope="col" className={`${counselorListThClass} w-10`}>선택</th>
-                    <th scope="col" className={`${counselorListThClass} w-12`}>검사현황</th>
+                    <th scope="col" className={`${counselorListThClass} w-28`}>검사 현황</th>
                     <SortableColumnHeader
                       label="생성 일시"
                       sortKey="createdAt"
@@ -391,7 +399,7 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="안내정보"
+                      label="기관/단체/그룹명·안내 제목"
                       sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -404,9 +412,9 @@ export default function DeletedAssessmentsPage() {
                         (
                         <span className="text-slate-300">총발송수</span>
                         <span> / </span>
-                        <span className="text-emerald-400">발송성공</span>
+                        <span className="text-red-400">발송실패</span>
                         <span> / </span>
-                        <span className="text-emerald-400">검사완료</span>
+                        <span className="text-red-400">미완료</span>
                         )
                       </span>
                     </th>
@@ -422,10 +430,10 @@ export default function DeletedAssessmentsPage() {
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
                   {paginatedItems.map((row, idx) => {
-                    const { dispatchSent, testComplete, dispatchTotal } = resultStatusCounts(row);
+                    const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(row);
                     const expired = isExpired(row.usageEndDate);
-                    const infoPrimary = (row.title || '—').trim();
-                    const infoSecondary = getAssessmentOrgLabel(row);
+                    const infoPrimary = getAssessmentOrgLabel(row);
+                    const infoSecondary = (row.title || '—').trim();
                     const hoverTypeCode = formatCounselingTypeWithCodeSlash(
                       row.codeCategory,
                       formatAccessCodeDisplay(row.accessCode),
@@ -448,7 +456,7 @@ export default function DeletedAssessmentsPage() {
                             />
                           </td>
                           <td
-                            className={`${counselorListTdClass} cursor-pointer text-slate-400 hover:bg-white/[0.04]`}
+                            className={`${counselorListTdClass} cursor-pointer whitespace-nowrap text-slate-300 hover:bg-white/[0.04]`}
                             onClick={() => void toggleExpand(row.id)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
@@ -460,7 +468,10 @@ export default function DeletedAssessmentsPage() {
                             role="button"
                             aria-expanded={isOpen}
                           >
-                            {isOpen ? '▼' : '▶'}
+                            <span className="text-slate-400" aria-hidden="true">
+                              {isOpen ? '▼' : '▶'}{' '}
+                            </span>
+                            <span>{dispatchTotal > 0 ? `${dispatchTotal}명` : '—'}</span>
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200 hover:bg-white/[0.04]`}
@@ -489,13 +500,17 @@ export default function DeletedAssessmentsPage() {
                           >
                             {formatUsageEndDate(row.usageEndDate)}
                           </td>
-                          <td className={`whitespace-nowrap ${counselorListTdClass} text-center text-slate-500 cursor-default`}>
+                          <td className={`whitespace-nowrap ${counselorListTdClass} cursor-default text-center text-slate-500`}>
                             (
                             <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                             /
-                            <span className="px-2 font-medium tabular-nums text-emerald-400">{dispatchSent}</span>
+                            <span className={`px-2 font-medium tabular-nums ${resultMetricClass(dispatchFailed, dispatchTotal)}`}>
+                              {dispatchFailed}
+                            </span>
                             /
-                            <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
+                            <span className={`px-2 font-medium tabular-nums ${resultMetricClass(testIncomplete, dispatchTotal)}`}>
+                              {testIncomplete}
+                            </span>
                             )
                           </td>
                           <td className={`whitespace-nowrap ${counselorListTdClass} text-xs tabular-nums text-slate-400 cursor-default`}>

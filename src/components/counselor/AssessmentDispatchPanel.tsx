@@ -892,7 +892,7 @@ export default function AssessmentDispatchPanel({
                 <th className="px-3 py-2.5 text-left text-sm font-medium">No.</th>
                 <th className="px-3 py-2.5 text-left text-sm font-medium">선택</th>
                 <SortableColumnHeader
-                  label="검사현황보기"
+                  label="검사 현황"
                   sortKey="testStatus"
                   activeKey={sortKey}
                   direction={sortDir}

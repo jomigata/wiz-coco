@@ -60,6 +60,13 @@ export function resolveCounselorCategorySlugForPath(pathname: string): string | 
       }
     }
   }
+  if (
+    path.startsWith('/counselor/assessments/progress') ||
+    path.startsWith('/counselor/assessments/edit') ||
+    path.startsWith('/counselor/clients/detail')
+  ) {
+    return COUNSELOR_PSYCH_TESTS_SLUG;
+  }
   if (path.startsWith('/counselor/hub/')) {
     const slug = path.replace('/counselor/hub/', '').split('/')[0];
     return slug || null;
@@ -71,10 +78,11 @@ export function isMenuItemActive(pathname: string, href: string): boolean {
   const path = normalizePath(pathname);
   const target = href.replace(/\/+$/, '');
   if (path === target) return true;
-  if (target === '/counselor/assessments' && path.startsWith('/counselor/assessments/')) {
-    if (path.startsWith('/counselor/assessments/deleted-recipients')) return false;
-    return true;
+  if (target === '/counselor/assessments') {
+    return path === '/counselor/assessments';
   }
-  if (target === '/counselor/clients' && path.startsWith('/counselor/clients')) return true;
+  if (target === '/counselor/clients') {
+    return path === '/counselor/clients';
+  }
   return path.startsWith(`${target}/`);
 }

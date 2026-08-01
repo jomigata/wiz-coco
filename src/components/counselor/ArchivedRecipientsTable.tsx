@@ -142,7 +142,7 @@ export default function ArchivedRecipientsTable({
     }
   };
 
-  const colSpanRest = showAssessmentColumns ? 10 : 8;
+  const colSpanRest = showAssessmentColumns ? 9 : 7;
 
   return (
     <>
@@ -152,7 +152,14 @@ export default function ArchivedRecipientsTable({
             <tr>
               <th className={counselorListNoThClass}>No.</th>
               <th className={`${counselorListThClass} w-10`}>선택</th>
-              <th className={`${counselorListThClass} w-12`}>검사현황</th>
+              <SortableColumnHeader
+                label="검사 현황"
+                sortKey="testStatus"
+                activeKey={sortKey}
+                direction={sortDir}
+                onSort={toggleSort}
+                className="w-32"
+              />
               <SortableColumnHeader
                 label="발송일시"
                 sortKey="notifyAt"
@@ -196,14 +203,6 @@ export default function ArchivedRecipientsTable({
               <SortableColumnHeader
                 label="발송"
                 sortKey="notifyStatus"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-24"
-              />
-              <SortableColumnHeader
-                label="검사"
-                sortKey="testStatus"
                 activeKey={sortKey}
                 direction={sortDir}
                 onSort={toggleSort}
@@ -259,8 +258,13 @@ export default function ArchivedRecipientsTable({
                         className="rounded text-blue-500"
                       />
                     </td>
-                    <td className="px-3 py-2 text-slate-400 align-top" aria-hidden="true">
-                      {isOpen ? '▼' : '▶'}
+                    <td
+                      className={`${counselorListTdClass} whitespace-nowrap align-top ${summary.className}`}
+                    >
+                      <span className="text-slate-400" aria-hidden="true">
+                        {isOpen ? '▼' : '▶'}{' '}
+                      </span>
+                      <span>{summary.text}</span>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
                       {formatNotifyDate(row.notifyAt)}
@@ -283,11 +287,8 @@ export default function ArchivedRecipientsTable({
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
                       {formatAccessCodeDisplay(row.myCode)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 align-top" title={notify.title}>
+                    <td className={`whitespace-nowrap ${counselorListTdClass} align-top`} title={notify.title}>
                       <DispatchStatusText value={notify} />
-                    </td>
-                    <td className={`whitespace-nowrap px-3 py-2 align-top ${summary.className}`}>
-                      {summary.text}
                     </td>
                     {showAssessmentColumns ? (
                       <>

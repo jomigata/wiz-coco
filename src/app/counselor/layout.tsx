@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
@@ -183,7 +183,15 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
                 : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
           }`}>
             {useManageShell ? (
-              <CounselorManageShell>{children}</CounselorManageShell>
+              <Suspense
+                fallback={
+                  <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-slate-400">
+                    메뉴 불러오는 중…
+                  </div>
+                }
+              >
+                <CounselorManageShell>{children}</CounselorManageShell>
+              </Suspense>
             ) : (
               <>
                 <CounselorPageTitle>{pageTitle}</CounselorPageTitle>

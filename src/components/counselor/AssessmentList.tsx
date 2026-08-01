@@ -21,6 +21,7 @@ import {
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
+  counselorListTdCompactClass,
   counselorListTdClass,
   counselorListThClass,
   counselorListTheadClass,
@@ -37,7 +38,14 @@ function parseCreatedAt(iso?: string): number {
 }
 
 function assessmentInfoLabel(a: CounselorAssessment): string {
-  return `${(a.title || '—').trim()}/${getAssessmentOrgLabel(a)}`;
+  return `${getAssessmentOrgLabel(a)}/${(a.title || '—').trim()}`;
+}
+
+function resultMetricClass(value: number, total: number): string {
+  if (total <= 0 && value <= 0) return 'text-emerald-400';
+  if (value === 0) return 'text-emerald-400';
+  if (value === total) return 'text-emerald-400';
+  return 'text-red-400';
 }
 
 function compareAssessments(
@@ -207,9 +215,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   return (
     <CounselorPageSection
       showHierarchyBreadcrumb
+      title="상담코드 목록"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
+      dense
       description={
         <>
           전체 <span className="font-semibold text-white">{listItems.length}</span>개 · 응시자{' '}
@@ -219,31 +229,20 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         </>
       }
       toolbar={
-        <>
-          <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
-              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-            />
-          </div>
-          <AuthLink
-            href="/counselor/assessments/new"
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+            <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
             </svg>
-            상담코드생성
-          </AuthLink>
-        </>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
+            className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+          />
+        </div>
       }
     >
     <motion.div
@@ -303,7 +302,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     className="whitespace-nowrap"
                   />
                   <SortableColumnHeader
-                    label="안내정보"
+                    label="기관/단체/그룹명·안내 제목"
                     sortKey="counselInfo"
                     activeKey={sortKey}
                     direction={sortDir}
@@ -316,9 +315,9 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       (
                       <span className="text-slate-300">총발송수</span>
                       <span> / </span>
-                      <span className="text-emerald-400">발송성공</span>
+                      <span className="text-red-400">발송실패</span>
                       <span> / </span>
-                      <span className="text-emerald-400">검사완료</span>
+                      <span className="text-red-400">미완료</span>
                       )
                     </span>
                   </th>
@@ -327,10 +326,10 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
                 {paginatedItems.map((a, idx) => {
-                  const { dispatchSent, testComplete, dispatchTotal } = resultStatusCounts(a);
+                  const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
-                  const infoPrimary = (a.title || '—').trim();
-                  const infoSecondary = getAssessmentOrgLabel(a);
+                  const infoPrimary = getAssessmentOrgLabel(a);
+                  const infoSecondary = (a.title || '—').trim();
                   const hoverTypeCode = formatCounselingTypeWithCodeSlash(
                     a.codeCategory,
                     formatAccessCodeDisplay(a.accessCode),
@@ -343,17 +342,17 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       onMouseEnter={() => setHoveredRowId(a.id)}
                       onMouseLeave={() => setHoveredRowId(null)}
                     >
-                      <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                      <td className={`${counselorListTdCompactClass} text-slate-500 tabular-nums`}>
                         {startIndex + idx + 1}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdClass} text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <span className={cellLinkClass}>{formatDate(a.createdAt)}</span>
                       </td>
                       <td
-                        className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
+                        className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <CounselorSlashInfoCell
@@ -369,35 +368,31 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         ) : null}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)} ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)} ${expired ? 'text-red-400' : 'text-slate-400'}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td className={`whitespace-nowrap ${counselorListTdClass} text-center text-slate-500 cursor-default`}>
+                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-500 cursor-default`}>
                         (
-                        <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
+                        <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                         /
-                        <span className="px-2 font-medium tabular-nums text-emerald-400">{dispatchSent}</span>
+                        <span className={`px-1 font-medium tabular-nums ${resultMetricClass(dispatchFailed, dispatchTotal)}`}>
+                          {dispatchFailed}
+                        </span>
                         /
-                        <span className="px-2 font-medium tabular-nums text-emerald-400">{testComplete}</span>
+                        <span className={`px-1 font-medium tabular-nums ${resultMetricClass(testIncomplete, dispatchTotal)}`}>
+                          {testIncomplete}
+                        </span>
                         )
                       </td>
-                      <td className={`whitespace-nowrap ${counselorListTdClass} cursor-default`}>
-                        <div className="grid min-w-[10rem] grid-cols-2 gap-1">
-                          <AuthLink
-                            href={progressHref(a.id)}
-                            className={`${counselorListActionBtnClass} bg-sky-800/50 text-sky-100 hover:bg-sky-700/60`}
-                          >
-                            진행현황
-                          </AuthLink>
-                          <AuthLink
-                            href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
-                            className={`${counselorListActionBtnClass} bg-emerald-800/50 text-emerald-100 hover:bg-emerald-700/60`}
-                          >
-                            수정
-                          </AuthLink>
-                        </div>
+                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-default`}>
+                        <AuthLink
+                          href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
+                          className="inline-flex min-w-0 items-center justify-center rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
+                        >
+                          수정
+                        </AuthLink>
                       </td>
                     </tr>
                   );
