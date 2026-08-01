@@ -40,6 +40,13 @@ import {
   readCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
+import {
+  counselorListBodyRowClass,
+  counselorListHeaderRowClass,
+  counselorListNoThClass,
+  counselorListTdClass,
+  counselorListThClass,
+} from '@/lib/counselorListTableStyles';
 
 function formatCompletedAt(iso: string | null | undefined): string {
   return formatNotifyDate(iso);
@@ -887,10 +894,10 @@ export default function AssessmentDispatchPanel({
                   <col className="w-24" />
                   <col className="w-24" />
                 </colgroup>
-                <thead className="sticky top-0 z-10 bg-slate-800 text-slate-400 shadow-[0_1px_0_0_rgb(71,85,105)]">
-              <tr>
-                <th className="px-3 py-2.5 text-left text-sm font-medium">No.</th>
-                <th className="px-3 py-2.5 text-left text-sm font-medium">선택</th>
+                <thead>
+              <tr className={counselorListHeaderRowClass}>
+                <th className={counselorListNoThClass}>No.</th>
+                <th className={`${counselorListThClass} w-10`}>선택</th>
                 <SortableColumnHeader
                   label="검사 현황"
                   sortKey="testStatus"
@@ -949,7 +956,7 @@ export default function AssessmentDispatchPanel({
                 />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700">
+            <tbody>
               {sortedRecipients.map((r, rowIndex) => {
                 const notify = dispatchStatusDisplay(r);
                 const summary = testSummary(r);
@@ -971,10 +978,10 @@ export default function AssessmentDispatchPanel({
                       role="button"
                       aria-expanded={isOpen}
                       aria-label={`${r.displayName || '내담자'} 검사 현황 ${isOpen ? '접기' : '펼치기'}`}
-                      className={`cursor-pointer hover:bg-slate-800/50 ${isOpen ? 'bg-slate-800/40 border-b border-slate-700/60' : ''}`}
+                      className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
-                      <td className="px-3 py-2.5 align-top tabular-nums text-slate-400">{rowIndex + 1}</td>
-                      <td className="px-3 py-2.5 align-top" onClick={(e) => e.stopPropagation()}>
+                      <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
+                      <td className={counselorListTdClass} onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selected.has(r.portalId)}

@@ -17,13 +17,14 @@ import {
 } from '@/lib/dispatchRecipientDisplay';
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
 import {
+  counselorListBodyRowClass,
+  counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
-  counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 
@@ -148,8 +149,8 @@ export default function ArchivedRecipientsTable({
     <>
       <div className={counselorListTableWrapperClass}>
         <table className="w-max min-w-full table-fixed text-sm">
-          <thead className={counselorListTheadClass}>
-            <tr>
+          <thead>
+            <tr className={counselorListHeaderRowClass}>
               <th className={counselorListNoThClass}>No.</th>
               <th className={`${counselorListThClass} w-10`}>선택</th>
               <SortableColumnHeader
@@ -224,7 +225,7 @@ export default function ArchivedRecipientsTable({
               />
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-700">
+          <tbody>
             {paginatedItems.map((row, rowIndex) => {
               const notify = dispatchStatusDisplay(row);
               const summary = testSummary(row);
@@ -245,7 +246,7 @@ export default function ArchivedRecipientsTable({
                     tabIndex={0}
                     role="button"
                     aria-expanded={isOpen}
-                    className={`cursor-pointer hover:bg-slate-800/50 ${isOpen ? 'border-b border-slate-700/60 bg-slate-800/40' : ''}`}
+                    className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                   >
                     <td className={`${counselorListTdClass} tabular-nums text-slate-400 align-top`}>
                       {startIndex + rowIndex + 1}

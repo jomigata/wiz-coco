@@ -11,17 +11,19 @@ import CounselorListPagination from '@/components/counselor/CounselorListPaginat
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   counselingCodeTypeLabel,
-  formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
+  counselorListBodyRowClass,
+  counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
-  counselorListTheadClass,
+  counselorResultMetricClass,
+  formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import {
@@ -50,13 +52,6 @@ function parseDate(iso?: string | null): number {
 
 function assessmentInfoLabel(a: ArchivedAssessment): string {
   return `${getAssessmentOrgLabel(a)}/${(a.title || '—').trim()}`;
-}
-
-function resultMetricClass(value: number, total: number): string {
-  if (total <= 0 && value <= 0) return 'text-emerald-400';
-  if (value === 0) return 'text-emerald-400';
-  if (value === total) return 'text-emerald-400';
-  return 'text-red-400';
 }
 
 function compareRows(
@@ -117,10 +112,10 @@ function isExpired(iso: string | undefined): boolean {
 
 function resultStatusCounts(a: ArchivedAssessment) {
   const dispatchSent = a.dispatchSentCount ?? 0;
+  const dispatchFailed = a.dispatchFailedCount ?? 0;
   const testComplete = a.testCompleteCount ?? 0;
   const testIncomplete = a.testIncompleteCount ?? 0;
-  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent);
-  const dispatchFailed = Math.max(0, dispatchTotal - dispatchSent);
+  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
   return { dispatchFailed, testIncomplete, dispatchTotal };
 }
 
@@ -385,13 +380,13 @@ export default function DeletedAssessmentsPage() {
           <>
             <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
               <table className="w-max min-w-full table-fixed text-sm">
-                <thead className={counselorListTheadClass}>
-                  <tr>
+                <thead>
+                  <tr className={counselorListHeaderRowClass}>
                     <th className={counselorListNoThClass}>No.</th>
                     <th scope="col" className={`${counselorListThClass} w-10`}>선택</th>
                     <th scope="col" className={`${counselorListThClass} w-28`}>검사 현황</th>
                     <SortableColumnHeader
-                      label="생성 일시"
+                      label="발급일"
                       sortKey="createdAt"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -399,13 +394,13 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="기관/단체/그룹명·안내 제목"
+                      label="그룹명/제목"
                       sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 사용 마감일</th>
+                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 유효일</th>
                     <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                       <span className="block">결과현황</span>
                       <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
@@ -428,22 +423,18 @@ export default function DeletedAssessmentsPage() {
                     />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.06]">
+                <tbody>
                   {paginatedItems.map((row, idx) => {
                     const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(row);
                     const expired = isExpired(row.usageEndDate);
                     const infoPrimary = getAssessmentOrgLabel(row);
                     const infoSecondary = (row.title || '—').trim();
-                    const hoverTypeCode = formatCounselingTypeWithCodeSlash(
-                      row.codeCategory,
-                      formatAccessCodeDisplay(row.accessCode),
-                    );
                     const isOpen = expandedId === row.id;
                     const expandedRecipients = recipientCache[row.id] || [];
 
                     return (
                       <React.Fragment key={row.id}>
-                        <tr className={isOpen ? 'bg-white/[0.03]' : undefined}>
+                        <tr className={`${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}>
                           <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
                             {startIndex + idx + 1}
                           </td>
@@ -477,16 +468,17 @@ export default function DeletedAssessmentsPage() {
                             className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200 hover:bg-white/[0.04]`}
                             onClick={() => void toggleExpand(row.id)}
                           >
-                            {formatDate(row.createdAt)}
+                            {formatCounselorIssueDate(row.createdAt)}
                           </td>
                           <td
-                            className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer hover:bg-white/[0.04]`}
+                            className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer`}
                             onClick={() => void toggleExpand(row.id)}
                           >
                             <CounselorSlashInfoCell
                               primary={infoPrimary}
                               secondary={infoSecondary}
-                              hoverExtra={hoverTypeCode}
+                              hoverTypeLabel={counselingCodeTypeLabel(row.codeCategory)}
+                              hoverAccessCode={formatAccessCodeDisplay(row.accessCode)}
                             />
                             {expired ? (
                               <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
@@ -504,11 +496,11 @@ export default function DeletedAssessmentsPage() {
                             (
                             <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                             /
-                            <span className={`px-2 font-medium tabular-nums ${resultMetricClass(dispatchFailed, dispatchTotal)}`}>
+                            <span className={`px-2 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
                               {dispatchFailed}
                             </span>
                             /
-                            <span className={`px-2 font-medium tabular-nums ${resultMetricClass(testIncomplete, dispatchTotal)}`}>
+                            <span className={`px-2 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
                               {testIncomplete}
                             </span>
                             )

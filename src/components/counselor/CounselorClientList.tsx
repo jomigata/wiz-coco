@@ -14,17 +14,17 @@ import { displayContactPhone } from '@/lib/contactPrivacy';
 import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import {
   counselingCodeTypeLabel,
-  formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
 import {
   counselorListActionBtnClass,
+  counselorListBodyRowClass,
+  counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
-  counselorListTheadClass,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
@@ -103,9 +103,9 @@ function progressSortValue(item: CounselorClientPortalListItem): number {
 function counselInfoLabel(item: CounselorClientPortalListItem): string {
   const primary = item.assessments[0];
   if (!primary) return '—';
-  const title = (primary.title || '—').trim();
   const org = (primary.orgName || item.cohortName || '—').trim();
-  return `${title}/${org}`;
+  const title = (primary.title || '—').trim();
+  return `${org}/${title}`;
 }
 
 function compareRows(
@@ -227,7 +227,6 @@ export default function CounselorClientList() {
   const [cohortFilter, setCohortFilter] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('displayName');
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
-  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
   const cacheKey = useMemo(
     () =>
@@ -380,9 +379,6 @@ export default function CounselorClientList() {
     }
   };
 
-  const rowHoverCellClass = (id: string) =>
-    hoveredRowId === id ? 'bg-white/[0.06]' : '';
-
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
@@ -522,8 +518,8 @@ export default function CounselorClientList() {
             ) : null}
             <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
               <table className="w-max min-w-full table-fixed text-sm">
-                <thead className={counselorListTheadClass}>
-                  <tr>
+                <thead>
+                  <tr className={counselorListHeaderRowClass}>
                     <th className={counselorListNoThClass}>No.</th>
                     <SortableColumnHeader
                       label="내담자"
@@ -533,7 +529,7 @@ export default function CounselorClientList() {
                       onSort={toggleSort}
                     />
                     <SortableColumnHeader
-                      label="안내정보"
+                      label="그룹명/제목"
                       sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -560,7 +556,7 @@ export default function CounselorClientList() {
                     <th className={`${counselorListThClass} text-center`}>작업</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.06]">
+                <tbody>
                   {paginatedItems.map((item, idx) => {
                     const progress = progressLabel(item);
                     const primaryAssessment = item.assessments[0];
@@ -568,27 +564,15 @@ export default function CounselorClientList() {
                     const phoneFull = item.phone?.trim()
                       ? formatPhoneDisplayOr(item.phone)
                       : undefined;
-                    const infoPrimary = primaryAssessment?.title || '—';
-                    const infoSecondary = primaryAssessment?.orgName || item.cohortName || '—';
-                    const hoverTypeCode = primaryAssessment
-                      ? formatCounselingTypeWithCodeSlash(
-                          primaryAssessment.codeCategory,
-                          formatAccessCodeDisplay(primaryAssessment.joinAccessCode || ''),
-                        )
-                      : '';
-
+                    const infoPrimary = primaryAssessment?.orgName || item.cohortName || '—';
+                    const infoSecondary = primaryAssessment?.title || '—';
                     return (
-                      <tr
-                        key={item.portalId}
-                        className="group"
-                        onMouseEnter={() => setHoveredRowId(item.portalId)}
-                        onMouseLeave={() => setHoveredRowId(null)}
-                      >
-                        <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                      <tr key={item.portalId} className={counselorListBodyRowClass}>
+                        <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
                         </td>
                         <td
-                          className={`max-w-[12rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`max-w-[12rem] ${counselorListTdClass} cursor-pointer`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           <span className={`${cellLinkClass} block truncate`}>
@@ -599,14 +583,17 @@ export default function CounselorClientList() {
                           </span>
                         </td>
                         <td
-                          className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           {primaryAssessment ? (
                             <CounselorSlashInfoCell
                               primary={infoPrimary}
                               secondary={infoSecondary}
-                              hoverExtra={hoverTypeCode}
+                              hoverTypeLabel={counselingCodeTypeLabel(primaryAssessment.codeCategory)}
+                              hoverAccessCode={formatAccessCodeDisplay(
+                                primaryAssessment.joinAccessCode || '',
+                              )}
                               className={cellLinkClass}
                             />
                           ) : (
@@ -614,13 +601,13 @@ export default function CounselorClientList() {
                           )}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)} ${progress.className}`}
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer ${progress.className}`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           {progress.text}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer transition-colors ${rowHoverCellClass(item.portalId)}`}
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer`}
                           onClick={() => goToDetail(item.portalId)}
                         >
                           <div className="font-medium text-slate-100">{formatDateTime(item.notifyAt)}</div>

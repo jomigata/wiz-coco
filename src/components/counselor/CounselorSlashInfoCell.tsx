@@ -5,21 +5,28 @@ import React, { useState } from 'react';
 type Props = {
   primary: string;
   secondary: string;
+  hoverTypeLabel?: string;
+  hoverAccessCode?: string;
+  /** @deprecated hoverTypeLabel + hoverAccessCode 사용 권장 */
   hoverExtra?: string;
   className?: string;
   onClick?: () => void;
 };
 
-/** 값1/값2 표시 — hover 시 hoverExtra를 위쪽 풍선으로 표시 */
+/** 값1/값2 표시 — hover 시 2줄 풍선 (1: 상담유형·코드, 2: 그룹명/제목) */
 export default function CounselorSlashInfoCell({
   primary,
   secondary,
+  hoverTypeLabel,
+  hoverAccessCode,
   hoverExtra,
   className = '',
   onClick,
 }: Props) {
   const [hover, setHover] = useState(false);
   const line = `${primary}/${secondary}`;
+  const showTooltip =
+    hover && (hoverTypeLabel || hoverAccessCode || hoverExtra);
 
   return (
     <div
@@ -33,12 +40,23 @@ export default function CounselorSlashInfoCell({
         <span className="text-slate-300">/</span>
         <span className="text-slate-200">{secondary || '—'}</span>
       </span>
-      {hover && hoverExtra ? (
+      {showTooltip ? (
         <div
-          className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 whitespace-nowrap rounded-md border border-sky-500/35 bg-slate-950 px-3 py-2 text-sm font-medium leading-snug text-sky-100 shadow-xl"
+          className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 min-w-[10rem] max-w-xs rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-snug text-slate-800 shadow-lg"
           role="tooltip"
         >
-          {hoverExtra}
+          {hoverTypeLabel || hoverAccessCode ? (
+            <>
+              <p className="font-medium text-slate-700">
+                ({hoverTypeLabel || '—'}) ({hoverAccessCode || '—'})
+              </p>
+              <p className="mt-0.5 text-slate-600">
+                {primary || '—'}/{secondary || '—'}
+              </p>
+            </>
+          ) : (
+            <p className="font-medium text-slate-700">{hoverExtra}</p>
+          )}
         </div>
       ) : null}
       <span className="sr-only">{line}</span>

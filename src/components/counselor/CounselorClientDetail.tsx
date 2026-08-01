@@ -289,25 +289,25 @@ export default function CounselorClientDetail({ portalId }: Props) {
               등록 {formatDateTime(portal.createdAt)} · 발송 {formatDateTime(portal.notifyAt)}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-              <p className="text-[10px] text-slate-500">검사 진행</p>
+          <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+            <div className="py-1">
+              <p className="text-[10px] text-gray-400">검사 진행</p>
               <p className="mt-0.5 text-base font-semibold text-white">{progress.percent}%</p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-gray-500">
                 {progress.completedTests}/{progress.totalTests}
               </p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-              <p className="text-[10px] text-slate-500">상담코드</p>
+            <div className="py-1">
+              <p className="text-[10px] text-gray-400">상담코드</p>
               <p className="mt-0.5 text-base font-semibold text-white">{assessments.length}</p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-              <p className="text-[10px] text-slate-500">자격증명</p>
+            <div className="py-1">
+              <p className="text-[10px] text-gray-400">자격증명</p>
               <p className={`mt-0.5 text-xs font-medium ${notify.className}`}>{notify.text}</p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-              <p className="text-[10px] text-slate-500">최근 접속</p>
-              <p className="mt-0.5 text-[11px] text-slate-200">{formatDateTime(portal.lastLoginAt)}</p>
+            <div className="py-1">
+              <p className="text-[10px] text-gray-400">최근 접속</p>
+              <p className="mt-0.5 text-[11px] text-gray-300">{formatDateTime(portal.lastLoginAt)}</p>
             </div>
           </div>
         </div>
@@ -388,11 +388,11 @@ export default function CounselorClientDetail({ portalId }: Props) {
         {assessments.length === 0 ? (
           <p className="text-sm text-slate-500">할당된 검사가 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-white/10">
+          <div className="overflow-x-auto">
             {assessments.map((assessment) => (
             <div
               key={assessment.assessmentId}
-              className="border-b border-white/[0.06] last:border-b-0 p-3 sm:p-4"
+              className="border-b border-white/10 p-3 last:border-b-0 hover:bg-white/5 sm:p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -443,17 +443,17 @@ export default function CounselorClientDetail({ portalId }: Props) {
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-xs">
                   <thead>
-                    <tr className="text-left text-slate-500">
+                    <tr className="border-b border-white/20 text-left text-gray-400">
                       <th className="pb-2 pr-4 font-medium">검사 항목</th>
                       <th className="pb-2 pr-4 font-medium">상태</th>
                       <th className="pb-2 pr-4 font-medium">완료 시각</th>
                       <th className="pb-2 font-medium">액션</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody>
                     {assessment.tests.map((test) => (
-                      <tr key={test.testId}>
-                        <td className="py-2 pr-4 text-slate-200">{test.testName}</td>
+                      <tr key={test.testId} className="border-b border-white/10 hover:bg-white/5">
+                        <td className="py-2 pr-4 text-white">{test.testName}</td>
                         <td className="py-2 pr-4">
                           <span
                             className={`inline-flex rounded border px-2 py-0.5 ${testStatusBadge(test.status)}`}

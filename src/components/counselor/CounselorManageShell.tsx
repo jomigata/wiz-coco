@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import {
-  counselorNestedNavItems,
+  nestedNavItemsAfter,
   resolveActiveNestedNavItem,
 } from '@/lib/counselorNestedNav';
 import {
@@ -41,16 +41,6 @@ export default function CounselorManageShell({ children }: Props) {
   };
 
   const sidebarCategories = useMemo(() => counselorMenuCategories, []);
-
-  const nestedBySub = useMemo(() => {
-    const map = new Map<string, typeof counselorNestedNavItems>();
-    for (const nested of counselorNestedNavItems) {
-      const list = map.get(nested.parentSubcategoryName) || [];
-      list.push(nested);
-      map.set(nested.parentSubcategoryName, list);
-    }
-    return map;
-  }, []);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 lg:max-h-[calc(100dvh-5.5rem)] lg:flex-row lg:gap-3">
@@ -101,19 +91,21 @@ export default function CounselorManageShell({ children }: Props) {
                 {expanded ? (
                   <div className="ml-2 mt-0.5 space-y-1 border-l border-white/10 pl-1.5">
                     {category.subcategories.map((sub) => {
-                      const nestedItems = nestedBySub.get(sub.name) || [];
-                      const visibleNested = nestedItems.filter((n) => n.match(pathname.split('?')[0]));
-
                       return (
                         <div key={sub.name}>
                           <p className="px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-slate-500">
                             {sub.name.replace(/^\d+[a-z]\.\s*/i, '')}
                           </p>
                           <ul className="space-y-0.5 pb-1">
-                            {sub.items.map((item) => {
+                            {sub.items.flatMap((item) => {
                               const active =
                                 !activeNested && isMenuItemActive(pathname, item.href);
-                              return (
+                              const nestedAfter = nestedNavItemsAfter(
+                                sub.name,
+                                item.href,
+                                pathname,
+                              );
+                              const rows: React.ReactNode[] = [
                                 <li key={item.href}>
                                   <AuthLink
                                     href={item.href}
@@ -126,30 +118,32 @@ export default function CounselorManageShell({ children }: Props) {
                                   >
                                     {item.name}
                                   </AuthLink>
-                                </li>
-                              );
-                            })}
-                            {visibleNested.map((nested) => {
-                              const href = nested.buildHref(
-                                pathname.split('?')[0],
-                                search,
-                              );
-                              const active = activeNested?.item.label === nested.label;
-                              return (
-                                <li key={nested.label}>
-                                  <AuthLink
-                                    href={href}
-                                    className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
-                                      active
-                                        ? 'bg-sky-600/30 font-semibold text-sky-100'
-                                        : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
-                                    }`}
-                                  >
-                                    {'\u00A0- '}
-                                    {nested.label}
-                                  </AuthLink>
-                                </li>
-                              );
+                                </li>,
+                              ];
+                              for (const nested of nestedAfter) {
+                                const href = nested.buildHref(
+                                  pathname.split('?')[0],
+                                  search,
+                                );
+                                const nestedActive =
+                                  activeNested?.item.label === nested.label;
+                                rows.push(
+                                  <li key={`${item.href}-${nested.label}`}>
+                                    <AuthLink
+                                      href={href}
+                                      className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                        nestedActive
+                                          ? 'bg-sky-600/30 font-semibold text-sky-100'
+                                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                                      }`}
+                                    >
+                                      {'\u00A0- '}
+                                      {nested.label}
+                                    </AuthLink>
+                                  </li>,
+                                );
+                              }
+                              return rows;
                             })}
                           </ul>
                         </div>

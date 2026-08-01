@@ -12,19 +12,20 @@ import CounselorListPagination from '@/components/counselor/CounselorListPaginat
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   counselingCodeTypeLabel,
-  formatCounselingTypeWithCodeSlash,
 } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
   counselorListActionBtnClass,
+  counselorListBodyRowClass,
+  counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
   counselorListTdCompactClass,
-  counselorListTdClass,
   counselorListThClass,
-  counselorListTheadClass,
+  counselorResultMetricClass,
+  formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 
@@ -41,11 +42,13 @@ function assessmentInfoLabel(a: CounselorAssessment): string {
   return `${getAssessmentOrgLabel(a)}/${(a.title || '—').trim()}`;
 }
 
-function resultMetricClass(value: number, total: number): string {
-  if (total <= 0 && value <= 0) return 'text-emerald-400';
-  if (value === 0) return 'text-emerald-400';
-  if (value === total) return 'text-emerald-400';
-  return 'text-red-400';
+function resultStatusCounts(a: CounselorAssessment) {
+  const dispatchSent = a.dispatchSentCount ?? 0;
+  const dispatchFailed = a.dispatchFailedCount ?? 0;
+  const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
+  const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
+  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
+  return { dispatchFailed, testIncomplete, dispatchTotal };
 }
 
 function compareAssessments(
@@ -67,6 +70,28 @@ function compareAssessments(
 
 function progressHref(assessmentId: string): string {
   return `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`;
+}
+
+function formatUsageEndDate(iso: string | undefined): string {
+  const s = (iso || '').trim();
+  if (!s) return '무기한';
+  try {
+    const d = new Date(`${s}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('ko-KR');
+  } catch {
+    return s;
+  }
+}
+
+function isExpired(iso: string | undefined): boolean {
+  const s = (iso || '').trim();
+  if (!s) return false;
+  try {
+    return new Date(`${s}T23:59:59`) < new Date();
+  } catch {
+    return false;
+  }
 }
 
 function SortableColumnHeader({
@@ -109,54 +134,16 @@ interface AssessmentListProps {
   createdInfo?: CreatedAssessmentBannerInfo | null;
 }
 
-function formatDate(iso: string | undefined): string {
-  if (!iso) return '-';
-  try {
-    return new Date(iso).toLocaleString('ko-KR', {
-      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
-    });
-  } catch { return String(iso); }
-}
-
-function formatUsageEndDate(iso: string | undefined): string {
-  const s = (iso || '').trim();
-  if (!s) return '무기한';
-  try {
-    const d = new Date(`${s}T00:00:00`);
-    if (Number.isNaN(d.getTime())) return s;
-    return d.toLocaleDateString('ko-KR');
-  } catch { return s; }
-}
-
-function isExpired(iso: string | undefined): boolean {
-  const s = (iso || '').trim();
-  if (!s) return false;
-  try { return new Date(`${s}T23:59:59`) < new Date(); } catch { return false; }
-}
-
-function resultStatusCounts(a: CounselorAssessment) {
-  const dispatchSent = a.dispatchSentCount ?? 0;
-  const dispatchFailed = a.dispatchFailedCount ?? 0;
-  const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
-  const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
-  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
-  return { dispatchSent, dispatchFailed, testComplete, testIncomplete, dispatchTotal };
-}
-
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
   const router = useRouter();
   const [listItems, setListItems] = useState(assessments);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
   useEffect(() => {
     setListItems(assessments);
   }, [assessments]);
-
-  const rowHoverCellClass = (id: string) =>
-    hoveredRowId === id ? 'bg-white/[0.06]' : '';
 
   const goToProgress = (assessmentId: string) => {
     router.push(progressHref(assessmentId));
@@ -175,11 +162,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const totalParticipants = listItems.reduce((sum, a) => {
-    const { testComplete, testIncomplete } = resultStatusCounts(a);
+    const { testIncomplete } = resultStatusCounts(a);
+    const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
     return sum + testComplete + testIncomplete;
   }, 0);
   const totalCompleted = listItems.reduce(
-    (sum, a) => sum + resultStatusCounts(a).testComplete,
+    (sum, a) => sum + (a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0),
     0,
   );
 
@@ -290,11 +278,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         <>
           <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
             <table className="w-max min-w-full table-fixed text-sm">
-              <thead className={counselorListTheadClass}>
-                <tr>
+              <thead>
+                <tr className={counselorListHeaderRowClass}>
                   <th className={counselorListNoThClass}>No.</th>
                   <SortableColumnHeader
-                    label="생성 일시"
+                    label="발급일"
                     sortKey="createdAt"
                     activeKey={sortKey}
                     direction={sortDir}
@@ -302,13 +290,13 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     className="whitespace-nowrap"
                   />
                   <SortableColumnHeader
-                    label="기관/단체/그룹명·안내 제목"
+                    label="그룹명/제목"
                     sortKey="counselInfo"
                     activeKey={sortKey}
                     direction={sortDir}
                     onSort={toggleSort}
                   />
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 사용 마감일</th>
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 유효일</th>
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
@@ -321,44 +309,36 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       )
                     </span>
                   </th>
-                  <th scope="col" className={`${counselorListThClass} text-center`}>작업</th>
+                  <th scope="col" className={`${counselorListThClass} text-center`}>기타</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody>
                 {paginatedItems.map((a, idx) => {
                   const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const infoPrimary = getAssessmentOrgLabel(a);
                   const infoSecondary = (a.title || '—').trim();
-                  const hoverTypeCode = formatCounselingTypeWithCodeSlash(
-                    a.codeCategory,
-                    formatAccessCodeDisplay(a.accessCode),
-                  );
 
                   return (
-                    <tr
-                      key={a.id}
-                      className="group"
-                      onMouseEnter={() => setHoveredRowId(a.id)}
-                      onMouseLeave={() => setHoveredRowId(null)}
-                    >
-                      <td className={`${counselorListTdCompactClass} text-slate-500 tabular-nums`}>
+                    <tr key={a.id} className={counselorListBodyRowClass}>
+                      <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                         {startIndex + idx + 1}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} text-slate-200 cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
                         onClick={() => goToProgress(a.id)}
                       >
-                        <span className={cellLinkClass}>{formatDate(a.createdAt)}</span>
+                        <span className={cellLinkClass}>{formatCounselorIssueDate(a.createdAt)}</span>
                       </td>
                       <td
-                        className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)}`}
+                        className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
                         onClick={() => goToProgress(a.id)}
                       >
                         <CounselorSlashInfoCell
                           primary={infoPrimary}
                           secondary={infoSecondary}
-                          hoverExtra={hoverTypeCode}
+                          hoverTypeLabel={counselingCodeTypeLabel(a.codeCategory)}
+                          hoverAccessCode={formatAccessCodeDisplay(a.accessCode)}
                           className={cellLinkClass}
                         />
                         {expired ? (
@@ -368,20 +348,20 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         ) : null}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer transition-colors ${rowHoverCellClass(a.id)} ${expired ? 'text-red-400' : 'text-slate-400'}`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer ${expired ? 'text-red-400' : ''}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         {formatUsageEndDate(a.usageEndDate)}
                       </td>
-                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-500 cursor-default`}>
+                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
                         (
                         <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                         /
-                        <span className={`px-1 font-medium tabular-nums ${resultMetricClass(dispatchFailed, dispatchTotal)}`}>
+                        <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
                           {dispatchFailed}
                         </span>
                         /
-                        <span className={`px-1 font-medium tabular-nums ${resultMetricClass(testIncomplete, dispatchTotal)}`}>
+                        <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
                           {testIncomplete}
                         </span>
                         )
