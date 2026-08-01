@@ -1,4 +1,5 @@
 # 결과 제출/조회/수정/삭제 (POST, GET, PUT, DELETE)
+import json
 from flask import Blueprint, request, jsonify
 from firebase_admin.firestore import SERVER_TIMESTAMP
 from datetime import datetime, timezone
@@ -20,6 +21,16 @@ from utils.test_result_queries import query_results_shared_to_assessment
 
 bp = Blueprint("results", __name__, url_prefix="/api/results")
 MSG_ACCESS_CODE_EXPIRED = "상담(코드) 사용기한이 종료되었습니다. 상담사에게 새 코드 발급을 요청해 주세요."
+
+
+def _responses_equal(a, b) -> bool:
+    """문항 응답·개인정보 등 responses 전체가 동일한지 비교."""
+    try:
+        norm_a = json.loads(json.dumps(a, sort_keys=True, ensure_ascii=False, default=str))
+        norm_b = json.loads(json.dumps(b, sort_keys=True, ensure_ascii=False, default=str))
+    except (TypeError, ValueError):
+        return a == b
+    return norm_a == norm_b
 
 
 def _iso_timestamp(value) -> str | None:
@@ -528,6 +539,8 @@ def update_result(result_id):
     if responses is None:
         return jsonify({"error": "Bad Request", "message": "responses required"}), 400
 
+    new_responses = responses if isinstance(responses, (dict, list)) else {}
+
     db = get_firestore()
     ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
     doc = ref.get()
@@ -544,9 +557,13 @@ def update_result(result_id):
             return jsonify({"error": "Bad Request", "message": "password required"}), 400
         return jsonify({"error": "Forbidden", "message": "Invalid password or not owner"}), 403
 
-    result_data = compute_result_data(d.get("testId", ""), responses if isinstance(responses, (dict, list)) else {})
+    old_responses = d.get("responses")
+    if _responses_equal(old_responses, new_responses):
+        return jsonify({"resultId": result_id, "message": "No changes", "unchanged": True})
+
+    result_data = compute_result_data(d.get("testId", ""), new_responses)
     update_payload = {
-        "responses": responses,
+        "responses": new_responses,
         "resultData": result_data,
         "status": "completed",
         "updatedAt": SERVER_TIMESTAMP,

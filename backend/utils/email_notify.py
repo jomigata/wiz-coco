@@ -157,8 +157,6 @@ def send_portal_credentials_email(
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
     cred_lines = [f"나의코드: {my_code}  비밀번호: {pin_display}"]
-    if join_code:
-        cred_lines.insert(0, f"상담(코드): {join_code}")
 
     body = f"""안녕하세요, {name}님.
 
@@ -213,7 +211,6 @@ def send_test_reminder_email(
 
     name = (display_name or "").strip() or "내담자"
     title = (assessment_title or "").strip() or "심리검사"
-    join_code = (join_access_code or "").strip().upper()
     portal_code = (my_code or "").strip().upper()
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
@@ -230,8 +227,6 @@ def send_test_reminder_email(
         pending_lines.append("- 미완료 검사 없음")
 
     cred_lines: list[str] = []
-    if join_code:
-        cred_lines.append(f"상담(코드): {join_code}")
     if portal_code:
         cred_lines.append(f"나의코드: {portal_code}")
 

@@ -18,6 +18,7 @@ import {
 } from '@/lib/joinParticipantSession';
 import { clearJoinGuestSession, ensureJoinGuestSession } from '@/lib/joinGuestSession';
 import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
+import { joinTestResponsesChanged } from '@/lib/mbtiProJoinResponses';
 
 const SCALE_LABELS: Record<number, string> = {
   1: '매우 그렇지 않다',
@@ -43,6 +44,7 @@ export default function TestRunnerPage() {
   const [loadingResult, setLoadingResult] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, number>>({});
+  const [editOriginalResponses, setEditOriginalResponses] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [accessCheckLoading, setAccessCheckLoading] = useState(true);
@@ -165,6 +167,7 @@ export default function TestRunnerPage() {
     getClientResult(editResultId, code)
       .then((data) => {
         if (cancelled) return;
+        setEditOriginalResponses(data.responses);
         const raw = data.responses;
         if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
           const next: Record<string, number> = {};
@@ -231,7 +234,9 @@ export default function TestRunnerPage() {
     setSubmitting(true);
     try {
       if (editResultId) {
-        await updateClientResult(editResultId, { responses }, code);
+        if (joinTestResponsesChanged(editOriginalResponses, responses)) {
+          await updateClientResult(editResultId, { responses }, code);
+        }
       } else {
         await submitResult({ accessCode: code, testId, responses });
       }

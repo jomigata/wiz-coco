@@ -20,7 +20,7 @@ import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { isPortalModeForAccessCode } from '@/lib/joinFlowMode';
 import { JOIN_STORAGE_KEY } from '@/lib/joinAssessmentSession';
 import { buildPortalProgressReturnUrl, getPortalReturnPath, setPortalReturnPath } from '@/lib/portalReturnPath';
-import { buildMbtiProJoinResponses, parseMbtiProJoinResponses } from '@/lib/mbtiProJoinResponses';
+import { buildMbtiProJoinResponses, mbtiProResponsesChanged, parseMbtiProJoinResponses } from '@/lib/mbtiProJoinResponses';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 
 function PortalAmbientBackground() {
@@ -86,6 +86,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const [joinAccessError, setJoinAccessError] = useState('');
   const [editResultId, setEditResultId] = useState('');
   const [editResultLoading, setEditResultLoading] = useState(false);
+  const [editOriginalResponses, setEditOriginalResponses] = useState<unknown>(null);
   const testId = generateTestId(pathname || flow.defaultPath);
 
   useLayoutEffect(() => {
@@ -159,6 +160,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     getClientResult(resultId, code)
       .then((data) => {
         if (cancelled) return;
+        setEditOriginalResponses(data.responses);
         const parsed = parseMbtiProJoinResponses(data.responses);
         if (parsed.answers && Object.keys(parsed.answers).length > 0) {
           setAnswers(parsed.answers);
@@ -577,7 +579,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         const payload = buildMbtiProJoinResponses(answers, clientInfo);
         try {
           if (editResultId.trim()) {
-            await updateClientResult(editResultId.trim(), { responses: payload }, portalCode);
+            if (mbtiProResponsesChanged(editOriginalResponses, payload)) {
+              await updateClientResult(editResultId.trim(), { responses: payload }, portalCode);
+            }
           } else {
             await submitResult({
               accessCode: portalCode,
@@ -641,7 +645,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setIsLoading(true);
     try {
       const payload = buildMbtiProJoinResponses(answers, clientInfo);
-      await updateClientResult(resultId, { responses: payload }, portalCode);
+      if (mbtiProResponsesChanged(editOriginalResponses, payload)) {
+        await updateClientResult(resultId, { responses: payload }, portalCode);
+      }
       clearTestProgress(testId);
       await new Promise((resolve) => setTimeout(resolve, 300));
       router.push(getPortalReturnPath());
@@ -778,8 +784,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   const answerGlowSky = 'after:from-sky-400/60';
   const answerGlowPink = 'after:from-pink-400/60';
-  const answerBtnClass = (shape: string, py: string, glowExtra = '', fromColor = answerGlowSky) =>
-    `group relative ${py} px-4 flex-1 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
+  const answerBtnClass = (shape: string, glowExtra = '', fromColor = answerGlowSky) =>
+    `group relative h-[152px] px-4 flex-1 flex flex-col items-center justify-end pb-3 ${shape} ${v.answerBtn} after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[15px] after:bg-gradient-to-t ${fromColor} after:to-transparent ${shape.includes('rounded-xl') ? 'after:rounded-b-xl' : 'after:rounded-b-[20px]'} after:pointer-events-none ${isMouseMoved ? `${v.answerBtnHover} ${glowExtra}` : ''}`;
 
   // 선택된 문항이 아직 로드되지 않았으면 로딩 표시
   if (selectedQuestions.length === 0) {
@@ -855,7 +861,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             </div>
 
             <div className="text-center mb-3">
-              <div className="h-[84px] relative overflow-hidden mb-8">
+              <div className="min-h-[96px] relative mb-8 flex items-center justify-center">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
@@ -865,7 +871,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     animate="center"
                     exit="exit"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className={v.questionCard}
+                    className={`${v.questionCard} w-full`}
                   >
                     <h2 className={`text-lg text-center leading-snug px-2 ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}>
                       {selectedQuestions[currentQuestion].text}
@@ -875,11 +881,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               </div>
               
               <div className="flex flex-col gap-4">
-                <div className="relative flex justify-between items-end gap-3 px-4">
+                <div className="relative flex justify-between items-stretch gap-3 px-4">
                   <div className={v.scaleArc}></div>
                   <button
                     onClick={() => handleAnswer(6)}
-                    className={answerBtnClass('rounded-xl', 'py-10')}
+                    className={answerBtnClass('rounded-xl')}
                   >
                     {answers[currentQuestion] === 6 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -898,7 +904,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(5)}
-                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]')}
+                    className={answerBtnClass('rounded-[20px]')}
                   >
                     {answers[currentQuestion] === 5 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -917,7 +923,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(4)}
-                    className={answerBtnClass('rounded-[20px]', 'py-5')}
+                    className={answerBtnClass('rounded-[20px]')}
                   >
                     {answers[currentQuestion] === 4 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -936,7 +942,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(3)}
-                    className={answerBtnClass('rounded-[20px]', 'py-5', '', answerGlowPink)}
+                    className={answerBtnClass('rounded-[20px]', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 3 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -955,7 +961,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(2)}
-                    className={answerBtnClass('rounded-[20px]', 'py-[2.625rem]', '', answerGlowPink)}
+                    className={answerBtnClass('rounded-[20px]', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 2 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -974,7 +980,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(1)}
-                    className={answerBtnClass('rounded-[20px]', 'py-10', '', answerGlowPink)}
+                    className={answerBtnClass('rounded-[20px]', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 1 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>

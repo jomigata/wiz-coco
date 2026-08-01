@@ -359,7 +359,7 @@ function ClientPortalContent() {
           ) : (
             <>
           <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
-            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '상담코드 진행 현황'}
+            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '검사 진행 현황'}
           </h2>
 
           {assessments.length === 0 ? (
@@ -376,20 +376,22 @@ function ClientPortalContent() {
                 >
                   <div>
                     <h3 className="text-lg font-medium text-white">{a.title}</h3>
-                    <p className="text-sm text-slate-400 mt-1">
-                      상담코드{' '}
-                      <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(code)}</span>
-                      {a.isLinkedShared ? (
-                        <span className="ml-2 text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
-                          수동 연결
-                        </span>
-                      ) : null}
-                      {a.isFromLinkedPortal ? (
-                        <span className="ml-2 text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5">
-                          연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
-                        </span>
-                      ) : null}
-                    </p>
+                    {a.isLinkedShared || a.isFromLinkedPortal ? (
+                      <p className="text-sm text-slate-400 mt-1">
+                        {a.isLinkedShared ? (
+                          <span className="text-xs text-purple-300 border border-purple-500/40 rounded px-1.5 py-0.5">
+                            수동 연결
+                          </span>
+                        ) : null}
+                        {a.isFromLinkedPortal ? (
+                          <span
+                            className={`text-xs text-indigo-300 border border-indigo-500/40 rounded px-1.5 py-0.5${a.isLinkedShared ? ' ml-2' : ''}`}
+                          >
+                            연결 나의코드 {formatAccessCodeDisplay(a.sourceMyCode || '')}
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : null}
                   </div>
 
                   {(() => {
@@ -449,7 +451,7 @@ function ClientPortalContent() {
           >
             <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
             <p className="text-slate-300 text-sm mb-4">
-              「{deleteModal.testName}」 결과를 삭제할까요?
+              선택된 「{deleteModal.testName}」의 내용/결과가 삭제됩니다.
             </p>
             {actionError ? <p className="text-red-400 text-sm mb-2">{actionError}</p> : null}
             <div className="flex gap-2 justify-end">

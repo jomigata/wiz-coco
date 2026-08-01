@@ -56,12 +56,35 @@ function GoContent() {
   if (error) {
     return (
       <div className="min-h-screen bg-[#0f1628] pt-24 px-4">
-        <div className="max-w-md mx-auto text-center rounded-2xl border border-white/[0.12] bg-[#182438] p-8 shadow-xl shadow-black/30">
-          <p className="text-amber-200 text-sm leading-relaxed mb-2">링크를 사용할 수 없습니다</p>
-          <p className="text-slate-100 text-sm leading-relaxed mb-6">{error}</p>
-          <Link href="/portal/login/" className="text-sky-400 hover:text-sky-300 text-sm">
-            나의코드로 직접 들어가기
-          </Link>
+        <div className="max-w-md mx-auto rounded-2xl border border-white/[0.12] bg-[#182438] p-8 shadow-xl shadow-black/30 text-left">
+          <h1 className="text-lg font-semibold text-amber-200 mb-3 text-center">
+            링크를 사용할 수 없습니다
+          </h1>
+          <p className="text-slate-300 text-sm leading-relaxed mb-4">
+            이메일로 받은 「바로 시작」 링크는 발송 후 72시간까지만 유효합니다. 기한이 지났거나
+            이미 사용된 링크일 수 있습니다.
+          </p>
+          <div className="rounded-xl border border-sky-400/35 bg-sky-500/10 px-4 py-3.5 mb-6">
+            <p className="text-sky-100 font-semibold text-sm">
+              나의코드 / 비밀번호 이용을 추천합니다
+            </p>
+            <p className="mt-1.5 text-slate-300 text-xs leading-relaxed">
+              안내 이메일에 적힌 <span className="text-white font-medium">나의코드</span>와{' '}
+              <span className="text-white font-medium">4자리 비밀번호</span>로 로그인하면 언제든
+              검사를 이어갈 수 있습니다.
+            </p>
+          </div>
+          {error && error !== '링크를 사용할 수 없습니다.' ? (
+            <p className="text-slate-500 text-xs mb-4">{error}</p>
+          ) : null}
+          <div className="text-center">
+            <Link
+              href="/portal/login/"
+              className="inline-flex items-center justify-center rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
+            >
+              나의코드로 직접 들어가기
+            </Link>
+          </div>
         </div>
       </div>
     );
