@@ -52,7 +52,7 @@ function TestSortHeader({
     <button
       type="button"
       onClick={() => onSort(sortKey)}
-      className={`inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-sky-200 ${active ? 'text-sky-300' : 'text-slate-500'} ${className}`}
+      className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:text-sky-200 whitespace-nowrap ${active ? 'text-sky-300' : 'text-slate-400'} ${className}`}
     >
       {label}
       <span className="text-[10px] opacity-80" aria-hidden>
@@ -203,13 +203,14 @@ export default function AssessmentSettingsFields({
           <div
             className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] bg-black/10 ${compact ? 'p-2' : 'p-2'}`}
           >
-            <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 border-b border-white/[0.08] px-2 py-2">
+            <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 border-b border-white/[0.08] px-2 py-2">
               <TestSortHeader
                 label="No."
                 sortKey="no"
                 activeKey={testSortKey}
                 direction={testSortDir}
                 onSort={toggleTestSort}
+                className="text-slate-300"
               />
               <span className="sr-only">선택</span>
               <TestSortHeader
@@ -218,6 +219,7 @@ export default function AssessmentSettingsFields({
                 activeKey={testSortKey}
                 direction={testSortDir}
                 onSort={toggleTestSort}
+                className="justify-start normal-case tracking-normal"
               />
             </div>
             <div
@@ -226,11 +228,12 @@ export default function AssessmentSettingsFields({
               {sortedTests.map((t) => (
                 <label
                   key={t.testId}
-                  className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 rounded-lg border border-transparent transition hover:border-sky-500/20 hover:bg-sky-500/5 ${
+                  className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg border border-transparent transition hover:border-sky-500/20 hover:bg-sky-500/5 ${
                     compact ? 'px-2 py-2' : 'px-2 py-2'
                   }`}
+                  title={t.name}
                 >
-                  <span className="tabular-nums text-xs text-slate-500">{t.no}</span>
+                  <span className="tabular-nums text-sm font-semibold text-slate-300">{t.no}</span>
                   <input
                     type="checkbox"
                     checked={selectedTestIds.has(t.testId)}
@@ -238,7 +241,7 @@ export default function AssessmentSettingsFields({
                     disabled={disabled}
                     className="rounded text-sky-500"
                   />
-                  <span className={`leading-snug text-white ${compact ? 'text-sm' : 'text-sm'}`}>
+                  <span className={`min-w-0 truncate whitespace-nowrap text-white ${compact ? 'text-sm' : 'text-sm'}`}>
                     {t.name}
                   </span>
                 </label>

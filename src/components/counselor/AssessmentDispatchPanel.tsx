@@ -37,10 +37,12 @@ import {
   readCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
+import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
@@ -663,11 +665,19 @@ export default function AssessmentDispatchPanel({
   };
 
   if (loading) {
-    return <p className="text-slate-400 text-sm py-4">발송목록을 불러오는 중…</p>;
+    return (
+      <CounselorPageSection title="발송·검사 현황" dense className="flex min-h-0 flex-1">
+        <p className="text-slate-400 text-sm py-4">발송목록을 불러오는 중…</p>
+      </CounselorPageSection>
+    );
   }
 
   if (error) {
-    return <p className="text-red-400 text-sm">{error}</p>;
+    return (
+      <CounselorPageSection title="발송·검사 현황" dense className="flex min-h-0 flex-1">
+        <p className="text-red-400 text-sm py-4">{error}</p>
+      </CounselorPageSection>
+    );
   }
 
   if (!data || !displayData) return null;
@@ -677,105 +687,104 @@ export default function AssessmentDispatchPanel({
     : null;
 
   return (
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-3 py-2.5 text-sm">
-        <span className="font-mono text-base font-bold tracking-wide text-cyan-300">
-          {formatAccessCodeDisplay(displayData.joinAccessCode)}
-        </span>
-        {displayData.cohortName ? (
-          <>
-            <span className="text-slate-600" aria-hidden>
-              ·
-            </span>
-            <span className="font-medium text-slate-200">{displayData.cohortName}</span>
-          </>
-        ) : null}
-        <span className="text-slate-600" aria-hidden>
-          ·
-        </span>
-        <span className="min-w-0 truncate text-slate-400">{displayData.title || '—'}</span>
-        <span className="text-slate-600" aria-hidden>
-          ·
-        </span>
-        <span className="whitespace-nowrap text-slate-300">
-          완료{' '}
-          <span className="font-semibold text-white tabular-nums">{completedCount}</span>
-          <span className="text-slate-500">/</span>
-          <span className="tabular-nums">{displayData.recipients.length}</span>
-        </span>
-        <div className="ml-auto flex items-center gap-1.5 text-xs">
+    <>
+    <CounselorPageSection
+      showHierarchyBreadcrumb
+      title="발송·검사 현황"
+      className="flex min-h-0 flex-1"
+      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+      noBodyPadding
+      dense
+      description={
+        <>
+          <span className="font-mono font-semibold tracking-wide text-cyan-300">
+            {formatAccessCodeDisplay(displayData.joinAccessCode)}
+          </span>
+          {displayData.cohortName ? (
+            <>
+              <span className="mx-1.5 text-slate-600">·</span>
+              <span className="font-medium text-slate-200">{displayData.cohortName}</span>
+            </>
+          ) : null}
+          <span className="mx-1.5 text-slate-600">·</span>
+          <span className="text-slate-400">{displayData.title || '—'}</span>
+          <span className="mx-1.5 text-slate-600">·</span>
+          <span className="text-slate-300">
+            완료{' '}
+            <span className="font-semibold text-emerald-300 tabular-nums">{completedCount}</span>
+            <span className="text-slate-500">/</span>
+            <span className="tabular-nums text-white">{displayData.recipients.length}</span>
+            <span className="ml-0.5 text-slate-500">명</span>
+          </span>
           {isLive ? (
-            <span className="inline-flex items-center gap-1 text-emerald-300">
+            <span className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-300">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
               실시간
               {liveUpdatedLabel ? <span className="text-slate-500">{liveUpdatedLabel}</span> : null}
             </span>
           ) : liveError ? (
-            <span className="text-amber-300/90" title={liveError}>
+            <span className="ml-2 text-xs text-amber-300/90" title={liveError}>
               API 기준
             </span>
           ) : (
-            <span className="text-slate-500">연결 중…</span>
+            <span className="ml-2 text-xs text-slate-500">연결 중…</span>
           )}
+        </>
+      }
+      toolbar={
+        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            onClick={toggleAll}
+            disabled={displayData.recipients.length === 0}
+            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
+          >
+            {allSelected ? '전체 해제' : '전체 선택'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmAction('remind')}
+            disabled={
+              remindLoading ||
+              resendLoading ||
+              deleteLoading ||
+              remindEligibleSelected.length === 0
+            }
+            className="rounded-md bg-amber-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-500 disabled:opacity-50 sm:text-sm"
+            title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
+          >
+            {remindLoading
+              ? '발송 중…'
+              : `미실시 알림 (${remindEligibleSelected.length})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmAction('resend')}
+            disabled={resendLoading || deleteLoading || credentialTargetSelected.length === 0}
+            className="rounded-md bg-sky-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-500 disabled:opacity-50 sm:text-sm"
+          >
+            {resendLoading
+              ? '발송 중…'
+              : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
+          </button>
         </div>
-      </div>
-
-      <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 px-4 py-3">
-          <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
-            <button
-              type="button"
-              onClick={toggleAll}
-              disabled={displayData.recipients.length === 0}
-              className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
-            >
-              {allSelected ? '전체 해제' : '전체 선택'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmAction('remind')}
-              disabled={
-                remindLoading ||
-                resendLoading ||
-                deleteLoading ||
-                remindEligibleSelected.length === 0
-              }
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
-              title="미실시 검사자에게 현황·검사 링크 발송 (비밀번호 유지)"
-            >
-              {remindLoading
-                ? '발송 중…'
-                : `미실시 알림통보 (${remindEligibleSelected.length})`}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmAction('resend')}
-              disabled={resendLoading || deleteLoading || credentialTargetSelected.length === 0}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-            >
-              {resendLoading
-                ? '발송 중…'
-                : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
-            </button>
-          </div>
-        </div>
-
+      }
+    >
+      <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
         {displayData.recipients.length === 0 ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-6">
-            <p className="text-slate-400 text-sm">발송된 내담자가 없습니다.</p>
+          <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
+            <p className="text-base text-slate-300">발송된 내담자가 없습니다</p>
             <Link
               href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
-              className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 inline-flex items-center"
+              className="mt-4 inline-flex items-center rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
             >
               삭제된 목록
             </Link>
           </div>
         ) : (
           <>
-            <div className="max-h-[min(28rem,calc(100dvh-20rem))] overflow-auto">
-              <table className="w-max min-w-full text-sm table-fixed">
+            <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
+              <table className="w-max min-w-full table-fixed text-sm">
                 <colgroup>
                   <col className="w-10" />
                   <col className="w-10" />
@@ -999,18 +1008,17 @@ export default function AssessmentDispatchPanel({
               </table>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700/80 px-4 py-3">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
               <p className="text-xs text-slate-500">
-                선택 <span className="text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
-                {displayData.recipients.length}명
+                선택 <span className="font-semibold text-slate-300 tabular-nums">{selected.size}</span>명 · 전체{' '}
+                <span className="tabular-nums text-slate-300">{displayData.recipients.length}</span>명
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="hidden text-xs text-slate-500 sm:inline">내보내기·관리</span>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleDownloadSelected}
                   disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
+                  className="rounded-md bg-emerald-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50 sm:text-sm"
                 >
                   다운로드 ({selected.size})
                 </button>
@@ -1018,7 +1026,7 @@ export default function AssessmentDispatchPanel({
                   type="button"
                   onClick={handlePrintSelected}
                   disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-600 hover:bg-slate-500 disabled:opacity-50"
+                  className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
                 >
                   인쇄 ({selected.size})
                 </button>
@@ -1026,13 +1034,13 @@ export default function AssessmentDispatchPanel({
                   type="button"
                   onClick={() => setConfirmAction('delete')}
                   disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-red-700 hover:bg-red-600 disabled:opacity-50"
+                  className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
                 >
                   {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                 </button>
                 <Link
                   href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
-                  className="px-3 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-200 hover:bg-slate-600 inline-flex items-center"
+                  className="inline-flex items-center rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
                 >
                   삭제된 목록
                 </Link>
@@ -1041,6 +1049,7 @@ export default function AssessmentDispatchPanel({
           </>
         )}
       </div>
+    </CounselorPageSection>
 
       {dispatchProgress ? (
         <div
@@ -1377,6 +1386,6 @@ export default function AssessmentDispatchPanel({
           </div>
         </div>
       )}
-    </section>
+    </>
   );
 }
