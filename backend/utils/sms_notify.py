@@ -104,35 +104,16 @@ def send_test_reminder_sms(
         return False, "sms_not_configured"
 
     name = (display_name or "").strip() or "내담자"
-    title = (assessment_title or "").strip() or "심리검사"
     join_code = (join_access_code or "").strip().upper()
     portal_code = (my_code or "").strip().upper()
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
 
-    pending_names: list[str] = []
-    for item in pending_tests or []:
-        test_name = (item.get("testName") or item.get("testId") or "검사").strip()
-        status = (item.get("status") or "not_started").strip()
-        if status == "in_progress":
-            pending_names.append(f"{test_name}(진행중)")
-        else:
-            pending_names.append(f"{test_name}(미실시)")
-
-    progress = (
-        f"{completed_count}/{required_count}"
-        if required_count > 0
-        else "진행중"
-    )
-
-    parts = [f"[WizCoCo] {name}님 미실시 알림"]
-    parts.append(title)
-    parts.append(f"진행 {progress}")
-    if pending_names:
-        parts.append("미완료: " + ", ".join(pending_names))
+    parts = [f"[WizCoCo] {name}님 검사시작"]
+    parts.append("아직 완료하지 않은 검사가 있습니다. 검사를 진행해 주세요.")
     if join_code:
         parts.append(f"상담(코드) {join_code}")
     if portal_code:
-        parts.append(f"나의코드 {portal_code}")
+        parts.append(f"나의코드 {portal_code} 비밀번호 (최초 발송 안내 참고)")
     parts.append(login_url)
     parts.append(magic_url)
     body = "\n".join(parts)

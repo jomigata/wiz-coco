@@ -311,6 +311,7 @@ export default function AssessmentDispatchPanel({
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedNotifyId, setExpandedNotifyId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -489,11 +490,6 @@ export default function AssessmentDispatchPanel({
     [selectedRecipients],
   );
 
-  const loginUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/portal/login/`
-      : 'https://wizcoco.com/portal/login/';
-
   const sortedRecipients = useMemo(() => {
     const list = (visibleData?.recipients || []).map((r) =>
       mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
@@ -528,6 +524,10 @@ export default function AssessmentDispatchPanel({
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
+  };
+
+  const toggleNotifyExpand = (id: string) => {
+    setExpandedNotifyId((prev) => (prev === id ? null : id));
   };
 
   const handleResend = async () => {
@@ -685,53 +685,66 @@ export default function AssessmentDispatchPanel({
   if (!data || !displayData) return null;
 
   const liveUpdatedLabel = lastUpdatedAt
-    ? lastUpdatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    ? lastUpdatedAt.toLocaleString('ko-KR', {
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
     : null;
 
   return (
     <>
     <CounselorPageSection
-      showHierarchyBreadcrumb
       title="발송·검사 현황"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
       dense
       description={
-        <>
-          <span className="font-mono font-semibold tracking-wide text-cyan-300">
-            {formatAccessCodeDisplay(displayData.joinAccessCode)}
+        <span className="inline-flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
+            <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
+              {formatAccessCodeDisplay(displayData.joinAccessCode)}
+            </span>
           </span>
           {displayData.cohortName ? (
-            <>
-              <span className="mx-1.5 text-slate-600">·</span>
-              <span className="font-medium text-slate-200">{displayData.cohortName}</span>
-            </>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">그룹</span>
+              <span className="text-sm font-medium text-slate-200">{displayData.cohortName}</span>
+            </span>
           ) : null}
-          <span className="mx-1.5 text-slate-600">·</span>
-          <span className="text-slate-400">{displayData.title || '—'}</span>
-          <span className="mx-1.5 text-slate-600">·</span>
-          <span className="text-slate-300">
-            완료{' '}
-            <span className="font-semibold text-emerald-300 tabular-nums">{completedCount}</span>
-            <span className="text-slate-500">/</span>
-            <span className="tabular-nums text-white">{displayData.recipients.length}</span>
-            <span className="ml-0.5 text-slate-500">명</span>
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
+            <span className="text-sm text-slate-300">{displayData.title || '—'}</span>
           </span>
-          {isLive ? (
-            <span className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-              실시간
-              {liveUpdatedLabel ? <span className="text-slate-500">{liveUpdatedLabel}</span> : null}
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-500/80">완료</span>
+            <span className="text-sm tabular-nums text-slate-200">
+              <span className="font-semibold text-emerald-300">{completedCount}</span>
+              <span className="mx-1 text-slate-600">/</span>
+              <span className="font-medium text-white">{displayData.recipients.length}</span>
+              <span className="ml-0.5 text-slate-500">명</span>
+            </span>
+          </span>
+          {liveUpdatedLabel ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-600/60 bg-slate-900/60 px-2 py-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">최종 업데이트</span>
+              <span className="text-sm font-medium tabular-nums text-slate-200">{liveUpdatedLabel}</span>
+              {isLive ? (
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden title="실시간 연결" />
+              ) : null}
             </span>
           ) : liveError ? (
-            <span className="ml-2 text-xs text-amber-300/90" title={liveError}>
+            <span className="text-xs text-amber-300/90" title={liveError}>
               API 기준
             </span>
           ) : (
-            <span className="ml-2 text-xs text-slate-500">연결 중…</span>
+            <span className="text-xs text-slate-500">연결 중…</span>
           )}
-        </>
+        </span>
       }
       toolbar={
         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
@@ -791,40 +804,22 @@ export default function AssessmentDispatchPanel({
                   <col className="w-10" />
                   <col className="w-10" />
                   <col className="w-36" />
-                  <col className="w-36" />
-                  <col className="w-28" />
                   <col className="w-52" />
                   <col className="w-32" />
-                  <col className="w-24" />
-                  <col className="w-24" />
+                  <col className="w-36" />
+                  <col className="w-28" />
                 </colgroup>
                 <thead>
               <tr className={counselorListHeaderRowClass}>
                 <th className={counselorListNoThClass}>No.</th>
                 <th className={counselorListSelectThClass}>선택</th>
                 <SortableColumnHeader
-                  label="검사 현황"
-                  sortKey="testStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
-                />
-                <SortableColumnHeader
-                  label="발송일시"
-                  sortKey="notifyAt"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
-                />
-                <SortableColumnHeader
-                  label="이름"
+                  label="이름 (나의코드)"
                   sortKey="displayName"
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
-                  className="w-28"
+                  className="w-36"
                 />
                 <SortableColumnHeader
                   label="이메일"
@@ -843,12 +838,12 @@ export default function AssessmentDispatchPanel({
                   className="w-32"
                 />
                 <SortableColumnHeader
-                  label="나의코드"
-                  sortKey="myCode"
+                  label="검사 현황"
+                  sortKey="testStatus"
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
-                  className="w-24"
+                  className="w-36"
                 />
                 <SortableColumnHeader
                   label="발송현황"
@@ -856,7 +851,7 @@ export default function AssessmentDispatchPanel({
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
-                  className="w-24"
+                  className="w-28"
                 />
               </tr>
             </thead>
@@ -865,8 +860,15 @@ export default function AssessmentDispatchPanel({
                 const notify = dispatchStatusDisplay(r);
                 const summary = testSummary(r);
                 const isOpen = expandedId === r.portalId;
+                const isNotifyOpen = expandedNotifyId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
+                const myCodeLabel = formatAccessCodeDisplay(r.myCode);
+                const nameWithCode = r.displayName
+                  ? `${r.displayName}${myCodeLabel && myCodeLabel !== '—' ? ` (${myCodeLabel})` : ''}`
+                  : myCodeLabel && myCodeLabel !== '—'
+                    ? `(${myCodeLabel})`
+                    : '—';
 
                 return (
                   <React.Fragment key={r.portalId}>
@@ -893,17 +895,8 @@ export default function AssessmentDispatchPanel({
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
-                        <span className="text-slate-400" aria-hidden="true">
-                          {isOpen ? '▼' : '▶'}{' '}
-                        </span>
-                        <span>{summary.text}</span>
-                      </td>
-                      <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
-                        {formatNotifyDate(r.notifyAt)}
-                      </td>
-                      <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
-                        {r.displayName || '—'}
+                      <td className="px-3 py-2 text-white align-top w-36 max-w-[9rem] truncate" title={nameWithCode}>
+                        {nameWithCode}
                       </td>
                       <td className="px-3 py-2 text-slate-300 align-top truncate tabular-nums">
                         {r.email?.trim() ? (
@@ -917,13 +910,51 @@ export default function AssessmentDispatchPanel({
                       <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
                         {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
                       </td>
-                      <td className="px-3 py-2 font-mono text-cyan-300 align-top whitespace-nowrap">
-                        {formatAccessCodeDisplay(r.myCode)}
+                      <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
+                        <span className="text-slate-400" aria-hidden="true">
+                          {isOpen ? '▼' : '▶'}{' '}
+                        </span>
+                        <span>{summary.text}</span>
                       </td>
-                      <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm" title={notify.title}>
-                        <DispatchStatusText value={notify} />
+                      <td
+                        className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
+                        title={notify.title}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleNotifyExpand(r.portalId);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toggleNotifyExpand(r.portalId);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isNotifyOpen}
+                        aria-label={`발송현황 ${isNotifyOpen ? '접기' : '펼치기'}`}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <span className="text-slate-500 text-xs" aria-hidden>
+                            {isNotifyOpen ? '▼' : '▶'}
+                          </span>
+                          <DispatchStatusText value={notify} />
+                        </span>
                       </td>
                     </tr>
+                    {isNotifyOpen ? (
+                      <tr className="bg-slate-900/25">
+                        <td colSpan={2} className="border-b border-slate-700/50 p-0" aria-hidden="true" />
+                        <td
+                          colSpan={5}
+                          className="border-b border-slate-700/50 px-3 py-2 text-xs text-slate-400"
+                        >
+                          <span className="text-slate-500">발송일시 </span>
+                          <span className="tabular-nums text-slate-200">{formatNotifyDate(r.notifyAt)}</span>
+                        </td>
+                      </tr>
+                    ) : null}
                     {isOpen ? (
                       <tr>
                         <td
@@ -932,7 +963,7 @@ export default function AssessmentDispatchPanel({
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={7}
+                          colSpan={5}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (
@@ -1173,7 +1204,7 @@ export default function AssessmentDispatchPanel({
               </p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-4 text-sm">
-              <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
+                  <div className="rounded-lg border border-slate-600 bg-slate-900/50 p-3 space-y-1">
                 <p>
                   <span className="text-slate-500">상담코드 </span>
                   <span className="font-mono text-cyan-300">
@@ -1192,7 +1223,7 @@ export default function AssessmentDispatchPanel({
                     <p className="text-slate-300 font-medium mb-2">
                       발송 대상 {remindEligibleSelected.length}명
                     </p>
-                    <ul className="space-y-2 max-h-48 overflow-y-auto">
+                    <ul className="space-y-2 max-h-40 overflow-y-auto">
                       {remindEligibleSelected.map((r) => (
                         <li
                           key={r.portalId}
@@ -1211,17 +1242,25 @@ export default function AssessmentDispatchPanel({
                         .join(', ')}
                     </p>
                   ) : null}
-                  <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-slate-300">
-                    <p className="text-amber-200 font-medium mb-2">발송 내용 (이메일/SMS)</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
-                      <li>제목: [WizCoCo] 미실시 알림 (수신자 이름)</li>
-                      <li>검사명, 진행 현황, 미완료 검사 목록</li>
-                      <li>
-                        상담코드 {formatAccessCodeDisplay(displayData.joinAccessCode)}, 나의코드(개인별)
-                      </li>
-                      <li>검사시작 URL: {loginUrl}</li>
-                      <li>바로 시작 매직링크 (72시간 유효, 개인별 발급)</li>
-                    </ul>
+                  <div className="rounded-lg border border-slate-600 bg-[#0a1018] p-4 space-y-3 text-sm">
+                    <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">발송 내용 미리보기</p>
+                    <p className="text-slate-200">안녕하세요, ○○님</p>
+                    <p className="text-slate-400 leading-relaxed">
+                      WizCoCo 검사 접속 정보입니다. 아직 완료하지 않은 검사가 있으니 아래 정보로 검사를 진행해
+                      주세요.
+                    </p>
+                    <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2.5 space-y-1">
+                      <p className="text-slate-300">
+                        나의코드{' '}
+                        <span className="font-mono font-semibold text-cyan-300">(개인별)</span>
+                      </p>
+                      <p className="text-slate-300">
+                        비밀번호 <span className="text-amber-200/90">(최초 발송 안내 참고)</span>
+                      </p>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      검사시작 URL · 바로 시작 링크(72시간)가 이메일·문자로 함께 전달됩니다.
+                    </p>
                   </div>
                 </>
               ) : confirmAction === 'delete' ? (
@@ -1290,6 +1329,31 @@ export default function AssessmentDispatchPanel({
                       <p>미발송 내담자는 접속 정보(나의코드·비밀번호)를, 이미 발송된 내담자는 재발송 메시지를 받습니다.</p>
                     </div>
                   ) : null}
+                  <div className="rounded-lg border border-slate-600 bg-[#0a1018] p-4 space-y-3 text-sm">
+                    <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">발송 내용 미리보기</p>
+                    <p className="text-slate-200">안녕하세요, ○○님</p>
+                    <p className="text-slate-400 leading-relaxed">
+                      WizCoCo 검사 접속 정보입니다. 아래 나의코드·비밀번호 또는 바로 시작 링크로 검사를 진행해
+                      주세요.
+                      {credentialSendMode === 'resend' ? (
+                        <span className="block mt-1 text-amber-200/80">
+                          재발송 시 비밀번호가 새로 발급됩니다.
+                        </span>
+                      ) : null}
+                    </p>
+                    <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2.5 space-y-1">
+                      <p className="text-slate-300">
+                        나의코드{' '}
+                        <span className="font-mono font-semibold text-cyan-300">(개인별)</span>
+                      </p>
+                      <p className="text-slate-300">
+                        비밀번호 <span className="font-mono font-semibold text-amber-200">(새로 발급)</span>
+                      </p>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      검사시작 URL · 바로 시작 링크(72시간)가 이메일·문자로 함께 전달됩니다.
+                    </p>
+                  </div>
                 </>
               )}
             </div>

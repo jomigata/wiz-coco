@@ -381,8 +381,8 @@ function ClientPortalContent() {
                   key={a.assessmentId}
                   className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
                 >
-                  <div>
-                    <h3 className="text-base font-medium text-slate-500 sm:text-lg">
+                  <div className="border-b border-slate-700/40 pb-2.5 mb-1">
+                    <h3 className="text-sm font-normal text-slate-500">
                       {portalAssessmentGroupTitle(a)}
                     </h3>
                     {a.isLinkedShared || a.isFromLinkedPortal ? (
@@ -406,7 +406,9 @@ function ClientPortalContent() {
                   {(() => {
                     const welcomeText = stripPortalWelcomeBoilerplate(a.welcomeMessage || '');
                     return welcomeText ? (
-                      <p className="text-slate-400 text-sm whitespace-pre-wrap">{welcomeText}</p>
+                      <p className="border-l-2 border-slate-600/70 pl-3 text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+                        {welcomeText}
+                      </p>
                     ) : null;
                   })()}
 
@@ -455,7 +457,7 @@ function ClientPortalContent() {
           onClick={() => !actionLoading && setDeleteModal(null)}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-white/10 bg-[#151c28] p-6 shadow-xl"
+            className="w-full max-w-sm rounded-xl border-2 border-red-500/40 bg-[#151c28] p-6 shadow-xl shadow-red-950/25"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -474,7 +476,9 @@ function ClientPortalContent() {
                 <>선택된 「{deleteModal.testName}」의 내용/결과가 삭제됩니다.</>
               )}
             </p>
-            <p className="mt-2 text-xs text-slate-500">삭제 후에는 복구할 수 없습니다.</p>
+            <p className="mt-3 rounded-md border border-red-500/35 bg-red-950/30 px-3 py-2 text-sm font-medium text-red-200">
+              삭제 후에는 복구할 수 없습니다.
+            </p>
             {actionError ? (
               <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
                 {actionError}

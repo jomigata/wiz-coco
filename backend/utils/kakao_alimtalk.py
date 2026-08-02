@@ -162,7 +162,7 @@ def send_test_reminder_alimtalk(
         "#{pending}": (pending_summary or "미완료 검사")[:80],
         "#{link}": link,
     }
-    fallback = f"[WizCoCo] {name}님, 접수하신 검사 미완료. {link}"
+    fallback = f"[WizCoCo] {name}님 검사시작. 아직 완료하지 않은 검사가 있습니다. {link}"
     return _send_alimtalk(
         to_phone=to_phone,
         template_id=SOLAPI_KAKAO_TEMPLATE_TEST_REMINDER,

@@ -129,6 +129,7 @@ export default function IndividualAssessmentCreateForm() {
   const [lastIssueIntent, setLastIssueIntent] = useState<IssueIntent>('excel');
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
+  const [testSearchQuery, setTestSearchQuery] = useState('');
 
   const loading = loadingIntent !== null;
 
@@ -152,6 +153,12 @@ export default function IndividualAssessmentCreateForm() {
       return mult * a.name.localeCompare(b.name, 'ko');
     });
   }, [testSortKey, testSortDir]);
+
+  const filteredTests = useMemo(() => {
+    const q = testSearchQuery.trim().toLowerCase();
+    if (!q) return sortedTests;
+    return sortedTests.filter((t) => t.name.toLowerCase().includes(q));
+  }, [sortedTests, testSearchQuery]);
 
   const focusValidationField = useCallback(
     (field: 'cohortName' | 'title' | 'recipients' | 'tests') => {
@@ -669,9 +676,13 @@ export default function IndividualAssessmentCreateForm() {
   const selectedTestCount = selectedTestIds.size;
 
   return (
-    <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)]">
-        <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col xl:col-start-1 xl:row-start-1">
+    <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4 xl:overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:overflow-hidden">
+        <CounselorPageSection
+          title="검사 정보"
+          className="flex min-h-0 flex-col xl:col-start-1 xl:row-start-1 xl:max-h-full"
+          bodyClassName="min-h-0 overflow-y-auto"
+        >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
@@ -800,17 +811,33 @@ export default function IndividualAssessmentCreateForm() {
                       className="text-slate-300"
                     />
                     <span className="sr-only">선택</span>
-                    <TestSortHeader
-                      label="검사명"
-                      sortKey="name"
-                      activeKey={testSortKey}
-                      direction={testSortDir}
-                      onSort={toggleTestSort}
-                      className="justify-start"
-                    />
+                    <div className="flex min-w-0 items-center gap-2">
+                      <TestSortHeader
+                        label="검사명"
+                        sortKey="name"
+                        activeKey={testSortKey}
+                        direction={testSortDir}
+                        onSort={toggleTestSort}
+                        className="shrink-0 justify-start"
+                      />
+                      <input
+                        type="search"
+                        value={testSearchQuery}
+                        onChange={(e) => setTestSearchQuery(e.target.value)}
+                        placeholder="검사명 찾기"
+                        disabled={loading}
+                        className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#0a1528]/90 px-2 py-1 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400/50 focus:outline-none focus:ring-1 focus:ring-sky-500/30 disabled:opacity-50"
+                        aria-label="검사명 찾기"
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 pt-2 xl:grid-cols-2">
-                    {sortedTests.map((t) => {
+                    {filteredTests.length === 0 ? (
+                      <p className="col-span-full px-2 py-3 text-sm text-slate-500">
+                        {testSearchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 검사가 없습니다.'}
+                      </p>
+                    ) : null}
+                    {filteredTests.map((t) => {
                       const checked = selectedTestIds.has(t.testId);
                       return (
                         <label
@@ -839,7 +866,8 @@ export default function IndividualAssessmentCreateForm() {
 
         <CounselorPageSection
           title="내담자 목록"
-          className="flex min-h-0 flex-1 flex-col overflow-hidden xl:col-start-2 xl:row-start-1"
+          className="flex min-h-0 flex-col xl:col-start-2 xl:row-start-1 xl:max-h-full xl:flex-1 xl:overflow-hidden"
+          bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
           toolbar={
             recipients.length > 0 ? (
               <span

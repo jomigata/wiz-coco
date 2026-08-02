@@ -305,7 +305,7 @@ def send_test_reminder_email(
     required_count: int = 0,
     magic_url: str,
 ) -> bool:
-    """미실시·미완료 검사 현황과 검사 연결 링크 안내."""
+    """미실시·미완료 검사자에게 접속 정보 형식으로 검사 진행을 요청."""
     if not is_email_configured():
         return False
 
@@ -314,51 +314,18 @@ def send_test_reminder_email(
         return False
 
     name = (display_name or "").strip() or "내담자"
-    title = (assessment_title or "").strip() or "심리검사"
-    portal_code = (my_code or "").strip().upper()
+    my_code_display = (my_code or "").strip().upper() or "—"
     login_url = f"{PUBLIC_SITE_URL.rstrip('/')}/portal/login/"
-
-    pending_lines: list[str] = []
-    for item in pending_tests or []:
-        test_name = (item.get("testName") or item.get("testId") or "검사").strip()
-        status = (item.get("status") or "not_started").strip()
-        if status == "in_progress":
-            pending_lines.append(f"- {test_name} (진행 중)")
-        else:
-            pending_lines.append(f"- {test_name} (미실시)")
-
-    if not pending_lines:
-        pending_lines.append("- 미완료 검사 없음")
-
-    cred_lines: list[str] = []
-    if portal_code:
-        cred_lines.append(f"나의코드: {portal_code}")
-
-    progress = (
-        f"{completed_count}/{required_count} 완료"
-        if required_count > 0
-        else "진행 중"
-    )
+    pin_display = "(최초 발송 안내 참고)"
+    magic_expiry_label = _magic_link_expiry_label()
 
     body = f"""안녕하세요, {name}님.
 
-WizCoCo 심리검사 미완료 안내입니다.
+WizCoCo 검사 접속 정보입니다. 아직 완료하지 않은 검사가 있으니 아래 정보로 검사를 진행해 주세요.
 
-검사명: {title}
-진행 현황: {progress}
+나의코드: {my_code_display}  비밀번호: {pin_display}
 
-▶ 미완료 검사
-{chr(10).join(pending_lines)}
-
-"""
-    if cred_lines:
-        body += f"""▶ 접속 정보
-{chr(10).join(cred_lines)}
-
-"""
-
-    magic_expiry_label = _magic_link_expiry_label()
-    body += f"""▶ 검사시작
+▶ 검사시작
 {login_url}
 
 ▶ 바로 시작 (추천)
@@ -369,29 +336,20 @@ WizCoCo 심리검사 미완료 안내입니다.
 WizCoCo
 """
 
-    extra_sections: list[tuple[str, str]] = [
-        ("검사명", title),
-        ("진행 현황", progress),
-        ("미완료 검사", "\n".join(pending_lines)),
-    ]
-    if cred_lines:
-        extra_sections.insert(2, ("접속 정보", "\n".join(cred_lines)))
-
     html = _portal_access_html_email(
         greeting=f"안녕하세요, {name}님",
-        intro="WizCoCo 심리검사 미완료 안내입니다. 아래 검사를 이어서 진행해 주세요.",
-        my_code=portal_code or "—",
-        pin_display="(이메일·문자 안내 참고)",
+        intro="WizCoCo 검사 접속 정보입니다. 아직 완료하지 않은 검사가 있으니 아래 정보로 검사를 진행해 주세요.",
+        my_code=my_code_display,
+        pin_display=pin_display,
         login_url=login_url,
         magic_url=magic_url,
         magic_expiry_label=magic_expiry_label,
-        extra_sections=extra_sections,
     )
 
     msg = MIMEMultipart()
     msg["From"] = MAIL_FROM
     msg["To"] = email
-    msg["Subject"] = f"[WizCoCo] 미실시 알림 ({name})"
+    msg["Subject"] = f"[WizCoCo] 검사시작 접속 안내 ({name})"
     _attach_email_bodies(msg, body, html)
 
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:

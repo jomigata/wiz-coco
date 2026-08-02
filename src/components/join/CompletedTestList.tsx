@@ -271,7 +271,7 @@ export default function CompletedTestList({
           onClick={() => !actionLoading && setDeleteModal(null)}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-white/10 bg-[#151c28] p-6 shadow-xl"
+            className="w-full max-w-sm rounded-xl border-2 border-red-500/40 bg-[#151c28] p-6 shadow-xl shadow-red-950/25"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -280,7 +280,9 @@ export default function CompletedTestList({
             <p className="mt-3 text-sm leading-relaxed text-slate-300">
               선택된 「{deleteModal.testName}」의 내용/결과가 삭제됩니다.
             </p>
-            <p className="mt-2 text-xs text-slate-500">삭제 후에는 복구할 수 없습니다.</p>
+            <p className="mt-3 rounded-md border border-red-500/35 bg-red-950/30 px-3 py-2 text-sm font-medium text-red-200">
+              삭제 후에는 복구할 수 없습니다.
+            </p>
             {actionError ? (
               <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
                 {actionError}
