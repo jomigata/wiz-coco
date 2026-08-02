@@ -9,6 +9,12 @@ export const counselorListThClass = 'text-left text-gray-300 py-3 px-4 text-sm f
 export const counselorListNoThClass =
   'w-10 text-left text-gray-300 py-3 px-4 text-sm font-medium tabular-nums';
 
+/** 선택(체크박스) 열 — 가로 한 줄 · 중앙 정렬 */
+export const counselorListSelectThClass =
+  'w-10 whitespace-nowrap text-center text-gray-300 py-3 px-2 text-sm font-medium';
+
+export const counselorListSelectTdClass = 'py-3 px-2 text-center align-top text-sm';
+
 /** thead 요소용 — tr에 counselorListHeaderRowClass 사용 */
 export const counselorListTheadClass = '';
 

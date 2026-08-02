@@ -219,7 +219,7 @@ export default function AssessmentSettingsFields({
                 activeKey={testSortKey}
                 direction={testSortDir}
                 onSort={toggleTestSort}
-                className="justify-start normal-case tracking-normal"
+                className="justify-start text-slate-300"
               />
             </div>
             <div
@@ -233,7 +233,7 @@ export default function AssessmentSettingsFields({
                   }`}
                   title={t.name}
                 >
-                  <span className="tabular-nums text-sm font-semibold text-slate-300">{t.no}</span>
+                  <span className="tabular-nums text-sm font-semibold text-slate-100">{t.no}</span>
                   <input
                     type="checkbox"
                     checked={selectedTestIds.has(t.testId)}

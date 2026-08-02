@@ -60,43 +60,53 @@ def _portal_access_html_email(
     extra_html = ""
     for title, content in extra_sections or []:
         extra_html += f"""
-        <tr><td style="padding:0 0 16px 0">
-          <p style="margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#64748b">{title}</p>
-          <div style="font-size:14px;line-height:1.65;color:#cbd5e1;white-space:pre-line">{content}</div>
+        <tr><td style="padding:0 0 14px 0">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #1f2937;border-radius:10px;background:#0a1018">
+            <tr><td style="padding:14px 16px">
+              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6b7280">{title}</p>
+              <div style="font-size:14px;line-height:1.7;color:#d1d5db;white-space:pre-line">{content}</div>
+            </td></tr>
+          </table>
         </td></tr>"""
 
     return f"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:24px 12px;background:#0b1220;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',sans-serif">
+<body style="margin:0;padding:20px 10px;background:#030712;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',sans-serif">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto">
-    <tr><td style="padding:0 0 16px 0">
-      <div style="border-radius:16px 16px 0 0;background:linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%);padding:22px 24px">
-        <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.82)">WizCoCo</p>
-        <h1 style="margin:8px 0 0;font-size:22px;line-height:1.35;font-weight:700;color:#ffffff">검사 접속 정보</h1>
-      </div>
+    <tr><td style="padding:0 0 12px 0;text-align:center">
+      <p style="margin:0;font-size:12px;font-weight:600;letter-spacing:0.12em;color:#64748b">WIZCOCO</p>
     </td></tr>
     <tr><td style="padding:0">
-      <div style="border:1px solid #1e293b;border-top:none;border-radius:0 0 16px 16px;background:#111827;padding:24px">
-        <p style="margin:0 0 8px;font-size:16px;font-weight:600;color:#f8fafc">{greeting}</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.65;color:#94a3b8">{intro}</p>
-        {extra_html}
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 16px 0;border:1px solid #1e3a5f;border-radius:12px;background:#0f172a">
-          <tr><td style="padding:16px 18px">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#64748b">접속 정보</p>
-            <p style="margin:0 0 6px;font-size:15px;color:#e2e8f0"><span style="color:#94a3b8">나의코드</span> <strong style="color:#67e8f9;font-family:Consolas,Monaco,monospace">{my_code}</strong></p>
-            <p style="margin:0;font-size:15px;color:#e2e8f0"><span style="color:#94a3b8">비밀번호</span> <strong style="color:#fde68a;font-family:Consolas,Monaco,monospace">{pin_display}</strong></p>
-          </td></tr>
-        </table>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 12px 0">
-          <tr><td style="padding:0 0 10px 0">
-            <a href="{login_url}" style="display:block;text-align:center;padding:13px 16px;border-radius:10px;background:#334155;color:#f8fafc;text-decoration:none;font-size:14px;font-weight:600">검사시작 로그인</a>
-          </td></tr>
-          <tr><td style="padding:0">
-            <a href="{magic_url}" style="display:block;text-align:center;padding:14px 16px;border-radius:10px;background:linear-gradient(135deg,#0284c7,#2563eb);color:#ffffff;text-decoration:none;font-size:15px;font-weight:700">바로 시작 (추천)</a>
-          </td></tr>
-        </table>
-        <p style="margin:0 0 18px;font-size:12px;line-height:1.6;color:#64748b;text-align:center">{magic_expiry_label}</p>
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#475569;text-align:center">본 메일은 검사 안내 목적으로 발송되었습니다.</p>
+      <div style="border:1px solid #1f2937;border-radius:14px;background:#0b0f17;overflow:hidden">
+        <div style="padding:20px 22px;border-bottom:1px solid #1f2937;background:#0f141d">
+          <h1 style="margin:0;font-size:20px;line-height:1.4;font-weight:700;color:#f3f4f6">검사 접속 정보</h1>
+          <p style="margin:10px 0 0;font-size:14px;line-height:1.65;color:#9ca3af">{intro}</p>
+        </div>
+        <div style="padding:20px 22px">
+          <p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#e5e7eb">{greeting}</p>
+          {extra_html}
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #1f2937;border-radius:10px;background:#0a1018">
+            <tr><td style="padding:16px 18px">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6b7280">접속 정보</p>
+              <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#e5e7eb"><span style="color:#9ca3af">나의코드</span> <strong style="color:#7dd3fc;font-family:Consolas,Monaco,monospace;font-size:16px">{my_code}</strong></p>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#e5e7eb"><span style="color:#9ca3af">비밀번호</span> <strong style="color:#fde68a;font-family:Consolas,Monaco,monospace;font-size:16px">{pin_display}</strong></p>
+            </td></tr>
+          </table>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #1f2937;border-radius:10px;background:#0a1018">
+            <tr><td style="padding:14px 16px">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6b7280">검사 시작</p>
+              <a href="{login_url}" style="display:block;text-align:center;padding:12px 14px;border-radius:8px;background:#1f2937;color:#f9fafb;text-decoration:none;font-size:14px;font-weight:600;border:1px solid #374151">검사시작 로그인</a>
+            </td></tr>
+          </table>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #1e3a5f;border-radius:10px;background:#0c1524">
+            <tr><td style="padding:14px 16px">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#60a5fa">바로 시작 (추천)</p>
+              <a href="{magic_url}" style="display:block;text-align:center;padding:13px 14px;border-radius:8px;background:#1d4ed8;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700">바로 시작하기</a>
+              <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:#94a3b8;text-align:center">{magic_expiry_label}</p>
+            </td></tr>
+          </table>
+          <p style="margin:0;font-size:11px;line-height:1.6;color:#6b7280;text-align:center">본 메일은 검사 안내 목적으로 발송되었습니다.</p>
+        </div>
       </div>
     </td></tr>
   </table>

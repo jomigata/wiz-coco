@@ -769,6 +769,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               setClientInfo(info);
               void handleEditComplete(info);
             }}
+            onEditNext={(info) => {
+              setClientInfo(info);
+              setCurrentStep('test');
+            }}
             onBack={
               flow.skipCodeStep && !joinFromPortal
                 ? undefined
@@ -868,7 +872,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             </div>
 
             <div className="text-center mb-3">
-              <div className="min-h-[96px] relative mb-8 flex items-center justify-center">
+              <div className="min-h-[112px] relative mb-10 flex items-center justify-center">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
@@ -887,12 +891,12 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 </AnimatePresence>
               </div>
               
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-5">
                 <div className="relative flex justify-between items-end gap-3 px-4">
                   <div className={v.scaleArc}></div>
                   <button
                     onClick={() => handleAnswer(6)}
-                    className={answerBtnClass('rounded-xl', 'py-10')}
+                    className={answerBtnClass('rounded-xl', 'py-12')}
                   >
                     {answers[currentQuestion] === 6 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>
@@ -987,7 +991,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
                   <button
                     onClick={() => handleAnswer(1)}
-                    className={answerBtnClass('rounded-[20px]', 'py-10', '', answerGlowPink)}
+                    className={answerBtnClass('rounded-[20px]', 'py-12', '', answerGlowPink)}
                   >
                     {answers[currentQuestion] === 1 && (
                       <div className={`absolute top-2 right-2 w-4 h-4 rounded-full ${v.checkDot} flex items-center justify-center`}>

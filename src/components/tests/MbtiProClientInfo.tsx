@@ -16,6 +16,8 @@ interface MbtiProClientInfoProps {
   editMode?: boolean;
   onEditComplete?: (clientInfo: ClientInfo) => void;
   editCompleteLoading?: boolean;
+  /** 수정 화면 — 문항 단계로 이동 */
+  onEditNext?: (clientInfo: ClientInfo) => void;
 }
 
 export interface ClientInfo {
@@ -39,6 +41,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   editMode = false,
   onEditComplete,
   editCompleteLoading = false,
+  onEditNext,
 }) => {
   const th = getMbtiProClientInfoTheme(uiTheme);
   const router = useRouter();
@@ -269,6 +272,11 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   const handleEditCompleteClick = () => {
     if (!onEditComplete || !validateForm()) return;
     onEditComplete(buildClientInfo());
+  };
+
+  const handleEditNextClick = () => {
+    if (!onEditNext || !validateForm()) return;
+    onEditNext(buildClientInfo());
   };
 
   const handleGenderSelect = (selectedGender: string) => {
@@ -791,7 +799,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
               )}
             </div>
 
-            <div className={`flex ${onBack ? 'justify-between' : 'justify-end'} items-center gap-2 pt-3 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className={`flex ${onBack || (editMode && onEditNext) ? 'justify-between' : 'justify-end'} items-center gap-2 pt-3 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {onBack && (
               <motion.button
                 type="button"
@@ -812,16 +820,29 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
               </motion.button>
               )}
 
-              {!editMode ? (
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={th.submitBtn}
-                >
-                  검사 시작하기
-                </motion.button>
-              ) : null}
+              <div className="flex items-center gap-2">
+                {editMode && onEditNext ? (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={th.backBtn}
+                    onClick={handleEditNextClick}
+                  >
+                    다음 페이지
+                  </motion.button>
+                ) : null}
+                {!editMode ? (
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={th.submitBtn}
+                  >
+                    검사 시작하기
+                  </motion.button>
+                ) : null}
+              </div>
             </div>
 
             {editMode && onEditComplete ? (

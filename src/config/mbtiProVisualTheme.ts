@@ -31,9 +31,9 @@ const emerald: MbtiProVisualTheme = {
   progressLabel: 'text-emerald-200 text-sm',
   progressTrack: 'bg-emerald-800/50',
   progressFill: 'bg-emerald-500',
-  mainCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-5',
+  mainCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-5 sm:p-6 min-h-[32rem] flex flex-col',
   questionCard:
-    'bg-emerald-800/50 backdrop-blur-sm rounded-xl p-3 flex items-center justify-center min-h-[72px] border border-emerald-700/20',
+    'bg-emerald-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center justify-center min-h-[112px] border border-emerald-700/20',
   scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-emerald-900/10 rounded-[100%/20px] -z-10',
   answerBtn:
     'bg-emerald-800/35 transition-all duration-300 border border-emerald-600/25',
@@ -62,9 +62,9 @@ const portal: MbtiProVisualTheme = {
   progressLabel: 'text-slate-200 text-sm',
   progressTrack: 'bg-white/[0.1]',
   progressFill: 'bg-gradient-to-r from-sky-500 to-indigo-500',
-  mainCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-4 sm:p-5',
+  mainCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-5 sm:p-6 min-h-[32rem] flex flex-col',
   questionCard:
-    'flex w-full items-center justify-center min-h-[84px] px-5 py-4 rounded-xl border-2 border-sky-400/40 bg-gradient-to-b from-[#2a4568] to-[#1e3555] shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.25)]',
+    'flex w-full items-center justify-center min-h-[112px] px-5 py-5 rounded-xl border-2 border-sky-400/40 bg-gradient-to-b from-[#2a4568] to-[#1e3555] shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.25)]',
   scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-400/[0.08] to-transparent rounded-[100%/20px] -z-10',
   answerBtn:
     'bg-[#1a3352]/70 transition-all duration-300 border border-white/[0.06] shadow-none',

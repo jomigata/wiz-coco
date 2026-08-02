@@ -48,19 +48,21 @@ function TestSortHeader({
   activeKey,
   direction,
   onSort,
+  className = '',
 }: {
   label: string;
   sortKey: TestSortKey;
   activeKey: TestSortKey;
   direction: SortDirection;
   onSort: (key: TestSortKey) => void;
+  className?: string;
 }) {
   const active = activeKey === sortKey;
   return (
     <button
       type="button"
       onClick={() => onSort(sortKey)}
-      className={`inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-sky-200 ${active ? 'text-sky-300' : 'text-slate-500'}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold transition-colors hover:text-sky-200 ${active ? 'text-sky-300' : 'text-slate-400'} ${className}`}
     >
       {label}
       <span className="text-[10px] opacity-80" aria-hidden>
@@ -623,23 +625,28 @@ export default function IndividualAssessmentCreateForm() {
             ) : null}
 
             {(notifySent > 0 || notifyFailed > 0 || notifyQueued > 0) ? (
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm text-slate-400">
-                {notifySent > 0 ? (
-                  <p>
-                    즉시 발송 완료:{' '}
-                    <span className="font-semibold text-emerald-300">{notifySent}</span>건
-                  </p>
-                ) : null}
-                {notifyQueued > 0 ? (
-                  <p className="mt-1">
-                    발송 예약: <span className="font-semibold text-sky-300">{notifyQueued}</span>건
-                  </p>
-                ) : null}
-                {notifyFailed > 0 ? (
-                  <p className="mt-1">
-                    발송 실패: <span className="font-semibold text-red-300">{notifyFailed}</span>건
-                  </p>
-                ) : null}
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm text-slate-300">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">발송 현황</p>
+                <div className="mt-2 space-y-1">
+                  {notifySent > 0 ? (
+                    <p>
+                      즉시 발송 완료{' '}
+                      <span className="font-semibold text-emerald-300 tabular-nums">{notifySent}</span>건
+                    </p>
+                  ) : null}
+                  {notifyQueued > 0 ? (
+                    <p>
+                      발송 진행 중{' '}
+                      <span className="font-semibold text-sky-300 tabular-nums">{notifyQueued}</span>건
+                    </p>
+                  ) : null}
+                  {notifyFailed > 0 ? (
+                    <p>
+                      발송 실패{' '}
+                      <span className="font-semibold text-red-300 tabular-nums">{notifyFailed}</span>건
+                    </p>
+                  ) : null}
+                </div>
               </div>
             ) : null}
           </div>
@@ -783,13 +790,14 @@ export default function IndividualAssessmentCreateForm() {
                   </span>
                 </div>
                 <div className={`${TEST_PICKER_SCROLL} flex flex-col`}>
-                  <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 border-b border-white/[0.08] px-1 pb-2">
+                  <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 border-b border-white/[0.08] px-1 pb-2">
                     <TestSortHeader
                       label="No."
                       sortKey="no"
                       activeKey={testSortKey}
                       direction={testSortDir}
                       onSort={toggleTestSort}
+                      className="text-slate-300"
                     />
                     <span className="sr-only">선택</span>
                     <TestSortHeader
@@ -798,6 +806,7 @@ export default function IndividualAssessmentCreateForm() {
                       activeKey={testSortKey}
                       direction={testSortDir}
                       onSort={toggleTestSort}
+                      className="justify-start"
                     />
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 pt-2 xl:grid-cols-2">
@@ -806,9 +815,10 @@ export default function IndividualAssessmentCreateForm() {
                       return (
                         <label
                           key={t.testId}
-                          className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 rounded-md px-2 py-2 text-sm leading-snug transition-colors hover:bg-white/5 ${checked ? 'text-sky-100' : 'text-slate-300'}`}
+                          title={t.name}
+                          className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-white/5 ${checked ? 'text-sky-100' : 'text-slate-300'}`}
                         >
-                          <span className="tabular-nums text-xs text-slate-500">{t.no}</span>
+                          <span className="tabular-nums text-sm font-semibold text-slate-100">{t.no}</span>
                           <input
                             type="checkbox"
                             checked={checked}
@@ -816,7 +826,7 @@ export default function IndividualAssessmentCreateForm() {
                             disabled={loading}
                             className="shrink-0 rounded accent-sky-500"
                           />
-                          <span>{t.name}</span>
+                          <span className="min-w-0 truncate whitespace-nowrap">{t.name}</span>
                         </label>
                       );
                     })}

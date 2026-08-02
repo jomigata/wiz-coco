@@ -42,6 +42,8 @@ import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListSelectTdClass,
+  counselorListSelectThClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
@@ -799,7 +801,7 @@ export default function AssessmentDispatchPanel({
                 <thead>
               <tr className={counselorListHeaderRowClass}>
                 <th className={counselorListNoThClass}>No.</th>
-                <th className={`${counselorListThClass} w-10`}>선택</th>
+                <th className={counselorListSelectThClass}>선택</th>
                 <SortableColumnHeader
                   label="검사 현황"
                   sortKey="testStatus"
@@ -883,7 +885,7 @@ export default function AssessmentDispatchPanel({
                       className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
                       <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
-                      <td className={counselorListTdClass} onClick={(e) => e.stopPropagation()}>
+                      <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selected.has(r.portalId)}

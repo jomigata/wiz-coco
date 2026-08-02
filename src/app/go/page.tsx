@@ -82,15 +82,16 @@ function GoContent() {
           <h1 className="text-lg font-semibold text-amber-200 mb-4 text-center">
             링크를 사용할 수 없습니다
           </h1>
-          <div className="rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3.5 mb-4">
+          <div className="rounded-xl border border-amber-500/20 bg-[#1a1408]/80 px-4 py-3.5 mb-4">
             <p className="text-sm leading-relaxed text-slate-300">
-              유효기한이 지났으며, 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다.
+              검사 바로시작 링크는 발송 후 72시간까지만 유효합니다.
+              {expiryLabel ? (
+                <>
+                  {' '}
+                  (<span className="text-amber-200/90">유효기한: {expiryLabel}까지</span>)
+                </>
+              ) : null}
             </p>
-            {expiryLabel ? (
-              <p className="mt-2 text-sm text-amber-200/90">
-                링크 유효일시: <span className="font-medium text-amber-100">{expiryLabel}</span>
-              </p>
-            ) : null}
           </div>
           <div className="rounded-xl border border-sky-400/35 bg-sky-500/10 px-4 py-3.5 mb-6">
             <p className="text-sky-100 font-semibold text-sm">

@@ -17,6 +17,8 @@ import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListSelectTdClass,
+  counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
@@ -384,7 +386,7 @@ export default function DeletedAssessmentsPage() {
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
                     <th className={counselorListNoThClass}>No.</th>
-                    <th scope="col" className={`${counselorListThClass} w-10`}>선택</th>
+                    <th scope="col" className={counselorListSelectThClass}>선택</th>
                     <th scope="col" className={`${counselorListThClass} w-28`}>검사 현황</th>
                     <SortableColumnHeader
                       label="발급일"
@@ -441,7 +443,7 @@ export default function DeletedAssessmentsPage() {
                           <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
                             {startIndex + idx + 1}
                           </td>
-                          <td className={counselorListTdClass} onClick={(e) => e.stopPropagation()}>
+                          <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
                               checked={selected.has(row.id)}
