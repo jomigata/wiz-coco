@@ -31,7 +31,12 @@ export type PortalTestListProps = {
     roundNumber: number | null;
     resultItem: TestResultItem;
   }) => void;
-  onDeleteResult: (params: { resultId: string; testName: string; accessCode: string }) => void;
+  onDeleteResult: (params: {
+    resultId: string;
+    testName: string;
+    accessCode: string;
+    roundNumber: number | null;
+  }) => void;
 };
 
 export default function PortalTestList({
@@ -159,6 +164,7 @@ export default function PortalTestList({
                                 resultId: r.resultId,
                                 testName,
                                 accessCode,
+                                roundNumber: roundById.get(r.resultId) ?? null,
                               })
                             }
                             className="text-red-400 hover:text-red-300 text-xs"

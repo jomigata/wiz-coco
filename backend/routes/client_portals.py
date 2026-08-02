@@ -116,6 +116,7 @@ def _load_assessments_for_portal(db, portal_doc):
             {
                 "assessmentId": adoc.id,
                 "title": a.get("title", ""),
+                "cohortName": (a.get("cohortName") or d.get("cohortName") or "").strip(),
                 "welcomeMessage": a.get("welcomeMessage", ""),
                 "usageEndDate": a.get("usageEndDate", ""),
                 "testList": a.get("testList", []),
@@ -345,6 +346,7 @@ def portal_me():
             {
                 "assessmentId": aid,
                 "title": a.get("title", ""),
+                "cohortName": (a.get("cohortName") or "").strip(),
                 "welcomeMessage": a.get("welcomeMessage", ""),
                 "usageEndDate": a.get("usageEndDate", ""),
                 "testList": a.get("testList", []),

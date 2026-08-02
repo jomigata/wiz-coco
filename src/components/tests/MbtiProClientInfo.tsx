@@ -13,6 +13,9 @@ interface MbtiProClientInfoProps {
   onBack?: (clientInfo: ClientInfo) => void;
   screenTitle?: string;
   uiTheme?: 'emerald' | 'portal';
+  editMode?: boolean;
+  onEditComplete?: (clientInfo: ClientInfo) => void;
+  editCompleteLoading?: boolean;
 }
 
 export interface ClientInfo {
@@ -33,6 +36,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   onBack,
   screenTitle,
   uiTheme = 'emerald',
+  editMode = false,
+  onEditComplete,
+  editCompleteLoading = false,
 }) => {
   const th = getMbtiProClientInfoTheme(uiTheme);
   const router = useRouter();
@@ -241,23 +247,28 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const buildClientInfo = (): ClientInfo => ({
+    birthYear,
+    groupCode,
+    groupPassword,
+    gender,
+    maritalStatus,
+    name: name.trim(),
+    privacyAgreed,
+    phone: phone.trim(),
+  });
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      const clientInfo: ClientInfo = {
-        birthYear,
-        groupCode,
-        groupPassword,
-        gender,
-        maritalStatus,
-        name: name.trim(),
-        privacyAgreed,
-        phone: phone.trim()
-      };
-      
-      onSubmit(clientInfo);
+      onSubmit(buildClientInfo());
     }
+  };
+
+  const handleEditCompleteClick = () => {
+    if (!onEditComplete || !validateForm()) return;
+    onEditComplete(buildClientInfo());
   };
 
   const handleGenderSelect = (selectedGender: string) => {
@@ -780,7 +791,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
               )}
             </div>
 
-            <div className={`flex ${onBack ? 'justify-between' : 'justify-end'} items-center pt-2 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className={`flex ${onBack ? 'justify-between' : 'justify-end'} items-center gap-2 pt-2 ${showYearSelector ? 'opacity-30 pointer-events-none' : ''}`}>
               {onBack && (
               <motion.button
                 type="button"
@@ -788,16 +799,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                 whileTap={{ scale: 0.97 }}
                 className={isPersonalTest ? th.backBtn : th.backBtnDisabled}
                 onClick={() => {
-                  const currentInfo: ClientInfo = {
-                    birthYear,
-                    groupCode,
-                    groupPassword,
-                    gender,
-                    maritalStatus,
-                    name: name.trim(),
-                    privacyAgreed,
-                    phone: phone.trim()
-                  };
+                  const currentInfo = buildClientInfo();
                   try {
                     if (typeof window !== 'undefined') {
                       localStorage.setItem('mbti_pro_client_info', JSON.stringify(currentInfo));
@@ -810,14 +812,28 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
               </motion.button>
               )}
 
-              <motion.button
-                type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={th.submitBtn}
-              >
-                검사 시작하기
-              </motion.button>
+              <div className="flex items-center gap-2">
+                {editMode && onEditComplete ? (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    disabled={editCompleteLoading}
+                    className="rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={handleEditCompleteClick}
+                  >
+                    {editCompleteLoading ? '저장 중…' : '수정완료'}
+                  </motion.button>
+                ) : null}
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={th.submitBtn}
+                >
+                  검사 시작하기
+                </motion.button>
+              </div>
             </div>
           </form>
         </motion.div>

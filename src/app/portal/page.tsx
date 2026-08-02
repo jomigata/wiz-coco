@@ -30,6 +30,12 @@ import { clearJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
 import { getJoinTestPath } from '@/lib/portalTestNavigation';
 
 type PortalAssessment = PortalDashboardAssessment;
+
+function portalAssessmentGroupTitle(a: PortalAssessment): string {
+  const org = (a.cohortName || '').trim() || (a.title || '').trim() || '—';
+  const title = (a.title || '—').trim();
+  return `${org}/${title}`;
+}
 type PortalTab = 'tests' | 'care';
 
 function PortalLoading() {
@@ -57,6 +63,7 @@ function ClientPortalContent() {
     resultId: string;
     testName: string;
     accessCode: string;
+    roundNumber: number | null;
   } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -375,7 +382,10 @@ function ClientPortalContent() {
                   className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
                 >
                   <div>
-                    <h3 className="text-lg font-medium text-white">{a.title}</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      <span className="text-slate-400 font-normal">그룹명/제목: </span>
+                      {portalAssessmentGroupTitle(a)}
+                    </h3>
                     {a.isLinkedShared || a.isFromLinkedPortal ? (
                       <p className="text-sm text-slate-400 mt-1">
                         {a.isLinkedShared ? (
@@ -415,9 +425,9 @@ function ClientPortalContent() {
                       onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
                         openResultView(code, testName, resultId, roundNumber, resultItem)
                       }
-                      onDeleteResult={({ resultId, testName, accessCode: resultCode }) => {
+                      onDeleteResult={({ resultId, testName, accessCode: resultCode, roundNumber }) => {
                         setActionError('');
-                        setDeleteModal({ resultId, testName, accessCode: resultCode });
+                        setDeleteModal({ resultId, testName, accessCode: resultCode, roundNumber });
                       }}
                     />
                   )}
@@ -451,7 +461,14 @@ function ClientPortalContent() {
           >
             <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
             <p className="text-slate-300 text-sm mb-4">
-              선택된 「{deleteModal.testName}」의 내용/결과가 삭제됩니다.
+              {deleteModal.roundNumber ? (
+                <>
+                  선택된 {deleteModal.roundNumber}회차 「{deleteModal.testName}」의 내용/결과가
+                  삭제됩니다.
+                </>
+              ) : (
+                <>선택된 「{deleteModal.testName}」의 내용/결과가 삭제됩니다.</>
+              )}
             </p>
             {actionError ? <p className="text-red-400 text-sm mb-2">{actionError}</p> : null}
             <div className="flex gap-2 justify-end">

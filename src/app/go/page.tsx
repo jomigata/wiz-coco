@@ -57,13 +57,9 @@ function GoContent() {
     return (
       <div className="min-h-screen bg-[#0f1628] pt-24 px-4">
         <div className="max-w-md mx-auto rounded-2xl border border-white/[0.12] bg-[#182438] p-8 shadow-xl shadow-black/30 text-left">
-          <h1 className="text-lg font-semibold text-amber-200 mb-3 text-center">
+          <h1 className="text-lg font-semibold text-amber-200 mb-4 text-center">
             링크를 사용할 수 없습니다
           </h1>
-          <p className="text-slate-300 text-sm leading-relaxed mb-4">
-            이메일로 받은 「바로 시작」 링크는 발송 후 72시간까지만 유효합니다. 기한이 지났거나
-            이미 사용된 링크일 수 있습니다.
-          </p>
           <div className="rounded-xl border border-sky-400/35 bg-sky-500/10 px-4 py-3.5 mb-6">
             <p className="text-sky-100 font-semibold text-sm">
               나의코드 / 비밀번호 이용을 추천합니다
@@ -74,9 +70,6 @@ function GoContent() {
               검사를 이어갈 수 있습니다.
             </p>
           </div>
-          {error && error !== '링크를 사용할 수 없습니다.' ? (
-            <p className="text-slate-500 text-xs mb-4">{error}</p>
-          ) : null}
           <div className="text-center">
             <Link
               href="/portal/login/"

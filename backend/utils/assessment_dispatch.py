@@ -401,9 +401,9 @@ def aggregate_assessment_list_stats(
         for aid in assigned:
             if aid not in stats:
                 continue
-            if notify_status == "sent":
+            if notify_status in ("sent", "partial"):
                 stats[aid]["dispatchSentCount"] += 1
-            elif notify_status in ("failed", "partial"):
+            elif notify_status == "failed":
                 stats[aid]["dispatchFailedCount"] += 1
 
             required = required_by_assessment.get(aid, set())

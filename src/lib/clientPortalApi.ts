@@ -78,6 +78,7 @@ export async function verifyPortalMagicToken(token: string): Promise<ClientPorta
 export type PortalDashboardAssessment = {
   assessmentId: string;
   title: string;
+  cohortName?: string;
   welcomeMessage: string;
   usageEndDate?: string;
   testList: { testId: string; name: string }[];

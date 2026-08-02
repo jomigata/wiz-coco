@@ -160,7 +160,7 @@ def send_portal_credentials_email(
 
     body = f"""안녕하세요, {name}님.
 
-WizCoCo 심리검사 접속 정보입니다.
+WizCoCo 검사 접속 정보입니다.
 
 {chr(10).join(cred_lines)}
 
