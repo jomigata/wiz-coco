@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import {
   FORM_HINT,
@@ -29,6 +29,39 @@ export interface AssessmentSettingsFieldsProps {
   sections?: 'all' | 'meta' | 'tests';
 }
 
+type TestSortKey = 'no' | 'name';
+type SortDirection = 'asc' | 'desc';
+
+function TestSortHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+  className = '',
+}: {
+  label: string;
+  sortKey: TestSortKey;
+  activeKey: TestSortKey;
+  direction: SortDirection;
+  onSort: (key: TestSortKey) => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className={`inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-sky-200 ${active ? 'text-sky-300' : 'text-slate-500'} ${className}`}
+    >
+      {label}
+      <span className="text-[10px] opacity-80" aria-hidden>
+        {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
+      </span>
+    </button>
+  );
+}
+
 export default function AssessmentSettingsFields({
   title,
   onTitleChange,
@@ -44,12 +77,35 @@ export default function AssessmentSettingsFields({
   sections = 'all',
 }: AssessmentSettingsFieldsProps) {
   const usageEndDateRef = useRef<HTMLInputElement>(null);
+  const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
+  const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
   const showMeta = sections === 'all' || sections === 'meta';
   const showTests = sections === 'all' || sections === 'tests';
-  const fieldGap = compact ? 'space-y-3' : 'space-y-4';
-  const labelClass = compact ? 'mb-1.5 block text-sm font-semibold text-slate-300' : FORM_LABEL;
-  const inputClass = compact ? `${FORM_INPUT} py-2 text-sm` : FORM_INPUT;
-  const hintClass = compact ? 'mt-1 text-sm text-slate-400 leading-relaxed' : `${FORM_HINT} mt-1.5`;
+  const fieldGap = compact ? 'space-y-4' : 'space-y-4';
+  const labelClass = compact ? 'mb-2 block text-sm font-semibold text-slate-300' : FORM_LABEL;
+  const inputClass = compact ? `${FORM_INPUT} py-2.5 text-sm` : FORM_INPUT;
+  const hintClass = compact ? 'mt-1.5 text-sm text-slate-400 leading-relaxed' : `${FORM_HINT} mt-1.5`;
+
+  const toggleTestSort = (key: TestSortKey) => {
+    if (testSortKey === key) {
+      setTestSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setTestSortKey(key);
+      setTestSortDir(key === 'no' ? 'asc' : 'asc');
+    }
+  };
+
+  const sortedTests = useMemo(() => {
+    const list = counselorAssessmentTestOptions.map((t, index) => ({
+      ...t,
+      no: index + 1,
+    }));
+    const mult = testSortDir === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      if (testSortKey === 'no') return mult * (a.no - b.no);
+      return mult * a.name.localeCompare(b.name, 'ko');
+    });
+  }, [testSortKey, testSortDir]);
 
   return (
     <div
@@ -141,32 +197,56 @@ export default function AssessmentSettingsFields({
 
       {showTests ? (
         <div className={sections === 'tests' ? 'flex min-h-0 flex-1 flex-col' : 'space-y-0'}>
-          <div className={`flex items-center justify-end gap-2 shrink-0 ${compact ? 'mb-1.5' : 'mb-1.5'}`}>
+          <div className={`flex items-center justify-end gap-2 shrink-0 ${compact ? 'mb-2' : 'mb-2'}`}>
             <span className="text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
           </div>
           <div
-            className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} grid grid-cols-1 ${compact ? 'gap-1.5 p-2.5' : 'gap-1.5'}`}
+            className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] bg-black/10 ${compact ? 'p-2' : 'p-2'}`}
           >
-            {counselorAssessmentTestOptions.map((t) => (
-              <label
-                key={t.testId}
-                className={`flex cursor-pointer items-center gap-2 rounded-lg border border-transparent transition hover:border-sky-500/20 hover:bg-sky-500/5 ${
-                  compact ? 'px-2 py-1.5' : 'px-2 py-1.5'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTestIds.has(t.testId)}
-                  onChange={() => onToggleTest(t.testId)}
-                  disabled={disabled}
-                  className="rounded text-sky-500"
-                />
-                <span className={`text-white ${compact ? 'text-xs' : 'text-sm'}`}>{t.name}</span>
-              </label>
-            ))}
+            <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 border-b border-white/[0.08] px-2 py-2">
+              <TestSortHeader
+                label="No."
+                sortKey="no"
+                activeKey={testSortKey}
+                direction={testSortDir}
+                onSort={toggleTestSort}
+              />
+              <span className="sr-only">선택</span>
+              <TestSortHeader
+                label="검사명"
+                sortKey="name"
+                activeKey={testSortKey}
+                direction={testSortDir}
+                onSort={toggleTestSort}
+              />
+            </div>
+            <div
+              className={`min-h-0 flex-1 overflow-y-auto grid grid-cols-1 xl:grid-cols-2 ${compact ? 'gap-1 p-1.5' : 'gap-1.5 p-2'}`}
+            >
+              {sortedTests.map((t) => (
+                <label
+                  key={t.testId}
+                  className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 rounded-lg border border-transparent transition hover:border-sky-500/20 hover:bg-sky-500/5 ${
+                    compact ? 'px-2 py-2' : 'px-2 py-2'
+                  }`}
+                >
+                  <span className="tabular-nums text-xs text-slate-500">{t.no}</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedTestIds.has(t.testId)}
+                    onChange={() => onToggleTest(t.testId)}
+                    disabled={disabled}
+                    className="rounded text-sky-500"
+                  />
+                  <span className={`leading-snug text-white ${compact ? 'text-sm' : 'text-sm'}`}>
+                    {t.name}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
           {!compact ? (
-            <p className={`${FORM_HINT} mt-1.5 shrink-0`}>
+            <p className={`${FORM_HINT} mt-2 shrink-0`}>
               이미 제출된 결과가 있어도 안내·검사 구성은 수정할 수 있습니다.
             </p>
           ) : null}

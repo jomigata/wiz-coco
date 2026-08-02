@@ -5,11 +5,12 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import {
-  getAssessmentListNestedNavItems,
+  getAssessmentListContextNestedItems,
+  getAssessmentListDeletedNavItem,
   nestedNavItemsAfter,
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
-  shouldShowAssessmentListNested,
+  shouldShowDeletedAssessmentSubmenu,
 } from '@/lib/counselorNestedNav';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
@@ -109,14 +110,21 @@ export default function CounselorManageShell({ children }: Props) {
                                 item.href,
                                 pathname,
                               );
-                              const showAssessmentNested = shouldShowAssessmentListNested(
+                              const contextNested =
+                                item.href.replace(/\/+$/, '') === '/counselor/assessments'
+                                  ? getAssessmentListContextNestedItems(pathname, search)
+                                  : [];
+                              const showDeletedSubmenu = shouldShowDeletedAssessmentSubmenu(
                                 pathname,
                                 item.href,
                                 hoveredMenuHref === item.href,
                               );
-                              const assessmentNested = showAssessmentNested
-                                ? getAssessmentListNestedNavItems(pathname, search)
+                              const deletedNested = showDeletedSubmenu
+                                ? [getAssessmentListDeletedNavItem()]
                                 : [];
+                              const assessmentNested = [...contextNested, ...deletedNested].sort(
+                                (a, b) => a.order - b.order,
+                              );
                               const rows: React.ReactNode[] = [
                                 <li
                                   key={item.href}

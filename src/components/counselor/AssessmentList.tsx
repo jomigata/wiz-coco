@@ -455,21 +455,68 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     />
 
     {deleteTarget ? (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 p-6 text-sm shadow-2xl">
-          <h2 className="mb-3 text-lg font-semibold text-white">상담코드 삭제</h2>
-          <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
-            <p className="font-mono font-bold tracking-wider text-cyan-400">
-              {formatAccessCodeDisplay(deleteTarget.accessCode)}
-            </p>
-            <p className="mt-1 text-slate-300">{deleteTarget.title}</p>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
+        <div
+          className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50"
+          role="dialog"
+          aria-labelledby="delete-assessment-title"
+          aria-modal="true"
+        >
+          <div className="border-b border-red-500/20 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900 px-6 py-5">
+            <div className="flex items-start gap-3">
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-red-400"
+                aria-hidden
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.75}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <h2 id="delete-assessment-title" className="text-lg font-semibold text-white">
+                  상담코드 삭제
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                  선택한 상담코드를 삭제 목록으로 이동합니다.
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="mb-5 leading-relaxed text-slate-400">
-            <span className="font-medium text-slate-300">[삭제된 상담코드 목록]</span> 으로 이동하며,
-            삭제된 상담코드는 복구가 가능합니다.
-          </p>
-          {deleteError ? <p className="mb-4 text-red-400">{deleteError}</p> : null}
-          <div className="flex justify-end gap-2">
+
+          <div className="space-y-4 px-6 py-5">
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                삭제 대상
+              </p>
+              <p className="mt-1.5 font-mono text-lg font-bold tracking-wider text-cyan-300">
+                {formatAccessCodeDisplay(deleteTarget.accessCode)}
+              </p>
+              <p className="mt-1 text-sm leading-snug text-slate-200">{deleteTarget.title}</p>
+            </div>
+
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm leading-relaxed text-slate-400">
+              <p>
+                <span className="font-medium text-slate-300">삭제된 상담코드 목록</span>으로 이동하며,
+                필요 시 복구할 수 있습니다.
+              </p>
+              <p className="mt-2 text-xs text-slate-500">
+                내담자 접속 정보·검사 결과는 삭제 목록에서 복구하기 전까지 보관됩니다.
+              </p>
+            </div>
+
+            {deleteError ? (
+              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {deleteError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-white/[0.06] bg-black/20 px-6 py-4">
             <button
               type="button"
               onClick={() => {
@@ -479,7 +526,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                 }
               }}
               disabled={deleteLoading}
-              className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-lg border border-white/10 bg-slate-800/80 px-4 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-700 disabled:opacity-50"
             >
               취소
             </button>
@@ -487,7 +534,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               type="button"
               onClick={() => void handleDeleteConfirm()}
               disabled={deleteLoading}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+              className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-900/30 transition-colors hover:bg-red-500 disabled:opacity-50"
             >
               {deleteLoading ? '처리 중…' : '삭제 확인'}
             </button>

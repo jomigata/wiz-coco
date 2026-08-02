@@ -678,7 +678,7 @@ export default function AssessmentDispatchPanel({
 
   return (
     <section className="space-y-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-sky-400/20 bg-[#0f1d33]/70 px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-3 py-2.5 text-sm">
         <span className="font-mono text-base font-bold tracking-wide text-cyan-300">
           {formatAccessCodeDisplay(displayData.joinAccessCode)}
         </span>

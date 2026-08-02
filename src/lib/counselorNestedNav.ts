@@ -19,6 +19,8 @@ export type AssessmentListNestedNavItem = {
 };
 
 const ASSESSMENT_CONTEXT_KEY = 'counselorAssessmentContextId';
+const ASSESSMENT_LIST_HREF = '/counselor/assessments';
+export const DELETED_ASSESSMENTS_HREF = '/counselor/assessments/deleted';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [
   {
@@ -69,52 +71,61 @@ export function resolveAssessmentContextId(pathname: string, search: string): st
   return null;
 }
 
-export function getAssessmentListNestedNavItems(
+/** 상담코드 목록 hover/클릭 시 — 삭제된 상담코드만 */
+export function getAssessmentListDeletedNavItem(): AssessmentListNestedNavItem {
+  return {
+    order: 99,
+    label: '삭제된 상담코드',
+    href: DELETED_ASSESSMENTS_HREF,
+    isActive: (p) => p.startsWith(DELETED_ASSESSMENTS_HREF),
+  };
+}
+
+/** 해당 화면이 직접 열렸을 때만 — 발송·검사 현황 / 상담코드 수정 */
+export function getAssessmentListContextNestedItems(
   pathname: string,
   search: string,
 ): AssessmentListNestedNavItem[] {
+  const path = normalizeCounselorPath(pathname);
   const assessmentId = resolveAssessmentContextId(pathname, search);
-  const progressHref = assessmentId
-    ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
-    : '/counselor/assessments';
-  const editHref = assessmentId
-    ? `/counselor/assessments/edit?id=${encodeURIComponent(assessmentId)}`
-    : '/counselor/assessments';
+  const items: AssessmentListNestedNavItem[] = [];
 
-  return [
-    {
+  if (path.startsWith('/counselor/assessments/progress')) {
+    items.push({
       order: 1,
       label: '발송·검사 현황',
-      href: progressHref,
+      href: assessmentId
+        ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
+        : ASSESSMENT_LIST_HREF,
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),
-    },
-    {
+    });
+  }
+
+  if (path.startsWith('/counselor/assessments/edit')) {
+    items.push({
       order: 2,
       label: '상담코드 수정',
-      href: editHref,
+      href: assessmentId
+        ? `/counselor/assessments/edit?id=${encodeURIComponent(assessmentId)}`
+        : ASSESSMENT_LIST_HREF,
       isActive: (p) => p.startsWith('/counselor/assessments/edit'),
-    },
-    {
-      order: 3,
-      label: '삭제된 상담코드',
-      href: '/counselor/assessments/deleted',
-      isActive: (p) => p.startsWith('/counselor/assessments/deleted'),
-    },
-  ];
+    });
+  }
+
+  return items;
 }
 
-export function shouldShowAssessmentListNested(
+/** 삭제된 상담코드 소분류 — hover 또는 삭제 목록 화면에서만 */
+export function shouldShowDeletedAssessmentSubmenu(
   pathname: string,
   itemHref: string,
   hovered: boolean,
 ): boolean {
-  if (normalizeHref(itemHref) !== '/counselor/assessments') return false;
+  if (normalizeHref(itemHref) !== ASSESSMENT_LIST_HREF) return false;
   if (hovered) return true;
   const path = normalizeCounselorPath(pathname);
-  if (path === '/counselor/assessments') return true;
-  if (path.startsWith('/counselor/assessments/progress')) return true;
-  if (path.startsWith('/counselor/assessments/edit')) return true;
-  if (path.startsWith('/counselor/assessments/deleted')) return true;
+  if (path.startsWith(DELETED_ASSESSMENTS_HREF)) return true;
+  if (path === ASSESSMENT_LIST_HREF) return true;
   return false;
 }
 
@@ -128,12 +139,14 @@ export function resolveActiveNestedNavItem(
       return { item, href: item.buildHref(path, search) };
     }
   }
-  for (const nested of getAssessmentListNestedNavItems(pathname, search)) {
+  const contextItems = getAssessmentListContextNestedItems(pathname, search);
+  const deletedItem = getAssessmentListDeletedNavItem();
+  for (const nested of [...contextItems, deletedItem]) {
     if (nested.isActive(path)) {
       return {
         item: {
           parentSubcategoryName: '1a. 상담코드',
-          insertAfterHref: '/counselor/assessments',
+          insertAfterHref: ASSESSMENT_LIST_HREF,
           order: nested.order,
           label: nested.label,
           match: nested.isActive,
