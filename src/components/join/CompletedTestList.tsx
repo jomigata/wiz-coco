@@ -267,23 +267,38 @@ export default function CompletedTestList({
 
       {deleteModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
           onClick={() => !actionLoading && setDeleteModal(null)}
         >
           <div
-            className="bg-slate-800 rounded-xl border border-slate-600 p-6 max-w-sm w-full shadow-xl"
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
           >
-            <h4 className="text-lg font-semibold text-white mb-2">검사 결과 삭제</h4>
-            <p className="text-slate-300 text-sm mb-4">
-              「{deleteModal.testName}」 결과를 삭제할까요?
-            </p>
-            {actionError && <p className="text-red-400 text-sm mb-2">{actionError}</p>}
-            <div className="flex gap-2 justify-end">
+            <div className="border-b border-red-500/20 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900 px-6 py-5">
+              <h4 className="text-lg font-semibold text-white">검사 결과 삭제</h4>
+              <p className="mt-1 text-sm text-slate-400">삭제 후에는 복구할 수 없습니다.</p>
+            </div>
+            <div className="px-6 py-5">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3.5">
+                <p className="text-sm leading-relaxed text-slate-200">
+                  선택된 「<span className="font-medium text-white">{deleteModal.testName}</span>
+                  」의 내용/결과가 삭제됩니다.
+                </p>
+              </div>
+              {actionError ? (
+                <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                  {actionError}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-white/[0.06] bg-black/20 px-6 py-4">
               <button
                 type="button"
                 onClick={() => !actionLoading && setDeleteModal(null)}
-                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-700"
+                disabled={actionLoading}
+                className="rounded-lg border border-white/10 bg-slate-800/80 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50"
               >
                 취소
               </button>
@@ -291,9 +306,9 @@ export default function CompletedTestList({
                 type="button"
                 onClick={handleDelete}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-900/30 hover:bg-red-500 disabled:opacity-50"
               >
-                {actionLoading ? '처리 중…' : '삭제'}
+                {actionLoading ? '처리 중…' : '삭제 확인'}
               </button>
             </div>
           </div>

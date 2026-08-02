@@ -58,6 +58,11 @@ export async function loginClientPortal(body: {
   return data as ClientPortalLoginResult;
 }
 
+export type PortalMagicVerifyError = Error & {
+  expiresAt?: number;
+  issuedAt?: number;
+};
+
 export async function verifyPortalMagicToken(token: string): Promise<ClientPortalLoginResult> {
   const res = await fetch(`${getBaseUrl()}/api/client-portals/magic-link/verify`, {
     method: 'POST',
@@ -66,11 +71,14 @@ export async function verifyPortalMagicToken(token: string): Promise<ClientPorta
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(
+    const err = new Error(
       typeof data?.message === 'string'
         ? data.message
-        : '이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 안내 받으신 나의코드와 비밀번호를 이용하거나 담당자에게 새 링크를 요청해 주세요.'
-    );
+        : '유효기한이 지났으며, 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 안내 받으신 나의코드와 비밀번호를 이용하거나 담당자에게 새 링크를 요청해 주세요.',
+    ) as PortalMagicVerifyError;
+    if (typeof data?.expiresAt === 'number') err.expiresAt = data.expiresAt;
+    if (typeof data?.issuedAt === 'number') err.issuedAt = data.issuedAt;
+    throw err;
   }
   return data as ClientPortalLoginResult;
 }

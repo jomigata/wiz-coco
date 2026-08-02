@@ -39,6 +39,36 @@ import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSam
 import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
 type IssueIntent = 'excel' | 'send_all' | 'goto_dispatch';
+type TestSortKey = 'no' | 'name';
+type SortDirection = 'asc' | 'desc';
+
+function TestSortHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+}: {
+  label: string;
+  sortKey: TestSortKey;
+  activeKey: TestSortKey;
+  direction: SortDirection;
+  onSort: (key: TestSortKey) => void;
+}) {
+  const active = activeKey === sortKey;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className={`inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide transition-colors hover:text-sky-200 ${active ? 'text-sky-300' : 'text-slate-500'}`}
+    >
+      {label}
+      <span className="text-[10px] opacity-80" aria-hidden>
+        {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
+      </span>
+    </button>
+  );
+}
 
 const EMPTY_ROW: RecipientRow = { displayName: '', email: '', phone: '' };
 
@@ -95,8 +125,31 @@ export default function IndividualAssessmentCreateForm() {
   const [jobProgress, setJobProgress] = useState<BulkPortalJobStatus | null>(null);
   const [lastCreatedAssessmentId, setLastCreatedAssessmentId] = useState('');
   const [lastIssueIntent, setLastIssueIntent] = useState<IssueIntent>('excel');
+  const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
+  const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
 
   const loading = loadingIntent !== null;
+
+  const toggleTestSort = (key: TestSortKey) => {
+    if (testSortKey === key) {
+      setTestSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setTestSortKey(key);
+      setTestSortDir('asc');
+    }
+  };
+
+  const sortedTests = useMemo(() => {
+    const list = counselorAssessmentTestOptions.map((t, index) => ({
+      ...t,
+      no: index + 1,
+    }));
+    const mult = testSortDir === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      if (testSortKey === 'no') return mult * (a.no - b.no);
+      return mult * a.name.localeCompare(b.name, 'ko');
+    });
+  }, [testSortKey, testSortDir]);
 
   const focusValidationField = useCallback(
     (field: 'cohortName' | 'title' | 'recipients' | 'tests') => {
@@ -517,35 +570,87 @@ export default function IndividualAssessmentCreateForm() {
   if (created.length > 0) {
     return (
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="issue-complete-title"
       >
-        <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0f1a2e] p-6 shadow-2xl">
-          <h2 id="issue-complete-title" className="text-lg font-semibold text-white">
-            발급 완료
-          </h2>
-          <div className="mt-4 space-y-3 text-base text-slate-200">
-            <p className="font-semibold text-emerald-200">
-              {created.length.toLocaleString('ko-KR')}명에게 나의코드·비밀번호가 발급되었습니다.
-            </p>
-            {sharedJoinCode ? (
-              <p>
-                적용 상담코드:{' '}
-                <span className="font-mono text-lg font-bold tracking-wider text-emerald-100">
-                  {formatAccessCodeDisplay(sharedJoinCode)}
-                </span>
+        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50">
+          <div className="border-b border-emerald-500/25 bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 px-6 py-5">
+            <div className="flex items-start gap-3">
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/35 bg-emerald-500/15 text-emerald-300"
+                aria-hidden
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <h2 id="issue-complete-title" className="text-xl font-semibold text-white">
+                  발급 완료
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                  상담코드와 나의코드·비밀번호가 정상적으로 생성되었습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 px-6 py-5">
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                발급 인원
               </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-200">
+                {created.length.toLocaleString('ko-KR')}
+                <span className="ml-1 text-base font-medium text-slate-400">명</span>
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                각 내담자에게 나의코드·비밀번호가 발급되었습니다.
+              </p>
+            </div>
+
+            {sharedJoinCode ? (
+              <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  적용 상담코드
+                </p>
+                <p className="mt-1.5 font-mono text-2xl font-bold tracking-wider text-cyan-300">
+                  {formatAccessCodeDisplay(sharedJoinCode)}
+                </p>
+              </div>
+            ) : null}
+
+            {(notifySent > 0 || notifyFailed > 0 || notifyQueued > 0) ? (
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm text-slate-400">
+                {notifySent > 0 ? (
+                  <p>
+                    즉시 발송 완료:{' '}
+                    <span className="font-semibold text-emerald-300">{notifySent}</span>건
+                  </p>
+                ) : null}
+                {notifyQueued > 0 ? (
+                  <p className="mt-1">
+                    발송 예약: <span className="font-semibold text-sky-300">{notifyQueued}</span>건
+                  </p>
+                ) : null}
+                {notifyFailed > 0 ? (
+                  <p className="mt-1">
+                    발송 실패: <span className="font-semibold text-red-300">{notifyFailed}</span>건
+                  </p>
+                ) : null}
+              </div>
             ) : null}
           </div>
-          <div className="mt-6 flex justify-end">
+
+          <div className="flex justify-end gap-2 border-t border-white/[0.06] bg-black/20 px-6 py-4">
             <button
               type="button"
               onClick={confirmIssueCompleteAndGoToList}
-              className="rounded-lg bg-sky-600 px-6 py-2.5 text-base font-semibold text-white transition hover:bg-sky-500"
+              className="rounded-lg bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500"
             >
-              확인
+              상담코드 목록으로
             </button>
           </div>
         </div>
@@ -677,21 +782,39 @@ export default function IndividualAssessmentCreateForm() {
                     {selectedTestCount}개 선택
                   </span>
                 </div>
-                <div className={TEST_PICKER_SCROLL}>
-                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    {counselorAssessmentTestOptions.map((t) => {
+                <div className={`${TEST_PICKER_SCROLL} flex flex-col`}>
+                  <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 border-b border-white/[0.08] px-1 pb-2">
+                    <TestSortHeader
+                      label="No."
+                      sortKey="no"
+                      activeKey={testSortKey}
+                      direction={testSortDir}
+                      onSort={toggleTestSort}
+                    />
+                    <span className="sr-only">선택</span>
+                    <TestSortHeader
+                      label="검사명"
+                      sortKey="name"
+                      activeKey={testSortKey}
+                      direction={testSortDir}
+                      onSort={toggleTestSort}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5 pt-2 xl:grid-cols-2">
+                    {sortedTests.map((t) => {
                       const checked = selectedTestIds.has(t.testId);
                       return (
                         <label
                           key={t.testId}
-                          className={`flex items-start gap-2.5 rounded-md px-2 py-2 text-base leading-snug transition-colors cursor-pointer hover:bg-white/5 ${checked ? 'text-sky-100' : 'text-slate-300'}`}
+                          className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_1fr] items-center gap-2 rounded-md px-2 py-2 text-sm leading-snug transition-colors hover:bg-white/5 ${checked ? 'text-sky-100' : 'text-slate-300'}`}
                         >
+                          <span className="tabular-nums text-xs text-slate-500">{t.no}</span>
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleTest(t.testId)}
                             disabled={loading}
-                            className="mt-1 shrink-0 rounded accent-sky-500"
+                            className="shrink-0 rounded accent-sky-500"
                           />
                           <span>{t.name}</span>
                         </label>

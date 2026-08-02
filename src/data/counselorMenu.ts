@@ -24,7 +24,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '📦',
           },
           {
-            name: '상담코드생성',
+            name: '상담코드 생성',
             href: '/counselor/assessments/new',
             description: '내담자별 나의코드 상담코드 발급',
             icon: '➕',
@@ -34,6 +34,12 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             href: '/counselor/credits',
             description: '보유 크레딧·사용 내역 (협회 지급)',
             icon: '💳',
+          },
+          {
+            name: '삭제된 상담코드',
+            href: '/counselor/assessments/deleted',
+            description: '삭제된 상담코드 복구·영구 삭제',
+            icon: '🗑️',
           },
         ],
       },

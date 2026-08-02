@@ -46,11 +46,8 @@ export function resolveCounselorHierarchy(
 
   if (pathname.startsWith('/counselor/assessments/deleted')) {
     return {
-      depth: 1,
-      crumbs: [
-        { label: '상담코드 목록', href: '/counselor/assessments' },
-        { label: '삭제된 상담코드' },
-      ],
+      depth: 0,
+      crumbs: [{ label: '삭제된 상담코드' }],
     };
   }
 
@@ -80,7 +77,7 @@ export function resolveCounselorHierarchy(
       depth: 1,
       crumbs: [
         { label: '상담코드 목록', href: '/counselor/assessments' },
-        { label: '상담코드생성' },
+        { label: '상담코드 생성' },
       ],
     };
   }

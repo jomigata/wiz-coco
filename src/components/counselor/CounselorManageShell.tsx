@@ -6,11 +6,9 @@ import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import {
   getAssessmentListContextNestedItems,
-  getAssessmentListDeletedNavItem,
   nestedNavItemsAfter,
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
-  shouldShowDeletedAssessmentSubmenu,
 } from '@/lib/counselorNestedNav';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
@@ -114,15 +112,7 @@ export default function CounselorManageShell({ children }: Props) {
                                 item.href.replace(/\/+$/, '') === '/counselor/assessments'
                                   ? getAssessmentListContextNestedItems(pathname, search)
                                   : [];
-                              const showDeletedSubmenu = shouldShowDeletedAssessmentSubmenu(
-                                pathname,
-                                item.href,
-                                hoveredMenuHref === item.href,
-                              );
-                              const deletedNested = showDeletedSubmenu
-                                ? [getAssessmentListDeletedNavItem()]
-                                : [];
-                              const assessmentNested = [...contextNested, ...deletedNested].sort(
+                              const assessmentNested = [...contextNested].sort(
                                 (a, b) => a.order - b.order,
                               );
                               const rows: React.ReactNode[] = [

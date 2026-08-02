@@ -35,13 +35,13 @@ export type MbtiProClientInfoTheme = {
 const emerald: MbtiProClientInfoTheme = {
   shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-emerald-950 text-white px-3 pt-14 pb-14',
   subtitle: 'text-emerald-300 max-w-lg mx-auto text-sm',
-  formCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-5',
-  fieldBox: 'py-0.5',
-  fieldBoxMuted: 'py-0.5',
-  label: 'block text-sm font-medium text-emerald-300 mb-0.5',
+  formCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-5 sm:p-6',
+  fieldBox: 'py-2.5',
+  fieldBoxMuted: 'py-2.5',
+  label: 'block text-sm font-medium text-emerald-300 mb-1.5',
   input:
-    'w-full px-3 py-2 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
-  choiceSection: 'py-0.5',
+    'w-full px-3 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
+  choiceSection: 'py-2.5',
   choiceBtnActive: 'bg-teal-600 text-white border-2 border-teal-500',
   choiceBtnInactive:
     'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70',
@@ -61,7 +61,7 @@ const emerald: MbtiProClientInfoTheme = {
   yearSelectedUnderline: 'bg-emerald-300/45',
   yearSelectedRing: 'ring-emerald-300/30',
   yearBtnHoverRgb: 'rgba(5, 150, 105, 0.3)',
-  privacyBox: 'bg-emerald-800/30 p-2.5 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors',
+  privacyBox: 'bg-emerald-800/30 p-3.5 rounded-lg border border-emerald-700/30 hover:bg-emerald-800/40 transition-colors',
   checkbox: 'w-4 h-4 text-emerald-600 bg-emerald-900 border-emerald-500 rounded focus:ring-emerald-500 focus:ring-2',
   privacyLabel: 'font-medium text-emerald-200 cursor-pointer select-none text-sm',
   privacyHint: 'text-emerald-300/80 mt-0.5 cursor-pointer select-none text-xs leading-snug',
@@ -78,13 +78,13 @@ const emerald: MbtiProClientInfoTheme = {
 const portal: MbtiProClientInfoTheme = {
   shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#060a12] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-300 max-w-lg mx-auto text-sm',
-  formCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-4 sm:p-5',
-  fieldBox: 'py-0.5',
-  fieldBoxMuted: 'py-0.5',
-  label: 'block text-sm font-medium text-sky-200/95 mb-0.5',
+  formCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-5 sm:p-6',
+  fieldBox: 'py-2.5',
+  fieldBoxMuted: 'py-2.5',
+  label: 'block text-sm font-medium text-sky-200/95 mb-1.5',
   input:
-    'w-full px-3 py-2 rounded-lg bg-sky-950/45 border border-sky-500/45 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60 transition-colors',
-  choiceSection: 'py-0.5',
+    'w-full px-3 py-3 rounded-lg bg-sky-950/45 border border-sky-500/45 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60 transition-colors',
+  choiceSection: 'py-2.5',
   choiceBtnActive: 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border border-sky-400/30',
   choiceBtnInactive:
     'bg-[#1a2740] text-slate-200 border border-white/[0.12] hover:bg-[#1f2f4d]',
@@ -105,7 +105,7 @@ const portal: MbtiProClientInfoTheme = {
   yearSelectedRing: 'ring-sky-300/35',
   yearBtnHoverRgb: 'rgba(14, 165, 233, 0.35)',
   privacyBox:
-    'rounded-xl border border-white/[0.14] bg-[#1a2740] p-2.5 hover:bg-[#1f2f4d] transition-colors',
+    'rounded-xl border border-white/[0.14] bg-[#1a2740] p-3.5 hover:bg-[#1f2f4d] transition-colors',
   checkbox: 'w-4 h-4 text-sky-500 bg-slate-900 border-sky-500/50 rounded focus:ring-sky-500 focus:ring-2',
   privacyLabel: 'font-medium text-slate-200 cursor-pointer select-none text-sm',
   privacyHint: 'text-slate-400 mt-0.5 cursor-pointer select-none text-xs leading-snug',

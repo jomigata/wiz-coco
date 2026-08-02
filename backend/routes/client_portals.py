@@ -35,7 +35,11 @@ from utils.portal_assessment_access import get_portal_doc
 from utils.my_code import normalize_my_code, is_valid_my_code
 from utils.password import hash_password, verify_password
 from utils.phone_format import format_phone_display, normalize_recipient_phone
-from utils.portal_magic import create_portal_magic_link_token, verify_portal_magic_link_token
+from utils.portal_magic import (
+    create_portal_magic_link_token,
+    get_portal_magic_link_timestamps,
+    verify_portal_magic_link_token,
+)
 from utils.bulk_portal_worker import (
     create_bulk_job,
     create_portal_for_row,
@@ -430,10 +434,16 @@ def verify_magic_link():
     try:
         data = verify_portal_magic_link_token(token)
     except SignatureExpired:
-        return jsonify({
+        issued_at, expires_at = get_portal_magic_link_timestamps(token)
+        payload = {
             "error": "Gone",
-            "message": "이메일로 받은 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 안내 받으신 나의코드와 비밀번호를 이용하거나 담당자에게 새 링크를 요청해 주세요.",
-        }), 410
+            "message": "유효기한이 지났으며, 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다. 안내 받으신 나의코드와 비밀번호를 이용하거나 담당자에게 새 링크를 요청해 주세요.",
+        }
+        if issued_at is not None:
+            payload["issuedAt"] = issued_at
+        if expires_at is not None:
+            payload["expiresAt"] = expires_at
+        return jsonify(payload), 410
     except BadSignature:
         return jsonify({"error": "Bad Request", "message": "링크가 유효하지 않습니다."}), 400
 

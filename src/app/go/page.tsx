@@ -3,12 +3,28 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { verifyPortalMagicToken } from '@/lib/clientPortalApi';
+import { verifyPortalMagicToken, type PortalMagicVerifyError } from '@/lib/clientPortalApi';
 import { persistClientPortalSession } from '@/lib/clientPortalSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
 import { resetAllSessionsBeforePortalLinkEntry } from '@/lib/portalLinkEntryReset';
 import { setPortalReturnPath } from '@/lib/portalReturnPath';
+
+function formatExpiryLabel(unixSeconds?: number): string | null {
+  if (!unixSeconds) return null;
+  try {
+    return new Date(unixSeconds * 1000).toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return null;
+  }
+}
 
 function GoLoading() {
   return (
@@ -23,6 +39,7 @@ function GoContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('t') || '';
   const [error, setError] = useState('');
+  const [expiresAt, setExpiresAt] = useState<number | undefined>();
 
   useEffect(() => {
     if (!token) {
@@ -45,7 +62,11 @@ function GoContent() {
         router.replace(dest);
       } catch (err) {
         if (cancelled) return;
+        const magicErr = err as PortalMagicVerifyError;
         setError(err instanceof Error ? err.message : '링크를 사용할 수 없습니다.');
+        if (typeof magicErr.expiresAt === 'number') {
+          setExpiresAt(magicErr.expiresAt);
+        }
       }
     })();
     return () => {
@@ -54,12 +75,23 @@ function GoContent() {
   }, [token, router, searchParams]);
 
   if (error) {
+    const expiryLabel = formatExpiryLabel(expiresAt);
     return (
       <div className="min-h-screen bg-[#0f1628] pt-24 px-4">
         <div className="max-w-md mx-auto rounded-2xl border border-white/[0.12] bg-[#182438] p-8 shadow-xl shadow-black/30 text-left">
           <h1 className="text-lg font-semibold text-amber-200 mb-4 text-center">
             링크를 사용할 수 없습니다
           </h1>
+          <div className="rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3.5 mb-4">
+            <p className="text-sm leading-relaxed text-slate-300">
+              유효기한이 지났으며, 검사 바로 시작 링크는 발송 후 72시간까지만 유효합니다.
+            </p>
+            {expiryLabel ? (
+              <p className="mt-2 text-sm text-amber-200/90">
+                링크 유효일시: <span className="font-medium text-amber-100">{expiryLabel}</span>
+              </p>
+            ) : null}
+          </div>
           <div className="rounded-xl border border-sky-400/35 bg-sky-500/10 px-4 py-3.5 mb-6">
             <p className="text-sky-100 font-semibold text-sm">
               나의코드 / 비밀번호 이용을 추천합니다

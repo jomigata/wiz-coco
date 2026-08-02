@@ -319,10 +319,11 @@ export default function DeletedAssessmentsPage() {
 
   return (
     <CounselorPageSection
-      showHierarchyBreadcrumb
+      title="삭제된 상담코드"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
+      dense
       toolbar={
         <>
           <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
