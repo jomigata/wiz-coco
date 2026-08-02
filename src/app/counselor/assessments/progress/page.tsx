@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
-import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
@@ -19,6 +19,7 @@ function ProgressPageContent() {
     const pid = (searchParams.get('portalId') || '').trim();
     setAssessmentId(id);
     setPortalId(pid);
+    if (id) rememberCounselorAssessmentContext(id);
     if (!id) {
       router.replace('/counselor/assessments');
     }
@@ -40,16 +41,9 @@ function ProgressPageContent() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <CounselorPageSection
-        showHierarchyBreadcrumb
-        className="flex min-h-0 flex-1"
-        bodyClassName="!p-0"
-        noBodyPadding
-      >
-        <div className="p-2.5 sm:p-3">
-          <AssessmentDispatchPanel assessmentId={assessmentId} filterPortalId={portalId || undefined} />
-        </div>
-      </CounselorPageSection>
+      <div className="flex min-h-0 flex-1 flex-col p-2.5 sm:p-3">
+        <AssessmentDispatchPanel assessmentId={assessmentId} filterPortalId={portalId || undefined} />
+      </div>
     </div>
   );
 }

@@ -7,9 +7,14 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
+import { deleteAssessment, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
+import AssessmentAddRecipientModal, {
+  buildContextFromAssessment,
+} from '@/components/counselor/AssessmentAddRecipientModal';
+import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import {
   counselingCodeTypeLabel,
 } from '@/data/counselingCodeTypes';
@@ -140,13 +145,46 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [addTarget, setAddTarget] = useState<CounselorAssessment | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     setListItems(assessments);
   }, [assessments]);
 
   const goToProgress = (assessmentId: string) => {
+    rememberCounselorAssessmentContext(assessmentId);
     router.push(progressHref(assessmentId));
+  };
+
+  const openAddRecipient = (assessment: CounselorAssessment) => {
+    rememberCounselorAssessmentContext(assessment.id);
+    setAddTarget(assessment);
+  };
+
+  const openDelete = (assessment: CounselorAssessment) => {
+    rememberCounselorAssessmentContext(assessment.id);
+    setDeleteError('');
+    setDeleteTarget(assessment);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      await deleteAssessment(deleteTarget.id, deleteTarget.accessCode);
+      removeCounselorAssessmentFromListCache(deleteTarget.id, deleteTarget.accessCode);
+      setListItems((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const toggleSort = (key: ListSortKey) => {
@@ -296,7 +334,9 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     direction={sortDir}
                     onSort={toggleSort}
                   />
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 유효일</th>
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                    사용 종료일
+                  </th>
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
@@ -337,8 +377,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         <CounselorSlashInfoCell
                           primary={infoPrimary}
                           secondary={infoSecondary}
-                          hoverTypeLabel={counselingCodeTypeLabel(a.codeCategory)}
-                          hoverAccessCode={formatAccessCodeDisplay(a.accessCode)}
+                          showTooltip={false}
                           className={cellLinkClass}
                         />
                         {expired ? (
@@ -348,7 +387,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         ) : null}
                       </td>
                       <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer ${expired ? 'text-red-400' : ''}`}
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
                         onClick={() => goToProgress(a.id)}
                       >
                         {formatUsageEndDate(a.usageEndDate)}
@@ -366,13 +405,30 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         </span>
                         )
                       </td>
-                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-default`}>
-                        <AuthLink
-                          href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
-                          className="inline-flex min-w-0 items-center justify-center rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
-                        >
-                          수정
-                        </AuthLink>
+                      <td className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-default text-center`}>
+                        <div className="inline-flex flex-wrap items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openAddRecipient(a)}
+                            className="inline-flex items-center justify-center rounded bg-sky-800/50 px-2 py-0.5 text-xs font-medium text-sky-100 hover:bg-sky-700/60"
+                          >
+                            내담자추가
+                          </button>
+                          <AuthLink
+                            href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
+                            onClick={() => rememberCounselorAssessmentContext(a.id)}
+                            className="inline-flex min-w-0 items-center justify-center rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
+                          >
+                            수정
+                          </AuthLink>
+                          <button
+                            type="button"
+                            onClick={() => openDelete(a)}
+                            className="inline-flex items-center justify-center rounded bg-red-950/50 px-2 py-0.5 text-xs font-medium text-red-300 hover:bg-red-900/60"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -390,6 +446,56 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
         </>
       )}
     </motion.div>
+
+    <AssessmentAddRecipientModal
+      open={Boolean(addTarget)}
+      onClose={() => setAddTarget(null)}
+      context={addTarget ? buildContextFromAssessment(addTarget) : null}
+      onSuccess={() => router.refresh()}
+    />
+
+    {deleteTarget ? (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 p-6 text-sm shadow-2xl">
+          <h2 className="mb-3 text-lg font-semibold text-white">상담코드 삭제</h2>
+          <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+            <p className="font-mono font-bold tracking-wider text-cyan-400">
+              {formatAccessCodeDisplay(deleteTarget.accessCode)}
+            </p>
+            <p className="mt-1 text-slate-300">{deleteTarget.title}</p>
+          </div>
+          <p className="mb-5 leading-relaxed text-slate-400">
+            <span className="font-medium text-slate-300">[삭제된 상담코드 목록]</span> 으로 이동하며,
+            삭제된 상담코드는 복구가 가능합니다.
+          </p>
+          {deleteError ? <p className="mb-4 text-red-400">{deleteError}</p> : null}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!deleteLoading) {
+                  setDeleteTarget(null);
+                  setDeleteError('');
+                }
+              }}
+              disabled={deleteLoading}
+              className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700 disabled:opacity-50"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDeleteConfirm()}
+              disabled={deleteLoading}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+            >
+              {deleteLoading ? '처리 중…' : '삭제 확인'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
     </CounselorPageSection>
   );
 }

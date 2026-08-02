@@ -400,7 +400,9 @@ export default function DeletedAssessmentsPage() {
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap`}>코드 유효일</th>
+                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                      사용 종료일
+                    </th>
                     <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                       <span className="block">결과현황</span>
                       <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
@@ -477,8 +479,7 @@ export default function DeletedAssessmentsPage() {
                             <CounselorSlashInfoCell
                               primary={infoPrimary}
                               secondary={infoSecondary}
-                              hoverTypeLabel={counselingCodeTypeLabel(row.codeCategory)}
-                              hoverAccessCode={formatAccessCodeDisplay(row.accessCode)}
+                              showTooltip={false}
                             />
                             {expired ? (
                               <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">

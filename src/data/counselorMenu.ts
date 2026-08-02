@@ -35,12 +35,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             description: '보유 크레딧·사용 내역 (협회 지급)',
             icon: '💳',
           },
-          {
-            name: '삭제된 상담코드',
-            href: '/counselor/assessments/deleted',
-            description: '목록에서 삭제한 상담코드 복구·영구 삭제',
-            icon: '🗑️',
-          },
         ],
       },
       {

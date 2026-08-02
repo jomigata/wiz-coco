@@ -5,8 +5,11 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import {
+  getAssessmentListNestedNavItems,
   nestedNavItemsAfter,
+  rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
+  shouldShowAssessmentListNested,
 } from '@/lib/counselorNestedNav';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
@@ -29,6 +32,7 @@ export default function CounselorManageShell({ children }: Props) {
   const [expandedSlug, setExpandedSlug] = useState<string>(() =>
     activeCategorySlug || COUNSELOR_PSYCH_TESTS_SLUG,
   );
+  const [hoveredMenuHref, setHoveredMenuHref] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeCategorySlug) {
@@ -105,8 +109,22 @@ export default function CounselorManageShell({ children }: Props) {
                                 item.href,
                                 pathname,
                               );
+                              const showAssessmentNested = shouldShowAssessmentListNested(
+                                pathname,
+                                item.href,
+                                hoveredMenuHref === item.href,
+                              );
+                              const assessmentNested = showAssessmentNested
+                                ? getAssessmentListNestedNavItems(pathname, search)
+                                : [];
                               const rows: React.ReactNode[] = [
-                                <li key={item.href}>
+                                <li
+                                  key={item.href}
+                                  onMouseEnter={() => setHoveredMenuHref(item.href)}
+                                  onMouseLeave={() =>
+                                    setHoveredMenuHref((prev) => (prev === item.href ? null : prev))
+                                  }
+                                >
                                   <AuthLink
                                     href={item.href}
                                     className={`block truncate rounded-md px-2 py-1 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
@@ -120,6 +138,44 @@ export default function CounselorManageShell({ children }: Props) {
                                   </AuthLink>
                                 </li>,
                               ];
+                              for (const nested of assessmentNested) {
+                                const nestedActive = nested.isActive(
+                                  (pathname || '').split('?')[0].replace(/\/+$/, '') || '',
+                                );
+                                rows.push(
+                                  <li
+                                    key={`${item.href}-${nested.label}`}
+                                    onMouseEnter={() => setHoveredMenuHref(item.href)}
+                                    onMouseLeave={() =>
+                                      setHoveredMenuHref((prev) =>
+                                        prev === item.href ? null : prev,
+                                      )
+                                    }
+                                  >
+                                    <AuthLink
+                                      href={nested.href}
+                                      onClick={() => {
+                                        const idMatch =
+                                          nested.href.match(/assessmentId=([^&]+)/) ||
+                                          nested.href.match(/[?&]id=([^&]+)/);
+                                        if (idMatch?.[1]) {
+                                          rememberCounselorAssessmentContext(
+                                            decodeURIComponent(idMatch[1]),
+                                          );
+                                        }
+                                      }}
+                                      className={`block truncate rounded-md py-1 pl-3 pr-2 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
+                                        nestedActive
+                                          ? 'bg-sky-600/30 font-semibold text-sky-100'
+                                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                                      }`}
+                                    >
+                                      {'\u00A0- '}
+                                      {nested.label}
+                                    </AuthLink>
+                                  </li>,
+                                );
+                              }
                               for (const nested of nestedAfter) {
                                 const href = nested.buildHref(
                                   pathname.split('?')[0],

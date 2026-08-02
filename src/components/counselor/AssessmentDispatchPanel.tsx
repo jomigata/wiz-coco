@@ -25,7 +25,6 @@ import {
 } from '@/lib/dispatchNotifySummary';
 import {
   archiveDispatchRecipients,
-  bulkCreateClientPortals,
   fetchAssessmentDispatchStatus,
   resendDispatchCredentials,
   sendDispatchTestReminders,
@@ -34,8 +33,6 @@ import {
   type DispatchTestResult,
 } from '@/lib/clientPortalApi';
 import { useAssessmentDispatchRealtime } from '@/hooks/useAssessmentDispatchRealtime';
-import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
-import { mergeRecipients, parseRecipientFile, formatRecipientRowsPreview, type RecipientRow } from '@/lib/recipientImport';
 import {
   readCachedDispatchStatus,
   writeCachedDispatchStatus,
@@ -318,17 +315,6 @@ export default function AssessmentDispatchPanel({
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [showAddRecipient, setShowAddRecipient] = useState(false);
-  const [addName, setAddName] = useState('');
-  const [addEmail, setAddEmail] = useState('');
-  const [addPhone, setAddPhone] = useState('');
-  const [addSendNow, setAddSendNow] = useState(true);
-  const [addLoading, setAddLoading] = useState(false);
-  const [addError, setAddError] = useState('');
-  const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
-  const [addFileLabel, setAddFileLabel] = useState('');
-  const [addFilePreviewText, setAddFilePreviewText] = useState('');
-  const [showAddFilePreview, setShowAddFilePreview] = useState(false);
 
   const [dispatchOverrides, setDispatchOverrides] = useState<Record<string, DispatchRowOverride>>({});
 
@@ -494,13 +480,6 @@ export default function AssessmentDispatchPanel({
     [selectedRecipients, credentialTargetSelected],
   );
 
-  const addFilePreviewLayout = useMemo(() => {
-    if (!addFilePreviewText) return null;
-    const lines = addFilePreviewText.split('\n');
-    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
-    return { widthCh: Math.min(Math.max(longestLine + 2, 32), 120) };
-  }, [addFilePreviewText]);
-
   const remindSkippedSelected = useMemo(
     () => selectedRecipients.filter((r) => !canSendReminder(r)),
     [selectedRecipients],
@@ -545,79 +524,6 @@ export default function AssessmentDispatchPanel({
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
-  };
-
-  const handleAddRecipient = async () => {
-    if (!assessmentId || !displayData) return;
-    const manualRows: RecipientRow[] = addName.trim()
-      ? [
-          {
-            displayName: addName.trim(),
-            email: addEmail.trim().toLowerCase(),
-            phone: normalizeRecipientPhone(addPhone),
-          },
-        ]
-      : [];
-    const rows = mergeRecipients(manualRows, addFileRows);
-    if (rows.length === 0) {
-      setAddError('개별 입력 또는 파일에서 내담자 1명 이상을 추가해 주세요.');
-      return;
-    }
-    const invalid = rows.find((r) => !r.email.trim() && !r.phone.trim());
-    if (invalid) {
-      setAddError(`「${invalid.displayName}」님의 이메일 또는 휴대폰 번호가 필요합니다.`);
-      return;
-    }
-    const cohortName = (displayData.cohortName || displayData.title || '내담자').trim();
-    setAddLoading(true);
-    setAddError('');
-    try {
-      await bulkCreateClientPortals({
-        assessmentId,
-        cohortName,
-        title: displayData.title || cohortName,
-        testList: displayData.testList,
-        rows: rows.map((r) => ({
-          displayName: r.displayName.trim(),
-          email: r.email.trim() || undefined,
-          phone: normalizeRecipientPhone(r.phone) || undefined,
-          queueNotify: addSendNow,
-        })),
-        queueNotify: addSendNow,
-      });
-      setShowAddRecipient(false);
-      setAddName('');
-      setAddEmail('');
-      setAddPhone('');
-      setAddFileRows([]);
-      setAddFileLabel('');
-      setAddFilePreviewText('');
-      setShowAddFilePreview(false);
-      setAddSendNow(true);
-      await load({ silent: true });
-    } catch (err) {
-      setAddError(err instanceof Error ? err.message : '내담자 추가에 실패했습니다.');
-    } finally {
-      setAddLoading(false);
-    }
-  };
-
-  const handleAddRecipientFile = async (file: File | null) => {
-    if (!file) return;
-    setAddError('');
-    try {
-      const parsed = await parseRecipientFile(file);
-      if (!parsed.length) {
-        setAddError('파일에서 유효한 내담자 행을 찾지 못했습니다.');
-        return;
-      }
-      setAddFileRows(parsed);
-      setAddFileLabel(file.name);
-      setAddFilePreviewText(formatRecipientRowsPreview(parsed));
-    } catch (err) {
-      setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
-      setAddFilePreviewText('');
-    }
   };
 
   const handleResend = async () => {
@@ -816,20 +722,7 @@ export default function AssessmentDispatchPanel({
 
       <div className="rounded-lg border border-slate-600 bg-slate-800/30 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 px-4 py-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
-            <button
-              type="button"
-              onClick={() => {
-                setAddError('');
-                setShowAddRecipient(true);
-              }}
-              disabled={addLoading || resendLoading || deleteLoading}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-100 bg-emerald-700/80 hover:bg-emerald-600 disabled:opacity-50"
-            >
-              + 내담자 추가
-            </button>
-          </div>
+          <p className="text-sm font-semibold text-slate-300">내담자 목록</p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="hidden text-xs text-slate-500 sm:inline">발송·알림</span>
             <button
@@ -1424,153 +1317,6 @@ export default function AssessmentDispatchPanel({
                     : credentialSendMode === 'resend'
                       ? '재발송'
                       : '발송'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {showAddRecipient ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={() => !addLoading && setShowAddRecipient(false)}
-        >
-          <div
-            className="bg-slate-800 rounded-xl border border-slate-600 max-w-lg w-full shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-4 py-3 border-b border-slate-600">
-              <h3 className="text-lg font-semibold text-white">내담자 추가</h3>
-              <p className="text-sm text-slate-400 mt-1">
-                개별 입력 또는 파일(CSV·Excel)로 내담자를 등록할 수 있습니다. 나의코드·비밀번호가 자동 발급됩니다.
-              </p>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="rounded-lg border border-slate-600 bg-slate-900/40 p-3 space-y-2">
-                <p className="text-sm font-medium text-slate-200">파일 첨부</p>
-                <input
-                  type="file"
-                  accept=".csv,.txt,.tsv,.xlsx,.xls,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                  disabled={addLoading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    void handleAddRecipientFile(file);
-                    e.target.value = '';
-                  }}
-                  className="block w-full text-sm text-slate-300 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-white"
-                />
-                {addFileLabel ? (
-                  <div
-                    className="relative"
-                    onMouseLeave={() => setShowAddFilePreview(false)}
-                  >
-                    <p className="text-xs text-emerald-300">
-                      <span
-                        className="cursor-help underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
-                        onMouseEnter={() => setShowAddFilePreview(true)}
-                        onFocus={() => setShowAddFilePreview(true)}
-                        onBlur={() => setShowAddFilePreview(false)}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`${addFileLabel} 파일 내용 미리보기`}
-                      >
-                        {addFileLabel}
-                      </span>
-                      {' · '}
-                      {addFileRows.length}명
-                    </p>
-                    {showAddFilePreview && addFilePreviewText && addFilePreviewLayout ? (
-                      <div className="absolute left-0 top-full z-30 pt-1.5" role="tooltip">
-                        <div
-                          className="rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
-                          style={{ width: `min(calc(100vw - 3rem), ${addFilePreviewLayout.widthCh}ch)` }}
-                        >
-                          <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
-                          <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
-                            {addFilePreviewText}
-                            {addFilePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
-                          </pre>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500">이름, 이메일, 휴대폰 열 순서 (첫 줄 헤더 가능)</p>
-                )}
-              </div>
-              <p className="text-xs text-slate-500">또는 개별 입력</p>
-              <div>
-                <label htmlFor="add-recipient-name" className={FORM_LABEL}>
-                  이름
-                </label>
-                <input
-                  id="add-recipient-name"
-                  type="text"
-                  className={FORM_INPUT}
-                  value={addName}
-                  onChange={(e) => setAddName(e.target.value)}
-                  disabled={addLoading}
-                />
-              </div>
-              <div>
-                <label htmlFor="add-recipient-email" className={FORM_LABEL}>
-                  이메일
-                </label>
-                <input
-                  id="add-recipient-email"
-                  type="email"
-                  className={FORM_INPUT}
-                  value={addEmail}
-                  onChange={(e) => setAddEmail(e.target.value)}
-                  disabled={addLoading}
-                />
-              </div>
-              <div>
-                <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
-                  휴대폰
-                </label>
-                <input
-                  id="add-recipient-phone"
-                  type="tel"
-                  className={FORM_INPUT}
-                  value={addPhone}
-                  onChange={(e) => setAddPhone(e.target.value)}
-                  disabled={addLoading}
-                  placeholder="010-0000-0000"
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={addSendNow}
-                  onChange={(e) => setAddSendNow(e.target.checked)}
-                  disabled={addLoading}
-                  className="rounded text-sky-500"
-                />
-                추가 후 즉시 접속 정보 발송
-              </label>
-              {addError ? (
-                <p className="text-red-400 text-sm" role="alert">
-                  {addError}
-                </p>
-              ) : null}
-            </div>
-            <div className="px-4 py-3 border-t border-slate-600 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowAddRecipient(false)}
-                disabled={addLoading}
-                className="px-4 py-2 rounded-lg text-sm text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleAddRecipient()}
-                disabled={addLoading}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {addLoading ? '추가 중…' : addSendNow ? '추가 후 발송' : '추가만'}
               </button>
             </div>
           </div>

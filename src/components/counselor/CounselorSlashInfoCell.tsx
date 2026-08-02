@@ -9,6 +9,8 @@ type Props = {
   hoverAccessCode?: string;
   /** @deprecated hoverTypeLabel + hoverAccessCode 사용 권장 */
   hoverExtra?: string;
+  /** false이면 hover 말풍선 비표시 */
+  showTooltip?: boolean;
   className?: string;
   onClick?: () => void;
 };
@@ -20,13 +22,14 @@ export default function CounselorSlashInfoCell({
   hoverTypeLabel,
   hoverAccessCode,
   hoverExtra,
+  showTooltip = true,
   className = '',
   onClick,
 }: Props) {
   const [hover, setHover] = useState(false);
   const line = `${primary}/${secondary}`;
-  const showTooltip =
-    hover && (hoverTypeLabel || hoverAccessCode || hoverExtra);
+  const tooltipVisible =
+    showTooltip && hover && (hoverTypeLabel || hoverAccessCode || hoverExtra);
 
   return (
     <div
@@ -40,7 +43,7 @@ export default function CounselorSlashInfoCell({
         <span className="text-slate-300">/</span>
         <span className="text-slate-200">{secondary || '—'}</span>
       </span>
-      {showTooltip ? (
+      {tooltipVisible ? (
         <div
           className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 min-w-[10rem] max-w-xs rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-snug text-slate-800 shadow-lg"
           role="tooltip"
