@@ -6,7 +6,7 @@ import IndividualAssessmentCreateForm from '@/components/counselor/IndividualAss
 
 function NewAssessmentContent() {
   return (
-    <CounselorPageBody className="gap-4 xl:overflow-hidden">
+    <CounselorPageBody className="gap-4">
       <IndividualAssessmentCreateForm />
     </CounselorPageBody>
   );

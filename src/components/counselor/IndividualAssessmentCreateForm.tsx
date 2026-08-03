@@ -584,7 +584,7 @@ export default function IndividualAssessmentCreateForm() {
         aria-modal="true"
         aria-labelledby="issue-complete-title"
       >
-        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50">
+        <div className="w-full max-w-lg overflow-hidden rounded-2xl border-2 border-emerald-400/45 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50 ring-1 ring-emerald-500/15">
           <div className="border-b border-emerald-500/25 bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 px-6 py-5">
             <div className="flex items-start gap-3">
               <span
@@ -676,12 +676,12 @@ export default function IndividualAssessmentCreateForm() {
   const selectedTestCount = selectedTestIds.size;
 
   return (
-    <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4 xl:overflow-hidden">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:overflow-hidden">
+    <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-start">
         <CounselorPageSection
           title="검사 정보"
-          className="flex min-h-0 flex-col xl:col-start-1 xl:row-start-1 xl:max-h-full"
-          bodyClassName="min-h-0 xl:overflow-y-auto"
+          className="!overflow-visible flex min-h-0 flex-col xl:col-start-1 xl:row-start-1 xl:min-h-[28rem]"
+          bodyClassName="min-h-0 overflow-visible"
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -811,39 +811,51 @@ export default function IndividualAssessmentCreateForm() {
                       className="text-slate-300"
                     />
                     <span className="sr-only">선택</span>
-                    <div className="flex min-w-0 items-center justify-between gap-3">
-                      <TestSortHeader
-                        label="검사명"
-                        sortKey="name"
-                        activeKey={testSortKey}
-                        direction={testSortDir}
-                        onSort={toggleTestSort}
-                        className="shrink-0 justify-start"
-                      />
-                      <div className="relative min-w-0 flex-1">
-                        <svg
-                          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <input
-                          type="search"
-                          value={testSearchQuery}
-                          onChange={(e) => setTestSearchQuery(e.target.value)}
-                          placeholder="검사명 찾기"
-                          disabled={loading}
-                          className="w-full min-w-0 rounded-md border border-white/10 bg-[#0a1528]/90 py-1 pl-7 pr-2 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400/50 focus:outline-none focus:ring-1 focus:ring-sky-500/30 disabled:opacity-50"
-                          aria-label="검사명 찾기"
+                    <TestSortHeader
+                      label="검사명"
+                      sortKey="name"
+                      activeKey={testSortKey}
+                      direction={testSortDir}
+                      onSort={toggleTestSort}
+                      className="justify-start"
+                    />
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] px-1 pb-2 pt-1.5">
+                    <span className="shrink-0 text-sm font-semibold text-slate-300">검색</span>
+                    <div className="relative min-w-0 flex-[3] basis-0">
+                      <svg
+                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-400/80"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                          clipRule="evenodd"
                         />
-                      </div>
+                      </svg>
+                      <input
+                        type="search"
+                        value={testSearchQuery}
+                        onChange={(e) => setTestSearchQuery(e.target.value)}
+                        placeholder="검사명 찾기"
+                        disabled={loading}
+                        className="w-full min-w-[12rem] rounded-lg border border-sky-400/35 bg-[#0a1528] py-2.5 pl-9 pr-9 text-base font-medium text-center text-white caret-sky-300 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
+                        aria-label="검사명 찾기"
+                      />
+                      {testSearchQuery ? (
+                        <button
+                          type="button"
+                          onClick={() => setTestSearchQuery('')}
+                          disabled={loading}
+                          className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
+                          aria-label="검색어 지우기"
+                        >
+                          ×
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 pt-2 xl:grid-cols-2">
@@ -881,8 +893,8 @@ export default function IndividualAssessmentCreateForm() {
 
         <CounselorPageSection
           title="내담자 목록"
-          className="flex min-h-0 flex-col xl:col-start-2 xl:row-start-1 xl:max-h-full xl:flex-1 xl:overflow-hidden"
-          bodyClassName="flex min-h-0 flex-1 flex-col xl:overflow-hidden"
+          className="!overflow-visible flex min-h-0 flex-col xl:col-start-2 xl:row-start-1 xl:min-h-[28rem]"
+          bodyClassName="flex flex-col overflow-visible"
           toolbar={
             recipients.length > 0 ? (
               <span
@@ -897,18 +909,18 @@ export default function IndividualAssessmentCreateForm() {
             ) : null
           }
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-3 xl:overflow-hidden">
+          <div className="flex flex-col gap-3 overflow-visible">
             <div className={`hidden md:grid ${recipientHeaderClass()}`}>
               <span>이름 *</span>
               <span>이메일</span>
               <span>휴대폰</span>
               <span />
             </div>
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+            <div className="min-h-[10rem] max-h-[16rem] space-y-2 overflow-y-auto pr-1">
               {manualRows.map((row, idx) => (
                   <div
                     key={idx}
-                    className={`${recipientGridClass()} rounded-lg border border-white/5 bg-[#101f38]/40 px-2 py-2 md:border-0 md:bg-transparent md:px-0 md:py-0.5`}
+                    className={`${recipientGridClass()} rounded-lg border border-white/5 bg-[#101f38]/40 px-2 py-2.5 md:border-0 md:bg-transparent md:px-0 md:py-1`}
                   >
                     <div>
                       <span className="mb-1 block text-xs text-slate-500 md:hidden">이름 *</span>
@@ -917,7 +929,7 @@ export default function IndividualAssessmentCreateForm() {
                           recipientNameRefs.current[idx] = el;
                         }}
                         placeholder="이름"
-                        className={FORM_INPUT}
+                        className={`${FORM_INPUT} py-2.5`}
                         value={row.displayName}
                         onChange={(e) => updateRow(idx, 'displayName', e.target.value)}
                         onKeyDown={handleRecipientFieldKeyDown}
@@ -929,7 +941,7 @@ export default function IndividualAssessmentCreateForm() {
                       <input
                         placeholder="이메일"
                         type="email"
-                        className={FORM_INPUT}
+                        className={`${FORM_INPUT} py-2.5`}
                         value={row.email}
                         onChange={(e) => updateRow(idx, 'email', e.target.value)}
                         onKeyDown={handleRecipientFieldKeyDown}
@@ -940,7 +952,7 @@ export default function IndividualAssessmentCreateForm() {
                       <span className="mb-1 block text-xs text-slate-500 md:hidden">휴대폰</span>
                       <input
                         placeholder="휴대폰"
-                        className={FORM_INPUT}
+                        className={`${FORM_INPUT} py-2.5`}
                         value={row.phone}
                         onChange={(e) => updateRow(idx, 'phone', e.target.value)}
                         onKeyDown={handleRecipientFieldKeyDown}
@@ -959,17 +971,7 @@ export default function IndividualAssessmentCreateForm() {
                   </div>
               ))}
             </div>
-            <div className="shrink-0">
-              <button
-                type="button"
-                onClick={() => addRow()}
-                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
-                disabled={loading}
-              >
-                + 행 추가
-              </button>
-            </div>
-            <div className="flex shrink-0 flex-col gap-2 border-t border-white/10 pt-3">
+            <div className="relative z-20 flex shrink-0 flex-col gap-2 overflow-visible border-t border-white/10 pt-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1014,7 +1016,7 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="absolute bottom-full left-0 z-30 mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
                     role="tooltip"
                     style={{
                       width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
@@ -1054,7 +1056,7 @@ export default function IndividualAssessmentCreateForm() {
                     </p>
                     {showFilePreview && filePreviewText && filePreviewLayout ? (
                       <div
-                        className="absolute bottom-full left-0 z-30 mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-lg"
+                        className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-2xl"
                         role="tooltip"
                         style={{
                           width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
@@ -1081,6 +1083,16 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
               ) : null}
             </div>
+            <div className="shrink-0">
+              <button
+                type="button"
+                onClick={() => addRow()}
+                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                disabled={loading}
+              >
+                + 행 추가
+              </button>
+            </div>
             {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD ? (
               <p className="shrink-0 text-sm leading-snug text-amber-200/90">
                 {GROUP_NOTIFY_WARN_THRESHOLD}명 이상은 「발급만」 또는 「발급 후 선택 발송」을 권장합니다.
@@ -1091,8 +1103,8 @@ export default function IndividualAssessmentCreateForm() {
 
         <CounselorPageSection
           title="발급 · 발송"
-          className="flex min-h-0 flex-1 flex-col xl:col-start-3 xl:row-start-1 xl:self-stretch"
-          bodyClassName="flex min-h-0 flex-1 flex-col"
+          className="!overflow-visible flex min-h-0 flex-col xl:col-start-3 xl:row-start-1 xl:min-h-[20rem] xl:self-stretch"
+          bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
         >
           {error ? (
             <div
@@ -1112,7 +1124,7 @@ export default function IndividualAssessmentCreateForm() {
             </div>
           ) : null}
 
-          <div className="flex min-h-0 flex-1 flex-col justify-center gap-2.5 py-2">
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-2.5 px-1 pb-2 pt-4">
             <button
               type="button"
               onClick={() => void handleIssue('send_all')}

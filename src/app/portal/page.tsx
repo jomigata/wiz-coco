@@ -34,7 +34,7 @@ type PortalAssessment = PortalDashboardAssessment;
 function portalAssessmentGroupTitle(a: PortalAssessment): string {
   const org = (a.cohortName || '').trim() || (a.title || '').trim() || '—';
   const title = (a.title || '—').trim();
-  return `${org}/${title}`;
+  return `${org} / ${title}`;
 }
 type PortalTab = 'tests' | 'care';
 

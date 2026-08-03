@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { bulkCreateClientPortals } from '@/lib/clientPortalApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { normalizeRecipientPhone } from '@/lib/phoneFormat';
-import { FORM_INPUT } from '@/lib/assessmentFormUi';
+import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import { formatCounselorIssueDate } from '@/lib/counselorListTableStyles';
 import type { CounselorAssessment } from '@/lib/assessmentApi';
@@ -62,8 +62,8 @@ export { buildContextFromAssessment };
 function MiniStat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/50 px-2 py-1">
-      <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
-      <span className="text-xs font-medium text-slate-200">{children}</span>
+      <span className="text-sm font-semibold text-slate-400">{label}</span>
+      <span className="text-sm font-medium text-slate-200">{children}</span>
     </span>
   );
 }
@@ -214,8 +214,7 @@ export default function AssessmentAddRecipientModal({
 
   if (!open || !context) return null;
 
-  const groupTitleLine = `${context.cohortName}/${context.title}`;
-  const compactInput = `${FORM_INPUT} py-2 text-sm`;
+  const groupTitleLine = `${context.cohortName} / ${context.title}`;
 
   const handleDraftKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -230,7 +229,7 @@ export default function AssessmentAddRecipientModal({
       onClick={handleClose}
     >
       <div
-        className="flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
+        className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 border-b border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">
@@ -251,25 +250,25 @@ export default function AssessmentAddRecipientModal({
               <MiniStat label="발급일">{formatCounselorIssueDate(context.createdAt)}</MiniStat>
             </div>
           </div>
-          <p className="mt-1.5 text-xs leading-relaxed text-sky-100/60">
+          <p className="mt-1.5 text-sm leading-relaxed text-sky-100/70">
             나의코드·비밀번호가 자동 발급됩니다.
           </p>
         </div>
 
-        <div className="space-y-3 px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-visible px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <section className="rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
-              <h4 className="text-sm font-bold text-sky-100">개별 입력</h4>
-              <p className="mt-0.5 text-[11px] text-slate-500">이메일 또는 휴대폰 중 하나 필수</p>
+            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
+              <h4 className={FORM_LABEL}>개별 입력</h4>
+              <p className="mt-0.5 text-sm text-slate-400">이메일 또는 휴대폰 중 하나 필수</p>
               <div className="mt-2.5 grid grid-cols-2 gap-2">
                 <div>
-                  <label htmlFor="add-recipient-name" className="mb-1 block text-[11px] font-medium text-slate-400">
+                  <label htmlFor="add-recipient-name" className={FORM_LABEL}>
                     이름
                   </label>
                   <input
                     id="add-recipient-name"
                     type="text"
-                    className={compactInput}
+                    className={FORM_INPUT}
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value)}
                     onKeyDown={handleDraftKeyDown}
@@ -278,13 +277,13 @@ export default function AssessmentAddRecipientModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="add-recipient-phone" className="mb-1 block text-[11px] font-medium text-slate-400">
+                  <label htmlFor="add-recipient-phone" className={FORM_LABEL}>
                     휴대폰
                   </label>
                   <input
                     id="add-recipient-phone"
                     type="tel"
-                    className={compactInput}
+                    className={FORM_INPUT}
                     value={draftPhone}
                     onChange={(e) => setDraftPhone(e.target.value)}
                     onKeyDown={handleDraftKeyDown}
@@ -294,13 +293,13 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 <div className="col-span-2 flex items-end gap-2">
                   <div className="min-w-0 flex-1">
-                    <label htmlFor="add-recipient-email" className="mb-1 block text-[11px] font-medium text-slate-400">
+                    <label htmlFor="add-recipient-email" className={FORM_LABEL}>
                       이메일
                     </label>
                     <input
                       id="add-recipient-email"
                       type="email"
-                      className={compactInput}
+                      className={FORM_INPUT}
                       value={draftEmail}
                       onChange={(e) => setDraftEmail(e.target.value)}
                       onKeyDown={handleDraftKeyDown}
@@ -312,7 +311,7 @@ export default function AssessmentAddRecipientModal({
                     type="button"
                     onClick={handleAddDraftRow}
                     disabled={addLoading}
-                    className="shrink-0 rounded-lg bg-sky-600/90 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-500 disabled:opacity-50"
+                    className="shrink-0 rounded-lg bg-sky-600/90 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-500 disabled:opacity-50"
                   >
                     입력
                   </button>
@@ -320,9 +319,9 @@ export default function AssessmentAddRecipientModal({
               </div>
             </section>
 
-            <section className="rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
-              <h4 className="text-sm font-bold text-sky-100">파일 일괄 등록</h4>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+            <section className="overflow-visible rounded-xl border border-white/[0.1] bg-[#101f38]/55 p-3 sm:p-3.5">
+              <h4 className={FORM_LABEL}>파일 일괄 등록</h4>
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-400">
                 CSV·Excel — 이름, 이메일, 휴대폰
               </p>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
@@ -335,15 +334,15 @@ export default function AssessmentAddRecipientModal({
                     void handleAddRecipientFile(file);
                     e.target.value = '';
                   }}
-                  className="block min-w-0 flex-1 text-xs text-slate-300 file:mr-2 file:rounded-md file:border-0 file:bg-sky-700/90 file:px-2.5 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-sky-600"
+                  className="block min-w-0 flex-1 text-sm text-slate-300 file:mr-2 file:rounded-md file:border-0 file:bg-sky-700/90 file:px-2.5 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-sky-600"
                 />
               </div>
               <div
-                className="relative mt-2"
+                className="relative z-20 mt-2 overflow-visible"
                 onMouseLeave={() => setSamplePreviewKind(null)}
               >
-                <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                  <span className="text-slate-500">샘플받기</span>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-slate-400">샘플받기</span>
                   <button
                     type="button"
                     onClick={downloadGroupRecipientSampleTxt}
@@ -367,22 +366,22 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="absolute bottom-full left-0 z-30 mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
                     role="tooltip"
                     style={{ width: `min(100%, ${samplePreviewLayout.widthCh}ch)` }}
                   >
-                    <p className="mb-2 text-xs font-semibold text-sky-300">
+                    <p className="mb-2 text-sm font-semibold text-sky-300">
                       {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
                     </p>
-                    <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                    <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200">
                       {samplePreviewText}
                     </pre>
                   </div>
                 ) : null}
               </div>
               {addFileLabel ? (
-                <div className="relative mt-2" onMouseLeave={() => setShowAddFilePreview(false)}>
-                  <p className="truncate text-xs text-emerald-300">
+                <div className="relative z-20 mt-2 overflow-visible" onMouseLeave={() => setShowAddFilePreview(false)}>
+                  <p className="truncate text-sm text-emerald-300">
                     <span
                       className="cursor-help underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
                       onMouseEnter={() => setShowAddFilePreview(true)}
@@ -406,10 +405,10 @@ export default function AssessmentAddRecipientModal({
                     </button>
                   </p>
                   {showAddFilePreview && addFilePreviewText && addFilePreviewLayout ? (
-                    <div className="absolute left-0 bottom-full z-30 mb-1.5" role="tooltip">
-                      <div className="max-w-[min(100vw-2rem,28rem)] rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg">
-                        <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
-                        <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                    <div className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5" role="tooltip">
+                      <div className="max-w-[min(100vw-2rem,28rem)] rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl">
+                        <p className="mb-2 text-sm font-semibold text-sky-300">파일 내용 미리보기</p>
+                        <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200">
                           {addFilePreviewText}
                           {addFilePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
                         </pre>
@@ -423,15 +422,13 @@ export default function AssessmentAddRecipientModal({
 
           <div className="rounded-xl border border-white/[0.08] bg-[#0d1830]/60 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                추가 대상 목록
-              </h4>
-              <span className="rounded-full bg-white/5 px-2 py-0.5 text-xs font-semibold text-slate-300">
+              <h4 className={FORM_LABEL}>추가 대상 목록</h4>
+              <span className="rounded-full bg-white/5 px-2 py-0.5 text-sm font-semibold text-slate-300">
                 {combinedRows.length}명
               </span>
             </div>
             {combinedRows.length === 0 ? (
-              <p className="py-3 text-center text-xs text-slate-500">
+              <p className="py-3 text-center text-sm text-slate-400">
                 개별 입력 후 「입력」을 누르거나 파일을 첨부해 주세요.
               </p>
             ) : (
@@ -439,7 +436,7 @@ export default function AssessmentAddRecipientModal({
                 {pendingRows.map((row, idx) => (
                   <li
                     key={`pending-${idx}`}
-                    className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-xs"
+                    className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-900/40 px-2.5 py-1.5 text-sm"
                   >
                     <span className="min-w-0 truncate text-slate-200">
                       <span className="font-medium text-white">{row.displayName}</span>
@@ -458,7 +455,7 @@ export default function AssessmentAddRecipientModal({
                   </li>
                 ))}
                 {addFileRows.length > 0 ? (
-                  <li className="rounded-md border border-emerald-500/15 bg-emerald-950/20 px-2.5 py-1.5 text-xs text-emerald-300/90">
+                  <li className="rounded-md border border-emerald-500/15 bg-emerald-950/20 px-2.5 py-1.5 text-sm text-emerald-300/90">
                     파일에서 {addFileRows.length}명 ({addFileLabel})
                   </li>
                 ) : null}
@@ -478,7 +475,7 @@ export default function AssessmentAddRecipientModal({
               추가 후 즉시 접속 정보 발송
             </label>
             {addError ? (
-              <p className="text-xs text-red-300 sm:text-sm" role="alert">
+              <p className="text-sm text-red-300" role="alert">
                 {addError}
               </p>
             ) : null}

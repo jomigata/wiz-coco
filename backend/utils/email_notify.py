@@ -92,10 +92,10 @@ def _portal_access_html_email(
               <p style="margin:0;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">비밀번호</span> <strong style="color:#92400e;font-family:Consolas,Monaco,monospace;font-size:16px">{pin_display}</strong></p>
             </td></tr>
           </table>
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc">
-            <tr><td style="padding:14px 16px">
-              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">검사 시작</p>
-              <a href="{login_url}" style="display:block;text-align:center;padding:12px 14px;border-radius:8px;background:#334155;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;border:1px solid #334155">검사시작 로그인</a>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0">
+            <tr><td style="padding:8px 4px 10px">
+              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8">검사 시작</p>
+              <a href="{login_url}" style="display:block;text-align:center;padding:8px 0;color:#64748b;text-decoration:underline;font-size:14px;font-weight:600">검사시작 로그인</a>
             </td></tr>
           </table>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #bfdbfe;border-radius:10px;background:#eff6ff">
