@@ -27,7 +27,7 @@ export default function CounselorSlashInfoCell({
   onClick,
 }: Props) {
   const [hover, setHover] = useState(false);
-  const line = `${primary}/${secondary}`;
+  const line = `${primary} / ${secondary}`;
   const tooltipVisible =
     showTooltip && hover && (hoverTypeLabel || hoverAccessCode || hoverExtra);
 
@@ -40,7 +40,7 @@ export default function CounselorSlashInfoCell({
     >
       <span className="block max-w-full truncate">
         <span className="font-medium text-white">{primary || '—'}</span>
-        <span className="text-slate-300">/</span>
+        <span className="text-slate-300"> / </span>
         <span className="text-slate-200">{secondary || '—'}</span>
       </span>
       {tooltipVisible ? (
@@ -54,7 +54,7 @@ export default function CounselorSlashInfoCell({
                 ({hoverTypeLabel || '—'}) ({hoverAccessCode || '—'})
               </p>
               <p className="mt-0.5 text-slate-600">
-                {primary || '—'}/{secondary || '—'}
+                {primary || '—'} / {secondary || '—'}
               </p>
             </>
           ) : (

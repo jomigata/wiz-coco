@@ -118,6 +118,31 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
   return data;
 }
 
+export async function changeClientPortalPin(
+  portalToken: string,
+  body: { currentPin: string; newPin: string },
+): Promise<void> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/me/pin`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Portal ${portalToken}`,
+    },
+    body: JSON.stringify({
+      currentPin: normalizeJoinPinDigits(body.currentPin),
+      newPin: normalizeJoinPinDigits(body.newPin),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof data?.message === 'string' && data.message.trim()
+        ? data.message
+        : '비밀번호 변경에 실패했습니다.',
+    );
+  }
+}
+
 /** 포털 — 상담사가 할당한 치료·과제 (T-2-05) */
 export async function fetchPortalCareAssignments(
   portalToken: string,

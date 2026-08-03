@@ -31,12 +31,8 @@ def _format_dt_kst(dt: datetime) -> str:
 
 
 def _magic_link_expiry_label(issued_at: datetime | None = None) -> str:
-    issued = issued_at or datetime.now(timezone.utc)
-    if issued.tzinfo is None:
-        issued = issued.replace(tzinfo=timezone.utc)
-    expires = issued + timedelta(seconds=PORTAL_MAGIC_LINK_MAX_AGE)
     hours = max(1, PORTAL_MAGIC_LINK_MAX_AGE // 3600)
-    return f"유효기한: {_format_dt_kst(expires)}까지 (발송 후 {hours}시간)"
+    return f"(발송 후 {hours}시간)"
 
 
 def _attach_email_bodies(msg: MIMEMultipart, plain: str, html: str) -> None:
@@ -89,12 +85,7 @@ def _portal_access_html_email(
             <tr><td style="padding:16px 18px">
               <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0369a1">접속 정보</p>
               <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">나의코드</span> <strong style="color:#0369a1;font-family:Consolas,Monaco,monospace;font-size:16px">{my_code}</strong></p>
-              <p style="margin:0;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">비밀번호</span> <strong style="color:#92400e;font-family:Consolas,Monaco,monospace;font-size:16px">{pin_display}</strong></p>
-            </td></tr>
-          </table>
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0">
-            <tr><td style="padding:8px 4px 10px">
-              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8">검사 시작</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">비밀번호</span> <strong style="color:#92400e;font-family:Consolas,Monaco,monospace;font-size:16px">{pin_display}</strong></p>
               <a href="{login_url}" style="display:block;text-align:center;padding:8px 0;color:#64748b;text-decoration:underline;font-size:14px;font-weight:600">검사시작 로그인</a>
             </td></tr>
           </table>
@@ -257,9 +248,7 @@ def send_portal_credentials_email(
 WizCoCo 검사 접속 정보입니다.
 
 {chr(10).join(cred_lines)}
-
-▶ 검사시작
-{login_url}
+검사시작 로그인: {login_url}
 
 ▶ 바로 시작 (추천)
 {magic_url}
@@ -324,9 +313,7 @@ def send_test_reminder_email(
 WizCoCo 검사 접속 정보입니다. 아직 완료하지 않은 검사가 있으니 아래 정보로 검사를 진행해 주세요.
 
 나의코드: {my_code_display}  비밀번호: {pin_display}
-
-▶ 검사시작
-{login_url}
+검사시작 로그인: {login_url}
 
 ▶ 바로 시작 (추천)
 {magic_url}

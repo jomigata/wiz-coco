@@ -510,7 +510,12 @@ export default function IndividualAssessmentCreateForm() {
       try {
         sessionStorage.setItem(
           'wizcoco_created_assessment',
-          JSON.stringify({ assessmentId, accessCode }),
+          JSON.stringify({
+            assessmentId,
+            accessCode,
+            cohortName: cohortName.trim() || undefined,
+            title: (title.trim() || cohortName.trim() || '검사').slice(0, 200),
+          }),
         );
       } catch {
         // ignore
@@ -837,7 +842,7 @@ export default function IndividualAssessmentCreateForm() {
                         />
                       </svg>
                       <input
-                        type="search"
+                        type="text"
                         value={testSearchQuery}
                         onChange={(e) => setTestSearchQuery(e.target.value)}
                         placeholder="검사명 찾기"
@@ -870,17 +875,17 @@ export default function IndividualAssessmentCreateForm() {
                         <label
                           key={t.testId}
                           title={t.name}
-                          className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-white/5 ${checked ? 'text-sky-100' : 'text-slate-300'}`}
+                          className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-start gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-white/5 ${checked ? 'text-sky-100' : 'text-slate-300'}`}
                         >
-                          <span className="tabular-nums text-sm font-semibold text-slate-100">{t.no}</span>
+                          <span className="pt-0.5 tabular-nums text-sm font-semibold text-slate-100">{t.no}</span>
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleTest(t.testId)}
                             disabled={loading}
-                            className="shrink-0 rounded accent-sky-500"
+                            className="mt-0.5 shrink-0 rounded accent-sky-500"
                           />
-                          <span className="min-w-0 truncate whitespace-nowrap">{t.name}</span>
+                          <span className="min-w-0 break-words leading-snug">{t.name}</span>
                         </label>
                       );
                     })}
@@ -904,7 +909,7 @@ export default function IndividualAssessmentCreateForm() {
                     : 'bg-emerald-500/15 text-emerald-300'
                 }`}
               >
-                {recipients.length.toLocaleString('ko-KR')}명
+                총 {recipients.length.toLocaleString('ko-KR')}명
               </span>
             ) : null
           }
@@ -1016,7 +1021,7 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
+                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
                     role="tooltip"
                     style={{
                       width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
@@ -1056,7 +1061,7 @@ export default function IndividualAssessmentCreateForm() {
                     </p>
                     {showFilePreview && filePreviewText && filePreviewLayout ? (
                       <div
-                        className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-2xl"
+                        className="pointer-events-none absolute bottom-full left-0 z-[120] mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
                         role="tooltip"
                         style={{
                           width: `min(100%, ${filePreviewLayout.widthCh}ch)`,

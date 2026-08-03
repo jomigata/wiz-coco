@@ -233,13 +233,11 @@ export default function AssessmentAddRecipientModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 border-b border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="text-base font-bold text-white sm:text-lg">내담자 추가</h3>
-              <p className="mt-0.5 truncate text-sm font-medium text-sky-100/90" title={groupTitleLine}>
-                {groupTitleLine}
-              </p>
-            </div>
+          <h3 className="text-base font-bold text-white sm:text-lg">내담자 추가</h3>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+            <p className="min-w-0 truncate text-sm font-medium text-sky-100/90" title={groupTitleLine}>
+              {groupTitleLine}
+            </p>
             <div className="flex shrink-0 flex-wrap items-center gap-1.5">
               <MiniStat label="코드">
                 <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(context.accessCode)}</span>
@@ -250,9 +248,6 @@ export default function AssessmentAddRecipientModal({
               <MiniStat label="발급일">{formatCounselorIssueDate(context.createdAt)}</MiniStat>
             </div>
           </div>
-          <p className="mt-1.5 text-sm leading-relaxed text-sky-100/70">
-            나의코드·비밀번호가 자동 발급됩니다.
-          </p>
         </div>
 
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-visible px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
@@ -366,7 +361,7 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl"
+                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
                     role="tooltip"
                     style={{ width: `min(100%, ${samplePreviewLayout.widthCh}ch)` }}
                   >
@@ -406,7 +401,7 @@ export default function AssessmentAddRecipientModal({
                   </p>
                   {showAddFilePreview && addFilePreviewText && addFilePreviewLayout ? (
                     <div className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5" role="tooltip">
-                      <div className="max-w-[min(100vw-2rem,28rem)] rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-2xl">
+                      <div className="max-w-[min(100vw-2rem,28rem)] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl">
                         <p className="mb-2 text-sm font-semibold text-sky-300">파일 내용 미리보기</p>
                         <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200">
                           {addFilePreviewText}
@@ -424,7 +419,7 @@ export default function AssessmentAddRecipientModal({
             <div className="mb-2 flex items-center justify-between">
               <h4 className={FORM_LABEL}>추가 대상 목록</h4>
               <span className="rounded-full bg-white/5 px-2 py-0.5 text-sm font-semibold text-slate-300">
-                {combinedRows.length}명
+                총 {combinedRows.length}명
               </span>
             </div>
             {combinedRows.length === 0 ? (
@@ -464,7 +459,7 @@ export default function AssessmentAddRecipientModal({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="inline-flex items-center gap-2 text-sm text-slate-300">
+            <label className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-300">
               <input
                 type="checkbox"
                 checked={addSendNow}
@@ -472,7 +467,10 @@ export default function AssessmentAddRecipientModal({
                 disabled={addLoading}
                 className="rounded text-sky-500"
               />
-              추가 후 즉시 접속 정보 발송
+              <span>
+                추가 후 즉시 접속 정보 발송
+                <span className="text-slate-500"> (나의코드·비밀번호가 자동 발급됩니다.)</span>
+              </span>
             </label>
             {addError ? (
               <p className="text-sm text-red-300" role="alert">

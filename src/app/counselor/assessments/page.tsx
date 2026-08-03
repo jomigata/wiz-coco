@@ -30,9 +30,18 @@ export default function AssessmentListPage() {
       if (createdId) {
         const raw = sessionStorage.getItem('wizcoco_created_assessment');
         if (raw) {
-          const o = JSON.parse(raw) as { assessmentId?: string; accessCode?: string };
+          const o = JSON.parse(raw) as {
+            assessmentId?: string;
+            accessCode?: string;
+            cohortName?: string;
+            title?: string;
+          };
           if (o.assessmentId === createdId && o.accessCode) {
-            setCreatedInfo({ accessCode: o.accessCode });
+            setCreatedInfo({
+              accessCode: o.accessCode,
+              cohortName: o.cohortName,
+              title: o.title,
+            });
             sessionStorage.removeItem('wizcoco_created_assessment');
           }
         }

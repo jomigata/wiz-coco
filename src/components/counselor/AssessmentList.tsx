@@ -44,7 +44,7 @@ function parseCreatedAt(iso?: string): number {
 }
 
 function assessmentInfoLabel(a: CounselorAssessment): string {
-  return `${getAssessmentOrgLabel(a)}/${(a.title || '—').trim()}`;
+  return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
 }
 
 function resultStatusCounts(a: CounselorAssessment) {
@@ -317,6 +317,11 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
               <span className="text-emerald-300 font-mono font-bold tracking-widest">
                 {formatAccessCodeDisplay(createdInfo.accessCode)}
               </span>
+              {(createdInfo.cohortName || createdInfo.title) ? (
+                <span className="ml-2 font-normal text-white">
+                  ({(createdInfo.cohortName || '—').trim()} / {(createdInfo.title || '—').trim()})
+                </span>
+              ) : null}
             </p>
           </div>
         </div>
@@ -359,7 +364,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     className="whitespace-nowrap"
                   />
                   <SortableColumnHeader
-                    label="그룹명/제목"
+                    label="그룹명 / 제목"
                     sortKey="counselInfo"
                     activeKey={sortKey}
                     direction={sortDir}

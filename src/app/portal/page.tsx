@@ -3,7 +3,7 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchPortalDashboard, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
+import { fetchPortalDashboard, changeClientPortalPin, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
@@ -16,6 +16,7 @@ import {
 import {
   formatAccessCodeDisplay,
   normalizeAccessCodeInput,
+  normalizeJoinPinDigits,
 } from '@/lib/accessCodeFormat';
 import {
   clearClientPortalSession,
@@ -73,6 +74,13 @@ function ClientPortalContent() {
   const [resultViewLoading, setResultViewLoading] = useState(false);
   const [resultViewError, setResultViewError] = useState('');
   const [portalTab, setPortalTab] = useState<PortalTab>('tests');
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinCurrent, setPinCurrent] = useState('');
+  const [pinNew, setPinNew] = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinError, setPinError] = useState('');
+  const [pinSuccess, setPinSuccess] = useState('');
 
   useEffect(() => {
     if (!resultView) {
@@ -294,6 +302,57 @@ function ClientPortalContent() {
     }
   };
 
+  const handleChangePin = async () => {
+    const session = readClientPortalSession();
+    if (!session?.portalToken) {
+      router.replace('/portal/login/');
+      return;
+    }
+    const current = normalizeJoinPinDigits(pinCurrent);
+    const next = normalizeJoinPinDigits(pinNew);
+    const confirm = normalizeJoinPinDigits(pinConfirm);
+    if (current.length !== 4 || next.length !== 4) {
+      setPinError('비밀번호는 4자리 숫자여야 합니다.');
+      return;
+    }
+    if (next !== confirm) {
+      setPinError('새 비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+    if (current === next) {
+      setPinError('새 비밀번호는 현재 비밀번호와 달라야 합니다.');
+      return;
+    }
+    setPinLoading(true);
+    setPinError('');
+    setPinSuccess('');
+    try {
+      await changeClientPortalPin(session.portalToken, { currentPin: current, newPin: next });
+      setPinSuccess('비밀번호가 변경되었습니다.');
+      setPinCurrent('');
+      setPinNew('');
+      setPinConfirm('');
+      window.setTimeout(() => {
+        setPinModalOpen(false);
+        setPinSuccess('');
+      }, 1200);
+    } catch (err) {
+      setPinError(err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.');
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
+  const closePinModal = () => {
+    if (pinLoading) return;
+    setPinModalOpen(false);
+    setPinCurrent('');
+    setPinNew('');
+    setPinConfirm('');
+    setPinError('');
+    setPinSuccess('');
+  };
+
   if (loading) return <PortalLoading />;
 
   if (error) {
@@ -314,26 +373,35 @@ function ClientPortalContent() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-              <div>
-                <h1 className="text-xl font-bold text-white">내 검사실</h1>
-                <p className="text-slate-300 text-sm mt-1">{displayName}님, 환영합니다.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  clearClientPortalSession();
-                  router.push('/portal/login/');
-                }}
-                className="text-xs text-slate-400 hover:text-slate-200 underline"
-              >
-                로그아웃
-              </button>
+            <div className="mb-4">
+              <h1 className="text-xl font-bold text-white">내 검사실</h1>
+              <p className="text-slate-300 text-sm mt-1">{displayName}님, 환영합니다.</p>
             </div>
-            <p className="text-sm text-slate-400">
-              나의코드{' '}
-              <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(myCode)}</span>
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-slate-400">
+                나의코드{' '}
+                <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(myCode)}</span>
+              </p>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setPinModalOpen(true)}
+                  className="text-xs text-sky-300 hover:text-sky-200 underline"
+                >
+                  비밀번호 변경
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearClientPortalSession();
+                    router.push('/portal/login/');
+                  }}
+                  className="text-xs text-slate-400 hover:text-slate-200 underline"
+                >
+                  로그아웃
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-2 border-b border-slate-700/80">
@@ -346,7 +414,7 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              검사 진행
+              검사 진행 현황
             </button>
             <button
               type="button"
@@ -364,11 +432,7 @@ function ClientPortalContent() {
           {portalTab === 'care' ? (
             <PortalCareAssignmentsPanel />
           ) : (
-            <>
-          <h2 id="portal-results" className="text-lg font-semibold text-white scroll-mt-24">
-            {searchParams.get('focus') === 'results' ? '완료한 검사 결과' : '검사 진행 현황'}
-          </h2>
-
+            <div id="portal-results" className="scroll-mt-24 space-y-6">
           {assessments.length === 0 ? (
             <p className="text-slate-400 text-sm">배정된 검사가 없습니다. 담당자에게 상담(코드)·나의코드를 확인해 주세요.</p>
           ) : (
@@ -436,7 +500,7 @@ function ClientPortalContent() {
               );
             })
           )}
-            </>
+            </div>
           )}
         </main>
       </div>
@@ -500,6 +564,104 @@ function ClientPortalContent() {
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
               >
                 {actionLoading ? '처리 중…' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pinModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={closePinModal}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl border border-sky-500/30 bg-[#151c28] p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="portal-pin-title"
+          >
+            <h4 id="portal-pin-title" className="text-lg font-semibold text-white">
+              비밀번호 변경
+            </h4>
+            <p className="mt-2 text-sm text-slate-400">4자리 숫자 비밀번호를 변경합니다.</p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label htmlFor="portal-pin-current" className="block text-xs text-slate-400 mb-1">
+                  현재 비밀번호
+                </label>
+                <input
+                  id="portal-pin-current"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={pinCurrent}
+                  onChange={(e) => setPinCurrent(normalizeJoinPinDigits(e.target.value))}
+                  disabled={pinLoading}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-center font-mono text-white tracking-widest"
+                  autoComplete="current-password"
+                />
+              </div>
+              <div>
+                <label htmlFor="portal-pin-new" className="block text-xs text-slate-400 mb-1">
+                  새 비밀번호
+                </label>
+                <input
+                  id="portal-pin-new"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={pinNew}
+                  onChange={(e) => setPinNew(normalizeJoinPinDigits(e.target.value))}
+                  disabled={pinLoading}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-center font-mono text-white tracking-widest"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <label htmlFor="portal-pin-confirm" className="block text-xs text-slate-400 mb-1">
+                  새 비밀번호 확인
+                </label>
+                <input
+                  id="portal-pin-confirm"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={pinConfirm}
+                  onChange={(e) => setPinConfirm(normalizeJoinPinDigits(e.target.value))}
+                  disabled={pinLoading}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-center font-mono text-white tracking-widest"
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+            {pinError ? (
+              <p className="mt-3 text-sm text-red-300" role="alert">
+                {pinError}
+              </p>
+            ) : null}
+            {pinSuccess ? (
+              <p className="mt-3 text-sm text-emerald-300" role="status">
+                {pinSuccess}
+              </p>
+            ) : null}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closePinModal}
+                disabled={pinLoading}
+                className="rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleChangePin()}
+                disabled={pinLoading}
+                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+              >
+                {pinLoading ? '변경 중…' : '변경'}
               </button>
             </div>
           </div>

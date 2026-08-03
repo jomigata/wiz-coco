@@ -382,6 +382,41 @@ def portal_me():
     )
 
 
+@bp.route("/me/pin", methods=["POST"])
+def portal_change_pin():
+    """포털 내담자 — 비밀번호(PIN) 변경."""
+    payload = get_portal_session_from_request()
+    if not payload:
+        return jsonify({"error": "Unauthorized", "message": "세션이 만료되었습니다."}), 401
+
+    portal_id = (payload.get("portalId") or "").strip()
+    if not portal_id or portal_id.startswith("legacy:"):
+        return jsonify({"error": "Forbidden", "message": "비밀번호를 변경할 수 없습니다."}), 403
+
+    body = request.get_json(silent=True) or {}
+    current_pin = "".join(c for c in str(body.get("currentPin") or "") if c.isdigit())[:4]
+    new_pin = "".join(c for c in str(body.get("newPin") or "") if c.isdigit())[:4]
+
+    if len(current_pin) != 4 or len(new_pin) != 4:
+        return jsonify({"error": "Bad Request", "message": "비밀번호는 4자리 숫자여야 합니다."}), 400
+
+    if current_pin == new_pin:
+        return jsonify({"error": "Bad Request", "message": "새 비밀번호는 현재 비밀번호와 달라야 합니다."}), 400
+
+    db = get_firestore()
+    pref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
+    pdoc = pref.get()
+    if not pdoc.exists:
+        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
+
+    pin_hash = (pdoc.to_dict() or {}).get("pinHash") or ""
+    if not pin_hash or not verify_password(current_pin, pin_hash):
+        return jsonify({"error": "Unauthorized", "message": "현재 비밀번호가 올바르지 않습니다."}), 401
+
+    pref.update({"pinHash": hash_password(new_pin)})
+    return jsonify({"ok": True})
+
+
 @bp.route("/care-assignments", methods=["GET"])
 def portal_care_assignments():
     """포털 내담자 — 상담사가 할당한 치료·과제 목록."""

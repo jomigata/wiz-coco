@@ -411,6 +411,8 @@ export interface CounselorAssessment {
 /** 상담(코드) 발급 직후 목록 상단 배너용(세션에서 전달) */
 export interface CreatedAssessmentBannerInfo {
   accessCode: string;
+  cohortName?: string;
+  title?: string;
 }
 
 export interface ProgressByClient {
