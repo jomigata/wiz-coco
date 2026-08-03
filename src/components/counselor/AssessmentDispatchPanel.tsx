@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -311,7 +311,6 @@ export default function AssessmentDispatchPanel({
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [expandedNotifyId, setExpandedNotifyId] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -419,9 +418,18 @@ export default function AssessmentDispatchPanel({
     [visibleData?.recipients],
   );
 
+  const sendingStartedAtRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!hasSendingNotify || authPending || !isAuthenticated) return;
+    if (!hasSendingNotify) {
+      sendingStartedAtRef.current = null;
+      return;
+    }
+    if (authPending || !isAuthenticated) return;
+    if (sendingStartedAtRef.current === null) sendingStartedAtRef.current = Date.now();
+    const elapsed = Date.now() - sendingStartedAtRef.current;
+    if (elapsed >= 60_000) return;
     const timer = window.setInterval(() => {
+      if (Date.now() - (sendingStartedAtRef.current ?? Date.now()) >= 60_000) return;
       void load({ silent: true });
     }, 1500);
     return () => window.clearInterval(timer);
@@ -524,10 +532,6 @@ export default function AssessmentDispatchPanel({
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
-  };
-
-  const toggleNotifyExpand = (id: string) => {
-    setExpandedNotifyId((prev) => (prev === id ? null : id));
   };
 
   const handleResend = async () => {
@@ -725,7 +729,8 @@ export default function AssessmentDispatchPanel({
             <span className="text-sm tabular-nums text-slate-200">
               <span className="font-semibold text-emerald-300">{completedCount}</span>
               <span className="mx-1 text-slate-600">/</span>
-              <span className="font-medium text-white">{displayData.recipients.length}</span>
+              <span className="text-slate-500">총</span>
+              <span className="ml-0.5 font-medium text-white">{displayData.recipients.length}</span>
               <span className="ml-0.5 text-slate-500">명</span>
             </span>
           </span>
@@ -808,6 +813,7 @@ export default function AssessmentDispatchPanel({
                   <col className="w-32" />
                   <col className="w-36" />
                   <col className="w-28" />
+                  <col className="w-36" />
                 </colgroup>
                 <thead>
               <tr className={counselorListHeaderRowClass}>
@@ -853,6 +859,14 @@ export default function AssessmentDispatchPanel({
                   onSort={toggleSort}
                   className="w-28"
                 />
+                <SortableColumnHeader
+                  label="발송일시"
+                  sortKey="notifyAt"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                  className="w-36"
+                />
               </tr>
             </thead>
             <tbody>
@@ -860,7 +874,6 @@ export default function AssessmentDispatchPanel({
                 const notify = dispatchStatusDisplay(r);
                 const summary = testSummary(r);
                 const isOpen = expandedId === r.portalId;
-                const isNotifyOpen = expandedNotifyId === r.portalId;
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
                 const myCodeLabel = formatAccessCodeDisplay(r.myCode);
@@ -919,42 +932,13 @@ export default function AssessmentDispatchPanel({
                       <td
                         className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
                         title={notify.title}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleNotifyExpand(r.portalId);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            toggleNotifyExpand(r.portalId);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        aria-expanded={isNotifyOpen}
-                        aria-label={`발송현황 ${isNotifyOpen ? '접기' : '펼치기'}`}
                       >
-                        <span className="inline-flex items-center gap-1">
-                          <span className="text-slate-500 text-xs" aria-hidden>
-                            {isNotifyOpen ? '▼' : '▶'}
-                          </span>
-                          <DispatchStatusText value={notify} />
-                        </span>
+                        <DispatchStatusText value={notify} />
+                      </td>
+                      <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
+                        {formatNotifyDate(r.notifyAt)}
                       </td>
                     </tr>
-                    {isNotifyOpen ? (
-                      <tr className="bg-slate-900/25">
-                        <td colSpan={2} className="border-b border-slate-700/50 p-0" aria-hidden="true" />
-                        <td
-                          colSpan={5}
-                          className="border-b border-slate-700/50 px-3 py-2 text-xs text-slate-400"
-                        >
-                          <span className="text-slate-500">발송일시 </span>
-                          <span className="tabular-nums text-slate-200">{formatNotifyDate(r.notifyAt)}</span>
-                        </td>
-                      </tr>
-                    ) : null}
                     {isOpen ? (
                       <tr>
                         <td
@@ -963,7 +947,7 @@ export default function AssessmentDispatchPanel({
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={5}
+                          colSpan={6}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (

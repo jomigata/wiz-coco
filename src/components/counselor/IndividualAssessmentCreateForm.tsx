@@ -681,7 +681,7 @@ export default function IndividualAssessmentCreateForm() {
         <CounselorPageSection
           title="검사 정보"
           className="flex min-h-0 flex-col xl:col-start-1 xl:row-start-1 xl:max-h-full"
-          bodyClassName="min-h-0 overflow-y-auto"
+          bodyClassName="min-h-0 xl:overflow-y-auto"
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -811,7 +811,7 @@ export default function IndividualAssessmentCreateForm() {
                       className="text-slate-300"
                     />
                     <span className="sr-only">선택</span>
-                    <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
                       <TestSortHeader
                         label="검사명"
                         sortKey="name"
@@ -820,15 +820,30 @@ export default function IndividualAssessmentCreateForm() {
                         onSort={toggleTestSort}
                         className="shrink-0 justify-start"
                       />
-                      <input
-                        type="search"
-                        value={testSearchQuery}
-                        onChange={(e) => setTestSearchQuery(e.target.value)}
-                        placeholder="검사명 찾기"
-                        disabled={loading}
-                        className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#0a1528]/90 px-2 py-1 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400/50 focus:outline-none focus:ring-1 focus:ring-sky-500/30 disabled:opacity-50"
-                        aria-label="검사명 찾기"
-                      />
+                      <div className="relative min-w-0 flex-1">
+                        <svg
+                          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <input
+                          type="search"
+                          value={testSearchQuery}
+                          onChange={(e) => setTestSearchQuery(e.target.value)}
+                          placeholder="검사명 찾기"
+                          disabled={loading}
+                          className="w-full min-w-0 rounded-md border border-white/10 bg-[#0a1528]/90 py-1 pl-7 pr-2 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400/50 focus:outline-none focus:ring-1 focus:ring-sky-500/30 disabled:opacity-50"
+                          aria-label="검사명 찾기"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 pt-2 xl:grid-cols-2">
@@ -867,7 +882,7 @@ export default function IndividualAssessmentCreateForm() {
         <CounselorPageSection
           title="내담자 목록"
           className="flex min-h-0 flex-col xl:col-start-2 xl:row-start-1 xl:max-h-full xl:flex-1 xl:overflow-hidden"
-          bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+          bodyClassName="flex min-h-0 flex-1 flex-col xl:overflow-hidden"
           toolbar={
             recipients.length > 0 ? (
               <span
@@ -882,7 +897,7 @@ export default function IndividualAssessmentCreateForm() {
             ) : null
           }
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 xl:overflow-hidden">
             <div className={`hidden md:grid ${recipientHeaderClass()}`}>
               <span>이름 *</span>
               <span>이메일</span>
@@ -999,7 +1014,7 @@ export default function IndividualAssessmentCreateForm() {
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="mt-2 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
+                    className="absolute bottom-full left-0 z-30 mb-1.5 w-full rounded-lg border border-sky-500/45 bg-slate-950/98 p-3 text-left shadow-lg"
                     role="tooltip"
                     style={{
                       width: `min(100%, ${samplePreviewLayout.widthCh}ch)`,
@@ -1008,7 +1023,7 @@ export default function IndividualAssessmentCreateForm() {
                     <p className="mb-2 text-xs font-semibold text-sky-300">
                       {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
                     </p>
-                    <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                    <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
                       {samplePreviewText}
                     </pre>
                   </div>
@@ -1024,7 +1039,7 @@ export default function IndividualAssessmentCreateForm() {
                   aria-live="polite"
                 >
                   <p className="text-xs font-medium text-sky-300/90">첨부된 파일</p>
-                  <div className="mt-1 max-w-full">
+                  <div className="relative mt-1 max-w-full">
                     <p
                       className="inline cursor-help break-all text-sm font-medium leading-snug text-white underline decoration-dotted decoration-sky-400/60 underline-offset-4"
                       onMouseEnter={() => setShowFilePreview(true)}
@@ -1039,14 +1054,14 @@ export default function IndividualAssessmentCreateForm() {
                     </p>
                     {showFilePreview && filePreviewText && filePreviewLayout ? (
                       <div
-                        className="mt-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-lg"
+                        className="absolute bottom-full left-0 z-30 mb-2 w-max max-w-full rounded-lg border border-sky-500/40 bg-slate-950/95 p-3 text-left shadow-lg"
                         role="tooltip"
                         style={{
                           width: `min(100%, ${filePreviewLayout.widthCh}ch)`,
                         }}
                       >
                         <p className="mb-2 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
-                        <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
+                        <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-slate-200">
                           {filePreviewText}
                           {filePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
                         </pre>

@@ -382,7 +382,7 @@ function ClientPortalContent() {
                   className="bg-slate-800/80 rounded-2xl border border-slate-600 p-5 space-y-3"
                 >
                   <div className="border-b border-slate-700/40 pb-2.5 mb-1">
-                    <h3 className="text-sm font-normal text-slate-500">
+                    <h3 className="text-base sm:text-lg font-medium text-slate-400">
                       {portalAssessmentGroupTitle(a)}
                     </h3>
                     {a.isLinkedShared || a.isFromLinkedPortal ? (

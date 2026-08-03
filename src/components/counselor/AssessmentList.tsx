@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useRouter } from 'next/navigation';
@@ -139,6 +139,9 @@ interface AssessmentListProps {
   createdInfo?: CreatedAssessmentBannerInfo | null;
 }
 
+const LIVE_POLL_INTERVAL_MS = 3000;
+const LIVE_POLL_MAX_MS = 60_000;
+
 export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
   const router = useRouter();
   const [listItems, setListItems] = useState(assessments);
@@ -149,10 +152,38 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [liveAssessmentId, setLiveAssessmentId] = useState<string | null>(null);
+  const liveStartRef = useRef<number>(0);
 
   useEffect(() => {
     setListItems(assessments);
   }, [assessments]);
+
+  useEffect(() => {
+    if (!liveAssessmentId) return;
+    const row = listItems.find((a) => a.id === liveAssessmentId);
+    if (row) {
+      const { dispatchTotal } = resultStatusCounts(row);
+      const dispatchDone = (row.dispatchSentCount ?? 0) + (row.dispatchFailedCount ?? 0);
+      if (dispatchTotal > 0 && dispatchDone >= dispatchTotal) {
+        setLiveAssessmentId(null);
+        return;
+      }
+    }
+    if (Date.now() - liveStartRef.current >= LIVE_POLL_MAX_MS) {
+      setLiveAssessmentId(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      router.refresh();
+    }, LIVE_POLL_INTERVAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [liveAssessmentId, listItems, router]);
+
+  const startLivePolling = (assessmentId: string) => {
+    liveStartRef.current = Date.now();
+    setLiveAssessmentId(assessmentId);
+  };
 
   const goToProgress = (assessmentId: string) => {
     rememberCounselorAssessmentContext(assessmentId);
@@ -451,7 +482,13 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       open={Boolean(addTarget)}
       onClose={() => setAddTarget(null)}
       context={addTarget ? buildContextFromAssessment(addTarget) : null}
-      onSuccess={() => router.refresh()}
+      onSuccess={(info) => {
+        const targetId = addTarget?.id;
+        router.refresh();
+        if (info.sent && targetId) {
+          startLivePolling(targetId);
+        }
+      }}
     />
 
     {deleteTarget ? (
