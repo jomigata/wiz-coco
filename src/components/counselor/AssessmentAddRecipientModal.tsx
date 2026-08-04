@@ -361,7 +361,7 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                    className="pointer-events-none absolute bottom-full left-0 z-[200] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
                     role="tooltip"
                     style={{ width: `min(100%, ${samplePreviewLayout.widthCh}ch)` }}
                   >
@@ -458,35 +458,33 @@ export default function AssessmentAddRecipientModal({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-medium text-white">
-              나의코드·비밀번호가 자동 발급됩니다.
+          {addError ? (
+            <p className="text-sm text-red-300" role="alert">
+              {addError}
             </p>
-            {addError ? (
-              <p className="text-sm text-red-300" role="alert">
-                {addError}
-              </p>
-            ) : null}
-          </div>
+          ) : null}
         </div>
 
-        <div className="flex shrink-0 justify-end gap-2 border-t border-white/[0.08] bg-black/20 px-4 py-3 sm:px-5">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={addLoading}
-            className="rounded-lg border border-white/10 bg-slate-700/80 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600 disabled:opacity-50"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={addLoading}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
-          >
-            {addLoading ? '추가 중…' : '추가 후 발송'}
-          </button>
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] bg-black/20 px-4 py-3 sm:px-5">
+          <p className="text-sm font-normal text-white">나의코드·비밀번호가 자동 발급됩니다.</p>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={addLoading}
+              className="rounded-lg border border-white/10 bg-slate-700/80 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600 disabled:opacity-50"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={addLoading}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {addLoading ? '추가 중…' : '추가 후 발송'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

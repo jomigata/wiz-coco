@@ -681,19 +681,28 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     }
   };
 
+  const QUESTION_SLIDE_DURATION = 0.56;
+
   const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 500 : -500,
-      opacity: 0
+    enter: (dir: number) => ({
+      x: dir > 0 ? '100%' : '-100%',
+      opacity: 1,
+      transition: {
+        duration: QUESTION_SLIDE_DURATION,
+        ease: 'easeInOut',
+        delay: dir > 0 ? QUESTION_SLIDE_DURATION * 0.5 : 0,
+      },
     }),
     center: {
       x: 0,
-      opacity: 1
+      opacity: 1,
+      transition: { duration: QUESTION_SLIDE_DURATION, ease: 'easeInOut' },
     },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 500 : -500,
-      opacity: 0
-    })
+    exit: (dir: number) => ({
+      x: dir > 0 ? '-100%' : '100%',
+      opacity: 1,
+      transition: { duration: QUESTION_SLIDE_DURATION, ease: 'easeInOut' },
+    }),
   };
 
   // 단계별 렌더링
@@ -872,8 +881,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             </div>
 
             <div className="text-center mb-3">
-              <div className="min-h-[112px] relative mb-10 flex items-center justify-center">
-                <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <div className="relative mb-10 min-h-[112px] overflow-hidden">
+                <AnimatePresence initial={false} custom={direction}>
                   <motion.div
                     key={currentQuestion}
                     custom={direction}
@@ -881,8 +890,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className={`${v.questionCard} w-full`}
+                    className={`${v.questionCard} absolute inset-0 flex w-full items-center justify-center`}
                   >
                     <h2 className={`text-lg text-center leading-snug px-2 ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}>
                       {selectedQuestions[currentQuestion].text}

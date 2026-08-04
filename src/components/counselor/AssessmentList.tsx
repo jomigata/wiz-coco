@@ -34,7 +34,7 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 
-type ListSortKey = 'createdAt' | 'counselInfo';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode';
 type SortDirection = 'asc' | 'desc';
 
 function parseCreatedAt(iso?: string): number {
@@ -74,6 +74,11 @@ function compareAssessments(
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
     case 'counselInfo':
       return mult * assessmentInfoLabel(a).localeCompare(assessmentInfoLabel(b), 'ko');
+    case 'accessCode':
+      return (
+        mult *
+        formatAccessCodeDisplay(a.accessCode).localeCompare(formatAccessCodeDisplay(b.accessCode), 'ko')
+      );
     default:
       return 0;
   }
@@ -438,9 +443,14 @@ export default function AssessmentList({
                     onSort={toggleSort}
                     className="whitespace-nowrap"
                   />
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                    상담코드
-                  </th>
+                  <SortableColumnHeader
+                    label="상담코드"
+                    sortKey="accessCode"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap text-center"
+                  />
                   <SortableColumnHeader
                     label="그룹명 / 제목"
                     sortKey="counselInfo"

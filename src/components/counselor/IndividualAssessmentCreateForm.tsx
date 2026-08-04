@@ -322,6 +322,25 @@ export default function IndividualAssessmentCreateForm() {
     });
   };
 
+  const filteredTestIds = useMemo(() => filteredTests.map((t) => t.testId), [filteredTests]);
+
+  const allFilteredSelected =
+    filteredTestIds.length > 0 && filteredTestIds.every((id) => selectedTestIds.has(id));
+  const someFilteredSelected =
+    filteredTestIds.some((id) => selectedTestIds.has(id)) && !allFilteredSelected;
+
+  const toggleSelectAllFiltered = () => {
+    setSelectedTestIds((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        filteredTestIds.forEach((id) => next.delete(id));
+      } else {
+        filteredTestIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
   const updateRow = (index: number, field: keyof RecipientRow, value: string) => {
     setManualRows((prev) => {
       const next = [...prev];
@@ -804,12 +823,17 @@ export default function IndividualAssessmentCreateForm() {
                 />
               </div>
               <div>
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                  <label className={`${FORM_LABEL} shrink-0`}>
+                <div className="mb-2 flex w-full flex-wrap items-center gap-y-2">
+                  <label className={`${FORM_LABEL} shrink-0 whitespace-nowrap`}>
                     포함할 검사 <span className="text-red-400">*</span>
                   </label>
-                  <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-                    <div className="relative w-[10ch] min-w-[10ch] shrink-0">
+                  <div className="flex min-w-0 flex-1 basis-full items-center gap-2 sm:basis-0">
+                    <div
+                      className="hidden shrink-0 sm:block"
+                      style={{ width: 'clamp(0.75rem, 5vw, 20ch)' }}
+                      aria-hidden
+                    />
+                    <div className="relative min-w-0 flex-1">
                       <svg
                         className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sky-400/80"
                         xmlns="http://www.w3.org/2000/svg"
@@ -829,7 +853,7 @@ export default function IndividualAssessmentCreateForm() {
                         onChange={(e) => setTestSearchQuery(e.target.value)}
                         placeholder="검사명 찾기"
                         disabled={loading}
-                        className="w-full rounded-lg border border-sky-400/35 bg-[#0a1528] py-2 pl-7 pr-7 text-sm font-medium text-center text-white caret-sky-300 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
+                        className="w-full rounded-lg border border-sky-400/35 bg-[#0a1528] py-2 pl-7 pr-7 text-sm font-medium text-white caret-sky-300 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
                         aria-label="검사명 찾기"
                       />
                       {testSearchQuery ? (
@@ -859,7 +883,18 @@ export default function IndividualAssessmentCreateForm() {
                       onSort={toggleTestSort}
                       className="text-slate-300"
                     />
-                    <span className="sr-only">선택</span>
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someFilteredSelected;
+                      }}
+                      onChange={toggleSelectAllFiltered}
+                      disabled={loading || filteredTests.length === 0}
+                      className="shrink-0 rounded accent-sky-500"
+                      aria-label="표시된 검사 전체 선택 또는 해제"
+                      title="전체 선택/해제"
+                    />
                     <TestSortHeader
                       label="검사명"
                       sortKey="name"
