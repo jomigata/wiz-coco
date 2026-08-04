@@ -56,13 +56,13 @@ function StatChip({
 
   const inner = (
     <>
-      <p className="truncate text-[10px] leading-tight text-slate-400 sm:text-[11px]">{label}</p>
-      <p className={`mt-0.5 text-lg font-bold tabular-nums leading-none sm:text-xl ${toneClass}`}>{value}</p>
-      {sub ? <p className="mt-0.5 truncate text-[10px] text-slate-500">{sub}</p> : null}
+      <p className="truncate text-xs leading-tight text-slate-400 sm:text-sm">{label}</p>
+      <p className={`mt-0.5 text-xl font-bold tabular-nums leading-none sm:text-2xl ${toneClass}`}>{value}</p>
+      {sub ? <p className="mt-0.5 truncate text-xs text-slate-500 sm:text-sm">{sub}</p> : null}
     </>
   );
 
-  const className = `${counselorHubClasses.statCard} min-w-0 px-2 py-2 sm:px-3 sm:py-2.5 transition-colors hover:border-sky-400/25`;
+  const className = `${counselorHubClasses.statCard} min-w-0 px-2.5 py-2.5 sm:px-3.5 sm:py-3 transition-colors hover:border-sky-400/25`;
 
   if (href) {
     return (
@@ -134,12 +134,12 @@ export default function CounselorHomeDashboard() {
   const recentActivity = (hub?.recentActivity || []).slice(0, 3);
 
   if (loading && !hub && !cohorts) {
-    return <p className="py-12 text-center text-sm text-slate-500">대시보드를 불러오는 중…</p>;
+    return <p className="py-12 text-center text-base text-slate-500">대시보드를 불러오는 중…</p>;
   }
 
   if (error && !hub && !cohorts) {
     return (
-      <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-base text-red-200">
         {error}
       </div>
     );
@@ -149,11 +149,11 @@ export default function CounselorHomeDashboard() {
     <div className="flex h-[calc(100dvh-5.5rem)] min-h-[32rem] max-h-[920px] flex-col gap-2 overflow-hidden sm:gap-2.5">
       <header className="flex shrink-0 flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-base font-bold text-white sm:text-lg">상담관리</h1>
-          <p className="text-[11px] text-slate-400 sm:text-xs">전체 현황과 메뉴를 한 화면에서 확인하세요</p>
+          <h1 className="text-lg font-bold text-white sm:text-xl">상담관리</h1>
+          <p className="text-xs text-slate-400 sm:text-sm">전체 현황과 메뉴를 한 화면에서 확인하세요</p>
         </div>
         {revalidating ? (
-          <p className="text-[10px] text-sky-300/70" role="status">
+          <p className="text-xs text-sky-300/70 sm:text-sm" role="status">
             갱신 중…
           </p>
         ) : null}
@@ -204,36 +204,36 @@ export default function CounselorHomeDashboard() {
           >
             <AuthLink
               href={getCounselorCategoryHubHref(category.slug)}
-              className={`flex shrink-0 items-center gap-2 border-b border-sky-400/20 bg-gradient-to-r ${CATEGORY_ACCENT[category.slug] ?? 'from-sky-600/25'} to-transparent px-2.5 py-2 transition-colors hover:bg-white/[0.03] sm:px-3 sm:py-2.5`}
+              className={`flex shrink-0 items-center gap-2.5 border-b border-sky-400/20 bg-gradient-to-r ${CATEGORY_ACCENT[category.slug] ?? 'from-sky-600/25'} to-transparent px-3 py-2.5 transition-colors hover:bg-white/[0.03] sm:px-3.5 sm:py-3`}
             >
-              <span className="text-base leading-none sm:text-lg" aria-hidden>
+              <span className="text-lg leading-none sm:text-xl" aria-hidden>
                 {category.icon}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold text-white sm:text-sm">{category.category}</p>
-                <p className="truncate text-[10px] text-sky-200/55">{category.description}</p>
+                <p className="truncate text-sm font-bold text-white sm:text-base">{category.category}</p>
+                <p className="truncate text-xs text-sky-200/55 sm:text-sm">{category.description}</p>
               </div>
-              <span className="shrink-0 text-sky-300/40" aria-hidden>
+              <span className="shrink-0 text-base text-sky-300/40" aria-hidden>
                 →
               </span>
             </AuthLink>
 
-            <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2 sm:p-2.5">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5 sm:p-3">
               {category.subcategories.map((sub) => (
                 <div key={sub.name}>
-                  <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-slate-400 sm:text-[11px]">
+                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-400 sm:text-sm">
                     <span aria-hidden>{sub.icon}</span>
                     {sub.name}
                   </p>
-                  <ul className="grid grid-cols-2 gap-1">
+                  <ul className="grid grid-cols-2 gap-1.5">
                     {sub.items.map((item) => (
                       <li key={item.href}>
                         <AuthLink
                           href={item.href}
                           title={item.description}
-                          className="group flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-[#101f38]/80 px-2 py-1.5 text-[11px] text-slate-200 transition-colors hover:border-sky-400/30 hover:bg-sky-500/10 hover:text-white sm:text-xs"
+                          className="group flex items-center gap-2 rounded-md border border-white/[0.06] bg-[#101f38]/80 px-2.5 py-2 text-sm text-slate-200 transition-colors hover:border-sky-400/30 hover:bg-sky-500/10 hover:text-white sm:text-base"
                         >
-                          <span className="shrink-0 text-sm leading-none opacity-80" aria-hidden>
+                          <span className="shrink-0 text-base leading-none opacity-80 sm:text-lg" aria-hidden>
                             {item.icon}
                           </span>
                           <span className="min-w-0 truncate font-medium">{item.name}</span>
@@ -249,41 +249,41 @@ export default function CounselorHomeDashboard() {
       </div>
 
       <footer className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3.5 py-2.5 sm:px-4 sm:py-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-slate-300">개별 내담자 진행</p>
+            <p className="text-sm font-semibold text-slate-300 sm:text-base">개별 내담자 진행</p>
             {individualCohort ? (
-              <span className="text-[11px] tabular-nums text-slate-400">
+              <span className="text-sm tabular-nums text-slate-400 sm:text-base">
                 {individualCohort.progress.percent}%
               </span>
             ) : null}
           </div>
           {individualCohort ? (
             <>
-              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full rounded-full bg-sky-500 transition-all"
                   style={{ width: `${individualCohort.progress.percent}%` }}
                 />
               </div>
-              <p className="mt-1 text-[10px] text-slate-500">
+              <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
                 완료 {individualCohort.completedPortals} · 진행 {individualCohort.inProgressPortals} · 미시작{' '}
                 {individualCohort.notStartedPortals}
               </p>
             </>
           ) : (
-            <p className="mt-1 text-[10px] text-slate-500">개별 내담자 데이터 없음</p>
+            <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">개별 내담자 데이터 없음</p>
           )}
         </div>
 
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-300">최근 검사 활동</p>
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3.5 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-sm font-semibold text-slate-300 sm:text-base">최근 검사 활동</p>
           {recentActivity.length === 0 ? (
-            <p className="mt-1 text-[10px] text-slate-500">최근 활동 없음</p>
+            <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">최근 활동 없음</p>
           ) : (
-            <ul className="mt-1 space-y-0.5">
+            <ul className="mt-1.5 space-y-1">
               {recentActivity.map((item, i) => (
-                <li key={`${item.portalId}-${item.testId}-${i}`} className="truncate text-[10px] text-slate-400">
+                <li key={`${item.portalId}-${item.testId}-${i}`} className="truncate text-xs text-slate-400 sm:text-sm">
                   <span className="text-slate-200">{item.displayName}</span>
                   <span className="text-slate-500"> · {item.assessmentTitle}</span>
                 </li>
