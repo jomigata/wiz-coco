@@ -1,6 +1,8 @@
 ﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { FaClipboard } from 'react-icons/fa';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
@@ -9,9 +11,7 @@ import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
-import {
-  counselingCodeTypeLabel,
-} from '@/data/counselingCodeTypes';
+import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
   counselorListBodyRowClass,
@@ -22,7 +22,7 @@ import {
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
-  counselorListTdClass,
+  counselorListTdCompactClass,
   counselorListThClass,
   counselorResultMetricClass,
   formatCounselorIssueDate,
@@ -43,17 +43,24 @@ import {
   type ArchivedAssessment,
 } from '@/lib/assessmentApi';
 
-type ListSortKey = 'createdAt' | 'counselInfo' | 'archivedAt';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt';
 type SortDirection = 'asc' | 'desc';
 
-function parseDate(iso?: string | null): number {
+function parseCreatedAt(iso?: string | null): number {
   if (!iso) return 0;
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? 0 : t;
 }
 
+function parseUsageEndDate(iso?: string): number {
+  const s = (iso || '').trim();
+  if (!s) return Number.MAX_SAFE_INTEGER;
+  const t = new Date(`${s}T00:00:00`).getTime();
+  return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
+}
+
 function assessmentInfoLabel(a: ArchivedAssessment): string {
-  return `${getAssessmentOrgLabel(a)}/${(a.title || '—').trim()}`;
+  return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
 }
 
 function compareRows(
@@ -65,28 +72,20 @@ function compareRows(
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
     case 'createdAt':
-      return mult * (parseDate(a.createdAt) - parseDate(b.createdAt));
+      return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
     case 'archivedAt':
-      return mult * (parseDate(a.archivedAt) - parseDate(b.archivedAt));
+      return mult * (parseCreatedAt(a.archivedAt) - parseCreatedAt(b.archivedAt));
     case 'counselInfo':
       return mult * assessmentInfoLabel(a).localeCompare(assessmentInfoLabel(b), 'ko');
+    case 'accessCode':
+      return (
+        mult *
+        formatAccessCodeDisplay(a.accessCode).localeCompare(formatAccessCodeDisplay(b.accessCode), 'ko')
+      );
+    case 'usageEndDate':
+      return mult * (parseUsageEndDate(a.usageEndDate) - parseUsageEndDate(b.usageEndDate));
     default:
       return 0;
-  }
-}
-
-function formatDate(iso: string | undefined | null): string {
-  if (!iso) return '-';
-  try {
-    return new Date(iso).toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return String(iso);
   }
 }
 
@@ -170,13 +169,16 @@ export default function DeletedAssessmentsPage() {
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
+  const [sortKey, setSortKey] = useState<ListSortKey>('archivedAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [recipientCache, setRecipientCache] = useState<Record<string, ArchivedDispatchRecipient[]>>({});
   const [recipientLoadingId, setRecipientLoadingId] = useState<string | null>(null);
   const [recipientError, setRecipientError] = useState('');
   const emptyRecipientSelection = useMemo(() => new Set<string>(), []);
+
+  const cellLinkClass =
+    'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const load = useCallback(async () => {
     const cached = readCachedArchivedAssessments<ArchivedAssessment>();
@@ -225,6 +227,15 @@ export default function DeletedAssessmentsPage() {
     list.sort((a, b) => compareRows(a, b, sortKey, sortDir));
     return list;
   }, [filtered, sortKey, sortDir]);
+
+  const totalParticipants = useMemo(
+    () =>
+      items.reduce((sum, a) => {
+        const { dispatchTotal } = resultStatusCounts(a);
+        return sum + dispatchTotal;
+      }, 0),
+    [items],
+  );
 
   const {
     page,
@@ -326,6 +337,13 @@ export default function DeletedAssessmentsPage() {
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
       dense
+      description={
+        <>
+          전체 <span className="font-semibold text-white">{items.length}</span>개 · 응시자{' '}
+          <span className="font-semibold text-cyan-300">{totalParticipants}</span>명
+          <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
+        </>
+      }
       toolbar={
         <>
           <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
@@ -369,16 +387,27 @@ export default function DeletedAssessmentsPage() {
         </>
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
+      <motion.div
+        className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
         {message ? <p className="mb-3 shrink-0 text-sm text-emerald-300">{message}</p> : null}
         {error ? <p className="mb-3 shrink-0 text-sm text-red-400">{error}</p> : null}
 
         {loading ? (
           <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-slate-400">
-            {items.length === 0 ? '삭제된 상담코드가 없습니다.' : '검색 결과가 없습니다.'}
-          </p>
+          <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
+            <FaClipboard className="mb-2 h-10 w-10 text-slate-600" />
+            <p className="text-base text-slate-300">
+              {items.length === 0 ? '삭제된 상담코드가 없습니다' : '검색 결과가 없습니다'}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              {items.length === 0 ? '삭제된 항목이 없습니다.' : '검색어를 바꿔 보세요.'}
+            </p>
+          </div>
         ) : (
           <>
             <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
@@ -386,8 +415,9 @@ export default function DeletedAssessmentsPage() {
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
                     <th className={counselorListNoThClass}>No.</th>
-                    <th scope="col" className={counselorListSelectThClass}>선택</th>
-                    <th scope="col" className={`${counselorListThClass} w-28`}>검사 현황</th>
+                    <th scope="col" className={counselorListSelectThClass}>
+                      선택
+                    </th>
                     <SortableColumnHeader
                       label="발급일"
                       sortKey="createdAt"
@@ -397,15 +427,20 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="그룹명/제목"
+                      label="상담코드"
+                      sortKey="accessCode"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap text-center"
+                    />
+                    <SortableColumnHeader
+                      label="그룹명 / 제목"
                       sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                     />
-                    <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                      사용 종료일
-                    </th>
                     <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                       <span className="block">결과현황</span>
                       <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
@@ -419,12 +454,20 @@ export default function DeletedAssessmentsPage() {
                       </span>
                     </th>
                     <SortableColumnHeader
-                      label="삭제일시"
+                      label="사용 종료일"
+                      sortKey="usageEndDate"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap text-center"
+                    />
+                    <SortableColumnHeader
+                      label="삭제일"
                       sortKey="archivedAt"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
-                      className="whitespace-nowrap"
+                      className="whitespace-nowrap text-center"
                     />
                   </tr>
                 </thead>
@@ -440,7 +483,7 @@ export default function DeletedAssessmentsPage() {
                     return (
                       <React.Fragment key={row.id}>
                         <tr className={`${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}>
-                          <td className={`${counselorListTdClass} text-slate-500 tabular-nums`}>
+                          <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                             {startIndex + idx + 1}
                           </td>
                           <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
@@ -452,37 +495,28 @@ export default function DeletedAssessmentsPage() {
                             />
                           </td>
                           <td
-                            className={`${counselorListTdClass} cursor-pointer whitespace-nowrap text-slate-300 hover:bg-white/[0.04]`}
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
                             onClick={() => void toggleExpand(row.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                void toggleExpand(row.id);
-                              }
-                            }}
-                            tabIndex={0}
-                            role="button"
-                            aria-expanded={isOpen}
                           >
-                            <span className="text-slate-400" aria-hidden="true">
-                              {isOpen ? '▼' : '▶'}{' '}
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.createdAt)}</span>
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
+                              {formatAccessCodeDisplay(row.accessCode)}
                             </span>
-                            <span>{dispatchTotal > 0 ? `${dispatchTotal}명` : '—'}</span>
                           </td>
                           <td
-                            className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200 hover:bg-white/[0.04]`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            {formatCounselorIssueDate(row.createdAt)}
-                          </td>
-                          <td
-                            className={`max-w-[16rem] ${counselorListTdClass} cursor-pointer`}
+                            className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
                             onClick={() => void toggleExpand(row.id)}
                           >
                             <CounselorSlashInfoCell
                               primary={infoPrimary}
                               secondary={infoSecondary}
                               showTooltip={false}
+                              className={cellLinkClass}
                             />
                             {expired ? (
                               <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
@@ -490,44 +524,49 @@ export default function DeletedAssessmentsPage() {
                               </span>
                             ) : null}
                           </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer hover:bg-white/[0.04] ${expired ? 'text-red-400' : 'text-slate-400'}`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            {formatUsageEndDate(row.usageEndDate)}
-                          </td>
-                          <td className={`whitespace-nowrap ${counselorListTdClass} cursor-default text-center text-slate-500`}>
+                          <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
                             (
-                            <span className="px-2 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
+                            <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                             /
-                            <span className={`px-2 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
+                            <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
                               {dispatchFailed}
                             </span>
                             /
-                            <span className={`px-2 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
+                            <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
                               {testIncomplete}
                             </span>
                             )
                           </td>
-                          <td className={`whitespace-nowrap ${counselorListTdClass} text-xs tabular-nums text-slate-400 cursor-default`}>
-                            {formatDate(row.archivedAt)}
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatUsageEndDate(row.usageEndDate)}</span>
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
                           </td>
                         </tr>
                         {isOpen ? (
                           <tr>
                             <td colSpan={8} className="border-t border-white/10 bg-slate-950/40 px-3 py-4">
                               {recipientLoadingId === row.id ? (
-                                <p className="text-sm text-slate-400">삭제된 검사자 목록을 불러오는 중…</p>
+                                <p className="text-sm text-slate-400">내담자 목록을 불러오는 중…</p>
                               ) : recipientError && !expandedRecipients.length ? (
                                 <p className="text-sm text-red-400">{recipientError}</p>
                               ) : expandedRecipients.length === 0 ? (
-                                <p className="text-sm text-slate-400">삭제된 검사자가 없습니다.</p>
+                                <p className="text-sm text-slate-400">발송된 내담자가 없습니다.</p>
                               ) : (
                                 <ArchivedRecipientsTable
                                   items={expandedRecipients}
                                   selected={emptyRecipientSelection}
                                   onToggleOne={() => undefined}
-                                  showAssessmentColumns={false}
+                                  layout="dispatch"
+                                  hideSelect
+                                  hideArchivedAt
                                 />
                               )}
                             </td>
@@ -548,7 +587,7 @@ export default function DeletedAssessmentsPage() {
             />
           </>
         )}
-      </div>
+      </motion.div>
     </CounselorPageSection>
   );
 }

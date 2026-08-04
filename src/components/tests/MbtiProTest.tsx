@@ -681,6 +681,12 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     }
   };
 
+  const QUESTION_FRAME_HEIGHT = 112;
+  const QUESTION_TEXT_EST_HEIGHT = 32;
+  const gapAboveTextTop = (QUESTION_FRAME_HEIGHT - QUESTION_TEXT_EST_HEIGHT) / 2;
+  const questionExitStartY = gapAboveTextTop * 0.1;
+  const questionExitEndY = gapAboveTextTop * 0.9;
+
   const QUESTION_TRANSITION_DURATION = 0.65;
   const QUESTION_EXIT_DURATION = QUESTION_TRANSITION_DURATION * 0.85 * 1.5;
 
@@ -703,13 +709,20 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       filter: 'blur(0px)',
       transition: { duration: QUESTION_TRANSITION_DURATION, ease: [0.22, 1, 0.36, 1] },
     },
-    exit: (dir: number) => ({
-      y: dir > 0 ? -28 : 28,
-      opacity: 0,
-      scale: 0.88,
-      filter: 'blur(8px)',
-      transition: { duration: QUESTION_EXIT_DURATION, ease: 'easeIn' },
-    }),
+    exit: (dir: number) => {
+      const sign = dir > 0 ? -1 : 1;
+      return {
+        y: [sign * questionExitStartY, sign * questionExitEndY],
+        opacity: [1, 0],
+        scale: [0.99, 0.88],
+        filter: ['blur(0px)', 'blur(8px)'],
+        transition: {
+          duration: QUESTION_EXIT_DURATION,
+          ease: 'easeIn',
+          times: [0.1, 1],
+        },
+      };
+    },
   };
 
   // 단계별 렌더링
@@ -888,7 +901,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             </div>
 
             <div className="text-center mb-3">
-              <div className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}>
+              <div
+                className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}
+                style={{ height: QUESTION_FRAME_HEIGHT }}
+              >
                 <AnimatePresence initial={false} custom={direction}>
                   <motion.h2
                     key={currentQuestion}

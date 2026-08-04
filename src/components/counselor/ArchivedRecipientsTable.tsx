@@ -20,6 +20,8 @@ import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListSelectTdClass,
+  counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
@@ -82,6 +84,10 @@ type ArchivedRecipientsTableProps = {
   selected: Set<string>;
   onToggleOne: (id: string) => void;
   showAssessmentColumns?: boolean;
+  layout?: 'default' | 'dispatch';
+  hideSelect?: boolean;
+  hideArchivedAt?: boolean;
+  hidePagination?: boolean;
 };
 
 export default function ArchivedRecipientsTable({
@@ -89,6 +95,10 @@ export default function ArchivedRecipientsTable({
   selected,
   onToggleOne,
   showAssessmentColumns = false,
+  layout = 'default',
+  hideSelect = false,
+  hideArchivedAt = false,
+  hidePagination = false,
 }: ArchivedRecipientsTableProps) {
   const [sortKey, setSortKey] = useState<RecipientSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
@@ -143,7 +153,89 @@ export default function ArchivedRecipientsTable({
     }
   };
 
-  const colSpanRest = showAssessmentColumns ? 9 : 7;
+  const isDispatchLayout = layout === 'dispatch';
+  const showArchivedAtColumn = !hideArchivedAt && !isDispatchLayout;
+  const showSelectColumn = !hideSelect;
+
+  const expandLeadingColSpan = isDispatchLayout
+    ? showSelectColumn
+      ? 2
+      : 1
+    : 3;
+  const expandRestColSpan = isDispatchLayout
+    ? 6
+    : (showAssessmentColumns ? 9 : showArchivedAtColumn ? 7 : 6);
+
+  const renderTestExpandRow = (row: ArchivedDispatchRecipient, tests: DispatchTestResult[]) => (
+    <tr>
+      <td
+        colSpan={expandLeadingColSpan}
+        className="border-b border-slate-700/60 bg-slate-900/20 p-0"
+        aria-hidden="true"
+      />
+      <td
+        colSpan={expandRestColSpan}
+        className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
+      >
+        {tests.length === 0 ? (
+          <p className="rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2 text-sm text-slate-500">
+            등록된 검사 항목이 없습니다.
+          </p>
+        ) : (
+          <div className="max-w-2xl overflow-hidden rounded-lg border border-slate-600/80 bg-slate-950/55 shadow-inner">
+            <table className="w-full table-fixed text-sm">
+              <thead>
+                <tr className="border-b border-slate-700/70 bg-slate-900/40 text-xs text-slate-400">
+                  <th className="w-10 px-3 py-2" aria-hidden="true" />
+                  <th className="px-3 py-2 text-left font-medium">검사명</th>
+                  <th className="w-[5.5rem] px-3 py-2 text-left font-medium">상태</th>
+                  <th className="w-[10.5rem] px-3 py-2 text-left font-medium">완료일시</th>
+                  <th className="w-[5.5rem] px-3 py-2 text-left font-medium">결과 확인</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tests.map((t, testIndex) => {
+                  const st = testStatusLabel(t.status);
+                  return (
+                    <tr
+                      key={t.testId}
+                      className="border-b border-slate-800/80 last:border-0 hover:bg-slate-900/30"
+                    >
+                      <td className="px-3 py-2.5 tabular-nums text-slate-500 align-top">
+                        {testLetterLabel(testIndex)}
+                      </td>
+                      <td className="break-words px-3 py-2.5 text-white align-top">
+                        {t.testName || t.testId}
+                      </td>
+                      <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
+                      <td className="px-3 py-2.5 text-xs leading-relaxed text-slate-400 align-top">
+                        {formatCompletedAt(t.completedAt)}
+                      </td>
+                      <td className="px-3 py-2.5 align-top">
+                        {t.status === 'completed' && t.resultId ? (
+                          <button
+                            type="button"
+                            onClick={() => void openResultDetail(t.resultId!, row.assessmentId)}
+                            className="whitespace-nowrap text-blue-400 hover:text-blue-300"
+                          >
+                            결과 보기
+                          </button>
+                        ) : t.status === 'in_progress' ? (
+                          <span className="text-amber-300">진행 중</span>
+                        ) : (
+                          <span className="text-slate-500">미실시</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </td>
+    </tr>
+  );
 
   return (
     <>
@@ -152,77 +244,138 @@ export default function ArchivedRecipientsTable({
           <thead>
             <tr className={counselorListHeaderRowClass}>
               <th className={counselorListNoThClass}>No.</th>
-              <th className={`${counselorListThClass} w-10`}>선택</th>
-              <SortableColumnHeader
-                label="검사 현황"
-                sortKey="testStatus"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-32"
-              />
-              <SortableColumnHeader
-                label="발송일시"
-                sortKey="notifyAt"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-36"
-              />
-              <SortableColumnHeader
-                label="이름"
-                sortKey="displayName"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-28"
-              />
-              <SortableColumnHeader
-                label="이메일"
-                sortKey="email"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-52"
-              />
-              <SortableColumnHeader
-                label="휴대폰"
-                sortKey="phone"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-32"
-              />
-              <SortableColumnHeader
-                label="나의코드"
-                sortKey="myCode"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-24"
-              />
-              <SortableColumnHeader
-                label="발송"
-                sortKey="notifyStatus"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-24"
-              />
-              {showAssessmentColumns ? (
-                <>
-                  <th className={counselorListThClass}>상담코드</th>
-                  <th className={counselorListThClass}>검사명</th>
-                </>
+              {showSelectColumn ? (
+                <th className={isDispatchLayout ? counselorListSelectThClass : `${counselorListThClass} w-10`}>
+                  선택
+                </th>
               ) : null}
-              <SortableColumnHeader
-                label="삭제일시"
-                sortKey="archivedAt"
-                activeKey={sortKey}
-                direction={sortDir}
-                onSort={toggleSort}
-                className="w-36"
-              />
+              {isDispatchLayout ? (
+                <>
+                  <SortableColumnHeader
+                    label="이름 (나의코드)"
+                    sortKey="displayName"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-36"
+                  />
+                  <SortableColumnHeader
+                    label="이메일"
+                    sortKey="email"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-52"
+                  />
+                  <SortableColumnHeader
+                    label="휴대폰"
+                    sortKey="phone"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-32"
+                  />
+                  <SortableColumnHeader
+                    label="검사 현황"
+                    sortKey="testStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-36"
+                  />
+                  <SortableColumnHeader
+                    label="발송현황"
+                    sortKey="notifyStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-28"
+                  />
+                  <SortableColumnHeader
+                    label="발송일시"
+                    sortKey="notifyAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-36"
+                  />
+                </>
+              ) : (
+                <>
+                  <SortableColumnHeader
+                    label="검사 현황"
+                    sortKey="testStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-32"
+                  />
+                  <SortableColumnHeader
+                    label="발송일시"
+                    sortKey="notifyAt"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-36"
+                  />
+                  <SortableColumnHeader
+                    label="이름"
+                    sortKey="displayName"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-28"
+                  />
+                  <SortableColumnHeader
+                    label="이메일"
+                    sortKey="email"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-52"
+                  />
+                  <SortableColumnHeader
+                    label="휴대폰"
+                    sortKey="phone"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-32"
+                  />
+                  <SortableColumnHeader
+                    label="나의코드"
+                    sortKey="myCode"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-24"
+                  />
+                  <SortableColumnHeader
+                    label="발송"
+                    sortKey="notifyStatus"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="w-24"
+                  />
+                  {showAssessmentColumns ? (
+                    <>
+                      <th className={counselorListThClass}>상담코드</th>
+                      <th className={counselorListThClass}>검사명</th>
+                    </>
+                  ) : null}
+                  {showArchivedAtColumn ? (
+                    <SortableColumnHeader
+                      label="삭제일시"
+                      sortKey="archivedAt"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="w-36"
+                    />
+                  ) : null}
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -232,6 +385,12 @@ export default function ArchivedRecipientsTable({
               const isOpen = expandedId === row.portalId;
               const contactRevealed = isOpen;
               const tests = row.tests ?? [];
+              const myCodeLabel = formatAccessCodeDisplay(row.myCode);
+              const nameWithCode = row.displayName
+                ? `${row.displayName}${myCodeLabel && myCodeLabel !== '—' ? ` (${myCodeLabel})` : ''}`
+                : myCodeLabel && myCodeLabel !== '—'
+                  ? `(${myCodeLabel})`
+                  : '—';
 
               return (
                 <React.Fragment key={row.portalId}>
@@ -246,148 +405,134 @@ export default function ArchivedRecipientsTable({
                     tabIndex={0}
                     role="button"
                     aria-expanded={isOpen}
+                    aria-label={
+                      isDispatchLayout
+                        ? `${row.displayName || '내담자'} 검사 현황 ${isOpen ? '접기' : '펼치기'}`
+                        : undefined
+                    }
                     className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                   >
                     <td className={`${counselorListTdClass} tabular-nums text-slate-400 align-top`}>
                       {startIndex + rowIndex + 1}
                     </td>
-                    <td className={`${counselorListTdClass} align-top`} onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(row.portalId)}
-                        onChange={() => onToggleOne(row.portalId)}
-                        className="rounded text-blue-500"
-                      />
-                    </td>
-                    <td
-                      className={`${counselorListTdClass} whitespace-nowrap align-top ${summary.className}`}
-                    >
-                      <span className="text-slate-400" aria-hidden="true">
-                        {isOpen ? '▼' : '▶'}{' '}
-                      </span>
-                      <span>{summary.text}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
-                      {formatNotifyDate(row.notifyAt)}
-                    </td>
-                    <td className="max-w-[7rem] truncate px-3 py-2 text-white align-top">
-                      {row.displayName || '—'}
-                    </td>
-                    <td className="truncate px-3 py-2 text-slate-300 align-top tabular-nums">
-                      {row.email?.trim() ? (
-                        displayContactEmail(row.email, contactRevealed)
-                      ) : (
-                        <span className="text-amber-300/90" title="이메일 주소 없음">
-                          없음
-                        </span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-300 align-top tabular-nums">
-                      {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
-                      {formatAccessCodeDisplay(row.myCode)}
-                    </td>
-                    <td className={`whitespace-nowrap ${counselorListTdClass} align-top`} title={notify.title}>
-                      <DispatchStatusText value={notify} />
-                    </td>
-                    {showAssessmentColumns ? (
+                    {showSelectColumn ? (
+                      <td
+                        className={isDispatchLayout ? counselorListSelectTdClass : `${counselorListTdClass} align-top`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected.has(row.portalId)}
+                          onChange={() => onToggleOne(row.portalId)}
+                          className="rounded text-blue-500"
+                        />
+                      </td>
+                    ) : null}
+                    {isDispatchLayout ? (
                       <>
-                        <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
-                          {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
-                        </td>
                         <td
-                          className="max-w-xs truncate px-3 py-2 text-slate-300 align-top"
-                          title={row.assessmentTitle}
+                          className="max-w-[9rem] truncate px-3 py-2 text-white align-top w-36"
+                          title={nameWithCode}
                         >
-                          {row.assessmentTitle || row.cohortName || '—'}
+                          {nameWithCode}
+                        </td>
+                        <td className="truncate px-3 py-2 text-slate-300 align-top tabular-nums">
+                          {row.email?.trim() ? (
+                            displayContactEmail(row.email, contactRevealed)
+                          ) : (
+                            <span className="text-amber-300/90" title="이메일 주소 없음">
+                              없음
+                            </span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-300 align-top tabular-nums">
+                          {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
+                        </td>
+                        <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
+                          <span className="text-slate-400" aria-hidden="true">
+                            {isOpen ? '▼' : '▶'}{' '}
+                          </span>
+                          <span>{summary.text}</span>
+                        </td>
+                        <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm" title={notify.title}>
+                          <DispatchStatusText value={notify} />
+                        </td>
+                        <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
+                          {formatNotifyDate(row.notifyAt)}
                         </td>
                       </>
-                    ) : null}
-                    <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
-                      {formatNotifyDate(row.archivedAt)}
-                    </td>
+                    ) : (
+                      <>
+                        <td
+                          className={`${counselorListTdClass} whitespace-nowrap align-top ${summary.className}`}
+                        >
+                          <span className="text-slate-400" aria-hidden="true">
+                            {isOpen ? '▼' : '▶'}{' '}
+                          </span>
+                          <span>{summary.text}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
+                          {formatNotifyDate(row.notifyAt)}
+                        </td>
+                        <td className="max-w-[7rem] truncate px-3 py-2 text-white align-top">
+                          {row.displayName || '—'}
+                        </td>
+                        <td className="truncate px-3 py-2 text-slate-300 align-top tabular-nums">
+                          {row.email?.trim() ? (
+                            displayContactEmail(row.email, contactRevealed)
+                          ) : (
+                            <span className="text-amber-300/90" title="이메일 주소 없음">
+                              없음
+                            </span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-300 align-top tabular-nums">
+                          {row.phone?.trim() ? displayContactPhone(row.phone, contactRevealed) : '—'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
+                          {formatAccessCodeDisplay(row.myCode)}
+                        </td>
+                        <td className={`whitespace-nowrap ${counselorListTdClass} align-top`} title={notify.title}>
+                          <DispatchStatusText value={notify} />
+                        </td>
+                        {showAssessmentColumns ? (
+                          <>
+                            <td className="whitespace-nowrap px-3 py-2 font-mono text-cyan-300 align-top">
+                              {row.joinAccessCode ? formatAccessCodeDisplay(row.joinAccessCode) : '—'}
+                            </td>
+                            <td
+                              className="max-w-xs truncate px-3 py-2 text-slate-300 align-top"
+                              title={row.assessmentTitle}
+                            >
+                              {row.assessmentTitle || row.cohortName || '—'}
+                            </td>
+                          </>
+                        ) : null}
+                        {showArchivedAtColumn ? (
+                          <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-slate-400 align-top">
+                            {formatNotifyDate(row.archivedAt)}
+                          </td>
+                        ) : null}
+                      </>
+                    )}
                   </tr>
-                  {isOpen ? (
-                    <tr>
-                      <td colSpan={3} className="border-b border-slate-700/60 bg-slate-900/20 p-0" aria-hidden="true" />
-                      <td
-                        colSpan={colSpanRest}
-                        className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
-                      >
-                        {tests.length === 0 ? (
-                          <p className="rounded-lg border border-slate-700/60 bg-slate-950/40 px-3 py-2 text-sm text-slate-500">
-                            등록된 검사 항목이 없습니다.
-                          </p>
-                        ) : (
-                          <div className="max-w-2xl overflow-hidden rounded-lg border border-slate-600/80 bg-slate-950/55 shadow-inner">
-                            <table className="w-full table-fixed text-sm">
-                              <thead>
-                                <tr className="border-b border-slate-700/70 bg-slate-900/40 text-xs text-slate-400">
-                                  <th className="w-10 px-3 py-2" aria-hidden="true" />
-                                  <th className="px-3 py-2 text-left font-medium">검사명</th>
-                                  <th className="w-[5.5rem] px-3 py-2 text-left font-medium">상태</th>
-                                  <th className="w-[10.5rem] px-3 py-2 text-left font-medium">완료일시</th>
-                                  <th className="w-[5.5rem] px-3 py-2 text-left font-medium">결과 확인</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {tests.map((t, testIndex) => {
-                                  const st = testStatusLabel(t.status);
-                                  return (
-                                    <tr
-                                      key={t.testId}
-                                      className="border-b border-slate-800/80 last:border-0 hover:bg-slate-900/30"
-                                    >
-                                      <td className="px-3 py-2.5 tabular-nums text-slate-500 align-top">
-                                        {testLetterLabel(testIndex)}
-                                      </td>
-                                      <td className="break-words px-3 py-2.5 text-white align-top">
-                                        {t.testName || t.testId}
-                                      </td>
-                                      <td className={`px-3 py-2.5 align-top ${st.className}`}>{st.text}</td>
-                                      <td className="px-3 py-2.5 text-xs leading-relaxed text-slate-400 align-top">
-                                        {formatCompletedAt(t.completedAt)}
-                                      </td>
-                                      <td className="px-3 py-2.5 align-top">
-                                        {t.status === 'completed' && t.resultId ? (
-                                          <button
-                                            type="button"
-                                            onClick={() => void openResultDetail(t.resultId!, row.assessmentId)}
-                                            className="whitespace-nowrap text-blue-400 hover:text-blue-300"
-                                          >
-                                            결과 보기
-                                          </button>
-                                        ) : t.status === 'in_progress' ? (
-                                          <span className="text-amber-300">진행 중</span>
-                                        ) : (
-                                          <span className="text-slate-500">미실시</span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ) : null}
+                  {isOpen ? renderTestExpandRow(row, tests) : null}
                 </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
-      <CounselorListPagination
-        page={page}
-        totalPages={totalPages}
-        currentCount={currentCount}
-        totalCount={totalCount}
-        onPageChange={setPage}
-        unit="명"
-      />
+      {hidePagination ? null : (
+        <CounselorListPagination
+          page={page}
+          totalPages={totalPages}
+          currentCount={currentCount}
+          totalCount={totalCount}
+          onPageChange={setPage}
+          unit="명"
+        />
+      )}
 
       {detailLoading ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
