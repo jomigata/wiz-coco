@@ -681,27 +681,33 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     }
   };
 
-  const QUESTION_SLIDE_DURATION = 0.56;
+  const QUESTION_TRANSITION_DURATION = 0.65;
 
   const variants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? '100%' : '-100%',
-      opacity: 1,
+      y: dir > 0 ? 32 : -32,
+      opacity: 0,
+      scale: 1.02,
+      filter: 'blur(10px)',
       transition: {
-        duration: QUESTION_SLIDE_DURATION,
-        ease: 'easeInOut',
-        delay: dir > 0 ? QUESTION_SLIDE_DURATION * 0.5 : 0,
+        duration: QUESTION_TRANSITION_DURATION,
+        ease: [0.22, 1, 0.36, 1],
+        delay: dir > 0 ? QUESTION_TRANSITION_DURATION * 0.32 : 0,
       },
     }),
     center: {
-      x: 0,
+      y: 0,
       opacity: 1,
-      transition: { duration: QUESTION_SLIDE_DURATION, ease: 'easeInOut' },
+      scale: 1,
+      filter: 'blur(0px)',
+      transition: { duration: QUESTION_TRANSITION_DURATION, ease: [0.22, 1, 0.36, 1] },
     },
     exit: (dir: number) => ({
-      x: dir > 0 ? '-100%' : '100%',
-      opacity: 1,
-      transition: { duration: QUESTION_SLIDE_DURATION, ease: 'easeInOut' },
+      y: dir > 0 ? -10 : 10,
+      opacity: 0,
+      scale: 0.9,
+      filter: 'blur(8px)',
+      transition: { duration: QUESTION_TRANSITION_DURATION * 0.85, ease: 'easeIn' },
     }),
   };
 
@@ -890,7 +896,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className={`${v.questionCard} absolute inset-0 flex w-full items-center justify-center`}
+                    className={`${v.questionCard} absolute inset-0 flex w-full items-center justify-center will-change-[transform,opacity,filter]`}
                   >
                     <h2 className={`text-lg text-center leading-snug px-2 ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}>
                       {selectedQuestions[currentQuestion].text}

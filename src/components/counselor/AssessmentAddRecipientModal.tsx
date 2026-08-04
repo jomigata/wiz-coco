@@ -361,14 +361,14 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="pointer-events-none absolute bottom-full left-0 z-[200] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                    className="pointer-events-none absolute bottom-full left-0 z-[200] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl"
                     role="tooltip"
                     style={{ width: `min(100%, ${samplePreviewLayout.widthCh}ch)` }}
                   >
-                    <p className="mb-2 text-sm font-semibold text-sky-300">
+                    <p className="mb-1 text-xs font-semibold text-sky-300">
                       {samplePreviewKind === 'txt' ? '샘플 텍스트 미리보기' : '샘플 엑셀(CSV) 미리보기'}
                     </p>
-                    <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200">
+                    <pre className="max-h-32 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-snug text-slate-200">
                       {samplePreviewText}
                     </pre>
                   </div>

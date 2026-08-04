@@ -34,7 +34,7 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 
-type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
 
 function parseCreatedAt(iso?: string): number {
@@ -62,6 +62,13 @@ function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {
   return dispatchTotal > 0 && dispatchSent + dispatchFailed < dispatchTotal;
 }
 
+function parseUsageEndDate(iso?: string): number {
+  const s = (iso || '').trim();
+  if (!s) return Number.MAX_SAFE_INTEGER;
+  const t = new Date(`${s}T00:00:00`).getTime();
+  return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
+}
+
 function compareAssessments(
   a: CounselorAssessment,
   b: CounselorAssessment,
@@ -79,6 +86,8 @@ function compareAssessments(
         mult *
         formatAccessCodeDisplay(a.accessCode).localeCompare(formatAccessCodeDisplay(b.accessCode), 'ko')
       );
+    case 'usageEndDate':
+      return mult * (parseUsageEndDate(a.usageEndDate) - parseUsageEndDate(b.usageEndDate));
     default:
       return 0;
   }
@@ -470,9 +479,14 @@ export default function AssessmentList({
                       )
                     </span>
                   </th>
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                    사용 종료일
-                  </th>
+                  <SortableColumnHeader
+                    label="사용 종료일"
+                    sortKey="usageEndDate"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className="whitespace-nowrap text-center"
+                  />
                   <th scope="col" className={`${counselorListThClass} text-center`}>기타</th>
                 </tr>
               </thead>
