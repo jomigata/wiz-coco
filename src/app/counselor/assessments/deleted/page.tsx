@@ -454,16 +454,16 @@ export default function DeletedAssessmentsPage() {
                       </span>
                     </th>
                     <SortableColumnHeader
-                      label="사용 종료일"
-                      sortKey="usageEndDate"
+                      label="발급일"
+                      sortKey="createdAt"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
                     <SortableColumnHeader
-                      label="발급일"
-                      sortKey="createdAt"
+                      label="사용 종료일"
+                      sortKey="usageEndDate"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -538,16 +538,16 @@ export default function DeletedAssessmentsPage() {
                             )
                           </td>
                           <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className={cellLinkClass}>{formatUsageEndDate(row.usageEndDate)}</span>
-                          </td>
-                          <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
                             onClick={() => void toggleExpand(row.id)}
                           >
                             <span className={cellLinkClass}>{formatCounselorIssueDate(row.createdAt)}</span>
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatUsageEndDate(row.usageEndDate)}</span>
                           </td>
                         </tr>
                         {isOpen ? (

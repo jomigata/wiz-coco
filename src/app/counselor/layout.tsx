@@ -196,7 +196,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
             ) : (
               <>
                 {!isDashboardHome ? <CounselorPageTitle>{pageTitle}</CounselorPageTitle> : null}
-                <CounselorPageBody className={isDashboardHome ? 'gap-0' : undefined}>{children}</CounselorPageBody>
+                <CounselorPageBody>{children}</CounselorPageBody>
               </>
             )}
           </div>

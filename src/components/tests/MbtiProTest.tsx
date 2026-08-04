@@ -681,7 +681,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const questionExitStartY = gapAboveTextTop * 0.1;
   const questionExitEndY = gapAboveTextTop * 0.9;
 
-  const QUESTION_TRANSITION_DURATION = 0.65;
+  const QUESTION_TRANSITION_DURATION = 0.92;
   const QUESTION_EXIT_DURATION = 1.25;
 
   const variants = {
