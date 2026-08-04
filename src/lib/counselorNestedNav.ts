@@ -22,16 +22,7 @@ const ASSESSMENT_CONTEXT_KEY = 'counselorAssessmentContextId';
 const ASSESSMENT_LIST_HREF = '/counselor/assessments';
 export const DELETED_ASSESSMENTS_HREF = '/counselor/assessments/deleted';
 
-export const counselorNestedNavItems: CounselorNestedNavItem[] = [
-  {
-    parentSubcategoryName: '1b. 내담자 관리',
-    insertAfterHref: '/counselor/clients',
-    order: 1,
-    label: '내담자 상세',
-    match: (path) => path.startsWith('/counselor/clients/detail'),
-    buildHref: (path, search) => `${path}${search}`,
-  },
-];
+export const counselorNestedNavItems: CounselorNestedNavItem[] = [];
 
 export function normalizeCounselorPath(pathname: string): string {
   return (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
