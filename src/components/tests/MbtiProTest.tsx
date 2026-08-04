@@ -685,6 +685,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const QUESTION_TRANSITION_DURATION = 1.08;
   const QUESTION_EXIT_DURATION = 1.05;
 
+  const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
+
   const variants = {
     enter: (dir: number) => ({
       y: dir > 0 ? 32 : -32,
@@ -692,9 +694,26 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       scale: 1.02,
       filter: 'blur(10px)',
       transition: {
-        duration: QUESTION_TRANSITION_DURATION,
-        ease: [0.22, 1, 0.36, 1],
-        delay: QUESTION_ENTER_DELAY,
+        y: {
+          duration: QUESTION_TRANSITION_DURATION,
+          ease: QUESTION_ENTER_EASE,
+          delay: QUESTION_ENTER_DELAY,
+        },
+        opacity: {
+          duration: QUESTION_TRANSITION_DURATION * 0.9,
+          ease: QUESTION_ENTER_EASE,
+          delay: QUESTION_ENTER_DELAY,
+        },
+        scale: {
+          duration: QUESTION_TRANSITION_DURATION,
+          ease: QUESTION_ENTER_EASE,
+          delay: QUESTION_ENTER_DELAY,
+        },
+        filter: {
+          duration: QUESTION_TRANSITION_DURATION,
+          ease: QUESTION_ENTER_EASE,
+          delay: QUESTION_ENTER_DELAY,
+        },
       },
     }),
     center: {

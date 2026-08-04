@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -29,6 +30,10 @@ import {
   readCachedArchivedAssessments,
   writeCachedArchivedAssessments,
 } from '@/lib/counselorSessionCache';
+import {
+  fetchArchivedDispatchRecipients,
+  type ArchivedDispatchRecipient,
+} from '@/lib/clientPortalApi';
 import {
   listArchivedAssessments,
   permanentlyDeleteArchivedAssessments,
@@ -164,6 +169,14 @@ export default function DeletedAssessmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('archivedAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [recipientCache, setRecipientCache] = useState<Record<string, ArchivedDispatchRecipient[]>>({});
+  const [recipientLoadingId, setRecipientLoadingId] = useState<string | null>(null);
+  const [recipientError, setRecipientError] = useState('');
+  const emptyRecipientSelection = useMemo(() => new Set<string>(), []);
+
+  const cellLinkClass =
+    'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const load = useCallback(async () => {
     const cached = readCachedArchivedAssessments<ArchivedAssessment>();
@@ -259,6 +272,28 @@ export default function DeletedAssessmentsPage() {
       return next;
     });
   };
+
+  const toggleExpand = useCallback(
+    async (assessmentId: string) => {
+      if (expandedId === assessmentId) {
+        setExpandedId(null);
+        return;
+      }
+      setExpandedId(assessmentId);
+      setRecipientError('');
+      if (recipientCache[assessmentId]) return;
+      setRecipientLoadingId(assessmentId);
+      try {
+        const result = await fetchArchivedDispatchRecipients(assessmentId);
+        setRecipientCache((prev) => ({ ...prev, [assessmentId]: result.items || [] }));
+      } catch (err) {
+        setRecipientError(err instanceof Error ? err.message : '삭제된 검사자 목록을 불러오지 못했습니다.');
+      } finally {
+        setRecipientLoadingId(null);
+      }
+    },
+    [expandedId, recipientCache],
+  );
 
   const handleRestore = async () => {
     if (selected.size === 0) return;
@@ -456,66 +491,105 @@ export default function DeletedAssessmentsPage() {
                     const infoPrimary = getAssessmentOrgLabel(row);
                     const infoSecondary = (row.title || '—').trim();
                     const isSelected = selected.has(row.id);
+                    const isOpen = expandedId === row.id;
+                    const expandedRecipients = recipientCache[row.id] || [];
 
                     return (
-                      <tr
-                        key={row.id}
-                        className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
-                      >
-                        <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
-                          <label className="inline-flex cursor-pointer items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleOne(row.id)}
-                              className="rounded accent-blue-500"
-                              aria-label={`${infoSecondary} 선택`}
-                            />
-                            <span>{startIndex + idx + 1}</span>
-                          </label>
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-white`}>
-                          {formatCounselorIssueDate(row.createdAt)}
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
-                          <span className="font-mono tracking-wide text-cyan-300/95">
-                            {formatAccessCodeDisplay(row.accessCode)}
-                          </span>
-                        </td>
-                        <td className={`max-w-[16rem] ${counselorListTdCompactClass}`}>
-                          <CounselorSlashInfoCell
-                            primary={infoPrimary}
-                            secondary={infoSecondary}
-                            showTooltip={false}
-                          />
-                          {expired ? (
-                            <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
-                              만료
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
-                          (
-                          <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
-                          /
-                          <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
-                            {dispatchFailed}
-                          </span>
-                          /
-                          <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
-                            {testIncomplete}
-                          </span>
-                          )
-                        </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdCompactClass} text-center ${expired ? 'text-red-400' : ''}`}
+                      <React.Fragment key={row.id}>
+                        <tr
+                          className={`${counselorListBodyRowClass} ${isSelected || isOpen ? 'bg-white/[0.04]' : ''}`}
                         >
-                          {formatUsageEndDate(row.usageEndDate)}
-                        </td>
-                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-300`}>
-                          {formatCounselorIssueDate(row.archivedAt)}
-                        </td>
-                      </tr>
+                          <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
+                            <label className="inline-flex cursor-pointer items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleOne(row.id)}
+                                className="rounded accent-blue-500"
+                                aria-label={`${infoSecondary} 선택`}
+                              />
+                              <span>{startIndex + idx + 1}</span>
+                            </label>
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.createdAt)}</span>
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
+                              {formatAccessCodeDisplay(row.accessCode)}
+                            </span>
+                          </td>
+                          <td
+                            className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <CounselorSlashInfoCell
+                              primary={infoPrimary}
+                              secondary={infoSecondary}
+                              showTooltip={false}
+                              className={cellLinkClass}
+                            />
+                            {expired ? (
+                              <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
+                                만료
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
+                            (
+                            <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
+                            /
+                            <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
+                              {dispatchFailed}
+                            </span>
+                            /
+                            <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
+                              {testIncomplete}
+                            </span>
+                            )
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatUsageEndDate(row.usageEndDate)}</span>
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
+                          </td>
+                        </tr>
+                        {isOpen ? (
+                          <tr>
+                            <td colSpan={7} className="border-t border-white/10 bg-slate-950/40 px-3 py-4">
+                              {recipientLoadingId === row.id ? (
+                                <p className="text-sm text-slate-400">내담자 목록을 불러오는 중…</p>
+                              ) : recipientError && !expandedRecipients.length ? (
+                                <p className="text-sm text-red-400">{recipientError}</p>
+                              ) : expandedRecipients.length === 0 ? (
+                                <p className="text-sm text-slate-400">발송된 내담자가 없습니다.</p>
+                              ) : (
+                                <ArchivedRecipientsTable
+                                  items={expandedRecipients}
+                                  selected={emptyRecipientSelection}
+                                  onToggleOne={() => undefined}
+                                  layout="dispatch"
+                                  hideSelect
+                                  hideArchivedAt
+                                />
+                              )}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
