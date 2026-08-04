@@ -682,6 +682,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   };
 
   const QUESTION_TRANSITION_DURATION = 0.65;
+  const QUESTION_EXIT_DURATION = QUESTION_TRANSITION_DURATION * 0.85 * 1.5;
 
   const variants = {
     enter: (dir: number) => ({
@@ -692,7 +693,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       transition: {
         duration: QUESTION_TRANSITION_DURATION,
         ease: [0.22, 1, 0.36, 1],
-        delay: dir > 0 ? QUESTION_TRANSITION_DURATION * 0.32 : 0,
+        delay: dir > 0 ? QUESTION_EXIT_DURATION * 0.32 : 0,
       },
     }),
     center: {
@@ -703,11 +704,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       transition: { duration: QUESTION_TRANSITION_DURATION, ease: [0.22, 1, 0.36, 1] },
     },
     exit: (dir: number) => ({
-      y: dir > 0 ? -10 : 10,
+      y: dir > 0 ? -28 : 28,
       opacity: 0,
-      scale: 0.9,
+      scale: 0.88,
       filter: 'blur(8px)',
-      transition: { duration: QUESTION_TRANSITION_DURATION * 0.85, ease: 'easeIn' },
+      transition: { duration: QUESTION_EXIT_DURATION, ease: 'easeIn' },
     }),
   };
 
@@ -887,21 +888,19 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
             </div>
 
             <div className="text-center mb-3">
-              <div className="relative mb-10 min-h-[112px] overflow-hidden">
+              <div className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}>
                 <AnimatePresence initial={false} custom={direction}>
-                  <motion.div
+                  <motion.h2
                     key={currentQuestion}
                     custom={direction}
                     variants={variants}
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className={`${v.questionCard} absolute inset-0 flex w-full items-center justify-center will-change-[transform,opacity,filter]`}
+                    className={`absolute inset-x-0 top-0 flex min-h-[112px] items-center justify-center px-2 text-center text-lg leading-snug will-change-[transform,opacity,filter] ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}
                   >
-                    <h2 className={`text-lg text-center leading-snug px-2 ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}>
-                      {selectedQuestions[currentQuestion].text}
-                    </h2>
-                  </motion.div>
+                    {selectedQuestions[currentQuestion].text}
+                  </motion.h2>
                 </AnimatePresence>
               </div>
               

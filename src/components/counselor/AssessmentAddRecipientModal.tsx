@@ -16,7 +16,6 @@ import {
 import {
   mergeRecipients,
   parseRecipientFile,
-  formatRecipientRowsPreview,
   type RecipientRow,
 } from '@/lib/recipientImport';
 
@@ -83,7 +82,6 @@ export default function AssessmentAddRecipientModal({
   const [addError, setAddError] = useState('');
   const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
   const [addFileLabel, setAddFileLabel] = useState('');
-  const [addFilePreviewText, setAddFilePreviewText] = useState('');
   const [showAddFilePreview, setShowAddFilePreview] = useState(false);
   const [samplePreviewKind, setSamplePreviewKind] = useState<'txt' | 'csv' | null>(null);
 
@@ -93,13 +91,6 @@ export default function AssessmentAddRecipientModal({
     const widthCh = Math.min(72, Math.max(24, ...lines.map((l) => l.length)));
     return { widthCh };
   }, [samplePreviewText]);
-
-  const addFilePreviewLayout = useMemo(() => {
-    if (!addFilePreviewText) return null;
-    const lines = addFilePreviewText.split('\n');
-    const widthCh = Math.min(72, Math.max(24, ...lines.map((l) => l.length)));
-    return { widthCh };
-  }, [addFilePreviewText]);
 
   const combinedRows = useMemo(
     () => mergeRecipients(pendingRows, addFileRows),
@@ -115,7 +106,6 @@ export default function AssessmentAddRecipientModal({
     setAddError('');
     setAddFileRows([]);
     setAddFileLabel('');
-    setAddFilePreviewText('');
     setShowAddFilePreview(false);
     setSamplePreviewKind(null);
   };
@@ -156,19 +146,16 @@ export default function AssessmentAddRecipientModal({
       const parsed = await parseRecipientFile(file);
       setAddFileRows(parsed);
       setAddFileLabel(file.name);
-      setAddFilePreviewText(formatRecipientRowsPreview(parsed));
     } catch (err) {
       setAddError(err instanceof Error ? err.message : '파일을 읽지 못했습니다.');
       setAddFileRows([]);
       setAddFileLabel('');
-      setAddFilePreviewText('');
     }
   };
 
   const clearAddedFile = () => {
     setAddFileRows([]);
     setAddFileLabel('');
-    setAddFilePreviewText('');
     setShowAddFilePreview(false);
   };
 
@@ -399,14 +386,23 @@ export default function AssessmentAddRecipientModal({
                       제거
                     </button>
                   </p>
-                  {showAddFilePreview && addFilePreviewText && addFilePreviewLayout ? (
+                  {showAddFilePreview && addFileRows.length > 0 ? (
                     <div className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5" role="tooltip">
-                      <div className="max-w-[min(100vw-2rem,28rem)] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl">
-                        <p className="mb-2 text-sm font-semibold text-sky-300">파일 내용 미리보기</p>
-                        <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200">
-                          {addFilePreviewText}
-                          {addFilePreviewText.length >= 4000 ? '\n… (일부만 표시)' : ''}
-                        </pre>
+                      <div className="max-w-[min(100vw-2rem,40rem)] overflow-x-auto rounded-lg border border-sky-500/40 bg-slate-950 p-2.5 text-left shadow-2xl">
+                        <p className="mb-1 text-xs font-semibold text-sky-300">파일 내용 미리보기</p>
+                        <div className="max-h-32 space-y-0.5 overflow-y-auto">
+                          {addFileRows.slice(0, 50).map((row, idx) => (
+                            <p
+                              key={`${row.displayName}-${row.email}-${row.phone}-${idx}`}
+                              className="whitespace-nowrap font-mono text-xs leading-snug text-slate-200"
+                            >
+                              {[row.displayName, row.email, row.phone].filter(Boolean).join(' · ')}
+                            </p>
+                          ))}
+                          {addFileRows.length > 50 ? (
+                            <p className="text-xs text-slate-500">… 외 {(addFileRows.length - 50).toLocaleString('ko-KR')}명</p>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   ) : null}
