@@ -26,6 +26,7 @@ import {
   writeCachedTestResults,
 } from '@/lib/counselorSessionCache';
 import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 
 type CounselorResultRow = {
   id: string;
@@ -60,6 +61,7 @@ export default function TestResultsPage() {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [queryText, setQueryText] = useState('');
+  const { pageSize, setPageSize } = useCounselorListPageSize();
 
   useEffect(() => {
     const run = async () => {
@@ -132,7 +134,7 @@ export default function TestResultsPage() {
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(filtered);
+  } = useListPagination(filtered, pageSize);
 
   return (
     <CounselorPageSection
@@ -282,6 +284,8 @@ export default function TestResultsPage() {
             currentCount={currentCount}
             totalCount={totalCount}
             onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
           />
           </>
         )}

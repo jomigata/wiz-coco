@@ -341,6 +341,121 @@ def _test_status_for_portal(db, portal_id: str, assessment_id: str, required: se
     }
 
 
+def _collect_portals_for_assessment(
+    db,
+    *,
+    counselor_uid: str,
+    assessment_id: str,
+) -> list[tuple[str, dict]]:
+    """활성 배정 + 해당 상담(코드)에서 soft-delete(archived)된 내담자."""
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return []
+    seen: set[str] = set()
+    rows: list[tuple[str, dict]] = []
+    refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("counselorId", "==", counselor_uid)
+        .stream()
+    )
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        pid = doc.id
+        status = pdata.get("status") or "active"
+        assigned = [str(x).strip() for x in (pdata.get("assignedAssessmentIds") or []) if str(x).strip()]
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        include = (status == "active" and aid in assigned) or (
+            status == "archived" and from_aid == aid
+        )
+        if include and pid not in seen:
+            seen.add(pid)
+            rows.append((pid, pdata))
+    return rows
+
+
+def _accumulate_assessment_stats_for_portals(
+    stats: dict[str, dict],
+    *,
+    assessment_id: str,
+    portal_rows: list[tuple[str, dict]],
+    required_by_assessment: dict[str, set[str]],
+    notify_map: dict,
+    completion_map: dict[tuple[str, str], set[str]],
+) -> None:
+    if assessment_id not in stats:
+        return
+    required = required_by_assessment.get(assessment_id, set())
+    for portal_id, pdata in portal_rows:
+        notify = notify_map.get(portal_id) or {}
+        email = (pdata.get("email") or "").strip()
+        phone = (pdata.get("phone") or "").strip()
+        notify_status, _ = _resolve_notify_status(notify, pdata, email=email, phone=phone)
+        if notify_status in ("sent", "partial"):
+            stats[assessment_id]["dispatchSentCount"] += 1
+        elif notify_status == "failed":
+            stats[assessment_id]["dispatchFailedCount"] += 1
+        completed = completion_map.get((portal_id, assessment_id), set())
+        if required and required <= completed:
+            stats[assessment_id]["testCompleteCount"] += 1
+        else:
+            stats[assessment_id]["testIncompleteCount"] += 1
+
+
+def aggregate_archived_assessment_list_stats(
+    db,
+    *,
+    counselor_uid: str,
+    items: list[dict],
+) -> dict[str, dict]:
+    """삭제(archived) 상담(코드) — 활성·archived-from 내담자 통합 집계."""
+    if not items:
+        return {}
+
+    stats: dict[str, dict] = {
+        x["id"]: {
+            "dispatchSentCount": 0,
+            "dispatchFailedCount": 0,
+            "testCompleteCount": 0,
+            "testIncompleteCount": 0,
+        }
+        for x in items
+    }
+    required_by_assessment: dict[str, set[str]] = {}
+    for x in items:
+        aid = x["id"]
+        required_by_assessment[aid] = {
+            str(t.get("testId") or "").strip()
+            for t in (x.get("testList") or [])
+            if t and str(t.get("testId") or "").strip()
+        }
+
+    all_portal_rows: list[tuple[str, dict]] = []
+    for x in items:
+        all_portal_rows.extend(
+            _collect_portals_for_assessment(db, counselor_uid=counselor_uid, assessment_id=x["id"])
+        )
+    portal_ids = {row[0] for row in all_portal_rows}
+    notify_map = _latest_notify_by_portal(db, portal_ids)
+    completion_map = _bulk_completed_tests_by_portal_assessment(
+        db, list(portal_ids), set(stats.keys())
+    )
+
+    for x in items:
+        aid = x["id"]
+        portal_rows = _collect_portals_for_assessment(
+            db, counselor_uid=counselor_uid, assessment_id=aid
+        )
+        _accumulate_assessment_stats_for_portals(
+            stats,
+            assessment_id=aid,
+            portal_rows=portal_rows,
+            required_by_assessment=required_by_assessment,
+            notify_map=notify_map,
+            completion_map=completion_map,
+        )
+    return stats
+
+
 def aggregate_assessment_list_stats(
     db,
     *,
@@ -805,7 +920,13 @@ def list_archived_portals(
     counselor_uid: str,
     assessment_id: str | None = None,
 ) -> list[dict]:
-    """상담사 소유 archived 내담자 포털 목록."""
+    """상담사 소유 archived 내담자 포털 목록.
+    assessment_id가 있으면 해당 상담(코드)의 활성 배정 + archived-from 내담자를 반환."""
+    if assessment_id:
+        return _list_assessment_recipients_unified(
+            db, counselor_uid=counselor_uid, assessment_id=assessment_id
+        )
+
     refs = (
         db.collection(CLIENT_PORTALS_COLLECTION)
         .where("counselorId", "==", counselor_uid)
@@ -819,79 +940,130 @@ def list_archived_portals(
     for doc in refs:
         pdata = doc.to_dict() or {}
         from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
-        if assessment_id:
-            if from_aid != assessment_id:
-                continue
-
         portal_rows.append((doc.id, pdata, from_aid))
 
     portal_ids = {row[0] for row in portal_rows}
     notify_map = _latest_notify_by_portal(db, portal_ids)
 
     for portal_id, pdata, from_aid in portal_rows:
-        join_code = ""
-        assessment_title = ""
-        cohort_name = ""
-        test_list: list = []
-        required: set[str] = set()
-        if from_aid:
-            if from_aid not in assessment_cache:
-                adoc = db.collection(ASSESSMENTS_COLLECTION).document(from_aid).get()
-                if adoc.exists:
-                    a = adoc.to_dict() or {}
-                    assessment_cache[from_aid] = a
-                else:
-                    assessment_cache[from_aid] = {}
-            a = assessment_cache.get(from_aid) or {}
-            join_code = (a.get("accessCode") or "").strip()
-            assessment_title = (a.get("title") or "").strip()
-            cohort_name = (a.get("cohortName") or "").strip()
-            test_list = a.get("testList") or []
-            required = {
-                str(t.get("testId") or "").strip()
-                for t in test_list
-                if t and str(t.get("testId") or "").strip()
-            }
-
-        email = (pdata.get("email") or "").strip()
-        phone = (pdata.get("phone") or "").strip()
-        notify = notify_map.get(portal_id) or {}
-        notify_snap = _merge_notify_snapshot(notify, pdata)
-        notify_status, notify_error = _resolve_notify_status(
-            notify, pdata, email=email, phone=phone
-        )
-        notify_at = _resolve_notify_at(notify, pdata, notify_status)
-        test_info = (
-            _test_status_for_portal(db, portal_id, from_aid, required)
-            if from_aid and required
-            else {"testStatus": "not_started", "completedCount": 0, "requiredCount": len(required)}
-        )
-
-        archived_at = pdata.get("archivedAt")
         items.append(
-            {
-                "portalId": portal_id,
-                "displayName": pdata.get("displayName") or "",
-                "email": email,
-                "phone": phone,
-                "myCode": pdata.get("accessCode") or "",
-                "joinAccessCode": join_code,
-                "assessmentId": from_aid,
-                "assessmentTitle": assessment_title,
-                "cohortName": cohort_name,
-                "archivedAt": _iso_timestamp(archived_at),
-                "notifyStatus": notify_status,
-                "notifyError": notify_error,
-                "notifyAt": notify_at,
-                "notifySentVia": notify_snap.get("sentVia") or "",
-                "notifyKind": notify_snap.get("notifyKind") or "initial",
-                "notifyEmailChannel": notify_snap.get("emailChannel") or "",
-                "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
-                "tests": _test_detail_rows(db, portal_id, from_aid, test_list) if from_aid else [],
-                **test_info,
-            }
+            _build_assessment_recipient_item(
+                db,
+                portal_id=portal_id,
+                pdata=pdata,
+                assessment_id=from_aid,
+                assessment_cache=assessment_cache,
+                notify_map=notify_map,
+            )
         )
 
+    items.sort(
+        key=lambda x: (
+            x.get("notifyAt") or "",
+            x.get("archivedAt") or "",
+            x.get("displayName") or "",
+        ),
+        reverse=True,
+    )
+    return items
+
+
+def _build_assessment_recipient_item(
+    db,
+    *,
+    portal_id: str,
+    pdata: dict,
+    assessment_id: str,
+    assessment_cache: dict[str, dict],
+    notify_map: dict,
+) -> dict:
+    join_code = ""
+    assessment_title = ""
+    cohort_name = ""
+    test_list: list = []
+    required: set[str] = set()
+    from_aid = (assessment_id or "").strip()
+    if from_aid:
+        if from_aid not in assessment_cache:
+            adoc = db.collection(ASSESSMENTS_COLLECTION).document(from_aid).get()
+            if adoc.exists:
+                a = adoc.to_dict() or {}
+                assessment_cache[from_aid] = a
+            else:
+                assessment_cache[from_aid] = {}
+        a = assessment_cache.get(from_aid) or {}
+        join_code = (a.get("accessCode") or "").strip()
+        assessment_title = (a.get("title") or "").strip()
+        cohort_name = (a.get("cohortName") or "").strip()
+        test_list = a.get("testList") or []
+        required = {
+            str(t.get("testId") or "").strip()
+            for t in test_list
+            if t and str(t.get("testId") or "").strip()
+        }
+
+    email = (pdata.get("email") or "").strip()
+    phone = (pdata.get("phone") or "").strip()
+    notify = notify_map.get(portal_id) or {}
+    notify_snap = _merge_notify_snapshot(notify, pdata)
+    notify_status, notify_error = _resolve_notify_status(
+        notify, pdata, email=email, phone=phone
+    )
+    notify_at = _resolve_notify_at(notify, pdata, notify_status)
+    test_info = (
+        _test_status_for_portal(db, portal_id, from_aid, required)
+        if from_aid and required
+        else {"testStatus": "not_started", "completedCount": 0, "requiredCount": len(required)}
+    )
+
+    archived_at = pdata.get("archivedAt")
+    return {
+        "portalId": portal_id,
+        "displayName": pdata.get("displayName") or "",
+        "email": email,
+        "phone": phone,
+        "myCode": pdata.get("accessCode") or "",
+        "joinAccessCode": join_code,
+        "assessmentId": from_aid,
+        "assessmentTitle": assessment_title,
+        "cohortName": cohort_name,
+        "archivedAt": _iso_timestamp(archived_at),
+        "portalStatus": pdata.get("status") or "active",
+        "notifyStatus": notify_status,
+        "notifyError": notify_error,
+        "notifyAt": notify_at,
+        "notifySentVia": notify_snap.get("sentVia") or "",
+        "notifyKind": notify_snap.get("notifyKind") or "initial",
+        "notifyEmailChannel": notify_snap.get("emailChannel") or "",
+        "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
+        "tests": _test_detail_rows(db, portal_id, from_aid, test_list) if from_aid else [],
+        **test_info,
+    }
+
+
+def _list_assessment_recipients_unified(
+    db,
+    *,
+    counselor_uid: str,
+    assessment_id: str,
+) -> list[dict]:
+    assessment_cache: dict[str, dict] = {}
+    portal_rows = _collect_portals_for_assessment(
+        db, counselor_uid=counselor_uid, assessment_id=assessment_id
+    )
+    portal_ids = {row[0] for row in portal_rows}
+    notify_map = _latest_notify_by_portal(db, portal_ids)
+    items = [
+        _build_assessment_recipient_item(
+            db,
+            portal_id=portal_id,
+            pdata=pdata,
+            assessment_id=assessment_id,
+            assessment_cache=assessment_cache,
+            notify_map=notify_map,
+        )
+        for portal_id, pdata in portal_rows
+    ]
     items.sort(
         key=lambda x: (
             x.get("notifyAt") or "",

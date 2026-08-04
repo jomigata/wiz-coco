@@ -681,11 +681,12 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const questionExitStartY = gapAboveTextTop * 0.1;
   const questionExitEndY = gapAboveTextTop * 0.9;
 
-  const QUESTION_ENTER_DELAY = 0.14;
+  const QUESTION_ENTER_DELAY = 0.22;
   const QUESTION_TRANSITION_DURATION = 1.08;
-  const QUESTION_EXIT_DURATION = 1.05;
+  const QUESTION_EXIT_DURATION = 0.72;
 
   const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
+  const QUESTION_EXIT_EASE: [number, number, number, number] = [0.45, 0, 1, 1];
 
   const variants = {
     enter: (dir: number) => ({
@@ -733,23 +734,23 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         transition: {
           y: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.22, 0, 0.35, 1],
-            times: [0.1, 1],
+            ease: QUESTION_EXIT_EASE,
+            times: [0, 1],
           },
           opacity: {
-            duration: QUESTION_EXIT_DURATION,
-            ease: [0.4, 0, 0.6, 1],
-            times: [0.1, 1],
+            duration: QUESTION_EXIT_DURATION * 0.85,
+            ease: QUESTION_EXIT_EASE,
+            times: [0, 1],
           },
           scale: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.22, 0, 0.35, 1],
-            times: [0.1, 1],
+            ease: QUESTION_EXIT_EASE,
+            times: [0, 1],
           },
           filter: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.22, 0, 0.35, 1],
-            times: [0.1, 1],
+            ease: QUESTION_EXIT_EASE,
+            times: [0, 1],
           },
         },
       };

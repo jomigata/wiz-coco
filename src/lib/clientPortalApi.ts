@@ -580,6 +580,36 @@ export async function listCounselorPortalTestAssignments(params?: {
   return data as CounselorPortalTestAssignmentListResult;
 }
 
+export async function movePortalsToAssessment(body: {
+  portalIds: string[];
+  targetAssessmentId: string;
+  sourceAssessmentId?: string;
+}): Promise<{
+  targetAssessmentId: string;
+  targetAssessmentTitle: string;
+  moved: number;
+  skipped: number;
+  failed: number;
+  resultsUpdated: number;
+}> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');
+
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/move-assessments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(typeof data?.message === 'string' ? data.message : '상담코드 이동에 실패했습니다.');
+  }
+  return data;
+}
+
 export async function pushAssessmentsToPortals(body: {
   portalIds: string[];
   assessmentId?: string;

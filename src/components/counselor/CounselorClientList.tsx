@@ -25,7 +25,8 @@ import {
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
-import { listCounselorClientPortals, pushAssessmentsToPortals } from '@/lib/clientPortalApi';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
+import { listCounselorClientPortals, movePortalsToAssessment } from '@/lib/clientPortalApi';
 import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
@@ -54,6 +55,19 @@ type ListSortKey =
   | 'notifyAt'
   | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
+
+function formatDateOnly(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  } catch {
+    return String(iso);
+  }
+}
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -248,11 +262,11 @@ export default function CounselorClientList() {
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveAssessmentId, setMoveAssessmentId] = useState('');
-  const [moveNotify, setMoveNotify] = useState(true);
   const [moveBusy, setMoveBusy] = useState(false);
   const [moveError, setMoveError] = useState('');
   const [assessmentsForMove, setAssessmentsForMove] = useState<CounselorAssessment[]>([]);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
+  const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const cacheKey = useMemo(
     () =>
@@ -426,7 +440,7 @@ export default function CounselorClientList() {
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedFiltered);
+  } = useListPagination(sortedFiltered, pageSize);
 
   const stats = useMemo(() => {
     const completed = displayItems.filter((i) => i.progress.label === 'completed').length;
@@ -484,13 +498,12 @@ export default function CounselorClientList() {
     setMoveBusy(true);
     setMoveError('');
     try {
-      const result = await pushAssessmentsToPortals({
+      const result = await movePortalsToAssessment({
         portalIds: selectedPortalIds,
-        assessmentId: moveAssessmentId,
-        notify: moveNotify,
+        targetAssessmentId: moveAssessmentId,
       });
       setMessage(
-        `이동(배정) ${result.assigned}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건 · 알림 ${result.notify.sent}건`,
+        `이동 ${result.moved}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건 · 검사결과 ${result.resultsUpdated}건 갱신`,
       );
       setMoveOpen(false);
       setMoveAssessmentId('');
@@ -671,20 +684,17 @@ export default function CounselorClientList() {
                       onSort={toggleSort}
                       className="w-12 tabular-nums"
                     />
-                    <th className={`${counselorListThClass} w-14 text-center`}>
-                      <label className="inline-flex cursor-pointer items-center justify-center gap-1">
-                        <input
-                          type="checkbox"
-                          checked={allPageSelected}
-                          onChange={toggleAllOnPage}
-                          className="rounded accent-blue-500"
-                          aria-label="현재 페이지 전체 선택"
-                        />
-                        <span>선택</span>
-                      </label>
+                    <th className={`${counselorListThClass} w-10 text-center`}>
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        onChange={toggleAllOnPage}
+                        className="rounded accent-blue-500"
+                        aria-label="현재 페이지 전체 선택"
+                      />
                     </th>
                     <SortableColumnHeader
-                      label="이름 (나의코드)"
+                      label="이름 / 나의코드"
                       sortKey="displayName"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -747,7 +757,9 @@ export default function CounselorClientList() {
                     const phoneFull = item.phone?.trim()
                       ? formatPhoneDisplayOr(item.phone)
                       : undefined;
-                    const infoPrimary = primaryAssessment?.orgName || item.cohortName || '—';
+                    const infoPrimary = primaryAssessment
+                      ? `${primaryAssessment.orgName || item.cohortName || '—'} (${formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')})`
+                      : item.cohortName || '—';
                     const infoSecondary = primaryAssessment?.title || '—';
                     const usageEnd = primaryUsageEndDate(item, usageEndMap);
                     const dispatchView = dispatchStatusDisplay({
@@ -828,7 +840,7 @@ export default function CounselorClientList() {
                           className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200`}
                           onClick={() => goToDetail(item.portalId)}
                         >
-                          {formatDateTime(item.notifyAt)}
+                          {formatDateOnly(item.notifyAt)}
                         </td>
                         <td
                           className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-center text-slate-200`}
@@ -849,6 +861,8 @@ export default function CounselorClientList() {
               totalCount={totalCount}
               onPageChange={setPage}
               unit="명"
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
             />
           </>
         )}
@@ -869,8 +883,8 @@ export default function CounselorClientList() {
               다른 상담코드로 이동
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              선택한 {selectedPortalIds.length}명을 지정한 개별 발급 상담코드에 배정합니다.
-              이미 배정된 내담자는 생략됩니다.
+              선택한 {selectedPortalIds.length}명을 지정한 상담코드로 완전 이동합니다.
+              기존 상담코드에서는 제거되며 알림은 발송하지 않습니다.
             </p>
 
             {moveError ? <p className="mt-3 text-sm text-red-400">{moveError}</p> : null}
@@ -893,17 +907,6 @@ export default function CounselorClientList() {
                   </option>
                 ))}
               </select>
-            </label>
-
-            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={moveNotify}
-                onChange={(e) => setMoveNotify(e.target.checked)}
-                className="rounded accent-blue-500"
-                disabled={moveBusy}
-              />
-              배정 후 알림 발송
             </label>
 
             <div className="mt-5 flex justify-end gap-2">

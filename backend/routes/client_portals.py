@@ -269,6 +269,40 @@ def push_assessments():
     return jsonify(result), 201
 
 
+@bp.route("/move-assessments", methods=["POST"])
+@require_counselor
+def move_assessments():
+    """내담자를 다른 상담(코드)로 완전 이동 — 기존 코드에서 제거, 알림 없음."""
+    from utils.portal_assessment_move import move_portals_to_assessment
+
+    body = request.get_json(silent=True) or {}
+    portal_ids = body.get("portalIds") or []
+    if not isinstance(portal_ids, list) or not portal_ids:
+        return jsonify({"error": "Bad Request", "message": "portalIds가 필요합니다."}), 400
+
+    target_assessment_id = (body.get("targetAssessmentId") or body.get("assessmentId") or "").strip()
+    if not target_assessment_id:
+        return jsonify({"error": "Bad Request", "message": "targetAssessmentId가 필요합니다."}), 400
+
+    source_assessment_id = (body.get("sourceAssessmentId") or "").strip() or None
+
+    db = get_firestore()
+    try:
+        result = move_portals_to_assessment(
+            db,
+            counselor_uid=g.counselor_uid,
+            portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
+            target_assessment_id=target_assessment_id,
+            source_assessment_id=source_assessment_id,
+        )
+    except PermissionError as exc:
+        return jsonify({"error": "Forbidden", "message": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": "Bad Request", "message": str(exc)}), 400
+
+    return jsonify(result), 200
+
+
 @bp.route("/monitoring", methods=["GET"])
 @require_counselor
 def counselor_monitoring_hub():

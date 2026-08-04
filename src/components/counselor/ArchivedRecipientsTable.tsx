@@ -29,6 +29,7 @@ import {
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 
 function SortableColumnHeader({
   label,
@@ -106,6 +107,7 @@ export default function ArchivedRecipientsTable({
   const [detail, setDetail] = useState<CounselorResultDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
+  const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const sortedItems = useMemo(() => {
     const list = [...items];
@@ -121,7 +123,7 @@ export default function ArchivedRecipientsTable({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedItems);
+  } = useListPagination(sortedItems, pageSize);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -531,6 +533,8 @@ export default function ArchivedRecipientsTable({
           totalCount={totalCount}
           onPageChange={setPage}
           unit="명"
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       )}
 

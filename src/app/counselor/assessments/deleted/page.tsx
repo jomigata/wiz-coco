@@ -26,6 +26,7 @@ import {
   formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import {
   readCachedArchivedAssessments,
   writeCachedArchivedAssessments,
@@ -110,11 +111,10 @@ function isExpired(iso: string | undefined): boolean {
 }
 
 function resultStatusCounts(a: ArchivedAssessment) {
-  const dispatchSent = a.dispatchSentCount ?? 0;
   const dispatchFailed = a.dispatchFailedCount ?? 0;
   const testComplete = a.testCompleteCount ?? 0;
   const testIncomplete = a.testIncompleteCount ?? 0;
-  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
+  const dispatchTotal = testComplete + testIncomplete;
   return { dispatchFailed, testIncomplete, dispatchTotal, testComplete };
 }
 
@@ -174,6 +174,7 @@ export default function DeletedAssessmentsPage() {
   const [recipientLoadingId, setRecipientLoadingId] = useState<string | null>(null);
   const [recipientError, setRecipientError] = useState('');
   const emptyRecipientSelection = useMemo(() => new Set<string>(), []);
+  const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
@@ -248,7 +249,7 @@ export default function DeletedAssessmentsPage() {
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedFiltered);
+  } = useListPagination(sortedFiltered, pageSize);
 
   const toggleSort = (key: ListSortKey) => {
     if (sortKey === key) {
@@ -601,6 +602,8 @@ export default function DeletedAssessmentsPage() {
               currentCount={currentCount}
               totalCount={totalCount}
               onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
             />
           </>
         )}

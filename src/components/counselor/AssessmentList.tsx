@@ -33,6 +33,7 @@ import {
   formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
+import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
@@ -181,6 +182,7 @@ export default function AssessmentList({
   const [deleteError, setDeleteError] = useState('');
   const [liveAssessmentId, setLiveAssessmentId] = useState<string | null>(null);
   const liveStartRef = useRef<number>(0);
+  const { pageSize, setPageSize } = useCounselorListPageSize();
 
   useEffect(() => {
     setListItems(assessments);
@@ -356,7 +358,7 @@ export default function AssessmentList({
     startIndex,
     paginatedItems,
     currentCount,
-  } = useListPagination(sortedFiltered);
+  } = useListPagination(sortedFiltered, pageSize);
 
   return (
     <CounselorPageSection
@@ -588,6 +590,8 @@ export default function AssessmentList({
             currentCount={currentCount}
             totalCount={totalCount}
             onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
           />
         </>
       )}

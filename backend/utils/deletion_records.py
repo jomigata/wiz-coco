@@ -9,7 +9,7 @@ from utils.assessment_dispatch import _iso_timestamp
 
 
 def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
-    from utils.assessment_dispatch import aggregate_assessment_list_stats
+    from utils.assessment_dispatch import aggregate_archived_assessment_list_stats
 
     refs = (
         db.collection(ASSESSMENTS_COLLECTION)
@@ -34,7 +34,9 @@ def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
                 "testList": data.get("testList") or [],
             }
         )
-    portal_stats = aggregate_assessment_list_stats(db, counselor_uid=counselor_uid, items=items)
+    portal_stats = aggregate_archived_assessment_list_stats(
+        db, counselor_uid=counselor_uid, items=items
+    )
     for x in items:
         pstats = portal_stats.get(x["id"]) or {}
         x["dispatchSentCount"] = int(pstats.get("dispatchSentCount") or 0)
