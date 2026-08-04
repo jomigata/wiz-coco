@@ -419,8 +419,8 @@ export default function DeletedAssessmentsPage() {
                       선택
                     </th>
                     <SortableColumnHeader
-                      label="발급일"
-                      sortKey="createdAt"
+                      label="삭제일"
+                      sortKey="archivedAt"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -462,8 +462,8 @@ export default function DeletedAssessmentsPage() {
                       className="whitespace-nowrap text-center"
                     />
                     <SortableColumnHeader
-                      label="삭제일"
-                      sortKey="archivedAt"
+                      label="발급일"
+                      sortKey="createdAt"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -498,7 +498,7 @@ export default function DeletedAssessmentsPage() {
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
                             onClick={() => void toggleExpand(row.id)}
                           >
-                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.createdAt)}</span>
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
@@ -547,7 +547,7 @@ export default function DeletedAssessmentsPage() {
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
                             onClick={() => void toggleExpand(row.id)}
                           >
-                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.createdAt)}</span>
                           </td>
                         </tr>
                         {isOpen ? (

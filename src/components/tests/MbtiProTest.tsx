@@ -372,11 +372,9 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setAnswers(newAnswers);
     setIsMouseMoved(false);
     setDirection(1);
-    
+
     if (currentQuestion < totalQuestions - 1) {
-      setTimeout(() => {
-        setCurrentQuestion(currentQuestion + 1);
-      }, 100);
+      setCurrentQuestion(currentQuestion + 1);
     }
   };
 
@@ -663,9 +661,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const handlePrevQuestion = () => {
     if (currentQuestion > 0) {
       setDirection(-1);
-      setTimeout(() => {
-        setCurrentQuestion(prev => prev - 1);
-      }, 100);
+      setCurrentQuestion((prev) => prev - 1);
     } else {
       // 첫 번째 질문에서는 기본정보 입력 단계로 이동
       setCurrentStep('info');
@@ -675,9 +671,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const handleNextQuestion = () => {
     if (currentQuestion < totalQuestions - 1 && answers[currentQuestion] !== undefined) {
       setDirection(1);
-      setTimeout(() => {
-        setCurrentQuestion(prev => prev + 1);
-      }, 100);
+      setCurrentQuestion((prev) => prev + 1);
     }
   };
 
@@ -688,7 +682,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const questionExitEndY = gapAboveTextTop * 0.9;
 
   const QUESTION_TRANSITION_DURATION = 0.65;
-  const QUESTION_EXIT_DURATION = QUESTION_TRANSITION_DURATION * 0.85 * 1.5;
+  const QUESTION_EXIT_DURATION = 1.25;
 
   const variants = {
     enter: (dir: number) => ({
@@ -699,7 +693,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       transition: {
         duration: QUESTION_TRANSITION_DURATION,
         ease: [0.22, 1, 0.36, 1],
-        delay: dir > 0 ? QUESTION_EXIT_DURATION * 0.32 : 0,
+        delay: 0,
       },
     }),
     center: {
@@ -714,12 +708,29 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       return {
         y: [sign * questionExitStartY, sign * questionExitEndY],
         opacity: [1, 0],
-        scale: [0.99, 0.88],
-        filter: ['blur(0px)', 'blur(8px)'],
+        scale: [0.99, 0.9],
+        filter: ['blur(0px)', 'blur(6px)'],
         transition: {
-          duration: QUESTION_EXIT_DURATION,
-          ease: 'easeIn',
-          times: [0.1, 1],
+          y: {
+            duration: QUESTION_EXIT_DURATION,
+            ease: [0.22, 0, 0.35, 1],
+            times: [0.1, 1],
+          },
+          opacity: {
+            duration: QUESTION_EXIT_DURATION,
+            ease: [0.4, 0, 0.6, 1],
+            times: [0.1, 1],
+          },
+          scale: {
+            duration: QUESTION_EXIT_DURATION,
+            ease: [0.22, 0, 0.35, 1],
+            times: [0.1, 1],
+          },
+          filter: {
+            duration: QUESTION_EXIT_DURATION,
+            ease: [0.22, 0, 0.35, 1],
+            times: [0.1, 1],
+          },
         },
       };
     },
@@ -905,7 +916,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}
                 style={{ height: QUESTION_FRAME_HEIGHT }}
               >
-                <AnimatePresence initial={false} custom={direction}>
+                <AnimatePresence initial={false} mode="sync" custom={direction}>
                   <motion.h2
                     key={currentQuestion}
                     custom={direction}
