@@ -229,7 +229,7 @@ export default function AssessmentAddRecipientModal({
       onClick={handleClose}
     >
       <div
-        className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
+        className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-visible rounded-2xl border border-sky-400/20 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 border-b border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">
@@ -361,7 +361,7 @@ export default function AssessmentAddRecipientModal({
                 </div>
                 {samplePreviewKind && samplePreviewText && samplePreviewLayout ? (
                   <div
-                    className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
+                    className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5 w-full rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl"
                     role="tooltip"
                     style={{ width: `min(100%, ${samplePreviewLayout.widthCh}ch)` }}
                   >
@@ -376,9 +376,9 @@ export default function AssessmentAddRecipientModal({
               </div>
               {addFileLabel ? (
                 <div className="relative z-20 mt-2 overflow-visible" onMouseLeave={() => setShowAddFilePreview(false)}>
-                  <p className="truncate text-sm text-emerald-300">
+                  <p className="text-sm text-emerald-300">
                     <span
-                      className="cursor-help underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
+                      className="cursor-help break-all underline decoration-dotted decoration-emerald-400/60 underline-offset-2"
                       onMouseEnter={() => setShowAddFilePreview(true)}
                       onFocus={() => setShowAddFilePreview(true)}
                       onBlur={() => setShowAddFilePreview(false)}
@@ -400,7 +400,7 @@ export default function AssessmentAddRecipientModal({
                     </button>
                   </p>
                   {showAddFilePreview && addFilePreviewText && addFilePreviewLayout ? (
-                    <div className="pointer-events-none absolute bottom-full left-0 z-[120] mb-1.5" role="tooltip">
+                    <div className="pointer-events-none absolute left-0 top-full z-[200] mt-1.5" role="tooltip">
                       <div className="max-w-[min(100vw-2rem,28rem)] rounded-lg border border-sky-500/40 bg-slate-950 p-3 text-left shadow-2xl">
                         <p className="mb-2 text-sm font-semibold text-sky-300">파일 내용 미리보기</p>
                         <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200">
@@ -459,19 +459,9 @@ export default function AssessmentAddRecipientModal({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={addSendNow}
-                onChange={(e) => setAddSendNow(e.target.checked)}
-                disabled={addLoading}
-                className="rounded text-sky-500"
-              />
-              <span>
-                추가 후 즉시 접속 정보 발송
-                <span className="text-slate-500"> (나의코드·비밀번호가 자동 발급됩니다.)</span>
-              </span>
-            </label>
+            <p className="text-sm font-medium text-white">
+              나의코드·비밀번호가 자동 발급됩니다.
+            </p>
             {addError ? (
               <p className="text-sm text-red-300" role="alert">
                 {addError}
@@ -495,7 +485,7 @@ export default function AssessmentAddRecipientModal({
             disabled={addLoading}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-900/25 transition-colors hover:bg-emerald-500 disabled:opacity-50"
           >
-            {addLoading ? '추가 중…' : addSendNow ? '추가 후 발송' : '추가만'}
+            {addLoading ? '추가 중…' : '추가 후 발송'}
           </button>
         </div>
       </div>

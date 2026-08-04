@@ -21,6 +21,7 @@ export default function AssessmentListPage() {
   const [loading, setLoading] = useState(() => !readCachedAssessmentsList()?.length);
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
+  const [autoLivePollId, setAutoLivePollId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -42,6 +43,7 @@ export default function AssessmentListPage() {
               cohortName: o.cohortName,
               title: o.title,
             });
+            setAutoLivePollId(createdId);
             sessionStorage.removeItem('wizcoco_created_assessment');
           }
         }
@@ -110,7 +112,12 @@ export default function AssessmentListPage() {
               저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
             </p>
           ) : null}
-          <AssessmentList assessments={assessments} createdInfo={createdInfo} />
+          <AssessmentList
+            assessments={assessments}
+            createdInfo={createdInfo}
+            autoLivePollId={autoLivePollId}
+            onAssessmentsRefresh={setAssessments}
+          />
         </>
       )}
     </div>

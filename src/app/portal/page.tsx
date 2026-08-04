@@ -373,11 +373,11 @@ function ClientPortalContent() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <div className="mb-4">
+            <div>
               <h1 className="text-xl font-bold text-white">내 검사실</h1>
-              <p className="text-slate-300 text-sm mt-1">{displayName}님, 환영합니다.</p>
+              <p className="text-slate-300 text-sm mt-3">{displayName}님, 환영합니다.</p>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-slate-400">
                 나의코드{' '}
                 <span className="font-mono text-cyan-300">{formatAccessCodeDisplay(myCode)}</span>

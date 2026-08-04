@@ -1,13 +1,13 @@
 ﻿'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
-import { deleteAssessment, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
+import { deleteAssessment, listAssessments, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
@@ -53,7 +53,13 @@ function resultStatusCounts(a: CounselorAssessment) {
   const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
   const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
   const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
-  return { dispatchFailed, testIncomplete, dispatchTotal };
+  return { dispatchFailed, testIncomplete, dispatchTotal, dispatchSent, dispatchFailedCount: dispatchFailed };
+}
+
+function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {
+  const { dispatchTotal, dispatchSent } = resultStatusCounts(a);
+  const dispatchFailed = a.dispatchFailedCount ?? 0;
+  return dispatchTotal > 0 && dispatchSent + dispatchFailed < dispatchTotal;
 }
 
 function compareAssessments(
@@ -137,12 +143,19 @@ function SortableColumnHeader({
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
   createdInfo?: CreatedAssessmentBannerInfo | null;
+  autoLivePollId?: string | null;
+  onAssessmentsRefresh?: (items: CounselorAssessment[]) => void;
 }
 
 const LIVE_POLL_INTERVAL_MS = 3000;
 const LIVE_POLL_MAX_MS = 60_000;
 
-export default function AssessmentList({ assessments, createdInfo }: AssessmentListProps) {
+export default function AssessmentList({
+  assessments,
+  createdInfo,
+  autoLivePollId,
+  onAssessmentsRefresh,
+}: AssessmentListProps) {
   const router = useRouter();
   const [listItems, setListItems] = useState(assessments);
   const [searchQuery, setSearchQuery] = useState('');
@@ -160,25 +173,84 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
   }, [assessments]);
 
   useEffect(() => {
+    if (autoLivePollId) {
+      liveStartRef.current = Date.now();
+      setLiveAssessmentId(autoLivePollId);
+    }
+  }, [autoLivePollId]);
+
+  const shouldPollList = useMemo(() => {
+    if (liveAssessmentId) return true;
+    return listItems.some((a) => assessmentHasPendingDispatch(a));
+  }, [liveAssessmentId, listItems]);
+
+  const refreshListFromApi = useCallback(async () => {
+    try {
+      const data = await listAssessments();
+      const items = data.assessments || [];
+      setListItems(items);
+      onAssessmentsRefresh?.(items);
+    } catch {
+      // ignore silent refresh errors
+    }
+  }, [onAssessmentsRefresh]);
+
+  useEffect(() => {
+    if (!shouldPollList) return;
+
+    let cancelled = false;
+    let timer: number | undefined;
+
+    const tick = async () => {
+      if (cancelled) return;
+      const elapsed = Date.now() - liveStartRef.current;
+      try {
+        const data = await listAssessments();
+        const items = data.assessments || [];
+        if (cancelled) return;
+        setListItems(items);
+        onAssessmentsRefresh?.(items);
+        const hasPending = items.some((a) => assessmentHasPendingDispatch(a));
+        if (elapsed >= LIVE_POLL_MAX_MS && !hasPending && !liveAssessmentId) {
+          return;
+        }
+      } catch {
+        // ignore silent refresh errors
+      }
+      if (cancelled) return;
+      timer = window.setTimeout(() => {
+        void tick();
+      }, LIVE_POLL_INTERVAL_MS);
+    };
+
+    void tick();
+
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [shouldPollList, liveAssessmentId, onAssessmentsRefresh]);
+
+  useEffect(() => {
     if (!liveAssessmentId) return;
     const row = listItems.find((a) => a.id === liveAssessmentId);
     if (row) {
       const { dispatchTotal } = resultStatusCounts(row);
       const dispatchDone = (row.dispatchSentCount ?? 0) + (row.dispatchFailedCount ?? 0);
-      if (dispatchTotal > 0 && dispatchDone >= dispatchTotal) {
-        setLiveAssessmentId(null);
+      if (dispatchTotal > 0 && dispatchDone >= dispatchTotal && !assessmentHasPendingDispatch(row)) {
+        if (!listItems.some((a) => a.id !== liveAssessmentId && assessmentHasPendingDispatch(a))) {
+          setLiveAssessmentId(null);
+        }
         return;
       }
     }
     if (Date.now() - liveStartRef.current >= LIVE_POLL_MAX_MS) {
-      setLiveAssessmentId(null);
+      if (!listItems.some((a) => assessmentHasPendingDispatch(a))) {
+        setLiveAssessmentId(null);
+      }
       return;
     }
-    const timer = window.setTimeout(() => {
-      router.refresh();
-    }, LIVE_POLL_INTERVAL_MS);
-    return () => window.clearTimeout(timer);
-  }, [liveAssessmentId, listItems, router]);
+  }, [liveAssessmentId, listItems]);
 
   const startLivePolling = (assessmentId: string) => {
     liveStartRef.current = Date.now();
@@ -208,9 +280,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
     try {
       await deleteAssessment(deleteTarget.id, deleteTarget.accessCode);
       removeCounselorAssessmentFromListCache(deleteTarget.id, deleteTarget.accessCode);
-      setListItems((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      setListItems((prev) => {
+        const next = prev.filter((a) => a.id !== deleteTarget.id);
+        onAssessmentsRefresh?.(next);
+        return next;
+      });
       setDeleteTarget(null);
-      router.refresh();
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
     } finally {
@@ -363,6 +438,9 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     onSort={toggleSort}
                     className="whitespace-nowrap"
                   />
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                    상담코드
+                  </th>
                   <SortableColumnHeader
                     label="그룹명 / 제목"
                     sortKey="counselInfo"
@@ -370,9 +448,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                     direction={sortDir}
                     onSort={toggleSort}
                   />
-                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                    사용 종료일
-                  </th>
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">결과현황</span>
                     <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
@@ -384,6 +459,9 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                       <span className="text-red-400">미완료</span>
                       )
                     </span>
+                  </th>
+                  <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
+                    사용 종료일
                   </th>
                   <th scope="col" className={`${counselorListThClass} text-center`}>기타</th>
                 </tr>
@@ -407,6 +485,14 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                         <span className={cellLinkClass}>{formatCounselorIssueDate(a.createdAt)}</span>
                       </td>
                       <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
+                        onClick={() => goToProgress(a.id)}
+                      >
+                        <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
+                          {formatAccessCodeDisplay(a.accessCode)}
+                        </span>
+                      </td>
+                      <td
                         className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
                         onClick={() => goToProgress(a.id)}
                       >
@@ -422,12 +508,6 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                           </span>
                         ) : null}
                       </td>
-                      <td
-                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
-                        onClick={() => goToProgress(a.id)}
-                      >
-                        {formatUsageEndDate(a.usageEndDate)}
-                      </td>
                       <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
                         (
                         <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
@@ -440,6 +520,12 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
                           {testIncomplete}
                         </span>
                         )
+                      </td>
+                      <td
+                        className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
+                        onClick={() => goToProgress(a.id)}
+                      >
+                        {formatUsageEndDate(a.usageEndDate)}
                       </td>
                       <td className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-default text-center`}>
                         <div className="inline-flex flex-wrap items-center justify-center gap-1">
@@ -489,7 +575,7 @@ export default function AssessmentList({ assessments, createdInfo }: AssessmentL
       context={addTarget ? buildContextFromAssessment(addTarget) : null}
       onSuccess={(info) => {
         const targetId = addTarget?.id;
-        router.refresh();
+        void refreshListFromApi();
         if (info.sent && targetId) {
           startLivePolling(targetId);
         }

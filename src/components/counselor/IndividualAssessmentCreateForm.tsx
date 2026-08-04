@@ -640,16 +640,23 @@ export default function IndividualAssessmentCreateForm() {
               <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm text-slate-300">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">발송 현황</p>
                 <div className="mt-2 space-y-1">
-                  {notifySent > 0 ? (
+                  {(notifySent > 0 || notifyQueued > 0) ? (
                     <p>
-                      즉시 발송 완료{' '}
-                      <span className="font-semibold text-emerald-300 tabular-nums">{notifySent}</span>건
-                    </p>
-                  ) : null}
-                  {notifyQueued > 0 ? (
-                    <p>
-                      발송 진행 중{' '}
-                      <span className="font-semibold text-sky-300 tabular-nums">{notifyQueued}</span>건
+                      {notifySent > 0 ? (
+                        <>
+                          즉시 발송 완료{' '}
+                          <span className="font-semibold text-emerald-300 tabular-nums">{notifySent}</span>건
+                        </>
+                      ) : null}
+                      {notifySent > 0 && notifyQueued > 0 ? (
+                        <span className="text-slate-500"> / </span>
+                      ) : null}
+                      {notifyQueued > 0 ? (
+                        <>
+                          발송중{' '}
+                          <span className="font-semibold text-sky-300 tabular-nums">{notifyQueued}</span>건
+                        </>
+                      ) : null}
                     </p>
                   ) : null}
                   {notifyFailed > 0 ? (
@@ -797,13 +804,50 @@ export default function IndividualAssessmentCreateForm() {
                 />
               </div>
               <div>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <label className={FORM_LABEL}>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                  <label className={`${FORM_LABEL} shrink-0`}>
                     포함할 검사 <span className="text-red-400">*</span>
                   </label>
-                  <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-sm text-slate-400">
-                    {selectedTestCount}개 선택
-                  </span>
+                  <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                    <div className="relative w-[10ch] min-w-[10ch] shrink-0">
+                      <svg
+                        className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sky-400/80"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <input
+                        type="text"
+                        value={testSearchQuery}
+                        onChange={(e) => setTestSearchQuery(e.target.value)}
+                        placeholder="검사명 찾기"
+                        disabled={loading}
+                        className="w-full rounded-lg border border-sky-400/35 bg-[#0a1528] py-2 pl-7 pr-7 text-sm font-medium text-center text-white caret-sky-300 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
+                        aria-label="검사명 찾기"
+                      />
+                      {testSearchQuery ? (
+                        <button
+                          type="button"
+                          onClick={() => setTestSearchQuery('')}
+                          disabled={loading}
+                          className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
+                          aria-label="검색어 지우기"
+                        >
+                          ×
+                        </button>
+                      ) : null}
+                    </div>
+                    <span className="shrink-0 rounded-full bg-white/5 px-2.5 py-0.5 text-sm text-slate-400">
+                      {selectedTestCount}개 선택
+                    </span>
+                  </div>
                 </div>
                 <div className={`${TEST_PICKER_SCROLL} flex flex-col`}>
                   <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 border-b border-white/[0.08] px-1 pb-2">
@@ -825,45 +869,7 @@ export default function IndividualAssessmentCreateForm() {
                       className="justify-start"
                     />
                   </div>
-                  <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] px-1 pb-2 pt-1.5">
-                    <span className="shrink-0 text-sm font-semibold text-slate-300">검색</span>
-                    <div className="relative min-w-0 flex-[3] basis-0">
-                      <svg
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-400/80"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <input
-                        type="text"
-                        value={testSearchQuery}
-                        onChange={(e) => setTestSearchQuery(e.target.value)}
-                        placeholder="검사명 찾기"
-                        disabled={loading}
-                        className="w-full min-w-[12rem] rounded-lg border border-sky-400/35 bg-[#0a1528] py-2.5 pl-9 pr-9 text-base font-medium text-center text-white caret-sky-300 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
-                        aria-label="검사명 찾기"
-                      />
-                      {testSearchQuery ? (
-                        <button
-                          type="button"
-                          onClick={() => setTestSearchQuery('')}
-                          disabled={loading}
-                          className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
-                          aria-label="검색어 지우기"
-                        >
-                          ×
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-1.5 pt-2 xl:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-1.5 pt-2">
                     {filteredTests.length === 0 ? (
                       <p className="col-span-full px-2 py-3 text-sm text-slate-500">
                         {testSearchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 검사가 없습니다.'}

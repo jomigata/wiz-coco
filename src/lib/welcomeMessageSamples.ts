@@ -14,7 +14,7 @@ export const WELCOME_MESSAGE_SAMPLES: WelcomeMessageSample[] = [
   {
     label: '샘플 2',
     text:
-      '검사는 편안한 마음으로 솔직하게 응답해 주시면 됩니다. 한 번에 끝내지 않아도 되며, 저장 후 이어서 진행할 수 있습니다. 문의 사항은 담당 상담사에게 연락해 주세요.',
+      '검사는 편안한 마음으로 솔직하게 응답해 주시면 됩니다. 안내드린 기한 안에 모든 검사를 완료해 주세요. 문의 사항은 담당 상담사에게 연락해 주세요.',
   },
   {
     label: '샘플 3',
@@ -25,7 +25,7 @@ export const WELCOME_MESSAGE_SAMPLES: WelcomeMessageSample[] = [
 
 /** 내 검사실 진행 현황에서 표시하지 않을 안내 문구(구 샘플·기본 문구) */
 const PORTAL_WELCOME_BOILERPLATE =
-  '본 검사는 안내된 기한 내에 완료해 주시기 바랍니다. 한 번에 끝내지 않아도 되며, 중간 저장 후 이어서 진행할 수 있습니다. 검사 결과는 상담·코칭 목적으로만 활용되며, 개인정보는 관련 법령에 따라 보호됩니다.';
+  '본 검사는 안내된 기한 내에 완료해 주시기 바랍니다. 검사 결과는 상담·코칭 목적으로만 활용되며, 개인정보는 관련 법령에 따라 보호됩니다.';
 
 export function stripPortalWelcomeBoilerplate(message: string): string {
   const trimmed = (message || '').trim();

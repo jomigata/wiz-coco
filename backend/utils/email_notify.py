@@ -32,7 +32,7 @@ def _format_dt_kst(dt: datetime) -> str:
 
 def _magic_link_expiry_label(issued_at: datetime | None = None) -> str:
     hours = max(1, PORTAL_MAGIC_LINK_MAX_AGE // 3600)
-    return f"(발송 후 {hours}시간)"
+    return f"바로 시작 링크는 발송 후 {hours}시간 동안 유효합니다."
 
 
 def _attach_email_bodies(msg: MIMEMultipart, plain: str, html: str) -> None:
