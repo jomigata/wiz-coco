@@ -1,9 +1,11 @@
 ﻿'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import AuthLink from '@/components/auth/AuthLink';
-import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import {
+  counselorMenuCategories,
+  getCounselorCategoryHubHref,
+} from '@/data/counselorMenu';
 import {
   fetchCounselorCohortMonitoring,
   fetchCounselorMonitoringHub,
@@ -17,102 +19,70 @@ import {
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import { counselorHubClasses } from '@/components/layout/appChromeTheme';
 import type {
-  CounselorCohortMonitoringItem,
   CounselorCohortMonitoringResult,
   CounselorMonitoringHubResult,
 } from '@/types/clientPortal';
 
-type DashboardTab = 'individual' | 'group';
+const CATEGORY_ACCENT: Record<string, string> = {
+  'psych-tests': 'from-sky-600/30 via-sky-500/10',
+  tools: 'from-violet-600/25 via-violet-500/10',
+  data: 'from-emerald-600/25 via-emerald-500/10',
+  sales: 'from-amber-600/25 via-amber-500/10',
+};
 
-const QUICK_LINKS = [
-  { title: '내담자 목록', href: '/counselor/clients', icon: '👥' },
-  { title: '상담코드 목록', href: '/counselor/assessments', icon: '📦' },
-  { title: '상담코드 관리', href: '/counselor/test-codes', icon: '🔑' },
-];
+function StatChip({
+  label,
+  value,
+  sub,
+  href,
+  tone = 'default',
+}: {
+  label: string;
+  value: number | string;
+  sub?: string;
+  href?: string;
+  tone?: 'default' | 'success' | 'warn' | 'danger';
+}) {
+  const toneClass =
+    tone === 'success'
+      ? 'text-emerald-300'
+      : tone === 'warn'
+        ? 'text-amber-300'
+        : tone === 'danger'
+          ? 'text-red-300'
+          : 'text-white';
 
-function progressColor(percent: number): string {
-  if (percent >= 80) return 'bg-emerald-500';
-  if (percent >= 40) return 'bg-sky-500';
-  return 'bg-amber-500';
-}
-
-function CohortRow({ cohort }: { cohort: CounselorCohortMonitoringItem }) {
-  const isIndividual = cohort.cohortKey === INDIVIDUAL_COHORT_KEY;
-  const href = isIndividual
-    ? '/counselor/clients'
-    : cohort.cohortId
-      ? `/counselor/clients?cohortId=${encodeURIComponent(cohort.cohortId)}`
-      : '/counselor/clients';
-
-  return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="font-medium text-white">{cohort.cohortName}</p>
-          <p className="text-xs text-slate-500">
-            {isIndividual ? '개별 내담자' : `그룹 · ${cohort.portalCount}명`}
-          </p>
-        </div>
-        <span className="text-sm font-semibold text-slate-200">{cohort.progress.percent}%</span>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div
-          className={`h-full rounded-full transition-all ${progressColor(cohort.progress.percent)}`}
-          style={{ width: `${cohort.progress.percent}%` }}
-        />
-      </div>
-      <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
-        <span>완료 {cohort.completedPortals}</span>
-        <span>진행 {cohort.inProgressPortals}</span>
-        <span>미시작 {cohort.notStartedPortals}</span>
-        <AuthLink href={href} className="text-sky-400 hover:text-sky-300">
-          상세 →
-        </AuthLink>
-      </div>
-    </div>
+  const inner = (
+    <>
+      <p className="truncate text-[10px] leading-tight text-slate-400 sm:text-[11px]">{label}</p>
+      <p className={`mt-0.5 text-lg font-bold tabular-nums leading-none sm:text-xl ${toneClass}`}>{value}</p>
+      {sub ? <p className="mt-0.5 truncate text-[10px] text-slate-500">{sub}</p> : null}
+    </>
   );
-}
 
-function OrgLiaisonCard({ org }: { org: CounselorOrgLiaison }) {
-  return (
-    <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="font-medium text-white">{org.name}</p>
-          <p className="text-xs text-slate-500">
-            {org.type} · cohort {org.cohortCount} · 크레딧 {org.creditBalance}
-          </p>
-        </div>
-      </div>
-      {org.cohorts.length > 0 ? (
-        <ul className="mt-2 space-y-1 text-xs text-slate-400">
-          {org.cohorts.slice(0, 3).map((c) => (
-            <li key={c.cohortId}>
-              {c.cohortName} — {c.completedCount}/{c.participantCount}명 ({c.completionRatePercent}%)
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-2 text-xs text-slate-500">등록된 cohort 없음</p>
-      )}
-    </div>
-  );
+  const className = `${counselorHubClasses.statCard} min-w-0 px-2 py-2 sm:px-3 sm:py-2.5 transition-colors hover:border-sky-400/25`;
+
+  if (href) {
+    return (
+      <AuthLink href={href} className={`block ${className}`}>
+        {inner}
+      </AuthLink>
+    );
+  }
+
+  return <div className={className}>{inner}</div>;
 }
 
 export default function CounselorHomeDashboard() {
   const { authPending, showLoginRequired } = useAuthResolved();
   const initialCache = useMemo(() => readCachedCounselorDashboard(), []);
-  const [tab, setTab] = useState<DashboardTab>('individual');
-  const [hub, setHub] = useState<CounselorMonitoringHubResult | null>(
-    () => initialCache?.hub ?? null,
-  );
+  const [hub, setHub] = useState<CounselorMonitoringHubResult | null>(() => initialCache?.hub ?? null);
   const [cohorts, setCohorts] = useState<CounselorCohortMonitoringResult | null>(
     () => initialCache?.cohorts ?? null,
   );
-  const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(
-    () => initialCache?.liaisons ?? [],
-  );
+  const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(() => initialCache?.liaisons ?? []);
   const [loading, setLoading] = useState(() => !initialCache?.hub && !initialCache?.cohorts);
   const [revalidating, setRevalidating] = useState(false);
   const [error, setError] = useState('');
@@ -132,11 +102,7 @@ export default function CounselorHomeDashboard() {
       setHub(hubData);
       setCohorts(cohortData);
       setLiaisons(liaisonData);
-      writeCachedCounselorDashboard({
-        hub: hubData,
-        cohorts: cohortData,
-        liaisons: liaisonData,
-      });
+      writeCachedCounselorDashboard({ hub: hubData, cohorts: cohortData, liaisons: liaisonData });
     } catch (err) {
       if (!hasCache) {
         setError(err instanceof Error ? err.message : '대시보드 데이터를 불러오지 못했습니다.');
@@ -155,23 +121,17 @@ export default function CounselorHomeDashboard() {
       return;
     }
     void load();
-  }, [authPending, showLoginRequired, load]);
+  }, [authPending, showLoginRequired, load, initialCache?.hub, initialCache?.cohorts]);
 
   useRedirectOnLoginRequiredError(error);
 
-  const individualCohort = useMemo(
-    () =>
-      cohorts?.cohorts.find((c) => c.cohortKey === INDIVIDUAL_COHORT_KEY) ?? null,
-    [cohorts?.cohorts],
-  );
-
-  const groupCohorts = useMemo(
-    () => (cohorts?.cohorts || []).filter((c) => c.cohortKey !== INDIVIDUAL_COHORT_KEY),
-    [cohorts?.cohorts],
-  );
-
   const summary = hub?.summary;
-  const cohortSummary = cohorts?.summary;
+  const individualCohort = useMemo(
+    () => cohorts?.cohorts.find((c) => c.cohortKey === INDIVIDUAL_COHORT_KEY) ?? null,
+    [cohorts?.cohorts],
+  );
+  const groupCount = cohorts?.summary?.groupCohorts ?? 0;
+  const recentActivity = (hub?.recentActivity || []).slice(0, 3);
 
   if (loading && !hub && !cohorts) {
     return <p className="py-12 text-center text-sm text-slate-500">대시보드를 불러오는 중…</p>;
@@ -186,163 +146,152 @@ export default function CounselorHomeDashboard() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      {revalidating ? (
-        <p className="text-xs text-sky-300/80" role="status">
-          저장된 대시보드를 표시 중… 최신 정보를 불러오고 있습니다.
-        </p>
-      ) : null}
-      <CounselorPageSection title="현황 요약" noBodyPadding bodyClassName="!p-0">
-        <div className="grid grid-cols-2 gap-3 p-2.5 sm:p-3 md:grid-cols-4">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <p className="text-xs text-slate-400">활성 내담자</p>
-            <p className="mt-1 text-2xl font-bold text-white">{summary?.activePortals ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <p className="text-xs text-slate-400">활성 상담코드</p>
-            <p className="mt-1 text-2xl font-bold text-white">{summary?.activeAssessments ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <p className="text-xs text-slate-400">검사 완료</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-300">{summary?.completedRecipients ?? 0}</p>
-            <p className="text-xs text-slate-500">/ {summary?.totalRecipients ?? 0}명</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <p className="text-xs text-slate-400">그룹 cohort</p>
-            <p className="mt-1 text-2xl font-bold text-white">{cohortSummary?.groupCohorts ?? 0}</p>
-            <p className="text-xs text-slate-500">개별 {cohortSummary?.individualCohorts ?? 0}</p>
-          </div>
+    <div className="flex h-[calc(100dvh-5.5rem)] min-h-[32rem] max-h-[920px] flex-col gap-2 overflow-hidden sm:gap-2.5">
+      <header className="flex shrink-0 flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-base font-bold text-white sm:text-lg">상담관리</h1>
+          <p className="text-[11px] text-slate-400 sm:text-xs">전체 현황과 메뉴를 한 화면에서 확인하세요</p>
         </div>
-      </CounselorPageSection>
+        {revalidating ? (
+          <p className="text-[10px] text-sky-300/70" role="status">
+            갱신 중…
+          </p>
+        ) : null}
+      </header>
 
-      <CounselorPageSection
-        title={tab === 'individual' ? '개별 내담자' : '그룹·기관'}
-        description="개별·그룹 검사 진행 현황과 담당 기관을 한곳에서 확인하세요."
-        toolbar={
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setTab('individual')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
-                tab === 'individual'
-                  ? 'bg-sky-600 text-white'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-              }`}
-            >
-              개별
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab('group')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
-                tab === 'group'
-                  ? 'bg-violet-600 text-white'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-              }`}
-            >
-              그룹·기관
-            </button>
+      <div className="grid shrink-0 grid-cols-3 gap-1.5 sm:grid-cols-6 sm:gap-2">
+        <StatChip
+          label="활성 내담자"
+          value={summary?.activePortals ?? 0}
+          href="/counselor/clients"
+        />
+        <StatChip
+          label="활성 상담코드"
+          value={summary?.activeAssessments ?? 0}
+          href="/counselor/assessments"
+        />
+        <StatChip
+          label="검사 완료"
+          value={summary?.completedRecipients ?? 0}
+          sub={`/ ${summary?.totalRecipients ?? 0}명`}
+          href="/counselor/test-results"
+          tone="success"
+        />
+        <StatChip
+          label="진행 중"
+          value={summary?.inProgressRecipients ?? 0}
+          href="/counselor/assign-tests"
+          tone="warn"
+        />
+        <StatChip
+          label="미시작"
+          value={summary?.notStartedRecipients ?? 0}
+          href="/counselor/clients"
+        />
+        <StatChip
+          label="그룹 cohort"
+          value={groupCount}
+          sub={liaisons.length > 0 ? `B2B ${liaisons.length}곳` : undefined}
+          href="/counselor/clients"
+        />
+      </div>
+
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto md:overflow-hidden xl:grid-cols-4">
+        {counselorMenuCategories.map((category) => (
+          <section
+            key={category.slug}
+            className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-sky-400/15 bg-[#1a3358]/90 ${counselorHubClasses.subsection} !p-0`}
+          >
             <AuthLink
-              href="/counselor/assessments"
-              className="text-xs text-sky-400 hover:text-sky-300 sm:text-sm"
+              href={getCounselorCategoryHubHref(category.slug)}
+              className={`flex shrink-0 items-center gap-2 border-b border-sky-400/20 bg-gradient-to-r ${CATEGORY_ACCENT[category.slug] ?? 'from-sky-600/25'} to-transparent px-2.5 py-2 transition-colors hover:bg-white/[0.03] sm:px-3 sm:py-2.5`}
             >
-              상담코드 목록 →
+              <span className="text-base leading-none sm:text-lg" aria-hidden>
+                {category.icon}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-bold text-white sm:text-sm">{category.category}</p>
+                <p className="truncate text-[10px] text-sky-200/55">{category.description}</p>
+              </div>
+              <span className="shrink-0 text-sky-300/40" aria-hidden>
+                →
+              </span>
             </AuthLink>
-          </div>
-        }
-      >
-        {tab === 'individual' ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-slate-300">개별 진행 현황</p>
-            {individualCohort ? (
-              <CohortRow cohort={individualCohort} />
-            ) : (
-              <p className="text-sm text-slate-500">개별 내담자 데이터가 없습니다.</p>
-            )}
-            <div className="grid grid-cols-3 gap-3 text-center text-sm">
-              <div className="rounded-lg bg-emerald-500/10 p-3 text-emerald-300">
-                완료 {summary?.completedRecipients ?? 0}
-              </div>
-              <div className="rounded-lg bg-sky-500/10 p-3 text-sky-300">
-                진행 {summary?.inProgressRecipients ?? 0}
-              </div>
-              <div className="rounded-lg bg-amber-500/10 p-3 text-amber-300">
-                미시작 {summary?.notStartedRecipients ?? 0}
-              </div>
+
+            <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2 sm:p-2.5">
+              {category.subcategories.map((sub) => (
+                <div key={sub.name}>
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-slate-400 sm:text-[11px]">
+                    <span aria-hidden>{sub.icon}</span>
+                    {sub.name}
+                  </p>
+                  <ul className="grid grid-cols-2 gap-1">
+                    {sub.items.map((item) => (
+                      <li key={item.href}>
+                        <AuthLink
+                          href={item.href}
+                          title={item.description}
+                          className="group flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-[#101f38]/80 px-2 py-1.5 text-[11px] text-slate-200 transition-colors hover:border-sky-400/30 hover:bg-sky-500/10 hover:text-white sm:text-xs"
+                        >
+                          <span className="shrink-0 text-sm leading-none opacity-80" aria-hidden>
+                            {item.icon}
+                          </span>
+                          <span className="min-w-0 truncate font-medium">{item.name}</span>
+                        </AuthLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-          </div>
+          </section>
+        ))}
+      </div>
 
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-slate-300">최근 활동</p>
-            {(hub?.recentActivity || []).length === 0 ? (
-              <p className="text-sm text-slate-500">최근 검사 활동이 없습니다.</p>
-            ) : (
-              <ul className="space-y-2">
-                {(hub?.recentActivity || []).slice(0, 6).map((item, i) => (
-                  <li
-                    key={`${item.portalId}-${item.testId}-${i}`}
-                    className="rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-sm"
-                  >
-                    <span className="text-white">{item.displayName}</span>
-                    <span className="text-slate-500"> · {item.assessmentTitle}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+      <footer className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold text-slate-300">개별 내담자 진행</p>
+            {individualCohort ? (
+              <span className="text-[11px] tabular-nums text-slate-400">
+                {individualCohort.progress.percent}%
+              </span>
+            ) : null}
           </div>
-        </div>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-slate-300">그룹 cohort ({groupCohorts.length})</p>
-            {groupCohorts.length === 0 ? (
-              <p className="text-sm text-slate-500">그룹 cohort가 없습니다.</p>
-            ) : (
-              <div className="space-y-3">
-                {groupCohorts.slice(0, 6).map((c) => (
-                  <CohortRow key={c.cohortKey} cohort={c} />
-                ))}
+          {individualCohort ? (
+            <>
+              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-sky-500 transition-all"
+                  style={{ width: `${individualCohort.progress.percent}%` }}
+                />
               </div>
-            )}
-            <AuthLink
-              href="/counselor/clients"
-              className="text-sm text-violet-400 hover:text-violet-300"
-            >
-              내담자 CRM →
-            </AuthLink>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-slate-300">담당 B2B 기관 ({liaisons.length})</p>
-            {liaisons.length === 0 ? (
-              <p className="text-sm text-slate-500">liaison으로 배정된 기관이 없습니다.</p>
-            ) : (
-              <div className="space-y-3">
-                {liaisons.map((org) => (
-                  <OrgLiaisonCard key={org.organizationId} org={org} />
-                ))}
-              </div>
-            )}
-          </div>
+              <p className="mt-1 text-[10px] text-slate-500">
+                완료 {individualCohort.completedPortals} · 진행 {individualCohort.inProgressPortals} · 미시작{' '}
+                {individualCohort.notStartedPortals}
+              </p>
+            </>
+          ) : (
+            <p className="mt-1 text-[10px] text-slate-500">개별 내담자 데이터 없음</p>
+          )}
         </div>
-      )}
-      </CounselorPageSection>
 
-      <CounselorPageSection title="빠른 접근">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {QUICK_LINKS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-xl border border-white/10 bg-white/5 p-4 text-center transition hover:bg-white/10"
-            >
-              <span className="text-2xl">{item.icon}</span>
-              <p className="mt-2 text-sm font-medium text-white">{item.title}</p>
-            </Link>
-          ))}
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+          <p className="text-[11px] font-semibold text-slate-300">최근 검사 활동</p>
+          {recentActivity.length === 0 ? (
+            <p className="mt-1 text-[10px] text-slate-500">최근 활동 없음</p>
+          ) : (
+            <ul className="mt-1 space-y-0.5">
+              {recentActivity.map((item, i) => (
+                <li key={`${item.portalId}-${item.testId}-${i}`} className="truncate text-[10px] text-slate-400">
+                  <span className="text-slate-200">{item.displayName}</span>
+                  <span className="text-slate-500"> · {item.assessmentTitle}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </CounselorPageSection>
+      </footer>
     </div>
   );
 }

@@ -160,6 +160,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   const isHubPage = pathname?.startsWith('/counselor/hub/') ?? false;
+  const isDashboardHome = pathname === '/counselor' || pathname === '/counselor/';
   const useManageShell = isPsychTestsWorkspaceRoute(pathname || '');
 
   return (
@@ -194,8 +195,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
               </Suspense>
             ) : (
               <>
-                <CounselorPageTitle>{pageTitle}</CounselorPageTitle>
-                <CounselorPageBody>{children}</CounselorPageBody>
+                {!isDashboardHome ? <CounselorPageTitle>{pageTitle}</CounselorPageTitle> : null}
+                <CounselorPageBody className={isDashboardHome ? 'gap-0' : undefined}>{children}</CounselorPageBody>
               </>
             )}
           </div>
