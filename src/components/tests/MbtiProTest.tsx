@@ -678,10 +678,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const QUESTION_FRAME_HEIGHT = 112;
 
   const QUESTION_TRANSITION_DURATION = 1.08;
-  const QUESTION_EXIT_DURATION = 0.88;
-  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.82;
+  const QUESTION_EXIT_DURATION = 1.12;
+  const QUESTION_ENTER_DELAY = 0.08;
 
   const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
+  const QUESTION_EXIT_EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
   const variants = {
     enter: (dir: number) => ({
@@ -722,22 +723,22 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     exit: (dir: number) => {
       const sign = dir > 0 ? 1 : -1;
       return {
-        y: [0, sign * 20],
+        y: [0, sign * 12],
         opacity: [1, 0],
         scale: 1,
-        filter: ['blur(0px)', 'blur(2px)'],
+        filter: ['blur(0px)', 'blur(1px)'],
         transition: {
           y: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.22, 0, 0.36, 1],
+            ease: QUESTION_EXIT_EASE,
           },
           opacity: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.22, 0, 0.36, 1],
+            ease: QUESTION_EXIT_EASE,
           },
           filter: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.22, 0, 0.36, 1],
+            ease: QUESTION_EXIT_EASE,
           },
         },
       };
@@ -924,7 +925,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}
                 style={{ height: QUESTION_FRAME_HEIGHT }}
               >
-                <AnimatePresence initial={false} mode="sync" custom={direction}>
+                <AnimatePresence initial={false} mode="wait" custom={direction}>
                   <motion.h2
                     key={currentQuestion}
                     custom={direction}

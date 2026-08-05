@@ -402,7 +402,7 @@ export default function AssessmentList({
         <div className="mb-2 shrink-0 rounded-lg border border-sky-500/30 bg-sky-950/40 px-3 py-2">
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <p>
-              <span className="font-medium text-sky-200">이동 된 상담코드 : </span>
+              <span className="font-medium text-sky-200">이동 상담코드 : </span>
               <span className="font-mono font-bold tracking-widest text-sky-300">
                 {formatAccessCodeDisplay(moveInfo.targetAccessCode)}
               </span>
@@ -412,18 +412,23 @@ export default function AssessmentList({
             </p>
           </div>
           {moveInfo.recipients.length > 0 ? (
-            <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-300">
-              {moveInfo.recipients.map((r, idx) => (
-                <li key={`${r.displayName}-${idx}`}>
-                  {r.displayName}
-                  {r.myCode ? (
-                    <span className="ml-1 font-mono text-xs text-slate-400">
-                      ({formatAccessCodeDisplay(r.myCode)})
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+            <div className="mt-2 text-sm text-slate-300">
+              <span className="font-medium text-sky-200/90">
+                총 {moveInfo.recipients.length}명 :
+              </span>{' '}
+              <span className="inline-flex flex-wrap gap-x-3 gap-y-1">
+                {moveInfo.recipients.map((r, idx) => (
+                  <span key={`${r.displayName}-${idx}`}>
+                    {r.displayName}
+                    {r.myCode ? (
+                      <span className="ml-1 font-mono text-xs text-slate-400">
+                        ({formatAccessCodeDisplay(r.myCode)})
+                      </span>
+                    ) : null}
+                  </span>
+                ))}
+              </span>
+            </div>
           ) : null}
         </div>
       ) : null}
