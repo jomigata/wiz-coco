@@ -34,6 +34,12 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
+import {
+  assessmentGroupTitleParts,
+  formatDispatchFailedMetric,
+  formatTestIncompleteMetric,
+  resultStatusCounts,
+} from '@/lib/counselorAssessmentResultDisplay';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
@@ -48,18 +54,9 @@ function assessmentInfoLabel(a: CounselorAssessment): string {
   return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
 }
 
-function resultStatusCounts(a: CounselorAssessment) {
-  const dispatchSent = a.dispatchSentCount ?? 0;
-  const dispatchFailed = a.dispatchFailedCount ?? 0;
-  const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
-  const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
-  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
-  return { dispatchFailed, testIncomplete, dispatchTotal, dispatchSent, dispatchFailedCount: dispatchFailed };
-}
-
 function assessmentHasPendingDispatch(a: CounselorAssessment): boolean {
-  const { dispatchTotal, dispatchSent } = resultStatusCounts(a);
-  const dispatchFailed = a.dispatchFailedCount ?? 0;
+  const { dispatchTotal, dispatchSent, dispatchFailed, dispatchSending } = resultStatusCounts(a);
+  if (dispatchSending > 0) return true;
   return dispatchTotal > 0 && dispatchSent + dispatchFailed < dispatchTotal;
 }
 
@@ -494,10 +491,11 @@ export default function AssessmentList({
               </thead>
               <tbody>
                 {paginatedItems.map((a, idx) => {
-                  const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(a);
+                  const { dispatchTotal } = resultStatusCounts(a);
+                  const dispatchFailedLabel = formatDispatchFailedMetric(a);
+                  const testIncompleteLabel = formatTestIncompleteMetric(a);
                   const expired = isExpired(a.usageEndDate);
-                  const infoPrimary = getAssessmentOrgLabel(a);
-                  const infoSecondary = (a.title || '—').trim();
+                  const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
 
                   return (
                     <tr key={a.id} className={counselorListBodyRowClass}>
@@ -522,12 +520,18 @@ export default function AssessmentList({
                         className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
                         onClick={() => goToProgress(a.id)}
                       >
-                        <CounselorSlashInfoCell
-                          primary={infoPrimary}
-                          secondary={infoSecondary}
-                          showTooltip={false}
-                          className={cellLinkClass}
-                        />
+                        {infoSecondary ? (
+                          <CounselorSlashInfoCell
+                            primary={infoPrimary}
+                            secondary={infoSecondary}
+                            showTooltip={false}
+                            className={cellLinkClass}
+                          />
+                        ) : (
+                          <span className={`block truncate font-medium text-white ${cellLinkClass}`}>
+                            {infoPrimary}
+                          </span>
+                        )}
                         {expired ? (
                           <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
                             만료
@@ -538,12 +542,24 @@ export default function AssessmentList({
                         (
                         <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                         /
-                        <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
-                          {dispatchFailed}
+                        <span
+                          className={`px-1 font-medium tabular-nums ${
+                            dispatchFailedLabel === '발송중…'
+                              ? 'text-amber-300'
+                              : counselorResultMetricClass(Number(dispatchFailedLabel) || 0)
+                          }`}
+                        >
+                          {dispatchFailedLabel}
                         </span>
                         /
-                        <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
-                          {testIncomplete}
+                        <span
+                          className={`px-1 font-medium tabular-nums ${
+                            testIncompleteLabel === '완료'
+                              ? 'text-emerald-300'
+                              : counselorResultMetricClass(Number(testIncompleteLabel) || 0)
+                          }`}
+                        >
+                          {testIncompleteLabel}
                         </span>
                         )
                       </td>

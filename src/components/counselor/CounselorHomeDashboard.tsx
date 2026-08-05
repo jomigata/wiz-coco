@@ -40,15 +40,12 @@ import type {
   CounselorCohortMonitoringResult,
   CounselorMonitoringHubResult,
 } from '@/types/clientPortal';
-
-function resultStatusCounts(a: CounselorAssessment) {
-  const dispatchSent = a.dispatchSentCount ?? 0;
-  const dispatchFailed = a.dispatchFailedCount ?? 0;
-  const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
-  const testIncomplete = a.testIncompleteCount ?? a.emailsNotCompletedAllTestsCount ?? 0;
-  const dispatchTotal = Math.max(testComplete + testIncomplete, dispatchSent + dispatchFailed);
-  return { dispatchFailed, testIncomplete, dispatchTotal };
-}
+import {
+  assessmentGroupTitleParts,
+  formatDispatchFailedMetric,
+  formatTestIncompleteMetric,
+  resultStatusCounts,
+} from '@/lib/counselorAssessmentResultDisplay';
 
 function formatUsageEndDate(iso: string | undefined): string {
   const s = (iso || '').trim();
@@ -213,8 +210,8 @@ export default function CounselorHomeDashboard() {
   const attentionCount = useMemo(
     () =>
       assessments.filter((a) => {
-        const { dispatchFailed, testIncomplete } = resultStatusCounts(a);
-        return dispatchFailed > 0 || testIncomplete > 0;
+        const { dispatchFailed, testIncomplete, dispatchSending } = resultStatusCounts(a);
+        return dispatchSending > 0 || dispatchFailed > 0 || testIncomplete > 0;
       }).length,
     [assessments],
   );
@@ -376,10 +373,11 @@ export default function CounselorHomeDashboard() {
                   </thead>
                   <tbody>
                     {recentAssessments.map((a, idx) => {
-                      const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(a);
+                      const { dispatchTotal } = resultStatusCounts(a);
+                      const dispatchFailedLabel = formatDispatchFailedMetric(a);
+                      const testIncompleteLabel = formatTestIncompleteMetric(a);
                       const expired = isExpired(a.usageEndDate);
-                      const infoPrimary = getAssessmentOrgLabel(a);
-                      const infoSecondary = (a.title || '—').trim();
+                      const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
 
                       return (
                         <tr key={a.id} className={counselorListBodyRowClass}>
@@ -404,12 +402,18 @@ export default function CounselorHomeDashboard() {
                             className={`max-w-[14rem] ${counselorListTdCompactClass} cursor-pointer`}
                             onClick={() => goToProgress(a.id)}
                           >
-                            <CounselorSlashInfoCell
-                              primary={infoPrimary}
-                              secondary={infoSecondary}
-                              showTooltip={false}
-                              className={cellLinkClass}
-                            />
+                            {infoSecondary ? (
+                              <CounselorSlashInfoCell
+                                primary={infoPrimary}
+                                secondary={infoSecondary}
+                                showTooltip={false}
+                                className={cellLinkClass}
+                              />
+                            ) : (
+                              <span className={`block truncate font-medium text-white ${cellLinkClass}`}>
+                                {infoPrimary}
+                              </span>
+                            )}
                             {expired ? (
                               <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
                                 만료
@@ -425,15 +429,23 @@ export default function CounselorHomeDashboard() {
                             <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
                             /
                             <span
-                              className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}
+                              className={`px-1 font-medium tabular-nums ${
+                                dispatchFailedLabel === '발송중…'
+                                  ? 'text-amber-300'
+                                  : counselorResultMetricClass(Number(dispatchFailedLabel) || 0)
+                              }`}
                             >
-                              {dispatchFailed}
+                              {dispatchFailedLabel}
                             </span>
                             /
                             <span
-                              className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}
+                              className={`px-1 font-medium tabular-nums ${
+                                testIncompleteLabel === '완료'
+                                  ? 'text-emerald-300'
+                                  : counselorResultMetricClass(Number(testIncompleteLabel) || 0)
+                              }`}
                             >
-                              {testIncomplete}
+                              {testIncompleteLabel}
                             </span>
                             )
                           </td>

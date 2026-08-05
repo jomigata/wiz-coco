@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import {
   filterCounselorAssessmentsForPortalMove,
   listAssessments,
+  type CounselorAssessment,
 } from '@/lib/assessmentApi';
+import { formatPortalMoveAssessmentLabel } from '@/lib/counselorAssessmentResultDisplay';
 import { movePortalsToAssessment } from '@/lib/clientPortalApi';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 
@@ -30,9 +31,7 @@ export default function CounselorPortalMoveDialog({
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [options, setOptions] = useState<
-    { id: string; title: string; accessCode: string }[]
-  >([]);
+  const [options, setOptions] = useState<CounselorAssessment[]>([]);
 
   const loadOptions = useCallback(async () => {
     if (!counselorUid) return;
@@ -45,13 +44,7 @@ export default function CounselorPortalMoveDialog({
         counselorUid,
         { excludeAssessmentId: sourceAssessmentId },
       );
-      setOptions(
-        filtered.map((a) => ({
-          id: a.id,
-          title: (a.title || '제목 없음').trim(),
-          accessCode: a.accessCode || '',
-        })),
-      );
+      setOptions(filtered);
     } catch (err) {
       setError(err instanceof Error ? err.message : '상담코드 목록을 불러오지 못했습니다.');
       setOptions([]);
@@ -89,9 +82,7 @@ export default function CounselorPortalMoveDialog({
         targetAssessmentId,
         sourceAssessmentId,
       });
-      onSuccess(
-        `이동 ${result.moved}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건 · 검사결과 ${result.resultsUpdated}건 연결 · 중복 ${result.resultsDeleted ?? 0}건 삭제`,
-      );
+      onSuccess(`이동 ${result.moved}건`);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : '상담코드 이동에 실패했습니다.');
@@ -122,7 +113,7 @@ export default function CounselorPortalMoveDialog({
         {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
 
         <label className="mt-4 block text-sm text-slate-300">
-          <span className="mb-1 block">대상 상담코드 (내가 생성한 코드만 표시)</span>
+          <span className="mb-1 block">이동할 상담코드</span>
           <select
             value={targetAssessmentId}
             onChange={(e) => setTargetAssessmentId(e.target.value)}
@@ -135,7 +126,7 @@ export default function CounselorPortalMoveDialog({
             </option>
             {options.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.title} · {formatAccessCodeDisplay(a.accessCode)}
+                {formatPortalMoveAssessmentLabel(a)}
               </option>
             ))}
           </select>

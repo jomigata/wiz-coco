@@ -182,6 +182,7 @@ def list_assessments():
         pstats = portal_stats.get(aid) or {}
         x["dispatchSentCount"] = int(pstats.get("dispatchSentCount") or 0)
         x["dispatchFailedCount"] = int(pstats.get("dispatchFailedCount") or 0)
+        x["dispatchSendingCount"] = int(pstats.get("dispatchSendingCount") or 0)
         x["testCompleteCount"] = int(pstats.get("testCompleteCount") or 0)
         x["testIncompleteCount"] = int(pstats.get("testIncompleteCount") or 0)
         _strip_join_secrets_for_counselor_api(x)

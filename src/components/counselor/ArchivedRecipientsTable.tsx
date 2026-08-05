@@ -84,6 +84,8 @@ type ArchivedRecipientsTableProps = {
   items: ArchivedDispatchRecipient[];
   selected: Set<string>;
   onToggleOne: (id: string) => void;
+  onToggleAll?: () => void;
+  allSelected?: boolean;
   showAssessmentColumns?: boolean;
   layout?: 'default' | 'dispatch';
   hideSelect?: boolean;
@@ -95,6 +97,8 @@ export default function ArchivedRecipientsTable({
   items,
   selected,
   onToggleOne,
+  onToggleAll,
+  allSelected = false,
   showAssessmentColumns = false,
   layout = 'default',
   hideSelect = false,
@@ -248,7 +252,17 @@ export default function ArchivedRecipientsTable({
               <th className={counselorListNoThClass}>No.</th>
               {showSelectColumn ? (
                 <th className={isDispatchLayout ? counselorListSelectThClass : `${counselorListThClass} w-10`}>
-                  선택
+                  {onToggleAll ? (
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={onToggleAll}
+                      className="rounded accent-blue-500"
+                      aria-label="전체 선택"
+                    />
+                  ) : (
+                    '선택'
+                  )}
                 </th>
               ) : null}
               {isDispatchLayout ? (

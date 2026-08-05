@@ -400,6 +400,7 @@ export interface CounselorAssessment {
   /** 발송목록 기준 발송 성공·실패·검사 완료·미완료 인원 */
   dispatchSentCount?: number;
   dispatchFailedCount?: number;
+  dispatchSendingCount?: number;
   testCompleteCount?: number;
   testIncompleteCount?: number;
   /** 기관/단체/그룹명 (상담코드 세트) */

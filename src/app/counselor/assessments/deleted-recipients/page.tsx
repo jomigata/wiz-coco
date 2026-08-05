@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
@@ -17,7 +16,6 @@ import {
 function DeletedRecipientsPageContent() {
   const searchParams = useSearchParams();
   const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
-  const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
   const [items, setItems] = useState<Awaited<ReturnType<typeof fetchArchivedDispatchRecipients>>['items']>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,6 +23,7 @@ function DeletedRecipientsPageContent() {
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState('');
+  const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -105,27 +104,9 @@ function DeletedRecipientsPageContent() {
     return <AuthRequiredState description="Firebase에 로그인한 상태에서 다시 시도해 주세요." />;
   }
 
-  const showAssessmentColumns = !filterAssessmentId;
-
   return (
     <CounselorPageSection
-      showHierarchyBreadcrumb
-      description={
-        <>
-          발송·검사 현황에서 삭제한 내담자입니다. 복구하면 발송·검사 현황에 다시 표시됩니다.
-          {filterAssessmentId ? (
-            <>
-              {' '}
-              <Link
-                href="/counselor/assessments/deleted-recipients"
-                className="text-blue-400 underline-offset-2 hover:text-blue-300 hover:underline"
-              >
-                전체 삭제 목록 보기
-              </Link>
-            </>
-          ) : null}
-        </>
-      }
+      title="삭제된 검사자"
       toolbar={
         <>
           <button
@@ -174,7 +155,9 @@ function DeletedRecipientsPageContent() {
           items={items}
           selected={selected}
           onToggleOne={toggleOne}
-          showAssessmentColumns={showAssessmentColumns}
+          onToggleAll={toggleAll}
+          allSelected={allSelected}
+          showAssessmentColumns={!filterAssessmentId}
         />
       )}
     </CounselorPageSection>

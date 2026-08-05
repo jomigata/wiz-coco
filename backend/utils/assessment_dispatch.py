@@ -392,6 +392,8 @@ def _accumulate_assessment_stats_for_portals(
         notify_status, _ = _resolve_notify_status(notify, pdata, email=email, phone=phone)
         if notify_status in ("sent", "partial"):
             stats[assessment_id]["dispatchSentCount"] += 1
+        elif notify_status == "sending":
+            stats[assessment_id]["dispatchSendingCount"] += 1
         elif notify_status == "failed":
             stats[assessment_id]["dispatchFailedCount"] += 1
         completed = completion_map.get((portal_id, assessment_id), set())
@@ -415,6 +417,7 @@ def aggregate_archived_assessment_list_stats(
         x["id"]: {
             "dispatchSentCount": 0,
             "dispatchFailedCount": 0,
+            "dispatchSendingCount": 0,
             "testCompleteCount": 0,
             "testIncompleteCount": 0,
         }
@@ -470,6 +473,7 @@ def aggregate_assessment_list_stats(
         x["id"]: {
             "dispatchSentCount": 0,
             "dispatchFailedCount": 0,
+            "dispatchSendingCount": 0,
             "testCompleteCount": 0,
             "testIncompleteCount": 0,
         }
@@ -518,6 +522,8 @@ def aggregate_assessment_list_stats(
                 continue
             if notify_status in ("sent", "partial"):
                 stats[aid]["dispatchSentCount"] += 1
+            elif notify_status == "sending":
+                stats[aid]["dispatchSendingCount"] += 1
             elif notify_status == "failed":
                 stats[aid]["dispatchFailedCount"] += 1
 

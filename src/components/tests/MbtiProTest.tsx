@@ -690,10 +690,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   const variants = {
     enter: (dir: number) => ({
-      y: dir > 0 ? 32 : -32,
+      y: dir > 0 ? -32 : 32,
       opacity: 0,
-      scale: 1.02,
-      filter: 'blur(10px)',
+      scale: 0.9,
+      filter: 'blur(6px)',
       transition: {
         y: {
           duration: QUESTION_TRANSITION_DURATION,
