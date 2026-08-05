@@ -393,20 +393,22 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
                 <label htmlFor="name-field" className={th.label}>
                   이름(가명) <span className="text-red-400">*</span>
               </label>
-                  <input 
+                  <input
                     type="text"
-                  id="name-field"
-                  name="name_random_field"
+                    id="name-field"
+                    name="name_random_field"
                     value={name}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                  className={th.input}
-                  placeholder="이름(가명)을 입력하세요"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                    className={th.input}
+                    placeholder="이름(가명)을 입력하세요"
+                    lang="ko"
+                    inputMode="text"
                     autoComplete="off"
                     autoCorrect="off"
-                  autoCapitalize="off"
+                    autoCapitalize="off"
                     spellCheck="false"
-                  ref={nameRef}
-                />
+                    ref={nameRef}
+                  />
                 {errors.name && (
                   <p className="mt-2 text-sm text-red-400">{errors.name}</p>
                 )}
