@@ -503,7 +503,7 @@ export default function CounselorClientList() {
         targetAssessmentId: moveAssessmentId,
       });
       setMessage(
-        `이동 ${result.moved}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건 · 검사결과 ${result.resultsUpdated}건 갱신`,
+        `이동 ${result.moved}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건 · 검사결과 ${result.resultsUpdated}건 연결 · 중복 ${result.resultsDeleted ?? 0}건 삭제`,
       );
       setMoveOpen(false);
       setMoveAssessmentId('');
@@ -525,8 +525,7 @@ export default function CounselorClientList() {
 
   return (
     <CounselorPageSection
-      className="flex min-h-0 flex-1"
-      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+      bodyClassName="!p-0"
       noBodyPadding
       description={
         <>
@@ -627,7 +626,7 @@ export default function CounselorClientList() {
       }
     >
       <motion.div
-        className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3"
+        className="p-2.5 text-sm sm:p-3"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
@@ -672,7 +671,7 @@ export default function CounselorClientList() {
                 저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
               </p>
             ) : null}
-            <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>
+            <div className={counselorListTableWrapperClass}>
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
@@ -725,7 +724,7 @@ export default function CounselorClientList() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="그룹명 / 제목"
+                      label="그룹명(상담코드) / 제목"
                       sortKey="counselInfo"
                       activeKey={sortKey}
                       direction={sortDir}

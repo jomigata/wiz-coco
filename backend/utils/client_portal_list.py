@@ -72,7 +72,7 @@ def list_counselor_client_portals(
         progress_filter = "all"
     tag_filter = (tag or "").strip().lower()
 
-    rows: list[tuple[str, dict, float]] = []
+    raw_rows: list[tuple[str, dict, float]] = []
     refs = (
         db.collection(CLIENT_PORTALS_COLLECTION)
         .where("counselorId", "==", counselor_uid)
@@ -82,8 +82,6 @@ def list_counselor_client_portals(
         pdata = doc.to_dict() or {}
         st = (pdata.get("status") or "active").strip()
         if status_filter != "all" and st != status_filter:
-            continue
-        if not _matches_cohort_filter(pdata, cohort_filter):
             continue
         if query and not _matches_search(pdata, query):
             continue
@@ -99,7 +97,20 @@ def list_counselor_client_portals(
         created_ts = 0.0
         if created_raw is not None and hasattr(created_raw, "timestamp"):
             created_ts = float(created_raw.timestamp())
-        rows.append((doc.id, pdata, created_ts))
+        raw_rows.append((doc.id, pdata, created_ts))
+
+    cohorts_map: dict[str, dict] = {}
+    for _, pdata, _ in raw_rows:
+        cid = (pdata.get("cohortId") or "").strip()
+        cname = (pdata.get("cohortName") or "").strip()
+        if cid and cid not in cohorts_map:
+            cohorts_map[cid] = {"cohortId": cid, "cohortName": cname or cid}
+
+    rows = [
+        (portal_id, pdata, created_ts)
+        for portal_id, pdata, created_ts in raw_rows
+        if _matches_cohort_filter(pdata, cohort_filter)
+    ]
 
     rows.sort(key=lambda x: x[2], reverse=True)
 
@@ -119,6 +130,8 @@ def list_counselor_client_portals(
         if not adoc.exists:
             continue
         a = adoc.to_dict() or {}
+        if a.get("counselorId") != counselor_uid:
+            continue
         if (a.get("status") or "active") != "active":
             continue
         assessment_cache[aid] = {
@@ -137,7 +150,6 @@ def list_counselor_client_portals(
         set(assessment_cache.keys()),
     )
 
-    cohorts_map: dict[str, dict] = {}
     items: list[dict] = []
 
     for portal_id, pdata, _ in rows:
@@ -173,8 +185,6 @@ def list_counselor_client_portals(
 
         cid = (pdata.get("cohortId") or "").strip()
         cname = (pdata.get("cohortName") or "").strip()
-        if cid and cid not in cohorts_map:
-            cohorts_map[cid] = {"cohortId": cid, "cohortName": cname or cid}
 
         items.append(
             {

@@ -591,6 +591,7 @@ export async function movePortalsToAssessment(body: {
   skipped: number;
   failed: number;
   resultsUpdated: number;
+  resultsDeleted?: number;
 }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('전문가·상담사 로그인이 필요합니다.');

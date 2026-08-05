@@ -24,7 +24,28 @@ def _verify_move_target(db, assessment_id: str, counselor_uid: str) -> dict:
         "assessmentId": assessment_id,
         "accessCode": (ass.get("accessCode") or "").strip(),
         "title": (ass.get("title") or "").strip() or "상담(코드)",
+        "testList": ass.get("testList") or [],
     }
+
+
+def _result_priority(data: dict) -> int:
+    status = (data.get("status") or "").strip()
+    if status == "completed":
+        return 3
+    responses = data.get("responses")
+    has_responses = bool(responses) and (
+        (isinstance(responses, dict) and len(responses) > 0)
+        or (isinstance(responses, list) and len(responses) > 0)
+    )
+    if status == "in_progress" and has_responses:
+        return 2
+    if status == "in_progress":
+        return 1
+    return 0
+
+
+def _is_empty_stub(data: dict) -> bool:
+    return _result_priority(data) <= 1 and (data.get("status") or "").strip() != "completed"
 
 
 def _reassign_test_results(
@@ -33,23 +54,80 @@ def _reassign_test_results(
     portal_id: str,
     from_assessment_id: str,
     to_assessment: dict,
-) -> int:
+) -> tuple[int, int]:
+    """source 검사 결과를 target으로 옮기고, target의 빈 중복 발행분은 삭제."""
     to_aid = to_assessment["assessmentId"]
     to_code = to_assessment["accessCode"]
     updated = 0
-    refs = (
+    deleted = 0
+
+    target_docs = list(
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("portalId", "==", portal_id)
+        .where("assessmentId", "==", to_aid)
+        .stream()
+    )
+    target_by_test: dict[str, list] = {}
+    for doc in target_docs:
+        tid = str((doc.to_dict() or {}).get("testId") or "").strip()
+        if tid:
+            target_by_test.setdefault(tid, []).append(doc)
+
+    source_docs = list(
         db.collection(TEST_RESULTS_COLLECTION)
         .where("portalId", "==", portal_id)
         .where("assessmentId", "==", from_assessment_id)
         .stream()
     )
-    for doc in refs:
-        patch: dict = {"assessmentId": to_aid, "updatedAt": SERVER_TIMESTAMP}
-        if to_code:
-            patch["accessCode"] = to_code
-        doc.reference.update(patch)
+
+    migrated_test_ids: set[str] = set()
+
+    for doc in source_docs:
+        data = doc.to_dict() or {}
+        test_id = str(data.get("testId") or "").strip()
+        if not test_id:
+            continue
+        migrated_test_ids.add(test_id)
+        src_priority = _result_priority(data)
+
+        for tdoc in list(target_by_test.get(test_id, [])):
+            tdata = tdoc.to_dict() or {}
+            if _is_empty_stub(tdata) or _result_priority(tdata) < src_priority:
+                tdoc.reference.delete()
+                deleted += 1
+                target_by_test[test_id] = [
+                    d for d in target_by_test.get(test_id, []) if d.id != tdoc.id
+                ]
+
+        doc.reference.update(
+            {
+                "assessmentId": to_aid,
+                "accessCode": to_code,
+                "updatedAt": SERVER_TIMESTAMP,
+            }
+        )
         updated += 1
-    return updated
+
+    for test_id, docs in target_by_test.items():
+        if test_id in migrated_test_ids:
+            continue
+        for tdoc in docs:
+            tdata = tdoc.to_dict() or {}
+            if _is_empty_stub(tdata):
+                tdoc.reference.delete()
+                deleted += 1
+
+    leftover = (
+        db.collection(TEST_RESULTS_COLLECTION)
+        .where("portalId", "==", portal_id)
+        .where("assessmentId", "==", from_assessment_id)
+        .stream()
+    )
+    for doc in leftover:
+        doc.reference.delete()
+        deleted += 1
+
+    return updated, deleted
 
 
 def move_portals_to_assessment(
@@ -68,6 +146,7 @@ def move_portals_to_assessment(
     skipped = 0
     failed = 0
     results_updated = 0
+    results_deleted = 0
     details: list[dict] = []
 
     for raw_pid in portal_ids:
@@ -91,6 +170,7 @@ def move_portals_to_assessment(
             continue
 
         assigned = [str(x).strip() for x in (pdata.get("assignedAssessmentIds") or []) if str(x).strip()]
+        linked = [str(x).strip() for x in (pdata.get("linkedAssessmentIds") or []) if str(x).strip()]
         from_aid = (source_assessment_id or "").strip()
         if not from_aid:
             from_aid = assigned[0] if assigned else ""
@@ -110,23 +190,26 @@ def move_portals_to_assessment(
         new_assigned = [aid for aid in assigned if aid != from_aid]
         if to_aid not in new_assigned:
             new_assigned.append(to_aid)
+        new_linked = [aid for aid in linked if aid != from_aid]
 
         pref.update(
             {
                 "assignedAssessmentIds": new_assigned,
+                "linkedAssessmentIds": new_linked,
                 "updatedAt": SERVER_TIMESTAMP,
                 "lastAssessmentMoveAt": SERVER_TIMESTAMP,
                 "lastAssessmentMoveFrom": from_aid,
                 "lastAssessmentMoveTo": to_aid,
             }
         )
-        n = _reassign_test_results(
+        n_updated, n_deleted = _reassign_test_results(
             db,
             portal_id=pid,
             from_assessment_id=from_aid,
             to_assessment=target,
         )
-        results_updated += n
+        results_updated += n_updated
+        results_deleted += n_deleted
         moved += 1
         details.append(
             {
@@ -134,7 +217,8 @@ def move_portals_to_assessment(
                 "status": "moved",
                 "fromAssessmentId": from_aid,
                 "toAssessmentId": to_aid,
-                "resultsUpdated": n,
+                "resultsUpdated": n_updated,
+                "resultsDeleted": n_deleted,
                 "displayName": pdata.get("displayName") or "",
             }
         )
@@ -146,5 +230,6 @@ def move_portals_to_assessment(
         "skipped": skipped,
         "failed": failed,
         "resultsUpdated": results_updated,
+        "resultsDeleted": results_deleted,
         "details": details,
     }
