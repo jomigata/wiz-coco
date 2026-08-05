@@ -683,7 +683,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   const QUESTION_TRANSITION_DURATION = 1.08;
   const QUESTION_EXIT_DURATION = 0.72;
-  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.8;
+  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.9;
 
   const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
   const QUESTION_EXIT_EASE: [number, number, number, number] = [0.45, 0, 1, 1];

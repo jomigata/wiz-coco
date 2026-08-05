@@ -89,5 +89,5 @@ export function CounselorPageBody({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={`flex min-h-0 flex-1 flex-col gap-3 ${className}`}>{children}</div>;
+  return <div className={`flex min-h-0 flex-1 flex-col gap-2 ${className}`}>{children}</div>;
 }

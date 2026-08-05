@@ -185,8 +185,8 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
         </p>
       ) : null}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
-        <div ref={leftColRef} className="flex min-h-0 flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-stretch">
+        <div ref={leftColRef} className="flex h-full min-h-0 flex-col gap-4">
           <CounselorPageSection
             title={
               <span className="inline-flex flex-wrap items-center gap-2">

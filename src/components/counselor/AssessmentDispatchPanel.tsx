@@ -23,6 +23,7 @@ import {
   parseDispatchChannelSummary,
   type DispatchChannelSummary,
 } from '@/lib/dispatchNotifySummary';
+import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import {
   archiveDispatchRecipients,
   fetchAssessmentDispatchStatus,
@@ -314,6 +315,8 @@ export default function AssessmentDispatchPanel({
   const [resendLoading, setResendLoading] = useState(false);
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveMessage, setMoveMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
@@ -763,6 +766,19 @@ export default function AssessmentDispatchPanel({
           </button>
           <button
             type="button"
+            onClick={() => setMoveOpen(true)}
+            disabled={
+              remindLoading ||
+              resendLoading ||
+              deleteLoading ||
+              selected.size === 0
+            }
+            className="rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
+          >
+            다른 상담코드로 이동 ({selected.size})
+          </button>
+          <button
+            type="button"
             onClick={() => setConfirmAction('remind')}
             disabled={
               remindLoading ||
@@ -791,6 +807,11 @@ export default function AssessmentDispatchPanel({
       }
     >
       <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
+        {moveMessage ? (
+          <div className="mb-2 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            {moveMessage}
+          </div>
+        ) : null}
         {displayData.recipients.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <p className="text-base text-slate-300">발송된 내담자가 없습니다</p>
@@ -1436,6 +1457,19 @@ export default function AssessmentDispatchPanel({
           </div>
         </div>
       )}
+
+      <CounselorPortalMoveDialog
+        open={moveOpen}
+        portalIds={Array.from(selected)}
+        sourceAssessmentId={assessmentId}
+        onClose={() => setMoveOpen(false)}
+        onSuccess={(summary) => {
+          setMoveMessage(summary);
+          setMoveOpen(false);
+          setSelected(new Set());
+          void load({ silent: true });
+        }}
+      />
     </>
   );
 }

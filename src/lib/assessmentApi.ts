@@ -615,6 +615,23 @@ function filterAssessmentsForCounselor(
   return items.filter((a) => !a.counselorId || a.counselorId === counselorUid);
 }
 
+/** 상담코드 이동 대상 — 로그인 상담사가 생성한 활성 코드만 */
+export function filterCounselorAssessmentsForPortalMove(
+  assessments: CounselorAssessment[],
+  counselorUid: string,
+  options?: { excludeAssessmentId?: string },
+): CounselorAssessment[] {
+  const uid = counselorUid.trim();
+  const excludeId = options?.excludeAssessmentId?.trim();
+  return (assessments || []).filter(
+    (a) =>
+      Boolean(a.id) &&
+      a.counselorId === uid &&
+      (a.status || 'active') === 'active' &&
+      a.id !== excludeId,
+  );
+}
+
 export function readCachedAssessmentsList(counselorUid?: string | null): CounselorAssessment[] | null {
   if (typeof window === 'undefined') return null;
   const uid = (counselorUid ?? getCounselorUidSync())?.trim();

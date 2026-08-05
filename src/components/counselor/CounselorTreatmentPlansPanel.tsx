@@ -314,8 +314,8 @@ export default function CounselorTreatmentPlansPanel() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <CounselorPageSection title="프로그램 카탈로그" className="!rounded-lg">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:items-stretch">
+        <CounselorPageSection title="프로그램 카탈로그" className="!rounded-lg flex h-full min-h-0 flex-col">
           <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <select
@@ -344,7 +344,7 @@ export default function CounselorTreatmentPlansPanel() {
           </div>
         </CounselorPageSection>
 
-        <CounselorPageSection title="할당 설정" className="!rounded-lg">
+        <CounselorPageSection title="할당 설정" className="!rounded-lg flex h-full min-h-0 flex-col">
           {!selectedProgram ? (
             <p className="py-16 text-center text-sm text-slate-500">왼쪽에서 치료 프로그램을 선택하세요.</p>
           ) : (

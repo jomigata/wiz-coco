@@ -708,11 +708,11 @@ export default function IndividualAssessmentCreateForm() {
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-start">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(18rem,22rem)] xl:items-stretch">
         <CounselorPageSection
           title="검사 정보"
-          className="!overflow-visible flex min-h-0 flex-col xl:col-start-1 xl:row-start-1 xl:min-h-[28rem]"
-          bodyClassName="min-h-0 overflow-visible"
+          className="!overflow-visible flex h-full min-h-0 flex-col"
+          bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -939,8 +939,8 @@ export default function IndividualAssessmentCreateForm() {
 
         <CounselorPageSection
           title="내담자 목록"
-          className="!overflow-visible flex min-h-0 flex-col xl:col-start-2 xl:row-start-1 xl:min-h-[28rem]"
-          bodyClassName="flex flex-col overflow-visible"
+          className="!overflow-visible flex h-full min-h-0 flex-col xl:col-start-2 xl:row-start-1"
+          bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
           toolbar={
             recipients.length > 0 ? (
               <span
@@ -955,14 +955,14 @@ export default function IndividualAssessmentCreateForm() {
             ) : null
           }
         >
-          <div className="flex flex-col gap-3 overflow-visible">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-visible">
             <div className={`hidden md:grid ${recipientHeaderClass()}`}>
               <span>이름 *</span>
               <span>이메일</span>
               <span>휴대폰</span>
               <span />
             </div>
-            <div className="min-h-[10rem] max-h-[16rem] space-y-2 overflow-y-auto pr-1">
+            <div className="min-h-[10rem] flex-1 space-y-2 overflow-y-auto pr-1">
               {manualRows.map((row, idx) => (
                   <div
                     key={idx}
@@ -1149,7 +1149,7 @@ export default function IndividualAssessmentCreateForm() {
 
         <CounselorPageSection
           title="발급 · 발송"
-          className="!overflow-visible flex min-h-0 flex-col xl:col-start-3 xl:row-start-1 xl:min-h-[20rem] xl:self-stretch"
+          className="!overflow-visible flex h-full min-h-0 flex-col xl:col-start-3 xl:row-start-1"
           bodyClassName="flex min-h-0 flex-1 flex-col overflow-visible"
         >
           {error ? (

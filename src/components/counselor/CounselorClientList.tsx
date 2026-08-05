@@ -26,8 +26,9 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
-import { listCounselorClientPortals, movePortalsToAssessment } from '@/lib/clientPortalApi';
-import { listAssessments, type CounselorAssessment } from '@/lib/assessmentApi';
+import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
+import { listAssessments } from '@/lib/assessmentApi';
+import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -261,11 +262,6 @@ export default function CounselorClientList() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
-  const [moveAssessmentId, setMoveAssessmentId] = useState('');
-  const [moveBusy, setMoveBusy] = useState(false);
-  const [moveError, setMoveError] = useState('');
-  const [assessmentsForMove, setAssessmentsForMove] = useState<CounselorAssessment[]>([]);
-  const [loadingAssessments, setLoadingAssessments] = useState(false);
   const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const cacheKey = useMemo(
@@ -375,28 +371,6 @@ export default function CounselorClientList() {
 
   useRedirectOnLoginRequiredError(error);
 
-  const loadAssessmentsForMove = useCallback(async () => {
-    setLoadingAssessments(true);
-    setMoveError('');
-    try {
-      const data = await listAssessments();
-      const individual = (data.assessments || []).filter(
-        (a) => (a.issueType || 'individual') === 'individual' && (a.status || 'active') === 'active',
-      );
-      setAssessmentsForMove(individual);
-    } catch (err) {
-      setMoveError(err instanceof Error ? err.message : '상담코드 목록을 불러오지 못했습니다.');
-    } finally {
-      setLoadingAssessments(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (moveOpen && assessmentsForMove.length === 0) {
-      void loadAssessmentsForMove();
-    }
-  }, [moveOpen, assessmentsForMove.length, loadAssessmentsForMove]);
-
   const assessmentIds = useMemo(() => Object.keys(assessmentMeta), [assessmentMeta]);
 
   const { results: liveResults, isLive, liveError, lastUpdatedAt } =
@@ -486,35 +460,11 @@ export default function CounselorClientList() {
     });
   };
 
-  const handleMoveSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!moveAssessmentId) {
-      setMoveError('이동할 상담코드를 선택해 주세요.');
-      return;
-    }
-    if (selectedPortalIds.length === 0) {
-      setMoveError('이동할 내담자를 선택해 주세요.');
-      return;
-    }
-    setMoveBusy(true);
-    setMoveError('');
-    try {
-      const result = await movePortalsToAssessment({
-        portalIds: selectedPortalIds,
-        targetAssessmentId: moveAssessmentId,
-      });
-      setMessage(
-        `이동 ${result.moved}건 · 생략 ${result.skipped}건 · 실패 ${result.failed}건 · 검사결과 ${result.resultsUpdated}건 연결 · 중복 ${result.resultsDeleted ?? 0}건 삭제`,
-      );
-      setMoveOpen(false);
-      setMoveAssessmentId('');
-      setSelected(new Set());
-      await load();
-    } catch (err) {
-      setMoveError(err instanceof Error ? err.message : '상담코드 이동에 실패했습니다.');
-    } finally {
-      setMoveBusy(false);
-    }
+  const handleMoveSuccess = async (summary: string) => {
+    setMessage(summary);
+    setMoveOpen(false);
+    setSelected(new Set());
+    await load();
   };
 
   const cellLinkClass =
@@ -558,10 +508,7 @@ export default function CounselorClientList() {
           {selected.size > 0 ? (
             <button
               type="button"
-              onClick={() => {
-                setMoveError('');
-                setMoveOpen(true);
-              }}
+              onClick={() => setMoveOpen(true)}
               className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
             >
               다른 상담코드로 이동
@@ -868,70 +815,12 @@ export default function CounselorClientList() {
         )}
       </motion.div>
 
-      {moveOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="move-portal-title"
-        >
-          <form
-            onSubmit={handleMoveSubmit}
-            className="w-full max-w-md rounded-xl border border-white/10 bg-[#0f1a2e] p-5 shadow-xl"
-          >
-            <h2 id="move-portal-title" className="text-base font-semibold text-white">
-              다른 상담코드로 이동
-            </h2>
-            <p className="mt-1 text-sm text-slate-400">
-              선택한 {selectedPortalIds.length}명을 지정한 상담코드로 완전 이동합니다.
-              기존 상담코드에서는 제거되며 알림은 발송하지 않습니다.
-            </p>
-
-            {moveError ? <p className="mt-3 text-sm text-red-400">{moveError}</p> : null}
-
-            <label className="mt-4 block text-sm text-slate-300">
-              <span className="mb-1 block">대상 상담코드</span>
-              <select
-                value={moveAssessmentId}
-                onChange={(e) => setMoveAssessmentId(e.target.value)}
-                className="w-full rounded-md border border-white/10 bg-[#101f38]/90 px-2 py-2 text-sm text-white"
-                disabled={loadingAssessments || moveBusy}
-                required
-              >
-                <option value="">
-                  {loadingAssessments ? '불러오는 중…' : '상담코드를 선택하세요'}
-                </option>
-                {assessmentsForMove.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {(a.title || '제목 없음').trim()} · {formatAccessCodeDisplay(a.accessCode || '')}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMoveOpen(false);
-                  setMoveError('');
-                }}
-                className="rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
-                disabled={moveBusy}
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={moveBusy || loadingAssessments}
-                className="rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-              >
-                {moveBusy ? '처리 중…' : '이동'}
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
+      <CounselorPortalMoveDialog
+        open={moveOpen}
+        portalIds={selectedPortalIds}
+        onClose={() => setMoveOpen(false)}
+        onSuccess={(summary) => void handleMoveSuccess(summary)}
+      />
     </CounselorPageSection>
   );
 }
