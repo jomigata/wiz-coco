@@ -679,8 +679,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   const QUESTION_ENTER_DURATION = 0.54;
   const QUESTION_EXIT_DURATION = 1.12;
-  // 기존 글이 사라지는 중 이른 시점에 새 글이 등장 (mode="sync"로 겹쳐 재생)
-  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.3;
+  // 기존 글이 사라지기 시작한 직후 새 글이 등장 (mode="sync"로 겹쳐 재생)
+  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.1;
 
   // 등장은 시작부터 끝까지 일정한 속도
   const QUESTION_ENTER_EASE = 'linear' as const;
@@ -708,7 +708,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       // 답변 선택(전진) 시 아래로 퇴장, 이전 문항(후진) 시 위로 퇴장
       const sign = dir > 0 ? 1 : -1;
       return {
-        y: [0, sign * 48],
+        y: [0, sign * 96],
         opacity: [1, 0],
         scale: 1,
         filter: ['blur(0px)', 'blur(1px)'],
