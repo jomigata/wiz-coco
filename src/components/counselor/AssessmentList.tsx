@@ -6,7 +6,7 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
-import type { CounselorAssessment, CreatedAssessmentBannerInfo } from '@/lib/assessmentApi';
+import type { CounselorAssessment, CreatedAssessmentBannerInfo, PortalMoveBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment, listAssessments, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
@@ -155,6 +155,7 @@ function SortableColumnHeader({
 interface AssessmentListProps {
   assessments: CounselorAssessment[];
   createdInfo?: CreatedAssessmentBannerInfo | null;
+  moveInfo?: PortalMoveBannerInfo | null;
   autoLivePollId?: string | null;
   onAssessmentsRefresh?: (items: CounselorAssessment[]) => void;
 }
@@ -165,6 +166,7 @@ const LIVE_POLL_MAX_MS = 60_000;
 export default function AssessmentList({
   assessments,
   createdInfo,
+  moveInfo,
   autoLivePollId,
   onAssessmentsRefresh,
 }: AssessmentListProps) {
@@ -396,6 +398,39 @@ export default function AssessmentList({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
+      {moveInfo ? (
+        <div className="mb-2 shrink-0 rounded-lg border border-sky-500/30 bg-sky-950/40 px-3 py-2">
+          <p className="font-medium text-sky-200">
+            내담자 {moveInfo.moved}명이 상담코드로 이동했습니다
+          </p>
+          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <p>
+              <span className="text-sky-400/80">이동 상담코드 </span>
+              <span className="font-mono font-bold tracking-widest text-sky-300">
+                {formatAccessCodeDisplay(moveInfo.targetAccessCode)}
+              </span>
+              <span className="ml-2 font-normal text-white">
+                ({(moveInfo.targetCohortName || '—').trim()} / {(moveInfo.targetAssessmentTitle || '—').trim()})
+              </span>
+            </p>
+          </div>
+          {moveInfo.recipients.length > 0 ? (
+            <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-300">
+              {moveInfo.recipients.map((r, idx) => (
+                <li key={`${r.displayName}-${idx}`}>
+                  {r.displayName}
+                  {r.myCode ? (
+                    <span className="ml-1 font-mono text-xs text-slate-400">
+                      ({formatAccessCodeDisplay(r.myCode)})
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
       {createdInfo && (
         <div className="mb-2 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3 py-2">
           <p className="text-emerald-200 font-medium">상담코드가 발급되었습니다</p>

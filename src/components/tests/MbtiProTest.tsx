@@ -676,17 +676,13 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   };
 
   const QUESTION_FRAME_HEIGHT = 112;
-  const QUESTION_TEXT_EST_HEIGHT = 32;
-  const gapAboveTextTop = (QUESTION_FRAME_HEIGHT - QUESTION_TEXT_EST_HEIGHT) / 2;
-  const questionExitStartY = gapAboveTextTop * 0.1;
-  const questionExitEndY = gapAboveTextTop * 0.9;
 
   const QUESTION_TRANSITION_DURATION = 1.08;
-  const QUESTION_EXIT_DURATION = 0.72;
-  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.9;
+  const QUESTION_EXIT_DURATION = 0.36;
+  const QUESTION_SCALE_EXIT_DURATION = 0.1;
+  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.85;
 
   const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
-  const QUESTION_EXIT_EASE: [number, number, number, number] = [0.45, 0, 1, 1];
 
   const variants = {
     enter: (dir: number) => ({
@@ -727,30 +723,26 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     exit: (dir: number) => {
       const sign = dir > 0 ? 1 : -1;
       return {
-        y: [sign * questionExitStartY, sign * questionExitEndY],
+        y: [0, sign * 56],
         opacity: [1, 0],
-        scale: [0.99, 0.9],
-        filter: ['blur(0px)', 'blur(6px)'],
+        scale: [1, 0.5],
+        filter: ['blur(0px)', 'blur(5px)'],
         transition: {
           y: {
             duration: QUESTION_EXIT_DURATION,
-            ease: QUESTION_EXIT_EASE,
-            times: [0, 1],
+            ease: [0.65, 0, 1, 1],
           },
           opacity: {
             duration: QUESTION_EXIT_DURATION * 0.85,
-            ease: QUESTION_EXIT_EASE,
-            times: [0, 1],
+            ease: [0.65, 0, 1, 1],
           },
           scale: {
-            duration: QUESTION_EXIT_DURATION,
-            ease: QUESTION_EXIT_EASE,
-            times: [0, 1],
+            duration: QUESTION_SCALE_EXIT_DURATION,
+            ease: [0.4, 0, 1, 1],
           },
           filter: {
             duration: QUESTION_EXIT_DURATION,
-            ease: QUESTION_EXIT_EASE,
-            times: [0, 1],
+            ease: [0.65, 0, 1, 1],
           },
         },
       };

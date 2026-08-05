@@ -458,6 +458,16 @@ export default function AssessmentDispatchPanel({
     [visibleData?.recipients, selected],
   );
 
+  const movePortalSummaries = useMemo(
+    () =>
+      selectedRecipients.map((r) => ({
+        portalId: r.portalId,
+        displayName: r.displayName,
+        myCode: r.myCode,
+      })),
+    [selectedRecipients],
+  );
+
   const resendEligibleSelected = useMemo(
     () => selectedRecipients.filter((r) => r.email || r.phone),
     [selectedRecipients],
@@ -1463,12 +1473,12 @@ export default function AssessmentDispatchPanel({
       <CounselorPortalMoveDialog
         open={moveOpen}
         portalIds={Array.from(selected)}
+        portalSummaries={movePortalSummaries}
         sourceAssessmentId={assessmentId}
         onClose={() => setMoveOpen(false)}
         onSuccess={() => {
           setMoveOpen(false);
           setSelected(new Set());
-          void load({ silent: true });
         }}
       />
     </>

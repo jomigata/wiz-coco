@@ -9,8 +9,10 @@ import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect
 import {
   listAssessments,
   readCachedAssessmentsList,
+  readPortalMoveBanner,
   type CounselorAssessment,
   type CreatedAssessmentBannerInfo,
+  type PortalMoveBannerInfo,
 } from '@/lib/assessmentApi';
 
 export default function AssessmentListPage() {
@@ -24,12 +26,18 @@ export default function AssessmentListPage() {
   );
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
+  const [moveInfo, setMoveInfo] = useState<PortalMoveBannerInfo | null>(null);
   const [autoLivePollId, setAutoLivePollId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const params = new URLSearchParams(window.location.search);
+      if (params.get('moved') === '1') {
+        const moved = readPortalMoveBanner();
+        if (moved) setMoveInfo(moved);
+        return;
+      }
       const createdId = params.get('created');
       if (createdId) {
         const raw = sessionStorage.getItem('wizcoco_created_assessment');
@@ -118,6 +126,7 @@ export default function AssessmentListPage() {
           <AssessmentList
             assessments={assessments}
             createdInfo={createdInfo}
+            moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}
             onAssessmentsRefresh={setAssessments}
           />

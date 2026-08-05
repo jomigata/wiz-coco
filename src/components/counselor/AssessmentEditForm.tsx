@@ -107,7 +107,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
       observer.disconnect();
       window.removeEventListener('resize', syncRightHeight);
     };
-  }, [title, welcomeMessage, usageEndDate, codeCategory, initial]);
+  }, [title, welcomeMessage, usageEndDate, codeCategory, initial, selectedTestIds.size]);
 
   const canSubmit = Boolean(user) && !authPending && !loading && !loadingData && initial;
 
@@ -185,8 +185,8 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
         </p>
       ) : null}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-stretch">
-        <div ref={leftColRef} className="flex h-full min-h-0 flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+        <div ref={leftColRef} className="flex flex-col">
           <CounselorPageSection
             title={
               <span className="inline-flex flex-wrap items-center gap-2">
@@ -197,42 +197,42 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
               </span>
             }
             relaxed
+            bodyClassName="!pb-3"
           >
-            <div>
-              <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5`}>
-                상담유형 <span className="text-red-400">*</span>
-              </label>
-              <select
-                id="edit-code-category"
-                className={`${FORM_INPUT} py-2 text-sm`}
-                value={codeCategory}
-                onChange={(e) => setCodeCategory(e.target.value as CounselingCodeType)}
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="edit-code-category" className={`${FORM_LABEL} mb-1.5`}>
+                  상담유형 <span className="text-red-400">*</span>
+                </label>
+                <select
+                  id="edit-code-category"
+                  className={`${FORM_INPUT} py-2 text-sm`}
+                  value={codeCategory}
+                  onChange={(e) => setCodeCategory(e.target.value as CounselingCodeType)}
+                  disabled={loading}
+                  required
+                >
+                  {COUNSELING_CODE_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label} — {t.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <AssessmentSettingsFields
+                sections="meta"
+                compact
+                title={title}
+                onTitleChange={setTitle}
+                welcomeMessage={welcomeMessage}
+                onWelcomeMessageChange={setWelcomeMessage}
+                usageEndDate={usageEndDate}
+                onUsageEndDateChange={setUsageEndDate}
+                selectedTestIds={selectedTestIds}
+                onToggleTest={toggleTest}
                 disabled={loading}
-                required
-              >
-                {COUNSELING_CODE_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label} — {t.description}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
-          </CounselorPageSection>
-
-          <CounselorPageSection title="검사 정보" className="flex min-h-0 flex-col" relaxed>
-            <AssessmentSettingsFields
-              sections="meta"
-              compact
-              title={title}
-              onTitleChange={setTitle}
-              welcomeMessage={welcomeMessage}
-              onWelcomeMessageChange={setWelcomeMessage}
-              usageEndDate={usageEndDate}
-              onUsageEndDateChange={setUsageEndDate}
-              selectedTestIds={selectedTestIds}
-              onToggleTest={toggleTest}
-              disabled={loading}
-            />
           </CounselorPageSection>
         </div>
 
@@ -244,7 +244,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
             title="포함할 검사"
             relaxed
             className="flex min-h-0 flex-1 flex-col overflow-hidden xl:h-full"
-            bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+            bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden !pb-3"
           >
             <AssessmentSettingsFields
               sections="tests"

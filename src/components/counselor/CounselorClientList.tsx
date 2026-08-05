@@ -425,6 +425,18 @@ export default function CounselorClientList() {
 
   const selectedPortalIds = useMemo(() => Array.from(selected), [selected]);
 
+  const movePortalSummaries = useMemo(
+    () =>
+      items
+        .filter((item) => selected.has(item.portalId))
+        .map((item) => ({
+          portalId: item.portalId,
+          displayName: item.displayName,
+          myCode: item.accessCode,
+        })),
+    [items, selected],
+  );
+
   const allPageSelected =
     paginatedItems.length > 0 && paginatedItems.every((item) => selected.has(item.portalId));
 
@@ -460,11 +472,9 @@ export default function CounselorClientList() {
     });
   };
 
-  const handleMoveSuccess = async (summary: string) => {
-    setMessage(summary);
+  const handleMoveSuccess = () => {
     setMoveOpen(false);
     setSelected(new Set());
-    await load();
   };
 
   const cellLinkClass =
@@ -818,8 +828,9 @@ export default function CounselorClientList() {
       <CounselorPortalMoveDialog
         open={moveOpen}
         portalIds={selectedPortalIds}
+        portalSummaries={movePortalSummaries}
         onClose={() => setMoveOpen(false)}
-        onSuccess={(summary) => void handleMoveSuccess(summary)}
+        onSuccess={handleMoveSuccess}
       />
     </CounselorPageSection>
   );

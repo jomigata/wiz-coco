@@ -1,30 +1,42 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   filterCounselorAssessmentsForPortalMove,
   listAssessments,
+  writePortalMoveBanner,
   type CounselorAssessment,
 } from '@/lib/assessmentApi';
 import { formatPortalMoveAssessmentLabel } from '@/lib/counselorAssessmentResultDisplay';
 import { movePortalsToAssessment } from '@/lib/clientPortalApi';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+
+export type PortalMoveSummary = {
+  portalId: string;
+  displayName: string;
+  myCode?: string;
+};
 
 type Props = {
   open: boolean;
   portalIds: string[];
+  portalSummaries?: PortalMoveSummary[];
   sourceAssessmentId?: string;
   onClose: () => void;
-  onSuccess: (summary: string) => void;
+  onSuccess?: () => void;
 };
 
 export default function CounselorPortalMoveDialog({
   open,
   portalIds,
+  portalSummaries = [],
   sourceAssessmentId,
   onClose,
   onSuccess,
 }: Props) {
+  const router = useRouter();
   const { user } = useAuthResolved();
   const counselorUid = user?.uid;
   const [targetAssessmentId, setTargetAssessmentId] = useState('');
@@ -82,8 +94,26 @@ export default function CounselorPortalMoveDialog({
         targetAssessmentId,
         sourceAssessmentId,
       });
-      onSuccess(`이동 ${result.moved}건`);
+      const target = options.find((a) => a.id === targetAssessmentId);
+      const summaryById = new Map(portalSummaries.map((s) => [s.portalId, s]));
+      const recipients = portalIds.map((pid) => {
+        const row = summaryById.get(pid);
+        return {
+          displayName: (row?.displayName || '—').trim() || '—',
+          myCode: row?.myCode,
+        };
+      });
+      writePortalMoveBanner({
+        moved: result.moved,
+        targetAssessmentTitle: result.targetAssessmentTitle || target?.title || '상담코드',
+        targetAccessCode: target?.accessCode || '',
+        targetCohortName: target?.cohortName,
+        recipients,
+      });
       onClose();
+      onSuccess?.();
+      pushWithAuthSession(router, '/counselor/assessments?moved=1');
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : '상담코드 이동에 실패했습니다.');
     } finally {
@@ -106,8 +136,7 @@ export default function CounselorPortalMoveDialog({
           다른 상담코드로 이동
         </h2>
         <p className="mt-1 text-sm text-slate-400">
-          선택한 {portalIds.length}명을 선택한 상담코드로 완전 이동합니다. 기존 상담코드에서는 제거되며
-          알림은 발송하지 않습니다.
+          선택한 {portalIds.length}명을 선택한 상담코드로 완전 이동합니다.
         </p>
 
         {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}

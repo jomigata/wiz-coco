@@ -137,12 +137,16 @@ export default function AssessmentSettingsFields({
             <label htmlFor="usage-end-date" className={labelClass}>
               사용종료일 (선택)
             </label>
-            <div className="relative">
+            <div
+              className={`flex items-center overflow-hidden rounded-lg border border-white/10 bg-[#101f38]/90 ${
+                disabled ? 'opacity-55' : ''
+              }`}
+            >
               <input
                 id="usage-end-date"
                 ref={usageEndDateRef}
                 type="date"
-                className={`${inputClass} pr-12 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                className="w-[10.75rem] shrink-0 border-0 bg-transparent py-2.5 pl-3 pr-0 text-sm text-white [color-scheme:dark] focus:outline-none focus:ring-0 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:hidden"
                 value={usageEndDate}
                 onChange={(e) => onUsageEndDateChange(e.target.value)}
                 disabled={disabled}
@@ -151,10 +155,10 @@ export default function AssessmentSettingsFields({
                 type="button"
                 onClick={() => openDatePicker(usageEndDateRef)}
                 disabled={disabled}
-                className="absolute inset-y-0 right-0 z-10 flex min-w-[3rem] items-center justify-center rounded-r-lg text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="ml-1.5 flex flex-1 items-center self-stretch py-2.5 pr-3 text-sky-400 transition hover:text-sky-300 disabled:cursor-not-allowed"
                 aria-label="사용종료일 달력 열기"
               >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <svg className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path
                     d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
                     stroke="currentColor"
@@ -195,12 +199,16 @@ export default function AssessmentSettingsFields({
       ) : null}
 
       {showTests ? (
-        <div className={sections === 'tests' ? 'flex min-h-0 flex-1 flex-col' : 'space-y-0'}>
-          <div className={`flex items-center justify-end gap-2 shrink-0 ${compact ? 'mb-2' : 'mb-2'}`}>
+        <div className={sections === 'tests' ? 'flex h-full min-h-0 flex-1 flex-col' : 'space-y-0'}>
+          <div className={`flex shrink-0 items-center justify-end gap-2 ${compact ? 'mb-2' : 'mb-2'}`}>
             <span className="text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
           </div>
           <div
-            className={`${sections === 'tests' ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : TEST_PICKER_SCROLL} rounded-lg border border-white/[0.08] bg-black/10 ${compact ? 'p-2' : 'p-2'}`}
+            className={`${
+              sections === 'tests'
+                ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+                : TEST_PICKER_SCROLL
+            } rounded-lg border border-white/[0.08] bg-black/10 ${compact ? 'p-2' : 'p-2'}`}
           >
             <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 border-b border-white/[0.08] px-2 py-2">
               <TestSortHeader

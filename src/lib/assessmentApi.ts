@@ -416,6 +416,38 @@ export interface CreatedAssessmentBannerInfo {
   title?: string;
 }
 
+/** 내담자 상담코드 이동 완료 후 목록 상단 배너용(세션에서 전달) */
+export interface PortalMoveBannerInfo {
+  moved: number;
+  targetAssessmentTitle: string;
+  targetAccessCode: string;
+  targetCohortName?: string;
+  recipients: { displayName: string; myCode?: string }[];
+}
+
+const PORTAL_MOVE_BANNER_KEY = 'wizcoco_portal_move_banner';
+
+export function writePortalMoveBanner(info: PortalMoveBannerInfo): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(PORTAL_MOVE_BANNER_KEY, JSON.stringify(info));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function readPortalMoveBanner(): PortalMoveBannerInfo | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(PORTAL_MOVE_BANNER_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(PORTAL_MOVE_BANNER_KEY);
+    return JSON.parse(raw) as PortalMoveBannerInfo;
+  } catch {
+    return null;
+  }
+}
+
 export interface ProgressByClient {
   clientUid: string;
   clientEmail?: string | null;
