@@ -46,9 +46,9 @@ export default function CounselorManageShell({ children }: Props) {
   const sidebarCategories = useMemo(() => counselorMenuCategories, []);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 lg:max-h-[calc(100dvh-5.5rem)] lg:flex-row lg:gap-3">
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
       <aside
-        className={`flex max-h-[34vh] shrink-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 lg:max-h-none lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
+        className={`flex max-h-[34vh] shrink-0 flex-col overflow-hidden rounded-xl border border-sky-400/20 lg:sticky lg:top-[4.25rem] lg:max-h-[calc(100dvh-5.5rem)] lg:w-[15.5rem] lg:shrink-0 xl:w-[17rem] ${counselorHubClasses.subsection} !p-0`}
         aria-label="상담관리 메뉴"
       >
         <div className="shrink-0 border-b border-sky-400/25 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-3 py-2">
@@ -211,7 +211,7 @@ export default function CounselorManageShell({ children }: Props) {
         </nav>
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain">{children}</div>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

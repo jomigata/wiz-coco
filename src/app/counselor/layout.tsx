@@ -166,23 +166,26 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
   return (
     <RoleGuard allowedRoles={['counselor', 'admin']}>
     <div className={`flex min-h-[100dvh] flex-col text-white ${isHubPage ? counselorHubClasses.page : 'bg-[#0b1120]'}`}>
-      
-<div className="flex min-h-0 flex-1 flex-col pt-16">
-        <main className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${
-          isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'
-        }`}>
+      <div className="flex flex-1 flex-col pt-16">
+        <main
+          className={`relative flex flex-col ${
+            isHubPage ? counselorHubClasses.page : 'bg-gradient-to-b from-slate-950 via-[#0f172a] to-slate-950'
+          }`}
+        >
           <div className={`pointer-events-none absolute inset-0 ${
             isHubPage
               ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(72,130,210,0.1),transparent)]'
               : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.1),transparent)]'
           }`} />
-          <div className={`relative z-10 mx-auto flex min-h-0 w-full flex-1 flex-col ${
-            useManageShell
-              ? 'max-w-[1920px] px-3 py-2 sm:px-4 sm:py-3'
-              : isHubPage
-                ? 'max-w-3xl px-4 py-5 sm:px-6 sm:py-6'
-                : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
-          }`}>
+          <div
+            className={`relative z-10 mx-auto w-full flex-col ${
+              useManageShell
+                ? 'max-w-[1920px] px-3 py-2 sm:px-4 sm:py-3'
+                : isHubPage
+                  ? 'max-w-3xl px-4 py-5 sm:px-6 sm:py-6'
+                  : 'max-w-[1800px] px-4 py-3 sm:px-6 sm:py-4'
+            }`}
+          >
             {useManageShell ? (
               <Suspense
                 fallback={

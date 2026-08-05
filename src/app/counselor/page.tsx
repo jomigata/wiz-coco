@@ -7,8 +7,8 @@ import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatu
 import { readCachedCounselorDashboard } from '@/lib/counselorDashboardCache';
 
 export default function CounselorDashboard() {
-  const { authPending, showLoginRequired } = useAuthResolved();
-  const hasCache = Boolean(readCachedCounselorDashboard());
+  const { user, authPending, showLoginRequired } = useAuthResolved();
+  const hasCache = Boolean(user?.uid && readCachedCounselorDashboard(user.uid));
 
   if (authPending && !hasCache) {
     return <AuthLoadingState className="py-16" message="확인 중…" />;

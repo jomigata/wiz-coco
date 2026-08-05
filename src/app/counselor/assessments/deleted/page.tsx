@@ -154,12 +154,13 @@ function SortableColumnHeader({
 }
 
 export default function DeletedAssessmentsPage() {
-  const { authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
+  const { user, authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
+  const counselorUid = user?.uid;
   const [items, setItems] = useState<ArchivedAssessment[]>(
-    () => readCachedArchivedAssessments<ArchivedAssessment>() ?? [],
+    () => (counselorUid ? readCachedArchivedAssessments<ArchivedAssessment>(counselorUid) : []) ?? [],
   );
   const [loading, setLoading] = useState(
-    () => !(readCachedArchivedAssessments<ArchivedAssessment>()?.length),
+    () => !(counselorUid && readCachedArchivedAssessments<ArchivedAssessment>(counselorUid)?.length),
   );
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -180,12 +181,14 @@ export default function DeletedAssessmentsPage() {
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const load = useCallback(async () => {
-    const cached = readCachedArchivedAssessments<ArchivedAssessment>();
+    const cached = counselorUid
+      ? readCachedArchivedAssessments<ArchivedAssessment>(counselorUid)
+      : null;
     if (!cached?.length) setLoading(true);
     setError('');
     try {
       const result = await listArchivedAssessments();
-      writeCachedArchivedAssessments(result.assessments || []);
+      writeCachedArchivedAssessments(result.assessments || [], counselorUid);
       setItems(result.assessments || []);
       setSelected(new Set());
     } catch (err) {
@@ -196,7 +199,7 @@ export default function DeletedAssessmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [counselorUid]);
 
   useEffect(() => {
     if (authPending || !isAuthenticated) return;

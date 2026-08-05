@@ -33,7 +33,7 @@ export type MbtiProClientInfoTheme = {
 };
 
 const emerald: MbtiProClientInfoTheme = {
-  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-emerald-950 text-white px-3 pt-14 pb-14',
+  shell: 'fixed inset-x-0 top-16 bottom-0 overflow-y-auto bg-emerald-950 text-white px-3 pt-14 pb-14',
   subtitle: 'text-emerald-300 max-w-lg mx-auto text-sm',
   formCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-5 sm:p-6',
   fieldBox: 'py-2.5',
@@ -76,7 +76,7 @@ const emerald: MbtiProClientInfoTheme = {
 };
 
 const portal: MbtiProClientInfoTheme = {
-  shell: 'fixed inset-x-0 top-16 bottom-16 overflow-y-auto bg-[#060a12] text-white px-3 pt-14 pb-14',
+  shell: 'fixed inset-x-0 top-16 bottom-0 overflow-y-auto bg-[#060a12] text-white px-3 pt-14 pb-14',
   subtitle: 'text-slate-300 max-w-lg mx-auto text-sm',
   formCard: 'rounded-2xl border border-white/[0.14] bg-[#182438] shadow-xl shadow-black/30 p-5 sm:p-6',
   fieldBox: 'py-2.5',

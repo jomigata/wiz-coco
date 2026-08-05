@@ -124,12 +124,13 @@ type Props = {
 export default function CounselorMonitoringHub({ initialView = 'overview' }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
+  const { user, authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
+  const counselorUid = user?.uid;
   const [view, setView] = useState<MonitoringHubView>(initialView);
   const [baseData, setBaseData] = useState<Awaited<ReturnType<typeof fetchCounselorMonitoringHub>> | null>(
-    () => readCachedMonitoringHub(),
+    () => (counselorUid ? readCachedMonitoringHub(counselorUid) : null),
   );
-  const [loading, setLoading] = useState(() => !readCachedMonitoringHub());
+  const [loading, setLoading] = useState(() => !(counselorUid && readCachedMonitoringHub(counselorUid)));
   const [error, setError] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
 
@@ -159,12 +160,12 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
   );
 
   const load = useCallback(async () => {
-    const cached = readCachedMonitoringHub();
+    const cached = counselorUid ? readCachedMonitoringHub(counselorUid) : null;
     if (!cached) setLoading(true);
     setError('');
     try {
       const data = await fetchCounselorMonitoringHub();
-      writeCachedMonitoringHub(data);
+      writeCachedMonitoringHub(data, counselorUid);
       setBaseData(data);
     } catch (err) {
       if (!cached) {
@@ -174,7 +175,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [counselorUid]);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {

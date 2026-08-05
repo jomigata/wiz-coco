@@ -15,10 +15,13 @@ import {
 
 export default function AssessmentListPage() {
   const { user, authPending, showLoginRequired } = useAuthResolved();
+  const counselorUid = user?.uid;
   const [assessments, setAssessments] = useState<CounselorAssessment[]>(
-    () => readCachedAssessmentsList() ?? [],
+    () => (counselorUid ? readCachedAssessmentsList(counselorUid) : null) ?? [],
   );
-  const [loading, setLoading] = useState(() => !readCachedAssessmentsList()?.length);
+  const [loading, setLoading] = useState(
+    () => !(counselorUid && readCachedAssessmentsList(counselorUid)?.length),
+  );
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
   const [autoLivePollId, setAutoLivePollId] = useState<string | null>(null);
@@ -47,7 +50,7 @@ export default function AssessmentListPage() {
             sessionStorage.removeItem('wizcoco_created_assessment');
           }
         }
-        const cached = readCachedAssessmentsList();
+        const cached = counselorUid ? readCachedAssessmentsList(counselorUid) : null;
         if (cached?.length) {
           setAssessments(cached);
           setLoading(false);

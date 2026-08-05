@@ -131,15 +131,19 @@ function InsightTile({
 
 export default function CounselorHomeDashboard() {
   const router = useRouter();
-  const { authPending, showLoginRequired } = useAuthResolved();
-  const initialCache = useMemo(() => readCachedCounselorDashboard(), []);
+  const { user, authPending, showLoginRequired } = useAuthResolved();
+  const counselorUid = user?.uid;
+  const initialCache = useMemo(
+    () => (counselorUid ? readCachedCounselorDashboard(counselorUid) : null),
+    [counselorUid],
+  );
   const [hub, setHub] = useState<CounselorMonitoringHubResult | null>(() => initialCache?.hub ?? null);
   const [cohorts, setCohorts] = useState<CounselorCohortMonitoringResult | null>(
     () => initialCache?.cohorts ?? null,
   );
   const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(() => initialCache?.liaisons ?? []);
   const [assessments, setAssessments] = useState<CounselorAssessment[]>(
-    () => readCachedAssessmentsList() ?? [],
+    () => (counselorUid ? readCachedAssessmentsList(counselorUid) : null) ?? [],
   );
   const [loading, setLoading] = useState(() => !initialCache?.hub && !initialCache?.cohorts);
   const [revalidating, setRevalidating] = useState(false);
@@ -149,7 +153,7 @@ export default function CounselorHomeDashboard() {
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const load = useCallback(async () => {
-    const cached = readCachedCounselorDashboard();
+    const cached = counselorUid ? readCachedCounselorDashboard(counselorUid) : null;
     const hasCache = Boolean(cached?.hub || cached?.cohorts);
     if (!hasCache) setLoading(true);
     else setRevalidating(true);
@@ -159,13 +163,18 @@ export default function CounselorHomeDashboard() {
         fetchCounselorMonitoringHub(),
         fetchCounselorCohortMonitoring(),
         fetchCounselorOrgLiaisons().catch(() => []),
-        listAssessments().catch(() => ({ assessments: readCachedAssessmentsList() ?? [] })),
+        listAssessments().catch(() => ({
+          assessments: (counselorUid ? readCachedAssessmentsList(counselorUid) : null) ?? [],
+        })),
       ]);
       setHub(hubData);
       setCohorts(cohortData);
       setLiaisons(liaisonData);
       setAssessments(assessmentData.assessments || []);
-      writeCachedCounselorDashboard({ hub: hubData, cohorts: cohortData, liaisons: liaisonData });
+      writeCachedCounselorDashboard(
+        { hub: hubData, cohorts: cohortData, liaisons: liaisonData },
+        counselorUid,
+      );
     } catch (err) {
       if (!hasCache) {
         setError(err instanceof Error ? err.message : '대시보드 데이터를 불러오지 못했습니다.');
@@ -176,7 +185,7 @@ export default function CounselorHomeDashboard() {
       setLoading(false);
       setRevalidating(false);
     }
-  }, []);
+  }, [counselorUid]);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {

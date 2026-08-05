@@ -1,3 +1,4 @@
+import { getCounselorUidSync } from '@/lib/counselorAuth';
 import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
 import type {
   CounselorCohortMonitoringResult,
@@ -8,9 +9,19 @@ import type { CounselorOrgLiaison } from '@/lib/clientPortalApi';
 const CACHE_SCOPE = 'local' as const;
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-const HUB_KEY = 'swr:counselorMonitoringHub';
-const COHORTS_KEY = 'swr:counselorCohortMonitoring';
-const LIAISONS_KEY = 'swr:counselorOrgLiaisons';
+const HUB_KEY_PREFIX = 'swr:counselorMonitoringHub:';
+const COHORTS_KEY_PREFIX = 'swr:counselorCohortMonitoring:';
+const LIAISONS_KEY_PREFIX = 'swr:counselorOrgLiaisons:';
+
+function dashboardKeys(counselorUid?: string | null) {
+  const uid = (counselorUid ?? getCounselorUidSync())?.trim();
+  if (!uid) return null;
+  return {
+    hub: `${HUB_KEY_PREFIX}${uid}`,
+    cohorts: `${COHORTS_KEY_PREFIX}${uid}`,
+    liaisons: `${LIAISONS_KEY_PREFIX}${uid}`,
+  };
+}
 
 export type CounselorDashboardCacheSnapshot = {
   hub: CounselorMonitoringHubResult | null;
@@ -18,17 +29,21 @@ export type CounselorDashboardCacheSnapshot = {
   liaisons: CounselorOrgLiaison[];
 };
 
-export function readCachedCounselorDashboard(): CounselorDashboardCacheSnapshot | null {
+export function readCachedCounselorDashboard(
+  counselorUid?: string | null,
+): CounselorDashboardCacheSnapshot | null {
   if (typeof window === 'undefined') return null;
-  const hubCached = readSWRCache<CounselorMonitoringHubResult>(HUB_KEY, {
+  const keys = dashboardKeys(counselorUid);
+  if (!keys) return null;
+  const hubCached = readSWRCache<CounselorMonitoringHubResult>(keys.hub, {
     scope: CACHE_SCOPE,
     maxAgeMs: CACHE_MAX_AGE_MS,
   });
-  const cohortsCached = readSWRCache<CounselorCohortMonitoringResult>(COHORTS_KEY, {
+  const cohortsCached = readSWRCache<CounselorCohortMonitoringResult>(keys.cohorts, {
     scope: CACHE_SCOPE,
     maxAgeMs: CACHE_MAX_AGE_MS,
   });
-  const liaisonsCached = readSWRCache<CounselorOrgLiaison[]>(LIAISONS_KEY, {
+  const liaisonsCached = readSWRCache<CounselorOrgLiaison[]>(keys.liaisons, {
     scope: CACHE_SCOPE,
     maxAgeMs: CACHE_MAX_AGE_MS,
   });
@@ -43,13 +58,18 @@ export function readCachedCounselorDashboard(): CounselorDashboardCacheSnapshot 
   };
 }
 
-export function writeCachedCounselorDashboard(snapshot: CounselorDashboardCacheSnapshot): void {
+export function writeCachedCounselorDashboard(
+  snapshot: CounselorDashboardCacheSnapshot,
+  counselorUid?: string | null,
+): void {
   if (typeof window === 'undefined') return;
+  const keys = dashboardKeys(counselorUid);
+  if (!keys) return;
   if (snapshot.hub) {
-    writeSWRCache(HUB_KEY, snapshot.hub, { scope: CACHE_SCOPE });
+    writeSWRCache(keys.hub, snapshot.hub, { scope: CACHE_SCOPE });
   }
   if (snapshot.cohorts) {
-    writeSWRCache(COHORTS_KEY, snapshot.cohorts, { scope: CACHE_SCOPE });
+    writeSWRCache(keys.cohorts, snapshot.cohorts, { scope: CACHE_SCOPE });
   }
-  writeSWRCache(LIAISONS_KEY, snapshot.liaisons, { scope: CACHE_SCOPE });
+  writeSWRCache(keys.liaisons, snapshot.liaisons, { scope: CACHE_SCOPE });
 }

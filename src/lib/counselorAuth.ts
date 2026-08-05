@@ -68,3 +68,22 @@ export async function getCounselorToken(): Promise<string | null> {
   });
   return inFlightToken;
 }
+
+/** Firebase auth.currentUser.uid (동기). 로그인 전이면 null */
+export function getCounselorUidSync(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const { auth } = initializeFirebase();
+    return auth?.currentUser?.uid ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** 상담사 UID — 토큰 해석 후 currentUser 확인 */
+export async function getCounselorUid(): Promise<string | null> {
+  const sync = getCounselorUidSync();
+  if (sync) return sync;
+  await getCounselorToken();
+  return getCounselorUidSync();
+}

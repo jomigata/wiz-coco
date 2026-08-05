@@ -4,7 +4,7 @@
  */
 
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
-import { getCounselorToken } from '@/lib/counselorAuth';
+import { getCounselorToken, getCounselorUid, getCounselorUidSync } from '@/lib/counselorAuth';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
@@ -599,31 +599,57 @@ export async function permanentlyDeleteArchivedAssessments(
 }
 
 /** GET /api/assessments - 상담사: 내 상담(코드) 목록 */
-const ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
 const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const ASSESSMENTS_LIST_CACHE_SCOPE = 'local' as const;
+const LEGACY_ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
 
-export function readCachedAssessmentsList(): CounselorAssessment[] | null {
+function assessmentsListCacheKey(counselorUid?: string | null): string | null {
+  const uid = (counselorUid ?? getCounselorUidSync())?.trim();
+  return uid ? `swr:counselorAssessmentsList:${uid}` : null;
+}
+
+function filterAssessmentsForCounselor(
+  items: CounselorAssessment[],
+  counselorUid: string,
+): CounselorAssessment[] {
+  return items.filter((a) => !a.counselorId || a.counselorId === counselorUid);
+}
+
+export function readCachedAssessmentsList(counselorUid?: string | null): CounselorAssessment[] | null {
   if (typeof window === 'undefined') return null;
-  const cached = readSWRCache<{ assessments: CounselorAssessment[] }>(ASSESSMENTS_LIST_CACHE_KEY, {
+  const uid = (counselorUid ?? getCounselorUidSync())?.trim();
+  if (!uid) return null;
+  const cacheKey = assessmentsListCacheKey(uid);
+  if (!cacheKey) return null;
+  const cached = readSWRCache<{ assessments: CounselorAssessment[] }>(cacheKey, {
     scope: ASSESSMENTS_LIST_CACHE_SCOPE,
     maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
   });
   if (cached.isFresh && cached.data?.assessments?.length) {
-    return cached.data.assessments;
+    return filterAssessmentsForCounselor(cached.data.assessments, uid);
   }
-  // legacy: 이전 버전이 sessionStorage에만 저장한 캐시 마이그레이션
-  const legacy = readSWRCache<{ assessments: CounselorAssessment[] }>(ASSESSMENTS_LIST_CACHE_KEY, {
-    scope: 'session',
+  // legacy: uid 없는 공용 키 — 현재 상담사 항목만 마이그레이션
+  const legacy = readSWRCache<{ assessments: CounselorAssessment[] }>(LEGACY_ASSESSMENTS_LIST_CACHE_KEY, {
+    scope: ASSESSMENTS_LIST_CACHE_SCOPE,
     maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
   });
   if (legacy.isFresh && legacy.data?.assessments?.length) {
-    writeSWRCache(
-      ASSESSMENTS_LIST_CACHE_KEY,
-      { assessments: legacy.data.assessments },
-      { scope: ASSESSMENTS_LIST_CACHE_SCOPE },
-    );
-    return legacy.data.assessments;
+    const scoped = filterAssessmentsForCounselor(legacy.data.assessments, uid);
+    if (scoped.length) {
+      writeSWRCache(cacheKey, { assessments: scoped }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+      return scoped;
+    }
+  }
+  const legacySession = readSWRCache<{ assessments: CounselorAssessment[] }>(LEGACY_ASSESSMENTS_LIST_CACHE_KEY, {
+    scope: 'session',
+    maxAgeMs: ASSESSMENTS_LIST_CACHE_MAX_AGE_MS,
+  });
+  if (legacySession.isFresh && legacySession.data?.assessments?.length) {
+    const scoped = filterAssessmentsForCounselor(legacySession.data.assessments, uid);
+    if (scoped.length) {
+      writeSWRCache(cacheKey, { assessments: scoped }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+      return scoped;
+    }
   }
   return null;
 }
@@ -652,9 +678,15 @@ function assessmentAccessKey(accessCode?: string): string {
 export function mergeCounselorAssessmentLists(
   fromServer: CounselorAssessment[],
   fromCache: CounselorAssessment[],
+  counselorUid?: string | null,
 ): CounselorAssessment[] {
-  const serverItems = (fromServer || []).map(normalizeCounselorAssessment).filter((a) => a.id);
-  const cacheItems = (fromCache || []).map(normalizeCounselorAssessment).filter((a) => a.id);
+  const uid = counselorUid?.trim();
+  const serverItems = (fromServer || [])
+    .map(normalizeCounselorAssessment)
+    .filter((a) => a.id && (!uid || !a.counselorId || a.counselorId === uid));
+  const cacheItems = (fromCache || [])
+    .map(normalizeCounselorAssessment)
+    .filter((a) => a.id && (!uid || !a.counselorId || a.counselorId === uid));
 
   const byId = new Map<string, CounselorAssessment>();
   const serverAccessCodes = new Set(
@@ -675,8 +707,12 @@ export function mergeCounselorAssessmentLists(
 /** 발급 직후 목록에 바로 보이도록 세션 캐시 앞에 추가 */
 export function prependCounselorAssessmentToListCache(item: CounselorAssessment): void {
   if (typeof window === 'undefined' || !item.id) return;
-  const normalized = normalizeCounselorAssessment(item);
-  const existing = readCachedAssessmentsList() ?? [];
+  const uid = (item.counselorId || getCounselorUidSync())?.trim();
+  if (!uid) return;
+  const cacheKey = assessmentsListCacheKey(uid);
+  if (!cacheKey) return;
+  const normalized = normalizeCounselorAssessment({ ...item, counselorId: item.counselorId || uid });
+  const existing = readCachedAssessmentsList(uid) ?? [];
   const codeKey = assessmentAccessKey(normalized.accessCode);
   const rest = existing.filter(
     (a) =>
@@ -684,7 +720,7 @@ export function prependCounselorAssessmentToListCache(item: CounselorAssessment)
       (!codeKey || assessmentAccessKey(a.accessCode) !== codeKey),
   );
   writeSWRCache(
-    ASSESSMENTS_LIST_CACHE_KEY,
+    cacheKey,
     { assessments: sortAssessmentsByCreatedDesc([normalized, ...rest]) },
     { scope: ASSESSMENTS_LIST_CACHE_SCOPE },
   );
@@ -694,23 +730,29 @@ export function prependCounselorAssessmentToListCache(item: CounselorAssessment)
 export function removeCounselorAssessmentFromListCache(
   assessmentId: string,
   accessCode?: string,
+  counselorUid?: string | null,
 ): void {
   if (typeof window === 'undefined') return;
+  const uid = (counselorUid ?? getCounselorUidSync())?.trim();
+  const cacheKey = uid ? assessmentsListCacheKey(uid) : null;
+  if (!cacheKey) return;
   const id = assessmentId.trim();
   const codeKey = assessmentAccessKey(accessCode);
   if (!id && !codeKey) return;
-  const existing = readCachedAssessmentsList() ?? [];
+  const existing = readCachedAssessmentsList(uid) ?? [];
   const filtered = existing.filter((a) => {
     if (id && a.id === id) return false;
     if (codeKey && assessmentAccessKey(a.accessCode) === codeKey) return false;
     return true;
   });
-  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: filtered }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+  writeSWRCache(cacheKey, { assessments: filtered }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
 }
 
 export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
+  const counselorUid = (await getCounselorUid())?.trim();
+  if (!counselorUid) throw new Error('로그인이 필요합니다.');
   const res = await fetch(`${getBaseUrl()}/api/assessments`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -719,9 +761,12 @@ export async function listAssessments(): Promise<{ assessments: CounselorAssessm
     throw new Error(data?.message || data?.error || '목록 조회에 실패했습니다.');
   }
   const payload = data as { assessments: CounselorAssessment[] };
-  const cached = readCachedAssessmentsList() ?? [];
-  const merged = mergeCounselorAssessmentLists(payload.assessments || [], cached);
-  writeSWRCache(ASSESSMENTS_LIST_CACHE_KEY, { assessments: merged }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+  const cached = readCachedAssessmentsList(counselorUid) ?? [];
+  const merged = mergeCounselorAssessmentLists(payload.assessments || [], cached, counselorUid);
+  const cacheKey = assessmentsListCacheKey(counselorUid);
+  if (cacheKey) {
+    writeSWRCache(cacheKey, { assessments: merged }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+  }
   return { assessments: merged };
 }
 

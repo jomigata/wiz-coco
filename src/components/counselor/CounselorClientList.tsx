@@ -248,7 +248,7 @@ function SortableColumnHeader({
 export default function CounselorClientList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
+  const { user, authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -271,12 +271,13 @@ export default function CounselorClientList() {
   const cacheKey = useMemo(
     () =>
       buildClientPortalsCacheKey({
+        counselorUid: user?.uid,
         status: statusFilter,
         cohortId: cohortFilter || undefined,
         progress: progressFilter,
         tag: tagFilter || undefined,
       }),
-    [statusFilter, cohortFilter, progressFilter, tagFilter],
+    [user?.uid, statusFilter, cohortFilter, progressFilter, tagFilter],
   );
 
   const initialCached = useMemo(() => readCachedClientPortals(cacheKey), [cacheKey]);

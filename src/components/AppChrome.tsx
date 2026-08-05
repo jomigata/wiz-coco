@@ -4,7 +4,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState, memo 
 import Navigation from '@/components/Navigation';
 import AppFooter from '@/components/layout/AppFooter';
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext';
-import { APP_CHROME_BG, APP_FOOTER_PB } from '@/lib/appChromeLayout';
+import { APP_CHROME_BG } from '@/lib/appChromeLayout';
 
 const MemoNavigation = memo(Navigation);
 
@@ -45,7 +45,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               <MemoNavigation />
             </div>
           ) : null}
-          <div className={`relative flex min-h-dvh flex-1 flex-col ${APP_FOOTER_PB}`}>{children}</div>
+          <div className="relative flex min-h-dvh flex-1 flex-col pt-16">{children}</div>
           {!topNavHidden ? <AppFooter /> : null}
         </div>
       </ChromeNavContext.Provider>
