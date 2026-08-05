@@ -682,8 +682,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   // 기존 글이 절반쯤 사라진 시점에 새 글이 등장 (mode="sync"로 겹쳐 재생)
   const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.5;
 
-  // 초반은 서서히, 50% 이후 빠르게 마무리
-  const QUESTION_ENTER_EASE: [number, number, number, number] = [0.75, 0.04, 0.9, 0.5];
+  // 등장은 시작부터 끝까지 일정한 속도
+  const QUESTION_ENTER_EASE = 'linear' as const;
   const QUESTION_EXIT_EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
   const variants = {
