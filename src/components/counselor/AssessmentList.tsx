@@ -400,12 +400,9 @@ export default function AssessmentList({
     >
       {moveInfo ? (
         <div className="mb-2 shrink-0 rounded-lg border border-sky-500/30 bg-sky-950/40 px-3 py-2">
-          <p className="font-medium text-sky-200">
-            내담자 {moveInfo.moved}명이 상담코드로 이동했습니다
-          </p>
-          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <p>
-              <span className="text-sky-400/80">이동 상담코드 </span>
+              <span className="font-medium text-sky-200">이동 된 상담코드 : </span>
               <span className="font-mono font-bold tracking-widest text-sky-300">
                 {formatAccessCodeDisplay(moveInfo.targetAccessCode)}
               </span>

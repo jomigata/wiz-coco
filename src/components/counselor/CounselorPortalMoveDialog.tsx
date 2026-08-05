@@ -96,10 +96,11 @@ export default function CounselorPortalMoveDialog({
       });
       const target = options.find((a) => a.id === targetAssessmentId);
       const summaryById = new Map(portalSummaries.map((s) => [s.portalId, s]));
-      const recipients = portalIds.map((pid) => {
-        const row = summaryById.get(pid);
+      const movedDetails = (result.details || []).filter((d) => d.status === 'moved');
+      const recipients = movedDetails.map((d) => {
+        const row = summaryById.get(d.portalId);
         return {
-          displayName: (row?.displayName || '—').trim() || '—',
+          displayName: (d.displayName || row?.displayName || '—').trim() || '—',
           myCode: row?.myCode,
         };
       });
@@ -130,7 +131,7 @@ export default function CounselorPortalMoveDialog({
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-xl border border-white/10 bg-[#0f1a2e] p-5 shadow-xl"
+        className="w-full max-w-md rounded-xl border-2 border-sky-400/55 bg-[#0f1a2e] p-5 shadow-2xl ring-1 ring-white/15"
       >
         <h2 id="move-portal-title" className="text-base font-semibold text-white">
           다른 상담코드로 이동

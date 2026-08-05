@@ -678,9 +678,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const QUESTION_FRAME_HEIGHT = 112;
 
   const QUESTION_TRANSITION_DURATION = 1.08;
-  const QUESTION_EXIT_DURATION = 0.36;
-  const QUESTION_SCALE_EXIT_DURATION = 0.1;
-  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.85;
+  const QUESTION_EXIT_DURATION = 0.88;
+  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.82;
 
   const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
 
@@ -723,26 +722,22 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     exit: (dir: number) => {
       const sign = dir > 0 ? 1 : -1;
       return {
-        y: [0, sign * 56],
+        y: [0, sign * 20],
         opacity: [1, 0],
-        scale: [1, 0.5],
-        filter: ['blur(0px)', 'blur(5px)'],
+        scale: 1,
+        filter: ['blur(0px)', 'blur(2px)'],
         transition: {
           y: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.65, 0, 1, 1],
+            ease: [0.22, 0, 0.36, 1],
           },
           opacity: {
-            duration: QUESTION_EXIT_DURATION * 0.85,
-            ease: [0.65, 0, 1, 1],
-          },
-          scale: {
-            duration: QUESTION_SCALE_EXIT_DURATION,
-            ease: [0.4, 0, 1, 1],
+            duration: QUESTION_EXIT_DURATION,
+            ease: [0.22, 0, 0.36, 1],
           },
           filter: {
             duration: QUESTION_EXIT_DURATION,
-            ease: [0.65, 0, 1, 1],
+            ease: [0.22, 0, 0.36, 1],
           },
         },
       };

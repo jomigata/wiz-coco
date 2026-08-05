@@ -78,6 +78,7 @@ export default function AssessmentSettingsFields({
   const usageEndDateRef = useRef<HTMLInputElement>(null);
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
+  const [testSearchQuery, setTestSearchQuery] = useState('');
   const showMeta = sections === 'all' || sections === 'meta';
   const showTests = sections === 'all' || sections === 'tests';
   const fieldGap = compact ? 'space-y-4' : 'space-y-4';
@@ -105,6 +106,12 @@ export default function AssessmentSettingsFields({
       return mult * a.name.localeCompare(b.name, 'ko');
     });
   }, [testSortKey, testSortDir]);
+
+  const filteredTests = useMemo(() => {
+    const q = testSearchQuery.trim().toLowerCase();
+    if (!q) return sortedTests;
+    return sortedTests.filter((t) => t.name.toLowerCase().includes(q));
+  }, [sortedTests, testSearchQuery]);
 
   return (
     <div
@@ -155,7 +162,7 @@ export default function AssessmentSettingsFields({
                 type="button"
                 onClick={() => openDatePicker(usageEndDateRef)}
                 disabled={disabled}
-                className="ml-1.5 flex flex-1 items-center self-stretch py-2.5 pr-3 text-sky-400 transition hover:text-sky-300 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center self-stretch py-2.5 pr-3 text-sky-400 transition hover:text-sky-300 disabled:cursor-not-allowed"
                 aria-label="사용종료일 달력 열기"
               >
                 <svg className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -200,8 +207,19 @@ export default function AssessmentSettingsFields({
 
       {showTests ? (
         <div className={sections === 'tests' ? 'flex h-full min-h-0 flex-1 flex-col' : 'space-y-0'}>
-          <div className={`flex shrink-0 items-center justify-end gap-2 ${compact ? 'mb-2' : 'mb-2'}`}>
-            <span className="text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
+          <div className={`flex shrink-0 flex-wrap items-center justify-between gap-2 ${compact ? 'mb-2' : 'mb-2'}`}>
+            <div className="relative min-w-[10rem] flex-1 sm:max-w-xs">
+              <input
+                type="search"
+                value={testSearchQuery}
+                onChange={(e) => setTestSearchQuery(e.target.value)}
+                placeholder="검사명 검색"
+                disabled={disabled}
+                className={`${inputClass} py-2 pl-3 pr-3 text-sm`}
+                aria-label="검사명 검색"
+              />
+            </div>
+            <span className="shrink-0 text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
           </div>
           <div
             className={`${
@@ -232,7 +250,12 @@ export default function AssessmentSettingsFields({
             <div
               className={`min-h-0 flex-1 overflow-y-auto grid grid-cols-1 xl:grid-cols-2 ${compact ? 'gap-1 p-1.5' : 'gap-1.5 p-2'}`}
             >
-              {sortedTests.map((t) => (
+              {filteredTests.length === 0 ? (
+                <p className="col-span-full px-2 py-4 text-center text-sm text-slate-500">
+                  {testSearchQuery.trim() ? '검색 결과가 없습니다.' : '등록된 검사가 없습니다.'}
+                </p>
+              ) : (
+                filteredTests.map((t) => (
                 <label
                   key={t.testId}
                   className={`grid cursor-pointer grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg border border-transparent transition hover:border-sky-500/20 hover:bg-sky-500/5 ${
@@ -252,7 +275,8 @@ export default function AssessmentSettingsFields({
                     {t.name}
                   </span>
                 </label>
-              ))}
+                ))
+              )}
             </div>
           </div>
           {!compact ? (
