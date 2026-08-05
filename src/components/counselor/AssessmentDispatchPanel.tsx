@@ -316,7 +316,6 @@ export default function AssessmentDispatchPanel({
   const [remindLoading, setRemindLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
-  const [moveMessage, setMoveMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<BulkConfirmAction>(null);
   const [dispatchProgress, setDispatchProgress] = useState<DispatchProgress | null>(null);
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
@@ -807,11 +806,6 @@ export default function AssessmentDispatchPanel({
       }
     >
       <div className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3">
-        {moveMessage ? (
-          <div className="mb-2 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            {moveMessage}
-          </div>
-        ) : null}
         {displayData.recipients.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <p className="text-base text-slate-300">발송된 내담자가 없습니다</p>
@@ -839,7 +833,15 @@ export default function AssessmentDispatchPanel({
                 <thead>
               <tr className={counselorListHeaderRowClass}>
                 <th className={counselorListNoThClass}>No.</th>
-                <th className={counselorListSelectThClass}>선택</th>
+                <th className={counselorListSelectThClass}>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    className="rounded accent-blue-500"
+                    aria-label="전체 선택"
+                  />
+                </th>
                 <SortableColumnHeader
                   label="이름 (나의코드)"
                   sortKey="displayName"
@@ -1463,8 +1465,7 @@ export default function AssessmentDispatchPanel({
         portalIds={Array.from(selected)}
         sourceAssessmentId={assessmentId}
         onClose={() => setMoveOpen(false)}
-        onSuccess={(summary) => {
-          setMoveMessage(summary);
+        onSuccess={() => {
           setMoveOpen(false);
           setSelected(new Set());
           void load({ silent: true });

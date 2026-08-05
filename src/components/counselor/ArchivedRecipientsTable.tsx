@@ -251,7 +251,7 @@ export default function ArchivedRecipientsTable({
             <tr className={counselorListHeaderRowClass}>
               <th className={counselorListNoThClass}>No.</th>
               {showSelectColumn ? (
-                <th className={isDispatchLayout ? counselorListSelectThClass : `${counselorListThClass} w-10`}>
+                <th className={isDispatchLayout ? counselorListSelectThClass : `${counselorListThClass} w-10 text-center`}>
                   {onToggleAll ? (
                     <input
                       type="checkbox"
@@ -261,7 +261,7 @@ export default function ArchivedRecipientsTable({
                       aria-label="전체 선택"
                     />
                   ) : (
-                    '선택'
+                    <span className="sr-only">선택</span>
                   )}
                 </th>
               ) : null}

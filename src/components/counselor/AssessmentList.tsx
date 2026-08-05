@@ -532,11 +532,6 @@ export default function AssessmentList({
                             {infoPrimary}
                           </span>
                         )}
-                        {expired ? (
-                          <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
-                            만료
-                          </span>
-                        ) : null}
                       </td>
                       <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
                         (

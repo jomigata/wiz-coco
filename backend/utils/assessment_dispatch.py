@@ -912,6 +912,7 @@ def archive_dispatch_portals(
                 "status": "archived",
                 "archivedAt": SERVER_TIMESTAMP,
                 "archivedFromAssessmentId": assessment_id,
+                "archivedReason": "manual",
             }
         )
         archived += 1
@@ -1119,6 +1120,7 @@ def restore_archived_portals(
                 "status": "active",
                 "archivedAt": fa_firestore.DELETE_FIELD,
                 "archivedFromAssessmentId": fa_firestore.DELETE_FIELD,
+                "archivedReason": fa_firestore.DELETE_FIELD,
             }
         )
         restored += 1

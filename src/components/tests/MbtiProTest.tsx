@@ -725,7 +725,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       transition: { duration: QUESTION_TRANSITION_DURATION, ease: [0.22, 1, 0.36, 1] },
     },
     exit: (dir: number) => {
-      const sign = dir > 0 ? -1 : 1;
+      const sign = dir > 0 ? 1 : -1;
       return {
         y: [sign * questionExitStartY, sign * questionExitEndY],
         opacity: [1, 0],

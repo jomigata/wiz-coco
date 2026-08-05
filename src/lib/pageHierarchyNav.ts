@@ -21,34 +21,11 @@ export function resolveCounselorHierarchy(
   const assessmentId = (searchParams.get('assessmentId') || '').trim();
 
   if (pathname.startsWith('/counselor/assessments/deleted-recipients')) {
-    const isFullList = !assessmentId;
-    if (isFullList) {
-      return {
-        depth: 1,
-        crumbs: [
-          { label: '내담자 목록', href: '/counselor/clients' },
-          { label: '삭제된 검사자' },
-        ],
-      };
-    }
-    return {
-      depth: 2,
-      crumbs: [
-        { label: '상담코드 목록', href: '/counselor/assessments' },
-        {
-          label: '발송·검사 현황',
-          href: assessmentProgressHref(assessmentId),
-        },
-        { label: '삭제된 검사자' },
-      ],
-    };
+    return null;
   }
 
   if (pathname.startsWith('/counselor/assessments/deleted')) {
-    return {
-      depth: 0,
-      crumbs: [{ label: '삭제된 상담코드' }],
-    };
+    return null;
   }
 
   if (pathname.startsWith('/counselor/assessments/progress')) {

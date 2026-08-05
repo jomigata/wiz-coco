@@ -72,9 +72,9 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '🎯',
           },
           {
-            name: '삭제된 검사자',
+            name: '삭제된 내담자',
             href: '/counselor/assessments/deleted-recipients',
-            description: '상담코드별 삭제된 검사자 복구·영구 삭제',
+            description: '상담코드별 삭제된 내담자 복구·영구 삭제',
             icon: '🗑️',
           },
         ],

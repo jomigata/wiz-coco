@@ -106,7 +106,7 @@ function DeletedRecipientsPageContent() {
 
   return (
     <CounselorPageSection
-      title="삭제된 검사자"
+      title="삭제된 내담자"
       toolbar={
         <>
           <button
@@ -149,7 +149,7 @@ function DeletedRecipientsPageContent() {
       {loading ? (
         <AuthLoadingState className="py-8" message="목록을 불러오는 중…" />
       ) : items.length === 0 ? (
-        <p className="text-sm text-slate-400">삭제된 검사자가 없습니다.</p>
+        <p className="text-sm text-slate-400">삭제된 내담자가 없습니다.</p>
       ) : (
         <ArchivedRecipientsTable
           items={items}

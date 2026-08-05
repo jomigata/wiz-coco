@@ -7,7 +7,6 @@ import {
   FORM_INPUT,
   FORM_LABEL,
   openDatePicker,
-  TEST_PICKER_FILL,
   TEST_PICKER_SCROLL,
 } from '@/lib/assessmentFormUi';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
@@ -139,11 +138,20 @@ export default function AssessmentSettingsFields({
               사용종료일 (선택)
             </label>
             <div className="relative">
+              <input
+                id="usage-end-date"
+                ref={usageEndDateRef}
+                type="date"
+                className={`${inputClass} pr-12 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
+                value={usageEndDate}
+                onChange={(e) => onUsageEndDateChange(e.target.value)}
+                disabled={disabled}
+              />
               <button
                 type="button"
                 onClick={() => openDatePicker(usageEndDateRef)}
                 disabled={disabled}
-                className="absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center rounded-l-lg border-r border-white/10 text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="absolute inset-y-0 right-0 z-10 flex min-w-[3rem] items-center justify-center rounded-r-lg text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="사용종료일 달력 열기"
               >
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -156,15 +164,6 @@ export default function AssessmentSettingsFields({
                   />
                 </svg>
               </button>
-              <input
-                id="usage-end-date"
-                ref={usageEndDateRef}
-                type="date"
-                className={`${inputClass} pl-11 pr-2 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
-                value={usageEndDate}
-                onChange={(e) => onUsageEndDateChange(e.target.value)}
-                disabled={disabled}
-              />
             </div>
             {!compact ? (
               <p className={hintClass}>비워두면 무기한 사용 가능합니다.</p>
@@ -201,7 +200,7 @@ export default function AssessmentSettingsFields({
             <span className="text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
           </div>
           <div
-            className={`${sections === 'tests' ? TEST_PICKER_FILL : TEST_PICKER_SCROLL} flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] bg-black/10 ${compact ? 'p-2' : 'p-2'}`}
+            className={`${sections === 'tests' ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : TEST_PICKER_SCROLL} rounded-lg border border-white/[0.08] bg-black/10 ${compact ? 'p-2' : 'p-2'}`}
           >
             <div className="grid shrink-0 grid-cols-[2.75rem_1.75rem_minmax(0,1fr)] items-center gap-2 border-b border-white/[0.08] px-2 py-2">
               <TestSortHeader

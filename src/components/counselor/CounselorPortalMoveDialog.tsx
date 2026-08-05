@@ -106,7 +106,7 @@ export default function CounselorPortalMoveDialog({
           다른 상담코드로 이동
         </h2>
         <p className="mt-1 text-sm text-slate-400">
-          선택한 {portalIds.length}명을 지정한 상담코드로 완전 이동합니다. 기존 상담코드에서는 제거되며
+          선택한 {portalIds.length}명을 선택한 상담코드로 완전 이동합니다. 기존 상담코드에서는 제거되며
           알림은 발송하지 않습니다.
         </p>
 

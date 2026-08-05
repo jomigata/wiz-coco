@@ -350,6 +350,11 @@ def delete_assessment(assessment_id):
         return jsonify({"assessmentId": resolved_id, "message": "already_archived"})
 
     ref.update({"status": "archived", "archivedAt": SERVER_TIMESTAMP})
+    from utils.deletion_records import archive_portals_for_assessment
+
+    archive_portals_for_assessment(
+        db, counselor_uid=g.counselor_uid, assessment_id=resolved_id
+    )
     return jsonify({"assessmentId": resolved_id, "message": "archived"})
 
 

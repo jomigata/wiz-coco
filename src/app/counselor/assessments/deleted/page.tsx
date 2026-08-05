@@ -17,6 +17,8 @@ import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListSelectTdClass,
+  counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
@@ -291,7 +293,7 @@ export default function DeletedAssessmentsPage() {
         const result = await fetchArchivedDispatchRecipients(assessmentId);
         setRecipientCache((prev) => ({ ...prev, [assessmentId]: result.items || [] }));
       } catch (err) {
-        setRecipientError(err instanceof Error ? err.message : '삭제된 검사자 목록을 불러오지 못했습니다.');
+        setRecipientError(err instanceof Error ? err.message : '삭제된 내담자 목록을 불러오지 못했습니다.');
       } finally {
         setRecipientLoadingId(null);
       }
@@ -339,7 +341,6 @@ export default function DeletedAssessmentsPage() {
 
   return (
     <CounselorPageSection
-      showHierarchyBreadcrumb
       title="삭제된 상담코드"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
@@ -423,17 +424,15 @@ export default function DeletedAssessmentsPage() {
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
-                    <th className={counselorListNoThClass}>
-                      <label className="inline-flex cursor-pointer items-center gap-1.5">
-                        <input
-                          type="checkbox"
-                          checked={allSelected}
-                          onChange={toggleAll}
-                          className="rounded accent-blue-500"
-                          aria-label="전체 선택"
-                        />
-                        <span>No.</span>
-                      </label>
+                    <th className={counselorListNoThClass}>No.</th>
+                    <th className={counselorListSelectThClass}>
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        className="rounded accent-blue-500"
+                        aria-label="전체 선택"
+                      />
                     </th>
                     <SortableColumnHeader
                       label="발급일"
@@ -504,16 +503,16 @@ export default function DeletedAssessmentsPage() {
                           className={`${counselorListBodyRowClass} ${isSelected || isOpen ? 'bg-white/[0.04]' : ''}`}
                         >
                           <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
-                            <label className="inline-flex cursor-pointer items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleOne(row.id)}
-                                className="rounded accent-blue-500"
-                                aria-label={`${infoSecondary} 선택`}
-                              />
-                              <span>{startIndex + idx + 1}</span>
-                            </label>
+                            {startIndex + idx + 1}
+                          </td>
+                          <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleOne(row.id)}
+                              className="rounded accent-blue-500"
+                              aria-label={`${infoSecondary} 선택`}
+                            />
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}

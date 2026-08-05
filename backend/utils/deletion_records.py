@@ -47,6 +47,67 @@ def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
     return items
 
 
+def archive_portals_for_assessment(db, *, counselor_uid: str, assessment_id: str) -> int:
+    """상담코드 삭제 시 해당 코드에 배정된 active 내담자 포털을 함께 archived."""
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return 0
+    archived_count = 0
+    refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("counselorId", "==", counselor_uid)
+        .stream()
+    )
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        if (pdata.get("status") or "active") != "active":
+            continue
+        assigned = list(pdata.get("assignedAssessmentIds") or [])
+        if aid not in assigned:
+            continue
+        doc.reference.update(
+            {
+                "status": "archived",
+                "archivedAt": SERVER_TIMESTAMP,
+                "archivedFromAssessmentId": aid,
+                "archivedReason": "assessment_deleted",
+            }
+        )
+        archived_count += 1
+    return archived_count
+
+
+def restore_portals_for_assessment(db, *, counselor_uid: str, assessment_id: str) -> int:
+    """상담코드 복구 시 assessment_deleted 로 archived 된 내담자만 복구 (수동 삭제 제외)."""
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return 0
+    restored_count = 0
+    refs = (
+        db.collection(CLIENT_PORTALS_COLLECTION)
+        .where("counselorId", "==", counselor_uid)
+        .where("status", "==", "archived")
+        .stream()
+    )
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        if (pdata.get("archivedReason") or "") != "assessment_deleted":
+            continue
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        if from_aid != aid:
+            continue
+        doc.reference.update(
+            {
+                "status": "active",
+                "archivedAt": fa_firestore.DELETE_FIELD,
+                "archivedFromAssessmentId": fa_firestore.DELETE_FIELD,
+                "archivedReason": fa_firestore.DELETE_FIELD,
+            }
+        )
+        restored_count += 1
+    return restored_count
+
+
 def restore_archived_assessments(db, *, counselor_uid: str, assessment_ids: list[str]) -> dict:
     restored = 0
     failed = 0
@@ -76,6 +137,7 @@ def restore_archived_assessments(db, *, counselor_uid: str, assessment_ids: list
                 "archivedAt": fa_firestore.DELETE_FIELD,
             }
         )
+        restore_portals_for_assessment(db, counselor_uid=counselor_uid, assessment_id=aid)
         restored += 1
         details.append({"assessmentId": aid, "status": "restored"})
     return {"restored": restored, "failed": failed, "details": details}

@@ -162,11 +162,14 @@ def list_counselor_client_portals(
         )
         notify_at = _resolve_notify_at(notify, pdata, notify_status)
 
-        assigned_ids = [
+        raw_assigned_ids = [
             str(aid).strip()
             for aid in (pdata.get("assignedAssessmentIds") or [])
-            if str(aid).strip() in assessment_cache
+            if str(aid).strip()
         ]
+        assigned_ids = [aid for aid in raw_assigned_ids if aid in assessment_cache]
+        if status_filter == "active" and raw_assigned_ids and not assigned_ids:
+            continue
         assessments = [assessment_cache[aid] for aid in assigned_ids]
 
         total_tests = 0
