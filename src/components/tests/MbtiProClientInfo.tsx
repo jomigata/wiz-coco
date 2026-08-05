@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { getMbtiProClientInfoTheme, YEAR_GRID_COLS } from '@/config/mbtiProClientInfoTheme';
+import {
+  backspaceHangul,
+  createHangulComposerState,
+  hangulComposerText,
+  pushHangulKey,
+} from '@/lib/hangulTypingComposer';
 
 interface MbtiProClientInfoProps {
   onSubmit: (clientInfo: ClientInfo) => void;
@@ -77,6 +83,9 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
   const genderRef = useRef<HTMLDivElement>(null);
   const maritalStatusRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  // 이름 칸 기본 입력을 한글로 — 영문 자판 입력을 직접 한글로 조합
+  const [nameHangulMode, setNameHangulMode] = useState<boolean>(true);
+  const nameComposerRef = useRef(createHangulComposerState(initialData?.name || ''));
   const phoneRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +104,52 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
     }
   }, [isPersonalTest]);
 
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    // 붙여넣기·IME 직접 입력 등은 그대로 반영하고 조합 상태를 초기화
+    nameComposerRef.current = createHangulComposerState(e.target.value);
+    setName(e.target.value);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!nameHangulMode) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if ((e.nativeEvent as unknown as { isComposing?: boolean }).isComposing) return;
+
+    const el = e.currentTarget;
+    const atEnd =
+      el.selectionStart === el.value.length && el.selectionEnd === el.value.length;
+
+    if (e.key === 'Backspace') {
+      if (!atEnd) return;
+      const stepped = backspaceHangul(nameComposerRef.current);
+      if (!stepped) {
+        nameComposerRef.current = createHangulComposerState(el.value.slice(0, -1));
+        return;
+      }
+      e.preventDefault();
+      nameComposerRef.current = stepped;
+      setName(hangulComposerText(stepped));
+      return;
+    }
+
+    if (e.key.length !== 1) return;
+    if (!/[a-zA-Z]/.test(e.key)) {
+      nameComposerRef.current = createHangulComposerState(el.value + e.key);
+      return;
+    }
+    if (!atEnd) return;
+
+    const next = pushHangulKey(nameComposerRef.current, e.key);
+    if (!next) return;
+    e.preventDefault();
+    nameComposerRef.current = next;
+    setName(hangulComposerText(next));
+  };
+
+  const commitNameComposer = () => {
+    nameComposerRef.current = createHangulComposerState(name);
+  };
+
   // initialData가 변경되면 상태 업데이트
   useEffect(() => {
     if (initialData) {
@@ -105,6 +160,7 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
       setGender(initialData.gender || '');
       setMaritalStatus(initialData.maritalStatus || '');
       setName(initialData.name || '');
+      nameComposerRef.current = createHangulComposerState(initialData.name || '');
       setPrivacyAgreed(initialData.privacyAgreed ?? true);
       setPhone(initialData.phone || '');
     }
@@ -390,15 +446,32 @@ const MbtiProClientInfo: FC<MbtiProClientInfoProps> = ({
             {/* 이름(가명) */}
             <div className={th.fieldBox}>
               <div>
-                <label htmlFor="name-field" className={th.label}>
-                  이름(가명) <span className="text-red-400">*</span>
-              </label>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label htmlFor="name-field" className={th.label}>
+                    이름(가명) <span className="text-red-400">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      commitNameComposer();
+                      setNameHangulMode((prev) => !prev);
+                      nameRef.current?.focus();
+                    }}
+                    className="rounded-md border border-white/20 px-2 py-0.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/10"
+                    aria-pressed={nameHangulMode}
+                    title="이름 입력 자판 전환 (한글 / 영문)"
+                  >
+                    {nameHangulMode ? '한글' : '영문'}
+                  </button>
+                </div>
                   <input
                     type="text"
                     id="name-field"
                     name="name_random_field"
                     value={name}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                    onChange={handleNameChange}
+                    onKeyDown={handleNameKeyDown}
+                    onBlur={commitNameComposer}
                     className={th.input}
                     placeholder="이름(가명)을 입력하세요"
                     lang="ko"

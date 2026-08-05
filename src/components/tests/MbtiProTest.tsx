@@ -679,9 +679,11 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
 
   const QUESTION_ENTER_DURATION = 0.54;
   const QUESTION_EXIT_DURATION = 1.12;
-  const QUESTION_ENTER_DELAY = 0.04;
+  // 기존 글이 절반쯤 사라진 시점에 새 글이 등장 (mode="sync"로 겹쳐 재생)
+  const QUESTION_ENTER_DELAY = QUESTION_EXIT_DURATION * 0.5;
 
-  const QUESTION_ENTER_EASE: [number, number, number, number] = [0.18, 0, 0.85, 1];
+  // 초반은 서서히, 50% 이후 빠르게 마무리
+  const QUESTION_ENTER_EASE: [number, number, number, number] = [0.75, 0.04, 0.9, 0.5];
   const QUESTION_EXIT_EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
   const variants = {
@@ -690,35 +692,17 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       opacity: 0,
       scale: 0.9,
       filter: 'blur(6px)',
-      transition: {
-        y: {
-          duration: QUESTION_ENTER_DURATION,
-          ease: QUESTION_ENTER_EASE,
-          delay: QUESTION_ENTER_DELAY,
-        },
-        opacity: {
-          duration: QUESTION_ENTER_DURATION * 0.9,
-          ease: QUESTION_ENTER_EASE,
-          delay: QUESTION_ENTER_DELAY,
-        },
-        scale: {
-          duration: QUESTION_ENTER_DURATION,
-          ease: QUESTION_ENTER_EASE,
-          delay: QUESTION_ENTER_DELAY,
-        },
-        filter: {
-          duration: QUESTION_ENTER_DURATION,
-          ease: QUESTION_ENTER_EASE,
-          delay: QUESTION_ENTER_DELAY,
-        },
-      },
     }),
     center: {
       y: 0,
       opacity: 1,
       scale: 1,
       filter: 'blur(0px)',
-      transition: { duration: QUESTION_ENTER_DURATION, ease: [0.22, 1, 0.36, 1] },
+      transition: {
+        duration: QUESTION_ENTER_DURATION,
+        ease: QUESTION_ENTER_EASE,
+        delay: QUESTION_ENTER_DELAY,
+      },
     },
     exit: (dir: number) => {
       const sign = dir > 0 ? 1 : -1;
@@ -925,7 +909,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                 className={`${v.questionCard} relative mb-10 min-h-[112px] overflow-hidden`}
                 style={{ height: QUESTION_FRAME_HEIGHT }}
               >
-                <AnimatePresence initial={false} mode="wait" custom={direction}>
+                <AnimatePresence initial={false} mode="sync" custom={direction}>
                   <motion.h2
                     key={currentQuestion}
                     custom={direction}
