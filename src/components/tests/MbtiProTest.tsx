@@ -705,9 +705,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       },
     },
     exit: (dir: number) => {
+      // 답변 선택(전진) 시 아래로 퇴장, 이전 문항(후진) 시 위로 퇴장
       const sign = dir > 0 ? 1 : -1;
       return {
-        y: [0, sign * 12],
+        y: [0, sign * 48],
         opacity: [1, 0],
         scale: 1,
         filter: ['blur(0px)', 'blur(1px)'],
