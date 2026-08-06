@@ -12,14 +12,14 @@ export const TEST_PICKER_FILL =
 export function openDatePicker(ref: React.RefObject<HTMLInputElement | null>) {
   const el = ref.current;
   if (!el || el.disabled) return;
-  el.focus();
+  // 포커스를 유지한 채 달력만 열어, 연·월·일 세그먼트 키보드 입력이 가능하도록 함
   if (typeof el.showPicker === 'function') {
     try {
       el.showPicker();
       return;
     } catch {
-      /* Safari 등 */
+      /* NotAllowedError / Safari 등 — 아래 포커스로 폴백 */
     }
   }
-  el.click();
+  el.focus();
 }
