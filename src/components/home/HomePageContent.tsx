@@ -14,26 +14,24 @@ import { HOME_PAGE_BG } from '@/components/home/homeSectionStyles';
 export default function HomePageContent() {
   return (
     <div className="min-h-full" style={{ backgroundColor: HOME_PAGE_BG }}>
-      <div className="pt-16">
-        <main className="flex-grow">
-          <HeroSection />
-          <PublicTestPortalSections />
-          <ClientExamTrustSection />
+      <main className="flex-grow">
+        <HeroSection />
+        <PublicTestPortalSections />
+        <ClientExamTrustSection />
 
-          <ProfessionalContentGate>
-            <MonetizationChannelSection />
-            <MonetizationPricingSection />
-            <MonetizationTrustSection />
-            <MonetizationPartnerSection />
-          </ProfessionalContentGate>
+        <ProfessionalContentGate>
+          <MonetizationChannelSection />
+          <MonetizationPricingSection />
+          <MonetizationTrustSection />
+          <MonetizationPartnerSection />
+        </ProfessionalContentGate>
 
-          <section className="border-t border-white/[0.06] px-4 py-12">
-            <div className="mx-auto max-w-3xl">
-              <BusinessLegalBlock variant="full" />
-            </div>
-          </section>
-        </main>
-      </div>
+        <section className="border-t border-white/[0.06] px-4 py-12">
+          <div className="mx-auto max-w-3xl">
+            <BusinessLegalBlock variant="full" />
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
