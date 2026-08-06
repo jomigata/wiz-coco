@@ -1,0 +1,39 @@
+---
+description: WizCoCo Cursor 플러그인·MCP 사용 가이드 (상담사/배포/결제)
+alwaysApply: false
+---
+
+# WizCoCo Cursor 플러그인 사용
+
+설치: `docs/cursor-plugins-wizcoco-ko.md` · MCP: `.cursor/mcp.json`
+
+## 1단계 (개발)
+
+- **PR Review Canvas** — main 푸시·PR 전 diff 리뷰, 상담코드·목록 UI 변경 검증
+- **Figma** — 상담코드 생성/수정, 발송·검사 현황 UI 구현 전 `get_design_context`
+- **Google Drive** — 검사 안내 문구, FAQ, 운영 문서 검색
+
+## 2단계 (운영·분석)
+
+- **Datadog** — Cloud Run(`wizcoco-api`), Functions, 발송 워커 로그·메트릭 (`/ddsetup` 후)
+- **Amplitude** — 검사 시작/완료, 상담코드 생성 전환 (`add-analytics-instrumentation` 스킬)
+
+## 업무별
+
+### 상담사 업무
+- Linear — 상담코드·내담자·포털 기능 이슈
+- Docs Canvas — 상담코드 → 발송 → 검사 → 결과 아키텍처 문서
+- Figma + Google Drive — UI·카피
+
+### 배포·장애
+- Datadog — GitHub Actions 실패, API 5xx, 발송 실패
+- Slack (팀) — CI/장애 채널 공유
+- PR Review Canvas — 배포 직전 변경 요약
+
+### 결제·알림
+- Gmail — Toss webhook·Solapi 발송·비밀번호 메일 확인
+- Slack (팀) — 알림 장애 에스컬레이션
+
+## MCP Connect 필요
+
+`figma`, `google-drive`, `gmail`, `linear`, `amplitude`는 Tools & MCP에서 OAuth **Connect** 후 사용.

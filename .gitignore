@@ -119,6 +119,7 @@ backend/*.pyc
 !tailwind.config.js
 !postcss.config.js
 !jest.config.js 
+!.cursor/mcp.json
 node_modules
 
 img/

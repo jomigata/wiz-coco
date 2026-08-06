@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "figma": {
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "google-drive": {
+      "url": "https://drivemcp.googleapis.com/mcp/v1"
+    },
+    "gmail": {
+      "url": "https://gmailmcp.googleapis.com/mcp/v1"
+    },
+    "linear": {
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "amplitude": {
+      "url": "https://mcp.amplitude.com/mcp"
+    }
+  }
+}
