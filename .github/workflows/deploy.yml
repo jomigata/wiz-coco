@@ -46,10 +46,10 @@ jobs:
     
     steps:
     - name: 📥 코드 체크아웃
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
@@ -107,10 +107,10 @@ jobs:
     
     steps:
     - name: 📥 코드 체크아웃
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
@@ -151,7 +151,7 @@ jobs:
       run: npm test -- --testPathIgnorePatterns=dbCodeGenerator.test.ts --passWithNoTests --coverage
       
     - name: 📊 테스트 커버리지 리포트
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: test-coverage
@@ -166,10 +166,10 @@ jobs:
     
     steps:
     - name: 📥 코드 체크아웃
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
@@ -207,12 +207,12 @@ jobs:
         echo "=================================="
       
     - name: 🔐 Authenticate to Google Cloud (Flask API URL)
-      uses: google-github-actions/auth@v2
+      uses: google-github-actions/auth@v3
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
     - name: 🔧 Set up gcloud (Flask API URL)
-      uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@v3
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
@@ -281,7 +281,7 @@ jobs:
     
     - name: 📎 빌드 로그 업로드
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: build-log
         path: build.log

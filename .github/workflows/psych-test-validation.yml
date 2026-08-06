@@ -21,10 +21,10 @@ jobs:
     
     steps:
     - name: 📥 코드 체크아웃
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: '20.x'
         cache: 'npm'
@@ -152,7 +152,7 @@ jobs:
         echo "4. 사용자 경험 최적화: 직관적 인터페이스" >> psych-test-report.txt
         
     - name: 📄 심리 테스트 리포트 저장
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: psych-test-validation-report
         path: psych-test-report.txt
