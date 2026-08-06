@@ -22,6 +22,7 @@ import {
   GROUP_BULK_ASYNC_THRESHOLD,
   GROUP_NOTIFY_WARN_THRESHOLD,
 } from '@/lib/groupRecipientLimits';
+import UsageEndDateField from '@/components/counselor/UsageEndDateField';
 import {
   downloadGroupRecipientSampleCsv,
   downloadGroupRecipientSampleTxt,
@@ -93,7 +94,6 @@ function recipientHeaderClass(): string {
 export default function IndividualAssessmentCreateForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const usageEndDateRef = useRef<HTMLInputElement>(null);
   const cohortNameRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const recipientNameRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -297,21 +297,6 @@ export default function IndividualAssessmentCreateForm() {
     !loading &&
     !activeJobId &&
     recipients.length <= GROUP_RECIPIENT_MAX;
-
-  const openDatePicker = (ref: React.RefObject<HTMLInputElement | null>) => {
-    const el = ref.current;
-    if (!el || loading) return;
-    if (typeof el.showPicker === 'function') {
-      try {
-        el.showPicker();
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
-    el.focus();
-    el.click();
-  };
 
   const toggleTest = (testId: string) => {
     setSelectedTestIds((prev) => {
@@ -758,35 +743,12 @@ export default function IndividualAssessmentCreateForm() {
                 <label htmlFor="usage-end-date" className={FORM_LABEL}>
                   사용종료일 (선택)
                 </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => openDatePicker(usageEndDateRef)}
-                    disabled={loading}
-                    className="absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center rounded-l-lg border-r border-white/10 text-sky-400 transition hover:bg-sky-500/10 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="사용종료일 달력 열기"
-                  >
-                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <path
-                        d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <input
-                    id="usage-end-date"
-                    ref={usageEndDateRef}
-                    type="date"
-                    className={`${FORM_INPUT} py-2.5 pl-11 pr-2 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden`}
-                    value={usageEndDate}
-                    onChange={(e) => setUsageEndDate(e.target.value)}
-                    onClick={() => openDatePicker(usageEndDateRef)}
-                    disabled={loading}
-                  />
-                </div>
+                <UsageEndDateField
+                  id="usage-end-date"
+                  value={usageEndDate}
+                  onChange={setUsageEndDate}
+                  disabled={loading}
+                />
               </div>
             </div>
             <div>

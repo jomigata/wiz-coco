@@ -321,6 +321,7 @@ export default function AssessmentDispatchPanel({
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [dispatchOverrides, setDispatchOverrides] = useState<Record<string, DispatchRowOverride>>({});
 
@@ -354,12 +355,11 @@ export default function AssessmentDispatchPanel({
     void load();
   }, [load, authPending, isAuthenticated]);
 
-  const {
-    data: liveData,
-    isLive,
-    liveError,
-    lastUpdatedAt,
-  } = useAssessmentDispatchRealtime(assessmentId, data, isAuthenticated && !authPending);
+  const { data: liveData } = useAssessmentDispatchRealtime(
+    assessmentId,
+    data,
+    isAuthenticated && !authPending,
+  );
 
   const displayData = liveData ?? data;
 
@@ -511,13 +511,27 @@ export default function AssessmentDispatchPanel({
   );
 
   const sortedRecipients = useMemo(() => {
-    const list = (visibleData?.recipients || []).map((r) =>
+    const q = searchQuery.trim().toLowerCase();
+    let list = (visibleData?.recipients || []).map((r) =>
       mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
     );
+    if (q) {
+      list = list.filter((r) => {
+        const hay = [
+          r.displayName || '',
+          r.email || '',
+          r.phone || '',
+          r.myCode || '',
+        ]
+          .join(' ')
+          .toLowerCase();
+        return hay.includes(q);
+      });
+    }
     if (!sortKey) return list;
     list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
     return list;
-  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir]);
+  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, searchQuery]);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -700,16 +714,6 @@ export default function AssessmentDispatchPanel({
 
   if (!data || !displayData) return null;
 
-  const liveUpdatedLabel = lastUpdatedAt
-    ? lastUpdatedAt.toLocaleString('ko-KR', {
-        month: 'numeric',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
-    : null;
-
   return (
     <>
     <CounselorPageSection
@@ -719,7 +723,7 @@ export default function AssessmentDispatchPanel({
       noBodyPadding
       dense
       description={
-        <span className="inline-flex flex-wrap items-center gap-2">
+        <span className="inline-flex w-full flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
             <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
@@ -746,25 +750,24 @@ export default function AssessmentDispatchPanel({
               <span className="ml-0.5 text-slate-500">명</span>
             </span>
           </span>
-          {liveUpdatedLabel ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-600/60 bg-slate-900/60 px-2 py-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">최종 업데이트</span>
-              <span className="text-sm font-medium tabular-nums text-slate-200">{liveUpdatedLabel}</span>
-              {isLive ? (
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden title="실시간 연결" />
-              ) : null}
-            </span>
-          ) : liveError ? (
-            <span className="text-xs text-amber-300/90" title={liveError}>
-              API 기준
-            </span>
-          ) : (
-            <span className="text-xs text-slate-500">연결 중…</span>
-          )}
+          <div className="relative ml-auto min-w-[12rem] flex-1 sm:max-w-xs">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
+              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
+          </div>
         </span>
       }
       toolbar={
-        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+        <div className="flex w-full flex-wrap items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={toggleAll}
@@ -772,19 +775,6 @@ export default function AssessmentDispatchPanel({
             className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
           >
             {allSelected ? '전체 해제' : '전체 선택'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMoveOpen(true)}
-            disabled={
-              remindLoading ||
-              resendLoading ||
-              deleteLoading ||
-              selected.size === 0
-            }
-            className="rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
-          >
-            다른 상담코드로 이동 ({selected.size})
           </button>
           <button
             type="button"
@@ -811,6 +801,19 @@ export default function AssessmentDispatchPanel({
             {resendLoading
               ? '발송 중…'
               : `${credentialSendModeLabel(credentialSendMode)} (${credentialTargetSelected.length})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMoveOpen(true)}
+            disabled={
+              remindLoading ||
+              resendLoading ||
+              deleteLoading ||
+              selected.size === 0
+            }
+            className="ml-auto rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
+          >
+            상담코드 변경 ({selected.size})
           </button>
         </div>
       }

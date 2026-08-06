@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import {
   FORM_HINT,
   FORM_INPUT,
   FORM_LABEL,
-  openDatePicker,
   TEST_PICKER_SCROLL,
 } from '@/lib/assessmentFormUi';
+import UsageEndDateField from '@/components/counselor/UsageEndDateField';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
 
 export interface AssessmentSettingsFieldsProps {
@@ -75,7 +75,6 @@ export default function AssessmentSettingsFields({
   compact = false,
   sections = 'all',
 }: AssessmentSettingsFieldsProps) {
-  const usageEndDateRef = useRef<HTMLInputElement>(null);
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
   const [testSearchQuery, setTestSearchQuery] = useState('');
@@ -144,38 +143,13 @@ export default function AssessmentSettingsFields({
             <label htmlFor="usage-end-date" className={labelClass}>
               사용종료일 (선택)
             </label>
-            <div
-              className={`flex items-center overflow-hidden rounded-lg border border-white/10 bg-[#101f38]/90 ${
-                disabled ? 'opacity-55' : ''
-              }`}
-            >
-              <input
-                id="usage-end-date"
-                ref={usageEndDateRef}
-                type="date"
-                className="w-[10.75rem] shrink-0 border-0 bg-transparent py-2.5 pl-3 pr-0 text-sm text-white [color-scheme:dark] focus:outline-none focus:ring-0 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:hidden"
-                value={usageEndDate}
-                onChange={(e) => onUsageEndDateChange(e.target.value)}
-                disabled={disabled}
-              />
-              <button
-                type="button"
-                onClick={() => openDatePicker(usageEndDateRef)}
-                disabled={disabled}
-                className="flex flex-1 items-center self-stretch py-2.5 pr-3 text-sky-400 transition hover:text-sky-300 disabled:cursor-not-allowed"
-                aria-label="사용종료일 달력 열기"
-              >
-                <svg className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path
-                    d="M6 2.5V5M14 2.5V5M3.5 8h13M5 4.5h10a1.1 1.1 0 011.1 1.1v10.4A1.1 1.1 0 0115 17.1H5a1.1 1.1 0 01-1.1-1.1V5.6A1.1 1.1 0 015 4.5z"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
+            <UsageEndDateField
+              id="usage-end-date"
+              value={usageEndDate}
+              onChange={onUsageEndDateChange}
+              disabled={disabled}
+              compact={compact}
+            />
             {!compact ? (
               <p className={hintClass}>비워두면 무기한 사용 가능합니다.</p>
             ) : null}

@@ -8,6 +8,13 @@ import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo, PortalMoveBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment, listAssessments, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
+import { listCounselorClientPortals } from '@/lib/clientPortalApi';
+import {
+  buildClientPortalsCacheKey,
+  readCachedClientPortals,
+} from '@/lib/counselorSessionCache';
+import { useAuthResolved } from '@/hooks/useAuthResolved';
+import type { CounselorClientPortalListItem } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
@@ -171,8 +178,21 @@ export default function AssessmentList({
   onAssessmentsRefresh,
 }: AssessmentListProps) {
   const router = useRouter();
+  const { user } = useAuthResolved();
   const [listItems, setListItems] = useState(assessments);
   const [searchQuery, setSearchQuery] = useState('');
+  const clientCacheKey = useMemo(
+    () =>
+      buildClientPortalsCacheKey({
+        counselorUid: user?.uid,
+        status: 'active',
+        progress: 'all',
+      }),
+    [user?.uid],
+  );
+  const [clientItems, setClientItems] = useState<CounselorClientPortalListItem[]>(
+    () => readCachedClientPortals(clientCacheKey)?.items ?? [],
+  );
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [addTarget, setAddTarget] = useState<CounselorAssessment | null>(null);
@@ -186,6 +206,42 @@ export default function AssessmentList({
   useEffect(() => {
     setListItems(assessments);
   }, [assessments]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    let cancelled = false;
+    void listCounselorClientPortals({ status: 'active' })
+      .then((data) => {
+        if (!cancelled) setClientItems(data.items || []);
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
+
+  const clientSearchByAssessment = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of clientItems) {
+      const hay = [
+        item.displayName || '',
+        item.email || '',
+        item.phone || '',
+        item.accessCode || '',
+        item.cohortName || '',
+        ...(item.counselorTags || []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      for (const assessment of item.assessments) {
+        const prev = map.get(assessment.assessmentId) || '';
+        map.set(assessment.assessmentId, `${prev} ${hay}`.trim());
+      }
+    }
+    return map;
+  }, [clientItems]);
 
   useEffect(() => {
     if (autoLivePollId) {
@@ -333,15 +389,23 @@ export default function AssessmentList({
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return listItems;
-    return listItems.filter(
-      (a) =>
-        (a.title || '').toLowerCase().includes(q) ||
-        (a.accessCode || '').toLowerCase().includes(q) ||
-        counselingCodeTypeLabel(a.codeCategory).toLowerCase().includes(q) ||
-        (a.targetAudience || '').toLowerCase().includes(q) ||
-        getAssessmentOrgLabel(a).toLowerCase().includes(q),
-    );
-  }, [listItems, searchQuery]);
+    return listItems.filter((a) => {
+      const hay = [
+        a.title || '',
+        a.accessCode || '',
+        a.cohortName || '',
+        a.welcomeMessage || '',
+        counselingCodeTypeLabel(a.codeCategory),
+        a.targetAudience || '',
+        getAssessmentOrgLabel(a),
+        ...(a.testList || []).map((t) => `${t.name} ${t.testId}`),
+        clientSearchByAssessment.get(a.id) || '',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [listItems, searchQuery, clientSearchByAssessment]);
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
@@ -368,28 +432,28 @@ export default function AssessmentList({
       noBodyPadding
       dense
       description={
-        <>
-          전체 <span className="font-semibold text-white">{listItems.length}</span>개 · 응시자{' '}
-          <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
-          <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
-          <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
-        </>
-      }
-      toolbar={
-        <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-            <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
+        <span className="inline-flex w-full flex-wrap items-center gap-x-2 gap-y-1.5">
+          <>
+            전체 <span className="font-semibold text-white">{listItems.length}</span>개 · 응시자{' '}
+            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
+            <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
+            <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
+          </>
+          <div className="relative ml-auto min-w-[12rem] flex-1 sm:max-w-xs">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
+              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
-            className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-          />
-        </div>
+        </span>
       }
     >
     <motion.div

@@ -414,11 +414,7 @@ export default function CounselorHomeDashboard() {
                                 {infoPrimary}
                               </span>
                             )}
-                            {expired ? (
-                              <span className="ml-1 inline-block rounded-full border border-red-500/30 bg-red-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-red-300">
-                                만료
-                              </span>
-                            ) : isExpiringSoon(a.usageEndDate) ? (
+                            {isExpiringSoon(a.usageEndDate) ? (
                               <span className="ml-1 inline-block rounded-full border border-amber-500/30 bg-amber-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-amber-300">
                                 임박
                               </span>

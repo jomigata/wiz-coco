@@ -7,6 +7,7 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { createAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
+import UsageEndDateField from '@/components/counselor/UsageEndDateField';
 
 export default function AssessmentCreateForm() {
   const router = useRouter();
@@ -105,12 +106,10 @@ export default function AssessmentCreateForm() {
         <label htmlFor="usageEndDate" className="block text-sm font-medium text-slate-300 mb-2">
           상담코드 사용최종일 (선택)
         </label>
-        <input
+        <UsageEndDateField
           id="usageEndDate"
-          type="date"
-          className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={usageEndDate}
-          onChange={(e) => setUsageEndDate(e.target.value)}
+          onChange={setUsageEndDate}
           disabled={loading}
         />
         <p className="text-slate-500 text-xs mt-1">비워두면 무기한 사용 가능합니다.</p>
