@@ -406,14 +406,14 @@ function ClientPortalContent() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4">
               <div>
                 <h1 className="text-xl font-bold text-white">내 검사실</h1>
-                <p className="text-slate-300 text-sm mt-3">{displayName}님, 환영합니다.</p>
+                <p className="text-slate-300 text-sm mt-2">{displayName}님, 환영합니다.</p>
               </div>
               <PortalWelcomeProgressSummary
-                tests={{ label: '검사 진행', completed: testProgressSummary.completed, total: testProgressSummary.total }}
-                care={{ label: '추가 과제·치료', completed: careCompletedCount, total: careTotalCount }}
+                tests={{ label: '검사', completed: testProgressSummary.completed, total: testProgressSummary.total }}
+                care={{ label: '과제·치료', completed: careCompletedCount, total: careTotalCount }}
               />
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">

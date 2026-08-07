@@ -751,17 +751,26 @@ export default function AssessmentDispatchPanel({
       noBodyPadding
       dense
       description={
-        <span className="inline-flex w-full flex-wrap items-center gap-2">
-          <Link
-            href={buildAssessmentListHref(searchQuery)}
-            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-slate-900/60 p-1.5 text-slate-300 transition-colors hover:border-sky-500/40 hover:bg-sky-950/40 hover:text-sky-200"
-            title="상담코드 목록"
-            aria-label="상담코드 목록으로 이동"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
+        <div className="flex w-full flex-col gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <Link
+              href={buildAssessmentListHref(searchQuery)}
+              className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/10 bg-slate-900/60 p-1.5 text-slate-300 transition-colors hover:border-sky-500/40 hover:bg-sky-950/40 hover:text-sky-200"
+              title="상담코드 목록"
+              aria-label="상담코드 목록으로 이동"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            <CounselorListSearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
+              className="min-w-0 flex-1 sm:max-w-xl"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
             <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
@@ -787,13 +796,8 @@ export default function AssessmentDispatchPanel({
               ]}
             />
           </span>
-          <CounselorListSearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
-            className="sm:max-w-xs"
-          />
-        </span>
+          </div>
+        </div>
       }
       toolbar={
         <div className="flex w-full flex-wrap items-center gap-1.5 sm:gap-2">

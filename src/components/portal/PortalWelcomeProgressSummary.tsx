@@ -13,33 +13,55 @@ type Props = {
   care: SummaryBlock;
 };
 
-function statusBadge(completed: number, total: number): { text: string; className: string } {
+function tone(completed: number, total: number) {
   if (total <= 0) {
-    return { text: '배정 없음', className: 'bg-slate-700/60 text-slate-300 border-slate-600/60' };
+    return {
+      ring: 'border-slate-500/50 bg-slate-800/60',
+      accent: 'text-slate-400',
+      badge: '없음',
+      badgeClass: 'bg-slate-700/80 text-slate-300',
+    };
   }
   if (completed >= total) {
-    return { text: '완료', className: 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40' };
+    return {
+      ring: 'border-emerald-400/60 bg-emerald-950/35',
+      accent: 'text-emerald-300',
+      badge: '완료',
+      badgeClass: 'bg-emerald-500/25 text-emerald-200',
+    };
   }
   if (completed > 0) {
-    return { text: '진행 중', className: 'bg-sky-950/50 text-sky-300 border-sky-500/40' };
+    return {
+      ring: 'border-sky-400/55 bg-sky-950/35',
+      accent: 'text-sky-300',
+      badge: '진행',
+      badgeClass: 'bg-sky-500/25 text-sky-200',
+    };
   }
-  return { text: '미완료', className: 'bg-amber-950/50 text-amber-300 border-amber-500/40' };
+  return {
+    ring: 'border-amber-400/55 bg-amber-950/30',
+    accent: 'text-amber-300',
+    badge: '대기',
+    badgeClass: 'bg-amber-500/25 text-amber-200',
+  };
 }
 
-function SummaryCard({ block }: { block: SummaryBlock }) {
-  const badge = statusBadge(block.completed, block.total);
+function CompactStat({ block }: { block: SummaryBlock }) {
+  const t = tone(block.completed, block.total);
   return (
-    <div className="min-w-[8.5rem] rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2.5">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{block.label}</p>
-      <div className="mt-1.5 flex items-end justify-between gap-2">
-        <p className="text-sm text-slate-200 tabular-nums">
-          <span className="text-lg font-semibold text-white">{block.completed}</span>
-          <span className="text-slate-500"> / {block.total}</span>
+    <div
+      className={`flex min-w-[7.5rem] flex-1 items-center justify-between gap-2 rounded-xl border-2 px-3 py-2 sm:min-w-[8.5rem] sm:px-4 ${t.ring}`}
+    >
+      <div className="min-w-0">
+        <p className="truncate text-[11px] font-semibold tracking-wide text-slate-300">{block.label}</p>
+        <p className="mt-0.5 tabular-nums leading-none">
+          <span className={`text-2xl font-bold ${t.accent}`}>{block.completed}</span>
+          <span className="text-base font-medium text-slate-500"> / {block.total}</span>
         </p>
-        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>
-          {badge.text}
-        </span>
       </div>
+      <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${t.badgeClass}`}>
+        {t.badge}
+      </span>
     </div>
   );
 }
@@ -47,9 +69,9 @@ function SummaryCard({ block }: { block: SummaryBlock }) {
 /** 내 검사실 환영 영역 — 검사·과제 진행 요약 */
 export default function PortalWelcomeProgressSummary({ tests, care }: Props) {
   return (
-    <div className="flex flex-wrap items-stretch gap-2 sm:justify-end">
-      <SummaryCard block={tests} />
-      <SummaryCard block={{ ...care, label: '추가 과제·치료' }} />
+    <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[18rem]">
+      <CompactStat block={{ ...tests, label: '검사' }} />
+      <CompactStat block={{ ...care, label: '과제·치료' }} />
     </div>
   );
 }

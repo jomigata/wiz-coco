@@ -57,10 +57,7 @@ function ForgotPinContent() {
               <span className="inline-block text-[11px] uppercase tracking-[0.16em] text-violet-300/80 mb-3">
                 Password Recovery
               </span>
-              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">비밀번호 찾기</h1>
-              <p className="text-violet-100/70 text-sm leading-relaxed">
-                나의코드와 등록된 이메일을 입력하면 비밀번호 재설정 링크를 보내드립니다.
-              </p>
+              <h1 className="text-2xl font-semibold text-white tracking-tight">비밀번호 찾기</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
