@@ -41,7 +41,11 @@ function ProgressPageContent() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <AssessmentDispatchPanel assessmentId={assessmentId} filterPortalId={portalId || undefined} />
+      <AssessmentDispatchPanel
+        assessmentId={assessmentId}
+        filterPortalId={portalId || undefined}
+        initialSearchQuery={(searchParams.get('search') || '').trim()}
+      />
     </div>
   );
 }

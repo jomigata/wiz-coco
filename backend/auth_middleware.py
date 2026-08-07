@@ -93,6 +93,7 @@ def require_counselor(f):
             return jsonify({"error": "Forbidden", "message": "Counselor role required"}), 403
         from flask import g
         g.counselor_uid = uid
+        g.counselor_role = role
         return f(*args, **kwargs)
     return decorated
 

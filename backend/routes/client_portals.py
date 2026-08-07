@@ -74,6 +74,7 @@ from utils.counselor_org_liaison import list_counselor_org_liaisons
 from utils.care_assignments import list_portal_care_assignments, submit_portal_care_progress
 from utils.care_assignment_schema import CareAssignmentValidationError
 from utils.email_notify import send_portal_pin_reset_email
+from utils.counselor_scope import scope_counselor_uid, resource_owned_by_scope
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -190,7 +191,7 @@ def list_counselor_portals():
     db = get_firestore()
     result = list_counselor_client_portals(
         db,
-        g.counselor_uid,
+        scope_counselor_uid(),
         status=status,
         cohort_id=cohort_id,
         progress=progress,
@@ -216,7 +217,7 @@ def list_counselor_assignments():
     db = get_firestore()
     result = list_counselor_portal_test_assignments(
         db,
-        g.counselor_uid,
+        scope_counselor_uid(),
         status=status,
         test_status=test_status,
         cohort_id=cohort_id,
@@ -312,7 +313,7 @@ def counselor_monitoring_hub():
     """상담사 통합 모니터링 허브 — 전체 상담(코드)·진행 요약."""
     cohort_id = (request.args.get("cohortId") or "").strip() or None
     db = get_firestore()
-    result = get_counselor_monitoring_hub(db, g.counselor_uid, cohort_id=cohort_id)
+    result = get_counselor_monitoring_hub(db, scope_counselor_uid(), cohort_id=cohort_id)
     return jsonify(result)
 
 
@@ -321,7 +322,7 @@ def counselor_monitoring_hub():
 def counselor_cohort_monitoring():
     """상담사 그룹(학급·단체)별 진행률 집계."""
     db = get_firestore()
-    result = get_counselor_cohort_monitoring_view(db, g.counselor_uid)
+    result = get_counselor_cohort_monitoring_view(db, scope_counselor_uid())
     return jsonify(result)
 
 
@@ -455,6 +456,9 @@ def portal_change_pin():
 
 
 MSG_PIN_RESET_SENT = "등록된 이메일로 재설정 안내를 보냈습니다."
+MSG_PIN_RESET_MISMATCH = "나의코드와 이메일이 일치하지 않습니다. 입력 내용을 확인해 주세요."
+MSG_PIN_NOT_FOUND = "나의코드를 찾을 수 없습니다. 담당자에게 문의해 주세요."
+MSG_PIN_NO_EMAIL = "등록된 이메일이 없습니다. 담당자에게 문의해 주세요."
 
 
 @bp.route("/forgot-pin", methods=["POST"])
@@ -465,21 +469,29 @@ def portal_forgot_pin():
     code = normalize_my_code(body.get("accessCode") or "")
     email = (body.get("email") or "").strip().lower()
 
-    if not is_valid_my_code(code) or not email or "@" not in email:
-        return jsonify({"message": MSG_PIN_RESET_SENT}), 200
+    if not is_valid_my_code(code):
+        return jsonify({"error": "Bad Request", "message": MSG_PIN_NOT_FOUND}), 400
+    if not email or "@" not in email:
+        return jsonify({"error": "Bad Request", "message": "올바른 이메일 주소를 입력해 주세요."}), 400
 
     db = get_firestore()
     portal_doc = _find_portal_by_access_code(db, code)
-    if portal_doc:
-        portal_email = ((portal_doc.to_dict() or {}).get("email") or "").strip().lower()
-        if portal_email and portal_email == email:
-            token = _serializer("portal-pin-reset").dumps({"portalId": portal_doc.id})
-            reset_url = f"{PUBLIC_SITE_URL}/portal/reset-pin/?t={token}"
-            send_portal_pin_reset_email(
-                to_email=email,
-                reset_url=reset_url,
-                access_code=code,
-            )
+    if not portal_doc:
+        return jsonify({"error": "Bad Request", "message": MSG_PIN_NOT_FOUND}), 400
+
+    portal_email = ((portal_doc.to_dict() or {}).get("email") or "").strip().lower()
+    if not portal_email:
+        return jsonify({"error": "Bad Request", "message": MSG_PIN_NO_EMAIL}), 400
+    if portal_email != email:
+        return jsonify({"error": "Bad Request", "message": MSG_PIN_RESET_MISMATCH}), 400
+
+    token = _serializer("portal-pin-reset").dumps({"portalId": portal_doc.id})
+    reset_url = f"{PUBLIC_SITE_URL}/portal/reset-pin/?t={token}"
+    send_portal_pin_reset_email(
+        to_email=email,
+        reset_url=reset_url,
+        access_code=code,
+    )
 
     return jsonify({"message": MSG_PIN_RESET_SENT}), 200
 
@@ -905,7 +917,7 @@ def resend_bulk_notifications():
 def get_dispatch_status(assessment_id):
     """상담(코드)별 내담자 발송·검사 완료 현황."""
     db = get_firestore()
-    data = get_assessment_dispatch_status(db, assessment_id, g.counselor_uid)
+    data = get_assessment_dispatch_status(db, assessment_id, scope_counselor_uid())
     if not data:
         return jsonify({"error": "Not Found", "message": "상담(코드)를 찾을 수 없습니다."}), 404
     return jsonify(data)
@@ -924,7 +936,7 @@ def resend_dispatch(assessment_id):
         result = resend_portal_credentials(
             db,
             assessment_id=assessment_id,
-            counselor_uid=g.counselor_uid,
+            counselor_uid=scope_counselor_uid(),
             portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
         )
     except PermissionError as exc:
@@ -947,7 +959,7 @@ def remind_dispatch(assessment_id):
         result = send_test_reminders(
             db,
             assessment_id=assessment_id,
-            counselor_uid=g.counselor_uid,
+            counselor_uid=scope_counselor_uid(),
             portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
         )
     except PermissionError as exc:
@@ -970,7 +982,7 @@ def archive_dispatch(assessment_id):
         result = archive_dispatch_portals(
             db,
             assessment_id=assessment_id,
-            counselor_uid=g.counselor_uid,
+            counselor_uid=scope_counselor_uid(),
             portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
         )
     except PermissionError as exc:
@@ -986,7 +998,7 @@ def list_archived():
     """삭제(archived)된 내담자 포털 목록."""
     assessment_id = (request.args.get("assessmentId") or "").strip() or None
     db = get_firestore()
-    items = list_archived_portals(db, counselor_uid=g.counselor_uid, assessment_id=assessment_id)
+    items = list_archived_portals(db, counselor_uid=scope_counselor_uid(), assessment_id=assessment_id)
     return jsonify({"items": items})
 
 
@@ -1074,7 +1086,7 @@ def create_magic_link():
 def get_counselor_portal_detail(portal_id):
     """상담사 내담자 1명 상세 (360° 뷰)."""
     db = get_firestore()
-    detail = get_counselor_client_portal_detail(db, g.counselor_uid, portal_id)
+    detail = get_counselor_client_portal_detail(db, scope_counselor_uid(), portal_id)
     if not detail:
         return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
     return jsonify(detail)

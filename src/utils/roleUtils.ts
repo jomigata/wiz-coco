@@ -2,12 +2,33 @@
 // 이메일이 아닌 Firebase 로그인 사용자(uid)의 프로필 문서(/users/{uid}.role)를 기준으로 판단합니다.
 
 import { isClientPortalDedicatedTestPath } from '@/lib/joinDedicatedTestPaths';
+import { readSWRCache } from '@/utils/staleWhileRevalidateCache';
+
+const AUTH_CACHE_KEY = 'swr:firebaseAuthUser';
 
 export type AppRole = 'user' | 'counselor' | 'admin' | 'org_admin';
 
 export const isAdmin = (role: unknown): boolean => role === 'admin';
 
 export const isCounselor = (role: unknown): boolean => role === 'counselor' || role === 'admin';
+
+/** 세션 캐시의 Firebase 사용자 role (동기) */
+export function getAppRoleSync(): AppRole {
+  if (typeof window === 'undefined') return 'user';
+  try {
+    const cached = readSWRCache<{ role?: AppRole }>(AUTH_CACHE_KEY, {
+      scope: 'session',
+      maxAgeMs: 24 * 60 * 60 * 1000,
+    });
+    const role = cached.data?.role;
+    if (role === 'admin' || role === 'counselor' || role === 'org_admin' || role === 'user') {
+      return role;
+    }
+  } catch {
+    // ignore
+  }
+  return 'user';
+}
 
 export const isOrgAdmin = (role: unknown): boolean => role === 'org_admin' || role === 'admin';
 

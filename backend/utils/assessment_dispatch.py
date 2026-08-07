@@ -344,7 +344,7 @@ def _test_status_for_portal(db, portal_id: str, assessment_id: str, required: se
 def _collect_portals_for_assessment(
     db,
     *,
-    counselor_uid: str,
+    counselor_uid: str | None,
     assessment_id: str,
 ) -> list[tuple[str, dict]]:
     """활성 배정 + 해당 상담(코드)에서 soft-delete(archived)된 내담자."""
@@ -353,11 +353,14 @@ def _collect_portals_for_assessment(
         return []
     seen: set[str] = set()
     rows: list[tuple[str, dict]] = []
-    refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     for doc in refs:
         pdata = doc.to_dict() or {}
         pid = doc.id
@@ -406,7 +409,7 @@ def _accumulate_assessment_stats_for_portals(
 def aggregate_archived_assessment_list_stats(
     db,
     *,
-    counselor_uid: str,
+    counselor_uid: str | None,
     items: list[dict],
 ) -> dict[str, dict]:
     """삭제(archived) 상담(코드) — 활성·archived-from 내담자 통합 집계."""
@@ -462,7 +465,7 @@ def aggregate_archived_assessment_list_stats(
 def aggregate_assessment_list_stats(
     db,
     *,
-    counselor_uid: str,
+    counselor_uid: str | None,
     items: list[dict],
 ) -> dict[str, dict]:
     """상담(코드) 목록용 — 포털별 발송·검사 완료 집계."""
@@ -489,11 +492,14 @@ def aggregate_assessment_list_stats(
         }
 
     portal_rows: list[tuple[str, dict, list]] = []
-    portal_refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        portal_refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        portal_refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     for doc in portal_refs:
         pdata = doc.to_dict() or {}
         if (pdata.get("status") or "active") != "active":
@@ -537,13 +543,14 @@ def aggregate_assessment_list_stats(
     return stats
 
 
-def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -> dict | None:
+def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | None) -> dict | None:
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
         return None
     ass = ass_doc.to_dict() or {}
-    if ass.get("counselorId") != counselor_uid:
+    owner_uid = (ass.get("counselorId") or "").strip()
+    if counselor_uid is not None and owner_uid != counselor_uid:
         return None
     if (ass.get("status") or "active") != "active":
         return None
@@ -556,11 +563,14 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str) -
         if t and str(t.get("testId") or "").strip()
     }
 
-    portal_refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        portal_refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        portal_refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     rows = []
     portal_ids: set[str] = set()
     for doc in portal_refs:
@@ -636,16 +646,10 @@ def resend_portal_credentials(
     db,
     *,
     assessment_id: str,
-    counselor_uid: str,
+    counselor_uid: str | None,
     portal_ids: list[str],
 ) -> dict:
-    ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
-    ass_doc = ass_ref.get()
-    if not ass_doc.exists:
-        raise ValueError("상담(코드)를 찾을 수 없습니다.")
-    ass = ass_doc.to_dict() or {}
-    if ass.get("counselorId") != counselor_uid:
-        raise PermissionError("접근 권한이 없습니다.")
+    ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
     join_access_code = (ass.get("accessCode") or "").strip()
 
     sent = 0
@@ -665,7 +669,7 @@ def resend_portal_credentials(
             details.append({"portalId": pid, "status": "failed", "message": "not_found"})
             continue
         pdata = pdoc.to_dict() or {}
-        if pdata.get("counselorId") != counselor_uid:
+        if not _portal_owned_by_scope(pdata, counselor_uid):
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
             continue
@@ -741,17 +745,11 @@ def send_test_reminders(
     db,
     *,
     assessment_id: str,
-    counselor_uid: str,
+    counselor_uid: str | None,
     portal_ids: list[str],
 ) -> dict:
     """미완료 검사자에게 미실시 현황·검사 링크 알림 (비밀번호 재발급 없음)."""
-    ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
-    ass_doc = ass_ref.get()
-    if not ass_doc.exists:
-        raise ValueError("상담(코드)를 찾을 수 없습니다.")
-    ass = ass_doc.to_dict() or {}
-    if ass.get("counselorId") != counselor_uid:
-        raise PermissionError("접근 권한이 없습니다.")
+    ass = _verify_assessment_owned(db, assessment_id, counselor_uid)
 
     join_access_code = (ass.get("accessCode") or "").strip()
     assessment_title = (ass.get("title") or "").strip()
@@ -779,7 +777,7 @@ def send_test_reminders(
             details.append({"portalId": pid, "status": "failed", "message": "not_found"})
             continue
         pdata = pdoc.to_dict() or {}
-        if pdata.get("counselorId") != counselor_uid:
+        if not _portal_owned_by_scope(pdata, counselor_uid):
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
             continue
@@ -858,22 +856,29 @@ def send_test_reminders(
     }
 
 
-def _verify_assessment_owned(db, assessment_id: str, counselor_uid: str) -> dict:
+def _verify_assessment_owned(db, assessment_id: str, counselor_uid: str | None) -> dict:
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass_doc = ass_ref.get()
     if not ass_doc.exists:
         raise ValueError("상담(코드)를 찾을 수 없습니다.")
     ass = ass_doc.to_dict() or {}
-    if ass.get("counselorId") != counselor_uid:
+    owner_uid = (ass.get("counselorId") or "").strip()
+    if counselor_uid is not None and owner_uid != counselor_uid:
         raise PermissionError("접근 권한이 없습니다.")
     return ass
+
+
+def _portal_owned_by_scope(pdata: dict, counselor_uid: str | None) -> bool:
+    if counselor_uid is None:
+        return True
+    return (pdata.get("counselorId") or "").strip() == counselor_uid.strip()
 
 
 def archive_dispatch_portals(
     db,
     *,
     assessment_id: str,
-    counselor_uid: str,
+    counselor_uid: str | None,
     portal_ids: list[str],
 ) -> dict:
     """선택 내담자 포털을 soft-delete(archived) — 발송·검사 현황에서 제외."""
@@ -893,7 +898,7 @@ def archive_dispatch_portals(
             details.append({"portalId": pid, "status": "failed", "message": "not_found"})
             continue
         pdata = pdoc.to_dict() or {}
-        if pdata.get("counselorId") != counselor_uid:
+        if not _portal_owned_by_scope(pdata, counselor_uid):
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
             continue
@@ -924,7 +929,7 @@ def archive_dispatch_portals(
 def list_archived_portals(
     db,
     *,
-    counselor_uid: str,
+    counselor_uid: str | None,
     assessment_id: str | None = None,
 ) -> list[dict]:
     """상담사 소유 archived 내담자 포털 목록.
@@ -934,12 +939,16 @@ def list_archived_portals(
             db, counselor_uid=counselor_uid, assessment_id=assessment_id
         )
 
-    refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .where("status", "==", "archived")
-        .stream()
-    )
+    refs_query = db.collection(CLIENT_PORTALS_COLLECTION).where("status", "==", "archived")
+    if counselor_uid:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .where("status", "==", "archived")
+            .stream()
+        )
+    else:
+        refs = refs_query.stream()
     items: list[dict] = []
     assessment_cache: dict[str, dict] = {}
     portal_rows: list[tuple[str, dict, str]] = []
@@ -1106,7 +1115,7 @@ def restore_archived_portals(
             details.append({"portalId": pid, "status": "failed", "message": "not_found"})
             continue
         pdata = pdoc.to_dict() or {}
-        if pdata.get("counselorId") != counselor_uid:
+        if not _portal_owned_by_scope(pdata, counselor_uid):
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
             continue

@@ -13,8 +13,8 @@ import {
 
 function ForgotPinLoading() {
   return (
-    <div className="min-h-screen bg-[#070b14] pt-24 flex justify-center">
-      <p className="text-slate-400 text-sm">불러오는 중…</p>
+    <div className="min-h-screen bg-[#0a0814] pt-24 flex justify-center">
+      <p className="text-violet-200/70 text-sm">불러오는 중…</p>
     </div>
   );
 }
@@ -49,20 +49,23 @@ function ForgotPinContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070b14]">
+    <div className="min-h-screen bg-[#0a0814]">
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
-          <div className="bg-slate-900/90 rounded-2xl border border-white/[0.08] p-8 shadow-2xl shadow-black/30">
+          <div className="bg-violet-950/40 rounded-2xl border border-violet-400/25 p-8 shadow-2xl shadow-violet-950/40">
             <div className="mb-6">
+              <span className="inline-block text-[11px] uppercase tracking-[0.16em] text-violet-300/80 mb-3">
+                Password Recovery
+              </span>
               <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">비밀번호 찾기</h1>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <p className="text-violet-100/70 text-sm leading-relaxed">
                 나의코드와 등록된 이메일을 입력하면 비밀번호 재설정 링크를 보내드립니다.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div>
-                <label htmlFor="portal-forgot-my-code" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="portal-forgot-my-code" className="block text-sm font-medium text-violet-100 mb-2">
                   나의코드
                 </label>
                 <input
@@ -72,14 +75,14 @@ function ForgotPinContent() {
                   maxLength={20}
                   autoComplete="off"
                   placeholder={getMyCodeInputPlaceholder()}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-[#120a24]/80 border border-violet-400/20 text-white text-center text-lg tracking-wider placeholder:text-violet-200/40 focus:outline-none focus:ring-2 focus:ring-violet-400/50"
                   value={code}
                   onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}
                 />
               </div>
               <div>
-                <label htmlFor="portal-forgot-email" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="portal-forgot-email" className="block text-sm font-medium text-violet-100 mb-2">
                   이메일
                 </label>
                 <input
@@ -87,25 +90,32 @@ function ForgotPinContent() {
                   type="email"
                   autoComplete="email"
                   placeholder="등록된 이메일 주소"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-[#120a24]/80 border border-violet-400/20 text-white placeholder:text-violet-200/40 focus:outline-none focus:ring-2 focus:ring-violet-400/50"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
                 />
               </div>
-              {error ? <p className="text-red-400 text-sm">{error}</p> : null}
+              {error ? <p className="text-red-300 text-sm font-medium">{error}</p> : null}
               {success ? <p className="text-emerald-300 text-sm">{success}</p> : null}
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full py-3.5 px-4 rounded-xl font-semibold text-white bg-sky-600 hover:bg-sky-500 disabled:opacity-50 transition-colors"
+                className="w-full py-3.5 px-4 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors"
               >
                 {loading ? '발송 중…' : '재설정 링크 받기'}
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-slate-300">
-              <Link href="/portal/login/" className="text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline">
+            <div className="mt-5 rounded-xl border border-violet-400/15 bg-violet-950/30 px-4 py-3 text-sm text-violet-100/75 leading-relaxed">
+              나의코드나 등록한 이메일을 모를 경우, 담당 상담사·기관 담당자에게 문의해 주세요.
+            </div>
+
+            <p className="mt-6 text-center text-sm text-violet-100/70">
+              <Link
+                href="/portal/login/"
+                className="text-violet-200 hover:text-white underline-offset-2 hover:underline"
+              >
                 로그인으로 돌아가기
               </Link>
             </p>

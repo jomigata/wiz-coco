@@ -24,7 +24,7 @@ def _progress_label(total: int, completed: int) -> str:
 
 def get_counselor_monitoring_hub(
     db,
-    counselor_uid: str,
+    counselor_uid: str | None,
     *,
     cohort_id: str | None = None,
 ) -> dict:
@@ -32,12 +32,19 @@ def get_counselor_monitoring_hub(
     cohort_filter = (cohort_id or "").strip()
 
     assessment_docs: list[tuple[str, dict]] = []
-    ass_refs = (
-        db.collection(ASSESSMENTS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .where("status", "==", "active")
-        .stream()
-    )
+    if counselor_uid:
+        ass_refs = (
+            db.collection(ASSESSMENTS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .where("status", "==", "active")
+            .stream()
+        )
+    else:
+        ass_refs = (
+            db.collection(ASSESSMENTS_COLLECTION)
+            .where("status", "==", "active")
+            .stream()
+        )
     for doc in ass_refs:
         a = doc.to_dict() or {}
         if (a.get("issueType") or "individual") != "individual":
@@ -63,11 +70,14 @@ def get_counselor_monitoring_hub(
         }
 
     portal_rows: list[tuple[str, dict, list[str]]] = []
-    portal_refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        portal_refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        portal_refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     for doc in portal_refs:
         pdata = doc.to_dict() or {}
         if (pdata.get("status") or "active") != "active":
@@ -259,16 +269,23 @@ INDIVIDUAL_COHORT_KEY = "__individual__"
 
 def get_counselor_cohort_monitoring_view(
     db,
-    counselor_uid: str,
+    counselor_uid: str | None,
 ) -> dict:
     """그룹(학급·단체)별 진행률 집계."""
     assessment_docs: list[tuple[str, dict]] = []
-    ass_refs = (
-        db.collection(ASSESSMENTS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .where("status", "==", "active")
-        .stream()
-    )
+    if counselor_uid:
+        ass_refs = (
+            db.collection(ASSESSMENTS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .where("status", "==", "active")
+            .stream()
+        )
+    else:
+        ass_refs = (
+            db.collection(ASSESSMENTS_COLLECTION)
+            .where("status", "==", "active")
+            .stream()
+        )
     for doc in ass_refs:
         a = doc.to_dict() or {}
         if (a.get("issueType") or "individual") != "individual":
@@ -292,11 +309,14 @@ def get_counselor_cohort_monitoring_view(
         }
 
     portal_rows: list[tuple[str, dict, list[str]]] = []
-    portal_refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        portal_refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        portal_refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     for doc in portal_refs:
         pdata = doc.to_dict() or {}
         if (pdata.get("status") or "active") != "active":

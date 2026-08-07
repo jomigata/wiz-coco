@@ -46,8 +46,13 @@ import {
   assessmentGroupTitleParts,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
+import {
+  buildAssessmentProgressHref,
+  readAssessmentListSearch,
+  writeAssessmentListSearch,
+} from '@/lib/counselorAssessmentListSearch';
 
-type ListSortKey = 'no' | 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
 
 function parseCreatedAt(iso?: string): number {
@@ -81,7 +86,6 @@ function compareAssessments(
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
-    case 'no':
     case 'createdAt':
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
     case 'counselInfo':
@@ -98,9 +102,6 @@ function compareAssessments(
   }
 }
 
-function progressHref(assessmentId: string): string {
-  return `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`;
-}
 
 function formatUsageEndDate(iso: string | undefined): string {
   const s = (iso || '').trim();
@@ -180,7 +181,7 @@ export default function AssessmentList({
   const router = useRouter();
   const { user } = useAuthResolved();
   const [listItems, setListItems] = useState(assessments);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => readAssessmentListSearch());
   const clientCacheKey = useMemo(
     () =>
       buildClientPortalsCacheKey({
@@ -328,9 +329,14 @@ export default function AssessmentList({
     setLiveAssessmentId(assessmentId);
   };
 
+  useEffect(() => {
+    writeAssessmentListSearch(searchQuery);
+  }, [searchQuery]);
+
   const goToProgress = (assessmentId: string) => {
+    writeAssessmentListSearch(searchQuery);
     rememberCounselorAssessmentContext(assessmentId);
-    router.push(progressHref(assessmentId));
+    router.push(buildAssessmentProgressHref(assessmentId, searchQuery));
   };
 
   const openAddRecipient = (assessment: CounselorAssessment) => {
@@ -369,7 +375,7 @@ export default function AssessmentList({
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDir(key === 'createdAt' || key === 'no' ? 'desc' : 'asc');
+      setSortDir(key === 'createdAt' ? 'desc' : 'asc');
     }
   };
 
@@ -527,14 +533,7 @@ export default function AssessmentList({
             <table className="w-max min-w-full table-fixed text-sm">
               <thead>
                 <tr className={counselorListHeaderRowClass}>
-                  <SortableColumnHeader
-                    label="No."
-                    sortKey="no"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                    className={`${counselorListNoThClass} whitespace-nowrap`}
-                  />
+                  <th className={counselorListNoThClass}>No.</th>
                   <SortableColumnHeader
                     label="발급일"
                     sortKey="createdAt"
@@ -560,9 +559,6 @@ export default function AssessmentList({
                   />
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">진행현황</span>
-                    <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-400">
-                      (총내담자 / 검사완료)
-                    </span>
                   </th>
                   <SortableColumnHeader
                     label="사용 종료일"

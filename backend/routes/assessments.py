@@ -18,6 +18,7 @@ from utils.result_actor import (
 )
 from utils.test_result_queries import query_results_shared_to_assessment
 from utils.assessment_dispatch import aggregate_assessment_list_stats
+from utils.counselor_scope import resource_owned_by_scope, scope_counselor_uid
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -139,11 +140,17 @@ def _aggregate_completed_testids_by_email(db, assessment_ids):
 @bp.route("", methods=["GET"])
 @require_counselor
 def list_assessments():
-    """상담사: 로그인 상담사 소유 assessments 목록 (행별 진행: 미전체완료 이메일 수 / 전체완료 이메일 수)."""
+    """상담사: 로그인 상담사 소유 assessments 목록 (admin: 전체)."""
     db = get_firestore()
-    refs = db.collection(ASSESSMENTS_COLLECTION).where("counselorId", "==", g.counselor_uid).get()
+    scoped_uid = scope_counselor_uid()
+    if scoped_uid:
+        refs = db.collection(ASSESSMENTS_COLLECTION).where("counselorId", "==", scoped_uid).get()
+    else:
+        refs = db.collection(ASSESSMENTS_COLLECTION).stream()
+        refs = list(refs)
     def _sort_key(doc):
-        t = doc.to_dict().get("createdAt")
+        d = doc.to_dict() if hasattr(doc, "to_dict") else {}
+        t = d.get("createdAt")
         if t is None:
             return 0
         if hasattr(t, "timestamp") and callable(getattr(t, "timestamp", None)):
@@ -157,7 +164,7 @@ def list_assessments():
     items = [x for x in items if (x.get("status") or "active") == "active"]
     ids = [x["id"] for x in items]
     per_testids = _aggregate_completed_testids_by_email(db, ids)
-    portal_stats = aggregate_assessment_list_stats(db, counselor_uid=g.counselor_uid, items=items)
+    portal_stats = aggregate_assessment_list_stats(db, counselor_uid=scoped_uid, items=items)
     for x in items:
         aid = x["id"]
         required = {
@@ -198,7 +205,7 @@ def _owned_assessment_from_doc(doc):
     if not doc.exists:
         return None, None
     d = doc.to_dict() or {}
-    if d.get("counselorId") != g.counselor_uid:
+    if not resource_owned_by_scope(d.get("counselorId")):
         return None, None
     if not _assessment_status_active(d):
         return None, None
@@ -210,16 +217,14 @@ def _find_owned_assessment_by_access_code(db, access_code: str, *, include_archi
     code = normalize_access_code(access_code)
     if not is_valid_access_code(code):
         return None, None
-    refs = (
-        db.collection(ASSESSMENTS_COLLECTION)
-        .where("accessCode", "==", code)
-        .where("counselorId", "==", g.counselor_uid)
-        .limit(5)
-        .get()
-    )
+    scoped_uid = scope_counselor_uid()
+    refs_query = db.collection(ASSESSMENTS_COLLECTION).where("accessCode", "==", code)
+    if scoped_uid:
+        refs_query = refs_query.where("counselorId", "==", scoped_uid)
+    refs = refs_query.limit(5).get()
     for doc in refs:
         d = doc.to_dict() or {}
-        if d.get("counselorId") != g.counselor_uid:
+        if not resource_owned_by_scope(d.get("counselorId")):
             continue
         status = d.get("status") or "active"
         if status == "active" or (include_archived and status == "archived"):
@@ -258,7 +263,7 @@ def _get_owned_assessment_for_delete(db, assessment_id, *, access_code_hint: str
         doc = db.collection(ASSESSMENTS_COLLECTION).document(raw).get()
         if doc.exists:
             d = doc.to_dict() or {}
-            if d.get("counselorId") == g.counselor_uid and (d.get("status") or "active") == "archived":
+            if resource_owned_by_scope(d.get("counselorId")) and (d.get("status") or "active") == "archived":
                 return doc.reference, doc
         if is_valid_access_code(normalize_access_code(raw)):
             ref, doc = _find_owned_assessment_by_access_code(db, raw, include_archived=True)
@@ -352,8 +357,10 @@ def delete_assessment(assessment_id):
     ref.update({"status": "archived", "archivedAt": SERVER_TIMESTAMP})
     from utils.deletion_records import archive_portals_for_assessment
 
+    scoped_uid = scope_counselor_uid()
+    owner_uid = (data.get("counselorId") or scoped_uid or g.counselor_uid)
     archive_portals_for_assessment(
-        db, counselor_uid=g.counselor_uid, assessment_id=resolved_id
+        db, counselor_uid=owner_uid, assessment_id=resolved_id
     )
     return jsonify({"assessmentId": resolved_id, "message": "archived"})
 
@@ -364,7 +371,8 @@ def list_archived_assessments_route():
     from utils.deletion_records import list_archived_assessments
 
     db = get_firestore()
-    items = list_archived_assessments(db, counselor_uid=g.counselor_uid)
+    scoped_uid = scope_counselor_uid()
+    items = list_archived_assessments(db, counselor_uid=scoped_uid)
     return jsonify({"assessments": items})
 
 
@@ -378,9 +386,10 @@ def restore_archived_assessments_route():
     if not isinstance(assessment_ids, list) or not assessment_ids:
         return jsonify({"error": "Bad Request", "message": "assessmentIds가 필요합니다."}), 400
     db = get_firestore()
+    scoped_uid = scope_counselor_uid()
     result = restore_archived_assessments(
         db,
-        counselor_uid=g.counselor_uid,
+        counselor_uid=scoped_uid,
         assessment_ids=[str(x).strip() for x in assessment_ids if str(x).strip()],
     )
     return jsonify(result)
@@ -396,9 +405,10 @@ def permanent_delete_archived_assessments_route():
     if not isinstance(assessment_ids, list) or not assessment_ids:
         return jsonify({"error": "Bad Request", "message": "assessmentIds가 필요합니다."}), 400
     db = get_firestore()
+    scoped_uid = scope_counselor_uid()
     result = permanently_delete_archived_assessments(
         db,
-        counselor_uid=g.counselor_uid,
+        counselor_uid=scoped_uid,
         assessment_ids=[str(x).strip() for x in assessment_ids if str(x).strip()],
     )
     return jsonify(result)
@@ -413,7 +423,7 @@ def get_progress(assessment_id):
         ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
         ass = ass_ref.get()
         ass_data = ass.to_dict() or {} if ass.exists else {}
-        if not ass.exists or ass_data.get("counselorId") != g.counselor_uid:
+        if not ass.exists or not resource_owned_by_scope(ass_data.get("counselorId")):
             return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
         access_code = ass_data.get("accessCode", "")
 
@@ -502,7 +512,7 @@ def get_assessment_result(assessment_id, result_id):
     db = get_firestore()
     ass_ref = db.collection(ASSESSMENTS_COLLECTION).document(assessment_id)
     ass = ass_ref.get()
-    if not ass.exists or ass.to_dict().get("counselorId") != g.counselor_uid:
+    if not ass.exists or not resource_owned_by_scope((ass.to_dict() or {}).get("counselorId")):
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
     result_ref = db.collection(TEST_RESULTS_COLLECTION).document(result_id)
     result_doc = result_ref.get()

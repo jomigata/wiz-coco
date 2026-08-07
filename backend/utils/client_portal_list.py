@@ -21,6 +21,12 @@ from utils.portal_linking import list_linked_portal_summaries
 from utils.counselor_monitoring import INDIVIDUAL_COHORT_KEY
 
 
+def _matches_counselor_scope(resource_counselor_id: str | None, scoped_uid: str | None) -> bool:
+    if scoped_uid is None:
+        return True
+    return (resource_counselor_id or "").strip() == scoped_uid.strip()
+
+
 def _matches_cohort_filter(pdata: dict, cohort_filter: str) -> bool:
     if not cohort_filter:
         return True
@@ -55,7 +61,7 @@ def _progress_label(total: int, completed: int) -> str:
 
 def list_counselor_client_portals(
     db,
-    counselor_uid: str,
+    counselor_uid: str | None,
     *,
     status: str | None = None,
     cohort_id: str | None = None,
@@ -73,11 +79,14 @@ def list_counselor_client_portals(
     tag_filter = (tag or "").strip().lower()
 
     raw_rows: list[tuple[str, dict, float]] = []
-    refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     for doc in refs:
         pdata = doc.to_dict() or {}
         st = (pdata.get("status") or "active").strip()
@@ -130,7 +139,7 @@ def list_counselor_client_portals(
         if not adoc.exists:
             continue
         a = adoc.to_dict() or {}
-        if a.get("counselorId") != counselor_uid:
+        if not _matches_counselor_scope(a.get("counselorId"), counselor_uid):
             continue
         if (a.get("status") or "active") != "active":
             continue
@@ -263,7 +272,7 @@ def list_counselor_client_portals(
 
 def get_counselor_client_portal_detail(
     db,
-    counselor_uid: str,
+    counselor_uid: str | None,
     portal_id: str,
 ) -> dict | None:
     """상담사 내담자 1명 상세 — 검사·발송·진행·결과 통합."""
@@ -275,7 +284,7 @@ def get_counselor_client_portal_detail(
     if not portal_doc:
         return None
     pdata = portal_doc.to_dict() or {}
-    if pdata.get("counselorId") != counselor_uid:
+    if not _matches_counselor_scope(pdata.get("counselorId"), counselor_uid):
         return None
 
     email = (pdata.get("email") or "").strip()
@@ -304,7 +313,7 @@ def get_counselor_client_portal_detail(
         if not adoc.exists:
             continue
         a = adoc.to_dict() or {}
-        if a.get("counselorId") != counselor_uid:
+        if not _matches_counselor_scope(a.get("counselorId"), counselor_uid):
             continue
         if (a.get("status") or "active") != "active":
             continue
@@ -403,7 +412,7 @@ def get_counselor_client_portal_detail(
 
 def list_counselor_portal_test_assignments(
     db,
-    counselor_uid: str,
+    counselor_uid: str | None,
     *,
     status: str | None = None,
     test_status: str | None = None,
@@ -419,11 +428,14 @@ def list_counselor_portal_test_assignments(
     assessment_filter = (assessment_id or "").strip()
 
     rows: list[tuple[str, dict, float]] = []
-    refs = (
-        db.collection(CLIENT_PORTALS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
-        .stream()
-    )
+    if counselor_uid:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    else:
+        refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
     for doc in refs:
         pdata = doc.to_dict() or {}
         st = (pdata.get("status") or "active").strip()
@@ -454,7 +466,7 @@ def list_counselor_portal_test_assignments(
         if not adoc.exists:
             continue
         a = adoc.to_dict() or {}
-        if a.get("counselorId") != counselor_uid:
+        if not _matches_counselor_scope(a.get("counselorId"), counselor_uid):
             continue
         if (a.get("status") or "active") != "active":
             continue
@@ -559,7 +571,7 @@ def update_portal_counselor_tags(
     if not portal_doc:
         return None
     pdata = portal_doc.to_dict() or {}
-    if pdata.get("counselorId") != counselor_uid:
+    if not _matches_counselor_scope(pdata.get("counselorId"), counselor_uid):
         return None
 
     cleaned: list[str] = []

@@ -118,6 +118,15 @@ export type DispatchStatusView = {
   title?: string;
 };
 
+function anyChannelSucceeded(parts: ChannelDetailPart[]): boolean {
+  return parts.some((p) => !p.failed && p.text.endsWith('✓'));
+}
+
+function dispatchSuccessLabel(kindPrefix: string): string {
+  const label = kindPrefix ? `${kindPrefix}발송성공` : '발송성공';
+  return label.trim();
+}
+
 function composeStatusText(mainText: string, detailParts: ChannelDetailPart[]): string {
   if (!detailParts.length) return mainText;
   return `${mainText} (${detailParts.map((p) => p.text).join('·')})`;
@@ -239,23 +248,38 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
     );
   }
 
-  if (status === 'partial') {
+  if (status === 'partial' || status === 'sent' || status === 'failed') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const detailParts = buildChannelDetailParts(r);
-    const mainLabel = kindPrefix ? `${kindPrefix}성공` : '발송 성공';
-    return statusView(
-      mainLabel,
-      detailParts,
-      'text-emerald-300',
-      notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.',
-    );
-  }
+    let detailParts = buildChannelDetailParts(r);
+    const succeeded = status === 'sent' || status === 'partial' || anyChannelSucceeded(detailParts);
 
-  if (status === 'failed') {
-    const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const detailParts = buildChannelDetailParts(r);
+    if (succeeded) {
+      if (!detailParts.length && status === 'sent') {
+        if (!hasEmail && hasPhone) {
+          detailParts = [{ text: 'SMS', failed: false }];
+        } else if (hasEmail && !hasPhone) {
+          detailParts = [{ text: '이메일', failed: false }];
+        } else {
+          const viaLabel = formatSentViaLabel(r.notifySentVia);
+          if (viaLabel) detailParts = [{ text: viaLabel, failed: false }];
+        }
+      }
+
+      let title = kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료';
+      if (!hasEmail && hasPhone) title = '이메일 없음 · SMS로 발송됨';
+      else if (hasEmail && !hasPhone) title = '이메일로 발송됨';
+      else if (status === 'partial') title = notifyErrorHint(r.notifyError) || '일부 채널만 발송되었습니다.';
+
+      return statusView(
+        dispatchSuccessLabel(kindPrefix),
+        detailParts,
+        'text-emerald-300',
+        title,
+      );
+    }
+
     return statusView(
-      `${kindPrefix}실패`.trim(),
+      `${kindPrefix}발송실패`.trim(),
       detailParts,
       'text-red-400',
       notifyErrorHint(r.notifyError) || '발송에 실패했습니다.',
@@ -272,52 +296,6 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
       );
     }
     return statusView('발송 생략', [], 'text-slate-400', notifyErrorHint(r.notifyError));
-  }
-
-  if (status === 'sent') {
-    const kindPrefix = notifyKindPrefix(r.notifyKind);
-    const detailParts = buildChannelDetailParts(r);
-    if (!hasEmail && hasPhone) {
-      const parts = detailParts.length ? detailParts : [{ text: 'SMS', failed: false }];
-      return statusView(
-        `${kindPrefix}완료`.trim(),
-        parts,
-        'text-emerald-300',
-        '이메일 없음 · SMS로 발송됨',
-      );
-    }
-    if (hasEmail && !hasPhone) {
-      const parts = detailParts.length ? detailParts : [{ text: '이메일', failed: false }];
-      return statusView(
-        `${kindPrefix}완료`.trim(),
-        parts,
-        'text-emerald-300',
-        '이메일로 발송됨',
-      );
-    }
-    const viaLabel = formatSentViaLabel(r.notifySentVia);
-    if (detailParts.length) {
-      return statusView(
-        `${kindPrefix}완료`.trim(),
-        detailParts,
-        'text-emerald-300',
-        kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
-      );
-    }
-    if (viaLabel) {
-      return statusView(
-        `${kindPrefix}완료`.trim(),
-        [{ text: viaLabel, failed: false }],
-        'text-emerald-300',
-        kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
-      );
-    }
-    return statusView(
-      `${kindPrefix}완료`.trim(),
-      [],
-      'text-emerald-300',
-      kindPrefix.includes('재발송') ? '접속 정보 재발송 완료' : '접속 정보 발송 완료',
-    );
   }
 
   if (status === 'pending') {
@@ -338,16 +316,14 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
 }
 
 export function testSummary(r: DispatchDisplayRecipient): { text: string; className: string } {
-  if (r.testStatus === 'completed') {
-    return { text: '검사 완료', className: 'text-emerald-300' };
+  const required = r.requiredCount ?? 0;
+  const completed = r.completedCount ?? 0;
+  const allComplete =
+    r.testStatus === 'completed' || (required > 0 && completed >= required);
+  if (allComplete) {
+    return { text: '검사완료', className: 'text-emerald-300' };
   }
-  if (r.testStatus === 'in_progress') {
-    return {
-      text: `${r.completedCount ?? 0}/${r.requiredCount ?? 0}`,
-      className: 'text-amber-300',
-    };
-  }
-  return { text: '미실시', className: 'text-slate-500' };
+  return { text: '미실시', className: 'text-red-400' };
 }
 
 export function formatNotifyDate(iso: string | null | undefined): string {

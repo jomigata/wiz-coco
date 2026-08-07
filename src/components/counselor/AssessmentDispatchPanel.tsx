@@ -42,6 +42,7 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
+import { writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
@@ -301,11 +302,13 @@ type DispatchComplete = {
 interface AssessmentDispatchPanelProps {
   assessmentId: string;
   filterPortalId?: string;
+  initialSearchQuery?: string;
 }
 
 export default function AssessmentDispatchPanel({
   assessmentId,
   filterPortalId,
+  initialSearchQuery = '',
 }: AssessmentDispatchPanelProps) {
   const { authPending, isAuthenticated } = useAuthResolved();
   const [data, setData] = useState<AssessmentDispatchStatus | null>(
@@ -324,7 +327,18 @@ export default function AssessmentDispatchPanel({
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+
+  useEffect(() => {
+    if (initialSearchQuery) {
+      setSearchQuery(initialSearchQuery);
+      writeAssessmentListSearch(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
+
+  useEffect(() => {
+    writeAssessmentListSearch(searchQuery);
+  }, [searchQuery]);
 
   const [dispatchOverrides, setDispatchOverrides] = useState<Record<string, DispatchRowOverride>>({});
 

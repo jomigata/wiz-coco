@@ -8,18 +8,25 @@ from config import ASSESSMENTS_COLLECTION, CLIENT_PORTALS_COLLECTION
 from utils.assessment_dispatch import _iso_timestamp
 
 
-def list_archived_assessments(db, *, counselor_uid: str) -> list[dict]:
+def _matches_counselor_scope(resource_counselor_id: str | None, scoped_uid: str | None) -> bool:
+    if scoped_uid is None:
+        return True
+    return (resource_counselor_id or "").strip() == scoped_uid.strip()
+
+
+def list_archived_assessments(db, *, counselor_uid: str | None) -> list[dict]:
     from utils.assessment_dispatch import aggregate_archived_assessment_list_stats
 
     refs = (
         db.collection(ASSESSMENTS_COLLECTION)
-        .where("counselorId", "==", counselor_uid)
         .where("status", "==", "archived")
         .stream()
     )
     items: list[dict] = []
     for doc in refs:
         data = doc.to_dict() or {}
+        if not _matches_counselor_scope(data.get("counselorId"), counselor_uid):
+            continue
         items.append(
             {
                 "id": doc.id,
@@ -108,7 +115,7 @@ def restore_portals_for_assessment(db, *, counselor_uid: str, assessment_id: str
     return restored_count
 
 
-def restore_archived_assessments(db, *, counselor_uid: str, assessment_ids: list[str]) -> dict:
+def restore_archived_assessments(db, *, counselor_uid: str | None, assessment_ids: list[str]) -> dict:
     restored = 0
     failed = 0
     details: list[dict] = []
@@ -123,7 +130,7 @@ def restore_archived_assessments(db, *, counselor_uid: str, assessment_ids: list
             details.append({"assessmentId": aid, "status": "failed", "message": "not_found"})
             continue
         data = doc.to_dict() or {}
-        if data.get("counselorId") != counselor_uid:
+        if not _matches_counselor_scope(data.get("counselorId"), counselor_uid):
             failed += 1
             details.append({"assessmentId": aid, "status": "failed", "message": "forbidden"})
             continue
@@ -137,14 +144,16 @@ def restore_archived_assessments(db, *, counselor_uid: str, assessment_ids: list
                 "archivedAt": fa_firestore.DELETE_FIELD,
             }
         )
-        restore_portals_for_assessment(db, counselor_uid=counselor_uid, assessment_id=aid)
+        owner_uid = (data.get("counselorId") or counselor_uid or "").strip()
+        if owner_uid:
+            restore_portals_for_assessment(db, counselor_uid=owner_uid, assessment_id=aid)
         restored += 1
         details.append({"assessmentId": aid, "status": "restored"})
     return {"restored": restored, "failed": failed, "details": details}
 
 
 def permanently_delete_archived_assessments(
-    db, *, counselor_uid: str, assessment_ids: list[str]
+    db, *, counselor_uid: str | None, assessment_ids: list[str]
 ) -> dict:
     deleted = 0
     failed = 0
@@ -160,7 +169,7 @@ def permanently_delete_archived_assessments(
             details.append({"assessmentId": aid, "status": "failed", "message": "not_found"})
             continue
         data = doc.to_dict() or {}
-        if data.get("counselorId") != counselor_uid:
+        if not _matches_counselor_scope(data.get("counselorId"), counselor_uid):
             failed += 1
             details.append({"assessmentId": aid, "status": "failed", "message": "forbidden"})
             continue
@@ -194,7 +203,7 @@ def permanently_delete_archived_portals(db, *, counselor_uid: str, portal_ids: l
             details.append({"portalId": pid, "status": "failed", "message": "not_found"})
             continue
         data = doc.to_dict() or {}
-        if data.get("counselorId") != counselor_uid:
+        if not _matches_counselor_scope(data.get("counselorId"), counselor_uid):
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "forbidden"})
             continue

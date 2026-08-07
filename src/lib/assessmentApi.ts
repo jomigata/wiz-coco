@@ -5,6 +5,7 @@
 
 import { isValidAccessCodeInput, normalizeAccessCodeInput } from '@/lib/accessCodeFormat';
 import { getCounselorToken, getCounselorUid, getCounselorUidSync } from '@/lib/counselorAuth';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
@@ -645,6 +646,7 @@ function filterAssessmentsForCounselor(
   items: CounselorAssessment[],
   counselorUid: string,
 ): CounselorAssessment[] {
+  if (isAdmin(getAppRoleSync())) return items;
   return items.filter((a) => !a.counselorId || a.counselorId === counselorUid);
 }
 
@@ -731,12 +733,13 @@ export function mergeCounselorAssessmentLists(
   counselorUid?: string | null,
 ): CounselorAssessment[] {
   const uid = counselorUid?.trim();
+  const scopeToCounselor = uid && !isAdmin(getAppRoleSync());
   const serverItems = (fromServer || [])
     .map(normalizeCounselorAssessment)
-    .filter((a) => a.id && (!uid || !a.counselorId || a.counselorId === uid));
+    .filter((a) => a.id && (!scopeToCounselor || !a.counselorId || a.counselorId === uid));
   const cacheItems = (fromCache || [])
     .map(normalizeCounselorAssessment)
-    .filter((a) => a.id && (!uid || !a.counselorId || a.counselorId === uid));
+    .filter((a) => a.id && (!scopeToCounselor || !a.counselorId || a.counselorId === uid));
 
   const byId = new Map<string, CounselorAssessment>();
   const serverAccessCodes = new Set(
