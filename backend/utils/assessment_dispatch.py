@@ -240,36 +240,49 @@ def _iso_timestamp(value) -> str | None:
     return value.isoformat() if hasattr(value, "isoformat") else str(value)
 
 
-def _test_detail_rows(db, portal_id: str, assessment_id: str, test_list: list) -> list[dict]:
-    refs = list(
-        db.collection(TEST_RESULTS_COLLECTION)
-        .where("portalId", "==", portal_id)
-        .where("assessmentId", "==", assessment_id)
-        .stream()
-    )
-    by_test: dict[str, dict] = {}
-    for doc in refs:
-        data = doc.to_dict() or {}
-        test_id = str(data.get("testId") or "").strip()
-        if not test_id:
-            continue
-        status = (data.get("status") or "").strip() or "in_progress"
-        candidate = {
-            "resultId": doc.id,
-            "status": status,
-            "completedAt": _iso_timestamp(data.get("completedAt")),
-        }
-        prev = by_test.get(test_id)
-        if not prev:
-            by_test[test_id] = candidate
-            continue
-        if candidate["status"] == "completed" and prev.get("status") != "completed":
-            by_test[test_id] = candidate
-            continue
-        if candidate["status"] == "completed" and prev.get("status") == "completed":
-            if (candidate.get("completedAt") or "") >= (prev.get("completedAt") or ""):
+def _bulk_test_results_by_portal_assessment(
+    db, portal_ids: list[str], assessment_id: str
+) -> dict[str, dict[str, dict]]:
+    """portalId → testId → {resultId, status, completedAt}."""
+    out: dict[str, dict[str, dict]] = {}
+    aid = (assessment_id or "").strip()
+    if not portal_ids or not aid:
+        return out
+    chunk_size = 30
+    for i in range(0, len(portal_ids), chunk_size):
+        chunk = portal_ids[i : i + chunk_size]
+        refs = (
+            db.collection(TEST_RESULTS_COLLECTION)
+            .where("portalId", "in", chunk)
+            .where("assessmentId", "==", aid)
+            .stream()
+        )
+        for doc in refs:
+            data = doc.to_dict() or {}
+            pid = (data.get("portalId") or "").strip()
+            test_id = str(data.get("testId") or "").strip()
+            if not pid or not test_id:
+                continue
+            status = (data.get("status") or "").strip() or "in_progress"
+            candidate = {
+                "resultId": doc.id,
+                "status": status,
+                "completedAt": _iso_timestamp(data.get("completedAt")),
+            }
+            by_test = out.setdefault(pid, {})
+            prev = by_test.get(test_id)
+            if not prev:
                 by_test[test_id] = candidate
+                continue
+            if candidate["status"] == "completed" and prev.get("status") != "completed":
+                by_test[test_id] = candidate
+            elif candidate["status"] == "completed" and prev.get("status") == "completed":
+                if (candidate.get("completedAt") or "") >= (prev.get("completedAt") or ""):
+                    by_test[test_id] = candidate
+    return out
 
+
+def _test_detail_rows_from_map(by_test: dict[str, dict], test_list: list) -> list[dict]:
     rows: list[dict] = []
     for item in test_list or []:
         test_id = str(item.get("testId") or "").strip()
@@ -310,6 +323,30 @@ def _test_detail_rows(db, portal_id: str, assessment_id: str, test_list: list) -
     return rows
 
 
+def _test_status_from_completed(completed: set[str], required: set[str]) -> dict:
+    if not required:
+        return {"testStatus": "not_started", "completedCount": 0, "requiredCount": 0}
+    done = required <= completed if required else False
+    partial = bool(completed) and not done
+    if done:
+        status = "completed"
+    elif partial:
+        status = "in_progress"
+    else:
+        status = "not_started"
+    return {
+        "testStatus": status,
+        "completedCount": len(completed & required),
+        "requiredCount": len(required),
+    }
+
+
+def _test_detail_rows(db, portal_id: str, assessment_id: str, test_list: list) -> list[dict]:
+    bulk = _bulk_test_results_by_portal_assessment(db, [portal_id], assessment_id)
+    by_test = bulk.get(portal_id) or {}
+    return _test_detail_rows_from_map(by_test, test_list)
+
+
 def _test_status_for_portal(db, portal_id: str, assessment_id: str, required: set[str]) -> dict:
     if not required:
         return {"testStatus": "not_started", "completedCount": 0, "requiredCount": 0}
@@ -346,33 +383,38 @@ def _collect_portals_for_assessment(
     *,
     counselor_uid: str | None,
     assessment_id: str,
+    owner_uid: str | None = None,
 ) -> list[tuple[str, dict]]:
     """활성 배정 + 해당 상담(코드)에서 soft-delete(archived)된 내담자."""
     aid = (assessment_id or "").strip()
     if not aid:
         return []
+    scope_uid = (counselor_uid or owner_uid or "").strip() or None
     seen: set[str] = set()
     rows: list[tuple[str, dict]] = []
-    if counselor_uid:
-        refs = (
-            db.collection(CLIENT_PORTALS_COLLECTION)
-            .where("counselorId", "==", counselor_uid)
-            .stream()
-        )
-    else:
-        refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
-    for doc in refs:
-        pdata = doc.to_dict() or {}
-        pid = doc.id
-        status = pdata.get("status") or "active"
-        assigned = [str(x).strip() for x in (pdata.get("assignedAssessmentIds") or []) if str(x).strip()]
-        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
-        include = (status == "active" and aid in assigned) or (
-            status == "archived" and from_aid == aid
-        )
-        if include and pid not in seen:
+
+    def _append_query(q):
+        for doc in q.stream():
+            pid = doc.id
+            if pid in seen:
+                continue
             seen.add(pid)
-            rows.append((pid, pdata))
+            rows.append((pid, doc.to_dict() or {}))
+
+    q_active = db.collection(CLIENT_PORTALS_COLLECTION).where(
+        "assignedAssessmentIds", "array_contains", aid
+    )
+    if scope_uid:
+        q_active = q_active.where("counselorId", "==", scope_uid)
+    _append_query(q_active)
+
+    q_archived = db.collection(CLIENT_PORTALS_COLLECTION).where(
+        "archivedFromAssessmentId", "==", aid
+    )
+    if scope_uid:
+        q_archived = q_archived.where("counselorId", "==", scope_uid)
+    _append_query(q_archived)
+
     return rows
 
 
@@ -597,30 +639,20 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
     }
 
     if counselor_uid:
-        portal_refs = (
-            db.collection(CLIENT_PORTALS_COLLECTION)
-            .where("counselorId", "==", counselor_uid)
-            .stream()
-        )
+        portal_scope_uid = counselor_uid
     elif owner_uid:
-        portal_refs = (
-            db.collection(CLIENT_PORTALS_COLLECTION)
-            .where("counselorId", "==", owner_uid)
-            .stream()
-        )
+        portal_scope_uid = owner_uid
     else:
-        portal_refs = iter(())
-    rows = []
-    portal_ids: set[str] = set()
-    for doc in portal_refs:
-        pdata = doc.to_dict() or {}
-        assigned = list(pdata.get("assignedAssessmentIds") or [])
-        if assessment_id not in assigned:
-            continue
-        if (pdata.get("status") or "active") != "active":
-            continue
-        portal_ids.add(doc.id)
-        rows.append((doc.id, pdata))
+        portal_scope_uid = None
+
+    rows = _collect_portals_for_assessment(
+        db,
+        counselor_uid=portal_scope_uid,
+        assessment_id=assessment_id,
+        owner_uid=owner_uid,
+    )
+    rows = [(pid, pdata) for pid, pdata in rows if (pdata.get("status") or "active") == "active"]
+    portal_ids = [pid for pid, _ in rows]
 
     sending_portal_ids = [
         pid
@@ -638,7 +670,11 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
                 refreshed.append((pid, pdata))
         rows = refreshed
 
-    notify_map = _latest_notify_by_portal(db, portal_ids)
+    notify_map = _latest_notify_by_portal(db, set(portal_ids))
+    completion_map = _bulk_completed_tests_by_portal_assessment(
+        db, portal_ids, {assessment_id}
+    )
+    test_results_map = _bulk_test_results_by_portal_assessment(db, portal_ids, assessment_id)
     recipients = []
     for portal_id, pdata in rows:
         notify = notify_map.get(portal_id) or {}
@@ -649,7 +685,8 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
             notify, pdata, email=email, phone=phone
         )
         notify_at = _resolve_notify_at(notify, pdata, notify_status)
-        test_info = _test_status_for_portal(db, portal_id, assessment_id, required)
+        completed = completion_map.get((portal_id, assessment_id), set())
+        test_info = _test_status_from_completed(completed, required)
         recipients.append(
             {
                 "portalId": portal_id,
@@ -665,7 +702,10 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
                 "notifyKind": notify_snap.get("notifyKind") or "initial",
                 "notifyEmailChannel": notify_snap.get("emailChannel") or "",
                 "notifyPhoneChannel": notify_snap.get("phoneChannel") or "",
-                "tests": _test_detail_rows(db, portal_id, assessment_id, test_list),
+                "tests": _test_detail_rows_from_map(
+                    test_results_map.get(portal_id) or {},
+                    test_list,
+                ),
                 **test_info,
             }
         )

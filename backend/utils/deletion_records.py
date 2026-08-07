@@ -81,6 +81,12 @@ def archive_portals_for_assessment(db, *, counselor_uid: str, assessment_id: str
             }
         )
         archived_count += 1
+    try:
+        from utils.assessment_list_stats import touch_assessment_list_stats
+
+        touch_assessment_list_stats(db, aid)
+    except Exception:
+        pass
     return archived_count
 
 

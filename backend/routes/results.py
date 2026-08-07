@@ -188,6 +188,12 @@ def submit_result():
             data["clientEmail"] = client_email
     ref = db.collection(TEST_RESULTS_COLLECTION).document()
     ref.set(data)
+    try:
+        from utils.assessment_list_stats import touch_assessment_list_stats
+
+        touch_assessment_list_stats(db, assessment_id)
+    except Exception:
+        pass
 
     portal_issued = None
     if participant_session:
@@ -571,6 +577,14 @@ def update_result(result_id):
     if not d.get("submittedAt"):
         update_payload["submittedAt"] = d.get("completedAt") or SERVER_TIMESTAMP
     ref.update(update_payload)
+    try:
+        from utils.assessment_list_stats import touch_assessment_list_stats
+
+        aid = (d.get("assessmentId") or "").strip()
+        if aid:
+            touch_assessment_list_stats(db, aid)
+    except Exception:
+        pass
     return jsonify({"resultId": result_id, "message": "Updated"})
 
 

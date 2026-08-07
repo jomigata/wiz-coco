@@ -10,6 +10,7 @@ import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect
 import { parseAssessmentListSearchFromUrl } from '@/lib/counselorAssessmentListSearch';
 import {
   listAssessments,
+  listAssessmentsPage,
   readCachedAssessmentsList,
   readPortalMoveBanner,
   type CounselorAssessment,
@@ -32,6 +33,7 @@ function AssessmentListPageContent() {
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
   const [moveInfo, setMoveInfo] = useState<PortalMoveBannerInfo | null>(null);
   const [autoLivePollId, setAutoLivePollId] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -87,20 +89,33 @@ function AssessmentListPageContent() {
     const hasCache = assessments.length > 0;
     if (!hasCache) setLoading(true);
     setError('');
-    listAssessments()
-      .then((data) => {
-        if (!cancelled) setAssessments(data.assessments || []);
+
+    const searchQ = initialSearchQuery.trim() || undefined;
+
+    listAssessmentsPage({ limit: 50, q: searchQ, includeStats: true })
+      .then(async (firstPage) => {
+        if (cancelled) return;
+        const firstItems = firstPage.assessments || [];
+        if (firstItems.length) setAssessments(firstItems);
+        setLoading(false);
+        if (!firstPage.nextCursor) return;
+        setLoadingMore(true);
+        const all = await listAssessments({ q: searchQ, includeStats: true });
+        if (!cancelled) setAssessments(all.assessments || []);
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : '목록 조회 실패');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [authPending, user, showLoginRequired]);
+  }, [authPending, user, showLoginRequired, initialSearchQuery]);
 
   useRedirectOnLoginRequiredError(error);
 
@@ -122,9 +137,11 @@ function AssessmentListPageContent() {
         </div>
       ) : (
         <>
-          {(authPending || loading) && assessments.length > 0 ? (
+          {(authPending || loading || loadingMore) && assessments.length > 0 ? (
             <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
-              저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
+              {loadingMore
+                ? '목록을 추가로 불러오는 중…'
+                : '저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.'}
             </p>
           ) : null}
           <AssessmentList

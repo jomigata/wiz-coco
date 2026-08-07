@@ -637,6 +637,83 @@ const ASSESSMENTS_LIST_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const ASSESSMENTS_LIST_CACHE_SCOPE = 'local' as const;
 const LEGACY_ASSESSMENTS_LIST_CACHE_KEY = 'swr:counselorAssessmentsList';
 
+export interface AssessmentListPageResult {
+  assessments: CounselorAssessment[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
+  limit?: number;
+}
+
+export interface AssessmentListStats {
+  dispatchSentCount?: number;
+  dispatchFailedCount?: number;
+  dispatchSendingCount?: number;
+  testCompleteCount?: number;
+  testIncompleteCount?: number;
+  emailsCompletedAllTestsCount?: number;
+  emailsNotCompletedAllTestsCount?: number;
+}
+
+export async function listAssessmentsPage(params?: {
+  limit?: number;
+  cursor?: string | null;
+  q?: string;
+  includeStats?: boolean;
+  counselorId?: string;
+}): Promise<AssessmentListPageResult> {
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+
+  const search = new URLSearchParams();
+  if (params?.limit) search.set('limit', String(params.limit));
+  if (params?.cursor) search.set('cursor', params.cursor);
+  if (params?.q?.trim()) search.set('q', params.q.trim());
+  if (params?.counselorId?.trim()) search.set('counselorId', params.counselorId.trim());
+  if (params?.includeStats === false) search.set('includeStats', '0');
+
+  const qs = search.toString() ? `?${search.toString()}` : '';
+  const res = await fetch(`${getBaseUrl()}/api/assessments${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '목록 조회에 실패했습니다.');
+  }
+  return data as AssessmentListPageResult;
+}
+
+export async function fetchAssessmentListStats(
+  assessmentIds: string[],
+): Promise<Record<string, AssessmentListStats>> {
+  const ids = assessmentIds.filter(Boolean);
+  if (!ids.length) return {};
+
+  const token = await getCounselorToken();
+  if (!token) throw new Error('로그인이 필요합니다.');
+
+  const res = await fetch(
+    `${getBaseUrl()}/api/assessments/stats?ids=${encodeURIComponent(ids.slice(0, 100).join(','))}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message || data?.error || '통계 조회에 실패했습니다.');
+  }
+  return (data.stats || {}) as Record<string, AssessmentListStats>;
+}
+
+export function mergeAssessmentListStats(
+  items: CounselorAssessment[],
+  statsMap: Record<string, AssessmentListStats>,
+): CounselorAssessment[] {
+  if (!items.length || !Object.keys(statsMap).length) return items;
+  return items.map((item) => {
+    const stats = statsMap[item.id];
+    if (!stats) return item;
+    return { ...item, ...stats };
+  });
+}
+
 function assessmentsListCacheKey(counselorUid?: string | null): string | null {
   const uid = (counselorUid ?? getCounselorUidSync())?.trim();
   return uid ? `swr:counselorAssessmentsList:${uid}` : null;
@@ -801,21 +878,31 @@ export function removeCounselorAssessmentFromListCache(
   writeSWRCache(cacheKey, { assessments: filtered }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
 }
 
-export async function listAssessments(): Promise<{ assessments: CounselorAssessment[] }> {
+export async function listAssessments(params?: {
+  q?: string;
+  counselorId?: string;
+  includeStats?: boolean;
+}): Promise<{ assessments: CounselorAssessment[] }> {
   const token = await getCounselorToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const counselorUid = (await getCounselorUid())?.trim();
   if (!counselorUid) throw new Error('로그인이 필요합니다.');
-  const res = await fetch(`${getBaseUrl()}/api/assessments`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data?.message || data?.error || '목록 조회에 실패했습니다.');
-  }
-  const payload = data as { assessments: CounselorAssessment[] };
+
+  const mergedItems: CounselorAssessment[] = [];
+  let cursor: string | null | undefined;
+  do {
+    const page = await listAssessmentsPage({
+      ...params,
+      cursor,
+      limit: 100,
+      includeStats: params?.includeStats ?? true,
+    });
+    mergedItems.push(...(page.assessments || []));
+    cursor = page.nextCursor;
+  } while (cursor);
+
   const cached = readCachedAssessmentsList(counselorUid) ?? [];
-  const merged = mergeCounselorAssessmentLists(payload.assessments || [], cached, counselorUid);
+  const merged = mergeCounselorAssessmentLists(mergedItems, cached, counselorUid);
   const cacheKey = assessmentsListCacheKey(counselorUid);
   if (cacheKey) {
     writeSWRCache(cacheKey, { assessments: merged }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });

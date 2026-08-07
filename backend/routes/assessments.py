@@ -19,6 +19,16 @@ from utils.result_actor import (
 from utils.test_result_queries import query_results_shared_to_assessment
 from utils.assessment_dispatch import aggregate_assessment_list_stats
 from utils.counselor_scope import resource_owned_by_scope, scope_counselor_uid
+from utils.assessment_list_stats import (
+    LIST_STATS_FIELD,
+    apply_list_stats_to_item,
+    build_assessment_search_tokens,
+    fetch_stats_by_ids,
+    resolve_stats_for_items,
+    recompute_and_persist_assessment_list_stats,
+    sync_assessment_search_fields,
+    touch_assessment_list_stats,
+)
 
 bp = Blueprint("assessments", __name__, url_prefix="/api/assessments")
 
@@ -137,63 +147,155 @@ def _aggregate_completed_testids_by_email(db, assessment_ids):
     return per_testids
 
 
+DEFAULT_LIST_LIMIT = 100
+MAX_LIST_LIMIT = 200
+
+
+def _assessment_matches_search(item: dict, query: str) -> bool:
+    q = (query or "").strip().lower()
+    if not q:
+        return True
+    tokens = item.get("searchTokens") or []
+    if any(q in str(t).lower() for t in tokens):
+        return True
+    hay = " ".join(
+        [
+            str(item.get("title") or ""),
+            str(item.get("accessCode") or ""),
+            str(item.get("cohortName") or ""),
+            str(item.get("welcomeMessage") or ""),
+            str(item.get("codeCategory") or ""),
+            str(item.get("targetAudience") or ""),
+        ]
+    ).lower()
+    return q in hay
+
+
+def _fetch_assessment_list_page(
+    db,
+    *,
+    scoped_uid: str | None,
+    filter_counselor_id: str | None,
+    limit: int,
+    cursor_id: str | None,
+    search_query: str,
+):
+    """Firestore cursor pagination — active assessment만 limit개 수집."""
+    from google.cloud.firestore_v1 import Query
+
+    coll = db.collection(ASSESSMENTS_COLLECTION)
+    if scoped_uid:
+        base = coll.where("counselorId", "==", scoped_uid)
+    elif filter_counselor_id:
+        base = coll.where("counselorId", "==", filter_counselor_id)
+    else:
+        base = coll
+
+    query = base.order_by("createdAt", direction=Query.DESCENDING)
+    if cursor_id:
+        cursor_doc = coll.document(cursor_id).get()
+        if cursor_doc.exists:
+            query = query.start_after(cursor_doc)
+
+    items: list = []
+    last_scanned = None
+    batch_size = max(limit + 25, 50)
+    rounds = 0
+    while len(items) < limit and rounds < 12:
+        rounds += 1
+        docs = list(query.limit(batch_size).stream())
+        if not docs:
+            break
+        for doc in docs:
+            last_scanned = doc
+            d = _serialize_doc(doc)
+            if (d.get("status") or "active") != "active":
+                continue
+            if not _assessment_matches_search(d, search_query):
+                continue
+            items.append(d)
+            if len(items) >= limit:
+                break
+        if len(docs) < batch_size or len(items) >= limit:
+            break
+        query = base.order_by("createdAt", direction=Query.DESCENDING).start_after(docs[-1])
+
+    next_cursor = None
+    if last_scanned is not None and len(items) >= limit:
+        next_cursor = last_scanned.id
+    return items, next_cursor
+
+
 @bp.route("", methods=["GET"])
 @require_counselor
 def list_assessments():
-    """상담사: 로그인 상담사 소유 assessments 목록 (admin: 전체)."""
+    """상담사: 로그인 상담사 소유 assessments 목록 (admin: 전체, 페이지네이션·검색·listStats)."""
     db = get_firestore()
     scoped_uid = scope_counselor_uid()
+
+    try:
+        limit = min(max(int(request.args.get("limit") or DEFAULT_LIST_LIMIT), 1), MAX_LIST_LIMIT)
+    except (TypeError, ValueError):
+        limit = DEFAULT_LIST_LIMIT
+    cursor_id = (request.args.get("cursor") or "").strip() or None
+    search_query = (request.args.get("q") or "").strip().lower()
+    include_stats = request.args.get("includeStats", "1") != "0"
+    filter_counselor_id = (request.args.get("counselorId") or "").strip() or None
     if scoped_uid:
-        refs = db.collection(ASSESSMENTS_COLLECTION).where("counselorId", "==", scoped_uid).get()
+        filter_counselor_id = None
+
+    items, next_cursor = _fetch_assessment_list_page(
+        db,
+        scoped_uid=scoped_uid,
+        filter_counselor_id=filter_counselor_id,
+        limit=limit,
+        cursor_id=cursor_id,
+        search_query=search_query,
+    )
+
+    if include_stats:
+        resolve_stats_for_items(db, items, recompute_missing=True)
     else:
-        refs = db.collection(ASSESSMENTS_COLLECTION).stream()
-        refs = list(refs)
-    def _sort_key(doc):
-        d = doc.to_dict() if hasattr(doc, "to_dict") else {}
-        t = d.get("createdAt")
-        if t is None:
-            return 0
-        if hasattr(t, "timestamp") and callable(getattr(t, "timestamp", None)):
-            return t.timestamp()
-        if hasattr(t, "total_seconds"):
-            return t.total_seconds()
-        return 0
-    refs = sorted(refs, key=_sort_key, reverse=True)
-    items = [_serialize_doc(d) for d in refs]
-    # 목록에는 활성 상담(코드)만 (삭제=archived 는 제외, 구문서는 status 없으면 active 로 간주)
-    items = [x for x in items if (x.get("status") or "active") == "active"]
-    ids = [x["id"] for x in items]
-    per_testids = _aggregate_completed_testids_by_email(db, ids)
-    portal_stats = aggregate_assessment_list_stats(db, counselor_uid=scoped_uid, items=items)
+        for x in items:
+            apply_list_stats_to_item(x, x.get(LIST_STATS_FIELD))
+
     for x in items:
-        aid = x["id"]
-        required = {
-            str(t.get("testId") or "").strip()
-            for t in (x.get("testList") or [])
-            if t and str(t.get("testId") or "").strip()
-        }
-        tmap = per_testids.get(aid, {})
-        emails_any = len(tmap)
-        emails_all = 0
-        if required:
-            for _uid, row in tmap.items():
-                tids = row.get("testIds") or set()
-                if required <= tids:
-                    emails_all += 1
-            emails_not_all = emails_any - emails_all
-        else:
-            emails_all = 0
-            emails_not_all = 0
-        x["emailsNotCompletedAllTestsCount"] = emails_not_all
-        x["emailsCompletedAllTestsCount"] = emails_all
-        pstats = portal_stats.get(aid) or {}
-        x["dispatchSentCount"] = int(pstats.get("dispatchSentCount") or 0)
-        x["dispatchFailedCount"] = int(pstats.get("dispatchFailedCount") or 0)
-        x["dispatchSendingCount"] = int(pstats.get("dispatchSendingCount") or 0)
-        x["testCompleteCount"] = int(pstats.get("testCompleteCount") or 0)
-        x["testIncompleteCount"] = int(pstats.get("testIncompleteCount") or 0)
         _strip_join_secrets_for_counselor_api(x)
-    return jsonify({"assessments": items})
+        x.pop(LIST_STATS_FIELD, None)
+
+    return jsonify(
+        {
+            "assessments": items,
+            "nextCursor": next_cursor,
+            "hasMore": bool(next_cursor),
+            "limit": limit,
+        }
+    )
+
+
+@bp.route("/stats", methods=["GET"])
+@require_counselor
+def batch_assessment_list_stats():
+    """목록 행 stats만 lazy 조회 — live poll·진행현황 컬럼용."""
+    db = get_firestore()
+    raw = (request.args.get("ids") or "").strip()
+    ids = [x.strip() for x in raw.split(",") if x.strip()]
+    if not ids:
+        return jsonify({"stats": {}})
+    stats = fetch_stats_by_ids(db, ids[:100])
+    return jsonify({"stats": stats})
+
+
+@bp.route("/<assessment_id>/stats/refresh", methods=["POST"])
+@require_counselor
+def refresh_assessment_list_stats(assessment_id):
+    """단일 assessment listStats 강제 재계산."""
+    db = get_firestore()
+    ref, doc = _get_owned_assessment(db, assessment_id)
+    if not doc:
+        return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
+    stats = recompute_and_persist_assessment_list_stats(db, doc.id)
+    return jsonify({"assessmentId": doc.id, "listStats": stats})
 
 
 def _assessment_status_active(d: dict) -> bool:
@@ -325,6 +427,15 @@ def update_assessment(assessment_id):
     if not doc:
         return jsonify({"error": "Not Found", "message": "Assessment not found"}), 404
 
+    existing = doc.to_dict() or {}
+    search_source = {
+        **existing,
+        "title": title,
+        "targetAudience": target_audience,
+        "welcomeMessage": welcome_message,
+        "codeCategory": code_category,
+        "testList": test_list,
+    }
     ref.update(
         {
             "title": title,
@@ -334,8 +445,10 @@ def update_assessment(assessment_id):
             "codeCategory": code_category,
             "testList": test_list,
             "updatedAt": SERVER_TIMESTAMP,
+            "searchTokens": build_assessment_search_tokens(search_source),
         }
     )
+    touch_assessment_list_stats(db, assessment_id)
     return jsonify({"assessmentId": assessment_id, "message": "updated"})
 
 

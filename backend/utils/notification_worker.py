@@ -108,6 +108,13 @@ def _apply_notify_snapshot(
 
     portal_ref.update(payload)
 
+    try:
+        from utils.assessment_list_stats import touch_assessments_for_portal_ref
+
+        touch_assessments_for_portal_ref(portal_ref)
+    except Exception:
+        pass
+
     if queue_ref is not None:
         q_payload: dict = {
             "status": status,

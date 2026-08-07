@@ -188,15 +188,18 @@ def list_counselor_portals():
     progress = (request.args.get("progress") or "all").strip().lower() or None
     tag = (request.args.get("tag") or "").strip() or None
     q = (request.args.get("q") or "").strip() or None
+    filter_counselor_id = (request.args.get("counselorId") or "").strip() or None
+    scoped = scope_counselor_uid()
     db = get_firestore()
     result = list_counselor_client_portals(
         db,
-        scope_counselor_uid(),
+        scoped,
         status=status,
         cohort_id=cohort_id,
         progress=progress,
         tag=tag,
         q=q,
+        filter_counselor_id=filter_counselor_id if not scoped else None,
     )
     return jsonify(result)
 

@@ -264,6 +264,13 @@ def push_assessments_to_portals(
             metadata={"assessmentId": aid, "portalCount": credit_required},
         )
 
+    try:
+        from utils.assessment_list_stats import touch_assessment_list_stats
+
+        touch_assessment_list_stats(db, aid)
+    except Exception:
+        pass
+
     return {
         "assessmentId": aid,
         "assessmentTitle": assessment.get("title") or "",

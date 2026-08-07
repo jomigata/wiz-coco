@@ -223,6 +223,14 @@ def move_portals_to_assessment(
             }
         )
 
+    try:
+        from utils.assessment_list_stats import touch_assessment_list_stats
+
+        touch_assessment_list_stats(db, from_aid)
+        touch_assessment_list_stats(db, to_aid)
+    except Exception:
+        pass
+
     return {
         "targetAssessmentId": to_aid,
         "targetAssessmentTitle": target["title"],

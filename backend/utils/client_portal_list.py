@@ -68,6 +68,7 @@ def list_counselor_client_portals(
     progress: str | None = None,
     tag: str | None = None,
     q: str | None = None,
+    filter_counselor_id: str | None = None,
 ) -> dict:
     """상담사 소유 내담자 포털 목록 + 진행·발송 요약."""
     status_filter = (status or "active").strip().lower()
@@ -83,6 +84,12 @@ def list_counselor_client_portals(
         refs = (
             db.collection(CLIENT_PORTALS_COLLECTION)
             .where("counselorId", "==", counselor_uid)
+            .stream()
+        )
+    elif filter_counselor_id:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", filter_counselor_id)
             .stream()
         )
     else:

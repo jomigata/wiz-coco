@@ -65,29 +65,31 @@ def prepare_bulk_assessment(
         raise ValueError("포함할 검사(testList)가 필요합니다.")
 
     join_access_code = generate_unique_access_code()
+    assessment_payload = {
+        "accessCode": join_access_code,
+        "counselorId": counselor_uid,
+        "title": title,
+        "issueType": "individual",
+        "targetAudience": "그룹",
+        "welcomeMessage": welcome_message,
+        "usageEndDate": usage_end_date,
+        "testList": test_list,
+        "createdAt": SERVER_TIMESTAMP,
+        "status": "active",
+        "clientPortalCohortId": cohort_id,
+        "cohortName": cohort_name,
+        **({"codeCategory": code_category} if code_category else {}),
+        **(
+            {"organizationId": organization_id, "prepaidByOrg": True}
+            if organization_id
+            else {}
+        ),
+    }
+    from utils.assessment_list_stats import build_assessment_search_tokens
+
+    assessment_payload["searchTokens"] = build_assessment_search_tokens(assessment_payload)
     assessment_ref = db.collection(ASSESSMENTS_COLLECTION).document()
-    assessment_ref.set(
-        {
-            "accessCode": join_access_code,
-            "counselorId": counselor_uid,
-            "title": title,
-            "issueType": "individual",
-            "targetAudience": "그룹",
-            "welcomeMessage": welcome_message,
-            "usageEndDate": usage_end_date,
-            "testList": test_list,
-            "createdAt": SERVER_TIMESTAMP,
-            "status": "active",
-            "clientPortalCohortId": cohort_id,
-            "cohortName": cohort_name,
-            **({"codeCategory": code_category} if code_category else {}),
-            **(
-                {"organizationId": organization_id, "prepaidByOrg": True}
-                if organization_id
-                else {}
-            ),
-        }
-    )
+    assessment_ref.set(assessment_payload)
     return assessment_ref.id, join_access_code, cohort_id
 
 
@@ -236,6 +238,12 @@ def create_portal_for_row(
         "magicUrl": magic_url,
         "assessmentId": assessment_ref_id,
     }
+    try:
+        from utils.assessment_list_stats import touch_assessment_list_stats
+
+        touch_assessment_list_stats(db, assessment_ref_id)
+    except Exception:
+        pass
     return created, notify_queued, notify_sent, notify_failed
 
 

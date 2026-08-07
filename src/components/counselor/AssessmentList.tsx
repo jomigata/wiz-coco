@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo, PortalMoveBannerInfo } from '@/lib/assessmentApi';
-import { deleteAssessment, listAssessments, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
+import { deleteAssessment, fetchAssessmentListStats, listAssessments, mergeAssessmentListStats, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import {
   buildClientPortalsCacheKey,
@@ -277,16 +277,40 @@ export default function AssessmentList({
     return listItems.some((a) => assessmentHasPendingDispatch(a));
   }, [liveAssessmentId, listItems]);
 
-  const refreshListFromApi = useCallback(async () => {
+  const refreshFullListFromApi = useCallback(async () => {
     try {
-      const data = await listAssessments();
+      const data = await listAssessments({ includeStats: true });
       const items = data.assessments || [];
       setListItems(items);
       onAssessmentsRefresh?.(items);
     } catch {
-      // ignore silent refresh errors
+      // ignore
     }
   }, [onAssessmentsRefresh]);
+
+  const pollTargetIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (liveAssessmentId) ids.add(liveAssessmentId);
+    for (const a of listItems) {
+      if (assessmentHasPendingDispatch(a)) ids.add(a.id);
+    }
+    return Array.from(ids);
+  }, [liveAssessmentId, listItems]);
+
+  const refreshStatsFromApi = useCallback(async () => {
+    if (!pollTargetIds.length) return;
+    try {
+      const statsMap = await fetchAssessmentListStats(pollTargetIds);
+      if (!Object.keys(statsMap).length) return;
+      setListItems((prev) => {
+        const next = mergeAssessmentListStats(prev, statsMap);
+        onAssessmentsRefresh?.(next);
+        return next;
+      });
+    } catch {
+      // ignore silent refresh errors
+    }
+  }, [pollTargetIds, onAssessmentsRefresh]);
 
   useEffect(() => {
     if (!shouldPollList) return;
@@ -297,20 +321,19 @@ export default function AssessmentList({
     const tick = async () => {
       if (cancelled) return;
       const elapsed = Date.now() - liveStartRef.current;
-      try {
-        const data = await listAssessments();
-        const items = data.assessments || [];
-        if (cancelled) return;
-        setListItems(items);
-        onAssessmentsRefresh?.(items);
-        const hasPending = items.some((a) => assessmentHasPendingDispatch(a));
-        if (elapsed >= LIVE_POLL_MAX_MS && !hasPending && !liveAssessmentId) {
-          return;
-        }
-      } catch {
-        // ignore silent refresh errors
-      }
+      await refreshStatsFromApi();
       if (cancelled) return;
+
+      let shouldStop = false;
+      setListItems((prev) => {
+        const hasPending = prev.some((a) => assessmentHasPendingDispatch(a));
+        if (elapsed >= LIVE_POLL_MAX_MS && !hasPending && !liveAssessmentId) {
+          shouldStop = true;
+        }
+        return prev;
+      });
+      if (shouldStop) return;
+
       timer = window.setTimeout(() => {
         void tick();
       }, LIVE_POLL_INTERVAL_MS);
@@ -322,7 +345,7 @@ export default function AssessmentList({
       cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [shouldPollList, liveAssessmentId, onAssessmentsRefresh]);
+  }, [shouldPollList, liveAssessmentId, refreshStatsFromApi]);
 
   useEffect(() => {
     if (!liveAssessmentId) return;
@@ -696,7 +719,7 @@ export default function AssessmentList({
       context={addTarget ? buildContextFromAssessment(addTarget) : null}
       onSuccess={(info) => {
         const targetId = addTarget?.id;
-        void refreshListFromApi();
+        void refreshFullListFromApi();
         if (info.sent && targetId) {
           startLivePolling(targetId);
         }
