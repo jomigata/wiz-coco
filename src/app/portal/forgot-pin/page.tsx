@@ -104,7 +104,7 @@ function ForgotPinContent() {
           나의코드나 등록한 이메일을 모를 경우, 담당 상담사·기관 담당자에게 문의해 주세요.
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-400">
+        <p className="mt-6 text-center text-sm text-slate-300">
           <Link href="/portal/login/" className={`${t.link} underline-offset-2 hover:underline`}>
             검사시작으로 돌아가기
           </Link>
