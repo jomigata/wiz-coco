@@ -36,7 +36,7 @@ export function resolveCounselorHierarchy(
         depth: 1,
         crumbs: [
           { label: '내담자 목록', href: '/counselor/clients' },
-          { label: '발송·검사 현황' },
+          { label: '상담진행 현황' },
         ],
       };
     }
@@ -44,7 +44,7 @@ export function resolveCounselorHierarchy(
       depth: 1,
       crumbs: [
         { label: '상담코드 목록', href: '/counselor/assessments' },
-        { label: '발송·검사 현황' },
+        { label: '상담진행 현황' },
       ],
     };
   }

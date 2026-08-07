@@ -104,7 +104,7 @@ function AssessmentCard({ item }: { item: CounselorMonitoringAssessment }) {
           href={progressHref(item.assessmentId)}
           className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500"
         >
-          발송·검사 현황
+          상담진행 현황
         </AuthLink>
         <AuthLink
           href="/counselor/clients"
@@ -279,7 +279,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm text-slate-400">
-                모든 상담코드의 발송·검사 진행을 한 화면에서 확인합니다. 상담코드를 선택하면 알림·재발송·상세
+                모든 상담코드의 상담진행을 한 화면에서 확인합니다. 상담코드를 선택하면 알림·재발송·상세
                 모니터링으로 이동합니다.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -334,7 +334,7 @@ export default function CounselorMonitoringHub({ initialView = 'overview' }: Pro
 
           {hub.summary.notifyFailedCount > 0 ? (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              자격증명 발송 실패 {hub.summary.notifyFailedCount}건 — 상담코드별 「발송·검사 현황」에서 재발송할 수
+              자격증명 발송 실패 {hub.summary.notifyFailedCount}건 — 상담코드별 「상담진행 현황」에서 재발송할 수
               있습니다.
             </div>
           ) : null}

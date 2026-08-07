@@ -37,6 +37,13 @@ export function counselorResultMetricClass(value: number): string {
   return value === 0 ? 'text-emerald-400' : 'text-red-400';
 }
 
+/** 진행현황 수치 — 총내담자보다 작으면 빨간색 */
+export function counselorMetricValueClass(value: number, total: number): string {
+  return value < total
+    ? 'font-semibold tabular-nums text-red-400'
+    : 'font-semibold tabular-nums text-slate-200';
+}
+
 export function formatCounselorIssueDate(iso: string | undefined | null): string {
   if (!iso) return '-';
   try {

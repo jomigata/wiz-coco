@@ -273,7 +273,7 @@ export default function CounselorCohortMonitoringView({
 
       {data.summary.notifyFailedCount > 0 ? (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          자격증명 발송 실패 {data.summary.notifyFailedCount}건 — 상담코드별 「발송·검사 현황」에서 재발송할 수
+          자격증명 발송 실패 {data.summary.notifyFailedCount}건 — 상담코드별 「상담진행 현황」에서 재발송할 수
           있습니다.
         </div>
       ) : null}

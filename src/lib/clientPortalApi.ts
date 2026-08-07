@@ -143,6 +143,52 @@ export async function changeClientPortalPin(
   }
 }
 
+export async function requestPortalPinReset(body: {
+  accessCode: string;
+  email: string;
+}): Promise<{ message: string }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/forgot-pin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      accessCode: normalizeMyCodeInput(body.accessCode),
+      email: body.email.trim().toLowerCase(),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof data?.message === 'string' && data.message.trim()
+        ? data.message
+        : '재설정 요청 처리 중 오류가 발생했습니다.',
+    );
+  }
+  return data as { message: string };
+}
+
+export async function resetPortalPin(body: {
+  token: string;
+  newPin: string;
+}): Promise<{ message: string }> {
+  const res = await fetch(`${getBaseUrl()}/api/client-portals/reset-pin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: body.token.trim(),
+      newPin: normalizeJoinPinDigits(body.newPin),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof data?.message === 'string' && data.message.trim()
+        ? data.message
+        : '비밀번호 재설정에 실패했습니다.',
+    );
+  }
+  return data as { message: string };
+}
+
 /** 포털 — 상담사가 할당한 치료·과제 (T-2-05) */
 export async function fetchPortalCareAssignments(
   portalToken: string,

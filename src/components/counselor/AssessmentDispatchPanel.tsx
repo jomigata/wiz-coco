@@ -39,6 +39,9 @@ import {
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
+import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
+import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
@@ -448,6 +451,17 @@ export default function AssessmentDispatchPanel({
     [visibleData?.recipients],
   );
 
+  const dispatchSuccessCount = useMemo(
+    () =>
+      (visibleData?.recipients || []).filter((r) => {
+        const status = r.notifyStatus || 'not_sent';
+        return status === 'sent' || status === 'partial';
+      }).length,
+    [visibleData?.recipients],
+  );
+
+  const totalRecipientCount = visibleData?.recipients.length ?? 0;
+
   const remindEligibleSelected = useMemo(
     () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
     [visibleData?.recipients, selected],
@@ -698,7 +712,7 @@ export default function AssessmentDispatchPanel({
 
   if (loading) {
     return (
-      <CounselorPageSection title="발송·검사 현황" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title="상담진행 현황" dense className="flex min-h-0 flex-1">
         <p className="text-slate-400 text-sm py-4">발송목록을 불러오는 중…</p>
       </CounselorPageSection>
     );
@@ -706,7 +720,7 @@ export default function AssessmentDispatchPanel({
 
   if (error) {
     return (
-      <CounselorPageSection title="발송·검사 현황" dense className="flex min-h-0 flex-1">
+      <CounselorPageSection title="상담진행 현황" dense className="flex min-h-0 flex-1">
         <p className="text-red-400 text-sm py-4">{error}</p>
       </CounselorPageSection>
     );
@@ -717,13 +731,23 @@ export default function AssessmentDispatchPanel({
   return (
     <>
     <CounselorPageSection
-      title="발송·검사 현황"
+      title="상담진행 현황"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
+          <Link
+            href="/counselor/assessments"
+            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-slate-900/60 p-1.5 text-slate-300 transition-colors hover:border-sky-500/40 hover:bg-sky-950/40 hover:text-sky-200"
+            title="상담코드 목록"
+            aria-label="상담코드 목록으로 이동"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
             <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
@@ -740,30 +764,21 @@ export default function AssessmentDispatchPanel({
             <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
             <span className="text-sm text-slate-300">{displayData.title || '—'}</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-500/80">완료</span>
-            <span className="text-sm tabular-nums text-slate-200">
-              <span className="font-semibold text-emerald-300">{completedCount}</span>
-              <span className="mx-1 text-slate-600">/</span>
-              <span className="text-slate-500">총</span>
-              <span className="ml-0.5 font-medium text-white">{displayData.recipients.length}</span>
-              <span className="ml-0.5 text-slate-500">명</span>
-            </span>
-          </span>
-          <div className="relative ml-auto min-w-[12rem] flex-1 sm:max-w-xs">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
-              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+          <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1 text-sm">
+            <CounselorProgressMetricsInline
+              totalClients={totalRecipientCount}
+              items={[
+                { label: '발송성공', value: dispatchSuccessCount },
+                { label: '검사완료', value: completedCount },
+              ]}
             />
-          </div>
+          </span>
+          <CounselorListSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="이름 · 이메일 · 휴대폰 · 나의코드 검색"
+            className="sm:max-w-xs"
+          />
         </span>
       }
       toolbar={
@@ -822,6 +837,7 @@ export default function AssessmentDispatchPanel({
         {displayData.recipients.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <p className="text-base text-slate-300">발송된 내담자가 없습니다</p>
+            <p className="mt-1 text-sm text-slate-400">상담코드에 내담자를 추가하고 발송해 보세요.</p>
             <Link
               href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
               className="mt-4 inline-flex items-center rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
@@ -837,10 +853,10 @@ export default function AssessmentDispatchPanel({
                   <col className="w-10" />
                   <col className="w-10" />
                   <col className="w-36" />
-                  <col className="w-52" />
                   <col className="w-32" />
-                  <col className="w-36" />
+                  <col className="w-52" />
                   <col className="w-28" />
+                  <col className="w-36" />
                   <col className="w-36" />
                 </colgroup>
                 <thead>
@@ -856,20 +872,12 @@ export default function AssessmentDispatchPanel({
                   />
                 </th>
                 <SortableColumnHeader
-                  label="이름 (나의코드)"
+                  label="이름 / 나의코드"
                   sortKey="displayName"
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
                   className="w-36"
-                />
-                <SortableColumnHeader
-                  label="이메일"
-                  sortKey="email"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-52"
                 />
                 <SortableColumnHeader
                   label="휴대폰"
@@ -880,12 +888,12 @@ export default function AssessmentDispatchPanel({
                   className="w-32"
                 />
                 <SortableColumnHeader
-                  label="검사 현황"
-                  sortKey="testStatus"
+                  label="이메일"
+                  sortKey="email"
                   activeKey={sortKey}
                   direction={sortDir}
                   onSort={toggleSort}
-                  className="w-36"
+                  className="w-52"
                 />
                 <SortableColumnHeader
                   label="발송현황"
@@ -894,6 +902,14 @@ export default function AssessmentDispatchPanel({
                   direction={sortDir}
                   onSort={toggleSort}
                   className="w-28"
+                />
+                <SortableColumnHeader
+                  label="진행 현황"
+                  sortKey="testStatus"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                  className="w-36"
                 />
                 <SortableColumnHeader
                   label="발송일시"
@@ -913,11 +929,6 @@ export default function AssessmentDispatchPanel({
                 const contactRevealed = isOpen;
                 const tests = r.tests ?? [];
                 const myCodeLabel = formatAccessCodeDisplay(r.myCode);
-                const nameWithCode = r.displayName
-                  ? `${r.displayName}${myCodeLabel && myCodeLabel !== '—' ? ` (${myCodeLabel})` : ''}`
-                  : myCodeLabel && myCodeLabel !== '—'
-                    ? `(${myCodeLabel})`
-                    : '—';
 
                 return (
                   <React.Fragment key={r.portalId}>
@@ -932,7 +943,7 @@ export default function AssessmentDispatchPanel({
                       tabIndex={0}
                       role="button"
                       aria-expanded={isOpen}
-                      aria-label={`${r.displayName || '내담자'} 검사 현황 ${isOpen ? '접기' : '펼치기'}`}
+                      aria-label={`${r.displayName || '내담자'} 진행 현황 ${isOpen ? '접기' : '펼치기'}`}
                       className={`cursor-pointer ${counselorListBodyRowClass} ${isOpen ? 'bg-white/[0.04]' : ''}`}
                     >
                       <td className={`${counselorListTdClass} tabular-nums text-slate-400`}>{rowIndex + 1}</td>
@@ -944,8 +955,15 @@ export default function AssessmentDispatchPanel({
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 text-white align-top w-36 max-w-[9rem] truncate" title={nameWithCode}>
-                        {nameWithCode}
+                      <td className="px-3 py-2 text-white align-top w-36 max-w-[9rem]">
+                        <CounselorSlashInfoCell
+                          primary={r.displayName || '—'}
+                          secondary={myCodeLabel !== '—' ? myCodeLabel : '—'}
+                          showTooltip={false}
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
+                        {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
                       </td>
                       <td className="px-3 py-2 text-slate-300 align-top truncate tabular-nums">
                         {r.email?.trim() ? (
@@ -956,20 +974,17 @@ export default function AssessmentDispatchPanel({
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
-                        {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
+                      <td
+                        className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
+                        title={notify.title}
+                      >
+                        <DispatchStatusText value={notify} />
                       </td>
                       <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
                         <span className="text-slate-400" aria-hidden="true">
                           {isOpen ? '▼' : '▶'}{' '}
                         </span>
                         <span>{summary.text}</span>
-                      </td>
-                      <td
-                        className="px-3 py-2.5 align-top whitespace-nowrap text-sm"
-                        title={notify.title}
-                      >
-                        <DispatchStatusText value={notify} />
                       </td>
                       <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {formatNotifyDate(r.notifyAt)}
@@ -1215,7 +1230,7 @@ export default function AssessmentDispatchPanel({
                 {confirmAction === 'remind'
                   ? '아래 내용으로 이메일·SMS 알림을 발송합니다. 비밀번호는 변경되지 않습니다.'
                   : confirmAction === 'delete'
-                    ? '선택한 검사자를 발송·검사 현황에서 제거합니다.'
+                    ? '선택한 검사자를 상담진행 현황에서 제거합니다.'
                     : credentialSendMode === 'initial'
                       ? '선택한 내담자에게 접속 정보를 발송합니다. 비밀번호가 새로 발급됩니다.'
                       : credentialSendMode === 'resend'

@@ -135,7 +135,13 @@ function PortalLoginContent() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
           <div className="bg-slate-900/90 rounded-2xl border border-white/[0.08] p-8 shadow-2xl shadow-black/30">
-            <div className="mb-6">
+            <div className="mb-6 relative">
+              <Link
+                href="/portal/forgot-pin/"
+                className="absolute -top-1 right-0 text-xs text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline"
+              >
+                (비밀번호 찾기)
+              </Link>
               <span
                 className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${
                   isResults ? 'text-emerald-300/80' : 'text-sky-300/80'
@@ -143,7 +149,7 @@ function PortalLoginContent() {
               >
                 {isResults ? 'Result Check' : 'Assessment Start'}
               </span>
-              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">{copy.title}</h1>
+              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight pr-24">{copy.title}</h1>
               <p className="text-slate-400 text-sm leading-relaxed">{copy.description}</p>
             </div>
 
@@ -184,7 +190,7 @@ function PortalLoginContent() {
                   data-1p-ignore="true"
                   data-bwignore
                   placeholder={myCodePlaceholder}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                   value={code}
                   onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}
@@ -204,7 +210,7 @@ function PortalLoginContent() {
                   data-lpignore="true"
                   data-1p-ignore="true"
                   placeholder="••••"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-500 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-400 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                   value={pin}
                   onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
                   disabled={loading}
@@ -225,11 +231,11 @@ function PortalLoginContent() {
             </form>
 
             {copy.alternate && alternateHref && (
-              <p className="mt-6 text-center text-xs text-slate-500">
+              <p className="mt-6 text-center text-sm text-slate-300">
                 {copy.alternate.label}{' '}
                 <Link
                   href={alternateHref}
-                  className="text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline font-medium"
+                  className="text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline font-semibold"
                   onClick={handleAlternateClick}
                 >
                   여기

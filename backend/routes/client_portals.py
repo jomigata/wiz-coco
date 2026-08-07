@@ -13,12 +13,14 @@ from config import (
     ASSESSMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
     PORTAL_MAGIC_LINK_MAX_AGE,
+    PORTAL_PIN_RESET_MAX_AGE,
     PORTAL_SESSION_MAX_AGE,
     PORTAL_SESSION_REMEMBER_MAX_AGE,
     BULK_PORTAL_MAX_ROWS,
     BULK_PORTAL_SYNC_MAX,
     BULK_PORTAL_BATCH_SIZE,
     COMMERCE_CREDITS_ENFORCE,
+    PUBLIC_SITE_URL,
 )
 from firebase_init import get_firestore
 from auth_middleware import require_counselor
@@ -71,6 +73,7 @@ from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counsel
 from utils.counselor_org_liaison import list_counselor_org_liaisons
 from utils.care_assignments import list_portal_care_assignments, submit_portal_care_progress
 from utils.care_assignment_schema import CareAssignmentValidationError
+from utils.email_notify import send_portal_pin_reset_email
 
 bp = Blueprint("client_portals", __name__, url_prefix="/api/client-portals")
 
@@ -449,6 +452,70 @@ def portal_change_pin():
 
     pref.update({"pinHash": hash_password(new_pin)})
     return jsonify({"ok": True})
+
+
+MSG_PIN_RESET_SENT = "등록된 이메일로 재설정 안내를 보냈습니다."
+
+
+@bp.route("/forgot-pin", methods=["POST"])
+@limit_access_code
+def portal_forgot_pin():
+    """나의코드 + 이메일로 비밀번호(PIN) 재설정 링크 발송."""
+    body = request.get_json(silent=True) or {}
+    code = normalize_my_code(body.get("accessCode") or "")
+    email = (body.get("email") or "").strip().lower()
+
+    if not is_valid_my_code(code) or not email or "@" not in email:
+        return jsonify({"message": MSG_PIN_RESET_SENT}), 200
+
+    db = get_firestore()
+    portal_doc = _find_portal_by_access_code(db, code)
+    if portal_doc:
+        portal_email = ((portal_doc.to_dict() or {}).get("email") or "").strip().lower()
+        if portal_email and portal_email == email:
+            token = _serializer("portal-pin-reset").dumps({"portalId": portal_doc.id})
+            reset_url = f"{PUBLIC_SITE_URL}/portal/reset-pin/?t={token}"
+            send_portal_pin_reset_email(
+                to_email=email,
+                reset_url=reset_url,
+                access_code=code,
+            )
+
+    return jsonify({"message": MSG_PIN_RESET_SENT}), 200
+
+
+@bp.route("/reset-pin", methods=["POST"])
+def portal_reset_pin():
+    """재설정 토큰으로 새 PIN 저장."""
+    body = request.get_json(silent=True) or {}
+    token = (body.get("token") or "").strip()
+    new_pin = "".join(c for c in str(body.get("newPin") or "") if c.isdigit())[:4]
+
+    if len(new_pin) != 4:
+        return jsonify({"error": "Bad Request", "message": "비밀번호는 4자리 숫자여야 합니다."}), 400
+
+    if not token:
+        return jsonify({"error": "Bad Request", "message": "유효하지 않은 재설정 링크입니다."}), 400
+
+    try:
+        data = _serializer("portal-pin-reset").loads(token, max_age=PORTAL_PIN_RESET_MAX_AGE)
+    except SignatureExpired:
+        return jsonify({"error": "Bad Request", "message": "재설정 링크가 만료되었습니다. 다시 요청해 주세요."}), 400
+    except BadSignature:
+        return jsonify({"error": "Bad Request", "message": "유효하지 않은 재설정 링크입니다."}), 400
+
+    portal_id = (data.get("portalId") or "").strip()
+    if not portal_id:
+        return jsonify({"error": "Bad Request", "message": "유효하지 않은 재설정 링크입니다."}), 400
+
+    db = get_firestore()
+    pref = db.collection(CLIENT_PORTALS_COLLECTION).document(portal_id)
+    pdoc = pref.get()
+    if not pdoc.exists or (pdoc.to_dict() or {}).get("status") != "active":
+        return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
+
+    pref.update({"pinHash": hash_password(new_pin)})
+    return jsonify({"message": "비밀번호가 변경되었습니다."}), 200
 
 
 @bp.route("/care-assignments", methods=["GET"])

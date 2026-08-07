@@ -17,6 +17,8 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import type { CounselorClientPortalListItem } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
+import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
@@ -36,19 +38,16 @@ import {
   counselorListTableWrapperClass,
   counselorListTdCompactClass,
   counselorListThClass,
-  counselorResultMetricClass,
   formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import {
   assessmentGroupTitleParts,
-  formatDispatchFailedMetric,
-  formatTestIncompleteMetric,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
 
-type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
+type ListSortKey = 'no' | 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
 
 function parseCreatedAt(iso?: string): number {
@@ -82,6 +81,7 @@ function compareAssessments(
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
+    case 'no':
     case 'createdAt':
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
     case 'counselInfo':
@@ -369,7 +369,7 @@ export default function AssessmentList({
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDir(key === 'createdAt' ? 'desc' : 'asc');
+      setSortDir(key === 'createdAt' || key === 'no' ? 'desc' : 'asc');
     }
   };
 
@@ -377,14 +377,9 @@ export default function AssessmentList({
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const totalParticipants = listItems.reduce((sum, a) => {
-    const { testIncomplete } = resultStatusCounts(a);
-    const testComplete = a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0;
-    return sum + testComplete + testIncomplete;
+    const { dispatchTotal } = resultStatusCounts(a);
+    return sum + dispatchTotal;
   }, 0);
-  const totalCompleted = listItems.reduce(
-    (sum, a) => sum + (a.testCompleteCount ?? a.emailsCompletedAllTestsCount ?? 0),
-    0,
-  );
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -432,27 +427,16 @@ export default function AssessmentList({
       noBodyPadding
       dense
       description={
-        <span className="inline-flex w-full flex-wrap items-center gap-x-2 gap-y-1.5">
-          <>
-            전체 <span className="font-semibold text-white">{listItems.length}</span>개 · 응시자{' '}
-            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
-            <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
-            <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
-          </>
-          <div className="relative ml-auto min-w-[12rem] flex-1 sm:max-w-xs">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
-              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-            />
-          </div>
+        <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+          <span>
+            상담코드 총 <span className="font-semibold text-white">{listItems.length}</span>개 · 내담자 총{' '}
+            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명
+          </span>
+          <CounselorListSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
+          />
         </span>
       }
     >
@@ -522,7 +506,7 @@ export default function AssessmentList({
           <p className="text-base text-slate-300">
             {listItems.length === 0 ? '등록된 상담코드가 없습니다' : '검색 결과가 없습니다'}
           </p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-400">
             {listItems.length === 0 ? '첫 상담코드를 만들어 내담자에게 배포하세요.' : '검색어를 바꿔 보세요.'}
           </p>
           {listItems.length === 0 && (
@@ -543,7 +527,14 @@ export default function AssessmentList({
             <table className="w-max min-w-full table-fixed text-sm">
               <thead>
                 <tr className={counselorListHeaderRowClass}>
-                  <th className={counselorListNoThClass}>No.</th>
+                  <SortableColumnHeader
+                    label="No."
+                    sortKey="no"
+                    activeKey={sortKey}
+                    direction={sortDir}
+                    onSort={toggleSort}
+                    className={`${counselorListNoThClass} whitespace-nowrap`}
+                  />
                   <SortableColumnHeader
                     label="발급일"
                     sortKey="createdAt"
@@ -568,15 +559,9 @@ export default function AssessmentList({
                     onSort={toggleSort}
                   />
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                    <span className="block">결과현황</span>
-                    <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
-                      (
-                      <span className="text-slate-300">총발송수</span>
-                      <span> / </span>
-                      <span className="text-red-400">발송실패</span>
-                      <span> / </span>
-                      <span className="text-red-400">미완료</span>
-                      )
+                    <span className="block">진행현황</span>
+                    <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-400">
+                      (총내담자 / 검사완료)
                     </span>
                   </th>
                   <SortableColumnHeader
@@ -592,9 +577,7 @@ export default function AssessmentList({
               </thead>
               <tbody>
                 {paginatedItems.map((a, idx) => {
-                  const { dispatchTotal } = resultStatusCounts(a);
-                  const dispatchFailedLabel = formatDispatchFailedMetric(a);
-                  const testIncompleteLabel = formatTestIncompleteMetric(a);
+                  const { dispatchTotal, testComplete } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
 
@@ -635,29 +618,10 @@ export default function AssessmentList({
                         )}
                       </td>
                       <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
-                        (
-                        <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
-                        /
-                        <span
-                          className={`px-1 font-medium tabular-nums ${
-                            dispatchFailedLabel === '발송중…'
-                              ? 'text-amber-300'
-                              : counselorResultMetricClass(Number(dispatchFailedLabel) || 0)
-                          }`}
-                        >
-                          {dispatchFailedLabel}
-                        </span>
-                        /
-                        <span
-                          className={`px-1 font-medium tabular-nums ${
-                            testIncompleteLabel === '완료'
-                              ? 'text-emerald-300'
-                              : counselorResultMetricClass(Number(testIncompleteLabel) || 0)
-                          }`}
-                        >
-                          {testIncompleteLabel}
-                        </span>
-                        )
+                        <CounselorProgressMetricsInline
+                          totalClients={dispatchTotal}
+                          items={[{ label: '검사완료', value: testComplete }]}
+                        />
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}

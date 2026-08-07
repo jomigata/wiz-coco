@@ -62,7 +62,7 @@ export function resolveAssessmentContextId(pathname: string, search: string): st
   return null;
 }
 
-/** 해당 화면이 직접 열렸을 때만 — 발송·검사 현황 / 상담코드 수정 */
+/** 해당 화면이 직접 열렸을 때만 — 상담진행 현황 / 상담코드 수정 */
 export function getAssessmentListContextNestedItems(
   pathname: string,
   search: string,
@@ -74,7 +74,7 @@ export function getAssessmentListContextNestedItems(
   if (path.startsWith('/counselor/assessments/progress')) {
     items.push({
       order: 1,
-      label: '발송·검사 현황',
+      label: '상담진행 현황',
       href: assessmentId
         ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
         : ASSESSMENT_LIST_HREF,

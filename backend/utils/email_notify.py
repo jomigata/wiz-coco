@@ -451,6 +451,44 @@ WizCoCo
     return True
 
 
+def send_portal_pin_reset_email(*, to_email: str, reset_url: str, access_code: str) -> bool:
+    """내담자 포털 — 비밀번호(PIN) 재설정 링크 발송."""
+    if not is_email_configured():
+        return False
+
+    email = (to_email or "").strip().lower()
+    if not email or "@" not in email:
+        return False
+
+    body = f"""안녕하세요.
+
+WizCoCo 검사실 비밀번호 재설정 요청을 받았습니다.
+
+▶ 나의코드: {access_code}
+
+아래 링크에서 새 비밀번호(4자리)를 설정해 주세요.
+{reset_url}
+
+링크는 1시간 동안 유효합니다.
+본인이 요청하지 않았다면 이 메일을 무시해 주세요.
+
+WizCoCo
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = MAIL_FROM
+    msg["To"] = email
+    msg["Subject"] = "[WizCoCo] 검사실 비밀번호 재설정"
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(MAIL_FROM, [email], msg.as_string())
+
+    return True
+
+
 def send_personal_purchase_inquiry_email(
     *,
     name: str,

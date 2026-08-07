@@ -3,10 +3,11 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchPortalDashboard, changeClientPortalPin, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
+import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
+import PortalWelcomeProgressSummary from '@/components/portal/PortalWelcomeProgressSummary';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
   findFirstCompletedExpandKey,
@@ -82,6 +83,8 @@ function ClientPortalContent() {
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState('');
   const [pinSuccess, setPinSuccess] = useState('');
+  const [careCompletedCount, setCareCompletedCount] = useState(0);
+  const [careTotalCount, setCareTotalCount] = useState(0);
 
   useEffect(() => {
     if (!resultView) {
@@ -152,6 +155,15 @@ function ClientPortalContent() {
       setMyCode(data.accessCode || session.portal.accessCode);
       setAssessments(items);
       await loadResults(items);
+      try {
+        const careData = await fetchPortalCareAssignments(session.portalToken);
+        const summary = careData.summary;
+        setCareTotalCount((summary.activeCount ?? 0) + (summary.completedCount ?? 0));
+        setCareCompletedCount(summary.completedCount ?? 0);
+      } catch {
+        setCareTotalCount(0);
+        setCareCompletedCount(0);
+      }
     } catch (err) {
       clearClientPortalSession();
       setError(err instanceof Error ? err.message : '세션이 만료되었습니다.');
@@ -159,6 +171,26 @@ function ClientPortalContent() {
       setLoading(false);
     }
   }, [router, loadResults]);
+
+  const testProgressSummary = React.useMemo(() => {
+    let total = 0;
+    let completed = 0;
+    for (const a of assessments) {
+      const code = normalizeAccessCodeInput(a.accessCode);
+      const results = resultsByCode[code] || [];
+      for (const t of a.testList || []) {
+        total += 1;
+        if (
+          results.some(
+            (r) => r.status === 'completed' && String(r.testId) === String(t.testId),
+          )
+        ) {
+          completed += 1;
+        }
+      }
+    }
+    return { total, completed };
+  }, [assessments, resultsByCode]);
 
   useEffect(() => {
     if (readClientPortalSession()?.portalToken) {
@@ -374,9 +406,15 @@ function ClientPortalContent() {
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-3xl mx-auto space-y-6">
           <div className="bg-slate-800/80 rounded-2xl border border-slate-600 p-6 shadow-xl">
-            <div>
-              <h1 className="text-xl font-bold text-white">내 검사실</h1>
-              <p className="text-slate-300 text-sm mt-3">{displayName}님, 환영합니다.</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-white">내 검사실</h1>
+                <p className="text-slate-300 text-sm mt-3">{displayName}님, 환영합니다.</p>
+              </div>
+              <PortalWelcomeProgressSummary
+                tests={{ label: '검사 진행', completed: testProgressSummary.completed, total: testProgressSummary.total }}
+                care={{ label: '추가 과제·치료', completed: careCompletedCount, total: careTotalCount }}
+              />
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-slate-400">

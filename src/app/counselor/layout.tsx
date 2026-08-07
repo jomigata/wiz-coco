@@ -110,7 +110,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     if (path.startsWith('/counselor/assessments/deleted-recipients')) return '삭제된 내담자';
     if (path.startsWith('/counselor/assessments/deleted')) return '삭제된 상담코드';
     if (path.startsWith('/counselor/assessments/new')) return '상담코드 생성';
-    if (path.startsWith('/counselor/assessments/progress')) return '발송·검사 현황';
+    if (path.startsWith('/counselor/assessments/progress')) return '상담진행 현황';
     if (path.startsWith('/counselor/assessments/dispatch')) return '진행현황';
     if (path.startsWith('/counselor/assessments/edit')) return '상담코드 수정';
     if (path.startsWith('/counselor/assessments')) return '상담코드 목록';
