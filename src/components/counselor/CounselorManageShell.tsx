@@ -10,6 +10,7 @@ import {
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
 } from '@/lib/counselorNestedNav';
+import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
   isMenuItemActive,
@@ -125,6 +126,11 @@ export default function CounselorManageShell({ children }: Props) {
                                 >
                                   <AuthLink
                                     href={item.href}
+                                    onClick={() => {
+                                      if (item.href.replace(/\/+$/, '') === '/counselor/assessments') {
+                                        clearAssessmentListSearch();
+                                      }
+                                    }}
                                     className={`block truncate rounded-md px-2 py-1 text-xs font-normal leading-snug transition-colors sm:text-[13px] ${
                                       active
                                         ? 'bg-sky-600/30 font-semibold text-sky-100'

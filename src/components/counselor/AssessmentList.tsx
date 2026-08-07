@@ -48,9 +48,10 @@ import {
 } from '@/lib/counselorAssessmentResultDisplay';
 import {
   buildAssessmentProgressHref,
-  readAssessmentListSearch,
+  clearAssessmentListSearch,
   writeAssessmentListSearch,
 } from '@/lib/counselorAssessmentListSearch';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
@@ -166,6 +167,7 @@ interface AssessmentListProps {
   moveInfo?: PortalMoveBannerInfo | null;
   autoLivePollId?: string | null;
   onAssessmentsRefresh?: (items: CounselorAssessment[]) => void;
+  initialSearchQuery?: string;
 }
 
 const LIVE_POLL_INTERVAL_MS = 3000;
@@ -177,11 +179,13 @@ export default function AssessmentList({
   moveInfo,
   autoLivePollId,
   onAssessmentsRefresh,
+  initialSearchQuery = '',
 }: AssessmentListProps) {
   const router = useRouter();
   const { user } = useAuthResolved();
+  const adminUser = isAdmin(getAppRoleSync());
   const [listItems, setListItems] = useState(assessments);
-  const [searchQuery, setSearchQuery] = useState(() => readAssessmentListSearch());
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const clientCacheKey = useMemo(
     () =>
       buildClientPortalsCacheKey({
@@ -209,9 +213,26 @@ export default function AssessmentList({
   }, [assessments]);
 
   useEffect(() => {
+    setSearchQuery(initialSearchQuery);
+    if (initialSearchQuery) {
+      writeAssessmentListSearch(initialSearchQuery);
+    } else {
+      clearAssessmentListSearch();
+    }
+  }, [initialSearchQuery]);
+
+  useEffect(() => {
     if (!user?.uid) return;
+    if (adminUser && !searchQuery.trim()) {
+      setClientItems([]);
+      return;
+    }
     let cancelled = false;
-    void listCounselorClientPortals({ status: 'active' })
+    const portalQuery = searchQuery.trim();
+    void listCounselorClientPortals({
+      status: 'active',
+      ...(portalQuery ? { q: portalQuery } : {}),
+    })
       .then((data) => {
         if (!cancelled) setClientItems(data.items || []);
       })
@@ -221,7 +242,7 @@ export default function AssessmentList({
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user?.uid, adminUser, searchQuery]);
 
   const clientSearchByAssessment = useMemo(() => {
     const map = new Map<string, string>();

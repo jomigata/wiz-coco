@@ -23,6 +23,20 @@ export function writeAssessmentListSearch(query: string): void {
   }
 }
 
+export function parseAssessmentListSearchFromUrl(raw: string | null | undefined): string {
+  return (raw || '').trim();
+}
+
+export function clearAssessmentListSearch(): void {
+  writeAssessmentListSearch('');
+}
+
+export function buildAssessmentListHref(searchQuery?: string): string {
+  const q = (searchQuery || '').trim();
+  if (!q) return '/counselor/assessments';
+  return `/counselor/assessments?search=${encodeURIComponent(q)}`;
+}
+
 export function buildAssessmentProgressHref(assessmentId: string, searchQuery: string): string {
   const params = new URLSearchParams({ assessmentId: assessmentId.trim() });
   const q = searchQuery.trim();

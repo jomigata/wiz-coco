@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AssessmentList from '@/components/counselor/AssessmentList';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { isLoginRequiredError } from '@/lib/authRedirect';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
+import { parseAssessmentListSearchFromUrl } from '@/lib/counselorAssessmentListSearch';
 import {
   listAssessments,
   readCachedAssessmentsList,
@@ -15,7 +17,9 @@ import {
   type PortalMoveBannerInfo,
 } from '@/lib/assessmentApi';
 
-export default function AssessmentListPage() {
+function AssessmentListPageContent() {
+  const searchParams = useSearchParams();
+  const initialSearchQuery = parseAssessmentListSearchFromUrl(searchParams.get('search'));
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const counselorUid = user?.uid;
   const [assessments, setAssessments] = useState<CounselorAssessment[]>(
@@ -72,7 +76,7 @@ export default function AssessmentListPage() {
     } catch {
       setCreatedInfo(null);
     }
-  }, []);
+  }, [counselorUid]);
 
   useEffect(() => {
     if (authPending || !user) {
@@ -124,14 +128,24 @@ export default function AssessmentListPage() {
             </p>
           ) : null}
           <AssessmentList
+            key={initialSearchQuery}
             assessments={assessments}
             createdInfo={createdInfo}
             moveInfo={moveInfo}
             autoLivePollId={autoLivePollId}
             onAssessmentsRefresh={setAssessments}
+            initialSearchQuery={initialSearchQuery}
           />
         </>
       )}
     </div>
+  );
+}
+
+export default function AssessmentListPage() {
+  return (
+    <Suspense fallback={<AuthLoadingState />}>
+      <AssessmentListPageContent />
+    </Suspense>
   );
 }

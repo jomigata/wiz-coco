@@ -462,6 +462,39 @@ def aggregate_archived_assessment_list_stats(
     return stats
 
 
+def _iter_client_portals_for_scope(
+    db,
+    *,
+    counselor_uid: str | None,
+    owner_uids: set[str] | None = None,
+):
+    """상담사 또는 목록에 등장하는 counselorId 집합 기준으로 포털 문서를 순회."""
+    if counselor_uid:
+        for doc in (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", counselor_uid)
+            .stream()
+        ):
+            yield doc.id, doc.to_dict() or {}
+        return
+
+    uids = {str(u).strip() for u in (owner_uids or set()) if str(u).strip()}
+    if not uids:
+        return
+
+    seen: set[str] = set()
+    for uid in uids:
+        for doc in (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", uid)
+            .stream()
+        ):
+            if doc.id in seen:
+                continue
+            seen.add(doc.id)
+            yield doc.id, doc.to_dict() or {}
+
+
 def aggregate_assessment_list_stats(
     db,
     *,
@@ -492,22 +525,22 @@ def aggregate_assessment_list_stats(
         }
 
     portal_rows: list[tuple[str, dict, list]] = []
-    if counselor_uid:
-        portal_refs = (
-            db.collection(CLIENT_PORTALS_COLLECTION)
-            .where("counselorId", "==", counselor_uid)
-            .stream()
-        )
-    else:
-        portal_refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
-    for doc in portal_refs:
-        pdata = doc.to_dict() or {}
+    owner_uids = {
+        str(x.get("counselorId") or "").strip()
+        for x in items
+        if str(x.get("counselorId") or "").strip()
+    }
+    for doc_id, pdata in _iter_client_portals_for_scope(
+        db,
+        counselor_uid=counselor_uid,
+        owner_uids=owner_uids,
+    ):
         if (pdata.get("status") or "active") != "active":
             continue
         assigned = list(pdata.get("assignedAssessmentIds") or [])
         if not assigned:
             continue
-        portal_rows.append((doc.id, pdata, assigned))
+        portal_rows.append((doc_id, pdata, assigned))
 
     portal_ids = {row[0] for row in portal_rows}
     notify_map = _latest_notify_by_portal(db, portal_ids)
@@ -569,8 +602,14 @@ def get_assessment_dispatch_status(db, assessment_id: str, counselor_uid: str | 
             .where("counselorId", "==", counselor_uid)
             .stream()
         )
+    elif owner_uid:
+        portal_refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", owner_uid)
+            .stream()
+        )
     else:
-        portal_refs = db.collection(CLIENT_PORTALS_COLLECTION).stream()
+        portal_refs = iter(())
     rows = []
     portal_ids: set[str] = set()
     for doc in portal_refs:

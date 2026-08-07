@@ -456,8 +456,8 @@ def portal_change_pin():
 
 
 MSG_PIN_RESET_SENT = "등록된 이메일로 재설정 안내를 보냈습니다."
-MSG_PIN_RESET_MISMATCH = "나의코드와 이메일이 일치하지 않습니다. 입력 내용을 확인해 주세요."
-MSG_PIN_NOT_FOUND = "나의코드를 찾을 수 없습니다. 담당자에게 문의해 주세요."
+MSG_PIN_RESET_MISMATCH = "나의코드와 이메일이 일치하지 않습니다."
+MSG_PIN_NOT_FOUND = "나의코드를 확인해 주세요."
 MSG_PIN_NO_EMAIL = "등록된 이메일이 없습니다. 담당자에게 문의해 주세요."
 
 

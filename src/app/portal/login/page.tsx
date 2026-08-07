@@ -119,6 +119,18 @@ function PortalLoginContent() {
   const myCodePlaceholder = getMyCodeInputPlaceholder();
   const isResults = intent === 'results';
   const alternateHref = copy.alternate?.href;
+  const pageBg = isResults ? 'bg-[#0a1424]' : 'bg-[#070b14]';
+  const cardClass = isResults
+    ? 'bg-slate-900/85 rounded-2xl border border-cyan-400/20 p-8 shadow-2xl shadow-cyan-950/25'
+    : 'bg-slate-900/90 rounded-2xl border border-white/[0.08] p-8 shadow-2xl shadow-black/30';
+  const accentLabelClass = isResults ? 'text-cyan-300/90' : 'text-sky-300/80';
+  const inputRingClass = isResults ? 'focus:ring-cyan-400/50' : 'focus:ring-sky-500/50';
+  const submitBtnClass = isResults
+    ? 'bg-cyan-500 hover:bg-cyan-400'
+    : 'bg-sky-600 hover:bg-sky-500';
+  const alternateLinkClass = isResults
+    ? 'text-cyan-300 hover:text-cyan-200'
+    : 'text-sky-300 hover:text-sky-200';
 
   const handleAlternateClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -131,21 +143,21 @@ function PortalLoginContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#070b14]">
+    <div className={`min-h-screen ${pageBg}`}>
       <div className="pt-24 pb-12 px-4">
         <main className="max-w-md mx-auto">
-          <div className="bg-slate-900/90 rounded-2xl border border-white/[0.08] p-8 shadow-2xl shadow-black/30">
+          <div className={cardClass}>
             <div className="mb-6 relative">
               <Link
                 href="/portal/forgot-pin/"
-                className="absolute -top-1 right-0 text-xs text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline"
+                className={`absolute -top-1 right-0 text-xs underline-offset-2 hover:underline ${
+                  isResults ? 'text-cyan-300 hover:text-cyan-200' : 'text-sky-300 hover:text-sky-200'
+                }`}
               >
                 (비밀번호 찾기)
               </Link>
               <span
-                className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${
-                  isResults ? 'text-emerald-300/80' : 'text-sky-300/80'
-                }`}
+                className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${accentLabelClass}`}
               >
                 {isResults ? 'Result Check' : 'Assessment Start'}
               </span>
@@ -190,7 +202,7 @@ function PortalLoginContent() {
                   data-1p-ignore="true"
                   data-bwignore
                   placeholder={myCodePlaceholder}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className={`w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-lg tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 ${inputRingClass}`}
                   value={code}
                   onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}
@@ -210,7 +222,7 @@ function PortalLoginContent() {
                   data-lpignore="true"
                   data-1p-ignore="true"
                   placeholder="••••"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-400 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                  className={`w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-400 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 ${inputRingClass}`}
                   value={pin}
                   onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
                   disabled={loading}
@@ -220,11 +232,7 @@ function PortalLoginContent() {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className={`w-full py-3.5 px-4 rounded-xl font-semibold text-white disabled:opacity-50 transition-colors ${
-                  isResults
-                    ? 'bg-emerald-600 hover:bg-emerald-500'
-                    : 'bg-sky-600 hover:bg-sky-500'
-                }`}
+                className={`w-full py-3.5 px-4 rounded-xl font-semibold text-white disabled:opacity-50 transition-colors ${submitBtnClass}`}
               >
                 {loading ? copy.loadingLabel : copy.submitLabel}
               </button>
@@ -235,7 +243,7 @@ function PortalLoginContent() {
                 {copy.alternate.label}{' '}
                 <Link
                   href={alternateHref}
-                  className="text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline font-semibold"
+                  className={`${alternateLinkClass} underline-offset-2 hover:underline font-semibold`}
                   onClick={handleAlternateClick}
                 >
                   여기

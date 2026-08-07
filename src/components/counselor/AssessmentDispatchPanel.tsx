@@ -42,7 +42,7 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
-import { writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
+import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
@@ -753,7 +753,7 @@ export default function AssessmentDispatchPanel({
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-2">
           <Link
-            href="/counselor/assessments"
+            href={buildAssessmentListHref(searchQuery)}
             className="inline-flex items-center justify-center rounded-md border border-white/10 bg-slate-900/60 p-1.5 text-slate-300 transition-colors hover:border-sky-500/40 hover:bg-sky-950/40 hover:text-sky-200"
             title="상담코드 목록"
             aria-label="상담코드 목록으로 이동"

@@ -75,7 +75,7 @@ function ForgotPinContent() {
                   maxLength={20}
                   autoComplete="off"
                   placeholder={getMyCodeInputPlaceholder()}
-                  className="w-full px-4 py-3 rounded-xl bg-[#120a24]/80 border border-violet-400/20 text-white text-center text-lg tracking-wider placeholder:text-violet-200/40 focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-violet-200/35 text-white text-center text-lg tracking-wider placeholder:text-violet-100/55 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/50"
                   value={code}
                   onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
                   disabled={loading}
@@ -90,7 +90,7 @@ function ForgotPinContent() {
                   type="email"
                   autoComplete="email"
                   placeholder="등록된 이메일 주소"
-                  className="w-full px-4 py-3 rounded-xl bg-[#120a24]/80 border border-violet-400/20 text-white placeholder:text-violet-200/40 focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-violet-200/35 text-white placeholder:text-violet-100/55 focus:outline-none focus:ring-2 focus:ring-violet-300/60 focus:border-violet-200/50"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
