@@ -12,7 +12,7 @@ export const PORTAL_LOGIN_COPY: Record<
   }
 > = {
   start: {
-    title: '검사시작',
+    title: '검사 시작',
     description: '안내 받으신 나의코드/비밀번호를 입력해 주세요.',
     submitLabel: '검사시작',
     loadingLabel: '확인 중…',

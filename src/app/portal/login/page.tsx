@@ -21,19 +21,18 @@ import {
   PORTAL_LOGIN_COPY,
   parsePortalLoginIntent,
 } from '@/lib/portalLoginIntent';
-
-function PortalLoginLoading() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a4a72] via-[#123456] to-[#0c1f33] pt-24 flex justify-center">
-      <p className="text-sky-100/80 text-sm">불러오는 중…</p>
-    </div>
-  );
-}
+import {
+  PortalAuthCard,
+  PortalAuthScreenLayout,
+  usePortalAuthTheme,
+} from '@/components/portal/PortalAuthScreenLayout';
 
 function PortalLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const intent = parsePortalLoginIntent(searchParams.get('intent'));
+  const theme = intent === 'results' ? 'results' : 'start';
+  const t = usePortalAuthTheme(theme);
   const [code, setCode] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -117,28 +116,7 @@ function PortalLoginContent() {
   );
 
   const myCodePlaceholder = getMyCodeInputPlaceholder();
-  const isResults = intent === 'results';
   const alternateHref = copy.alternate?.href;
-  const pageBg = isResults
-    ? 'bg-gradient-to-br from-[#0d5c6e] via-[#134e6a] to-[#0a3048]'
-    : 'bg-gradient-to-br from-[#1e5a8c] via-[#164770] to-[#0f2844]';
-  const pageGlow = isResults
-    ? 'bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(56,189,248,0.28),transparent)]'
-    : 'bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(96,165,250,0.32),transparent)]';
-  const cardClass = isResults
-    ? 'rounded-2xl border-2 border-cyan-200/45 bg-slate-800/75 backdrop-blur-sm p-8 shadow-2xl shadow-cyan-900/30'
-    : 'rounded-2xl border-2 border-sky-200/45 bg-slate-800/75 backdrop-blur-sm p-8 shadow-2xl shadow-sky-900/30';
-  const accentLabelClass = isResults ? 'text-cyan-100' : 'text-sky-100';
-  const inputClass = isResults
-    ? 'bg-slate-900/55 border-2 border-cyan-200/35 focus:ring-cyan-300/55 focus:border-cyan-200/55'
-    : 'bg-slate-900/55 border-2 border-sky-200/35 focus:ring-sky-300/55 focus:border-sky-200/55';
-  const submitBtnClass = isResults
-    ? 'bg-cyan-400 hover:bg-cyan-300 text-slate-900'
-    : 'bg-sky-400 hover:bg-sky-300 text-slate-900';
-  const linkClass = isResults
-    ? 'text-cyan-100 hover:text-white'
-    : 'text-sky-100 hover:text-white';
-  const alternateLinkClass = linkClass;
 
   const handleAlternateClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -151,122 +129,99 @@ function PortalLoginContent() {
   );
 
   return (
-    <div className={`relative min-h-screen ${pageBg}`}>
-      <div className={`pointer-events-none absolute inset-0 ${pageGlow}`} aria-hidden />
-      <div className="relative pt-24 pb-12 px-4">
-        <main className="max-w-md mx-auto">
-          <div className={cardClass}>
-            <div className="mb-6 relative">
-              <Link
-                href="/portal/forgot-pin/"
-                className={`absolute -top-1 right-0 text-xs underline-offset-2 hover:underline ${linkClass}`}
-              >
-                (비밀번호 찾기)
-              </Link>
-              <span
-                className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${accentLabelClass}`}
-              >
-                {isResults ? 'Result Check' : 'Assessment Start'}
-              </span>
-              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight pr-24">{copy.title}</h1>
-              <p className="text-slate-200/85 text-sm leading-relaxed">{copy.description}</p>
-            </div>
+    <PortalAuthScreenLayout theme={theme}>
+      <PortalAuthCard theme={theme}>
+        <div className="mb-6 relative">
+          <Link
+            href="/portal/forgot-pin/"
+            className={`absolute -top-1 right-0 text-xs underline-offset-2 hover:underline ${t.link}`}
+          >
+            (비밀번호 찾기)
+          </Link>
+          <span className={`inline-block text-[11px] uppercase tracking-[0.16em] mb-3 ${t.accent}`}>
+            {theme === 'results' ? 'Result Check' : 'Assessment Start'}
+          </span>
+          <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight pr-24">{copy.title}</h1>
+          <p className="text-slate-400 text-sm leading-relaxed">{copy.description}</p>
+        </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <input
-                type="text"
-                name="prevent_autofill_username"
-                tabIndex={-1}
-                autoComplete="username"
-                className="sr-only"
-                aria-hidden
-                readOnly
-              />
-              <input
-                type="password"
-                name="prevent_autofill_password"
-                tabIndex={-1}
-                autoComplete="current-password"
-                className="sr-only"
-                aria-hidden
-                readOnly
-              />
-              <div>
-                <label htmlFor="wizcoco-portal-my-code" className="block text-sm font-medium text-slate-300 mb-2">
-                  나의코드
-                </label>
-                <input
-                  id="wizcoco-portal-my-code"
-                  name="wizcoco_portal_my_code"
-                  type="text"
-                  inputMode="text"
-                  maxLength={20}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  data-lpignore="true"
-                  data-1p-ignore="true"
-                  data-bwignore
-                  placeholder={myCodePlaceholder}
-                  className={`w-full px-4 py-3 rounded-xl text-white text-center text-lg tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 ${inputClass}`}
-                  value={code}
-                  onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label htmlFor="wizcoco-portal-pin" className="block text-sm font-medium text-slate-300 mb-2">
-                  비밀번호 (4자리)
-                </label>
-                <input
-                  id="wizcoco-portal-pin"
-                  name="wizcoco_portal_pin"
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  autoComplete="off"
-                  data-lpignore="true"
-                  data-1p-ignore="true"
-                  placeholder="••••"
-                  className={`w-full px-4 py-3 rounded-xl text-white text-center text-2xl tracking-[0.5em] placeholder:text-slate-400 placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 ${inputClass}`}
-                  value={pin}
-                  onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
-                  disabled={loading}
-                />
-              </div>
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                className={`w-full py-3.5 px-4 rounded-xl font-semibold text-white disabled:opacity-50 transition-colors ${submitBtnClass}`}
-              >
-                {loading ? copy.loadingLabel : copy.submitLabel}
-              </button>
-            </form>
-
-            {copy.alternate && alternateHref && (
-              <p className="mt-6 text-center text-sm text-slate-200/90">
-                {copy.alternate.label}{' '}
-                <Link
-                  href={alternateHref}
-                  className={`${alternateLinkClass} underline-offset-2 hover:underline font-semibold`}
-                  onClick={handleAlternateClick}
-                >
-                  여기
-                </Link>
-              </p>
-            )}
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+          <input type="text" name="prevent_autofill_username" tabIndex={-1} autoComplete="username" className="sr-only" aria-hidden readOnly />
+          <input type="password" name="prevent_autofill_password" tabIndex={-1} autoComplete="current-password" className="sr-only" aria-hidden readOnly />
+          <div>
+            <label htmlFor="wizcoco-portal-my-code" className={`block text-sm font-medium mb-2 ${t.label}`}>
+              나의코드
+            </label>
+            <input
+              id="wizcoco-portal-my-code"
+              name="wizcoco_portal_my_code"
+              type="text"
+              inputMode="text"
+              maxLength={20}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-bwignore
+              placeholder={myCodePlaceholder}
+              className={`w-full px-4 py-3 rounded-xl text-center text-lg tracking-wider focus:outline-none focus:ring-2 ${t.input}`}
+              value={code}
+              onChange={(e) => setCode(formatMyCodeWhileTyping(e.target.value))}
+              disabled={loading}
+            />
           </div>
-        </main>
-      </div>
-    </div>
+          <div>
+            <label htmlFor="wizcoco-portal-pin" className={`block text-sm font-medium mb-2 ${t.label}`}>
+              비밀번호 (4자리)
+            </label>
+            <input
+              id="wizcoco-portal-pin"
+              name="wizcoco_portal_pin"
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              autoComplete="off"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              placeholder="••••"
+              className={`w-full px-4 py-3 rounded-xl text-center text-2xl tracking-[0.5em] placeholder:tracking-[0.5em] focus:outline-none focus:ring-2 ${t.input}`}
+              value={pin}
+              onChange={(e) => setPin(normalizeJoinPinDigits(e.target.value))}
+              disabled={loading}
+            />
+          </div>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className={`w-full py-3.5 px-4 rounded-xl font-semibold disabled:opacity-50 transition-colors ${t.button}`}
+          >
+            {loading ? copy.loadingLabel : copy.submitLabel}
+          </button>
+        </form>
+
+        {copy.alternate && alternateHref && (
+          <p className="mt-6 text-center text-sm text-slate-300">
+            {copy.alternate.label}{' '}
+            <Link
+              href={alternateHref}
+              className={`${t.link} underline-offset-2 hover:underline font-semibold`}
+              onClick={handleAlternateClick}
+            >
+              여기
+            </Link>
+          </p>
+        )}
+      </PortalAuthCard>
+    </PortalAuthScreenLayout>
   );
 }
 
 export default function PortalLoginPage() {
   return (
-    <Suspense fallback={<PortalLoginLoading />}>
+    <Suspense fallback={<PortalAuthScreenLayout theme="start" loading />}>
       <PortalLoginContent />
     </Suspense>
   );

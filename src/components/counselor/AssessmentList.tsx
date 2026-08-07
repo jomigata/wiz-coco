@@ -477,18 +477,17 @@ export default function AssessmentList({
       noBodyPadding
       dense
       description={
-        <div className="flex w-full flex-col gap-2">
+        <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+          <span>
+            상담코드 총 <span className="font-semibold text-white">{listItems.length}</span>개 · 내담자 총{' '}
+            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명
+          </span>
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
-            className="!flex-none w-full sm:max-w-xl"
           />
-          <p className="text-sm text-slate-400">
-            상담코드 총 <span className="font-semibold text-white">{listItems.length}</span>개 · 내담자 총{' '}
-            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명
-          </p>
-        </div>
+        </span>
       }
     >
     <motion.div
