@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
+import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import {
   fetchCounselorCohortMonitoring,
@@ -33,7 +34,6 @@ import {
   counselorListTableWrapperClass,
   counselorListTdCompactClass,
   counselorListThClass,
-  counselorResultMetricClass,
   formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import type {
@@ -42,8 +42,6 @@ import type {
 } from '@/types/clientPortal';
 import {
   assessmentGroupTitleParts,
-  formatDispatchFailedMetric,
-  formatTestIncompleteMetric,
   resultStatusCounts,
 } from '@/lib/counselorAssessmentResultDisplay';
 
@@ -363,19 +361,14 @@ export default function CounselorHomeDashboard() {
                       <th className={`${counselorListThClass} whitespace-nowrap text-center`}>상담코드</th>
                       <th className={counselorListThClass}>그룹명 / 제목</th>
                       <th className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                        <span className="block">결과현황</span>
-                        <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
-                          (총 / 실패 / 미완료)
-                        </span>
+                        <span className="block">진행현황</span>
                       </th>
                       <th className={`${counselorListThClass} whitespace-nowrap text-center`}>사용 종료일</th>
                     </tr>
                   </thead>
                   <tbody>
                     {recentAssessments.map((a, idx) => {
-                      const { dispatchTotal } = resultStatusCounts(a);
-                      const dispatchFailedLabel = formatDispatchFailedMetric(a);
-                      const testIncompleteLabel = formatTestIncompleteMetric(a);
+                      const { dispatchTotal, testComplete } = resultStatusCounts(a);
                       const expired = isExpired(a.usageEndDate);
                       const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
 
@@ -421,29 +414,10 @@ export default function CounselorHomeDashboard() {
                             ) : null}
                           </td>
                           <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
-                            (
-                            <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
-                            /
-                            <span
-                              className={`px-1 font-medium tabular-nums ${
-                                dispatchFailedLabel === '발송중…'
-                                  ? 'text-amber-300'
-                                  : counselorResultMetricClass(Number(dispatchFailedLabel) || 0)
-                              }`}
-                            >
-                              {dispatchFailedLabel}
-                            </span>
-                            /
-                            <span
-                              className={`px-1 font-medium tabular-nums ${
-                                testIncompleteLabel === '완료'
-                                  ? 'text-emerald-300'
-                                  : counselorResultMetricClass(Number(testIncompleteLabel) || 0)
-                              }`}
-                            >
-                              {testIncompleteLabel}
-                            </span>
-                            )
+                            <CounselorProgressMetricsInline
+                              totalClients={dispatchTotal}
+                              items={[{ label: '검사완료', value: testComplete }]}
+                            />
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
