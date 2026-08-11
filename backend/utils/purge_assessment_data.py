@@ -2,18 +2,23 @@
 from __future__ import annotations
 
 from config import (
+    AI_REPORTS_COLLECTION,
     ASSESSMENTS_COLLECTION,
+    BULK_PORTAL_JOBS_COLLECTION,
+    CARE_ASSIGNMENTS_COLLECTION,
+    CARE_PROGRESS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
+    DAILY_RECORDS_COLLECTION,
     JOIN_PARTICIPANTS_COLLECTION,
     NOTIFICATION_QUEUE_COLLECTION,
     TEST_RESULTS_COLLECTION,
-    BULK_PORTAL_JOBS_COLLECTION,
 )
 from utils.access_code import reset_access_code_generation_meta
 from utils.my_code import reset_my_code_generation_meta
 
 BATCH_SIZE = 400
 LEGACY_TEST_RESULTS_COLLECTION = "test_results"
+BULK_JOB_CREATED_ROWS = "createdRows"
 
 
 def _delete_query_docs(db, query, label: str, dry_run: bool) -> int:
@@ -44,6 +49,18 @@ def _delete_entire_collection(db, collection_name: str, dry_run: bool) -> int:
     )
 
 
+def _delete_subcollection(db, parent_collection: str, subcollection: str, dry_run: bool) -> int:
+    deleted = 0
+    for parent in db.collection(parent_collection).stream():
+        query = parent.reference.collection(subcollection)
+        deleted += _delete_query_docs(db, query, subcollection, dry_run)
+    return deleted
+
+
+def _delete_bulk_job_subcollections(db, dry_run: bool) -> int:
+    return _delete_subcollection(db, BULK_PORTAL_JOBS_COLLECTION, BULK_JOB_CREATED_ROWS, dry_run)
+
+
 def _delete_counselor_test_results(db, dry_run: bool) -> int:
     """assessmentId / accessCode / portalId 중 하나라도 있는 testResults 삭제."""
     coll = db.collection(TEST_RESULTS_COLLECTION)
@@ -60,7 +77,6 @@ def _delete_counselor_test_results(db, dry_run: bool) -> int:
             or (d.to_dict() or {}).get("portalId")
         ]
         if not to_delete:
-            # 남은 문서가 모두 비대상이면 전체 스캔 종료
             break
         if dry_run:
             deleted += len(to_delete)
@@ -79,15 +95,20 @@ def _delete_counselor_test_results(db, dry_run: bool) -> int:
 
 def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_test_results: bool = False) -> dict:
     """
-    assessments, clientPortals, notificationQueue 전체 삭제.
+    상담코드·검사진행·내담자 포털 관련 Firestore 데이터 일괄 삭제.
     testResults: include_all_test_results=True 이면 컬렉션 전체, 아니면 상담(코드) 연동 문서만.
     """
     counts = {
+        "bulkPortalJobCreatedRows": _delete_bulk_job_subcollections(db, dry_run),
         "assessments": _delete_entire_collection(db, ASSESSMENTS_COLLECTION, dry_run),
         "clientPortals": _delete_entire_collection(db, CLIENT_PORTALS_COLLECTION, dry_run),
         "joinParticipants": _delete_entire_collection(db, JOIN_PARTICIPANTS_COLLECTION, dry_run),
         "notificationQueue": _delete_entire_collection(db, NOTIFICATION_QUEUE_COLLECTION, dry_run),
         "bulkPortalJobs": _delete_entire_collection(db, BULK_PORTAL_JOBS_COLLECTION, dry_run),
+        "careAssignments": _delete_entire_collection(db, CARE_ASSIGNMENTS_COLLECTION, dry_run),
+        "careProgress": _delete_entire_collection(db, CARE_PROGRESS_COLLECTION, dry_run),
+        "dailyRecords": _delete_entire_collection(db, DAILY_RECORDS_COLLECTION, dry_run),
+        "aiReports": _delete_entire_collection(db, AI_REPORTS_COLLECTION, dry_run),
     }
     if include_all_test_results:
         counts["testResults"] = _delete_entire_collection(db, TEST_RESULTS_COLLECTION, dry_run)
@@ -104,6 +125,8 @@ def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_tes
     counts["myCodeMetaReset"] = reset_my_code_generation_meta(db, dry_run=dry_run)
     counts["dryRun"] = dry_run
     counts["totalDeleted"] = sum(
-        v for k, v in counts.items() if k not in ("dryRun", "totalDeleted", "accessCodeMetaReset", "myCodeMetaReset")
+        v
+        for k, v in counts.items()
+        if k not in ("dryRun", "totalDeleted", "accessCodeMetaReset", "myCodeMetaReset")
     )
     return counts
