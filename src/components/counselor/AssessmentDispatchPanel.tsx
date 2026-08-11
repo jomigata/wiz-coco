@@ -842,7 +842,7 @@ export default function AssessmentDispatchPanel({
             }
             className="ml-auto rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-xs font-medium text-sky-100 transition-colors hover:bg-sky-800/50 disabled:opacity-50 sm:text-sm"
           >
-            상담코드 변경 ({selected.size})
+            상담코드 이동 ({selected.size})
           </button>
         </div>
       }
