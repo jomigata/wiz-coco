@@ -7,12 +7,6 @@ on:
     # 매주 월요일 오전 9시에 실행
     - cron: '0 9 * * 1'
   workflow_dispatch:
-  push:
-    branches: [ main, master ]
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
-      - 'src/**'
 
 jobs:
   security-audit:

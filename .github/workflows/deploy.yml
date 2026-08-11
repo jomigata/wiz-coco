@@ -39,117 +39,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 1단계: 코드 품질 검사 (30년 경력 풀스택 프로그래머 검토)
-  code-quality:
-    name: 🔍 코드 품질 검사
+  build-and-deploy:
+    name: 🏗️ 검사·빌드·배포
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 📥 코드 체크아웃
       uses: actions/checkout@v5
-      
+
     - name: 🟢 Node.js 설정
       uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        
+
     - name: 📦 의존성 설치
       run: |
         echo "📦 의존성 설치 시작..."
-        echo "=================================="
-        
-        # npm 캐시 정리
-        npm cache clean --force
-        
-        # 네트워크 재시도 설정
         npm config set registry https://registry.npmjs.org/
         npm config set fetch-retry-mintimeout 20000
         npm config set fetch-retry-maxtimeout 120000
         npm config set fetch-retries 5
-        
-        # 의존성 설치 (재시도 포함)
         for i in {1..3}; do
           echo "🔄 시도 $i/3..."
           if npm ci --legacy-peer-deps --no-audit --no-fund; then
             echo "✅ 의존성 설치 성공!"
             break
-          else
-            echo "❌ 시도 $i 실패, 재시도 중..."
-            if [ $i -eq 3 ]; then
-              echo "❌ 모든 시도 실패"
-              exit 1
-            fi
-            sleep 10
           fi
+          if [ "$i" -eq 3 ]; then
+            echo "❌ 모든 시도 실패"
+            exit 1
+          fi
+          sleep 10
         done
-        
-        echo "=================================="
-      
+
     - name: 🔍 ESLint 검사
       run: npm run lint --if-present || echo "ESLint 설정이 없습니다."
-      
+
     - name: 🎯 TypeScript 타입 검사
       run: npx tsc --noEmit --project tsconfig.json
-      
-    - name: 📊 코드 복잡도 분석
-      run: |
-        echo "📊 코드 복잡도 분석 결과:"
-        echo "- 총 TypeScript 파일: $(find src -name '*.ts' -o -name '*.tsx' | wc -l)개"
-        echo "- 총 컴포넌트: $(find src/components -name '*.tsx' | wc -l)개"
-        echo "- 총 페이지: $(find src/app -name 'page.tsx' | wc -l)개"
 
-  # 2단계: 테스트 실행 (30년 경력 심리상담전문가 검토)
-  test:
-    name: 🧪 테스트 실행
-    runs-on: ubuntu-latest
-    needs: code-quality
-    
-    steps:
-    - name: 📥 코드 체크아웃
-      uses: actions/checkout@v5
-      
-    - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v5
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        
-    - name: 📦 의존성 설치
-      run: |
-        echo "📦 의존성 설치 시작..."
-        echo "=================================="
-        
-        # npm 캐시 정리
-        npm cache clean --force
-        
-        # 네트워크 재시도 설정
-        npm config set registry https://registry.npmjs.org/
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
-        npm config set fetch-retries 5
-        
-        # 의존성 설치 (재시도 포함)
-        for i in {1..3}; do
-          echo "🔄 시도 $i/3..."
-          if npm ci --legacy-peer-deps --no-audit --no-fund; then
-            echo "✅ 의존성 설치 성공!"
-            break
-          else
-            echo "❌ 시도 $i 실패, 재시도 중..."
-            if [ $i -eq 3 ]; then
-              echo "❌ 모든 시도 실패"
-              exit 1
-            fi
-            sleep 10
-          fi
-        done
-        
-        echo "=================================="
-      
     - name: 🧪 단위 테스트 실행
       run: npm test -- --testPathIgnorePatterns=dbCodeGenerator.test.ts --passWithNoTests --coverage
-      
+
     - name: 📊 테스트 커버리지 리포트
       uses: actions/upload-artifact@v5
       if: always()
@@ -157,55 +89,8 @@ jobs:
         name: test-coverage
         path: coverage/
         retention-days: 30
+        if-no-files-found: ignore
 
-  # 3단계: 빌드 및 최적화 (30년 경력 웹디자이너 검토)
-  build:
-    name: 🏗️ 빌드 및 최적화
-    runs-on: ubuntu-latest
-    needs: [code-quality, test]
-    
-    steps:
-    - name: 📥 코드 체크아웃
-      uses: actions/checkout@v5
-      
-    - name: 🟢 Node.js 설정
-      uses: actions/setup-node@v5
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        
-    - name: 📦 의존성 설치
-      run: |
-        echo "📦 의존성 설치 시작..."
-        echo "=================================="
-        
-        # npm 캐시 정리
-        npm cache clean --force
-        
-        # 네트워크 재시도 설정
-        npm config set registry https://registry.npmjs.org/
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
-        npm config set fetch-retries 5
-        
-        # 의존성 설치 (재시도 포함)
-        for i in {1..3}; do
-          echo "🔄 시도 $i/3..."
-          if npm ci --legacy-peer-deps --no-audit --no-fund; then
-            echo "✅ 의존성 설치 성공!"
-            break
-          else
-            echo "❌ 시도 $i 실패, 재시도 중..."
-            if [ $i -eq 3 ]; then
-              echo "❌ 모든 시도 실패"
-              exit 1
-            fi
-            sleep 10
-          fi
-        done
-        
-        echo "=================================="
-      
     - name: 🔐 Authenticate to Google Cloud (Flask API URL)
       uses: google-github-actions/auth@v3
       with:
@@ -225,10 +110,8 @@ jobs:
         echo "NEXT_TELEMETRY_DISABLED=1" >> .env
         echo "CI=true" >> .env
         echo "GITHUB_ACTIONS=true" >> .env
-        # 빌드 식별자(캐시/배포 확인용)
         echo "NEXT_PUBLIC_BUILD_SHA=${{ github.sha }}" >> .env
         echo "NEXT_PUBLIC_BUILD_RUN_ID=${{ github.run_id }}" >> .env
-        # Firebase 환경 변수 설정
         echo "NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" >> .env
         AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"
         if [ -z "$AUTH_DOMAIN" ]; then
@@ -240,7 +123,6 @@ jobs:
         echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" >> .env
         echo "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" >> .env
-        # Flask API URL — Cloud Run 실제 URL 우선 (Secret stale 방지)
         FLASK_URL=""
         if [ -n "${GCP_PROJECT_ID}" ]; then
           FLASK_URL=$(gcloud run services describe wizcoco-api \
@@ -257,20 +139,9 @@ jobs:
         else
           echo "⚠️ Flask API URL을 확인하지 못했습니다."
         fi
-        
+
     - name: 🏗️ 프로젝트 빌드
       run: |
-        echo "🏗️ 프로젝트 빌드 시작..."
-        echo "=================================="
-        echo "📄 .env 파일 내용 확인:"
-        if [ -f ".env" ]; then
-          cat .env | grep -v "FIREBASE" | head -10
-          echo "... (Firebase 설정은 보안상 생략)"
-        else
-          echo "❌ .env 파일이 없습니다."
-        fi
-        echo "=================================="
-        # 빌드 로그를 남기되 pipefail로 npm 실패를 감지
         set -o pipefail
         npm run build 2>&1 | tee build.log
         if [ "${PIPESTATUS[0]}" -ne 0 ]; then
@@ -278,7 +149,7 @@ jobs:
           exit 1
         fi
         echo "✅ 빌드 완료!"
-    
+
     - name: 📎 빌드 로그 업로드
       if: always()
       uses: actions/upload-artifact@v5
@@ -286,32 +157,18 @@ jobs:
         name: build-log
         path: build.log
         if-no-files-found: ignore
-      
+
     - name: 🔧 Firebase CLI 설치
       run: npm install -g firebase-tools
 
     - name: 🔧 Functions 의존성 설치 및 빌드
       run: |
-        echo "🔧 Firebase Functions 의존성 설치/빌드..."
-        echo "=================================="
         cd functions
         npm ci --legacy-peer-deps --no-audit --no-fund
         npm run build
-        echo "✅ Functions 빌드 완료!"
-        echo "=================================="
-      
+
     - name: 🔍 Firebase 설정 검증
       run: |
-        echo "🔍 Firebase 설정 검증 중..."
-        echo "=================================="
-        
-        # .env 파일 로드
-        if [ -f ".env" ]; then
-          echo "📄 .env 파일 발견, 환경변수 로드 중..."
-          export $(cat .env | grep -v '^#' | xargs)
-        fi
-        
-        # 필수 환경 변수 검증
         required_vars=(
           "NEXT_PUBLIC_FIREBASE_API_KEY"
           "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
@@ -320,161 +177,70 @@ jobs:
           "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
           "NEXT_PUBLIC_FIREBASE_APP_ID"
         )
-        
         missing_vars=()
-        
         for var in "${required_vars[@]}"; do
-          # GitHub Secrets에서 직접 확인
           secret_value=""
           case $var in
-            "NEXT_PUBLIC_FIREBASE_API_KEY")
-              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
-              ;;
-            "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN")
-              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"
-              ;;
-            "NEXT_PUBLIC_FIREBASE_PROJECT_ID")
-              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}"
-              ;;
-            "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET")
-              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}"
-              ;;
-            "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID")
-              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}"
-              ;;
-            "NEXT_PUBLIC_FIREBASE_APP_ID")
-              secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}"
-              ;;
+            "NEXT_PUBLIC_FIREBASE_API_KEY") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" ;;
+            "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" ;;
+            "NEXT_PUBLIC_FIREBASE_PROJECT_ID") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" ;;
+            "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" ;;
+            "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" ;;
+            "NEXT_PUBLIC_FIREBASE_APP_ID") secret_value="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" ;;
           esac
-          
           if [ -z "$secret_value" ]; then
-            echo "❌ $var이 설정되지 않았습니다."
             missing_vars+=("$var")
-          else
-            echo "✅ $var 설정됨 (길이: ${#secret_value}자)"
           fi
         done
-        
-        # Firebase 토큰 검증
-        FIREBASE_TOKEN_VALUE="${{ secrets.FIREBASE_TOKEN }}"
-        
-        if [ -z "$FIREBASE_TOKEN_VALUE" ]; then
-          echo "❌ FIREBASE_TOKEN이 설정되지 않았습니다."
+        if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
           missing_vars+=("FIREBASE_TOKEN")
-        else
-          echo "✅ FIREBASE_TOKEN 설정됨 (길이: ${#FIREBASE_TOKEN_VALUE}자)"
         fi
-        
-        # 누락된 변수가 있으면 오류
         if [ ${#missing_vars[@]} -gt 0 ]; then
-          echo "❌ 다음 환경 변수들이 누락되었습니다:"
-          printf '%s\n' "${missing_vars[@]}"
-          echo "🔧 GitHub Secrets에서 설정해주세요."
+          echo "❌ 누락된 Secrets: ${missing_vars[*]}"
           exit 1
         fi
-        
-        echo "✅ 모든 필수 환경 변수가 설정되었습니다!"
-        echo "=================================="
-        
+
     - name: 🔑 Firebase Service Account 설정
-      run: |
-        echo "🔑 Firebase Service Account 설정 중..."
-        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-service-account.json
-        
-        if [ -f "firebase-service-account.json" ]; then
-          echo "✅ Firebase Service Account 파일 생성 완료"
-          echo "📊 파일 크기: $(wc -c < firebase-service-account.json) bytes"
-        else
-          echo "❌ Firebase Service Account 파일 생성 실패"
-          exit 1
-        fi
-        
+      run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-service-account.json
+
     - name: 🔍 빌드 결과물 확인
       run: |
-        echo "🔍 빌드 결과물 확인 중..."
-        echo "=================================="
-        
-        if [ -d "out" ]; then
-          echo "✅ out 폴더 존재 확인"
-          echo "📊 out 폴더 내용:"
-          ls -la out/
-          echo ""
-          echo "📄 HTML 파일 목록:"
-          find out -name "*.html" | head -10
-          echo ""
-          echo "📊 총 파일 수: $(find out -type f | wc -l)개"
-        else
+        if [ ! -d "out" ]; then
           echo "❌ out 폴더가 존재하지 않습니다."
-          echo "🔍 현재 디렉토리 내용:"
-          ls -la
           exit 1
         fi
-        
-        echo "=================================="
+        echo "✅ out 폴더 확인 — $(find out -type f | wc -l)개 파일"
 
     - name: 🔐 Gemini AI 상담 Functions 환경 준비
       run: |
-        echo "🔐 Gemini / FAQ 시트 환경 준비..."
         SHEET_ID="${{ secrets.COUNSEL_FAQ_SHEET_ID }}"
         if [ -z "$SHEET_ID" ]; then SHEET_ID="unset"; fi
         GID="${{ secrets.COUNSEL_FAQ_SHEET_GID }}"
         if [ -z "$GID" ]; then GID="0"; fi
         printf 'COUNSEL_FAQ_SHEET_ID=%s\nCOUNSEL_FAQ_SHEET_GID=%s\nCOST_SAVER_MODE=true\n' "$SHEET_ID" "$GID" > functions/.env
-        # defineSecret(GEMINI_API_KEY) Functions는 Firebase Secret이 없으면 비대화형 배포가 실패함
         if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
           printf '%s' "${{ secrets.GEMINI_API_KEY }}" > /tmp/gemini-key.txt
-          echo "✅ GitHub Secrets에서 GEMINI_API_KEY 사용"
         else
           printf 'unset' > /tmp/gemini-key.txt
-          echo "⚠️  GEMINI_API_KEY 미설정 — placeholder로 Firebase Secret 등록 (AI 응답은 런타임 실패)"
         fi
         firebase functions:secrets:set GEMINI_API_KEY --data-file /tmp/gemini-key.txt --force \
           --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
         rm -f /tmp/gemini-key.txt
-        echo "✅ GEMINI_API_KEY Firebase Secret 반영됨"
-        echo "=================================="
 
     - name: 🚀 Firebase Hosting + Functions 배포
       run: |
-        echo "🚀 Firebase Hosting + Functions + Firestore 배포 시작..."
         export GOOGLE_APPLICATION_CREDENTIALS="$PWD/firebase-service-account.json"
-        
-        # 배포 실행
-        # firestore: AI 상담(aiCounselSessions) 규칙·인덱스 반영
-        # --force: Artifact Registry 정리 정책을 자동 설정해 배포 후 exit 1 오탐 방지
-        firebase deploy --only hosting,functions,firestore,storage --force --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
-        
-        echo "🎉 Firebase Hosting + Functions 배포 완료!"
+        firebase deploy --only hosting,functions,firestore,storage --force \
+          --token "${{ secrets.FIREBASE_TOKEN }}" --project ${{ env.FIREBASE_PROJECT_ID }}
       env:
         FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        
+
     - name: 📊 배포 성공 알림
       if: success()
       run: |
-        echo "🎉 배포가 성공적으로 완료되었습니다!"
-        echo "🌐 배포 URL: https://${{ env.FIREBASE_PROJECT_ID }}.web.app"
-        echo "📅 배포 시간: $(date)"
+        echo "🎉 배포 완료: https://${{ env.FIREBASE_PROJECT_ID }}.web.app"
         echo "🔗 커밋: ${{ github.sha }}"
-        echo "👤 커밋터: ${{ github.actor }}"
-        echo ""
-        echo "📊 배포 통계:"
-        echo "- 총 페이지 수: $(find out -name '*.html' | wc -l)개"
-        echo "- 빌드 시간: 약 1분"
-        echo "- 배포 시간: 약 2분"
-        echo "- 총 소요 시간: 약 5분"
-        echo ""
-        echo "🔍 다음 단계:"
-        echo "1. 배포된 사이트 접속 확인"
-        echo "2. 주요 기능 테스트"
-        echo "3. 성능 모니터링"
-        
+
     - name: ❌ 배포 실패 알림
       if: failure()
-      run: |
-        echo "❌ 배포가 실패했습니다."
-        echo "🔍 실패 원인을 확인해주세요:"
-        echo "1. Firebase 설정 확인"
-        echo "2. 환경 변수 설정 확인"
-        echo "3. 빌드 오류 확인"
-        echo ""
-        echo "📞 지원: GitHub Issues 또는 개발팀 문의"
+      run: echo "❌ 배포 실패 — Firebase 설정·빌드 로그를 확인하세요."
