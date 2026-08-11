@@ -974,7 +974,7 @@ export default function IndividualAssessmentCreateForm() {
               <span>휴대폰</span>
               <span />
             </div>
-            <div className="min-h-[10rem] flex-1 space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-[14rem] space-y-2 overflow-y-auto overscroll-y-contain pr-1">
               {manualRows.map((row, idx) => (
                   <div
                     key={idx}
@@ -1029,7 +1029,7 @@ export default function IndividualAssessmentCreateForm() {
                   </div>
               ))}
             </div>
-            <div className="shrink-0">
+            <div className="shrink-0 pt-1">
               <button
                 type="button"
                 onClick={() => addRow()}

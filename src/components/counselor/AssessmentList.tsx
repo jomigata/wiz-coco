@@ -712,9 +712,16 @@ export default function AssessmentList({
     />
 
     {deleteTarget ? (
+      (() => {
+        const { primary, secondary } = assessmentGroupTitleParts(deleteTarget);
+        const { dispatchTotal } = resultStatusCounts(deleteTarget);
+        const testCount = deleteTarget.testList?.length ?? 0;
+        const deletedRecipientsHref = `/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(deleteTarget.id)}`;
+        const deletedCodesHref = '/counselor/assessments/deleted';
+        return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
         <div
-          className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50"
+          className="w-full max-w-lg overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50"
           role="dialog"
           aria-labelledby="delete-assessment-title"
           aria-modal="true"
@@ -722,7 +729,7 @@ export default function AssessmentList({
           <div className="border-b border-red-500/20 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900 px-6 py-5">
             <div className="flex items-start gap-3">
               <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-red-400"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-red-400"
                 aria-hidden
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -735,36 +742,86 @@ export default function AssessmentList({
                 </svg>
               </span>
               <div className="min-w-0">
-                <h2 id="delete-assessment-title" className="text-lg font-semibold text-white">
+                <h2 id="delete-assessment-title" className="text-xl font-semibold text-white">
                   상담코드 삭제
                 </h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                  선택한 상담코드를 삭제 목록으로 이동합니다.
+                  아래 상담코드를 삭제 목록으로 이동합니다. 되돌리려면 삭제된 상담코드 목록에서 복구할 수 있습니다.
                 </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3.5">
+            <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                삭제 대상
+                삭제 대상 상담코드
               </p>
-              <p className="mt-1.5 font-mono text-lg font-bold tracking-wider text-cyan-300">
+              <p className="mt-1.5 font-mono text-2xl font-bold tracking-wider text-cyan-300">
                 {formatAccessCodeDisplay(deleteTarget.accessCode)}
               </p>
-              <p className="mt-1 text-sm leading-snug text-slate-200">{deleteTarget.title}</p>
+              <p className="mt-2 text-sm font-semibold leading-snug text-slate-100">
+                {primary}
+                {secondary ? (
+                  <span className="font-normal text-slate-300"> / {secondary}</span>
+                ) : null}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                <span>
+                  내담자{' '}
+                  <span className="font-semibold tabular-nums text-slate-200">
+                    {dispatchTotal.toLocaleString('ko-KR')}
+                  </span>
+                  명
+                </span>
+                <span>
+                  포함 검사{' '}
+                  <span className="font-semibold tabular-nums text-slate-200">{testCount}</span>개
+                </span>
+                {deleteTarget.createdAt ? (
+                  <span>발급일 {formatCounselorIssueDate(deleteTarget.createdAt)}</span>
+                ) : null}
+                {counselingCodeTypeLabel(deleteTarget.codeCategory) !== '—' ? (
+                  <span>{counselingCodeTypeLabel(deleteTarget.codeCategory)}</span>
+                ) : null}
+              </div>
             </div>
 
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm leading-relaxed text-slate-400">
-              <p>
-                <span className="font-medium text-slate-300">삭제된 상담코드 목록</span>으로 이동하며,
-                필요 시 복구할 수 있습니다.
-              </p>
-              <p className="mt-2 text-xs text-slate-500">
-                내담자 접속 정보·검사 결과는 삭제 목록에서 복구하기 전까지 보관됩니다.
-              </p>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-950/20 px-4 py-3.5 text-sm leading-relaxed text-amber-100/90">
+              <p className="font-semibold text-amber-200">삭제 시 함께 처리되는 항목</p>
+              <ul className="mt-2 list-disc space-y-1.5 pl-5 text-amber-100/85">
+                <li>
+                  이 상담코드에 연결된{' '}
+                  <span className="font-semibold text-white">내담자 {dispatchTotal.toLocaleString('ko-KR')}명</span>
+                  이 자동으로 삭제 처리됩니다.
+                </li>
+                <li>
+                  삭제된 내담자는{' '}
+                  <AuthLink
+                    href={deletedRecipientsHref}
+                    className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
+                  >
+                    삭제된 내담자 목록
+                  </AuthLink>
+                  에서 확인·복구할 수 있습니다.
+                </li>
+                <li>
+                  상담코드 자체는{' '}
+                  <AuthLink
+                    href={deletedCodesHref}
+                    className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
+                  >
+                    삭제된 상담코드 목록
+                  </AuthLink>
+                  으로 이동하며, 필요 시 복구할 수 있습니다.
+                </li>
+              </ul>
             </div>
+
+            <p className="text-xs leading-relaxed text-slate-500">
+              검사 결과 등 데이터는 복구하기 전까지 보관됩니다. 삭제 후에는 해당 내담자의 내 검사실 접속이
+              제한됩니다.
+            </p>
 
             {deleteError ? (
               <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
@@ -791,13 +848,15 @@ export default function AssessmentList({
               type="button"
               onClick={() => void handleDeleteConfirm()}
               disabled={deleteLoading}
-              className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-900/30 transition-colors hover:bg-red-500 disabled:opacity-50"
+              className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-900/30 transition-colors hover:bg-red-500 disabled:opacity-50"
             >
               {deleteLoading ? '처리 중…' : '삭제 확인'}
             </button>
           </div>
         </div>
       </div>
+        );
+      })()
     ) : null}
 
     </CounselorPageSection>
