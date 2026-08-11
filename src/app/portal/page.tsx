@@ -42,17 +42,6 @@ function portalAssessmentGroupTitle(a: PortalAssessment): string {
 }
 type PortalTab = 'tests' | 'care' | 'materials';
 
-function toTestResultItems(items: PortalLegacyResultItem[]): TestResultItem[] {
-  return items.map((r) => ({
-    resultId: r.resultId,
-    testId: r.testId,
-    status: r.status,
-    completedAt: r.completedAt,
-    submittedAt: r.submittedAt,
-    updatedAt: r.updatedAt,
-  }));
-}
-
 function PortalLoading() {
   return (
     <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
