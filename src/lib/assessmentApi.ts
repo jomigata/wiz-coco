@@ -10,7 +10,7 @@ import { readClientPortalSession } from '@/lib/clientPortalSession';
 import { getJoinParticipantAuthHeader } from '@/lib/joinParticipantSession';
 import { getJoinGuestAuthHeader } from '@/lib/joinGuestSession';
 import { isJoinFreshParticipantFlow } from '@/lib/joinFlowMode';
-import { readSWRCache, writeSWRCache } from '@/utils/staleWhileRevalidateCache';
+import { readSWRCache, writeSWRCache, clearSWRCacheByPrefix } from '@/utils/staleWhileRevalidateCache';
 
 const FORCE_GUEST_ACCESS_CODE_KEY = 'wizcoco_force_guest_access_code';
 
@@ -878,6 +878,21 @@ export function removeCounselorAssessmentFromListCache(
   writeSWRCache(cacheKey, { assessments: filtered }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
 }
 
+/** 상담코드 목록 localStorage 캐시 비우기 (DB purge 후 stale 목록 정리) */
+export function clearCounselorAssessmentsListCache(counselorUid?: string | null): void {
+  if (typeof window === 'undefined') return;
+  const uid = (counselorUid ?? getCounselorUidSync())?.trim();
+  clearSWRCacheByPrefix('swr:counselorAssessmentsList', ['local', 'session']);
+  if (uid) {
+    const cacheKey = assessmentsListCacheKey(uid);
+    if (cacheKey) {
+      writeSWRCache(cacheKey, { assessments: [] }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+    }
+  }
+  writeSWRCache(LEGACY_ASSESSMENTS_LIST_CACHE_KEY, { assessments: [] }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+  writeSWRCache(LEGACY_ASSESSMENTS_LIST_CACHE_KEY, { assessments: [] }, { scope: 'session' });
+}
+
 export async function listAssessments(params?: {
   q?: string;
   counselorId?: string;
@@ -901,13 +916,16 @@ export async function listAssessments(params?: {
     cursor = page.nextCursor;
   } while (cursor);
 
-  const cached = readCachedAssessmentsList(counselorUid) ?? [];
-  const merged = mergeCounselorAssessmentLists(mergedItems, cached, counselorUid);
   const cacheKey = assessmentsListCacheKey(counselorUid);
-  if (cacheKey) {
-    writeSWRCache(cacheKey, { assessments: merged }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+  if (!mergedItems.length) {
+    clearCounselorAssessmentsListCache(counselorUid);
+    return { assessments: [] };
   }
-  return { assessments: merged };
+
+  if (cacheKey) {
+    writeSWRCache(cacheKey, { assessments: mergedItems }, { scope: ASSESSMENTS_LIST_CACHE_SCOPE });
+  }
+  return { assessments: mergedItems };
 }
 
 /** GET /api/assessments/:id/progress - 상담사: 해당 상담(코드) 진행 현황 */

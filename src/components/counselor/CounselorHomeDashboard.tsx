@@ -15,7 +15,6 @@ import {
 } from '@/lib/clientPortalApi';
 import {
   listAssessments,
-  readCachedAssessmentsList,
   type CounselorAssessment,
 } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -137,9 +136,7 @@ export default function CounselorHomeDashboard() {
     () => initialCache?.cohorts ?? null,
   );
   const [liaisons, setLiaisons] = useState<CounselorOrgLiaison[]>(() => initialCache?.liaisons ?? []);
-  const [assessments, setAssessments] = useState<CounselorAssessment[]>(
-    () => (counselorUid ? readCachedAssessmentsList(counselorUid) : null) ?? [],
-  );
+  const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
   const [loading, setLoading] = useState(() => !initialCache?.hub && !initialCache?.cohorts);
   const [revalidating, setRevalidating] = useState(false);
   const [error, setError] = useState('');
@@ -158,9 +155,7 @@ export default function CounselorHomeDashboard() {
         fetchCounselorMonitoringHub(),
         fetchCounselorCohortMonitoring(),
         fetchCounselorOrgLiaisons().catch(() => []),
-        listAssessments().catch(() => ({
-          assessments: (counselorUid ? readCachedAssessmentsList(counselorUid) : null) ?? [],
-        })),
+        listAssessments().catch(() => ({ assessments: [] as CounselorAssessment[] })),
       ]);
       setHub(hubData);
       setCohorts(cohortData);

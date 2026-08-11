@@ -11,8 +11,8 @@ import { parseAssessmentListSearchFromUrl } from '@/lib/counselorAssessmentListS
 import {
   listAssessments,
   listAssessmentsPage,
-  readCachedAssessmentsList,
   readPortalMoveBanner,
+  clearCounselorAssessmentsListCache,
   type CounselorAssessment,
   type CreatedAssessmentBannerInfo,
   type PortalMoveBannerInfo,
@@ -23,12 +23,8 @@ function AssessmentListPageContent() {
   const initialSearchQuery = parseAssessmentListSearchFromUrl(searchParams.get('search'));
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const counselorUid = user?.uid;
-  const [assessments, setAssessments] = useState<CounselorAssessment[]>(
-    () => (counselorUid ? readCachedAssessmentsList(counselorUid) : null) ?? [],
-  );
-  const [loading, setLoading] = useState(
-    () => !(counselorUid && readCachedAssessmentsList(counselorUid)?.length),
-  );
+  const [assessments, setAssessments] = useState<CounselorAssessment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createdInfo, setCreatedInfo] = useState<CreatedAssessmentBannerInfo | null>(null);
   const [moveInfo, setMoveInfo] = useState<PortalMoveBannerInfo | null>(null);
@@ -64,11 +60,6 @@ function AssessmentListPageContent() {
             sessionStorage.removeItem('wizcoco_created_assessment');
           }
         }
-        const cached = counselorUid ? readCachedAssessmentsList(counselorUid) : null;
-        if (cached?.length) {
-          setAssessments(cached);
-          setLoading(false);
-        }
         return;
       }
       const legacyCode = params.get('code');
@@ -86,8 +77,7 @@ function AssessmentListPageContent() {
       return;
     }
     let cancelled = false;
-    const hasCache = assessments.length > 0;
-    if (!hasCache) setLoading(true);
+    setLoading(true);
     setError('');
 
     const searchQ = initialSearchQuery.trim() || undefined;
@@ -96,7 +86,10 @@ function AssessmentListPageContent() {
       .then(async (firstPage) => {
         if (cancelled) return;
         const firstItems = firstPage.assessments || [];
-        if (firstItems.length) setAssessments(firstItems);
+        setAssessments(firstItems);
+        if (!firstItems.length) {
+          clearCounselorAssessmentsListCache(counselorUid);
+        }
         setLoading(false);
         if (!firstPage.nextCursor) return;
         setLoadingMore(true);
@@ -120,7 +113,7 @@ function AssessmentListPageContent() {
   useRedirectOnLoginRequiredError(error);
 
   const hasCache = assessments.length > 0;
-  const showInitialLoader = !hasCache && (authPending || loading);
+  const showInitialLoader = authPending || (loading && !hasCache);
   const showAuthGate =
     !hasCache && (showLoginRequired || (error && isLoginRequiredError(error)));
 

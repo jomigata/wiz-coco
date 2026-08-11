@@ -9,10 +9,6 @@ import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo, PortalMoveBannerInfo } from '@/lib/assessmentApi';
 import { deleteAssessment, fetchAssessmentListStats, listAssessments, mergeAssessmentListStats, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
-import {
-  buildClientPortalsCacheKey,
-  readCachedClientPortals,
-} from '@/lib/counselorSessionCache';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import type { CounselorClientPortalListItem } from '@/types/clientPortal';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -186,18 +182,7 @@ export default function AssessmentList({
   const adminUser = isAdmin(getAppRoleSync());
   const [listItems, setListItems] = useState(assessments);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
-  const clientCacheKey = useMemo(
-    () =>
-      buildClientPortalsCacheKey({
-        counselorUid: user?.uid,
-        status: 'active',
-        progress: 'all',
-      }),
-    [user?.uid],
-  );
-  const [clientItems, setClientItems] = useState<CounselorClientPortalListItem[]>(
-    () => readCachedClientPortals(clientCacheKey)?.items ?? [],
-  );
+  const [clientItems, setClientItems] = useState<CounselorClientPortalListItem[]>([]);
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [addTarget, setAddTarget] = useState<CounselorAssessment | null>(null);
