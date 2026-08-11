@@ -111,7 +111,6 @@ export type PortalLegacyResultItem = {
   originAssessmentId?: string;
   originAssessmentTitle?: string;
   originAccessCode?: string;
-  portalLegacyTab?: 'tests' | 'materials' | null;
   isShared?: boolean;
 };
 
@@ -133,7 +132,6 @@ export async function fetchPortalDashboard(portalToken: string): Promise<ClientP
   assessments: PortalDashboardAssessment[];
   linkedPortals?: LinkedPortalSummary[];
   legacyTests?: PortalLegacyTestGroup[];
-  legacyMaterials?: PortalLegacyResultItem[];
 }> {
   const res = await fetch(`${getBaseUrl()}/api/client-portals/me`, {
     headers: { Authorization: `Portal ${portalToken}` },

@@ -94,7 +94,7 @@ export default function CompletedTestList({
     setError('');
     listResults(normalizeAccessCodeInput(stored.accessCode))
       .then((data) => {
-        const list = data.results || [];
+        const list = (data.results || []).filter((r) => r.status === 'completed');
         setResults(list);
         onResultsChange?.(list);
       })

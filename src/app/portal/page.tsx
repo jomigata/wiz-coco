@@ -7,7 +7,6 @@ import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
-import PortalMaterialsPanel from '@/components/portal/PortalMaterialsPanel';
 import PortalWelcomeProgressSummary from '@/components/portal/PortalWelcomeProgressSummary';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
@@ -40,7 +39,7 @@ function portalAssessmentGroupTitle(a: PortalAssessment): string {
   if (!title || title === org) return org;
   return `${org} / ${title}`;
 }
-type PortalTab = 'tests' | 'care' | 'materials';
+type PortalTab = 'tests' | 'care';
 
 function toTestResultItems(items: PortalLegacyResultItem[]): TestResultItem[] {
   return items.map((r) => ({
@@ -51,10 +50,6 @@ function toTestResultItems(items: PortalLegacyResultItem[]): TestResultItem[] {
     submittedAt: r.submittedAt,
     updatedAt: r.updatedAt,
   }));
-}
-
-function legacyResultAccessCode(item: PortalLegacyResultItem): string {
-  return normalizeAccessCodeInput(item.originAccessCode || item.accessCode || '');
 }
 
 function PortalLoading() {
@@ -74,7 +69,6 @@ function ClientPortalContent() {
   const [myCode, setMyCode] = useState('');
   const [assessments, setAssessments] = useState<PortalAssessment[]>([]);
   const [legacyTests, setLegacyTests] = useState<PortalLegacyTestGroup[]>([]);
-  const [legacyMaterials, setLegacyMaterials] = useState<PortalLegacyResultItem[]>([]);
   const [resultsByCode, setResultsByCode] = useState<Record<string, TestResultItem[]>>({});
 
   const [expandedTestKey, setExpandedTestKey] = useState<string | null>(null);
@@ -173,7 +167,6 @@ function ClientPortalContent() {
       setMyCode(data.accessCode || session.portal.accessCode);
       setAssessments(items);
       setLegacyTests(data.legacyTests || []);
-      setLegacyMaterials(data.legacyMaterials || []);
       await loadResults(items);
       try {
         const careData = await fetchPortalCareAssignments(session.portalToken);
@@ -227,7 +220,6 @@ function ClientPortalContent() {
   useEffect(() => {
     const tab = (searchParams.get('tab') || '').trim();
     if (tab === 'care') setPortalTab('care');
-    else if (tab === 'materials') setPortalTab('materials');
     else if (tab === 'tests') setPortalTab('tests');
   }, [searchParams]);
 
@@ -407,43 +399,6 @@ function ClientPortalContent() {
     setPinSuccess('');
   };
 
-  const openLegacyMaterialTest = (item: PortalLegacyResultItem) => {
-    const code = legacyResultAccessCode(item);
-    if (!code) return;
-    setPortalReturnPath('/portal/?tab=materials');
-    clearJoinGuestSession();
-    clearJoinParticipantSession();
-    clearForceGuestForAccessCode(code);
-    clearJoinFreshParticipantFlow(code);
-    persistJoinAssessmentSession(code, {
-      assessmentId: item.originAssessmentId || item.assessmentId || '',
-      title: item.originAssessmentTitle || '기타 자료',
-      welcomeMessage: '',
-      usageEndDate: '',
-      testList: [{ testId: item.testId, name: item.testName || item.testId }],
-    });
-    router.push(getJoinTestPath(code, String(item.testId), { from: 'portal', resultId: item.resultId }));
-  };
-
-  const openLegacyResultView = (item: PortalLegacyResultItem) => {
-    openResultView(
-      legacyResultAccessCode(item),
-      item.testName || item.testId,
-      item.resultId,
-      null,
-      {
-        resultId: item.resultId,
-        testId: item.testId,
-        status: item.status,
-        completedAt: item.completedAt,
-        submittedAt: item.submittedAt,
-        updatedAt: item.updatedAt,
-      },
-    );
-  };
-
-  const materialsCount = legacyMaterials.length;
-
   if (loading) return <PortalLoading />;
 
   if (error) {
@@ -524,30 +479,10 @@ function ClientPortalContent() {
             >
               추가 과제·치료
             </button>
-            <button
-              type="button"
-              onClick={() => setPortalTab('materials')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                portalTab === 'materials'
-                  ? 'border-amber-400 text-amber-300'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              기타 자료
-              {materialsCount > 0 ? (
-                <span className="ml-1.5 text-xs tabular-nums text-amber-400/90">({materialsCount})</span>
-              ) : null}
-            </button>
           </div>
 
           {portalTab === 'care' ? (
             <PortalCareAssignmentsPanel assignedAssessmentIds={assessments.map((a) => a.assessmentId)} />
-          ) : portalTab === 'materials' ? (
-            <PortalMaterialsPanel
-              materials={legacyMaterials}
-              onViewResult={openLegacyResultView}
-              onContinueTest={openLegacyMaterialTest}
-            />
           ) : (
             <div id="portal-results" className="scroll-mt-24 space-y-6">
           {assessments.length === 0 ? (

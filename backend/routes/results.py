@@ -264,6 +264,8 @@ def list_results():
             legacy_tab = (d.get("portalLegacyTab") or "").strip()
             if legacy_tab in ("tests", "materials"):
                 return
+            if (d.get("status") or "").strip() != "completed":
+                return
             item = {
                 "resultId": doc.id,
                 "testId": d.get("testId"),

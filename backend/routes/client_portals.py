@@ -422,7 +422,6 @@ def portal_me():
             "assessments": assessments,
             "linkedPortals": linked_portals,
             "legacyTests": legacy_archive.get("legacyTests") or [],
-            "legacyMaterials": legacy_archive.get("legacyMaterials") or [],
         }
     )
 

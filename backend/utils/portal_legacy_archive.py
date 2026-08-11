@@ -1,4 +1,4 @@
-"""내담자 포털 — 상담코드 이동 후 레거시 검사·기타 자료 분류·조회."""
+"""내담자 포털 — 상담코드 이동 후 완료된 레거시 검사 분류·중지 검사 정리."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -27,28 +27,8 @@ def _iso_timestamp(value) -> str | None:
     return None
 
 
-def _result_priority(data: dict) -> int:
-    status = (data.get("status") or "").strip()
-    if status == "completed":
-        return 3
-    responses = data.get("responses")
-    has_responses = bool(responses) and (
-        (isinstance(responses, dict) and len(responses) > 0)
-        or (isinstance(responses, list) and len(responses) > 0)
-    )
-    if status == "in_progress" and has_responses:
-        return 2
-    if status == "in_progress":
-        return 1
-    return 0
-
-
-def _has_responses(data: dict) -> bool:
-    return _result_priority(data) >= 2
-
-
-def _is_empty_stub(data: dict) -> bool:
-    return _result_priority(data) <= 1 and (data.get("status") or "").strip() != "completed"
+def _is_completed(data: dict) -> bool:
+    return (data.get("status") or "").strip() == "completed"
 
 
 def _load_assessment_meta(db, assessment_id: str) -> dict:
@@ -89,36 +69,36 @@ def _result_item(doc, data: dict, *, test_name: str = "") -> dict:
         "originAssessmentId": (data.get("originAssessmentId") or data.get("assessmentId") or "").strip(),
         "originAssessmentTitle": (data.get("originAssessmentTitle") or "").strip(),
         "originAccessCode": (data.get("originAccessCode") or data.get("accessCode") or "").strip(),
-        "portalLegacyTab": (data.get("portalLegacyTab") or "").strip() or None,
         "isShared": bool(data.get("isShared")),
     }
 
 
-def _classify_orphan(
-    data: dict,
-    *,
-    in_current_test_list: bool,
-    assessment_assigned: bool,
-) -> str | None:
-    """None = current flow, 'tests' | 'materials' = legacy tab."""
+def _should_purge_stopped_result(data: dict) -> bool:
+    """완료되지 않은 중지·진행 중 검사 — 표시·관리 대상에서 제외."""
+    if _is_completed(data):
+        return False
     legacy_tab = (data.get("portalLegacyTab") or "").strip()
-    if legacy_tab in ("tests", "materials"):
-        return legacy_tab
-
-    if in_current_test_list:
-        return None
-
+    if legacy_tab == "materials":
+        return True
     status = (data.get("status") or "").strip()
-    if status == "completed" or _result_priority(data) >= 3:
-        return "tests"
-    if _has_responses(data):
-        return "materials"
-    if not assessment_assigned:
-        if status == "completed":
-            return "tests"
-        if _has_responses(data):
-            return "materials"
-    return None
+    return status == "in_progress" or legacy_tab == "materials"
+
+
+def purge_stopped_portal_test_results(db, portal_id: str) -> int:
+    """포털에 남아 있는 미완료(중지) 검사 결과 삭제."""
+    portal_id = (portal_id or "").strip()
+    if not portal_id:
+        return 0
+    deleted = 0
+    for doc in db.collection(TEST_RESULTS_COLLECTION).where("portalId", "==", portal_id).stream():
+        data = doc.to_dict() or {}
+        if _should_purge_stopped_result(data):
+            try:
+                doc.reference.delete()
+                deleted += 1
+            except Exception:
+                pass
+    return deleted
 
 
 def load_portal_legacy_archive(
@@ -128,10 +108,13 @@ def load_portal_legacy_archive(
     *,
     repair: bool = True,
 ) -> dict:
-    """포털 /me — 레거시 검사·기타 자료 목록 (이동·기존 자료 자동 분류 포함)."""
+    """포털 /me — 완료된 레거시 검사만 반환 (중지 검사는 정리)."""
     portal_id = (portal_id or "").strip()
     if not portal_id:
-        return {"legacyTests": [], "legacyMaterials": []}
+        return {"legacyTests": []}
+
+    if repair:
+        purge_stopped_portal_test_results(db, portal_id)
 
     assigned_ids = {str(a.get("assessmentId") or "").strip() for a in assessments}
     assigned_ids.discard("")
@@ -150,7 +133,6 @@ def load_portal_legacy_archive(
         }
 
     legacy_groups: dict[str, dict] = {}
-    legacy_materials: list[dict] = []
 
     docs = list(
         db.collection(TEST_RESULTS_COLLECTION).where("portalId", "==", portal_id).stream()
@@ -158,21 +140,19 @@ def load_portal_legacy_archive(
 
     for doc in docs:
         data = doc.to_dict() or {}
+        if not _is_completed(data):
+            continue
+
         aid = str(data.get("assessmentId") or "").strip()
         test_id = str(data.get("testId") or "").strip()
         if not test_id:
             continue
 
         in_list = aid in test_ids_by_assessment and test_id in test_ids_by_assessment.get(aid, set())
-        assigned = aid in assigned_ids
+        legacy_tab = (data.get("portalLegacyTab") or "").strip()
 
-        tab = _classify_orphan(
-            data,
-            in_current_test_list=in_list,
-            assessment_assigned=assigned,
-        )
-
-        if tab is None:
+        is_legacy = legacy_tab == "tests" or (not in_list and aid in assigned_ids) or aid not in assigned_ids
+        if not is_legacy:
             continue
 
         origin_id = (data.get("originAssessmentId") or aid or "").strip()
@@ -183,7 +163,7 @@ def load_portal_legacy_archive(
 
         if repair:
             patch: dict = {
-                "portalLegacyTab": tab,
+                "portalLegacyTab": "tests",
                 "updatedAt": SERVER_TIMESTAMP,
             }
             if not (data.get("originAssessmentId") or "").strip() and origin_id:
@@ -194,23 +174,16 @@ def load_portal_legacy_archive(
                 patch["originAccessCode"] = (
                     (data.get("accessCode") or "").strip() or origin_meta.get("accessCode") or ""
                 )
-            if tab == "tests" and assigned and in_list is False:
-                # 잘못 target으로 옮겨진 완료 검사 — 원래 accessCode 복원 시도
+            if aid in assigned_ids and not in_list:
                 origin_code = (patch.get("originAccessCode") or origin_meta.get("accessCode") or "").strip()
                 if origin_code and origin_code != (data.get("accessCode") or "").strip():
                     patch["accessCode"] = origin_code
             try:
-                if patch.get("portalLegacyTab") != data.get("portalLegacyTab") or len(patch) > 2:
-                    doc.reference.update(patch)
+                doc.reference.update(patch)
             except Exception:
                 pass
 
         item = _result_item(doc, data, test_name=test_name)
-
-        if tab == "materials":
-            legacy_materials.append(item)
-            continue
-
         group_key = origin_id or "unknown"
         if group_key not in legacy_groups:
             legacy_groups[group_key] = {
@@ -233,15 +206,11 @@ def load_portal_legacy_archive(
 
     legacy_tests: list[dict] = []
     for group in legacy_groups.values():
-        test_list = []
         origin_meta = meta_cache.get(group["originAssessmentId"]) or {}
-        for tid in sorted(group["testIds"]):
-            test_list.append(
-                {
-                    "testId": tid,
-                    "name": _test_name_from_meta(origin_meta, tid),
-                }
-            )
+        test_list = [
+            {"testId": tid, "name": _test_name_from_meta(origin_meta, tid)}
+            for tid in sorted(group["testIds"])
+        ]
         legacy_tests.append(
             {
                 "originAssessmentId": group["originAssessmentId"],
@@ -253,12 +222,7 @@ def load_portal_legacy_archive(
         )
 
     legacy_tests.sort(key=lambda g: g.get("originAssessmentTitle") or "")
-    legacy_materials.sort(
-        key=lambda r: r.get("updatedAt") or r.get("completedAt") or "",
-        reverse=True,
-    )
-
-    return {"legacyTests": legacy_tests, "legacyMaterials": legacy_materials}
+    return {"legacyTests": legacy_tests}
 
 
 def clear_legacy_fields_update() -> dict:

@@ -153,19 +153,6 @@ def _reassign_test_results(
             updated += 1
             continue
 
-        if src_priority >= 2:
-            doc.reference.update(
-                {
-                    "portalLegacyTab": "materials",
-                    "originAssessmentId": from_assessment_id,
-                    "originAssessmentTitle": origin_title,
-                    "originAccessCode": origin_code or (data.get("accessCode") or "").strip(),
-                    "updatedAt": SERVER_TIMESTAMP,
-                }
-            )
-            updated += 1
-            continue
-
         doc.reference.delete()
         deleted += 1
 
@@ -187,11 +174,13 @@ def _reassign_test_results(
     for doc in leftover:
         data = doc.to_dict() or {}
         legacy_tab = (data.get("portalLegacyTab") or "").strip()
-        if legacy_tab in ("tests", "materials"):
+        if legacy_tab == "tests":
             continue
-        if _is_empty_stub(data):
+        try:
             doc.reference.delete()
             deleted += 1
+        except Exception:
+            pass
 
     return updated, deleted
 
