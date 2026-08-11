@@ -8,7 +8,6 @@ import { listResults, deleteResult, getClientResult, TestResultItem, clearForceG
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
 import PortalLegacyMaterialsPanel from '@/components/portal/PortalLegacyMaterialsPanel';
-import PortalWelcomeProgressSummary from '@/components/portal/PortalWelcomeProgressSummary';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
   findFirstCompletedExpandKey,
@@ -24,7 +23,6 @@ import {
   clearClientPortalSession,
   readClientPortalSession,
 } from '@/lib/clientPortalSession';
-import { stripPortalWelcomeBoilerplate } from '@/lib/welcomeMessageSamples';
 import { persistJoinAssessmentSession } from '@/lib/joinAssessmentSession';
 import { clearJoinGuestSession } from '@/lib/joinGuestSession';
 import { clearJoinParticipantSession } from '@/lib/joinParticipantSession';
@@ -85,7 +83,6 @@ function ClientPortalContent() {
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState('');
   const [pinSuccess, setPinSuccess] = useState('');
-  const [careCompletedCount, setCareCompletedCount] = useState(0);
   const [careTotalCount, setCareTotalCount] = useState(0);
 
   useEffect(() => {
@@ -162,10 +159,8 @@ function ClientPortalContent() {
         const careData = await fetchPortalCareAssignments(session.portalToken);
         const summary = careData.summary;
         setCareTotalCount((summary.activeCount ?? 0) + (summary.completedCount ?? 0));
-        setCareCompletedCount(summary.completedCount ?? 0);
       } catch {
         setCareTotalCount(0);
-        setCareCompletedCount(0);
       }
     } catch (err) {
       clearClientPortalSession();
@@ -420,10 +415,6 @@ function ClientPortalContent() {
                 <h1 className="text-xl font-bold text-white">내 검사실</h1>
                 <p className="text-slate-300 text-sm mt-2">{displayName}님, 환영합니다.</p>
               </div>
-              <PortalWelcomeProgressSummary
-                tests={{ label: '검사', completed: testProgressSummary.completed, total: testProgressSummary.total }}
-                care={{ label: '과제·치료', completed: careCompletedCount, total: careTotalCount }}
-              />
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-slate-400">
@@ -462,7 +453,7 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              검사 진행 현황
+              검사 진행 현황 ({testProgressSummary.total})
             </button>
             <button
               type="button"
@@ -473,7 +464,7 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              추가 과제·치료
+              추가 과제·치료 ({careTotalCount})
             </button>
             <button
               type="button"
@@ -484,12 +475,7 @@ function ClientPortalContent() {
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
-              기타 자료
-              {legacyMaterialsCount > 0 ? (
-                <span className="ml-1.5 text-xs tabular-nums text-amber-400/90">
-                  ({legacyMaterialsCount})
-                </span>
-              ) : null}
+              기타 자료 ({legacyMaterialsCount})
             </button>
           </div>
 
@@ -549,15 +535,6 @@ function ClientPortalContent() {
                       </p>
                     ) : null}
                   </div>
-
-                  {(() => {
-                    const welcomeText = stripPortalWelcomeBoilerplate(a.welcomeMessage || '');
-                    return welcomeText ? (
-                      <p className="border-l-2 border-slate-600/70 pl-3 text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
-                        {welcomeText}
-                      </p>
-                    ) : null;
-                  })()}
 
                   {!a.testList?.length ? (
                     <p className="text-slate-500 text-sm">등록된 검사가 없습니다.</p>

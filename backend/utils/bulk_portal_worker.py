@@ -108,6 +108,9 @@ def _enqueue_portal_notification(
     scheduled_at_iso: str,
     bulk_job_id: str = "",
     cohort_id: str = "",
+    cohort_name: str = "",
+    assessment_title: str = "",
+    welcome_message: str = "",
 ) -> None:
     payload = {
         "type": "portal_credentials",
@@ -130,6 +133,12 @@ def _enqueue_portal_notification(
         payload["bulkJobId"] = bulk_job_id
     if cohort_id:
         payload["cohortId"] = cohort_id
+    if cohort_name:
+        payload["cohortName"] = cohort_name
+    if assessment_title:
+        payload["assessmentTitle"] = assessment_title
+    if welcome_message:
+        payload["welcomeMessage"] = welcome_message
     notify_queue.add(payload)
 
 
@@ -148,6 +157,8 @@ def create_portal_for_row(
     create_magic_link: Callable[[str, str], str],
     immediate_notify: bool = False,
     organization_id: str = "",
+    assessment_title: str = "",
+    welcome_message: str = "",
 ) -> tuple[dict, bool, int, int]:
     """Returns (created_row_dict, notify_queued, notify_sent, notify_failed)."""
     display_name = (row.get("displayName") or row.get("name") or "").strip() or "내담자"
@@ -199,6 +210,9 @@ def create_portal_for_row(
                 magic_path=magic_path,
                 display_name=display_name,
                 join_access_code=join_access_code,
+                cohort_name=cohort_name,
+                assessment_title=assessment_title,
+                welcome_message=welcome_message,
                 portal_ref=portal_ref,
                 notify_kind="initial",
             )
@@ -222,6 +236,9 @@ def create_portal_for_row(
                 scheduled_at_iso=scheduled_at_iso,
                 bulk_job_id=bulk_job_id,
                 cohort_id=cohort_id,
+                cohort_name=cohort_name,
+                assessment_title=assessment_title,
+                welcome_message=welcome_message,
             )
             notify_queued = True
 
@@ -259,6 +276,8 @@ def create_bulk_job(
     queue_notify: bool,
     scheduled_at_iso: str,
     organization_id: str = "",
+    assessment_title: str = "",
+    welcome_message: str = "",
 ) -> str:
     job_ref = db.collection(BULK_PORTAL_JOBS_COLLECTION).document()
     payload = {
@@ -271,6 +290,8 @@ def create_bulk_job(
         "cohortId": cohort_id,
         "cohortName": cohort_name,
         "assessmentId": assessment_id,
+        "assessmentTitle": (assessment_title or "").strip(),
+        "welcomeMessage": (welcome_message or "").strip(),
         "joinAccessCode": join_access_code,
         "queueNotify": queue_notify,
         "scheduledAt": scheduled_at_iso or None,
@@ -371,6 +392,8 @@ def process_bulk_job_batch(
     counselor_uid = data.get("counselorId") or ""
     cohort_id = data.get("cohortId") or ""
     cohort_name = data.get("cohortName") or ""
+    assessment_title = data.get("assessmentTitle") or ""
+    welcome_message = data.get("welcomeMessage") or ""
     assessment_id = data.get("assessmentId") or ""
     join_access_code = data.get("joinAccessCode") or ""
     queue_notify = bool(data.get("queueNotify"))
@@ -405,6 +428,8 @@ def process_bulk_job_batch(
                 create_magic_link=create_magic_link,
                 immediate_notify=False,
                 organization_id=organization_id,
+                assessment_title=assessment_title,
+                welcome_message=welcome_message,
             )
             _job_created_rows_ref(db, job_id).document(created["portalId"]).set(created)
             processed_now += 1
@@ -530,6 +555,9 @@ def _resend_notifications_for_job(db, job_id: str, data: dict, counselor_uid: st
         join_access_code = data.get("joinAccessCode") or ""
         scheduled_at_iso = (data.get("scheduledAt") or "").strip()
         cohort_id = data.get("cohortId") or ""
+        cohort_name = data.get("cohortName") or ""
+        assessment_title = data.get("assessmentTitle") or ""
+        welcome_message = data.get("welcomeMessage") or ""
         for row_doc in _job_created_rows_ref(db, job_id).stream():
             row = row_doc.to_dict() or {}
             email = (row.get("email") or "").strip().lower()
@@ -550,6 +578,9 @@ def _resend_notifications_for_job(db, job_id: str, data: dict, counselor_uid: st
                 scheduled_at_iso=scheduled_at_iso,
                 bulk_job_id=job_id,
                 cohort_id=cohort_id,
+                cohort_name=cohort_name,
+                assessment_title=assessment_title,
+                welcome_message=welcome_message,
             )
             requeued += 1
 

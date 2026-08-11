@@ -37,7 +37,7 @@ import {
 } from '@/lib/recipientImport';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import WelcomeMessageSamplePicker from '@/components/counselor/WelcomeMessageSamplePicker';
-import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselingCodeTypes';
+import { COUNSELING_CODE_TYPES, counselingCodeTypeLabel, type CounselingCodeType } from '@/data/counselingCodeTypes';
 
 type IssueIntent = 'excel' | 'send_all' | 'goto_dispatch';
 type TestSortKey = 'no' | 'name';
@@ -616,27 +616,77 @@ export default function IndividualAssessmentCreateForm() {
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                발급 인원
-              </p>
-              <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-200">
-                {created.length.toLocaleString('ko-KR')}
-                <span className="ml-1 text-base font-medium text-slate-400">명</span>
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                각 내담자에게 나의코드·비밀번호가 발급되었습니다.
-              </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-4 sm:col-span-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  발급 인원
+                </p>
+                <p className="mt-1 text-3xl font-bold tabular-nums text-emerald-200">
+                  {created.length.toLocaleString('ko-KR')}
+                  <span className="ml-1 text-base font-medium text-slate-400">명</span>
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  각 내담자에게 나의코드·비밀번호가 발급되었습니다.
+                </p>
+              </div>
+
+              {sharedJoinCode ? (
+                <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    상담코드
+                  </p>
+                  <p className="mt-1.5 font-mono text-2xl font-bold tracking-wider text-cyan-300">
+                    {formatAccessCodeDisplay(sharedJoinCode)}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {counselingCodeTypeLabel(codeCategory)}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  그룹명 / 제목
+                </p>
+                <p className="mt-1.5 text-sm font-semibold leading-snug text-slate-100">
+                  {(cohortName.trim() || title.trim())
+                    ? `${cohortName.trim() || '—'} / ${title.trim() || '—'}`
+                    : '—'}
+                </p>
+                <p className="mt-2 text-xs text-slate-400">
+                  포함 검사{' '}
+                  <span className="font-semibold tabular-nums text-sky-300">{selectedTestIds.size}</span>개
+                  {usageEndDate.trim() ? (
+                    <>
+                      {' · '}
+                      사용종료 {usageEndDate.trim()}
+                    </>
+                  ) : (
+                    ' · 사용종료 무기한'
+                  )}
+                </p>
+              </div>
             </div>
 
-            {sharedJoinCode ? (
-              <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-4">
+            {selectedTestIds.size > 0 ? (
+              <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 px-4 py-3.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  적용 상담코드
+                  포함 검사 목록
                 </p>
-                <p className="mt-1.5 font-mono text-2xl font-bold tracking-wider text-cyan-300">
-                  {formatAccessCodeDisplay(sharedJoinCode)}
-                </p>
+                <ul className="mt-2 space-y-1 text-sm text-slate-200">
+                  {counselorAssessmentTestOptions
+                    .filter((t) => selectedTestIds.has(t.testId))
+                    .slice(0, 6)
+                    .map((t, idx) => (
+                      <li key={t.testId} className="flex gap-2">
+                        <span className="shrink-0 tabular-nums text-slate-500">{idx + 1}.</span>
+                        <span>{t.name}</span>
+                      </li>
+                    ))}
+                  {selectedTestIds.size > 6 ? (
+                    <li className="text-xs text-slate-500">외 {selectedTestIds.size - 6}개</li>
+                  ) : null}
+                </ul>
               </div>
             ) : null}
 
@@ -979,6 +1029,16 @@ export default function IndividualAssessmentCreateForm() {
                   </div>
               ))}
             </div>
+            <div className="shrink-0">
+              <button
+                type="button"
+                onClick={() => addRow()}
+                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                disabled={loading}
+              >
+                + 행 추가
+              </button>
+            </div>
             <div className="relative z-20 flex shrink-0 flex-col gap-2 overflow-visible border-t border-white/10 pt-3">
               <input
                 ref={fileInputRef}
@@ -1090,16 +1150,6 @@ export default function IndividualAssessmentCreateForm() {
                   </p>
                 </div>
               ) : null}
-            </div>
-            <div className="shrink-0">
-              <button
-                type="button"
-                onClick={() => addRow()}
-                className="rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
-                disabled={loading}
-              >
-                + 행 추가
-              </button>
             </div>
             {recipients.length >= GROUP_NOTIFY_WARN_THRESHOLD ? (
               <p className="shrink-0 text-sm leading-snug text-amber-200/90">

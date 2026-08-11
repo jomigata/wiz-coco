@@ -782,6 +782,9 @@ def resend_portal_credentials(
             magic_path=magic_path,
             display_name=(pdata.get("displayName") or "").strip(),
             join_access_code=join_access_code,
+            cohort_name=(ass.get("cohortName") or "").strip(),
+            assessment_title=(ass.get("title") or "").strip(),
+            welcome_message=(ass.get("welcomeMessage") or "").strip(),
             portal_ref=pref,
             notify_kind=notify_kind,
         )

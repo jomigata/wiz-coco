@@ -740,6 +740,8 @@ def bulk_create():
             rows=normalized_rows,
             queue_notify=any_notify,
             scheduled_at_iso=scheduled_at_iso,
+            assessment_title=title,
+            welcome_message=welcome_message,
         )
         process_bulk_job_batch(
             db,
@@ -795,6 +797,8 @@ def bulk_create():
             bulk_job_id="",
             create_magic_link=_create_magic_link_token,
             immediate_notify=row_notify and immediate_batch,
+            assessment_title=title,
+            welcome_message=welcome_message,
         )
         created.append(created_row)
         if queued:

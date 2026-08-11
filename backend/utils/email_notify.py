@@ -1,4 +1,5 @@
 """관리자 알림 이메일 (SMTP 설정 시 발송)."""
+import html
 import smtplib
 from datetime import datetime, timedelta, timezone
 from email.mime.base import MIMEBase
@@ -23,6 +24,23 @@ from config import (
 
 _KST = timezone(timedelta(hours=9))
 
+DEFAULT_PORTAL_ACCESS_INTRO = (
+    "WizCoCo 검사 접속 정보입니다. 아래 나의코드·비밀번호 또는 바로 시작 링크로 검사를 진행해 주세요."
+)
+
+
+def _format_assessment_group_title(cohort_name: str = "", assessment_title: str = "") -> str:
+    org = (cohort_name or "").strip() or (assessment_title or "").strip()
+    title = (assessment_title or "").strip()
+    if not title or title == org:
+        return org
+    return f"{org} / {title}"
+
+
+def _portal_access_intro(welcome_message: str = "") -> str:
+    custom = (welcome_message or "").strip()
+    return custom or DEFAULT_PORTAL_ACCESS_INTRO
+
 
 def _format_dt_kst(dt: datetime) -> str:
     if dt.tzinfo is None:
@@ -46,6 +64,7 @@ def _portal_access_html_email(
     *,
     greeting: str,
     intro: str,
+    group_title: str = "",
     my_code: str,
     pin_display: str,
     login_url: str,
@@ -59,11 +78,18 @@ def _portal_access_html_email(
         <tr><td style="padding:0 0 14px 0">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc">
             <tr><td style="padding:14px 16px">
-              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">{title}</p>
-              <div style="font-size:14px;line-height:1.7;color:#1e293b;white-space:pre-line">{content}</div>
+              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">{html.escape(title)}</p>
+              <div style="font-size:14px;line-height:1.7;color:#1e293b;white-space:pre-line">{html.escape(content)}</div>
             </td></tr>
           </table>
         </td></tr>"""
+
+    group_title_html = ""
+    if (group_title or "").strip():
+        group_title_html = (
+            f'<p style="margin:12px 0 0;font-size:15px;font-weight:700;line-height:1.5;color:#0f172a">'
+            f"{html.escape(group_title.strip())}</p>"
+        )
 
     return f"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -76,24 +102,25 @@ def _portal_access_html_email(
       <div style="border:1px solid #dbe2ea;border-radius:14px;background:#ffffff;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,0.06)">
         <div style="padding:20px 22px;border-bottom:1px solid #e2e8f0;background:#f1f5f9">
           <h1 style="margin:0;font-size:20px;line-height:1.4;font-weight:700;color:#0f172a">검사 접속 정보</h1>
-          <p style="margin:10px 0 0;font-size:14px;line-height:1.65;color:#475569">{intro}</p>
+          <p style="margin:10px 0 0;font-size:14px;line-height:1.65;color:#475569;white-space:pre-line">{html.escape(intro)}</p>
+          {group_title_html}
         </div>
         <div style="padding:20px 22px">
-          <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0f172a">{greeting}</p>
+          <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0f172a">{html.escape(greeting)}</p>
           {extra_html}
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #bae6fd;border-radius:10px;background:#f0f9ff">
             <tr><td style="padding:16px 18px">
               <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0369a1">접속 정보</p>
-              <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">나의코드</span> <strong style="color:#0369a1;font-family:Consolas,Monaco,monospace;font-size:16px">{my_code}</strong></p>
-              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">비밀번호</span> <strong style="color:#92400e;font-family:Consolas,Monaco,monospace;font-size:16px">{pin_display}</strong></p>
+              <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">나의코드</span> <strong style="color:#0369a1;font-family:Consolas,Monaco,monospace;font-size:16px">{html.escape(my_code)}</strong></p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#1e293b"><span style="color:#64748b">비밀번호</span> <strong style="color:#92400e;font-family:Consolas,Monaco,monospace;font-size:16px">{html.escape(pin_display)}</strong></p>
               <a href="{login_url}" style="display:block;text-align:center;padding:8px 0;color:#64748b;text-decoration:underline;font-size:14px;font-weight:600">검사시작 로그인</a>
             </td></tr>
           </table>
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #bfdbfe;border-radius:10px;background:#eff6ff">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px 0;border:1px solid #1e3a8a;border-radius:10px;background:#eff6ff">
             <tr><td style="padding:14px 16px">
-              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1d4ed8">바로 시작 (추천)</p>
-              <a href="{magic_url}" style="display:block;text-align:center;padding:13px 14px;border-radius:8px;background:#1d4ed8;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700">바로 시작하기</a>
-              <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:#475569;text-align:center">{magic_expiry_label}</p>
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1e3a8a">바로 시작 (추천)</p>
+              <a href="{magic_url}" style="display:block;text-align:center;padding:14px 16px;border-radius:8px;background:#1e3a8a;color:#ffffff !important;text-decoration:none;font-size:16px;font-weight:800;letter-spacing:0.02em;line-height:1.3">바로 시작하기</a>
+              <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:#475569;text-align:center">{html.escape(magic_expiry_label)}</p>
             </td></tr>
           </table>
           <p style="margin:0;font-size:11px;line-height:1.6;color:#94a3b8;text-align:center">본 메일은 검사 안내 목적으로 발송되었습니다.</p>
@@ -225,6 +252,9 @@ def send_portal_credentials_email(
     magic_url: str,
     display_name: str = "",
     join_access_code: str = "",
+    cohort_name: str = "",
+    assessment_title: str = "",
+    welcome_message: str = "",
 ) -> bool:
     """검사시작 접속 정보(상담(코드)·나의코드·비밀번호·링크) 발송."""
     if not is_email_configured():
@@ -242,11 +272,16 @@ def send_portal_credentials_email(
 
     cred_lines = [f"나의코드: {my_code}  비밀번호: {pin_display}"]
     magic_expiry_label = _magic_link_expiry_label()
+    intro = _portal_access_intro(welcome_message)
+    group_title = _format_assessment_group_title(cohort_name, assessment_title)
 
     body = f"""안녕하세요, {name}님.
 
-WizCoCo 검사 접속 정보입니다.
-
+{intro}
+"""
+    if group_title:
+        body += f"\n{group_title}\n"
+    body += f"""
 {chr(10).join(cred_lines)}
 검사시작 로그인: {login_url}
 
@@ -260,7 +295,8 @@ WizCoCo
 
     html = _portal_access_html_email(
         greeting=f"안녕하세요, {name}님",
-        intro="WizCoCo 검사 접속 정보입니다. 아래 나의코드·비밀번호 또는 바로 시작 링크로 검사를 진행해 주세요.",
+        intro=intro,
+        group_title=group_title,
         my_code=my_code,
         pin_display=pin_display,
         login_url=login_url,

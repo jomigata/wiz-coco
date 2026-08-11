@@ -596,6 +596,9 @@ def deliver_portal_credentials(
     magic_path: str = "",
     display_name: str = "",
     join_access_code: str = "",
+    cohort_name: str = "",
+    assessment_title: str = "",
+    welcome_message: str = "",
     portal_ref=None,
     queue_ref=None,
     notify_kind: str = "initial",
@@ -638,6 +641,9 @@ def deliver_portal_credentials(
                 magic_url=magic_url,
                 display_name=display_name,
                 join_access_code=join_access_code,
+                cohort_name=cohort_name,
+                assessment_title=assessment_title,
+                welcome_message=welcome_message,
             )
             email_channel = _notify_channel_state(True, ok=email_ok)
             if not email_ok:
@@ -1053,6 +1059,9 @@ def process_notification_queue(*, limit: int = 50) -> dict:
                     magic_path=magic_path,
                     display_name=data.get("displayName") or "",
                     join_access_code=join_code,
+                    cohort_name=str(data.get("cohortName") or ""),
+                    assessment_title=str(data.get("assessmentTitle") or ""),
+                    welcome_message=str(data.get("welcomeMessage") or ""),
                     portal_ref=portal_ref,
                     queue_ref=doc.reference,
                     notify_kind=notify_kind,

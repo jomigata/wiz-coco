@@ -7,6 +7,7 @@ export type MbtiProClientInfoTheme = {
   label: string;
   input: string;
   choiceSection: string;
+  choiceGroup: string;
   choiceBtnActive: string;
   choiceBtnInactive: string;
   yearSelector: string;
@@ -42,9 +43,10 @@ const emerald: MbtiProClientInfoTheme = {
   input:
     'w-full px-3 py-3 rounded-lg bg-emerald-800/70 border border-emerald-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors',
   choiceSection: 'py-2.5',
-  choiceBtnActive: 'bg-teal-600 text-white border-2 border-teal-500',
+  choiceGroup: 'rounded-lg border border-emerald-700/70 p-1 grid grid-cols-2 gap-1 bg-emerald-950/30',
+  choiceBtnActive: 'bg-teal-600 text-white rounded-md shadow-sm',
   choiceBtnInactive:
-    'bg-emerald-800/70 text-emerald-200 border border-emerald-700 hover:bg-emerald-700/70',
+    'bg-transparent text-emerald-200 hover:bg-emerald-800/50 rounded-md',
   yearSelector:
     'year-selector mt-1.5 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-2 shadow-lg',
   yearGrid:
@@ -85,9 +87,10 @@ const portal: MbtiProClientInfoTheme = {
   input:
     'w-full px-3 py-3 rounded-lg bg-sky-950/45 border border-sky-500/45 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400/60 transition-colors',
   choiceSection: 'py-2.5',
-  choiceBtnActive: 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border border-sky-400/30',
+  choiceGroup: 'rounded-lg border border-white/[0.14] p-1 grid grid-cols-2 gap-1 bg-[#121f38]/50',
+  choiceBtnActive: 'bg-sky-600 text-white rounded-md shadow-sm shadow-sky-900/30',
   choiceBtnInactive:
-    'bg-[#1a2740] text-slate-200 border border-white/[0.12] hover:bg-[#1f2f4d]',
+    'bg-transparent text-slate-200 hover:bg-white/[0.06] rounded-md',
   yearSelector:
     'year-selector mt-1.5 z-50 bg-sky-900/95 backdrop-blur-sm border border-sky-600/65 rounded-lg p-2 shadow-lg shadow-black/30',
   yearGrid:

@@ -59,7 +59,7 @@ export default function PortalTestList({
 
   return (
     <ul className="space-y-2">
-      {testList.map((t) => {
+      {testList.map((t, index) => {
         const testName = t.name || t.testId;
         const completedResults = results.filter(
           (r) => r.status === 'completed' && String(r.testId) === String(t.testId),
@@ -88,26 +88,36 @@ export default function PortalTestList({
               }}
               className={`w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 transition-colors ${readOnly && !hasCompleted ? 'opacity-60 cursor-default' : 'hover:bg-slate-700'}`}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-white font-medium">{testName}</span>
-                <span className="text-slate-400 text-sm">
-                  {hasCompleted
-                    ? `${completedResults.length}회 완료 · ${isExpanded ? '접기' : '내역 보기'}`
-                    : readOnly
-                      ? '미완료'
-                      : '미완료 · 시작하기'}{' '}
-                  {hasCompleted || !readOnly ? '→' : ''}
+              <div className="flex items-start gap-3">
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-500/35 bg-cyan-950/40 text-sm font-bold tabular-nums text-cyan-300"
+                  aria-hidden
+                >
+                  {index + 1}
                 </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-white font-medium">{testName}</span>
+                    <span className="text-slate-400 text-sm">
+                      {hasCompleted
+                        ? `${completedResults.length}회 완료 · ${isExpanded ? '접기' : '내역 보기'}`
+                        : readOnly
+                          ? '미완료'
+                          : '미완료 · 시작하기'}{' '}
+                      {hasCompleted || !readOnly ? '→' : ''}
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
+                      hasCompleted
+                        ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40'
+                        : 'bg-amber-900/40 text-amber-200 border border-amber-700/30'
+                    }`}
+                  >
+                    {hasCompleted ? '검사 실시 완료' : '미실시'}
+                  </span>
+                </div>
               </div>
-              <span
-                className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
-                  hasCompleted
-                    ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40'
-                    : 'bg-amber-900/40 text-amber-200 border border-amber-700/30'
-                }`}
-              >
-                {hasCompleted ? '검사 실시 완료' : '미실시'}
-              </span>
             </button>
 
             {hasCompleted && isExpanded ? (
