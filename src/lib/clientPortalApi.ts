@@ -98,6 +98,31 @@ export type PortalDashboardAssessment = {
   sourcePortalId?: string;
 };
 
+export type PortalLegacyResultItem = {
+  resultId: string;
+  testId: string;
+  testName?: string;
+  status: string;
+  completedAt: string | null;
+  submittedAt?: string | null;
+  updatedAt?: string | null;
+  accessCode?: string;
+  assessmentId?: string;
+  originAssessmentId?: string;
+  originAssessmentTitle?: string;
+  originAccessCode?: string;
+  portalLegacyTab?: 'tests' | 'materials' | null;
+  isShared?: boolean;
+};
+
+export type PortalLegacyTestGroup = {
+  originAssessmentId: string;
+  originAssessmentTitle: string;
+  originAccessCode: string;
+  testList: { testId: string; name: string }[];
+  results: PortalLegacyResultItem[];
+};
+
 export type LinkedPortalSummary = {
   portalId: string;
   accessCode: string;
@@ -107,6 +132,8 @@ export type LinkedPortalSummary = {
 export async function fetchPortalDashboard(portalToken: string): Promise<ClientPortalLoginResult['portal'] & {
   assessments: PortalDashboardAssessment[];
   linkedPortals?: LinkedPortalSummary[];
+  legacyTests?: PortalLegacyTestGroup[];
+  legacyMaterials?: PortalLegacyResultItem[];
 }> {
   const res = await fetch(`${getBaseUrl()}/api/client-portals/me`, {
     headers: { Authorization: `Portal ${portalToken}` },

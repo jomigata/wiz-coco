@@ -303,10 +303,12 @@ function CareAssignmentCard({
   item,
   completed,
   onRefresh,
+  showLegacyOrigin,
 }: {
   item: PortalCareAssignmentItem;
   completed?: boolean;
   onRefresh: () => void;
+  showLegacyOrigin?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const program = item.programId ? getCareProgramById(item.programId) : null;
@@ -325,6 +327,11 @@ function CareAssignmentCard({
           ) : null}
         </div>
         <div className="flex flex-wrap gap-1.5">
+          {showLegacyOrigin && item.originAssessmentTitle ? (
+            <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300">
+              이전 상담 · {item.originAssessmentTitle}
+            </span>
+          ) : null}
           {overdue ? (
             <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-300">마감 지남</span>
           ) : null}
@@ -399,7 +406,11 @@ function CareAssignmentCard({
   );
 }
 
-export default function PortalCareAssignmentsPanel() {
+export default function PortalCareAssignmentsPanel({
+  assignedAssessmentIds = [],
+}: {
+  assignedAssessmentIds?: string[];
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchPortalCareAssignments>> | null>(null);
@@ -443,6 +454,13 @@ export default function PortalCareAssignmentsPanel() {
   if (!data) return null;
 
   const { active, completed, summary } = data;
+  const assignedSet = new Set(assignedAssessmentIds);
+
+  const isLegacyCare = (item: PortalCareAssignmentItem) =>
+    Boolean(
+      item.originAssessmentTitle ||
+        (item.assessmentId && assignedSet.size > 0 && !assignedSet.has(item.assessmentId)),
+    );
 
   if (summary.activeCount === 0 && summary.completedCount === 0) {
     return (
@@ -473,7 +491,12 @@ export default function PortalCareAssignmentsPanel() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-white">진행 중 과제</h2>
           {active.map((item) => (
-            <CareAssignmentCard key={item.assignmentId} item={item} onRefresh={() => void load()} />
+            <CareAssignmentCard
+              key={item.assignmentId}
+              item={item}
+              onRefresh={() => void load()}
+              showLegacyOrigin={isLegacyCare(item)}
+            />
           ))}
         </div>
       ) : null}
@@ -482,7 +505,13 @@ export default function PortalCareAssignmentsPanel() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-slate-300">완료한 과제</h2>
           {completed.map((item) => (
-            <CareAssignmentCard key={item.assignmentId} item={item} completed onRefresh={() => void load()} />
+            <CareAssignmentCard
+              key={item.assignmentId}
+              item={item}
+              completed
+              onRefresh={() => void load()}
+              showLegacyOrigin={isLegacyCare(item)}
+            />
           ))}
         </div>
       ) : null}

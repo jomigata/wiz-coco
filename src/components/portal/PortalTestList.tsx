@@ -37,6 +37,8 @@ export type PortalTestListProps = {
     accessCode: string;
     roundNumber: number | null;
   }) => void;
+  /** 이전 상담 레거시 — 시작·수정·삭제·재검사 비활성 */
+  readOnly?: boolean;
 };
 
 export default function PortalTestList({
@@ -49,6 +51,7 @@ export default function PortalTestList({
   onStartTest,
   onViewResult,
   onDeleteResult,
+  readOnly = false,
 }: PortalTestListProps) {
   if (!testList.length) {
     return <p className="text-slate-500 text-sm">등록된 검사가 없습니다.</p>;
@@ -76,21 +79,24 @@ export default function PortalTestList({
             <button
               type="button"
               onClick={() => {
+                if (readOnly) return;
                 if (!hasCompleted) {
                   onStartTest(String(t.testId));
                   return;
                 }
                 onExpandedChange(isExpanded ? null : expandKey);
               }}
-              className="w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 hover:bg-slate-700 transition-colors"
+              className={`w-full text-left py-3 px-4 rounded-lg bg-slate-700/80 border border-slate-600 transition-colors ${readOnly && !hasCompleted ? 'opacity-60 cursor-default' : 'hover:bg-slate-700'}`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-white font-medium">{testName}</span>
                 <span className="text-slate-400 text-sm">
                   {hasCompleted
                     ? `${completedResults.length}회 완료 · ${isExpanded ? '접기' : '내역 보기'}`
-                    : '미완료 · 시작하기'}{' '}
-                  →
+                    : readOnly
+                      ? '미완료'
+                      : '미완료 · 시작하기'}{' '}
+                  {hasCompleted || !readOnly ? '→' : ''}
                 </span>
               </div>
               <span
@@ -147,7 +153,7 @@ export default function PortalTestList({
                         >
                           결과보기
                         </button>
-                        {!r.isShared ? (
+                        {!readOnly && !r.isShared ? (
                           <button
                             type="button"
                             onClick={() => onStartTest(String(t.testId), r.resultId)}
@@ -156,7 +162,7 @@ export default function PortalTestList({
                             수정
                           </button>
                         ) : null}
-                        {!r.isShared ? (
+                        {!readOnly && !r.isShared ? (
                           <button
                             type="button"
                             onClick={() =>
@@ -176,13 +182,15 @@ export default function PortalTestList({
                     </div>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => onStartTest(String(t.testId))}
-                  className="text-xs text-cyan-400 hover:text-cyan-300 px-1 py-1"
-                >
-                  재검사하기
-                </button>
+                {!readOnly ? (
+                  <button
+                    type="button"
+                    onClick={() => onStartTest(String(t.testId))}
+                    className="text-xs text-cyan-400 hover:text-cyan-300 px-1 py-1"
+                  >
+                    재검사하기
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </li>

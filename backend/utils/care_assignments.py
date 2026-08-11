@@ -339,6 +339,8 @@ def _portal_assignment_item(db, doc_id: str, data: dict) -> dict:
         "instructions": data.get("instructions"),
         "priority": data.get("priority") or "medium",
         "programId": data.get("programId"),
+        "assessmentId": data.get("assessmentId"),
+        "originAssessmentTitle": data.get("originAssessmentTitle"),
         "dueAt": data.get("dueAt"),
         "progress": progress,
     }

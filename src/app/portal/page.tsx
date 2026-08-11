@@ -3,10 +3,11 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment } from '@/lib/clientPortalApi';
+import { fetchPortalDashboard, fetchPortalCareAssignments, changeClientPortalPin, type PortalDashboardAssessment, type PortalLegacyTestGroup, type PortalLegacyResultItem } from '@/lib/clientPortalApi';
 import { listResults, deleteResult, getClientResult, TestResultItem, clearForceGuestForAccessCode } from '@/lib/assessmentApi';
 import PortalTestList from '@/components/portal/PortalTestList';
 import PortalCareAssignmentsPanel from '@/components/portal/PortalCareAssignmentsPanel';
+import PortalMaterialsPanel from '@/components/portal/PortalMaterialsPanel';
 import PortalWelcomeProgressSummary from '@/components/portal/PortalWelcomeProgressSummary';
 import PortalResultViewModal, { type PortalResultViewState } from '@/components/portal/PortalResultViewModal';
 import {
@@ -39,7 +40,22 @@ function portalAssessmentGroupTitle(a: PortalAssessment): string {
   if (!title || title === org) return org;
   return `${org} / ${title}`;
 }
-type PortalTab = 'tests' | 'care';
+type PortalTab = 'tests' | 'care' | 'materials';
+
+function toTestResultItems(items: PortalLegacyResultItem[]): TestResultItem[] {
+  return items.map((r) => ({
+    resultId: r.resultId,
+    testId: r.testId,
+    status: r.status,
+    completedAt: r.completedAt,
+    submittedAt: r.submittedAt,
+    updatedAt: r.updatedAt,
+  }));
+}
+
+function legacyResultAccessCode(item: PortalLegacyResultItem): string {
+  return normalizeAccessCodeInput(item.originAccessCode || item.accessCode || '');
+}
 
 function PortalLoading() {
   return (
@@ -57,6 +73,8 @@ function ClientPortalContent() {
   const [displayName, setDisplayName] = useState('');
   const [myCode, setMyCode] = useState('');
   const [assessments, setAssessments] = useState<PortalAssessment[]>([]);
+  const [legacyTests, setLegacyTests] = useState<PortalLegacyTestGroup[]>([]);
+  const [legacyMaterials, setLegacyMaterials] = useState<PortalLegacyResultItem[]>([]);
   const [resultsByCode, setResultsByCode] = useState<Record<string, TestResultItem[]>>({});
 
   const [expandedTestKey, setExpandedTestKey] = useState<string | null>(null);
@@ -154,6 +172,8 @@ function ClientPortalContent() {
       setDisplayName(data.displayName || '내담자');
       setMyCode(data.accessCode || session.portal.accessCode);
       setAssessments(items);
+      setLegacyTests(data.legacyTests || []);
+      setLegacyMaterials(data.legacyMaterials || []);
       await loadResults(items);
       try {
         const careData = await fetchPortalCareAssignments(session.portalToken);
@@ -207,6 +227,7 @@ function ClientPortalContent() {
   useEffect(() => {
     const tab = (searchParams.get('tab') || '').trim();
     if (tab === 'care') setPortalTab('care');
+    else if (tab === 'materials') setPortalTab('materials');
     else if (tab === 'tests') setPortalTab('tests');
   }, [searchParams]);
 
@@ -327,7 +348,7 @@ function ClientPortalContent() {
     try {
       await deleteResult(deleteModal.resultId, undefined, deleteModal.accessCode);
       setDeleteModal(null);
-      await loadResults(assessments);
+      await load();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
     } finally {
@@ -385,6 +406,43 @@ function ClientPortalContent() {
     setPinError('');
     setPinSuccess('');
   };
+
+  const openLegacyMaterialTest = (item: PortalLegacyResultItem) => {
+    const code = legacyResultAccessCode(item);
+    if (!code) return;
+    setPortalReturnPath('/portal/?tab=materials');
+    clearJoinGuestSession();
+    clearJoinParticipantSession();
+    clearForceGuestForAccessCode(code);
+    clearJoinFreshParticipantFlow(code);
+    persistJoinAssessmentSession(code, {
+      assessmentId: item.originAssessmentId || item.assessmentId || '',
+      title: item.originAssessmentTitle || '기타 자료',
+      welcomeMessage: '',
+      usageEndDate: '',
+      testList: [{ testId: item.testId, name: item.testName || item.testId }],
+    });
+    router.push(getJoinTestPath(code, String(item.testId), { from: 'portal', resultId: item.resultId }));
+  };
+
+  const openLegacyResultView = (item: PortalLegacyResultItem) => {
+    openResultView(
+      legacyResultAccessCode(item),
+      item.testName || item.testId,
+      item.resultId,
+      null,
+      {
+        resultId: item.resultId,
+        testId: item.testId,
+        status: item.status,
+        completedAt: item.completedAt,
+        submittedAt: item.submittedAt,
+        updatedAt: item.updatedAt,
+      },
+    );
+  };
+
+  const materialsCount = legacyMaterials.length;
 
   if (loading) return <PortalLoading />;
 
@@ -466,10 +524,30 @@ function ClientPortalContent() {
             >
               추가 과제·치료
             </button>
+            <button
+              type="button"
+              onClick={() => setPortalTab('materials')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                portalTab === 'materials'
+                  ? 'border-amber-400 text-amber-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              기타 자료
+              {materialsCount > 0 ? (
+                <span className="ml-1.5 text-xs tabular-nums text-amber-400/90">({materialsCount})</span>
+              ) : null}
+            </button>
           </div>
 
           {portalTab === 'care' ? (
-            <PortalCareAssignmentsPanel />
+            <PortalCareAssignmentsPanel assignedAssessmentIds={assessments.map((a) => a.assessmentId)} />
+          ) : portalTab === 'materials' ? (
+            <PortalMaterialsPanel
+              materials={legacyMaterials}
+              onViewResult={openLegacyResultView}
+              onContinueTest={openLegacyMaterialTest}
+            />
           ) : (
             <div id="portal-results" className="scroll-mt-24 space-y-6">
           {assessments.length === 0 ? (
@@ -539,6 +617,48 @@ function ClientPortalContent() {
               );
             })
           )}
+
+          {legacyTests.length > 0 ? (
+            <div className="space-y-4 pt-2">
+              <h2 className="text-sm font-semibold text-slate-400 tracking-wide">
+                이전 상담에서 완료한 검사
+              </h2>
+              {legacyTests.map((group) => {
+                const code = normalizeAccessCodeInput(group.originAccessCode);
+                const results = toTestResultItems(group.results);
+                return (
+                  <section
+                    key={group.originAssessmentId}
+                    className="bg-slate-800/60 rounded-2xl border border-slate-700/80 p-5 space-y-3"
+                  >
+                    <div className="border-b border-slate-700/40 pb-2.5 mb-1">
+                      <h3 className="text-base font-medium text-slate-400">
+                        {group.originAssessmentTitle || '이전 상담'}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1">이전 상담코드 자료 · 열람 전용</p>
+                    </div>
+                    <PortalTestList
+                      accessCode={code}
+                      assessmentId={`legacy-${group.originAssessmentId}`}
+                      testList={group.testList}
+                      results={results}
+                      expandedTestKey={expandedTestKey}
+                      onExpandedChange={setExpandedTestKey}
+                      onStartTest={() => {}}
+                      onViewResult={({ testName, resultId, roundNumber, resultItem }) =>
+                        openResultView(code, testName, resultId, roundNumber, resultItem)
+                      }
+                      onDeleteResult={({ resultId, testName, accessCode: resultCode, roundNumber }) => {
+                        setActionError('');
+                        setDeleteModal({ resultId, testName, accessCode: resultCode, roundNumber });
+                      }}
+                      readOnly
+                    />
+                  </section>
+                );
+              })}
+            </div>
+          ) : null}
             </div>
           )}
         </main>

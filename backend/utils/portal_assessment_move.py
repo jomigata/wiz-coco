@@ -1,13 +1,15 @@
-"""내담자 포털을 다른 상담(코드)로 완전 이동 — 기존 코드에서 제거, 검사 결과 reassignment."""
+"""내담자 포털을 다른 상담(코드)로 완전 이동 — 기존 코드에서 제거, 검사 결과 분류·reassignment."""
 from __future__ import annotations
 
 from firebase_admin.firestore import SERVER_TIMESTAMP
 
 from config import (
     ASSESSMENTS_COLLECTION,
+    CARE_ASSIGNMENTS_COLLECTION,
     CLIENT_PORTALS_COLLECTION,
     TEST_RESULTS_COLLECTION,
 )
+from utils.portal_legacy_archive import clear_legacy_fields_update
 
 
 def _verify_move_target(db, assessment_id: str, counselor_uid: str) -> dict:
@@ -48,6 +50,22 @@ def _is_empty_stub(data: dict) -> bool:
     return _result_priority(data) <= 1 and (data.get("status") or "").strip() != "completed"
 
 
+def _load_source_meta(db, from_assessment_id: str) -> dict:
+    doc = db.collection(ASSESSMENTS_COLLECTION).document(from_assessment_id).get()
+    if not doc.exists:
+        return {
+            "assessmentId": from_assessment_id,
+            "title": "이전 상담",
+            "accessCode": "",
+        }
+    data = doc.to_dict() or {}
+    return {
+        "assessmentId": from_assessment_id,
+        "title": (data.get("title") or "").strip() or "이전 상담",
+        "accessCode": (data.get("accessCode") or "").strip(),
+    }
+
+
 def _reassign_test_results(
     db,
     *,
@@ -55,9 +73,18 @@ def _reassign_test_results(
     from_assessment_id: str,
     to_assessment: dict,
 ) -> tuple[int, int]:
-    """source 검사 결과를 target으로 옮기고, target의 빈 중복 발행분은 삭제."""
+    """source 검사 결과를 target testList 기준으로 분류·이동."""
     to_aid = to_assessment["assessmentId"]
     to_code = to_assessment["accessCode"]
+    target_test_ids = {
+        str(t.get("testId") or "").strip()
+        for t in (to_assessment.get("testList") or [])
+        if str(t.get("testId") or "").strip()
+    }
+    from_meta = _load_source_meta(db, from_assessment_id)
+    origin_title = from_meta["title"]
+    origin_code = from_meta["accessCode"]
+
     updated = 0
     deleted = 0
 
@@ -87,26 +114,60 @@ def _reassign_test_results(
         test_id = str(data.get("testId") or "").strip()
         if not test_id:
             continue
-        migrated_test_ids.add(test_id)
+
         src_priority = _result_priority(data)
+        is_completed = (data.get("status") or "").strip() == "completed"
 
-        for tdoc in list(target_by_test.get(test_id, [])):
-            tdata = tdoc.to_dict() or {}
-            if _is_empty_stub(tdata) or _result_priority(tdata) < src_priority:
-                tdoc.reference.delete()
-                deleted += 1
-                target_by_test[test_id] = [
-                    d for d in target_by_test.get(test_id, []) if d.id != tdoc.id
-                ]
+        if test_id in target_test_ids:
+            migrated_test_ids.add(test_id)
+            for tdoc in list(target_by_test.get(test_id, [])):
+                tdata = tdoc.to_dict() or {}
+                if _is_empty_stub(tdata) or _result_priority(tdata) < src_priority:
+                    tdoc.reference.delete()
+                    deleted += 1
+                    target_by_test[test_id] = [
+                        d for d in target_by_test.get(test_id, []) if d.id != tdoc.id
+                    ]
 
-        doc.reference.update(
-            {
-                "assessmentId": to_aid,
-                "accessCode": to_code,
-                "updatedAt": SERVER_TIMESTAMP,
-            }
-        )
-        updated += 1
+            doc.reference.update(
+                {
+                    "assessmentId": to_aid,
+                    "accessCode": to_code,
+                    "updatedAt": SERVER_TIMESTAMP,
+                    **clear_legacy_fields_update(),
+                }
+            )
+            updated += 1
+            continue
+
+        if is_completed or src_priority >= 3:
+            doc.reference.update(
+                {
+                    "portalLegacyTab": "tests",
+                    "originAssessmentId": from_assessment_id,
+                    "originAssessmentTitle": origin_title,
+                    "originAccessCode": origin_code or (data.get("accessCode") or "").strip(),
+                    "updatedAt": SERVER_TIMESTAMP,
+                }
+            )
+            updated += 1
+            continue
+
+        if src_priority >= 2:
+            doc.reference.update(
+                {
+                    "portalLegacyTab": "materials",
+                    "originAssessmentId": from_assessment_id,
+                    "originAssessmentTitle": origin_title,
+                    "originAccessCode": origin_code or (data.get("accessCode") or "").strip(),
+                    "updatedAt": SERVER_TIMESTAMP,
+                }
+            )
+            updated += 1
+            continue
+
+        doc.reference.delete()
+        deleted += 1
 
     for test_id, docs in target_by_test.items():
         if test_id in migrated_test_ids:
@@ -124,10 +185,46 @@ def _reassign_test_results(
         .stream()
     )
     for doc in leftover:
-        doc.reference.delete()
-        deleted += 1
+        data = doc.to_dict() or {}
+        legacy_tab = (data.get("portalLegacyTab") or "").strip()
+        if legacy_tab in ("tests", "materials"):
+            continue
+        if _is_empty_stub(data):
+            doc.reference.delete()
+            deleted += 1
 
     return updated, deleted
+
+
+def _tag_care_assignments_from_source(
+    db,
+    *,
+    portal_id: str,
+    from_assessment_id: str,
+    origin_title: str,
+) -> int:
+    """이전 상담코드에 연결된 케어 할당에 출처 표시."""
+    tagged = 0
+    refs = (
+        db.collection(CARE_ASSIGNMENTS_COLLECTION)
+        .where("portalId", "==", portal_id)
+        .stream()
+    )
+    for doc in refs:
+        data = doc.to_dict() or {}
+        aid = (data.get("assessmentId") or "").strip()
+        if aid != from_assessment_id:
+            continue
+        if (data.get("originAssessmentTitle") or "").strip():
+            continue
+        doc.reference.update(
+            {
+                "originAssessmentTitle": origin_title,
+                "updatedAt": SERVER_TIMESTAMP,
+            }
+        )
+        tagged += 1
+    return tagged
 
 
 def move_portals_to_assessment(
@@ -141,6 +238,7 @@ def move_portals_to_assessment(
     """내담자를 source 상담(코드)에서 target으로 완전 이동 (알림 없음)."""
     target = _verify_move_target(db, target_assessment_id.strip(), counselor_uid)
     to_aid = target["assessmentId"]
+    from_aid_for_stats = (source_assessment_id or "").strip()
 
     moved = 0
     skipped = 0
@@ -187,6 +285,9 @@ def move_portals_to_assessment(
             details.append({"portalId": pid, "status": "skipped", "message": "not_on_source"})
             continue
 
+        if not from_aid_for_stats:
+            from_aid_for_stats = from_aid
+
         new_assigned = [aid for aid in assigned if aid != from_aid]
         if to_aid not in new_assigned:
             new_assigned.append(to_aid)
@@ -208,6 +309,13 @@ def move_portals_to_assessment(
             from_assessment_id=from_aid,
             to_assessment=target,
         )
+        from_meta = _load_source_meta(db, from_aid)
+        _tag_care_assignments_from_source(
+            db,
+            portal_id=pid,
+            from_assessment_id=from_aid,
+            origin_title=from_meta["title"],
+        )
         results_updated += n_updated
         results_deleted += n_deleted
         moved += 1
@@ -226,7 +334,8 @@ def move_portals_to_assessment(
     try:
         from utils.assessment_list_stats import touch_assessment_list_stats
 
-        touch_assessment_list_stats(db, from_aid)
+        if from_aid_for_stats:
+            touch_assessment_list_stats(db, from_aid_for_stats)
         touch_assessment_list_stats(db, to_aid)
     except Exception:
         pass

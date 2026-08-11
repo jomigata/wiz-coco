@@ -72,6 +72,7 @@ from utils.portal_assessment_push import push_assessments_to_portals
 from utils.counselor_monitoring import get_counselor_monitoring_hub, get_counselor_cohort_monitoring_view
 from utils.counselor_org_liaison import list_counselor_org_liaisons
 from utils.care_assignments import list_portal_care_assignments, submit_portal_care_progress
+from utils.portal_legacy_archive import load_portal_legacy_archive
 from utils.care_assignment_schema import CareAssignmentValidationError
 from utils.email_notify import send_portal_pin_reset_email
 from utils.counselor_scope import scope_counselor_uid, resource_owned_by_scope
@@ -414,11 +415,14 @@ def portal_me():
         return jsonify({"error": "Not Found", "message": MSG_PORTAL_NOT_FOUND}), 404
     assessments = _load_assessments_for_portal_ecosystem(db, portal_id)
     linked_portals = list_linked_portal_summaries(db, portal_id)
+    legacy_archive = load_portal_legacy_archive(db, portal_id, assessments, repair=True)
     return jsonify(
         {
             **_portal_public_json(pdoc, assessments),
             "assessments": assessments,
             "linkedPortals": linked_portals,
+            "legacyTests": legacy_archive.get("legacyTests") or [],
+            "legacyMaterials": legacy_archive.get("legacyMaterials") or [],
         }
     )
 

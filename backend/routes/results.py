@@ -261,6 +261,9 @@ def list_results():
                 return
             seen.add(doc.id)
             d = doc.to_dict()
+            legacy_tab = (d.get("portalLegacyTab") or "").strip()
+            if legacy_tab in ("tests", "materials"):
+                return
             item = {
                 "resultId": doc.id,
                 "testId": d.get("testId"),

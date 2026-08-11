@@ -215,6 +215,7 @@ export type PortalCareAssignmentItem = {
   priority: CareAssignmentPriority;
   programId?: string;
   assessmentId?: string;
+  originAssessmentTitle?: string;
   dueAt?: string | null;
   progress: CareProgressSummary | null;
 };
