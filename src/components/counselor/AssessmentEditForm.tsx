@@ -16,6 +16,7 @@ import { COUNSELING_CODE_TYPES, type CounselingCodeType } from '@/data/counselin
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AssessmentSettingsFields from '@/components/counselor/AssessmentSettingsFields';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
 
 interface AssessmentEditFormProps {
@@ -286,6 +287,11 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
           취소
         </button>
       </div>
+      <CounselorActionProgressOverlay
+        open={loading}
+        title="저장 진행 중…"
+        message="상담코드 설정을 저장하고 있습니다."
+      />
     </form>
   );
 }

@@ -8,6 +8,7 @@ import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatu
 import { createAssessment } from '@/lib/assessmentApi';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
 import UsageEndDateField from '@/components/counselor/UsageEndDateField';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 
 export default function AssessmentCreateForm() {
   const router = useRouter();
@@ -175,6 +176,11 @@ export default function AssessmentCreateForm() {
           취소
         </button>
       </div>
+      <CounselorActionProgressOverlay
+        open={loading}
+        title="상담코드 생성 중…"
+        message="새 상담코드를 발급하고 있습니다."
+      />
     </form>
   );
 }

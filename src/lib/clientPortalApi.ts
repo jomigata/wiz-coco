@@ -441,6 +441,8 @@ export type ArchivedDispatchRecipient = {
   assessmentTitle: string;
   cohortName: string;
   archivedAt: string | null;
+  archivedReason?: string;
+  assessmentArchived?: boolean;
   notifyStatus?: string;
   notifyError?: string | null;
   notifyAt?: string | null;
@@ -451,6 +453,11 @@ export type ArchivedDispatchRecipient = {
   requiredCount?: number;
   tests?: DispatchTestResult[];
 };
+
+/** 삭제된 상담코드에 연결되어 개별 복구·영구삭제가 불가한 내담자 */
+export function isAssessmentLinkedArchivedRecipient(row: ArchivedDispatchRecipient): boolean {
+  return row.archivedReason === 'assessment_deleted' || row.assessmentArchived === true;
+}
 
 export async function archiveDispatchRecipients(
   assessmentId: string,

@@ -11,6 +11,8 @@ import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
+import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
@@ -24,7 +26,6 @@ import {
   counselorListTableWrapperClass,
   counselorListTdCompactClass,
   counselorListThClass,
-  counselorResultMetricClass,
   formatCounselorIssueDate,
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
@@ -458,16 +459,7 @@ export default function DeletedAssessmentsPage() {
                       onSort={toggleSort}
                     />
                     <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
-                      <span className="block">결과현황</span>
-                      <span className="mt-0.5 block text-[10px] font-normal leading-tight text-slate-500">
-                        (
-                        <span className="text-slate-300">총발송수</span>
-                        <span> / </span>
-                        <span className="text-red-400">발송실패</span>
-                        <span> / </span>
-                        <span className="text-red-400">미완료</span>
-                        )
-                      </span>
+                      <span className="block">진행현황</span>
                     </th>
                     <SortableColumnHeader
                       label="사용 종료일"
@@ -489,7 +481,7 @@ export default function DeletedAssessmentsPage() {
                 </thead>
                 <tbody>
                   {paginatedItems.map((row, idx) => {
-                    const { dispatchFailed, testIncomplete, dispatchTotal } = resultStatusCounts(row);
+                    const { dispatchTotal, testComplete } = resultStatusCounts(row);
                     const expired = isExpired(row.usageEndDate);
                     const infoPrimary = getAssessmentOrgLabel(row);
                     const infoSecondary = (row.title || '—').trim();
@@ -540,17 +532,10 @@ export default function DeletedAssessmentsPage() {
                             />
                           </td>
                           <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
-                            (
-                            <span className="px-1 font-medium tabular-nums text-slate-300">{dispatchTotal}</span>
-                            /
-                            <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(dispatchFailed)}`}>
-                              {dispatchFailed}
-                            </span>
-                            /
-                            <span className={`px-1 font-medium tabular-nums ${counselorResultMetricClass(testIncomplete)}`}>
-                              {testIncomplete}
-                            </span>
-                            )
+                            <CounselorProgressMetricsInline
+                              totalClients={dispatchTotal}
+                              items={[{ label: '검사완료', value: testComplete }]}
+                            />
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
@@ -605,6 +590,16 @@ export default function DeletedAssessmentsPage() {
           </>
         )}
       </motion.div>
+      <CounselorActionProgressOverlay
+        open={restoring}
+        title="복구 진행 중…"
+        message="선택한 상담코드를 복구하고 있습니다."
+      />
+      <CounselorActionProgressOverlay
+        open={deleting}
+        title="영구 삭제 진행 중…"
+        message="선택한 상담코드를 영구 삭제하고 있습니다."
+      />
     </CounselorPageSection>
   );
 }

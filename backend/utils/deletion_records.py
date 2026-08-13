@@ -194,6 +194,56 @@ def permanently_delete_archived_assessments(
     return {"deleted": deleted, "failed": failed, "details": details}
 
 
+def reconcile_assessment_deleted_portals(db, *, counselor_uid: str) -> int:
+    """삭제된 상담코드에 연결된 내담자가 잘못 복구·영구삭제된 경우 archived 상태로 되돌림."""
+    uid = (counselor_uid or "").strip()
+    if not uid:
+        return 0
+
+    archived_aids: set[str] = set()
+    for doc in (
+        db.collection(ASSESSMENTS_COLLECTION)
+        .where("counselorId", "==", uid)
+        .where("status", "==", "archived")
+        .stream()
+    ):
+        archived_aids.add(doc.id)
+
+    if not archived_aids:
+        return 0
+
+    reconciled = 0
+    refs = db.collection(CLIENT_PORTALS_COLLECTION).where("counselorId", "==", uid).stream()
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        status = (pdata.get("status") or "active").strip()
+        reason = (pdata.get("archivedReason") or "").strip()
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        assigned = [str(x).strip() for x in (pdata.get("assignedAssessmentIds") or []) if str(x).strip()]
+
+        linked_aid = from_aid if from_aid in archived_aids else next((aid for aid in assigned if aid in archived_aids), "")
+        if not linked_aid:
+            continue
+
+        if status == "archived" and reason == "assessment_deleted" and from_aid == linked_aid:
+            continue
+
+        if status not in ("active", "permanently_deleted"):
+            continue
+
+        update_fields: dict = {
+            "status": "archived",
+            "archivedFromAssessmentId": linked_aid,
+            "archivedReason": "assessment_deleted",
+            "permanentlyDeletedAt": fa_firestore.DELETE_FIELD,
+        }
+        if status == "active" or not pdata.get("archivedAt"):
+            update_fields["archivedAt"] = SERVER_TIMESTAMP
+        doc.reference.update(update_fields)
+        reconciled += 1
+    return reconciled
+
+
 def permanently_delete_archived_portals(db, *, counselor_uid: str, portal_ids: list[str]) -> dict:
     deleted = 0
     failed = 0
@@ -216,6 +266,16 @@ def permanently_delete_archived_portals(db, *, counselor_uid: str, portal_ids: l
         if (data.get("status") or "active") != "archived":
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "not_archived"})
+            continue
+        if (data.get("archivedReason") or "") == "assessment_deleted":
+            failed += 1
+            details.append(
+                {
+                    "portalId": pid,
+                    "status": "failed",
+                    "message": "assessment_deleted_linked",
+                }
+            )
             continue
         ref.update(
             {

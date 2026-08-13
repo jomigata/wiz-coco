@@ -91,7 +91,7 @@ def _portal_access_html_email(
 <body style="margin:0;padding:20px 10px;background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',sans-serif">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto">
     <tr><td style="padding:0 0 12px 0;text-align:center">
-      <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.04em;line-height:1.5;color:#0f172a">{html.escape(header_brand)}</p>
+      <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:0.02em;line-height:1.35;color:#0f172a">{html.escape(header_brand)}</p>
     </td></tr>
     <tr><td style="padding:0">
       <div style="border:1px solid #dbe2ea;border-radius:14px;background:#ffffff;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,0.06)">

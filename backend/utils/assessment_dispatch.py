@@ -1016,6 +1016,10 @@ def list_archived_portals(
 ) -> list[dict]:
     """상담사 소유 archived 내담자 포털 목록.
     assessment_id가 있으면 해당 상담(코드)의 활성 배정 + archived-from 내담자를 반환."""
+    if counselor_uid:
+        from utils.deletion_records import reconcile_assessment_deleted_portals
+
+        reconcile_assessment_deleted_portals(db, counselor_uid=counselor_uid)
     if assessment_id:
         return _list_assessment_recipients_unified(
             db, counselor_uid=counselor_uid, assessment_id=assessment_id
@@ -1115,6 +1119,12 @@ def _build_assessment_recipient_item(
     )
 
     archived_at = pdata.get("archivedAt")
+    archived_reason = (pdata.get("archivedReason") or "").strip()
+    assessment_status = ""
+    if from_aid:
+        a = assessment_cache.get(from_aid) or {}
+        assessment_status = (a.get("status") or "active").strip()
+    assessment_archived = assessment_status == "archived"
     return {
         "portalId": portal_id,
         "displayName": pdata.get("displayName") or "",
@@ -1126,6 +1136,8 @@ def _build_assessment_recipient_item(
         "assessmentTitle": assessment_title,
         "cohortName": cohort_name,
         "archivedAt": _iso_timestamp(archived_at),
+        "archivedReason": archived_reason,
+        "assessmentArchived": assessment_archived,
         "portalStatus": pdata.get("status") or "active",
         "notifyStatus": notify_status,
         "notifyError": notify_error,
@@ -1204,6 +1216,16 @@ def restore_archived_portals(
         if (pdata.get("status") or "active") != "archived":
             failed += 1
             details.append({"portalId": pid, "status": "failed", "message": "not_archived"})
+            continue
+        if (pdata.get("archivedReason") or "") == "assessment_deleted":
+            failed += 1
+            details.append(
+                {
+                    "portalId": pid,
+                    "status": "failed",
+                    "message": "assessment_deleted_linked",
+                }
+            )
             continue
 
         pref.update(

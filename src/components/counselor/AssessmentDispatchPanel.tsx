@@ -24,6 +24,7 @@ import {
   type DispatchChannelSummary,
 } from '@/lib/dispatchNotifySummary';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import {
   archiveDispatchRecipients,
   fetchAssessmentDispatchStatus,
@@ -1134,35 +1135,29 @@ export default function AssessmentDispatchPanel({
     </CounselorPageSection>
 
       {dispatchProgress ? (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dispatch-progress-title"
-          aria-busy="true"
-        >
-          <div className="bg-slate-800 rounded-xl border border-slate-600 max-w-md w-full p-6 shadow-xl text-center">
-            <div
-              className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-slate-600 border-t-cyan-400 animate-spin"
-              aria-hidden="true"
-            />
-            <h3 id="dispatch-progress-title" className="text-lg font-semibold text-white">
-              발송 진행 중…
-            </h3>
-            <p className="mt-2 text-sm text-slate-300">
-              {dispatchProgress.kind === 'remind'
-                ? `미실시 알림 ${dispatchProgress.count}명에게 발송하고 있습니다.`
-                : dispatchProgress.kind === 'delete'
-                  ? `선택 ${dispatchProgress.count}명을 삭제 처리하고 있습니다.`
-                  : `${credentialSendModeLabel(credentialSendMode)} ${dispatchProgress.count}명을 처리하고 있습니다.`}
-            </p>
-            <p className="mt-3 text-xs text-slate-500">
-              {dispatchProgress.kind === 'delete'
-                ? '잠시만 기다려 주세요.'
-                : '이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.'}
-            </p>
-          </div>
-        </div>
+        <CounselorActionProgressOverlay
+          open
+          zIndexClass="z-[60]"
+          title={
+            dispatchProgress.kind === 'delete'
+              ? '삭제 진행 중…'
+              : dispatchProgress.kind === 'remind'
+                ? '알림 발송 진행 중…'
+                : '발송 진행 중…'
+          }
+          message={
+            dispatchProgress.kind === 'remind'
+              ? `미실시 알림 ${dispatchProgress.count}명에게 발송하고 있습니다.`
+              : dispatchProgress.kind === 'delete'
+                ? `선택 ${dispatchProgress.count}명을 삭제 처리하고 있습니다.`
+                : `${credentialSendModeLabel(credentialSendMode)} ${dispatchProgress.count}명을 처리하고 있습니다.`
+          }
+          hint={
+            dispatchProgress.kind === 'delete'
+              ? '잠시만 기다려 주세요.'
+              : '이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.'
+          }
+        />
       ) : null}
 
       {dispatchComplete ? (

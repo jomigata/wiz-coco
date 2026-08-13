@@ -18,6 +18,7 @@ import {
   parseRecipientFile,
   type RecipientRow,
 } from '@/lib/recipientImport';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 
 export type AssessmentAddRecipientContext = {
   assessmentId: string;
@@ -483,6 +484,17 @@ export default function AssessmentAddRecipientModal({
           </div>
         </div>
       </div>
+      <CounselorActionProgressOverlay
+        open={addLoading}
+        zIndexClass="z-[120]"
+        title={addSendNow ? '발송 진행 중…' : '내담자 추가 중…'}
+        message={
+          addSendNow
+            ? `${combinedRows.length}명에게 접속 정보를 발송하고 있습니다.`
+            : `${combinedRows.length}명을 추가하고 있습니다.`
+        }
+        hint={addSendNow ? '이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.' : undefined}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
   type SortDirection,
 } from '@/lib/dispatchRecipientDisplay';
 import type { ArchivedDispatchRecipient } from '@/lib/clientPortalApi';
+import { isAssessmentLinkedArchivedRecipient } from '@/lib/clientPortalApi';
 import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
@@ -30,6 +31,7 @@ import {
 } from '@/lib/counselorListTableStyles';
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 
 function SortableColumnHeader({
   label,
@@ -407,6 +409,7 @@ export default function ArchivedRecipientsTable({
                 : myCodeLabel && myCodeLabel !== '—'
                   ? `(${myCodeLabel})`
                   : '—';
+              const selectionLocked = isAssessmentLinkedArchivedRecipient(row);
 
               return (
                 <React.Fragment key={row.portalId}>
@@ -439,8 +442,14 @@ export default function ArchivedRecipientsTable({
                         <input
                           type="checkbox"
                           checked={selected.has(row.portalId)}
+                          disabled={selectionLocked}
                           onChange={() => onToggleOne(row.portalId)}
-                          className="rounded text-blue-500"
+                          className="rounded text-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                          title={
+                            selectionLocked
+                              ? '삭제된 상담코드에 연결된 내담자는 여기서 선택할 수 없습니다. 상담코드 복구 시 함께 복구됩니다.'
+                              : undefined
+                          }
                         />
                       </td>
                     ) : null}
@@ -553,9 +562,11 @@ export default function ArchivedRecipientsTable({
       )}
 
       {detailLoading ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
-          <p className="text-sm text-slate-200">결과 불러오는 중…</p>
-        </div>
+        <CounselorActionProgressOverlay
+          open
+          zIndexClass="z-[80]"
+          title="결과 불러오는 중…"
+        />
       ) : null}
       {detailError ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">

@@ -9,9 +9,11 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   fetchArchivedDispatchRecipients,
+  isAssessmentLinkedArchivedRecipient,
   permanentlyDeleteArchivedDispatchRecipients,
   restoreArchivedDispatchRecipients,
 } from '@/lib/clientPortalApi';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 
 function DeletedRecipientsPageContent() {
   const searchParams = useSearchParams();
@@ -47,15 +49,20 @@ function DeletedRecipientsPageContent() {
 
   useRedirectOnLoginRequiredError(error);
 
-  const allIds = useMemo(() => items.map((i) => i.portalId), [items]);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
+  const selectableIds = useMemo(
+    () => items.filter((i) => !isAssessmentLinkedArchivedRecipient(i)).map((i) => i.portalId),
+    [items],
+  );
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
   const toggleAll = () => {
     if (allSelected) setSelected(new Set());
-    else setSelected(new Set(allIds));
+    else setSelected(new Set(selectableIds));
   };
 
   const toggleOne = (id: string) => {
+    const row = items.find((i) => i.portalId === id);
+    if (row && isAssessmentLinkedArchivedRecipient(row)) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -160,6 +167,16 @@ function DeletedRecipientsPageContent() {
           showAssessmentColumns={!filterAssessmentId}
         />
       )}
+      <CounselorActionProgressOverlay
+        open={restoring}
+        title="복구 진행 중…"
+        message={`선택 ${selected.size}명을 복구하고 있습니다.`}
+      />
+      <CounselorActionProgressOverlay
+        open={deleting}
+        title="영구 삭제 진행 중…"
+        message={`선택 ${selected.size}명을 영구 삭제하고 있습니다.`}
+      />
     </CounselorPageSection>
   );
 }

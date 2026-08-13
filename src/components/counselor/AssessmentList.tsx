@@ -19,6 +19,7 @@ import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCel
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
 } from '@/components/counselor/AssessmentAddRecipientModal';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import {
   counselingCodeTypeLabel,
@@ -858,6 +859,12 @@ export default function AssessmentList({
         );
       })()
     ) : null}
+
+    <CounselorActionProgressOverlay
+      open={deleteLoading}
+      title="삭제 진행 중…"
+      message="상담코드를 삭제 목록으로 이동하고 있습니다."
+    />
 
     </CounselorPageSection>
   );
