@@ -29,9 +29,10 @@ import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import { listAssessments } from '@/lib/assessmentApi';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
-import { counselorClientDetailHref } from '@/lib/counselorClientRoutes';
+import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
+import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -198,8 +199,11 @@ function compareRows(
         (notifyStatusSortValue(a.notifyStatus || 'not_sent') -
           notifyStatusSortValue(b.notifyStatus || 'not_sent'))
       );
-    case 'notifyAt':
-      return mult * (parseDate(a.notifyAt) - parseDate(b.notifyAt));
+    case 'notifyAt': {
+      const diff = mult * (parseDate(a.notifyAt) - parseDate(b.notifyAt));
+      if (diff !== 0) return diff;
+      return (a.displayName || '').localeCompare(b.displayName || '', 'ko');
+    }
     case 'usageEndDate':
       return (
         mult *
@@ -257,8 +261,8 @@ export default function CounselorClientList() {
   const [progressFilter, setProgressFilter] = useState<ProgressFilter>('all');
   const [tagFilter, setTagFilter] = useState('');
   const [cohortFilter, setCohortFilter] = useState('');
-  const [sortKey, setSortKey] = useState<ListSortKey>('displayName');
-  const [sortDir, setSortDir] = useState<SortDirection>('asc');
+  const [sortKey, setSortKey] = useState<ListSortKey>('notifyAt');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
@@ -480,8 +484,11 @@ export default function CounselorClientList() {
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
-  const goToDetail = (portalId: string) => {
-    router.push(counselorClientDetailHref(portalId));
+  const goToProgress = (item: CounselorClientPortalListItem) => {
+    const assessmentId = item.assessments[0]?.assessmentId;
+    if (!assessmentId) return;
+    rememberCounselorAssessmentContext(assessmentId);
+    router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
 
   return (
@@ -490,31 +497,36 @@ export default function CounselorClientList() {
       noBodyPadding
       description={
         <>
-          전체 <span className="font-semibold text-white">{stats.total}</span>명 · 진행 중{' '}
-          <span className="font-semibold text-sky-300">{stats.inProgress}</span>명 · 완료{' '}
-          <span className="font-semibold text-emerald-300">{stats.completed}</span>명
-          <span className="ml-2 text-sky-200/60">({filtered.length}명 표시)</span>
-          {selected.size > 0 ? (
-            <span className="ml-2 font-medium text-sky-200">{selected.size}명 선택</span>
-          ) : null}
+          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+            <h2 className="shrink-0 text-sm font-bold text-white">내담자 목록</h2>
+            <div className="relative min-w-[12rem] flex-1 sm:max-w-md">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
+                <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
+                className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+              />
+            </div>
+          </div>
+          <span className="mt-1 block">
+            전체 <span className="font-semibold text-white">{stats.total}</span>명 · 진행 중{' '}
+            <span className="font-semibold text-sky-300">{stats.inProgress}</span>명 · 완료{' '}
+            <span className="font-semibold text-emerald-300">{stats.completed}</span>명
+            <span className="ml-2 text-sky-200/60">({filtered.length}명 표시)</span>
+            {selected.size > 0 ? (
+              <span className="ml-2 font-medium text-sky-200">{selected.size}명 선택</span>
+            ) : null}
+          </span>
         </>
       }
       toolbar={
         <>
-          <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
-              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-            />
-          </div>
           {selected.size > 0 ? (
             <button
               type="button"
@@ -574,12 +586,6 @@ export default function CounselorClientList() {
             ))}
           </select>
           <CounselorLiveStatusBadge isLive={isLive} liveError={liveError} lastUpdatedAt={lastUpdatedAt} />
-          <AuthLink
-            href="/counselor/assessments/new"
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
-          >
-            +상담코드생성
-          </AuthLink>
         </>
       }
     >
@@ -633,14 +639,7 @@ export default function CounselorClientList() {
               <table className="w-max min-w-full table-fixed text-sm">
                 <thead>
                   <tr className={counselorListHeaderRowClass}>
-                    <SortableColumnHeader
-                      label="No."
-                      sortKey="createdAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="w-12 tabular-nums"
-                    />
+                    <th className={`${counselorListNoThClass} w-12 tabular-nums`}>No.</th>
                     <th className={`${counselorListThClass} w-10 text-center`}>
                       <input
                         type="checkbox"
@@ -651,6 +650,14 @@ export default function CounselorClientList() {
                       />
                     </th>
                     <SortableColumnHeader
+                      label="발송일"
+                      sortKey="notifyAt"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap"
+                    />
+                    <SortableColumnHeader
                       label="이름 / 나의코드"
                       sortKey="displayName"
                       activeKey={sortKey}
@@ -658,8 +665,15 @@ export default function CounselorClientList() {
                       onSort={toggleSort}
                     />
                     <SortableColumnHeader
-                      label="휴대폰"
-                      sortKey="phone"
+                      label="그룹명(상담코드) / 제목"
+                      sortKey="counselInfo"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                    />
+                    <SortableColumnHeader
+                      label="발송현황"
+                      sortKey="notifyStatus"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -674,23 +688,8 @@ export default function CounselorClientList() {
                       className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
-                      label="발송현황"
-                      sortKey="notifyStatus"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
-                    />
-                    <SortableColumnHeader
-                      label="그룹명(상담코드) / 제목"
-                      sortKey="counselInfo"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <SortableColumnHeader
-                      label="발송일"
-                      sortKey="notifyAt"
+                      label="휴대폰"
+                      sortKey="phone"
                       activeKey={sortKey}
                       direction={sortDir}
                       onSort={toggleSort}
@@ -746,8 +745,14 @@ export default function CounselorClientList() {
                           />
                         </td>
                         <td
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200`}
+                          onClick={() => goToProgress(item)}
+                        >
+                          {formatDateOnly(item.notifyAt)}
+                        </td>
+                        <td
                           className={`max-w-[11rem] ${counselorListTdClass} cursor-pointer`}
-                          onClick={() => goToDetail(item.portalId)}
+                          onClick={() => goToProgress(item)}
                         >
                           <CounselorSlashInfoCell
                             primary={item.displayName || '—'}
@@ -757,27 +762,8 @@ export default function CounselorClientList() {
                           />
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-300 tabular-nums`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          {phoneMasked}
-                          {phoneFull ? <span className="sr-only">{phoneFull}</span> : null}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer ${progress.className}`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          {progress.text}
-                        </td>
-                        <td
-                          className={`max-w-[10rem] ${counselorListTdClass} cursor-pointer`}
-                          onClick={() => goToDetail(item.portalId)}
-                        >
-                          <DispatchStatusText value={dispatchView} />
-                        </td>
-                        <td
                           className={`max-w-[14rem] ${counselorListTdClass} cursor-pointer`}
-                          onClick={() => goToDetail(item.portalId)}
+                          onClick={() => goToProgress(item)}
                         >
                           {primaryAssessment ? (
                             <CounselorSlashInfoCell
@@ -794,14 +780,27 @@ export default function CounselorClientList() {
                           )}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200`}
-                          onClick={() => goToDetail(item.portalId)}
+                          className={`max-w-[10rem] ${counselorListTdClass} cursor-pointer`}
+                          onClick={() => goToProgress(item)}
                         >
-                          {formatDateOnly(item.notifyAt)}
+                          <DispatchStatusText value={dispatchView} />
+                        </td>
+                        <td
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer ${progress.className}`}
+                          onClick={() => goToProgress(item)}
+                        >
+                          {progress.text}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-300 tabular-nums`}
+                          onClick={() => goToProgress(item)}
+                        >
+                          {phoneMasked}
+                          {phoneFull ? <span className="sr-only">{phoneFull}</span> : null}
                         </td>
                         <td
                           className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-center text-slate-200`}
-                          onClick={() => goToDetail(item.portalId)}
+                          onClick={() => goToProgress(item)}
                         >
                           {formatUsageEndDate(usageEnd)}
                         </td>
@@ -820,6 +819,14 @@ export default function CounselorClientList() {
               unit="명"
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
+              footerAction={
+                <AuthLink
+                  href="/counselor/assessments/deleted-recipients"
+                  className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                >
+                  삭제된 내담자
+                </AuthLink>
+              }
             />
           </>
         )}

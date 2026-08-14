@@ -18,28 +18,16 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         icon: '📋',
         items: [
           {
-            name: '상담코드 목록',
+            name: '상담코드',
             href: '/counselor/assessments',
             description: '상담코드 발급·목록·진행현황',
             icon: '📦',
-          },
-          {
-            name: '상담코드 생성',
-            href: '/counselor/assessments/new',
-            description: '내담자별 나의코드 상담코드 발급',
-            icon: '➕',
           },
           {
             name: '검사 크레딧',
             href: '/counselor/credits',
             description: '보유 크레딧·사용 내역 (협회 지급)',
             icon: '💳',
-          },
-          {
-            name: '삭제된 상담코드',
-            href: '/counselor/assessments/deleted',
-            description: '삭제된 상담코드 복구·영구 삭제',
-            icon: '🗑️',
           },
         ],
       },
@@ -48,7 +36,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
         icon: '👥',
         items: [
           {
-            name: '내담자 목록',
+            name: '내담자',
             href: '/counselor/clients',
             description: '발급 내담자 조회·검사·상담코드 연결 추적',
             icon: '👥',
@@ -70,12 +58,6 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             href: '/counselor/test-recommendations',
             description: '결과 기반 맞춤 검사 추천·할당',
             icon: '🎯',
-          },
-          {
-            name: '삭제된 내담자',
-            href: '/counselor/assessments/deleted-recipients',
-            description: '상담코드별 삭제된 내담자 복구·영구 삭제',
-            icon: '🗑️',
           },
         ],
       },

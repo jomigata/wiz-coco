@@ -457,14 +457,14 @@ export default function AssessmentList({
   return (
     <CounselorPageSection
       showHierarchyBreadcrumb
-      title="상담코드 목록"
+      title="상담코드"
       className="flex min-h-0 flex-1"
       bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
-          <span>
+          <span className="shrink-0">
             상담코드 총 <span className="font-semibold text-white">{listItems.length}</span>개 · 내담자 총{' '}
             <span className="font-semibold text-cyan-300">{totalParticipants}</span>명
           </span>
@@ -473,6 +473,12 @@ export default function AssessmentList({
             onChange={setSearchQuery}
             placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
           />
+          <AuthLink
+            href="/counselor/assessments/new"
+            className="ml-auto inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-500"
+          >
+            +상담코드생성
+          </AuthLink>
         </span>
       }
     >
@@ -694,6 +700,14 @@ export default function AssessmentList({
             onPageChange={setPage}
             pageSize={pageSize}
             onPageSizeChange={setPageSize}
+            footerAction={
+              <AuthLink
+                href="/counselor/assessments/deleted"
+                className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
+              >
+                삭제된 상담코드
+              </AuthLink>
+            }
           />
         </>
       )}

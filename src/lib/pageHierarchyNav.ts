@@ -35,7 +35,7 @@ export function resolveCounselorHierarchy(
       return {
         depth: 1,
         crumbs: [
-          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '내담자', href: '/counselor/clients' },
           { label: '상담진행 현황' },
         ],
       };
@@ -43,7 +43,7 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담코드 목록', href: '/counselor/assessments' },
+        { label: '상담코드', href: '/counselor/assessments' },
         { label: '상담진행 현황' },
       ],
     };
@@ -53,7 +53,7 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담코드 목록', href: '/counselor/assessments' },
+        { label: '상담코드', href: '/counselor/assessments' },
         { label: '상담코드 생성' },
       ],
     };
@@ -63,7 +63,7 @@ export function resolveCounselorHierarchy(
     return {
       depth: 1,
       crumbs: [
-        { label: '상담코드 목록', href: '/counselor/assessments' },
+        { label: '상담코드', href: '/counselor/assessments' },
         { label: '상담코드 수정' },
       ],
     };
@@ -72,7 +72,7 @@ export function resolveCounselorHierarchy(
   if (pathname === '/counselor/assessments') {
     return {
       depth: 0,
-      crumbs: [{ label: '상담코드 목록' }],
+      crumbs: [{ label: '상담코드' }],
     };
   }
 
@@ -93,7 +93,7 @@ export function resolveCounselorHierarchy(
       return {
         depth: 1,
         crumbs: [
-          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '내담자', href: '/counselor/clients' },
           { label: '검사 결과 분석' },
         ],
       };
@@ -110,7 +110,7 @@ export function resolveCounselorHierarchy(
       return {
         depth: 1,
         crumbs: [
-          { label: '내담자 목록', href: '/counselor/clients' },
+          { label: '내담자', href: '/counselor/clients' },
           { label: '검사 추천' },
         ],
       };

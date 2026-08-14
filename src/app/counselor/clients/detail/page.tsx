@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import CounselorClientDetail from '@/components/counselor/CounselorClientDetail';
+import { fetchCounselorClientPortalDetail } from '@/lib/clientPortalApi';
+import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
+import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
+/** 레거시 내담자 상세 URL → 상담진행 현황으로 리다이렉트 */
 export default function ClientDetailPage() {
   const router = useRouter();
   const [portalId, setPortalId] = useState('');
-  const { authPending, showLoginRequired } = useAuthResolved();
+  const { authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -22,13 +25,29 @@ export default function ClientDetailPage() {
   }, []);
 
   useEffect(() => {
-    if (!authPending && !showLoginRequired && portalId === '' && typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (!params.get('portalId')) {
-        router.replace('/counselor/clients');
+    if (authPending || !isAuthenticated || !portalId) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const detail = await fetchCounselorClientPortalDetail(portalId);
+        const assessmentId = detail.assessments?.[0]?.assessmentId || '';
+        if (cancelled) return;
+        if (assessmentId) {
+          rememberCounselorAssessmentContext(assessmentId);
+          router.replace(counselorClientProgressHref(assessmentId, portalId));
+        } else {
+          router.replace('/counselor/clients');
+        }
+      } catch {
+        if (!cancelled) router.replace('/counselor/clients');
       }
-    }
-  }, [authPending, showLoginRequired, portalId, router]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authPending, isAuthenticated, portalId, router]);
 
   if (authPending) {
     return <AuthLoadingState className="py-16" message="확인 중…" />;
@@ -36,17 +55,9 @@ export default function ClientDetailPage() {
 
   if (showLoginRequired) {
     return (
-      <AuthRequiredState description="Firebase에 로그인한 상태에서 내담자 상세를 이용할 수 있습니다." />
+      <AuthRequiredState description="Firebase에 로그인한 상태에서 내담자 정보를 이용할 수 있습니다." />
     );
   }
 
-  if (!portalId) {
-    return <p className="py-12 text-center text-sm text-slate-500">내담자를 선택해 주세요.</p>;
-  }
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <CounselorClientDetail portalId={portalId} />
-    </div>
-  );
+  return <AuthLoadingState className="py-16" message="상담진행 현황으로 이동 중…" />;
 }

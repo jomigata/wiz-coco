@@ -68,9 +68,9 @@ export default function CounselorPageSection({
         </div>
       ) : null}
       {description ? (
-        <p className="shrink-0 border-b border-white/[0.06] bg-[#0f1d33]/40 px-4 py-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
+        <div className="shrink-0 border-b border-white/[0.06] bg-[#0f1d33]/40 px-4 py-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
           {description}
-        </p>
+        </div>
       ) : null}
       <div
         className={`min-h-0 flex-1 bg-[#0f1d33]/60 ${bodyPad} ${bodyClassName}`}

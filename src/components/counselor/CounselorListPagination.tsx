@@ -15,6 +15,8 @@ type Props = {
   unit?: string;
   pageSize?: CounselorListPageSize;
   onPageSizeChange?: (size: CounselorListPageSize) => void;
+  /** 페이지네이션 우측 끝 (삭제된 목록 등) */
+  footerAction?: React.ReactNode;
 };
 
 export default function CounselorListPagination({
@@ -26,6 +28,7 @@ export default function CounselorListPagination({
   unit = '건',
   pageSize,
   onPageSizeChange,
+  footerAction,
 }: Props) {
   if (totalCount === 0) return null;
 
@@ -99,9 +102,12 @@ export default function CounselorListPagination({
           다음
         </button>
       </div>
-      <span className="hidden text-right text-xs text-slate-600 sm:block sm:justify-self-end">
-        {page}/{totalPages}페이지
-      </span>
+      <div className="hidden items-center justify-end gap-2 sm:flex sm:justify-self-end">
+        {footerAction}
+        <span className="text-right text-xs text-slate-600">
+          {page}/{totalPages}페이지
+        </span>
+      </div>
     </div>
   );
 }
