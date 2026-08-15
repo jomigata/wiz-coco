@@ -11,6 +11,10 @@ type Props = {
   hoverExtra?: string;
   /** false이면 hover 말풍선 비표시 */
   showTooltip?: boolean;
+  /** true이면 primary/secondary 모두 보통 굵기 */
+  normalWeight?: boolean;
+  /** true이면 secondary(두 번째 값)만 보통 굵기 */
+  normalSecondary?: boolean;
   className?: string;
   onClick?: () => void;
 };
@@ -23,6 +27,8 @@ export default function CounselorSlashInfoCell({
   hoverAccessCode,
   hoverExtra,
   showTooltip = true,
+  normalWeight = false,
+  normalSecondary = false,
   className = '',
   onClick,
 }: Props) {
@@ -39,9 +45,9 @@ export default function CounselorSlashInfoCell({
       onClick={onClick}
     >
       <span className="block max-w-full truncate">
-        <span className="font-medium text-white">{primary || '—'}</span>
+        <span className={`${normalWeight ? 'font-normal' : 'font-medium'} text-white`}>{primary || '—'}</span>
         <span className="text-slate-300"> / </span>
-        <span className="text-slate-200">{secondary || '—'}</span>
+        <span className={`${normalWeight || normalSecondary ? 'font-normal' : ''} text-slate-200`}>{secondary || '—'}</span>
       </span>
       {tooltipVisible ? (
         <div

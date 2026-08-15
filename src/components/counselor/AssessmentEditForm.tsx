@@ -21,9 +21,17 @@ import { FORM_INPUT, FORM_INPUT_BORDERED, FORM_LABEL } from '@/lib/assessmentFor
 
 interface AssessmentEditFormProps {
   assessmentId: string;
+  variant?: 'page' | 'modal';
+  onCancel?: () => void;
+  onSaved?: () => void;
 }
 
-export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormProps) {
+export default function AssessmentEditForm({
+  assessmentId,
+  variant = 'page',
+  onCancel,
+  onSaved,
+}: AssessmentEditFormProps) {
   const router = useRouter();
   const { user, authPending, showLoginRequired } = useAuthResolved();
   const [loadingData, setLoadingData] = useState(() => !readCachedAssessmentDetail(assessmentId));
@@ -147,6 +155,10 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         codeCategory,
         testList,
       });
+      if (variant === 'modal') {
+        onSaved?.();
+        return;
+      }
       pushWithAuthSession(router, '/counselor/assessments');
       router.refresh();
     } catch (err) {
@@ -181,7 +193,9 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <h1 className="text-lg font-bold text-white sm:text-xl">상담코드 수정</h1>
+      {variant === 'page' ? (
+        <h1 className="text-lg font-bold text-white sm:text-xl">상담코드 수정</h1>
+      ) : null}
       {loadingData && initial ? (
         <p className="text-sm text-sky-300/80" role="status">
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
@@ -282,7 +296,13 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
         </button>
         <button
           type="button"
-          onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
+          onClick={() => {
+            if (variant === 'modal') {
+              onCancel?.();
+              return;
+            }
+            pushWithAuthSession(router, '/counselor/assessments');
+          }}
           disabled={loading}
           className="rounded-lg border border-white/15 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700/80 disabled:opacity-50"
         >

@@ -20,6 +20,7 @@ import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
 } from '@/components/counselor/AssessmentAddRecipientModal';
 import AssessmentCreateModal from '@/components/counselor/AssessmentCreateModal';
+import AssessmentEditModal from '@/components/counselor/AssessmentEditModal';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import {
@@ -192,6 +193,7 @@ export default function AssessmentList({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<CounselorAssessment | null>(null);
   const [liveAssessmentId, setLiveAssessmentId] = useState<string | null>(null);
   const liveStartRef = useRef<number>(0);
   const { pageSize, setPageSize } = useCounselorListPageSize();
@@ -375,6 +377,11 @@ export default function AssessmentList({
   const openAddRecipient = (assessment: CounselorAssessment) => {
     rememberCounselorAssessmentContext(assessment.id);
     setAddTarget(assessment);
+  };
+
+  const openEdit = (assessment: CounselorAssessment) => {
+    rememberCounselorAssessmentContext(assessment.id);
+    setEditTarget(assessment);
   };
 
   const openDelete = (assessment: CounselorAssessment) => {
@@ -674,13 +681,13 @@ export default function AssessmentList({
                           >
                             내담자추가
                           </button>
-                          <AuthLink
-                            href={`/counselor/assessments/edit?id=${encodeURIComponent(a.id)}`}
-                            onClick={() => rememberCounselorAssessmentContext(a.id)}
+                          <button
+                            type="button"
+                            onClick={() => openEdit(a)}
                             className="inline-flex min-w-0 items-center justify-center rounded bg-emerald-800/50 px-2 py-0.5 text-xs font-medium text-emerald-100 hover:bg-emerald-700/60"
                           >
                             수정
-                          </AuthLink>
+                          </button>
                           <button
                             type="button"
                             onClick={() => openDelete(a)}
@@ -734,6 +741,16 @@ export default function AssessmentList({
       open={createModalOpen}
       onClose={() => setCreateModalOpen(false)}
       onCreated={() => {
+        void refreshFullListFromApi();
+      }}
+    />
+
+    <AssessmentEditModal
+      open={Boolean(editTarget)}
+      assessmentId={editTarget?.id ?? null}
+      onClose={() => setEditTarget(null)}
+      onSaved={() => {
+        setEditTarget(null);
         void refreshFullListFromApi();
       }}
     />

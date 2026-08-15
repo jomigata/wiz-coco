@@ -10,6 +10,7 @@ import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
@@ -350,55 +351,21 @@ export default function DeletedAssessmentsPage() {
       noBodyPadding
       dense
       description={
-        <>
-          전체 <span className="font-semibold text-white">{items.length}</span>개 · 응시자{' '}
-          <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
-          <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
-          <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
-        </>
+        <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="shrink-0">
+            삭제된 상담코드 총 <span className="font-semibold text-white">{items.length}</span>개 · 응시자{' '}
+            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
+            <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
+            <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
+          </span>
+          <CounselorListSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
+          />
+        </span>
       }
-      toolbar={
-        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-          <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-              <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
-              className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={toggleAll}
-            disabled={loading || items.length === 0}
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-          >
-            {allSelected ? '전체 해제' : '전체 선택'}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleRestore()}
-            disabled={restoring || selected.size === 0}
-            className="rounded-md bg-emerald-600/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 sm:text-sm"
-          >
-            {restoring ? '복구 중…' : `복구 (${selected.size})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handlePermanentDelete()}
-            disabled={deleting || selected.size === 0}
-            className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
-          >
-            {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
-          </button>
-        </div>
-      }
+      toolbar={undefined}
     >
       <motion.div
         className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3"
@@ -444,14 +411,6 @@ export default function DeletedAssessmentsPage() {
                       direction={sortDir}
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
-                    />
-                    <SortableColumnHeader
-                      label="발급일"
-                      sortKey="createdAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap"
                     />
                     <SortableColumnHeader
                       label="상담코드"
@@ -513,12 +472,6 @@ export default function DeletedAssessmentsPage() {
                             onClick={() => void toggleExpand(row.id)}
                           >
                             <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.createdAt)}</span>
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
@@ -588,6 +541,34 @@ export default function DeletedAssessmentsPage() {
               onPageChange={setPage}
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
+              footerAction={
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    disabled={loading || items.length === 0}
+                    className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+                  >
+                    {allSelected ? '전체 해제' : '전체 선택'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleRestore()}
+                    disabled={restoring || selected.size === 0}
+                    className="rounded-md bg-emerald-600/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {restoring ? '복구 중…' : `복구 (${selected.size})`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handlePermanentDelete()}
+                    disabled={deleting || selected.size === 0}
+                    className="rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                  >
+                    {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
+                  </button>
+                </div>
+              }
             />
           </>
         )}

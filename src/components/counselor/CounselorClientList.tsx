@@ -31,6 +31,7 @@ import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMov
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
+  archiveDispatchRecipients,
   fetchArchivedDispatchRecipients,
   isAssessmentLinkedArchivedRecipient,
   listCounselorClientPortals,
@@ -39,6 +40,7 @@ import {
   type ArchivedDispatchRecipient,
 } from '@/lib/clientPortalApi';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
+import { exportClientPortalItems } from '@/lib/clientPortalListExport';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
@@ -53,8 +55,6 @@ import {
 } from '@/lib/counselorSessionCache';
 import type { ClientPortalProgressLabel, CounselorClientPortalListItem } from '@/types/clientPortal';
 
-type StatusFilter = 'active' | 'archived' | 'all';
-type ProgressFilter = 'all' | ClientPortalProgressLabel;
 type ListSortKey =
   | 'createdAt'
   | 'displayName'
@@ -310,7 +310,8 @@ function DualFieldSortHeader({
   phase,
   leftPhases,
   rightPhases,
-  onSort,
+  onSortLeft,
+  onSortRight,
   className = '',
 }: {
   leftLabel: string;
@@ -320,7 +321,8 @@ function DualFieldSortHeader({
   phase: NameSortPhase;
   leftPhases: NameSortPhase[];
   rightPhases: NameSortPhase[];
-  onSort: () => void;
+  onSortLeft: () => void;
+  onSortRight: () => void;
   className?: string;
 }) {
   const active = activeKey === sortKey;
@@ -328,25 +330,35 @@ function DualFieldSortHeader({
   const rightActive = active && rightPhases.includes(phase);
   return (
     <th scope="col" className={`${counselorListThClass} ${className}`}>
-      <button
-        type="button"
-        onClick={onSort}
-        className="inline-flex flex-wrap items-center gap-1 transition-colors hover:text-slate-200"
-      >
-        <span className={leftActive ? counselorListSortActiveClass : 'text-slate-300'}>
-          {leftLabel}{' '}
+      <div className="inline-flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortLeft();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${leftActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {leftLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(leftActive, phase)}
           </span>
-        </span>
+        </button>
         <span className="text-slate-500">/</span>
-        <span className={rightActive ? counselorListSortActiveClass : 'text-slate-300'}>
-          {rightLabel}{' '}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortRight();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${rightActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {rightLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(rightActive, phase)}
           </span>
-        </span>
-      </button>
+        </button>
+      </div>
     </th>
   );
 }
@@ -358,7 +370,9 @@ function TripleFieldSortHeader({
   activeKey,
   sortKey,
   phase,
-  onSort,
+  onSortLeft,
+  onSortMid,
+  onSortRight,
   className = '',
 }: {
   leftLabel: string;
@@ -367,7 +381,9 @@ function TripleFieldSortHeader({
   activeKey: ListSortKey;
   sortKey: ListSortKey;
   phase: CounselSortPhase;
-  onSort: () => void;
+  onSortLeft: () => void;
+  onSortMid: () => void;
+  onSortRight: () => void;
   className?: string;
 }) {
   const active = activeKey === sortKey;
@@ -376,32 +392,49 @@ function TripleFieldSortHeader({
   const titleActive = active && phase.startsWith('title');
   return (
     <th scope="col" className={`${counselorListThClass} ${className}`}>
-      <button
-        type="button"
-        onClick={onSort}
-        className="inline-flex flex-wrap items-center gap-1 transition-colors hover:text-slate-200"
-      >
-        <span className={orgActive ? counselorListSortActiveClass : 'text-slate-300'}>
-          {leftLabel}{' '}
+      <div className="inline-flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortLeft();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${orgActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {leftLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(orgActive, phase)}
           </span>
-        </span>
+        </button>
         <span className="text-slate-500">/</span>
-        <span className={codeActive ? counselorListSortActiveClass : 'text-slate-300'}>
-          {midLabel}{' '}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortMid();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${codeActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {midLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(codeActive, phase)}
           </span>
-        </span>
+        </button>
         <span className="text-slate-500">/</span>
-        <span className={titleActive ? counselorListSortActiveClass : 'text-slate-300'}>
-          {rightLabel}{' '}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortRight();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${titleActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {rightLabel}
           <span className="text-[10px] opacity-80" aria-hidden>
             {sortPhaseIcon(titleActive, phase)}
           </span>
-        </span>
-      </button>
+        </button>
+      </div>
     </th>
   );
 }
@@ -457,10 +490,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [progressFilter, setProgressFilter] = useState<ProgressFilter>('all');
-  const [tagFilter, setTagFilter] = useState('');
-  const [cohortFilter, setCohortFilter] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [nameSortPhase, setNameSortPhase] = useState<NameSortPhase>('name-desc');
@@ -471,18 +500,17 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [archivedRaw, setArchivedRaw] = useState<ArchivedDispatchRecipient[]>([]);
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [clientDeleteLoading, setClientDeleteLoading] = useState(false);
   const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const cacheKey = useMemo(
     () =>
       buildClientPortalsCacheKey({
         counselorUid: user?.uid,
-        status: statusFilter,
-        cohortId: cohortFilter || undefined,
-        progress: progressFilter,
-        tag: tagFilter || undefined,
+        status: 'active',
+        progress: 'all',
       }),
-    [user?.uid, statusFilter, cohortFilter, progressFilter, tagFilter],
+    [user?.uid],
   );
 
   const initialCached = useMemo(() => readCachedClientPortals(cacheKey), [cacheKey]);
@@ -500,13 +528,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [loading, setLoading] = useState(() => !initialCached?.items?.length);
 
   useEffect(() => {
-    const fromUrl = searchParams.get('cohortId');
-    if (fromUrl !== null) {
-      setCohortFilter(fromUrl);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
     void listAssessments()
       .then((data) => {
         const map: Record<string, string> = {};
@@ -521,21 +542,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         // usage end dates are optional display
       });
   }, []);
-
-  const updateCohortFilter = useCallback(
-    (value: string) => {
-      setCohortFilter(value);
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set('cohortId', value);
-      } else {
-        params.delete('cohortId');
-      }
-      const qs = params.toString();
-      router.replace(qs ? `/counselor/clients?${qs}` : '/counselor/clients', { scroll: false });
-    },
-    [router, searchParams],
-  );
 
   const load = useCallback(async () => {
     if (deletedMode) {
@@ -573,10 +579,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     setError('');
     try {
       const data = await listCounselorClientPortals({
-        status: statusFilter,
-        cohortId: cohortFilter || undefined,
-        progress: progressFilter,
-        tag: tagFilter || undefined,
+        status: 'active',
       });
       writeCachedClientPortals(cacheKey, data);
       setItems(data.items || []);
@@ -591,7 +594,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     } finally {
       setLoading(false);
     }
-  }, [cacheKey, deletedMode, cohortFilter, progressFilter, searchParams, statusFilter, tagFilter]);
+  }, [cacheKey, deletedMode, searchParams]);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {
@@ -710,47 +713,31 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     }
   };
 
-  const toggleNameSort = () => {
-    if (sortKey !== 'displayName') {
-      setSortKey('displayName');
-      setNameSortPhase('name-asc');
-      return;
-    }
+  const toggleNameFieldSort = (field: 'name' | 'code') => {
+    setSortKey('displayName');
     setNameSortPhase((prev) => {
-      switch (prev) {
-        case 'name-asc':
-          return 'name-desc';
-        case 'name-desc':
-          return 'code-asc';
-        case 'code-asc':
-          return 'code-desc';
-        default:
-          return 'name-asc';
+      if (field === 'name') {
+        if (prev.startsWith('name')) return prev === 'name-asc' ? 'name-desc' : 'name-asc';
+        return 'name-asc';
       }
+      if (prev.startsWith('code')) return prev === 'code-asc' ? 'code-desc' : 'code-asc';
+      return 'code-asc';
     });
   };
 
-  const toggleCounselSort = () => {
-    if (sortKey !== 'counselInfo') {
-      setSortKey('counselInfo');
-      setCounselSortPhase('org-asc');
-      return;
-    }
+  const toggleCounselFieldSort = (field: 'org' | 'joinCode' | 'title') => {
+    setSortKey('counselInfo');
     setCounselSortPhase((prev) => {
-      switch (prev) {
-        case 'org-asc':
-          return 'org-desc';
-        case 'org-desc':
-          return 'joinCode-asc';
-        case 'joinCode-asc':
-          return 'joinCode-desc';
-        case 'joinCode-desc':
-          return 'title-asc';
-        case 'title-asc':
-          return 'title-desc';
-        default:
-          return 'org-asc';
+      if (field === 'org') {
+        if (prev.startsWith('org')) return prev === 'org-asc' ? 'org-desc' : 'org-asc';
+        return 'org-asc';
       }
+      if (field === 'joinCode') {
+        if (prev.startsWith('joinCode')) return prev === 'joinCode-asc' ? 'joinCode-desc' : 'joinCode-asc';
+        return 'joinCode-asc';
+      }
+      if (prev.startsWith('title')) return prev === 'title-asc' ? 'title-desc' : 'title-asc';
+      return 'title-asc';
     });
   };
 
@@ -815,6 +802,52 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     setSelected(new Set());
   };
 
+  const selectedItems = useMemo(
+    () => displayItems.filter((item) => selected.has(item.portalId)),
+    [displayItems, selected],
+  );
+
+  const handleClientDownload = () => {
+    exportClientPortalItems(selectedItems, 'download');
+  };
+
+  const handleClientPrint = () => {
+    exportClientPortalItems(selectedItems, 'print');
+  };
+
+  const handleClientDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`선택 ${selected.size}명을 삭제하시겠습니까?`)) return;
+    setClientDeleteLoading(true);
+    setMessage('');
+    setError('');
+    try {
+      const byAssessment = new Map<string, string[]>();
+      for (const item of selectedItems) {
+        const assessmentId = item.assessments[0]?.assessmentId;
+        if (!assessmentId) continue;
+        const list = byAssessment.get(assessmentId) || [];
+        list.push(item.portalId);
+        byAssessment.set(assessmentId, list);
+      }
+      let archived = 0;
+      let failed = 0;
+      for (const [assessmentId, portalIds] of Array.from(byAssessment.entries())) {
+        const result = await archiveDispatchRecipients(assessmentId, portalIds);
+        archived += result.archived;
+        failed += result.failed ?? 0;
+      }
+      clearCounselorAssessmentsListCache(user?.uid);
+      setSelected(new Set());
+      setMessage(`삭제 ${archived}명${failed ? `, 실패 ${failed}명` : ''}`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setClientDeleteLoading(false);
+    }
+  };
+
   const cellLinkClass =
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
@@ -827,7 +860,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
 
-  const pageTitle = deletedMode ? '삭제된 내담자' : '내담자';
+  const pageTitle = deletedMode ? '삭제된 내담자' : '내담자 목록';
   const dateColumnLabel = deletedMode ? '삭제일' : '발송일';
 
   return (
@@ -873,69 +906,15 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         </span>
       }
       toolbar={
-        deletedMode ? null : (
-          <>
-          {selected.size > 0 ? (
-            <button
-              type="button"
-              onClick={() => setMoveOpen(true)}
-              className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
-            >
-              다른 상담코드로 이동
-            </button>
-          ) : null}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2 py-1.5 text-sm text-slate-200"
-            title="내담자 상태"
+        deletedMode ? null : selected.size > 0 ? (
+          <button
+            type="button"
+            onClick={() => setMoveOpen(true)}
+            className="inline-flex shrink-0 items-center justify-center rounded-md border border-sky-500/40 bg-sky-900/40 px-2.5 py-1.5 text-sm font-medium text-sky-100 transition-colors hover:bg-sky-800/50"
           >
-            <option value="active">활성</option>
-            <option value="archived">보관</option>
-            <option value="all">전체 상태</option>
-          </select>
-          <select
-            value={progressFilter}
-            onChange={(e) => setProgressFilter(e.target.value as ProgressFilter)}
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2 py-1.5 text-sm text-slate-200"
-            title="검사 진행"
-          >
-            <option value="all">전체 진행</option>
-            <option value="in_progress">진행 중</option>
-            <option value="not_started">미시작</option>
-            <option value="completed">완료</option>
-            <option value="no_tests">검사 없음</option>
-          </select>
-          <select
-            value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value)}
-            className="hidden rounded-md border border-white/10 bg-[#101f38]/90 px-2 py-1.5 text-sm text-slate-200 sm:block"
-            title="관리 태그"
-          >
-            <option value="">전체 태그</option>
-            {tags.map((tag) => (
-              <option key={tag} value={tag}>
-                #{tag}
-              </option>
-            ))}
-          </select>
-          <select
-            value={cohortFilter}
-            onChange={(e) => updateCohortFilter(e.target.value)}
-            className="rounded-md border border-white/10 bg-[#101f38]/90 px-2 py-1.5 text-sm text-slate-200"
-            title="그룹"
-          >
-            <option value="">전체 그룹</option>
-            <option value={INDIVIDUAL_COHORT_KEY}>개별 발급</option>
-            {cohorts.map((c) => (
-              <option key={c.cohortId} value={c.cohortId}>
-                {c.cohortName || c.cohortId}
-              </option>
-            ))}
-          </select>
-          <CounselorLiveStatusBadge isLive={isLive} liveError={liveError} lastUpdatedAt={lastUpdatedAt} />
-          </>
-        )
+            다른 상담코드로 이동
+          </button>
+        ) : null
       }
     >
       <motion.div
@@ -1020,7 +999,8 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       phase={nameSortPhase}
                       leftPhases={['name-asc', 'name-desc']}
                       rightPhases={['code-asc', 'code-desc']}
-                      onSort={toggleNameSort}
+                      onSortLeft={() => toggleNameFieldSort('name')}
+                      onSortRight={() => toggleNameFieldSort('code')}
                     />
                     <TripleFieldSortHeader
                       leftLabel="그룹명"
@@ -1029,7 +1009,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       activeKey={sortKey}
                       sortKey="counselInfo"
                       phase={counselSortPhase}
-                      onSort={toggleCounselSort}
+                      onSortLeft={() => toggleCounselFieldSort('org')}
+                      onSortMid={() => toggleCounselFieldSort('joinCode')}
+                      onSortRight={() => toggleCounselFieldSort('title')}
                     />
                     <SortableColumnHeader
                       label="발송현황"
@@ -1122,6 +1104,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                             primary={item.displayName || '—'}
                             secondary={formatAccessCodeDisplay(item.accessCode || '')}
                             hoverTypeLabel="나의코드"
+                            normalSecondary
                             className={cellLinkClass}
                           />
                         </td>
@@ -1137,6 +1120,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                               hoverAccessCode={formatAccessCodeDisplay(
                                 primaryAssessment.joinAccessCode || '',
                               )}
+                              normalWeight
                               className={cellLinkClass}
                             />
                           ) : (
@@ -1204,12 +1188,38 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     </button>
                   </div>
                 ) : (
-                  <AuthLink
-                    href="/counselor/assessments/deleted-recipients"
-                    className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
-                  >
-                    삭제된 내담자
-                  </AuthLink>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleClientDownload}
+                      disabled={selected.size === 0 || clientDeleteLoading}
+                      className="inline-flex items-center rounded-md bg-emerald-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+                    >
+                      다운로드 ({selected.size})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClientPrint}
+                      disabled={selected.size === 0 || clientDeleteLoading}
+                      className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50"
+                    >
+                      인쇄 ({selected.size})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleClientDelete()}
+                      disabled={clientDeleteLoading || selected.size === 0}
+                      className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                    >
+                      {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                    </button>
+                    <AuthLink
+                      href="/counselor/assessments/deleted-recipients"
+                      className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                    >
+                      삭제된 내담자
+                    </AuthLink>
+                  </div>
                 )
               }
             />
@@ -1237,7 +1247,13 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
             message={`선택 ${selected.size}명을 영구 삭제하고 있습니다.`}
           />
         </>
-      ) : null}
+      ) : (
+        <CounselorActionProgressOverlay
+          open={clientDeleteLoading}
+          title="삭제 진행 중…"
+          message={`선택 ${selected.size}명을 삭제하고 있습니다.`}
+        />
+      )}
     </CounselorPageSection>
   );
 }

@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AssessmentDispatchPanel from '@/components/counselor/AssessmentDispatchPanel';
-import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
+import { rememberCounselorAssessmentContext, resolveCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 
@@ -39,12 +39,18 @@ function ProgressPageContent() {
     return <AuthLoadingState className="py-8" message="이동 중…" />;
   }
 
+  const entryFrom = resolveCounselorProgressFrom(
+    '/counselor/assessments/progress',
+    searchParams.toString() ? `?${searchParams.toString()}` : '',
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <AssessmentDispatchPanel
         assessmentId={assessmentId}
         filterPortalId={portalId || undefined}
         initialSearchQuery={(searchParams.get('search') || '').trim()}
+        entryFrom={entryFrom}
       />
     </div>
   );

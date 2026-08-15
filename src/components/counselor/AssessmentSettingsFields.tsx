@@ -113,9 +113,11 @@ export default function AssessmentSettingsFields({
 
   const filteredTests = useMemo(() => {
     const q = testSearchQuery.trim().toLowerCase();
-    if (!q) return sortedTests;
-    return sortedTests.filter((t) => t.name.toLowerCase().includes(q));
-  }, [sortedTests, testSearchQuery]);
+    const base = q ? sortedTests.filter((t) => t.name.toLowerCase().includes(q)) : sortedTests;
+    const picked = base.filter((t) => selectedTestIds.has(t.testId));
+    const rest = base.filter((t) => !selectedTestIds.has(t.testId));
+    return [...picked, ...rest];
+  }, [sortedTests, testSearchQuery, selectedTestIds]);
 
   return (
     <div
@@ -213,7 +215,9 @@ export default function AssessmentSettingsFields({
                 aria-label="검사명 검색"
               />
             </div>
-            <span className="shrink-0 text-xs text-sky-300/90">{selectedTestIds.size}개 선택</span>
+            <span className="shrink-0 rounded-md border border-sky-400/45 bg-sky-500/20 px-2.5 py-1 text-sm font-semibold text-sky-100 tabular-nums">
+              {selectedTestIds.size}개 선택
+            </span>
           </div>
           <div
             className={`${
