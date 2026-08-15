@@ -1005,6 +1005,14 @@ def archive_dispatch_portals(
         archived += 1
         details.append({"portalId": pid, "status": "archived"})
 
+    if archived:
+        try:
+            from utils.assessment_list_stats import touch_assessment_list_stats
+
+            touch_assessment_list_stats(db, assessment_id)
+        except Exception:
+            pass
+
     return {"archived": archived, "failed": failed, "details": details}
 
 
@@ -1238,5 +1246,13 @@ def restore_archived_portals(
         )
         restored += 1
         details.append({"portalId": pid, "status": "restored"})
+
+    if restored:
+        try:
+            from utils.assessment_list_stats import touch_assessment_list_stats
+
+            touch_assessment_list_stats(db, assessment_id)
+        except Exception:
+            pass
 
     return {"restored": restored, "failed": failed, "details": details}

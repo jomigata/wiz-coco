@@ -42,6 +42,7 @@ import {
   listArchivedAssessments,
   permanentlyDeleteArchivedAssessments,
   restoreArchivedAssessments,
+  clearCounselorAssessmentsListCache,
   type ArchivedAssessment,
 } from '@/lib/assessmentApi';
 
@@ -308,6 +309,7 @@ export default function DeletedAssessmentsPage() {
     setMessage('');
     try {
       const result = await restoreArchivedAssessments(Array.from(selected));
+      clearCounselorAssessmentsListCache(counselorUid);
       setMessage(`복구 ${result.restored}건${result.failed ? `, 실패 ${result.failed}건` : ''}`);
       await load();
     } catch (err) {

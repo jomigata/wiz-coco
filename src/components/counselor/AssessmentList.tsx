@@ -19,6 +19,7 @@ import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCel
 import AssessmentAddRecipientModal, {
   buildContextFromAssessment,
 } from '@/components/counselor/AssessmentAddRecipientModal';
+import AssessmentCreateModal from '@/components/counselor/AssessmentCreateModal';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
 import {
@@ -190,6 +191,7 @@ export default function AssessmentList({
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [liveAssessmentId, setLiveAssessmentId] = useState<string | null>(null);
   const liveStartRef = useRef<number>(0);
   const { pageSize, setPageSize } = useCounselorListPageSize();
@@ -473,12 +475,13 @@ export default function AssessmentList({
             onChange={setSearchQuery}
             placeholder="그룹명 · 제목 · 코드 · 내담자 이름 · 이메일 · 휴대폰 검색"
           />
-          <AuthLink
-            href="/counselor/assessments/new"
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
             className="ml-auto inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-600/90 px-2.5 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-500"
           >
             +상담코드생성
-          </AuthLink>
+          </button>
         </span>
       }
     >
@@ -726,6 +729,14 @@ export default function AssessmentList({
       }}
     />
 
+    <AssessmentCreateModal
+      open={createModalOpen}
+      onClose={() => setCreateModalOpen(false)}
+      onCreated={() => {
+        void refreshFullListFromApi();
+      }}
+    />
+
     {deleteTarget ? (
       (() => {
         const { primary, secondary } = assessmentGroupTitleParts(deleteTarget);
@@ -761,7 +772,7 @@ export default function AssessmentList({
                   상담코드 삭제
                 </h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                  아래 상담코드를 삭제 목록으로 이동합니다. 되돌리려면 삭제된 상담코드 목록에서 복구할 수 있습니다.
+                  아래 상담코드를 삭제 목록으로 이동합니다. 되돌리려면 삭제된 상담코드 에서 복구할 수 있습니다.
                 </p>
               </div>
             </div>

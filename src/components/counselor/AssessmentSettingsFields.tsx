@@ -26,6 +26,8 @@ export interface AssessmentSettingsFieldsProps {
   compact?: boolean;
   /** meta: 제목·종료일·메시지 / tests: 검사 선택만 / all: 전체(기본) */
   sections?: 'all' | 'meta' | 'tests';
+  /** 입력 필드 커스텀 클래스 (수정 화면 강조 등) */
+  inputClassName?: string;
 }
 
 type TestSortKey = 'no' | 'name';
@@ -74,6 +76,7 @@ export default function AssessmentSettingsFields({
   titleRequired = true,
   compact = false,
   sections = 'all',
+  inputClassName,
 }: AssessmentSettingsFieldsProps) {
   const [testSortKey, setTestSortKey] = useState<TestSortKey>('no');
   const [testSortDir, setTestSortDir] = useState<SortDirection>('asc');
@@ -82,7 +85,9 @@ export default function AssessmentSettingsFields({
   const showTests = sections === 'all' || sections === 'tests';
   const fieldGap = compact ? 'space-y-4' : 'space-y-4';
   const labelClass = compact ? 'mb-2 block text-sm font-semibold text-slate-300' : FORM_LABEL;
-  const inputClass = compact ? `${FORM_INPUT} py-2.5 text-sm` : FORM_INPUT;
+  const inputClass =
+    inputClassName ||
+    (compact ? `${FORM_INPUT} py-2.5 text-sm` : FORM_INPUT);
   const hintClass = compact ? 'mt-1.5 text-sm text-slate-400 leading-relaxed' : `${FORM_HINT} mt-1.5`;
 
   const toggleTestSort = (key: TestSortKey) => {

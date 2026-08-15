@@ -118,6 +118,13 @@ def restore_portals_for_assessment(db, *, counselor_uid: str, assessment_id: str
             }
         )
         restored_count += 1
+    if restored_count:
+        try:
+            from utils.assessment_list_stats import touch_assessment_list_stats
+
+            touch_assessment_list_stats(db, aid)
+        except Exception:
+            pass
     return restored_count
 
 
@@ -153,6 +160,12 @@ def restore_archived_assessments(db, *, counselor_uid: str | None, assessment_id
         owner_uid = (data.get("counselorId") or counselor_uid or "").strip()
         if owner_uid:
             restore_portals_for_assessment(db, counselor_uid=owner_uid, assessment_id=aid)
+        try:
+            from utils.assessment_list_stats import touch_assessment_list_stats
+
+            touch_assessment_list_stats(db, aid)
+        except Exception:
+            pass
         restored += 1
         details.append({"assessmentId": aid, "status": "restored"})
     return {"restored": restored, "failed": failed, "details": details}
@@ -225,8 +238,11 @@ def reconcile_assessment_deleted_portals(db, *, counselor_uid: str) -> int:
         if not linked_aid:
             continue
 
-        if status == "archived" and reason == "assessment_deleted" and from_aid == linked_aid:
-            continue
+        if status == "archived":
+            if reason == "manual":
+                continue
+            if reason == "assessment_deleted" and from_aid == linked_aid:
+                continue
 
         if status not in ("active", "permanently_deleted"):
             continue

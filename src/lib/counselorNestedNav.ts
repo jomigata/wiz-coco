@@ -20,7 +20,10 @@ export type AssessmentListNestedNavItem = {
 
 const ASSESSMENT_CONTEXT_KEY = 'counselorAssessmentContextId';
 const ASSESSMENT_LIST_HREF = '/counselor/assessments';
+const CLIENTS_LIST_HREF = '/counselor/clients';
 export const DELETED_ASSESSMENTS_HREF = '/counselor/assessments/deleted';
+export const DELETED_RECIPIENTS_HREF = '/counselor/assessments/deleted-recipients';
+const PARENT_SUBCATEGORY = '1a. 상담코드.내담자';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [];
 
@@ -93,7 +96,45 @@ export function getAssessmentListContextNestedItems(
     });
   }
 
+  if (
+    path.startsWith('/counselor/assessments/deleted') &&
+    !path.startsWith('/counselor/assessments/deleted-recipients')
+  ) {
+    items.push({
+      order: 3,
+      label: '삭제된 상담코드',
+      href: DELETED_ASSESSMENTS_HREF,
+      isActive: (p) =>
+        p.startsWith('/counselor/assessments/deleted') &&
+        !p.startsWith('/counselor/assessments/deleted-recipients'),
+    });
+  }
+
   return items;
+}
+
+/** 내담자 메뉴 — 삭제된 내담자 화면 하위 메뉴 */
+export function getClientsListContextNestedItems(
+  pathname: string,
+  search: string,
+): AssessmentListNestedNavItem[] {
+  const path = normalizeCounselorPath(pathname);
+  if (!path.startsWith('/counselor/assessments/deleted-recipients')) {
+    return [];
+  }
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  const filterAssessmentId = (params.get('assessmentId') || '').trim();
+  const href = filterAssessmentId
+    ? `${DELETED_RECIPIENTS_HREF}?assessmentId=${encodeURIComponent(filterAssessmentId)}`
+    : DELETED_RECIPIENTS_HREF;
+  return [
+    {
+      order: 1,
+      label: '삭제된 내담자',
+      href,
+      isActive: (p) => p.startsWith('/counselor/assessments/deleted-recipients'),
+    },
+  ];
 }
 
 export function resolveActiveNestedNavItem(
@@ -111,8 +152,24 @@ export function resolveActiveNestedNavItem(
     if (nested.isActive(path)) {
       return {
         item: {
-          parentSubcategoryName: '1a. 상담코드',
+          parentSubcategoryName: PARENT_SUBCATEGORY,
           insertAfterHref: ASSESSMENT_LIST_HREF,
+          order: nested.order,
+          label: nested.label,
+          match: nested.isActive,
+          buildHref: () => nested.href,
+        },
+        href: nested.href,
+      };
+    }
+  }
+  const clientsContextItems = getClientsListContextNestedItems(pathname, search);
+  for (const nested of clientsContextItems) {
+    if (nested.isActive(path)) {
+      return {
+        item: {
+          parentSubcategoryName: PARENT_SUBCATEGORY,
+          insertAfterHref: CLIENTS_LIST_HREF,
           order: nested.order,
           label: nested.label,
           match: nested.isActive,

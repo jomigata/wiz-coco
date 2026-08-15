@@ -17,7 +17,7 @@ import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AssessmentSettingsFields from '@/components/counselor/AssessmentSettingsFields';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
-import { FORM_INPUT, FORM_LABEL } from '@/lib/assessmentFormUi';
+import { FORM_INPUT, FORM_INPUT_EMPHASIZED, FORM_LABEL } from '@/lib/assessmentFormUi';
 
 interface AssessmentEditFormProps {
   assessmentId: string;
@@ -181,6 +181,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <h1 className="text-lg font-bold text-white sm:text-xl">상담코드 수정</h1>
       {loadingData && initial ? (
         <p className="text-sm text-sky-300/80" role="status">
           저장된 정보를 표시 중… 최신 내용을 불러오고 있습니다.
@@ -207,7 +208,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
                 </label>
                 <select
                   id="edit-code-category"
-                  className={`${FORM_INPUT} py-2 text-sm`}
+                  className={`${FORM_INPUT_EMPHASIZED} py-2 text-sm`}
                   value={codeCategory}
                   onChange={(e) => setCodeCategory(e.target.value as CounselingCodeType)}
                   disabled={loading}
@@ -223,6 +224,7 @@ export default function AssessmentEditForm({ assessmentId }: AssessmentEditFormP
               <AssessmentSettingsFields
                 sections="meta"
                 compact
+                inputClassName={`${FORM_INPUT_EMPHASIZED} py-2.5 text-sm`}
                 title={title}
                 onTitleChange={setTitle}
                 welcomeMessage={welcomeMessage}

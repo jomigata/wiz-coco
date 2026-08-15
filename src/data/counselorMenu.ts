@@ -14,7 +14,7 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
     icon: '📦',
     subcategories: [
       {
-        name: '1a. 상담코드',
+        name: '1a. 상담코드.내담자',
         icon: '📋',
         items: [
           {
@@ -24,22 +24,22 @@ export const counselorMenuCategories: CounselorMainCategory[] = [
             icon: '📦',
           },
           {
-            name: '검사 크레딧',
-            href: '/counselor/credits',
-            description: '보유 크레딧·사용 내역 (협회 지급)',
-            icon: '💳',
-          },
-        ],
-      },
-      {
-        name: '1b. 내담자 관리',
-        icon: '👥',
-        items: [
-          {
             name: '내담자',
             href: '/counselor/clients',
             description: '발급 내담자 조회·검사·상담코드 연결 추적',
             icon: '👥',
+          },
+        ],
+      },
+      {
+        name: '1b. 검사 관리',
+        icon: '👥',
+        items: [
+          {
+            name: '검사 크레딧',
+            href: '/counselor/credits',
+            description: '보유 크레딧·사용 내역 (협회 지급)',
+            icon: '💳',
           },
           {
             name: '검사 할당',

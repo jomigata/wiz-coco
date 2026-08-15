@@ -27,8 +27,16 @@ import {
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
 import { listAssessments } from '@/lib/assessmentApi';
-import { listCounselorClientPortals } from '@/lib/clientPortalApi';
+import {
+  fetchArchivedDispatchRecipients,
+  isAssessmentLinkedArchivedRecipient,
+  listCounselorClientPortals,
+  permanentlyDeleteArchivedDispatchRecipients,
+  restoreArchivedDispatchRecipients,
+  type ArchivedDispatchRecipient,
+} from '@/lib/clientPortalApi';
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
@@ -250,7 +258,51 @@ function SortableColumnHeader({
   );
 }
 
-export default function CounselorClientList() {
+function mapArchivedToClientItem(row: ArchivedDispatchRecipient): CounselorClientPortalListItem {
+  const completed = row.completedCount ?? 0;
+  const required = row.requiredCount ?? 0;
+  let label: ClientPortalProgressLabel = 'not_started';
+  if (row.testStatus === 'completed') label = 'completed';
+  else if (row.testStatus === 'in_progress' || completed > 0) label = 'in_progress';
+  else if (required === 0) label = 'no_tests';
+  const percent = required > 0 ? Math.min(100, Math.round((completed / required) * 100)) : 0;
+
+  return {
+    portalId: row.portalId,
+    displayName: row.displayName,
+    email: row.email,
+    phone: row.phone,
+    accessCode: row.myCode,
+    cohortName: row.cohortName,
+    status: 'archived',
+    assignedAssessmentCount: 1,
+    assessments: [
+      {
+        assessmentId: row.assessmentId,
+        title: row.assessmentTitle,
+        joinAccessCode: row.joinAccessCode,
+        orgName: row.cohortName,
+      },
+    ],
+    notifyStatus: row.notifyStatus || '',
+    notifyError: row.notifyError,
+    notifyAt: row.archivedAt,
+    createdAt: row.archivedAt,
+    counselorTags: [],
+    progress: {
+      label,
+      percent,
+      completedTests: completed,
+      totalTests: required,
+    },
+  };
+}
+
+type CounselorClientListProps = {
+  deletedMode?: boolean;
+};
+
+export default function CounselorClientList({ deletedMode = false }: CounselorClientListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
@@ -266,6 +318,9 @@ export default function CounselorClientList() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
+  const [archivedRaw, setArchivedRaw] = useState<ArchivedDispatchRecipient[]>([]);
+  const [restoring, setRestoring] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const cacheKey = useMemo(
@@ -333,6 +388,29 @@ export default function CounselorClientList() {
   );
 
   const load = useCallback(async () => {
+    if (deletedMode) {
+      setLoading(true);
+      setError('');
+      try {
+        const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
+        const data = await fetchArchivedDispatchRecipients(filterAssessmentId || undefined);
+        const raw = data.items || [];
+        setArchivedRaw(raw);
+        setItems(raw.map(mapArchivedToClientItem));
+        setCohorts([]);
+        setTags([]);
+        setAssessmentMeta({});
+        setSelected(new Set());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+        setItems([]);
+        setArchivedRaw([]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     const cached = readCachedClientPortals(cacheKey);
     if (cached?.items?.length) {
       setItems(cached.items);
@@ -363,7 +441,7 @@ export default function CounselorClientList() {
     } finally {
       setLoading(false);
     }
-  }, [cacheKey, statusFilter, cohortFilter, progressFilter, tagFilter]);
+  }, [cacheKey, deletedMode, cohortFilter, progressFilter, searchParams, statusFilter, tagFilter]);
 
   useEffect(() => {
     if (authPending || showLoginRequired) {
@@ -373,17 +451,37 @@ export default function CounselorClientList() {
     void load();
   }, [authPending, showLoginRequired, load]);
 
+  const archivedByPortalId = useMemo(() => {
+    const map = new Map<string, ArchivedDispatchRecipient>();
+    for (const row of archivedRaw) {
+      map.set(row.portalId, row);
+    }
+    return map;
+  }, [archivedRaw]);
+
+  const isRowSelectionLocked = useCallback(
+    (portalId: string) => {
+      if (!deletedMode) return false;
+      const row = archivedByPortalId.get(portalId);
+      return row ? isAssessmentLinkedArchivedRecipient(row) : false;
+    },
+    [archivedByPortalId, deletedMode],
+  );
+
   useRedirectOnLoginRequiredError(error);
 
-  const assessmentIds = useMemo(() => Object.keys(assessmentMeta), [assessmentMeta]);
+  const assessmentIds = useMemo(
+    () => (deletedMode ? [] : Object.keys(assessmentMeta)),
+    [assessmentMeta, deletedMode],
+  );
 
   const { results: liveResults, isLive, liveError, lastUpdatedAt } =
-    useCounselorTestResultsRealtime(assessmentIds, isAuthenticated && !authPending);
+    useCounselorTestResultsRealtime(assessmentIds, isAuthenticated && !authPending && !deletedMode);
 
-  const displayItems = useMemo(
-    () => applyRealtimeToClientList(items, assessmentMeta, liveResults),
-    [items, assessmentMeta, liveResults],
-  );
+  const displayItems = useMemo(() => {
+    if (deletedMode) return items;
+    return applyRealtimeToClientList(items, assessmentMeta, liveResults);
+  }, [deletedMode, items, assessmentMeta, liveResults]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -441,8 +539,13 @@ export default function CounselorClientList() {
     [items, selected],
   );
 
+  const selectableOnPage = useMemo(
+    () => paginatedItems.filter((item) => !isRowSelectionLocked(item.portalId)),
+    [paginatedItems, isRowSelectionLocked],
+  );
+
   const allPageSelected =
-    paginatedItems.length > 0 && paginatedItems.every((item) => selected.has(item.portalId));
+    selectableOnPage.length > 0 && selectableOnPage.every((item) => selected.has(item.portalId));
 
   const toggleSort = (key: ListSortKey) => {
     if (sortKey === key) {
@@ -456,6 +559,7 @@ export default function CounselorClientList() {
   };
 
   const toggleOne = (portalId: string) => {
+    if (isRowSelectionLocked(portalId)) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(portalId)) next.delete(portalId);
@@ -468,12 +572,45 @@ export default function CounselorClientList() {
     setSelected((prev) => {
       const next = new Set(prev);
       if (allPageSelected) {
-        paginatedItems.forEach((item) => next.delete(item.portalId));
+        selectableOnPage.forEach((item) => next.delete(item.portalId));
       } else {
-        paginatedItems.forEach((item) => next.add(item.portalId));
+        selectableOnPage.forEach((item) => next.add(item.portalId));
       }
       return next;
     });
+  };
+
+  const handleRestore = async () => {
+    if (selected.size === 0) return;
+    setRestoring(true);
+    setMessage('');
+    try {
+      const result = await restoreArchivedDispatchRecipients(Array.from(selected));
+      setMessage(`복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '복구에 실패했습니다.');
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`선택 ${selected.size}명을 영구 삭제하시겠습니까?`)) {
+      return;
+    }
+    setDeleting(true);
+    setMessage('');
+    try {
+      const result = await permanentlyDeleteArchivedDispatchRecipients(Array.from(selected));
+      setMessage(`영구 삭제 ${result.deleted}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '영구 삭제에 실패했습니다.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleMoveSuccess = () => {
@@ -485,11 +622,15 @@ export default function CounselorClientList() {
     'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const goToProgress = (item: CounselorClientPortalListItem) => {
+    if (isRowSelectionLocked(item.portalId)) return;
     const assessmentId = item.assessments[0]?.assessmentId;
     if (!assessmentId) return;
     rememberCounselorAssessmentContext(assessmentId);
     router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
+
+  const listTitle = deletedMode ? '삭제된 내담자' : '내담자 목록';
+  const dateColumnLabel = deletedMode ? '삭제일' : '발송일';
 
   return (
     <CounselorPageSection
@@ -498,7 +639,7 @@ export default function CounselorClientList() {
       description={
         <>
           <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2">
-            <h2 className="shrink-0 text-sm font-bold text-white">내담자 목록</h2>
+            <h2 className="shrink-0 text-sm font-bold text-white">{listTitle}</h2>
             <div className="relative min-w-[12rem] flex-1 sm:max-w-md">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
                 <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -526,7 +667,34 @@ export default function CounselorClientList() {
         </>
       }
       toolbar={
-        <>
+        deletedMode ? (
+          <>
+            <button
+              type="button"
+              onClick={() => void handleRestore()}
+              disabled={restoring || selected.size === 0}
+              className="inline-flex shrink-0 items-center justify-center rounded-md bg-emerald-600 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {restoring ? '복구 중…' : `복구 (${selected.size})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handlePermanentDelete()}
+              disabled={deleting || selected.size === 0}
+              className="inline-flex shrink-0 items-center justify-center rounded-md bg-red-700 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+            >
+              {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/15 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+            >
+              새로고침
+            </button>
+          </>
+        ) : (
+          <>
           {selected.size > 0 ? (
             <button
               type="button"
@@ -586,7 +754,8 @@ export default function CounselorClientList() {
             ))}
           </select>
           <CounselorLiveStatusBadge isLive={isLive} liveError={liveError} lastUpdatedAt={lastUpdatedAt} />
-        </>
+          </>
+        )
       }
     >
       <motion.div
@@ -612,14 +781,20 @@ export default function CounselorClientList() {
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaUsers className="mb-2 h-10 w-10 text-slate-600" />
             <p className="text-base text-slate-300">
-              {displayItems.length === 0 ? '등록된 내담자가 없습니다' : '검색 결과가 없습니다'}
+              {displayItems.length === 0
+                ? deletedMode
+                  ? '삭제된 내담자가 없습니다'
+                  : '등록된 내담자가 없습니다'
+                : '검색 결과가 없습니다'}
             </p>
             <p className="mt-1 text-sm text-slate-500">
               {displayItems.length === 0
-                ? '상담코드를 발급하면 내담자가 여기에 표시됩니다.'
+                ? deletedMode
+                  ? '직접 삭제하거나 상담코드 삭제로 보관된 내담자가 여기에 표시됩니다.'
+                  : '상담코드를 발급하면 내담자가 여기에 표시됩니다.'
                 : '검색어·필터를 바꿔 보세요.'}
             </p>
-            {displayItems.length === 0 ? (
+            {displayItems.length === 0 && !deletedMode ? (
               <AuthLink
                 href="/counselor/assessments/new"
                 className="mt-6 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500 transition-colors"
@@ -650,7 +825,7 @@ export default function CounselorClientList() {
                       />
                     </th>
                     <SortableColumnHeader
-                      label="발송일"
+                      label={dateColumnLabel}
                       sortKey="notifyAt"
                       activeKey={sortKey}
                       direction={sortDir}
@@ -726,10 +901,13 @@ export default function CounselorClientList() {
                     });
                     const isSelected = selected.has(item.portalId);
 
+                    const locked = isRowSelectionLocked(item.portalId);
+                    const rowClickable = !locked;
+
                     return (
                       <tr
                         key={item.portalId}
-                        className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
+                        className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''}`}
                       >
                         <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
@@ -739,20 +917,21 @@ export default function CounselorClientList() {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleOne(item.portalId)}
-                            className="rounded accent-blue-500"
+                            disabled={locked}
+                            className="rounded accent-blue-500 disabled:opacity-40"
                             aria-label={`${item.displayName || '내담자'} 선택`}
                             onClick={(e) => e.stopPropagation()}
                           />
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-200`}
-                          onClick={() => goToProgress(item)}
+                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-200`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           {formatDateOnly(item.notifyAt)}
                         </td>
                         <td
-                          className={`max-w-[11rem] ${counselorListTdClass} cursor-pointer`}
-                          onClick={() => goToProgress(item)}
+                          className={`max-w-[11rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           <CounselorSlashInfoCell
                             primary={item.displayName || '—'}
@@ -762,8 +941,8 @@ export default function CounselorClientList() {
                           />
                         </td>
                         <td
-                          className={`max-w-[14rem] ${counselorListTdClass} cursor-pointer`}
-                          onClick={() => goToProgress(item)}
+                          className={`max-w-[14rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           {primaryAssessment ? (
                             <CounselorSlashInfoCell
@@ -780,27 +959,27 @@ export default function CounselorClientList() {
                           )}
                         </td>
                         <td
-                          className={`max-w-[10rem] ${counselorListTdClass} cursor-pointer`}
-                          onClick={() => goToProgress(item)}
+                          className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           <DispatchStatusText value={dispatchView} />
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer ${progress.className}`}
-                          onClick={() => goToProgress(item)}
+                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} ${progress.className}`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           {progress.text}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-slate-300 tabular-nums`}
-                          onClick={() => goToProgress(item)}
+                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-300 tabular-nums`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           {phoneMasked}
                           {phoneFull ? <span className="sr-only">{phoneFull}</span> : null}
                         </td>
                         <td
-                          className={`whitespace-nowrap ${counselorListTdClass} cursor-pointer text-center text-slate-200`}
-                          onClick={() => goToProgress(item)}
+                          className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-center text-slate-200`}
+                          onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
                           {formatUsageEndDate(usageEnd)}
                         </td>
@@ -820,12 +999,21 @@ export default function CounselorClientList() {
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
               footerAction={
-                <AuthLink
-                  href="/counselor/assessments/deleted-recipients"
-                  className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
-                >
-                  삭제된 내담자
-                </AuthLink>
+                deletedMode ? (
+                  <AuthLink
+                    href="/counselor/clients"
+                    className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                  >
+                    내담자 목록
+                  </AuthLink>
+                ) : (
+                  <AuthLink
+                    href="/counselor/assessments/deleted-recipients"
+                    className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                  >
+                    삭제된 내담자
+                  </AuthLink>
+                )
               }
             />
           </>
@@ -839,6 +1027,20 @@ export default function CounselorClientList() {
         onClose={() => setMoveOpen(false)}
         onSuccess={handleMoveSuccess}
       />
+      {deletedMode ? (
+        <>
+          <CounselorActionProgressOverlay
+            open={restoring}
+            title="복구 진행 중…"
+            message={`선택 ${selected.size}명을 복구하고 있습니다.`}
+          />
+          <CounselorActionProgressOverlay
+            open={deleting}
+            title="영구 삭제 진행 중…"
+            message={`선택 ${selected.size}명을 영구 삭제하고 있습니다.`}
+          />
+        </>
+      ) : null}
     </CounselorPageSection>
   );
 }

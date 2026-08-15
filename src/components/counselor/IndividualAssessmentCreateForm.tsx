@@ -91,7 +91,17 @@ function recipientHeaderClass(): string {
   return `${recipientGridClass()} shrink-0 border-b border-white/10 pb-2 text-sm font-semibold text-sky-200/90`;
 }
 
-export default function IndividualAssessmentCreateForm() {
+type IndividualAssessmentCreateFormProps = {
+  variant?: 'page' | 'modal';
+  onClose?: () => void;
+  onIssued?: () => void;
+};
+
+export default function IndividualAssessmentCreateForm({
+  variant = 'page',
+  onClose,
+  onIssued,
+}: IndividualAssessmentCreateFormProps = {}) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cohortNameRef = useRef<HTMLInputElement>(null);
@@ -529,17 +539,23 @@ export default function IndividualAssessmentCreateForm() {
     const href = assessmentId
       ? `/counselor/assessments?created=${encodeURIComponent(assessmentId)}`
       : '/counselor/assessments';
+    if (variant === 'modal') {
+      onIssued?.();
+      return;
+    }
     pushWithAuthSession(router, href);
   }, [
     cohortName,
     created.length,
     lastCreatedAssessmentId,
+    onIssued,
     router,
     selectedTestIds,
     sharedJoinCode,
     title,
     usageEndDate,
     user?.uid,
+    variant,
     welcomeMessage,
   ]);
 
@@ -730,7 +746,7 @@ export default function IndividualAssessmentCreateForm() {
               onClick={confirmIssueCompleteAndGoToList}
               className="rounded-lg bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-500"
             >
-              상담코드 목록으로
+              {variant === 'modal' ? '닫기' : '상담코드 목록으로'}
             </button>
           </div>
         </div>
@@ -1214,7 +1230,13 @@ export default function IndividualAssessmentCreateForm() {
           <div className="shrink-0 border-t border-white/10 pt-3">
             <button
               type="button"
-              onClick={() => pushWithAuthSession(router, '/counselor/assessments')}
+              onClick={() => {
+                if (variant === 'modal') {
+                  onClose?.();
+                  return;
+                }
+                pushWithAuthSession(router, '/counselor/assessments');
+              }}
               disabled={loading}
               className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2.5 text-base text-slate-300 transition hover:bg-slate-800/70"
             >

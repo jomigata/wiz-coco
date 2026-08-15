@@ -6,6 +6,7 @@ import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import {
   getAssessmentListContextNestedItems,
+  getClientsListContextNestedItems,
   nestedNavItemsAfter,
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
@@ -109,10 +110,13 @@ export default function CounselorManageShell({ children }: Props) {
                                 item.href,
                                 pathname,
                               );
+                              const normalizedItemHref = item.href.replace(/\/+$/, '');
                               const contextNested =
-                                item.href.replace(/\/+$/, '') === '/counselor/assessments'
+                                normalizedItemHref === '/counselor/assessments'
                                   ? getAssessmentListContextNestedItems(pathname, search)
-                                  : [];
+                                  : normalizedItemHref === '/counselor/clients'
+                                    ? getClientsListContextNestedItems(pathname, search)
+                                    : [];
                               const assessmentNested = [...contextNested].sort(
                                 (a, b) => a.order - b.order,
                               );

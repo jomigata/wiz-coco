@@ -2,6 +2,9 @@ import type React from 'react';
 
 export const FORM_INPUT =
   'w-full rounded-lg border border-white/10 bg-[#101f38]/90 px-3 py-2.5 text-base text-white placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400/50 disabled:cursor-not-allowed disabled:opacity-55';
+/** 수정 화면 등 — 입력값을 더 눈에 띄게 */
+export const FORM_INPUT_EMPHASIZED =
+  'w-full rounded-lg border border-sky-400/40 bg-[#152a4a]/95 px-3 py-2.5 text-base text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400/45 focus:border-sky-300/60 disabled:cursor-not-allowed disabled:opacity-55';
 export const FORM_LABEL = 'mb-1.5 block text-sm font-semibold text-slate-300';
 export const FORM_HINT = 'text-sm text-slate-400 leading-relaxed';
 export const TEST_PICKER_SCROLL =
