@@ -8,6 +8,7 @@ import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import AuthLink from '@/components/auth/AuthLink';
 import CounselorLiveStatusBadge from '@/components/counselor/CounselorLiveStatusBadge';
 import CounselorListPagination from '@/components/counselor/CounselorListPagination';
+import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import DispatchStatusText from '@/components/counselor/DispatchStatusText';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
@@ -28,7 +29,7 @@ import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
-import { listAssessments } from '@/lib/assessmentApi';
+import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
   fetchArchivedDispatchRecipients,
   isAssessmentLinkedArchivedRecipient,
@@ -40,7 +41,7 @@ import {
 import { counselorClientProgressHref } from '@/lib/counselorClientRoutes';
 import { dispatchStatusDisplay } from '@/lib/dispatchRecipientDisplay';
 import { INDIVIDUAL_COHORT_KEY } from '@/lib/monitoringRealtime';
-import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
+import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
@@ -65,6 +66,14 @@ type ListSortKey =
   | 'notifyAt'
   | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
+type NameSortPhase = 'name-asc' | 'name-desc' | 'code-asc' | 'code-desc';
+type CounselSortPhase =
+  | 'org-asc'
+  | 'org-desc'
+  | 'joinCode-asc'
+  | 'joinCode-desc'
+  | 'title-asc'
+  | 'title-desc';
 
 function formatDateOnly(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -152,12 +161,25 @@ function progressSortValue(item: CounselorClientPortalListItem): number {
   return order[item.progress.label] * 1000 + item.progress.percent;
 }
 
-function counselInfoLabel(item: CounselorClientPortalListItem): string {
+function counselOrgLabel(item: CounselorClientPortalListItem): string {
   const primary = item.assessments[0];
-  if (!primary) return '—';
-  const org = (primary.orgName || item.cohortName || '—').trim();
-  const title = (primary.title || '—').trim();
-  return `${org}/${title}`;
+  return (primary?.orgName || item.cohortName || '').trim();
+}
+
+function counselJoinCodeLabel(item: CounselorClientPortalListItem): string {
+  return (item.assessments[0]?.joinAccessCode || '').trim();
+}
+
+function counselTitleLabel(item: CounselorClientPortalListItem): string {
+  return (item.assessments[0]?.title || '').trim();
+}
+
+function counselInfoLabel(item: CounselorClientPortalListItem): string {
+  const org = counselOrgLabel(item) || '—';
+  const code = counselJoinCodeLabel(item);
+  const title = counselTitleLabel(item) || '—';
+  const codePart = code ? formatAccessCodeDisplay(code) : '—';
+  return `${org}/${codePart}/${title}`;
 }
 
 function notifyStatusSortValue(status: string): number {
@@ -186,19 +208,36 @@ function compareRows(
   key: ListSortKey,
   dir: SortDirection,
   usageMap: Record<string, string>,
+  nameSortPhase: NameSortPhase,
+  counselSortPhase: CounselSortPhase,
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
     case 'createdAt':
       return mult * (parseDate(a.createdAt) - parseDate(b.createdAt));
-    case 'displayName':
-      return mult * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
+    case 'displayName': {
+      const phaseMult = (p: NameSortPhase) => (p.endsWith('-asc') ? 1 : -1);
+      const m = phaseMult(nameSortPhase);
+      if (nameSortPhase.startsWith('code')) {
+        return m * (a.accessCode || '').localeCompare(b.accessCode || '', 'ko');
+      }
+      return m * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
+    }
     case 'accessCode':
       return mult * (a.accessCode || '').localeCompare(b.accessCode || '', 'ko');
     case 'phone':
       return mult * (a.phone || '').localeCompare(b.phone || '', 'ko');
-    case 'counselInfo':
-      return mult * counselInfoLabel(a).localeCompare(counselInfoLabel(b), 'ko');
+    case 'counselInfo': {
+      const phaseMult = (p: CounselSortPhase) => (p.endsWith('-asc') ? 1 : -1);
+      const m = phaseMult(counselSortPhase);
+      if (counselSortPhase.startsWith('joinCode')) {
+        return m * counselJoinCodeLabel(a).localeCompare(counselJoinCodeLabel(b), 'ko');
+      }
+      if (counselSortPhase.startsWith('title')) {
+        return m * counselTitleLabel(a).localeCompare(counselTitleLabel(b), 'ko');
+      }
+      return m * counselOrgLabel(a).localeCompare(counselOrgLabel(b), 'ko');
+    }
     case 'progress':
       return mult * (progressSortValue(a) - progressSortValue(b));
     case 'notifyStatus':
@@ -252,6 +291,115 @@ function SortableColumnHeader({
           aria-hidden="true"
         >
           {active ? (direction === 'asc' ? '▲' : '▼') : '↕'}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+function sortPhaseIcon(active: boolean, phase: string): string {
+  if (!active) return '↕';
+  return phase.endsWith('-asc') ? '▲' : '▼';
+}
+
+function DualFieldSortHeader({
+  leftLabel,
+  rightLabel,
+  activeKey,
+  sortKey,
+  phase,
+  leftPhases,
+  rightPhases,
+  onSort,
+  className = '',
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  activeKey: ListSortKey;
+  sortKey: ListSortKey;
+  phase: NameSortPhase;
+  leftPhases: NameSortPhase[];
+  rightPhases: NameSortPhase[];
+  onSort: () => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  const leftActive = active && leftPhases.includes(phase);
+  const rightActive = active && rightPhases.includes(phase);
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <button
+        type="button"
+        onClick={onSort}
+        className="inline-flex flex-wrap items-center gap-1 transition-colors hover:text-slate-200"
+      >
+        <span className={leftActive ? counselorListSortActiveClass : 'text-slate-300'}>
+          {leftLabel}{' '}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(leftActive, phase)}
+          </span>
+        </span>
+        <span className="text-slate-500">/</span>
+        <span className={rightActive ? counselorListSortActiveClass : 'text-slate-300'}>
+          {rightLabel}{' '}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(rightActive, phase)}
+          </span>
+        </span>
+      </button>
+    </th>
+  );
+}
+
+function TripleFieldSortHeader({
+  leftLabel,
+  midLabel,
+  rightLabel,
+  activeKey,
+  sortKey,
+  phase,
+  onSort,
+  className = '',
+}: {
+  leftLabel: string;
+  midLabel: string;
+  rightLabel: string;
+  activeKey: ListSortKey;
+  sortKey: ListSortKey;
+  phase: CounselSortPhase;
+  onSort: () => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  const orgActive = active && phase.startsWith('org');
+  const codeActive = active && phase.startsWith('joinCode');
+  const titleActive = active && phase.startsWith('title');
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <button
+        type="button"
+        onClick={onSort}
+        className="inline-flex flex-wrap items-center gap-1 transition-colors hover:text-slate-200"
+      >
+        <span className={orgActive ? counselorListSortActiveClass : 'text-slate-300'}>
+          {leftLabel}{' '}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(orgActive, phase)}
+          </span>
+        </span>
+        <span className="text-slate-500">/</span>
+        <span className={codeActive ? counselorListSortActiveClass : 'text-slate-300'}>
+          {midLabel}{' '}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(codeActive, phase)}
+          </span>
+        </span>
+        <span className="text-slate-500">/</span>
+        <span className={titleActive ? counselorListSortActiveClass : 'text-slate-300'}>
+          {rightLabel}{' '}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(titleActive, phase)}
+          </span>
         </span>
       </button>
     </th>
@@ -315,6 +463,8 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [cohortFilter, setCohortFilter] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [nameSortPhase, setNameSortPhase] = useState<NameSortPhase>('name-desc');
+  const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [usageEndMap, setUsageEndMap] = useState<Record<string, string>>({});
   const [moveOpen, setMoveOpen] = useState(false);
@@ -505,9 +655,11 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
-    list.sort((a, b) => compareRows(a, b, sortKey, sortDir, usageEndMap));
+    list.sort((a, b) =>
+      compareRows(a, b, sortKey, sortDir, usageEndMap, nameSortPhase, counselSortPhase),
+    );
     return list;
-  }, [filtered, sortKey, sortDir, usageEndMap]);
+  }, [filtered, sortKey, sortDir, usageEndMap, nameSortPhase, counselSortPhase]);
 
   const {
     page,
@@ -558,6 +710,50 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     }
   };
 
+  const toggleNameSort = () => {
+    if (sortKey !== 'displayName') {
+      setSortKey('displayName');
+      setNameSortPhase('name-asc');
+      return;
+    }
+    setNameSortPhase((prev) => {
+      switch (prev) {
+        case 'name-asc':
+          return 'name-desc';
+        case 'name-desc':
+          return 'code-asc';
+        case 'code-asc':
+          return 'code-desc';
+        default:
+          return 'name-asc';
+      }
+    });
+  };
+
+  const toggleCounselSort = () => {
+    if (sortKey !== 'counselInfo') {
+      setSortKey('counselInfo');
+      setCounselSortPhase('org-asc');
+      return;
+    }
+    setCounselSortPhase((prev) => {
+      switch (prev) {
+        case 'org-asc':
+          return 'org-desc';
+        case 'org-desc':
+          return 'joinCode-asc';
+        case 'joinCode-asc':
+          return 'joinCode-desc';
+        case 'joinCode-desc':
+          return 'title-asc';
+        case 'title-asc':
+          return 'title-desc';
+        default:
+          return 'org-asc';
+      }
+    });
+  };
+
   const toggleOne = (portalId: string) => {
     if (isRowSelectionLocked(portalId)) return;
     setSelected((prev) => {
@@ -586,6 +782,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     setMessage('');
     try {
       const result = await restoreArchivedDispatchRecipients(Array.from(selected));
+      clearCounselorAssessmentsListCache(user?.uid);
       setMessage(`복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
       await load();
     } catch (err) {
@@ -626,36 +823,23 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     const assessmentId = item.assessments[0]?.assessmentId;
     if (!assessmentId) return;
     rememberCounselorAssessmentContext(assessmentId);
+    rememberCounselorProgressFrom('clients');
     router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
 
-  const listTitle = deletedMode ? '삭제된 내담자' : '내담자 목록';
+  const pageTitle = deletedMode ? '삭제된 내담자' : '내담자';
   const dateColumnLabel = deletedMode ? '삭제일' : '발송일';
 
   return (
     <CounselorPageSection
-      bodyClassName="!p-0"
+      title={pageTitle}
+      dense
+      className="flex min-h-0 flex-1"
+      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
       noBodyPadding
       description={
-        <>
-          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2">
-            <h2 className="shrink-0 text-sm font-bold text-white">{listTitle}</h2>
-            <div className="relative min-w-[12rem] flex-1 sm:max-w-md">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5">
-                <svg className="h-4 w-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
-                className="w-full rounded-md border border-white/10 bg-[#101f38]/90 py-1.5 pl-8 pr-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-              />
-            </div>
-          </div>
-          <span className="mt-1 block">
+        <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="shrink-0">
             전체 <span className="font-semibold text-white">{stats.total}</span>명 · 진행 중{' '}
             <span className="font-semibold text-sky-300">{stats.inProgress}</span>명 · 완료{' '}
             <span className="font-semibold text-emerald-300">{stats.completed}</span>명
@@ -664,36 +848,32 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
               <span className="ml-2 font-medium text-sky-200">{selected.size}명 선택</span>
             ) : null}
           </span>
-        </>
+          <CounselorListSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
+          />
+          {deletedMode ? (
+            <>
+              <AuthLink
+                href="/counselor/clients"
+                className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+              >
+                내담자 목록
+              </AuthLink>
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+              >
+                새로고침
+              </button>
+            </>
+          ) : null}
+        </span>
       }
       toolbar={
-        deletedMode ? (
-          <>
-            <button
-              type="button"
-              onClick={() => void handleRestore()}
-              disabled={restoring || selected.size === 0}
-              className="inline-flex shrink-0 items-center justify-center rounded-md bg-emerald-600 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
-            >
-              {restoring ? '복구 중…' : `복구 (${selected.size})`}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handlePermanentDelete()}
-              disabled={deleting || selected.size === 0}
-              className="inline-flex shrink-0 items-center justify-center rounded-md bg-red-700 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-            >
-              {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
-            </button>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/15 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-            >
-              새로고침
-            </button>
-          </>
-        ) : (
+        deletedMode ? null : (
           <>
           {selected.size > 0 ? (
             <button
@@ -759,7 +939,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
       }
     >
       <motion.div
-        className="p-2.5 text-sm sm:p-3"
+        className="flex min-h-0 flex-1 flex-col p-2.5 text-sm sm:p-3"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
@@ -832,19 +1012,24 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       onSort={toggleSort}
                       className="whitespace-nowrap"
                     />
-                    <SortableColumnHeader
-                      label="이름 / 나의코드"
+                    <DualFieldSortHeader
+                      leftLabel="이름"
+                      rightLabel="나의코드"
+                      activeKey={sortKey}
                       sortKey="displayName"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
+                      phase={nameSortPhase}
+                      leftPhases={['name-asc', 'name-desc']}
+                      rightPhases={['code-asc', 'code-desc']}
+                      onSort={toggleNameSort}
                     />
-                    <SortableColumnHeader
-                      label="그룹명(상담코드) / 제목"
-                      sortKey="counselInfo"
+                    <TripleFieldSortHeader
+                      leftLabel="그룹명"
+                      midLabel="상담코드"
+                      rightLabel="제목"
                       activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
+                      sortKey="counselInfo"
+                      phase={counselSortPhase}
+                      onSort={toggleCounselSort}
                     />
                     <SortableColumnHeader
                       label="발송현황"
@@ -889,7 +1074,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       ? formatPhoneDisplayOr(item.phone)
                       : undefined;
                     const infoPrimary = primaryAssessment
-                      ? `${primaryAssessment.orgName || item.cohortName || '—'} (${formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')})`
+                      ? `${primaryAssessment.orgName || item.cohortName || '—'} / ${formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')}`
                       : item.cohortName || '—';
                     const infoSecondary = primaryAssessment?.title || '—';
                     const usageEnd = primaryUsageEndDate(item, usageEndMap);
@@ -1000,12 +1185,24 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
               onPageSizeChange={setPageSize}
               footerAction={
                 deletedMode ? (
-                  <AuthLink
-                    href="/counselor/clients"
-                    className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
-                  >
-                    내담자 목록
-                  </AuthLink>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleRestore()}
+                      disabled={restoring || selected.size === 0}
+                      className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                    >
+                      {restoring ? '복구 중…' : `복구 (${selected.size})`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handlePermanentDelete()}
+                      disabled={deleting || selected.size === 0}
+                      className="inline-flex items-center rounded-md bg-red-700 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                    >
+                      {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
+                    </button>
+                  </div>
                 ) : (
                   <AuthLink
                     href="/counselor/assessments/deleted-recipients"

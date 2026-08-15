@@ -19,6 +19,7 @@ export type AssessmentListNestedNavItem = {
 };
 
 const ASSESSMENT_CONTEXT_KEY = 'counselorAssessmentContextId';
+const PROGRESS_FROM_KEY = 'counselorProgressFrom';
 const ASSESSMENT_LIST_HREF = '/counselor/assessments';
 const CLIENTS_LIST_HREF = '/counselor/clients';
 export const DELETED_ASSESSMENTS_HREF = '/counselor/assessments/deleted';
@@ -33,6 +34,40 @@ export function normalizeCounselorPath(pathname: string): string {
 
 function normalizeHref(href: string): string {
   return href.replace(/\/+$/, '');
+}
+
+export function rememberCounselorProgressFrom(source: 'clients' | 'assessments') {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(PROGRESS_FROM_KEY, source);
+  } catch {
+    // ignore
+  }
+}
+
+export function resolveCounselorProgressFrom(pathname: string, search: string): 'clients' | 'assessments' {
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  const fromQuery = (params.get('from') || '').trim();
+  if (fromQuery === 'clients') return 'clients';
+  if (fromQuery === 'assessments') return 'assessments';
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = (sessionStorage.getItem(PROGRESS_FROM_KEY) || '').trim();
+      if (stored === 'clients' || stored === 'assessments') return stored;
+    } catch {
+      // ignore
+    }
+  }
+  return 'assessments';
+}
+
+function buildProgressHref(assessmentId: string | null, search: string): string {
+  const params = new URLSearchParams();
+  if (assessmentId) params.set('assessmentId', assessmentId);
+  const from = resolveCounselorProgressFrom('', search);
+  params.set('from', from);
+  const qs = params.toString();
+  return qs ? `/counselor/assessments/progress?${qs}` : ASSESSMENT_LIST_HREF;
 }
 
 export function rememberCounselorAssessmentContext(assessmentId: string) {
@@ -72,15 +107,14 @@ export function getAssessmentListContextNestedItems(
 ): AssessmentListNestedNavItem[] {
   const path = normalizeCounselorPath(pathname);
   const assessmentId = resolveAssessmentContextId(pathname, search);
+  const progressFrom = resolveCounselorProgressFrom(pathname, search);
   const items: AssessmentListNestedNavItem[] = [];
 
-  if (path.startsWith('/counselor/assessments/progress')) {
+  if (path.startsWith('/counselor/assessments/progress') && progressFrom !== 'clients') {
     items.push({
       order: 1,
       label: '상담진행 현황',
-      href: assessmentId
-        ? `/counselor/assessments/progress?assessmentId=${encodeURIComponent(assessmentId)}`
-        : ASSESSMENT_LIST_HREF,
+      href: buildProgressHref(assessmentId, search),
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),
     });
   }
@@ -119,22 +153,33 @@ export function getClientsListContextNestedItems(
   search: string,
 ): AssessmentListNestedNavItem[] {
   const path = normalizeCounselorPath(pathname);
-  if (!path.startsWith('/counselor/assessments/deleted-recipients')) {
-    return [];
-  }
-  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
-  const filterAssessmentId = (params.get('assessmentId') || '').trim();
-  const href = filterAssessmentId
-    ? `${DELETED_RECIPIENTS_HREF}?assessmentId=${encodeURIComponent(filterAssessmentId)}`
-    : DELETED_RECIPIENTS_HREF;
-  return [
-    {
-      order: 1,
+  const items: AssessmentListNestedNavItem[] = [];
+
+  if (path.startsWith('/counselor/assessments/deleted-recipients')) {
+    const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+    const filterAssessmentId = (params.get('assessmentId') || '').trim();
+    const href = filterAssessmentId
+      ? `${DELETED_RECIPIENTS_HREF}?assessmentId=${encodeURIComponent(filterAssessmentId)}`
+      : DELETED_RECIPIENTS_HREF;
+    items.push({
+      order: 2,
       label: '삭제된 내담자',
       href,
       isActive: (p) => p.startsWith('/counselor/assessments/deleted-recipients'),
-    },
-  ];
+    });
+  }
+
+  if (path.startsWith('/counselor/assessments/progress') && resolveCounselorProgressFrom(pathname, search) === 'clients') {
+    const assessmentId = resolveAssessmentContextId(pathname, search);
+    items.push({
+      order: 1,
+      label: '상담진행 현황',
+      href: buildProgressHref(assessmentId, search),
+      isActive: (p) => p.startsWith('/counselor/assessments/progress'),
+    });
+  }
+
+  return items;
 }
 
 export function resolveActiveNestedNavItem(

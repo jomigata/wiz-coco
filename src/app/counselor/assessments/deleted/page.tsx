@@ -438,6 +438,14 @@ export default function DeletedAssessmentsPage() {
                       />
                     </th>
                     <SortableColumnHeader
+                      label="삭제일"
+                      sortKey="archivedAt"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                      className="whitespace-nowrap text-center"
+                    />
+                    <SortableColumnHeader
                       label="발급일"
                       sortKey="createdAt"
                       activeKey={sortKey}
@@ -471,14 +479,6 @@ export default function DeletedAssessmentsPage() {
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
-                    <SortableColumnHeader
-                      label="삭제일"
-                      sortKey="archivedAt"
-                      activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
-                      className="whitespace-nowrap text-center"
-                    />
                   </tr>
                 </thead>
                 <tbody>
@@ -507,6 +507,12 @@ export default function DeletedAssessmentsPage() {
                               className="rounded accent-blue-500"
                               aria-label={`${infoSecondary} 선택`}
                             />
+                          </td>
+                          <td
+                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
+                            onClick={() => void toggleExpand(row.id)}
+                          >
+                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
                           </td>
                           <td
                             className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
@@ -544,12 +550,6 @@ export default function DeletedAssessmentsPage() {
                             onClick={() => void toggleExpand(row.id)}
                           >
                             <span className={cellLinkClass}>{formatUsageEndDate(row.usageEndDate)}</span>
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
                           </td>
                         </tr>
                         {isOpen ? (

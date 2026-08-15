@@ -38,7 +38,10 @@ export function buildAssessmentListHref(searchQuery?: string): string {
 }
 
 export function buildAssessmentProgressHref(assessmentId: string, searchQuery: string): string {
-  const params = new URLSearchParams({ assessmentId: assessmentId.trim() });
+  const params = new URLSearchParams({
+    assessmentId: assessmentId.trim(),
+    from: 'assessments',
+  });
   const q = searchQuery.trim();
   if (q) params.set('search', q);
   return `/counselor/assessments/progress?${params.toString()}`;

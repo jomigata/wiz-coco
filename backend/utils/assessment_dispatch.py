@@ -1205,6 +1205,7 @@ def restore_archived_portals(
     restored = 0
     failed = 0
     details: list[dict] = []
+    touched_assessment_ids: set[str] = set()
 
     for portal_id in portal_ids:
         pid = (portal_id or "").strip()
@@ -1236,6 +1237,14 @@ def restore_archived_portals(
             )
             continue
 
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        if from_aid:
+            touched_assessment_ids.add(from_aid)
+        for raw in pdata.get("assignedAssessmentIds") or []:
+            aid = str(raw).strip()
+            if aid:
+                touched_assessment_ids.add(aid)
+
         pref.update(
             {
                 "status": "active",
@@ -1251,7 +1260,8 @@ def restore_archived_portals(
         try:
             from utils.assessment_list_stats import touch_assessment_list_stats
 
-            touch_assessment_list_stats(db, assessment_id)
+            for aid in touched_assessment_ids:
+                touch_assessment_list_stats(db, aid)
         except Exception:
             pass
 

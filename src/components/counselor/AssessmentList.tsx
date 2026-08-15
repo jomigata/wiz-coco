@@ -21,7 +21,7 @@ import AssessmentAddRecipientModal, {
 } from '@/components/counselor/AssessmentAddRecipientModal';
 import AssessmentCreateModal from '@/components/counselor/AssessmentCreateModal';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
-import { rememberCounselorAssessmentContext } from '@/lib/counselorNestedNav';
+import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import {
   counselingCodeTypeLabel,
 } from '@/data/counselingCodeTypes';
@@ -368,6 +368,7 @@ export default function AssessmentList({
   const goToProgress = (assessmentId: string) => {
     writeAssessmentListSearch(searchQuery);
     rememberCounselorAssessmentContext(assessmentId);
+    rememberCounselorProgressFrom('assessments');
     router.push(buildAssessmentProgressHref(assessmentId, searchQuery));
   };
 
@@ -740,10 +741,7 @@ export default function AssessmentList({
     {deleteTarget ? (
       (() => {
         const { primary, secondary } = assessmentGroupTitleParts(deleteTarget);
-        const { dispatchTotal } = resultStatusCounts(deleteTarget);
         const testCount = deleteTarget.testList?.length ?? 0;
-        const deletedRecipientsHref = `/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(deleteTarget.id)}`;
-        const deletedCodesHref = '/counselor/assessments/deleted';
         return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
         <div
@@ -794,13 +792,6 @@ export default function AssessmentList({
               </p>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
                 <span>
-                  내담자{' '}
-                  <span className="font-semibold tabular-nums text-slate-200">
-                    {dispatchTotal.toLocaleString('ko-KR')}
-                  </span>
-                  명
-                </span>
-                <span>
                   포함 검사{' '}
                   <span className="font-semibold tabular-nums text-slate-200">{testCount}</span>개
                 </span>
@@ -812,42 +803,6 @@ export default function AssessmentList({
                 ) : null}
               </div>
             </div>
-
-            <div className="rounded-xl border border-amber-500/20 bg-amber-950/20 px-4 py-3.5 text-sm leading-relaxed text-amber-100/90">
-              <p className="font-semibold text-amber-200">삭제 시 함께 처리되는 항목</p>
-              <ul className="mt-2 list-disc space-y-1.5 pl-5 text-amber-100/85">
-                <li>
-                  이 상담코드에 연결된{' '}
-                  <span className="font-semibold text-white">내담자 {dispatchTotal.toLocaleString('ko-KR')}명</span>
-                  이 자동으로 삭제 처리됩니다.
-                </li>
-                <li>
-                  삭제된 내담자는{' '}
-                  <AuthLink
-                    href={deletedRecipientsHref}
-                    className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
-                  >
-                    삭제된 내담자 목록
-                  </AuthLink>
-                  에서 확인·복구할 수 있습니다.
-                </li>
-                <li>
-                  상담코드 자체는{' '}
-                  <AuthLink
-                    href={deletedCodesHref}
-                    className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
-                  >
-                    삭제된 상담코드 목록
-                  </AuthLink>
-                  으로 이동하며, 필요 시 복구할 수 있습니다.
-                </li>
-              </ul>
-            </div>
-
-            <p className="text-xs leading-relaxed text-slate-500">
-              검사 결과 등 데이터는 복구하기 전까지 보관됩니다. 삭제 후에는 해당 내담자의 내 검사실 접속이
-              제한됩니다.
-            </p>
 
             {deleteError ? (
               <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
@@ -888,7 +843,7 @@ export default function AssessmentList({
     <CounselorActionProgressOverlay
       open={deleteLoading}
       title="삭제 진행 중…"
-      message="상담코드를 삭제 목록으로 이동하고 있습니다."
+      message="상담코드를 삭제하고 있습니다."
     />
 
     </CounselorPageSection>

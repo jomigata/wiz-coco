@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import IndividualAssessmentCreateForm from '@/components/counselor/IndividualAssessmentCreateForm';
 
 type Props = {
@@ -10,11 +11,20 @@ type Props = {
 };
 
 export default function AssessmentCreateModal({ open, onClose, onCreated }: Props) {
-  if (!open) return null;
+  useEffect(() => {
+    if (!open || typeof document === 'undefined') return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
-  return (
+  if (!open || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-2 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/70 p-2 backdrop-blur-sm sm:p-4"
       onClick={onClose}
     >
       <div
@@ -43,6 +53,7 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
