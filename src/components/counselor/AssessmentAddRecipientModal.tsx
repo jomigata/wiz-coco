@@ -518,7 +518,11 @@ export default function AssessmentAddRecipientModal({
             ? `${combinedRows.length}명에게 접속 정보를 발송하고 있습니다.`
             : `${combinedRows.length}명을 추가하고 있습니다.`
         }
-        hint={addSendNow ? '이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.' : undefined}
+        hint={
+          addSendNow
+            ? '이메일·SMS 발송 중입니다. 발송은 1~2분 이상 걸릴 수 있습니다.'
+            : undefined
+        }
       />
       <CounselorActionCompleteModal
         open={Boolean(addComplete)}

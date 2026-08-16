@@ -54,6 +54,7 @@ import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
+type CounselSortPhase = 'org-asc' | 'org-desc' | 'title-asc' | 'title-desc';
 
 function parseCreatedAt(iso?: string): number {
   if (!iso) return 0;
@@ -83,13 +84,23 @@ function compareAssessments(
   b: CounselorAssessment,
   key: ListSortKey,
   dir: SortDirection,
+  counselSortPhase: CounselSortPhase,
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
     case 'createdAt':
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
-    case 'counselInfo':
-      return mult * assessmentInfoLabel(a).localeCompare(assessmentInfoLabel(b), 'ko');
+    case 'counselInfo': {
+      const phaseMult = (p: CounselSortPhase) => (p.endsWith('-asc') ? 1 : -1);
+      const m = phaseMult(counselSortPhase);
+      if (counselSortPhase.startsWith('title')) {
+        return (
+          m *
+          ((a.title || '').trim() || '—').localeCompare((b.title || '').trim() || '—', 'ko')
+        );
+      }
+      return m * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
+    }
     case 'accessCode':
       return (
         mult *
@@ -123,6 +134,68 @@ function isExpired(iso: string | undefined): boolean {
   } catch {
     return false;
   }
+}
+
+function sortPhaseIcon(active: boolean, phase: string): string {
+  if (!active) return '↕';
+  return phase.endsWith('-asc') ? '▲' : '▼';
+}
+
+function DualFieldSortHeader({
+  leftLabel,
+  rightLabel,
+  activeKey,
+  sortKey,
+  phase,
+  onSortLeft,
+  onSortRight,
+  className = '',
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  activeKey: ListSortKey;
+  sortKey: ListSortKey;
+  phase: CounselSortPhase;
+  onSortLeft: () => void;
+  onSortRight: () => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  const leftActive = active && phase.startsWith('org');
+  const rightActive = active && phase.startsWith('title');
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <div className="inline-flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortLeft();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${leftActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {leftLabel}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(leftActive, phase)}
+          </span>
+        </button>
+        <span className="text-slate-500">/</span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSortRight();
+          }}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-slate-200 ${rightActive ? counselorListSortActiveClass : 'text-slate-300'}`}
+        >
+          {rightLabel}
+          <span className="text-[10px] opacity-80" aria-hidden>
+            {sortPhaseIcon(rightActive, phase)}
+          </span>
+        </button>
+      </div>
+    </th>
+  );
 }
 
 function SortableColumnHeader({
@@ -188,6 +261,7 @@ export default function AssessmentList({
   const [clientItems, setClientItems] = useState<CounselorClientPortalListItem[]>([]);
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
   const [addTarget, setAddTarget] = useState<CounselorAssessment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -410,6 +484,18 @@ export default function AssessmentList({
     }
   };
 
+  const toggleCounselFieldSort = (field: 'org' | 'title') => {
+    setSortKey('counselInfo');
+    setCounselSortPhase((prev) => {
+      if (field === 'org') {
+        if (prev.startsWith('org')) return prev === 'org-asc' ? 'org-desc' : 'org-asc';
+        return 'org-asc';
+      }
+      if (prev.startsWith('title')) return prev === 'title-asc' ? 'title-desc' : 'title-asc';
+      return 'title-asc';
+    });
+  };
+
   const toggleSort = (key: ListSortKey) => {
     if (sortKey === key) {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -450,9 +536,9 @@ export default function AssessmentList({
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
-    list.sort((a, b) => compareAssessments(a, b, sortKey, sortDir));
+    list.sort((a, b) => compareAssessments(a, b, sortKey, sortDir, counselSortPhase));
     return list;
-  }, [filtered, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir, counselSortPhase]);
 
   const {
     page,
@@ -597,13 +683,15 @@ export default function AssessmentList({
                     onSort={toggleSort}
                     className="whitespace-nowrap text-center"
                   />
-                  <SortableColumnHeader
-                    label="그룹명 / 제목"
-                    sortKey="counselInfo"
-                    activeKey={sortKey}
-                    direction={sortDir}
-                    onSort={toggleSort}
-                  />
+                    <DualFieldSortHeader
+                      leftLabel="그룹명"
+                      rightLabel="제목"
+                      activeKey={sortKey}
+                      sortKey="counselInfo"
+                      phase={counselSortPhase}
+                      onSortLeft={() => toggleCounselFieldSort('org')}
+                      onSortRight={() => toggleCounselFieldSort('title')}
+                    />
                   <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                     <span className="block">진행현황</span>
                   </th>
@@ -711,14 +799,6 @@ export default function AssessmentList({
             onPageChange={setPage}
             pageSize={pageSize}
             onPageSizeChange={setPageSize}
-            footerAction={
-              <AuthLink
-                href="/counselor/assessments/deleted"
-                className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
-              >
-                삭제된 상담코드
-              </AuthLink>
-            }
           />
         </>
       )}

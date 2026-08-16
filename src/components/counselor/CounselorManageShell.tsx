@@ -110,13 +110,7 @@ export default function CounselorManageShell({ children }: Props) {
                               const normalizedItemHref = item.href.replace(/\/+$/, '');
                               const assessmentsSelected = isAssessmentsMenuSelected(pathname, search);
                               const clientsSelected = isClientsMenuSelected(pathname, search);
-                              const active =
-                                !activeNested &&
-                                (normalizedItemHref === '/counselor/assessments'
-                                  ? assessmentsSelected
-                                  : normalizedItemHref === '/counselor/clients'
-                                    ? clientsSelected
-                                    : isMenuItemActive(pathname, item.href));
+                              const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
                               const nestedAfter = nestedNavItemsAfter(
                                 sub.name,
                                 item.href,
@@ -142,6 +136,14 @@ export default function CounselorManageShell({ children }: Props) {
                                   return true;
                                 })
                                 .sort((a, b) => a.order - b.order);
+                              const hasActiveNested = assessmentNested.some((n) => n.isActive(pathNorm));
+                              const parentExactActive =
+                                normalizedItemHref === '/counselor/assessments'
+                                  ? pathNorm === '/counselor/assessments'
+                                  : normalizedItemHref === '/counselor/clients'
+                                    ? pathNorm === '/counselor/clients'
+                                    : isMenuItemActive(pathname, item.href);
+                              const active = !activeNested && !hasActiveNested && parentExactActive;
                               const rows: React.ReactNode[] = [
                                 <li
                                   key={item.href}

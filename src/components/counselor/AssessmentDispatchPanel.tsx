@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import AuthLink from '@/components/auth/AuthLink';
 import { getCounselorResult, type CounselorResultDetail } from '@/lib/assessmentApi';
 import { formatAccessCodeDisplay } from '@/lib/accessCodeFormat';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -39,6 +40,7 @@ import {
   readCachedDispatchStatus,
   writeCachedDispatchStatus,
 } from '@/lib/counselorSessionCache';
+import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
@@ -304,7 +306,7 @@ interface AssessmentDispatchPanelProps {
   assessmentId: string;
   filterPortalId?: string;
   initialSearchQuery?: string;
-  entryFrom?: 'clients' | 'assessments';
+  entryFrom?: 'clients' | 'assessments' | 'deleted-recipients';
 }
 
 export default function AssessmentDispatchPanel({
@@ -479,14 +481,37 @@ export default function AssessmentDispatchPanel({
 
   const totalRecipientCount = visibleData?.recipients.length ?? 0;
 
+  const sortedRecipients = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    let list = (visibleData?.recipients || []).map((r) =>
+      mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
+    );
+    if (q) {
+      list = list.filter((r) => {
+        const hay = [
+          r.displayName || '',
+          r.email || '',
+          r.phone || '',
+          r.myCode || '',
+        ]
+          .join(' ')
+          .toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    if (!sortKey) return list;
+    list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
+    return list;
+  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, searchQuery]);
+
   const remindEligibleSelected = useMemo(
     () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
     [visibleData?.recipients, selected],
   );
 
   const selectedRecipients = useMemo(
-    () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId)),
-    [visibleData?.recipients, selected],
+    () => sortedRecipients.filter((r) => selected.has(r.portalId)),
+    [sortedRecipients, selected],
   );
 
   const movePortalSummaries = useMemo(
@@ -540,29 +565,6 @@ export default function AssessmentDispatchPanel({
     () => selectedRecipients.filter((r) => !canSendReminder(r)),
     [selectedRecipients],
   );
-
-  const sortedRecipients = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    let list = (visibleData?.recipients || []).map((r) =>
-      mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
-    );
-    if (q) {
-      list = list.filter((r) => {
-        const hay = [
-          r.displayName || '',
-          r.email || '',
-          r.phone || '',
-          r.myCode || '',
-        ]
-          .join(' ')
-          .toLowerCase();
-        return hay.includes(q);
-      });
-    }
-    if (!sortKey) return list;
-    list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
-    return list;
-  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, searchQuery]);
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -745,29 +747,25 @@ export default function AssessmentDispatchPanel({
 
   if (!data || !displayData) return null;
 
-  const backHref = entryFrom === 'clients' ? '/counselor/clients' : buildAssessmentListHref(searchQuery);
-  const backLabel = entryFrom === 'clients' ? '내담자 목록' : '상담코드 목록';
+  const backHref =
+    entryFrom === 'deleted-recipients'
+      ? '/counselor/assessments/deleted-recipients'
+      : entryFrom === 'clients'
+        ? '/counselor/clients'
+        : buildAssessmentListHref(searchQuery);
+  const backButtonLabel =
+    entryFrom === 'deleted-recipients'
+      ? '삭제된 내담자'
+      : entryFrom === 'clients'
+        ? '내담자'
+        : '상담코드';
 
   return (
     <>
     <CounselorPageSection
-      title="상담진행 현황"
-      className="flex min-h-0 flex-1"
-      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
-      noBodyPadding
-      dense
-      description={
-        <span className="inline-flex w-full flex-wrap items-center gap-2">
-          <Link
-            href={backHref}
-            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-slate-900/60 p-1.5 text-slate-300 transition-colors hover:border-sky-500/40 hover:bg-sky-950/40 hover:text-sky-200"
-            title={backLabel}
-            aria-label={`${backLabel}으로 이동`}
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
+      title={
+        <span className="inline-flex flex-wrap items-center gap-2">
+          <span>상담진행 현황</span>
           <span className="inline-flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-950/30 px-2 py-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-500/80">상담코드</span>
             <span className="font-mono text-sm font-semibold tracking-wide text-cyan-300">
@@ -784,6 +782,21 @@ export default function AssessmentDispatchPanel({
             <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">제목</span>
             <span className="text-sm text-slate-300">{displayData.title || '—'}</span>
           </span>
+        </span>
+      }
+      className="flex min-h-0 flex-1"
+      bodyClassName="flex min-h-0 flex-1 flex-col !p-0"
+      noBodyPadding
+      dense
+      description={
+        <span className="inline-flex w-full flex-wrap items-center gap-2">
+          <CounselorListBackLink href={backHref} label={backButtonLabel} />
+          <AuthLink
+            href={backHref}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+          >
+            {backButtonLabel}
+          </AuthLink>
           <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-950/25 px-2 py-1 text-sm">
             <CounselorProgressMetricsInline
               totalClients={totalRecipientCount}

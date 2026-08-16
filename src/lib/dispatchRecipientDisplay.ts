@@ -9,6 +9,7 @@ export type DispatchDisplayRecipient = {
   notifySentVia?: string | null;
   notifyEmailChannel?: string | null;
   notifyPhoneChannel?: string | null;
+  notifyAt?: string | null;
   testStatus?: string | null;
   completedCount?: number | null;
   requiredCount?: number | null;
@@ -132,6 +133,29 @@ function composeStatusText(mainText: string, detailParts: ChannelDetailPart[]): 
   return `${mainText} (${detailParts.map((p) => p.text).join('·')})`;
 }
 
+function isTerminalNotifyStatus(status: string): boolean {
+  return status === 'sent' || status === 'partial' || status === 'failed';
+}
+
+function resolveEffectiveNotifyStatus(r: DispatchDisplayRecipient): string {
+  let status = (r.notifyStatus || 'not_sent').trim();
+  if (status !== 'sending') return status;
+
+  const via = parseSentViaFlags(r.notifySentVia);
+  if (via.emailOk || via.alimtalkOk || via.smsOk) return 'sent';
+  if ((r.notifyError || '').trim()) return 'failed';
+
+  const notifyAt = (r.notifyAt || '').trim();
+  if (notifyAt) {
+    const age = Date.now() - new Date(notifyAt).getTime();
+    if (!Number.isNaN(age) && age >= 120_000) {
+      return (r.notifyError || '').trim() ? 'failed' : 'sent';
+    }
+  }
+
+  return status;
+}
+
 function pushChannelPart(parts: ChannelDetailPart[], text: string, failed: boolean): void {
   parts.push({ text, failed });
 }
@@ -167,20 +191,25 @@ function buildChannelDetailParts(r: DispatchDisplayRecipient): ChannelDetailPart
   const hasPhone = Boolean(r.phone?.trim());
   if (!hasEmail && !hasPhone) return [];
 
-  const status = r.notifyStatus || 'not_sent';
+  const status = resolveEffectiveNotifyStatus(r);
   const via = parseSentViaFlags(r.notifySentVia);
   const failed = parseNotifyErrors(r.notifyError);
+  const terminal = isTerminalNotifyStatus(status);
   const parts: ChannelDetailPart[] = [];
 
   if (hasEmail) {
     const legacy = emailChannelOutcome(status, via, failed);
-    pushChannelFromExplicitState(parts, '이메일', r.notifyEmailChannel, legacy);
+    let channelState = r.notifyEmailChannel;
+    if (terminal && channelState === 'sending') channelState = undefined;
+    pushChannelFromExplicitState(parts, '이메일', channelState, legacy);
   }
 
   if (hasPhone) {
     const phoneLabel = phoneChannelLabel(via);
     const legacy = phoneChannelOutcome(status, via, failed);
-    pushChannelFromExplicitState(parts, phoneLabel, r.notifyPhoneChannel, legacy);
+    let channelState = r.notifyPhoneChannel;
+    if (terminal && channelState === 'sending') channelState = undefined;
+    pushChannelFromExplicitState(parts, phoneLabel, channelState, legacy);
   }
 
   return parts;
@@ -235,7 +264,7 @@ export function dispatchStatusDisplay(r: DispatchDisplayRecipient): DispatchStat
     );
   }
 
-  const status = r.notifyStatus || 'not_sent';
+  const status = resolveEffectiveNotifyStatus(r);
 
   if (status === 'sending') {
     const kindPrefix = notifyKindPrefix(r.notifyKind);

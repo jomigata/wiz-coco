@@ -375,28 +375,26 @@ export default function DeletedAssessmentsPage() {
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           <CounselorListBackLink href="/counselor/assessments" label="상담코드" />
+          <AuthLink
+            href="/counselor/assessments"
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+          >
+            상담코드
+          </AuthLink>
           <span className="shrink-0">
-            삭제된 상담코드 총 <span className="font-semibold text-white">{items.length}</span>개 · 응시자{' '}
-            <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
+            전체 <span className="font-semibold text-white">{totalParticipants}</span>명 · 완료{' '}
             <span className="font-semibold text-emerald-300">{totalCompleted}</span>명
-            <span className="ml-2 text-sky-200/60">({filtered.length}건 표시)</span>
           </span>
           <CounselorListSearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
           />
-          <AuthLink
-            href="/counselor/assessments"
-            className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-          >
-            상담코드
-          </AuthLink>
           <button
             type="button"
             onClick={() => void load()}
             disabled={loading}
-            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+            className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
           >
             새로고침
           </button>

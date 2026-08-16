@@ -338,13 +338,17 @@ export default function CounselorHomeDashboard() {
             </div>
             {recentAssessments.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center">
-                <p className="text-sm text-slate-400">등록된 상담코드가 없습니다</p>
-                <AuthLink
-                  href="/counselor/assessments/new"
-                  className="mt-4 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
-                >
-                  첫 상담코드 생성
-                </AuthLink>
+                <p className="text-sm text-slate-400">
+                  {loading || revalidating ? '데이터를 불러오는 중…' : '등록된 상담코드가 없습니다'}
+                </p>
+                {!loading && !revalidating ? (
+                  <AuthLink
+                    href="/counselor/assessments/new"
+                    className="mt-4 inline-flex items-center gap-2 rounded-md bg-sky-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-500"
+                  >
+                    첫 상담코드 생성
+                  </AuthLink>
+                ) : null}
               </div>
             ) : (
               <div className={`min-h-0 flex-1 ${counselorListTableWrapperClass}`}>

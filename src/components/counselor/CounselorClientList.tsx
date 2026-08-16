@@ -824,8 +824,8 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   };
 
   const selectedItems = useMemo(
-    () => displayItems.filter((item) => selected.has(item.portalId)),
-    [displayItems, selected],
+    () => sortedFiltered.filter((item) => selected.has(item.portalId)),
+    [sortedFiltered, selected],
   );
 
   const handleClientDownload = () => {
@@ -884,7 +884,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     const assessmentId = item.assessments[0]?.assessmentId;
     if (!assessmentId) return;
     rememberCounselorAssessmentContext(assessmentId);
-    rememberCounselorProgressFrom('clients');
+    rememberCounselorProgressFrom(deletedMode ? 'deleted-recipients' : 'clients');
     router.push(counselorClientProgressHref(assessmentId, item.portalId));
   };
 
@@ -901,16 +901,19 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
           {deletedMode ? (
-            <CounselorListBackLink href="/counselor/clients" label="내담자" />
+            <>
+              <CounselorListBackLink href="/counselor/clients" label="내담자" />
+              <AuthLink
+                href="/counselor/clients"
+                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+              >
+                내담자
+              </AuthLink>
+            </>
           ) : null}
           <span className="shrink-0">
-            전체 <span className="font-semibold text-white">{stats.total}</span>명 · 진행 중{' '}
-            <span className="font-semibold text-sky-300">{stats.inProgress}</span>명 · 완료{' '}
+            전체 <span className="font-semibold text-white">{stats.total}</span>명 · 완료{' '}
             <span className="font-semibold text-emerald-300">{stats.completed}</span>명
-            <span className="ml-2 text-sky-200/60">({filtered.length}명 표시)</span>
-            {selected.size > 0 ? (
-              <span className="ml-2 font-medium text-sky-200">{selected.size}명 선택</span>
-            ) : null}
           </span>
           <CounselorListSearchInput
             value={searchQuery}
@@ -918,21 +921,13 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
             placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
           />
           {deletedMode ? (
-            <>
-              <AuthLink
-                href="/counselor/clients"
-                className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-              >
-                내담자
-              </AuthLink>
-              <button
-                type="button"
-                onClick={() => void load()}
-                className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-              >
-                새로고침
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+            >
+              새로고침
+            </button>
           ) : null}
         </span>
       }
@@ -1099,6 +1094,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       phone: item.phone,
                       notifyStatus: item.notifyStatus,
                       notifyError: item.notifyError,
+                      notifyAt: item.notifyAt,
                     });
                     const isSelected = selected.has(item.portalId);
 
@@ -1150,7 +1146,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                             <CounselorSlashInfoCell
                               primary={infoOrg}
                               mid={infoCode}
-                              midClassName="font-normal text-slate-500"
+                              midClassName="font-normal text-slate-400"
                               secondary={infoSecondary}
                               hoverTypeLabel={counselingCodeTypeLabel(primaryAssessment.codeCategory)}
                               hoverAccessCode={formatAccessCodeDisplay(
@@ -1249,12 +1245,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     >
                       {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
                     </button>
-                    <AuthLink
-                      href="/counselor/assessments/deleted-recipients"
-                      className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:bg-white/5"
-                    >
-                      삭제된 내담자
-                    </AuthLink>
                   </div>
                 )
               }

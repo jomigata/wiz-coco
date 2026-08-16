@@ -306,6 +306,7 @@ export default function IndividualAssessmentCreateForm({
     !authPending &&
     !loading &&
     !activeJobId &&
+    recipients.length > 0 &&
     recipients.length <= GROUP_RECIPIENT_MAX;
 
   const toggleTest = (testId: string) => {
@@ -1267,6 +1268,12 @@ export default function IndividualAssessmentCreateForm({
                 : '내담자에게 발급·발송을 처리하고 있습니다.'}
               <br />
               창을 닫지 말고 잠시만 기다려 주세요.
+              {loadingIntent === 'send_all' ? (
+                <>
+                  <br />
+                  발송은 1~2분 이상 걸릴 수 있습니다.
+                </>
+              ) : null}
             </p>
           </div>
         </div>

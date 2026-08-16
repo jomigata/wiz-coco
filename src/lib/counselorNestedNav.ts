@@ -41,7 +41,7 @@ function normalizeHref(href: string): string {
   return href.replace(/\/+$/, '');
 }
 
-export function rememberCounselorProgressFrom(source: 'clients' | 'assessments') {
+export function rememberCounselorProgressFrom(source: 'clients' | 'assessments' | 'deleted-recipients') {
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(PROGRESS_FROM_KEY, source);
@@ -50,15 +50,21 @@ export function rememberCounselorProgressFrom(source: 'clients' | 'assessments')
   }
 }
 
-export function resolveCounselorProgressFrom(pathname: string, search: string): 'clients' | 'assessments' {
+export function resolveCounselorProgressFrom(
+  pathname: string,
+  search: string,
+): 'clients' | 'assessments' | 'deleted-recipients' {
   const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
   const fromQuery = (params.get('from') || '').trim();
   if (fromQuery === 'clients') return 'clients';
+  if (fromQuery === 'deleted-recipients') return 'deleted-recipients';
   if (fromQuery === 'assessments') return 'assessments';
   if (typeof window !== 'undefined') {
     try {
       const stored = (sessionStorage.getItem(PROGRESS_FROM_KEY) || '').trim();
-      if (stored === 'clients' || stored === 'assessments') return stored;
+      if (stored === 'clients' || stored === 'assessments' || stored === 'deleted-recipients') {
+        return stored;
+      }
     } catch {
       // ignore
     }

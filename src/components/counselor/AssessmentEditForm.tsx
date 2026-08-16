@@ -286,7 +286,7 @@ export default function AssessmentEditForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+      <div className="-mx-2.5 flex flex-wrap items-center justify-center gap-2.5 border-t border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:-mx-3">
         <button
           type="submit"
           disabled={!canSubmit}
