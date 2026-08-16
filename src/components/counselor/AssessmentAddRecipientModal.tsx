@@ -19,6 +19,7 @@ import {
   type RecipientRow,
 } from '@/lib/recipientImport';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 
 export type AssessmentAddRecipientContext = {
   assessmentId: string;
@@ -80,6 +81,12 @@ export default function AssessmentAddRecipientModal({
   const [pendingRows, setPendingRows] = useState<RecipientRow[]>([]);
   const [addSendNow, setAddSendNow] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
+  const [addComplete, setAddComplete] = useState<{
+    title: string;
+    message: string;
+    sent: boolean;
+    error?: boolean;
+  } | null>(null);
   const [addError, setAddError] = useState('');
   const [addFileRows, setAddFileRows] = useState<RecipientRow[]>([]);
   const [addFileLabel, setAddFileLabel] = useState('');
@@ -189,14 +196,32 @@ export default function AssessmentAddRecipientModal({
         })),
         queueNotify: addSendNow,
       });
-      const sent = addSendNow;
-      resetForm();
-      onClose();
-      onSuccess?.({ sent });
+      setAddComplete({
+        title: addSendNow ? '발송 완료' : '추가 완료',
+        message: addSendNow
+          ? `${rows.length}명에게 접속 정보 발송을 요청했습니다.`
+          : `${rows.length}명을 추가했습니다.`,
+        sent: addSendNow,
+      });
     } catch (err) {
-      setAddError(err instanceof Error ? err.message : '내담자 추가에 실패했습니다.');
+      setAddComplete({
+        title: addSendNow ? '발송 실패' : '추가 실패',
+        message: err instanceof Error ? err.message : '내담자 추가에 실패했습니다.',
+        sent: addSendNow,
+        error: true,
+      });
     } finally {
       setAddLoading(false);
+    }
+  };
+
+  const handleCompleteConfirm = () => {
+    const info = addComplete;
+    setAddComplete(null);
+    resetForm();
+    onClose();
+    if (info && !info.error) {
+      onSuccess?.({ sent: info.sent });
     }
   };
 
@@ -494,6 +519,14 @@ export default function AssessmentAddRecipientModal({
             : `${combinedRows.length}명을 추가하고 있습니다.`
         }
         hint={addSendNow ? '이메일·SMS 발송 중입니다. 잠시만 기다려 주세요.' : undefined}
+      />
+      <CounselorActionCompleteModal
+        open={Boolean(addComplete)}
+        title={addComplete?.title ?? ''}
+        message={addComplete?.message}
+        error={addComplete?.error}
+        onConfirm={handleCompleteConfirm}
+        zIndexClass="z-[130]"
       />
     </div>
   );

@@ -46,7 +46,7 @@ const emerald: MbtiProClientInfoTheme = {
   choiceGroup: 'rounded-lg border border-emerald-700/70 p-1 grid grid-cols-2 gap-1 bg-emerald-950/30',
   choiceBtnActive: 'bg-teal-600 text-white rounded-md shadow-sm',
   choiceBtnInactive:
-    'bg-transparent text-emerald-200 hover:bg-emerald-800/50 rounded-md',
+    'bg-emerald-800/50 text-emerald-200 hover:bg-emerald-800/70 rounded-md',
   yearSelector:
     'year-selector mt-1.5 z-50 bg-emerald-900/95 backdrop-blur-sm border border-emerald-700 rounded-lg p-2 shadow-lg',
   yearGrid:
@@ -90,7 +90,7 @@ const portal: MbtiProClientInfoTheme = {
   choiceGroup: 'rounded-lg border border-white/[0.14] p-1 grid grid-cols-2 gap-1 bg-[#121f38]/50',
   choiceBtnActive: 'bg-sky-600 text-white rounded-md shadow-sm shadow-sky-900/30',
   choiceBtnInactive:
-    'bg-transparent text-slate-200 hover:bg-white/[0.06] rounded-md',
+    'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12] rounded-md',
   yearSelector:
     'year-selector mt-1.5 z-50 bg-sky-900/95 backdrop-blur-sm border border-sky-600/65 rounded-lg p-2 shadow-lg shadow-black/30',
   yearGrid:

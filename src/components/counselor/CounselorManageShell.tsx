@@ -6,7 +6,11 @@ import AuthLink from '@/components/auth/AuthLink';
 import { counselorMenuCategories, getCounselorCategoryHubHref } from '@/data/counselorMenu';
 import {
   getAssessmentListContextNestedItems,
+  getAssessmentsParentSubmenuItems,
   getClientsListContextNestedItems,
+  getClientsParentSubmenuItems,
+  isAssessmentsMenuSelected,
+  isClientsMenuSelected,
   nestedNavItemsAfter,
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
@@ -103,23 +107,41 @@ export default function CounselorManageShell({ children }: Props) {
                           </p>
                           <ul className="space-y-0.5 pb-1">
                             {sub.items.flatMap((item) => {
+                              const normalizedItemHref = item.href.replace(/\/+$/, '');
+                              const assessmentsSelected = isAssessmentsMenuSelected(pathname, search);
+                              const clientsSelected = isClientsMenuSelected(pathname, search);
                               const active =
-                                !activeNested && isMenuItemActive(pathname, item.href);
+                                !activeNested &&
+                                (normalizedItemHref === '/counselor/assessments'
+                                  ? assessmentsSelected
+                                  : normalizedItemHref === '/counselor/clients'
+                                    ? clientsSelected
+                                    : isMenuItemActive(pathname, item.href));
                               const nestedAfter = nestedNavItemsAfter(
                                 sub.name,
                                 item.href,
                                 pathname,
                               );
-                              const normalizedItemHref = item.href.replace(/\/+$/, '');
                               const contextNested =
                                 normalizedItemHref === '/counselor/assessments'
                                   ? getAssessmentListContextNestedItems(pathname, search)
                                   : normalizedItemHref === '/counselor/clients'
                                     ? getClientsListContextNestedItems(pathname, search)
                                     : [];
-                              const assessmentNested = [...contextNested].sort(
-                                (a, b) => a.order - b.order,
-                              );
+                              const parentSubmenu =
+                                normalizedItemHref === '/counselor/assessments' && assessmentsSelected
+                                  ? getAssessmentsParentSubmenuItems()
+                                  : normalizedItemHref === '/counselor/clients' && clientsSelected
+                                    ? getClientsParentSubmenuItems()
+                                    : [];
+                              const seenNestedLabels = new Set<string>();
+                              const assessmentNested = [...parentSubmenu, ...contextNested]
+                                .filter((nested) => {
+                                  if (seenNestedLabels.has(nested.label)) return false;
+                                  seenNestedLabels.add(nested.label);
+                                  return true;
+                                })
+                                .sort((a, b) => a.order - b.order);
                               const rows: React.ReactNode[] = [
                                 <li
                                   key={item.href}

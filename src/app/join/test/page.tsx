@@ -347,7 +347,7 @@ export default function TestRunnerPage() {
 
             {currentQuestion && (
               <div className="mb-8">
-                <p className="text-white text-lg mb-6">{currentQuestion.question}</p>
+                <p className="text-white text-xl font-semibold leading-relaxed mb-6">{currentQuestion.question}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[1, 2, 3, 4, 5, 6, 7].map((v) => (
                     <button
@@ -358,7 +358,7 @@ export default function TestRunnerPage() {
                       className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
                         responses[currentQuestion.id] === v
                           ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-slate-700 border-slate-600 text-slate-300 hover:border-slate-500'
+                          : 'bg-slate-700/45 border-slate-600/70 text-slate-300 hover:border-slate-500 hover:bg-slate-700/65'
                       } ${viewOnly ? 'cursor-default opacity-90' : ''}`}
                     >
                       {v}
@@ -378,7 +378,7 @@ export default function TestRunnerPage() {
                 type="button"
                 onClick={handlePrev}
                 disabled={currentIndex === 0}
-                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg text-gray-500 hover:bg-slate-700/40 hover:text-gray-400 disabled:opacity-50"
               >
                 이전
               </button>

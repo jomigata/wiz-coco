@@ -918,7 +918,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className={`absolute inset-x-0 top-0 flex min-h-[112px] items-center justify-center px-2 text-center text-lg leading-snug will-change-[transform,opacity,filter] ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-medium'}`}
+                    className={`absolute inset-x-0 top-0 flex min-h-[112px] items-center justify-center px-3 text-center text-xl leading-relaxed will-change-[transform,opacity,filter] ${uiTheme === 'portal' ? 'text-white font-semibold tracking-tight' : 'text-slate-50 font-semibold'}`}
                   >
                     {selectedQuestions[currentQuestion].text}
                   </motion.h2>
@@ -1055,7 +1055,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               <div className="flex justify-between mt-3">
                 <button
                   onClick={handlePrevQuestion}
-                  className="px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 bg-gray-700/50 text-gray-300 hover:bg-gray-700/70"
+                  className="px-5 py-2 text-sm rounded-lg font-medium transition-all duration-300 bg-gray-800/25 text-gray-500 hover:bg-gray-800/40 hover:text-gray-400"
                 >
                   {currentQuestion === 0 ? '이전 페이지' : '이전 문항'}
                 </button>

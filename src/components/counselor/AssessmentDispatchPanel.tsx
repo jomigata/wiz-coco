@@ -1102,47 +1102,30 @@ export default function AssessmentDispatchPanel({
                 <span className="tabular-nums text-slate-300">{displayData.recipients.length}</span>명
               </p>
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                {entryFrom === 'clients' ? (
-                  <Link
-                    href="/counselor/clients"
-                    className="inline-flex items-center rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/5 sm:text-sm"
-                  >
-                    내담자 목록
-                  </Link>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleDownloadSelected}
-                      disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-                      className="rounded-md bg-emerald-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50 sm:text-sm"
-                    >
-                      다운로드 ({selected.size})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handlePrintSelected}
-                      disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
-                      className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
-                    >
-                      인쇄 ({selected.size})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmAction('delete')}
-                      disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
-                      className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
-                    >
-                      {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
-                    </button>
-                    <Link
-                      href={`/counselor/assessments/deleted-recipients?assessmentId=${encodeURIComponent(assessmentId)}`}
-                      className="inline-flex items-center rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5 sm:text-sm"
-                    >
-                      삭제된 목록
-                    </Link>
-                  </>
-                )}
+                <button
+                  type="button"
+                  onClick={handleDownloadSelected}
+                  disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+                  className="rounded-md bg-emerald-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50 sm:text-sm"
+                >
+                  다운로드 ({selected.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintSelected}
+                  disabled={selected.size === 0 || deleteLoading || remindLoading || resendLoading}
+                  className="rounded-md border border-white/10 bg-[#101f38]/90 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50 sm:text-sm"
+                >
+                  인쇄 ({selected.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction('delete')}
+                  disabled={deleteLoading || selected.size === 0 || remindLoading || resendLoading}
+                  className="rounded-md bg-red-700/90 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50 sm:text-sm"
+                >
+                  {deleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                </button>
               </div>
             </div>
           </>

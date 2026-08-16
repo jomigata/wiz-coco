@@ -24,11 +24,11 @@ export default function AssessmentCreateModal({ open, onClose, onCreated }: Prop
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/70 p-2 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto bg-black/70 p-2 backdrop-blur-sm sm:p-4"
       onClick={onClose}
     >
       <div
-        className="my-2 flex max-h-[96dvh] w-full max-w-[min(96rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl sm:my-4"
+        className="flex max-h-[96dvh] w-full max-w-[min(96rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-[#0f1a2e] to-[#0a1220] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:px-5">

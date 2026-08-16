@@ -33,11 +33,11 @@ const emerald: MbtiProVisualTheme = {
   progressFill: 'bg-emerald-500',
   mainCard: 'bg-emerald-900/50 backdrop-blur-sm rounded-xl shadow-lg p-5 sm:p-6 min-h-[32rem] flex flex-col',
   questionCard:
-    'bg-emerald-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center justify-center min-h-[112px] border border-emerald-700/20',
+    'bg-emerald-800/55 backdrop-blur-sm rounded-xl p-5 flex items-center justify-center min-h-[112px] border border-emerald-600/25 shadow-inner shadow-black/10',
   scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-emerald-900/10 rounded-[100%/20px] -z-10',
   answerBtn:
-    'bg-emerald-800/35 transition-all duration-300 border border-emerald-600/25',
-  answerBtnHover: 'hover:bg-emerald-700/45 hover:translate-y-[-2px]',
+    'bg-emerald-800/18 transition-all duration-300 border border-emerald-600/18',
+  answerBtnHover: 'hover:bg-emerald-700/50 hover:translate-y-[-2px]',
   checkDot: 'bg-emerald-400',
   answerCircle: 'bg-emerald-500/90',
   answerLabel: 'text-emerald-400',
@@ -67,8 +67,8 @@ const portal: MbtiProVisualTheme = {
     'flex w-full items-center justify-center min-h-[112px] px-5 py-5 rounded-xl border-2 border-sky-400/40 bg-gradient-to-b from-[#2a4568] to-[#1e3555] shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.25)]',
   scaleArc: 'absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-sky-400/[0.08] to-transparent rounded-[100%/20px] -z-10',
   answerBtn:
-    'bg-[#1a3352]/70 transition-all duration-300 border border-white/[0.06] shadow-none',
-  answerBtnHover: 'hover:bg-[#234568]/80 hover:border-white/[0.1]',
+    'bg-[#1a3352]/40 transition-all duration-300 border border-white/[0.04] shadow-none',
+  answerBtnHover: 'hover:bg-[#234568]/85 hover:border-white/[0.12]',
   checkDot: 'bg-sky-400/90',
   answerCircle: 'bg-gradient-to-br from-sky-400/95 to-sky-500/90',
   answerLabel: 'text-slate-200/90',

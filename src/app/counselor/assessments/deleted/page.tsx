@@ -14,6 +14,9 @@ import CounselorListSearchInput from '@/components/counselor/CounselorListSearch
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
+import AuthLink from '@/components/auth/AuthLink';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
@@ -172,6 +175,11 @@ export default function DeletedAssessmentsPage() {
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState('');
+  const [actionComplete, setActionComplete] = useState<{
+    title: string;
+    message: string;
+    error?: boolean;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('archivedAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
@@ -311,10 +319,17 @@ export default function DeletedAssessmentsPage() {
     try {
       const result = await restoreArchivedAssessments(Array.from(selected));
       clearCounselorAssessmentsListCache(counselorUid);
-      setMessage(`복구 ${result.restored}건${result.failed ? `, 실패 ${result.failed}건` : ''}`);
+      setActionComplete({
+        title: '복구 완료',
+        message: `복구 ${result.restored}건${result.failed ? `, 실패 ${result.failed}건` : ''}`,
+      });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '복구에 실패했습니다.');
+      setActionComplete({
+        title: '복구 실패',
+        message: err instanceof Error ? err.message : '복구에 실패했습니다.',
+        error: true,
+      });
     } finally {
       setRestoring(false);
     }
@@ -329,10 +344,17 @@ export default function DeletedAssessmentsPage() {
     setMessage('');
     try {
       const result = await permanentlyDeleteArchivedAssessments(Array.from(selected));
-      setMessage(`영구 삭제 ${result.deleted}건${result.failed ? `, 실패 ${result.failed}건` : ''}`);
+      setActionComplete({
+        title: '영구 삭제 완료',
+        message: `영구 삭제 ${result.deleted}건${result.failed ? `, 실패 ${result.failed}건` : ''}`,
+      });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '영구 삭제에 실패했습니다.');
+      setActionComplete({
+        title: '영구 삭제 실패',
+        message: err instanceof Error ? err.message : '영구 삭제에 실패했습니다.',
+        error: true,
+      });
     } finally {
       setDeleting(false);
     }
@@ -352,6 +374,7 @@ export default function DeletedAssessmentsPage() {
       dense
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+          <CounselorListBackLink href="/counselor/assessments" label="상담코드" />
           <span className="shrink-0">
             삭제된 상담코드 총 <span className="font-semibold text-white">{items.length}</span>개 · 응시자{' '}
             <span className="font-semibold text-cyan-300">{totalParticipants}</span>명 · 완료{' '}
@@ -363,6 +386,20 @@ export default function DeletedAssessmentsPage() {
             onChange={setSearchQuery}
             placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
           />
+          <AuthLink
+            href="/counselor/assessments"
+            className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+          >
+            상담코드
+          </AuthLink>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={loading}
+            className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+          >
+            새로고침
+          </button>
         </span>
       }
       toolbar={undefined}
@@ -582,6 +619,13 @@ export default function DeletedAssessmentsPage() {
         open={deleting}
         title="영구 삭제 진행 중…"
         message="선택한 상담코드를 영구 삭제하고 있습니다."
+      />
+      <CounselorActionCompleteModal
+        open={Boolean(actionComplete)}
+        title={actionComplete?.title ?? ''}
+        message={actionComplete?.message}
+        error={actionComplete?.error}
+        onConfirm={() => setActionComplete(null)}
       />
     </CounselorPageSection>
   );

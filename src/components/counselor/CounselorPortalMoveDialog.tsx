@@ -12,6 +12,8 @@ import { formatPortalMoveAssessmentLabel } from '@/lib/counselorAssessmentResult
 import { movePortalsToAssessment } from '@/lib/clientPortalApi';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { pushWithAuthSession } from '@/utils/authSessionLifecycle';
+import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 
 export type PortalMoveSummary = {
   portalId: string;
@@ -43,6 +45,9 @@ export default function CounselorPortalMoveDialog({
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [moveComplete, setMoveComplete] = useState<{ message: string; error?: boolean } | null>(
+    null,
+  );
   const [options, setOptions] = useState<CounselorAssessment[]>([]);
 
   const loadOptions = useCallback(async () => {
@@ -74,7 +79,17 @@ export default function CounselorPortalMoveDialog({
     void loadOptions();
   }, [open, loadOptions]);
 
-  if (!open) return null;
+  const handleMoveCompleteConfirm = () => {
+    const hadError = moveComplete?.error;
+    setMoveComplete(null);
+    if (hadError) return;
+    onClose();
+    onSuccess?.();
+    pushWithAuthSession(router, '/counselor/assessments?moved=1');
+    router.refresh();
+  };
+
+  if (!open && !moveComplete) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,12 +126,14 @@ export default function CounselorPortalMoveDialog({
         targetCohortName: target?.cohortName,
         recipients,
       });
-      onClose();
-      onSuccess?.();
-      pushWithAuthSession(router, '/counselor/assessments?moved=1');
-      router.refresh();
+      setMoveComplete({
+        message: `이동 ${result.moved}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '상담코드 이동에 실패했습니다.');
+      setMoveComplete({
+        message: err instanceof Error ? err.message : '상담코드 이동에 실패했습니다.',
+        error: true,
+      });
     } finally {
       setBusy(false);
     }
@@ -184,6 +201,20 @@ export default function CounselorPortalMoveDialog({
           </button>
         </div>
       </form>
+      <CounselorActionProgressOverlay
+        open={busy}
+        zIndexClass="z-[60]"
+        title="이동 진행 중…"
+        message={`선택 ${portalIds.length}명을 다른 상담코드로 이동하고 있습니다.`}
+      />
+      <CounselorActionCompleteModal
+        open={Boolean(moveComplete)}
+        title={moveComplete?.error ? '이동 실패' : '이동 완료'}
+        message={moveComplete?.message}
+        error={moveComplete?.error}
+        onConfirm={handleMoveCompleteConfirm}
+        zIndexClass="z-[70]"
+      />
     </div>
   );
 }

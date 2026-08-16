@@ -36,6 +36,12 @@ def _format_assessment_group_title(cohort_name: str = "", assessment_title: str 
         return org
     return f"{org} / {title}"
 
+def _format_email_header_display(group_title: str = "") -> str:
+    brand = (group_title or "").strip()
+    if not brand:
+        return "✨ WIZCOCO ✨"
+    return f"📋 {brand} 📋"
+
 
 def _portal_access_intro(welcome_message: str = "") -> str:
     custom = (welcome_message or "").strip()
@@ -84,7 +90,7 @@ def _portal_access_html_email(
           </table>
         </td></tr>"""
 
-    header_brand = (group_title or "").strip() or "WIZCOCO"
+    header_brand = _format_email_header_display(group_title)
 
     return f"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -268,7 +274,7 @@ def send_portal_credentials_email(
     magic_expiry_label = _magic_link_expiry_label()
     intro = _portal_access_intro(welcome_message)
     group_title = _format_assessment_group_title(cohort_name, assessment_title)
-    header_label = group_title or "WizCoCo"
+    header_label = _format_email_header_display(group_title)
 
     body = f"""{header_label}
 

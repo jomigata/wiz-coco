@@ -18,6 +18,11 @@ export type AssessmentListNestedNavItem = {
   isActive: (path: string) => boolean;
 };
 
+/** 상담코드·내담자 메뉴 선택 시 항상 표시되는 고정 소분류 */
+export type CounselorParentSubmenuItem = AssessmentListNestedNavItem;
+
+const ASSESSMENTS_NEW_HREF = '/counselor/assessments/new';
+
 const ASSESSMENT_CONTEXT_KEY = 'counselorAssessmentContextId';
 const PROGRESS_FROM_KEY = 'counselorProgressFrom';
 const ASSESSMENT_LIST_HREF = '/counselor/assessments';
@@ -130,20 +135,6 @@ export function getAssessmentListContextNestedItems(
     });
   }
 
-  if (
-    path.startsWith('/counselor/assessments/deleted') &&
-    !path.startsWith('/counselor/assessments/deleted-recipients')
-  ) {
-    items.push({
-      order: 3,
-      label: '삭제된 상담코드',
-      href: DELETED_ASSESSMENTS_HREF,
-      isActive: (p) =>
-        p.startsWith('/counselor/assessments/deleted') &&
-        !p.startsWith('/counselor/assessments/deleted-recipients'),
-    });
-  }
-
   return items;
 }
 
@@ -154,20 +145,6 @@ export function getClientsListContextNestedItems(
 ): AssessmentListNestedNavItem[] {
   const path = normalizeCounselorPath(pathname);
   const items: AssessmentListNestedNavItem[] = [];
-
-  if (path.startsWith('/counselor/assessments/deleted-recipients')) {
-    const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
-    const filterAssessmentId = (params.get('assessmentId') || '').trim();
-    const href = filterAssessmentId
-      ? `${DELETED_RECIPIENTS_HREF}?assessmentId=${encodeURIComponent(filterAssessmentId)}`
-      : DELETED_RECIPIENTS_HREF;
-    items.push({
-      order: 2,
-      label: '삭제된 내담자',
-      href,
-      isActive: (p) => p.startsWith('/counselor/assessments/deleted-recipients'),
-    });
-  }
 
   if (path.startsWith('/counselor/assessments/progress') && resolveCounselorProgressFrom(pathname, search) === 'clients') {
     const assessmentId = resolveAssessmentContextId(pathname, search);
@@ -180,6 +157,59 @@ export function getClientsListContextNestedItems(
   }
 
   return items;
+}
+
+/** 내담자 메뉴가 활성(선택) 상태인지 */
+export function isClientsMenuSelected(pathname: string, search: string): boolean {
+  const path = normalizeCounselorPath(pathname);
+  if (path === CLIENTS_LIST_HREF) return true;
+  if (path.startsWith('/counselor/assessments/deleted-recipients')) return true;
+  if (
+    path.startsWith('/counselor/assessments/progress') &&
+    resolveCounselorProgressFrom(pathname, search) === 'clients'
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** 상담코드 메뉴가 활성(선택) 상태인지 — 내담자 전용 화면은 제외 */
+export function isAssessmentsMenuSelected(pathname: string, search: string): boolean {
+  if (isClientsMenuSelected(pathname, search)) return false;
+  const path = normalizeCounselorPath(pathname);
+  return path.startsWith('/counselor/assessments');
+}
+
+/** 상담코드 메뉴 선택 시 고정 소분류 */
+export function getAssessmentsParentSubmenuItems(): CounselorParentSubmenuItem[] {
+  return [
+    {
+      order: 1,
+      label: '상담코드 생성',
+      href: ASSESSMENTS_NEW_HREF,
+      isActive: (p) => p.startsWith(ASSESSMENTS_NEW_HREF),
+    },
+    {
+      order: 2,
+      label: '삭제된 상담코드',
+      href: DELETED_ASSESSMENTS_HREF,
+      isActive: (p) =>
+        p.startsWith('/counselor/assessments/deleted') &&
+        !p.startsWith('/counselor/assessments/deleted-recipients'),
+    },
+  ];
+}
+
+/** 내담자 메뉴 선택 시 고정 소분류 */
+export function getClientsParentSubmenuItems(): CounselorParentSubmenuItem[] {
+  return [
+    {
+      order: 1,
+      label: '삭제된 내담자',
+      href: DELETED_RECIPIENTS_HREF,
+      isActive: (p) => p.startsWith('/counselor/assessments/deleted-recipients'),
+    },
+  ];
 }
 
 export function resolveActiveNestedNavItem(

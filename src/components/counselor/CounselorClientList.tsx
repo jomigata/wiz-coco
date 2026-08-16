@@ -29,6 +29,8 @@ import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
+import CounselorListBackLink from '@/components/counselor/CounselorListBackLink';
 import { listAssessments, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import {
   archiveDispatchRecipients,
@@ -501,6 +503,11 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const [restoring, setRestoring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [clientDeleteLoading, setClientDeleteLoading] = useState(false);
+  const [actionComplete, setActionComplete] = useState<{
+    title: string;
+    message: string;
+    error?: boolean;
+  } | null>(null);
   const { pageSize, setPageSize } = useCounselorListPageSize();
 
   const cacheKey = useMemo(
@@ -770,10 +777,17 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     try {
       const result = await restoreArchivedDispatchRecipients(Array.from(selected));
       clearCounselorAssessmentsListCache(user?.uid);
-      setMessage(`복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
+      setActionComplete({
+        title: '복구 완료',
+        message: `복구 ${result.restored}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
+      });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '복구에 실패했습니다.');
+      setActionComplete({
+        title: '복구 실패',
+        message: err instanceof Error ? err.message : '복구에 실패했습니다.',
+        error: true,
+      });
     } finally {
       setRestoring(false);
     }
@@ -788,10 +802,17 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     setMessage('');
     try {
       const result = await permanentlyDeleteArchivedDispatchRecipients(Array.from(selected));
-      setMessage(`영구 삭제 ${result.deleted}명${result.failed ? `, 실패 ${result.failed}명` : ''}`);
+      setActionComplete({
+        title: '영구 삭제 완료',
+        message: `영구 삭제 ${result.deleted}명${result.failed ? `, 실패 ${result.failed}명` : ''}`,
+      });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '영구 삭제에 실패했습니다.');
+      setActionComplete({
+        title: '영구 삭제 실패',
+        message: err instanceof Error ? err.message : '영구 삭제에 실패했습니다.',
+        error: true,
+      });
     } finally {
       setDeleting(false);
     }
@@ -839,10 +860,17 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
       }
       clearCounselorAssessmentsListCache(user?.uid);
       setSelected(new Set());
-      setMessage(`삭제 ${archived}명${failed ? `, 실패 ${failed}명` : ''}`);
+      setActionComplete({
+        title: '삭제 완료',
+        message: `삭제 ${archived}명${failed ? `, 실패 ${failed}명` : ''}`,
+      });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+      setActionComplete({
+        title: '삭제 실패',
+        message: err instanceof Error ? err.message : '삭제에 실패했습니다.',
+        error: true,
+      });
     } finally {
       setClientDeleteLoading(false);
     }
@@ -872,6 +900,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
       noBodyPadding
       description={
         <span className="inline-flex w-full flex-wrap items-center gap-x-3 gap-y-2">
+          {deletedMode ? (
+            <CounselorListBackLink href="/counselor/clients" label="내담자" />
+          ) : null}
           <span className="shrink-0">
             전체 <span className="font-semibold text-white">{stats.total}</span>명 · 진행 중{' '}
             <span className="font-semibold text-sky-300">{stats.inProgress}</span>명 · 완료{' '}
@@ -892,7 +923,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                 href="/counselor/clients"
                 className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
               >
-                내담자 목록
+                내담자
               </AuthLink>
               <button
                 type="button"
@@ -1055,9 +1086,12 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     const phoneFull = item.phone?.trim()
                       ? formatPhoneDisplayOr(item.phone)
                       : undefined;
-                    const infoPrimary = primaryAssessment
-                      ? `${primaryAssessment.orgName || item.cohortName || '—'} / ${formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')}`
+                    const infoOrg = primaryAssessment
+                      ? primaryAssessment.orgName || item.cohortName || '—'
                       : item.cohortName || '—';
+                    const infoCode = primaryAssessment
+                      ? formatAccessCodeDisplay(primaryAssessment.joinAccessCode || '')
+                      : '—';
                     const infoSecondary = primaryAssessment?.title || '—';
                     const usageEnd = primaryUsageEndDate(item, usageEndMap);
                     const dispatchView = dispatchStatusDisplay({
@@ -1114,7 +1148,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                         >
                           {primaryAssessment ? (
                             <CounselorSlashInfoCell
-                              primary={infoPrimary}
+                              primary={infoOrg}
+                              mid={infoCode}
+                              midClassName="font-normal text-slate-500"
                               secondary={infoSecondary}
                               hoverTypeLabel={counselingCodeTypeLabel(primaryAssessment.codeCategory)}
                               hoverAccessCode={formatAccessCodeDisplay(
@@ -1254,6 +1290,13 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
           message={`선택 ${selected.size}명을 삭제하고 있습니다.`}
         />
       )}
+      <CounselorActionCompleteModal
+        open={Boolean(actionComplete)}
+        title={actionComplete?.title ?? ''}
+        message={actionComplete?.message}
+        error={actionComplete?.error}
+        onConfirm={() => setActionComplete(null)}
+      />
     </CounselorPageSection>
   );
 }

@@ -15,6 +15,10 @@ type Props = {
   normalWeight?: boolean;
   /** true이면 secondary(두 번째 값)만 보통 굵기 */
   normalSecondary?: boolean;
+  /** 가운데 값 (예: 상담코드) — primary / mid / secondary 3단 표시 */
+  mid?: string;
+  /** mid 글자색 클래스 (기본: text-slate-500) */
+  midClassName?: string;
   className?: string;
   onClick?: () => void;
 };
@@ -29,11 +33,13 @@ export default function CounselorSlashInfoCell({
   showTooltip = true,
   normalWeight = false,
   normalSecondary = false,
+  mid,
+  midClassName = 'text-slate-500',
   className = '',
   onClick,
 }: Props) {
   const [hover, setHover] = useState(false);
-  const line = `${primary} / ${secondary}`;
+  const line = mid ? `${primary} / ${mid} / ${secondary}` : `${primary} / ${secondary}`;
   const tooltipVisible =
     showTooltip && hover && (hoverTypeLabel || hoverAccessCode || hoverExtra);
 
@@ -47,6 +53,12 @@ export default function CounselorSlashInfoCell({
       <span className="block max-w-full truncate">
         <span className={`${normalWeight ? 'font-normal' : 'font-medium'} text-white`}>{primary || '—'}</span>
         <span className="text-slate-300"> / </span>
+        {mid !== undefined ? (
+          <>
+            <span className={`${normalWeight ? 'font-normal' : ''} ${midClassName}`}>{mid || '—'}</span>
+            <span className="text-slate-300"> / </span>
+          </>
+        ) : null}
         <span className={`${normalWeight || normalSecondary ? 'font-normal' : ''} text-slate-200`}>{secondary || '—'}</span>
       </span>
       {tooltipVisible ? (
