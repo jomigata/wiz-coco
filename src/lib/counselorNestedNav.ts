@@ -190,6 +190,12 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
 export function getAssessmentsParentSubmenuItems(): CounselorParentSubmenuItem[] {
   return [
     {
+      order: 0,
+      label: '상담코드 목록',
+      href: ASSESSMENT_LIST_HREF,
+      isActive: (p) => p === ASSESSMENT_LIST_HREF,
+    },
+    {
       order: 1,
       label: '상담코드 생성',
       href: ASSESSMENTS_NEW_HREF,
@@ -209,6 +215,12 @@ export function getAssessmentsParentSubmenuItems(): CounselorParentSubmenuItem[]
 /** 내담자 메뉴 선택 시 고정 소분류 */
 export function getClientsParentSubmenuItems(): CounselorParentSubmenuItem[] {
   return [
+    {
+      order: 0,
+      label: '내담자 목록',
+      href: CLIENTS_LIST_HREF,
+      isActive: (p) => p === CLIENTS_LIST_HREF,
+    },
     {
       order: 1,
       label: '삭제된 내담자',
