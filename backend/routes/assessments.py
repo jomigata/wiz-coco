@@ -263,6 +263,11 @@ def list_assessments():
         _strip_join_secrets_for_counselor_api(x)
         x.pop(LIST_STATS_FIELD, None)
 
+    if scoped_uid is None:
+        from utils.counselor_emails import attach_counselor_emails
+
+        attach_counselor_emails(db, items)
+
     return jsonify(
         {
             "assessments": items,
@@ -486,6 +491,10 @@ def list_archived_assessments_route():
     db = get_firestore()
     scoped_uid = scope_counselor_uid()
     items = list_archived_assessments(db, counselor_uid=scoped_uid)
+    if scoped_uid is None:
+        from utils.counselor_emails import attach_counselor_emails
+
+        attach_counselor_emails(db, items)
     return jsonify({"assessments": items})
 
 

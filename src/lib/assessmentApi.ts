@@ -408,6 +408,8 @@ export interface CounselorAssessment {
   cohortName?: string;
   /** 상담코드 유형: individual | group | school | corporate | community | other */
   codeCategory?: string;
+  /** 관리자 목록 — 상담사 이메일 */
+  counselorEmail?: string;
 }
 
 /** 상담(코드) 발급 직후 목록 상단 배너용(세션에서 전달) */
@@ -577,6 +579,8 @@ export type ArchivedAssessment = {
   dispatchFailedCount?: number;
   testCompleteCount?: number;
   testIncompleteCount?: number;
+  counselorId?: string;
+  counselorEmail?: string;
 };
 
 export async function listArchivedAssessments(): Promise<{ assessments: ArchivedAssessment[] }> {

@@ -55,6 +55,7 @@ import {
 import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
+import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
 type SortDirection = 'asc' | 'desc';
@@ -762,6 +763,7 @@ export default function AssessmentList({
                     className="whitespace-nowrap text-center"
                   />
                   <th scope="col" className={`${counselorListThClass} text-center`}>기타</th>
+                  {adminUser ? <CounselorAdminEmailTh /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -846,6 +848,7 @@ export default function AssessmentList({
                           </button>
                         </div>
                       </td>
+                      {adminUser ? <CounselorAdminEmailTd email={a.counselorEmail} /> : null}
                     </tr>
                   );
                 })}

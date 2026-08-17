@@ -53,6 +53,8 @@ import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } fro
 import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
+import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   buildClientPortalsCacheKey,
@@ -476,6 +478,8 @@ function mapArchivedToClientItem(row: ArchivedDispatchRecipient): CounselorClien
     notifyAt: row.archivedAt,
     createdAt: row.archivedAt,
     counselorTags: [],
+    counselorId: row.counselorId,
+    counselorEmail: row.counselorEmail,
     progress: {
       label,
       percent,
@@ -493,6 +497,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, authPending, showLoginRequired, isAuthenticated } = useAuthResolved();
+  const adminUser = isAdmin(getAppRoleSync());
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1082,6 +1087,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
+                    {adminUser ? <CounselorAdminEmailTh /> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -1222,6 +1228,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                         >
                           {formatUsageEndDate(usageEnd)}
                         </td>
+                        {adminUser ? <CounselorAdminEmailTd email={item.counselorEmail} /> : null}
                       </tr>
                     );
                   })}

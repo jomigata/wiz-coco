@@ -202,6 +202,10 @@ def list_counselor_portals():
         q=q,
         filter_counselor_id=filter_counselor_id if not scoped else None,
     )
+    if scoped is None and result.get("items"):
+        from utils.counselor_emails import attach_counselor_emails
+
+        attach_counselor_emails(db, result["items"])
     return jsonify(result)
 
 
@@ -1008,7 +1012,12 @@ def list_archived():
     """삭제(archived)된 내담자 포털 목록."""
     assessment_id = (request.args.get("assessmentId") or "").strip() or None
     db = get_firestore()
-    items = list_archived_portals(db, counselor_uid=scope_counselor_uid(), assessment_id=assessment_id)
+    scoped = scope_counselor_uid()
+    items = list_archived_portals(db, counselor_uid=scoped, assessment_id=assessment_id)
+    if scoped is None:
+        from utils.counselor_emails import attach_counselor_emails
+
+        attach_counselor_emails(db, items)
     return jsonify({"items": items})
 
 
@@ -1023,7 +1032,7 @@ def restore_archived():
     db = get_firestore()
     result = restore_archived_portals(
         db,
-        counselor_uid=g.counselor_uid,
+        counselor_uid=scope_counselor_uid(),
         portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
     )
     return jsonify(result)
@@ -1042,7 +1051,7 @@ def permanent_delete_archived():
     db = get_firestore()
     result = permanently_delete_archived_portals(
         db,
-        counselor_uid=g.counselor_uid,
+        counselor_uid=scope_counselor_uid(),
         portal_ids=[str(x).strip() for x in portal_ids if str(x).strip()],
     )
     return jsonify(result)

@@ -1138,6 +1138,7 @@ def _build_assessment_recipient_item(
         "displayName": pdata.get("displayName") or "",
         "email": email,
         "phone": phone,
+        "counselorId": pdata.get("counselorId") or "",
         "myCode": pdata.get("accessCode") or "",
         "joinAccessCode": join_code,
         "assessmentId": from_aid,

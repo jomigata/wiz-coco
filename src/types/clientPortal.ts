@@ -116,6 +116,8 @@ export type CounselorClientPortalListItem = {
   lastLoginAt?: string | null;
   createdAt?: string | null;
   counselorTags?: string[];
+  counselorId?: string;
+  counselorEmail?: string;
   progress: {
     totalTests: number;
     completedTests: number;

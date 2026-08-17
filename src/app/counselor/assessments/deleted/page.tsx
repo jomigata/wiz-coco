@@ -45,6 +45,8 @@ import {
   type ArchivedAssessment,
 } from '@/lib/assessmentApi';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
+import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt';
 type SortDirection = 'asc' | 'desc';
@@ -228,6 +230,7 @@ function SortableColumnHeader({
 
 export default function DeletedAssessmentsPage() {
   const { user, authPending, isAuthenticated, showLoginRequired } = useAuthResolved();
+  const adminUser = isAdmin(getAppRoleSync());
   const counselorUid = user?.uid;
   const [items, setItems] = useState<ArchivedAssessment[]>(
     () => (counselorUid ? readCachedArchivedAssessments<ArchivedAssessment>(counselorUid) : []) ?? [],
@@ -520,6 +523,7 @@ export default function DeletedAssessmentsPage() {
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
+                    {adminUser ? <CounselorAdminEmailTh /> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -573,6 +577,7 @@ export default function DeletedAssessmentsPage() {
                         >
                           {formatUsageEndDate(row.usageEndDate)}
                         </td>
+                        {adminUser ? <CounselorAdminEmailTd email={row.counselorEmail} /> : null}
                       </tr>
                     );
                   })}

@@ -14,6 +14,45 @@ def _matches_counselor_scope(resource_counselor_id: str | None, scoped_uid: str 
     return (resource_counselor_id or "").strip() == scoped_uid.strip()
 
 
+def _permanently_delete_assessment_linked_portals(
+    db, *, assessment_id: str, owner_counselor_id: str | None
+) -> int:
+    """상담코드 영구삭제 시 assessment_deleted 로 archived 된 연결 내담자도 영구삭제."""
+    aid = (assessment_id or "").strip()
+    if not aid:
+        return 0
+    owner = (owner_counselor_id or "").strip()
+    if owner:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("counselorId", "==", owner)
+            .where("status", "==", "archived")
+            .stream()
+        )
+    else:
+        refs = (
+            db.collection(CLIENT_PORTALS_COLLECTION)
+            .where("status", "==", "archived")
+            .stream()
+        )
+    deleted = 0
+    for doc in refs:
+        pdata = doc.to_dict() or {}
+        if (pdata.get("archivedReason") or "") != "assessment_deleted":
+            continue
+        from_aid = (pdata.get("archivedFromAssessmentId") or "").strip()
+        if from_aid != aid:
+            continue
+        doc.reference.update(
+            {
+                "status": "permanently_deleted",
+                "permanentlyDeletedAt": SERVER_TIMESTAMP,
+            }
+        )
+        deleted += 1
+    return deleted
+
+
 def list_archived_assessments(db, *, counselor_uid: str | None) -> list[dict]:
     from utils.assessment_dispatch import aggregate_archived_assessment_list_stats
 
@@ -36,6 +75,7 @@ def list_archived_assessments(db, *, counselor_uid: str | None) -> list[dict]:
                 "targetAudience": data.get("targetAudience") or "",
                 "cohortName": data.get("cohortName") or "",
                 "usageEndDate": data.get("usageEndDate") or "",
+                "counselorId": data.get("counselorId") or "",
                 "createdAt": _iso_timestamp(data.get("createdAt")),
                 "archivedAt": _iso_timestamp(data.get("archivedAt")),
                 "testList": data.get("testList") or [],
@@ -196,14 +236,26 @@ def permanently_delete_archived_assessments(
             failed += 1
             details.append({"assessmentId": aid, "status": "failed", "message": "not_archived"})
             continue
+        owner_uid = (data.get("counselorId") or "").strip()
         ref.update(
             {
                 "status": "permanently_deleted",
                 "permanentlyDeletedAt": SERVER_TIMESTAMP,
             }
         )
+        cascaded = _permanently_delete_assessment_linked_portals(
+            db,
+            assessment_id=aid,
+            owner_counselor_id=owner_uid or None,
+        )
         deleted += 1
-        details.append({"assessmentId": aid, "status": "permanently_deleted"})
+        details.append(
+            {
+                "assessmentId": aid,
+                "status": "permanently_deleted",
+                "cascadedPortals": cascaded,
+            }
+        )
     return {"deleted": deleted, "failed": failed, "details": details}
 
 
@@ -346,6 +398,10 @@ def list_permanently_deleted_records(db) -> dict:
     ]
     assessments.sort(key=lambda x: x.get("permanentlyDeletedAt") or "", reverse=True)
     portals.sort(key=lambda x: x.get("permanentlyDeletedAt") or "", reverse=True)
+    from utils.counselor_emails import attach_counselor_emails
+
+    attach_counselor_emails(db, assessments)
+    attach_counselor_emails(db, portals)
     return {"assessments": assessments, "portals": portals}
 
 

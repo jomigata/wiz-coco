@@ -443,6 +443,8 @@ export type ArchivedDispatchRecipient = {
   archivedAt: string | null;
   archivedReason?: string;
   assessmentArchived?: boolean;
+  counselorId?: string;
+  counselorEmail?: string;
   notifyStatus?: string;
   notifyError?: string | null;
   notifyAt?: string | null;

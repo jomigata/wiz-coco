@@ -29,6 +29,9 @@ const ASSESSMENT_LIST_HREF = '/counselor/assessments';
 const CLIENTS_LIST_HREF = '/counselor/clients';
 export const DELETED_ASSESSMENTS_HREF = '/counselor/assessments/deleted';
 export const DELETED_RECIPIENTS_HREF = '/counselor/assessments/deleted-recipients';
+export const PERMANENTLY_DELETED_ASSESSMENTS_HREF = '/counselor/assessments/permanently-deleted';
+export const PERMANENTLY_DELETED_RECIPIENTS_HREF =
+  '/counselor/assessments/permanently-deleted-recipients';
 const PARENT_SUBCATEGORY = '1a. 상담코드.내담자';
 
 export const counselorNestedNavItems: CounselorNestedNavItem[] = [];
@@ -170,6 +173,7 @@ export function isClientsMenuSelected(pathname: string, search: string): boolean
   const path = normalizeCounselorPath(pathname);
   if (path === CLIENTS_LIST_HREF) return true;
   if (path.startsWith('/counselor/assessments/deleted-recipients')) return true;
+  if (path.startsWith(PERMANENTLY_DELETED_RECIPIENTS_HREF)) return true;
   if (
     path.startsWith('/counselor/assessments/progress') &&
     resolveCounselorProgressFrom(pathname, search) === 'clients'
@@ -187,8 +191,8 @@ export function isAssessmentsMenuSelected(pathname: string, search: string): boo
 }
 
 /** 상담코드 메뉴 선택 시 고정 소분류 */
-export function getAssessmentsParentSubmenuItems(): CounselorParentSubmenuItem[] {
-  return [
+export function getAssessmentsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
+  const items: CounselorParentSubmenuItem[] = [
     {
       order: 0,
       label: '상담코드 목록',
@@ -207,14 +211,25 @@ export function getAssessmentsParentSubmenuItems(): CounselorParentSubmenuItem[]
       href: DELETED_ASSESSMENTS_HREF,
       isActive: (p) =>
         p.startsWith('/counselor/assessments/deleted') &&
-        !p.startsWith('/counselor/assessments/deleted-recipients'),
+        !p.startsWith('/counselor/assessments/deleted-recipients') &&
+        !p.startsWith('/counselor/assessments/permanently-deleted-recipients') &&
+        !p.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF),
     },
   ];
+  if (options?.admin) {
+    items.push({
+      order: 60,
+      label: '영구삭제 상담코드',
+      href: PERMANENTLY_DELETED_ASSESSMENTS_HREF,
+      isActive: (p) => p.startsWith(PERMANENTLY_DELETED_ASSESSMENTS_HREF),
+    });
+  }
+  return items;
 }
 
 /** 내담자 메뉴 선택 시 고정 소분류 */
-export function getClientsParentSubmenuItems(): CounselorParentSubmenuItem[] {
-  return [
+export function getClientsParentSubmenuItems(options?: { admin?: boolean }): CounselorParentSubmenuItem[] {
+  const items: CounselorParentSubmenuItem[] = [
     {
       order: 0,
       label: '내담자 목록',
@@ -228,6 +243,15 @@ export function getClientsParentSubmenuItems(): CounselorParentSubmenuItem[] {
       isActive: (p) => p.startsWith('/counselor/assessments/deleted-recipients'),
     },
   ];
+  if (options?.admin) {
+    items.push({
+      order: 60,
+      label: '영구삭제 내담자',
+      href: PERMANENTLY_DELETED_RECIPIENTS_HREF,
+      isActive: (p) => p.startsWith('/counselor/assessments/permanently-deleted-recipients'),
+    });
+  }
+  return items;
 }
 
 export function resolveActiveNestedNavItem(

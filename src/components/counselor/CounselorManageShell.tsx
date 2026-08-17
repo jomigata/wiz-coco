@@ -14,6 +14,7 @@ import {
   resolveActiveNestedNavItem,
 } from '@/lib/counselorNestedNav';
 import { clearAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
+import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 import {
   COUNSELOR_PSYCH_TESTS_SLUG,
   isMenuItemActive,
@@ -31,6 +32,7 @@ export default function CounselorManageShell({ children }: Props) {
   const search = searchParams.toString() ? `?${searchParams.toString()}` : '';
   const activeCategorySlug = resolveCounselorCategorySlugForPath(pathname);
   const activeNested = resolveActiveNestedNavItem(pathname, search);
+  const adminUser = isAdmin(getAppRoleSync());
 
   const [expandedSlug, setExpandedSlug] = useState<string>(() =>
     activeCategorySlug || COUNSELOR_PSYCH_TESTS_SLUG,
@@ -120,9 +122,9 @@ export default function CounselorManageShell({ children }: Props) {
                                     : [];
                               const parentSubmenu =
                                 normalizedItemHref === '/counselor/assessments'
-                                  ? getAssessmentsParentSubmenuItems()
+                                  ? getAssessmentsParentSubmenuItems({ admin: adminUser })
                                   : normalizedItemHref === '/counselor/clients'
-                                    ? getClientsParentSubmenuItems()
+                                    ? getClientsParentSubmenuItems({ admin: adminUser })
                                     : [];
                               const seenNestedLabels = new Set<string>();
                               const assessmentNested = [...parentSubmenu, ...contextNested]

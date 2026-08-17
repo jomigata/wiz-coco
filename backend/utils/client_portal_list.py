@@ -212,6 +212,7 @@ def list_counselor_client_portals(
                 "email": email or None,
                 "phone": phone or None,
                 "accessCode": pdata.get("accessCode") or "",
+                "counselorId": pdata.get("counselorId") or "",
                 "cohortId": cid or None,
                 "cohortName": cname or None,
                 "status": pdata.get("status") or "active",

@@ -30,6 +30,7 @@ export type PermanentlyDeletedAssessment = {
   counselorId: string;
   targetAudience: string;
   cohortName: string;
+  counselorEmail?: string;
   permanentlyDeletedAt: string | null;
 };
 
@@ -40,6 +41,7 @@ export type PermanentlyDeletedPortal = {
   phone: string;
   myCode: string;
   counselorId: string;
+  counselorEmail?: string;
   assessmentId: string;
   permanentlyDeletedAt: string | null;
 };
