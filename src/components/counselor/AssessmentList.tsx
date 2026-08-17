@@ -315,22 +315,20 @@ export default function AssessmentList({
     };
   }, [user?.uid, adminUser, searchQuery]);
 
-  const clientSearchByAssessment = useMemo(() => {
-    const map = new Map<string, string>();
+  const clientSearchFieldsByAssessment = useMemo(() => {
+    const map = new Map<string, string[]>();
     for (const item of clientItems) {
-      const hay = [
+      const fields = [
         item.displayName || '',
         item.email || '',
         item.phone || '',
         item.accessCode || '',
         item.cohortName || '',
         ...(item.counselorTags || []),
-      ]
-        .join(' ')
-        .toLowerCase();
+      ];
       for (const assessment of item.assessments) {
-        const prev = map.get(assessment.assessmentId) || '';
-        map.set(assessment.assessmentId, `${prev} ${hay}`.trim());
+        const prev = map.get(assessment.assessmentId) || [];
+        map.set(assessment.assessmentId, [...prev, ...fields]);
       }
     }
     return map;
@@ -500,20 +498,20 @@ export default function AssessmentList({
     return listItems.filter((a) =>
       matchesWildcardFields(
         [
-          a.title || '',
-          a.accessCode || '',
           a.cohortName || '',
+          a.accessCode || '',
+          a.title || '',
           a.welcomeMessage || '',
           counselingCodeTypeLabel(a.codeCategory),
           a.targetAudience || '',
-          getAssessmentOrgLabel(a),
-          ...(a.testList || []).map((t) => `${t.name} ${t.testId}`),
-          clientSearchByAssessment.get(a.id) || '',
+          ...(a.testList || []).map((t) => t.name),
+          ...(a.testList || []).map((t) => t.testId),
+          ...(clientSearchFieldsByAssessment.get(a.id) || []),
         ],
         q,
       ),
     );
-  }, [listItems, searchQuery, clientSearchByAssessment]);
+  }, [listItems, searchQuery, clientSearchFieldsByAssessment]);
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];

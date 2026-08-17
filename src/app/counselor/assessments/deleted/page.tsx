@@ -288,11 +288,12 @@ export default function DeletedAssessmentsPage() {
     return items.filter((a) =>
       matchesWildcardFields(
         [
+          a.cohortName || '',
           a.title || '',
           a.accessCode || '',
+          formatAccessCodeDisplay(a.accessCode),
           counselingCodeTypeLabel(a.codeCategory),
           a.targetAudience || '',
-          getAssessmentOrgLabel(a),
         ],
         q,
       ),

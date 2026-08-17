@@ -663,10 +663,18 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
           item.email || '',
           item.phone || '',
           item.accessCode || '',
-          item.cohortName || '',
+          counselOrgLabel(item),
+          counselJoinCodeLabel(item),
+          formatAccessCodeDisplay(counselJoinCodeLabel(item)),
+          counselTitleLabel(item),
           ...(item.counselorTags || []),
-          ...item.assessments.map((a) => `${a.title} ${a.orgName || ''} ${a.joinAccessCode || ''}`),
           counselingCodeTypeLabel(item.assessments[0]?.codeCategory),
+          ...item.assessments.flatMap((a) => [
+            a.orgName || '',
+            a.title || '',
+            a.joinAccessCode || '',
+            formatAccessCodeDisplay(a.joinAccessCode || ''),
+          ]),
         ],
         q,
       ),
@@ -963,7 +971,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
         {loading && displayItems.length === 0 ? (
           <p className="py-12 text-center text-sm text-slate-500">
-            {deletedMode ? '삭제된 내담자 목록을 불러오는 중…' : '내담자 목록을 불러오는 중…'}
+            {deletedMode ? '불러오는 중…' : '내담자 목록을 불러오는 중…'}
           </p>
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
@@ -1118,16 +1126,35 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                           {startIndex + idx + 1}
                         </td>
                         <td className={`${counselorListTdClass} text-center`}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleOne(item.portalId)}
-                            disabled={locked}
-                            className="rounded accent-blue-500 disabled:opacity-40"
-                            aria-label={`${item.displayName || '내담자'} 선택`}
-                            title={locked && deletedMode ? '삭제된 상담코드' : undefined}
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                          {locked && deletedMode ? (
+                            <span className="group/check relative inline-flex">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleOne(item.portalId)}
+                                disabled={locked}
+                                className="rounded accent-blue-500 disabled:opacity-40"
+                                aria-label={`${item.displayName || '내담자'} 선택`}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span
+                                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 opacity-0 shadow-md transition-none group-hover/check:opacity-100"
+                                role="tooltip"
+                              >
+                                삭제된 상담코드
+                              </span>
+                            </span>
+                          ) : (
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleOne(item.portalId)}
+                              disabled={locked}
+                              className="rounded accent-blue-500 disabled:opacity-40"
+                              aria-label={`${item.displayName || '내담자'} 선택`}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          )}
                         </td>
                         <td
                           className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} text-slate-200`}
