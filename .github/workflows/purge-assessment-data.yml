@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type PURGE to delete all assessment codes and client test records'
+        description: 'Type PURGE to delete all assessment, test, and counseling content'
         required: true
         type: string
       dry_run:

@@ -1,9 +1,11 @@
-"""상담(코드)(assessments) 및 관련 내담자 검사 데이터 일괄 삭제."""
+"""상담(코드)(assessments) 및 회원·비회원 검사·상담 관련 Firestore 데이터 일괄 삭제."""
 from __future__ import annotations
 
 from config import (
     AI_REPORTS_COLLECTION,
+    AI_USAGE_LEDGER_COLLECTION,
     ASSESSMENTS_COLLECTION,
+    B2C_ENTITLEMENTS_COLLECTION,
     BULK_PORTAL_JOBS_COLLECTION,
     CARE_ASSIGNMENTS_COLLECTION,
     CARE_PROGRESS_COLLECTION,
@@ -19,6 +21,23 @@ from utils.my_code import reset_my_code_generation_meta
 BATCH_SIZE = 400
 LEGACY_TEST_RESULTS_COLLECTION = "test_results"
 BULK_JOB_CREATED_ROWS = "createdRows"
+
+# 검사·결과·상담 내용 등 플랫폼 사용자 콘텐츠 (계정·결제·기관 제외)
+PLATFORM_CONTENT_COLLECTIONS = (
+    "chatMessages",
+    "counselingAppointments",
+    "clientCounselorRelations",
+    "dataSharingRequests",
+    "mbtiCompatibility",
+    "testAssignments",
+    "testCodeGenerationLogs",
+    "crisisEvents",
+    "counselorCodes",
+    "testSearchQueries",
+)
+
+AI_COUNSEL_SESSIONS_COLLECTION = "aiCounselSessions"
+AI_COUNSEL_MESSAGES_SUBCOLLECTION = "messages"
 
 
 def _delete_query_docs(db, query, label: str, dry_run: bool) -> int:
@@ -93,9 +112,32 @@ def _delete_counselor_test_results(db, dry_run: bool) -> int:
     return deleted
 
 
+def _delete_ai_counsel_sessions(db, dry_run: bool) -> dict:
+    """AI 상담 세션 및 messages 하위 컬렉션 삭제."""
+    sessions_deleted = 0
+    messages_deleted = 0
+    for doc in db.collection(AI_COUNSEL_SESSIONS_COLLECTION).stream():
+        messages_deleted += _delete_query_docs(
+            db,
+            doc.reference.collection(AI_COUNSEL_MESSAGES_SUBCOLLECTION),
+            AI_COUNSEL_MESSAGES_SUBCOLLECTION,
+            dry_run,
+        )
+        if dry_run:
+            sessions_deleted += 1
+        else:
+            doc.reference.delete()
+            sessions_deleted += 1
+    return {
+        "aiCounselSessions": sessions_deleted,
+        "aiCounselMessages": messages_deleted,
+    }
+
+
 def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_test_results: bool = False) -> dict:
     """
-    상담코드·검사진행·내담자 포털 관련 Firestore 데이터 일괄 삭제.
+    상담코드·검사·결과·상담내용 등 플랫폼 사용자 콘텐츠 일괄 삭제.
+    users·counselors·결제·기관·FAQ 등 계정/운영 메타는 유지.
     testResults: include_all_test_results=True 이면 컬렉션 전체, 아니면 상담(코드) 연동 문서만.
     """
     counts = {
@@ -109,7 +151,12 @@ def purge_assessment_platform_data(db, *, dry_run: bool = False, include_all_tes
         "careProgress": _delete_entire_collection(db, CARE_PROGRESS_COLLECTION, dry_run),
         "dailyRecords": _delete_entire_collection(db, DAILY_RECORDS_COLLECTION, dry_run),
         "aiReports": _delete_entire_collection(db, AI_REPORTS_COLLECTION, dry_run),
+        "aiUsageLedger": _delete_entire_collection(db, AI_USAGE_LEDGER_COLLECTION, dry_run),
+        "b2cEntitlements": _delete_entire_collection(db, B2C_ENTITLEMENTS_COLLECTION, dry_run),
     }
+    for name in PLATFORM_CONTENT_COLLECTIONS:
+        counts[name] = _delete_entire_collection(db, name, dry_run)
+    counts.update(_delete_ai_counsel_sessions(db, dry_run))
     if include_all_test_results:
         counts["testResults"] = _delete_entire_collection(db, TEST_RESULTS_COLLECTION, dry_run)
     else:
