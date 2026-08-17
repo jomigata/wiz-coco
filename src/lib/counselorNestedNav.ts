@@ -123,7 +123,7 @@ export function getAssessmentListContextNestedItems(
 
   if (path.startsWith('/counselor/assessments/progress') && progressFrom !== 'clients') {
     items.push({
-      order: 1,
+      order: 50,
       label: '상담진행 현황',
       href: buildProgressHref(assessmentId, search),
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),
@@ -132,7 +132,7 @@ export function getAssessmentListContextNestedItems(
 
   if (path.startsWith('/counselor/assessments/edit')) {
     items.push({
-      order: 2,
+      order: 51,
       label: '상담코드 수정',
       href: assessmentId
         ? `/counselor/assessments/edit?id=${encodeURIComponent(assessmentId)}`
@@ -155,7 +155,7 @@ export function getClientsListContextNestedItems(
   if (path.startsWith('/counselor/assessments/progress') && resolveCounselorProgressFrom(pathname, search) === 'clients') {
     const assessmentId = resolveAssessmentContextId(pathname, search);
     items.push({
-      order: 1,
+      order: 50,
       label: '상담진행 현황',
       href: buildProgressHref(assessmentId, search),
       isActive: (p) => p.startsWith('/counselor/assessments/progress'),

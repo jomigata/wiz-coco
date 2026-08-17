@@ -17,7 +17,9 @@ export function matchesWildcardSearch(text: string, query: string): boolean {
   }
 }
 
-/** 여러 필드를 공백으로 이어 붙인 문자열에 대해 와일드카드 검색 */
+/** 여러 필드 각각에 대해 검색 — 필드를 이어 붙이지 않고, 하나라도 일치하면 true */
 export function matchesWildcardFields(fields: Array<string | null | undefined>, query: string): boolean {
-  return matchesWildcardSearch(fields.filter(Boolean).join(' '), query);
+  const q = query.trim();
+  if (!q) return true;
+  return fields.some((field) => matchesWildcardSearch(String(field ?? ''), q));
 }

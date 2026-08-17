@@ -9,8 +9,6 @@ import {
   getAssessmentsParentSubmenuItems,
   getClientsListContextNestedItems,
   getClientsParentSubmenuItems,
-  isAssessmentsMenuSelected,
-  isClientsMenuSelected,
   nestedNavItemsAfter,
   rememberCounselorAssessmentContext,
   resolveActiveNestedNavItem,
@@ -108,8 +106,6 @@ export default function CounselorManageShell({ children }: Props) {
                           <ul className="space-y-0.5 pb-1">
                             {sub.items.flatMap((item) => {
                               const normalizedItemHref = item.href.replace(/\/+$/, '');
-                              const assessmentsSelected = isAssessmentsMenuSelected(pathname, search);
-                              const clientsSelected = isClientsMenuSelected(pathname, search);
                               const pathNorm = (pathname || '').split('?')[0].replace(/\/+$/, '') || '';
                               const nestedAfter = nestedNavItemsAfter(
                                 sub.name,
@@ -123,9 +119,9 @@ export default function CounselorManageShell({ children }: Props) {
                                     ? getClientsListContextNestedItems(pathname, search)
                                     : [];
                               const parentSubmenu =
-                                normalizedItemHref === '/counselor/assessments' && assessmentsSelected
+                                normalizedItemHref === '/counselor/assessments'
                                   ? getAssessmentsParentSubmenuItems()
-                                  : normalizedItemHref === '/counselor/clients' && clientsSelected
+                                  : normalizedItemHref === '/counselor/clients'
                                     ? getClientsParentSubmenuItems()
                                     : [];
                               const seenNestedLabels = new Set<string>();

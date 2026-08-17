@@ -1103,8 +1103,11 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
 
                     const locked = isRowSelectionLocked(item.portalId);
                     const rowClickable = !deletedMode && !locked;
-
                     const rowClass = deletedMode ? counselorListBodyRowStaticClass : counselorListBodyRowClass;
+                    const cellInteractionClass = deletedMode ? '' : cellLinkClass;
+                    const dispatchViewForRow = deletedMode
+                      ? { ...dispatchView, title: undefined }
+                      : dispatchView;
 
                     return (
                       <tr
@@ -1122,11 +1125,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                             disabled={locked}
                             className="rounded accent-blue-500 disabled:opacity-40"
                             aria-label={`${item.displayName || '내담자'} 선택`}
-                            title={
-                              locked && deletedMode
-                                ? '삭제된 상담코드에 속한 내담자입니다. 상담코드 복구 시 함께 복구됩니다.'
-                                : undefined
-                            }
+                            title={locked && deletedMode ? '삭제된 상담코드' : undefined}
                             onClick={(e) => e.stopPropagation()}
                           />
                         </td>
@@ -1145,7 +1144,8 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                             secondary={formatAccessCodeDisplay(item.accessCode || '')}
                             hoverTypeLabel="나의코드"
                             normalSecondary
-                            className={cellLinkClass}
+                            showTooltip={!deletedMode}
+                            className={cellInteractionClass}
                           />
                         </td>
                         <td
@@ -1163,7 +1163,8 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                                 primaryAssessment.joinAccessCode || '',
                               )}
                               normalWeight
-                              className={cellLinkClass}
+                              showTooltip={!deletedMode}
+                              className={cellInteractionClass}
                             />
                           ) : (
                             <span className="text-slate-500">—</span>
@@ -1173,7 +1174,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                           className={`max-w-[10rem] ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''}`}
                           onClick={rowClickable ? () => goToProgress(item) : undefined}
                         >
-                          <DispatchStatusText value={dispatchView} />
+                          <DispatchStatusText value={dispatchViewForRow} />
                         </td>
                         <td
                           className={`whitespace-nowrap ${counselorListTdClass} ${rowClickable ? 'cursor-pointer' : ''} ${progress.className}`}
