@@ -17,14 +17,18 @@ import { formatPhoneDisplayOr } from '@/lib/phoneFormat';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import {
   counselorListBodyRowClass,
+  counselorListBodyRowStaticClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListSelectTdClass,
+  counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
 } from '@/lib/counselorListTableStyles';
+import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import CounselorPortalMoveDialog from '@/components/counselor/CounselorPortalMoveDialog';
@@ -650,23 +654,23 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   }, [deletedMode, items, assessmentMeta, liveResults]);
 
   const filtered = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     if (!q) return displayItems;
-    return displayItems.filter((item) => {
-      const hay = [
-        item.displayName || '',
-        item.email || '',
-        item.phone || '',
-        item.accessCode || '',
-        item.cohortName || '',
-        ...(item.counselorTags || []),
-        ...item.assessments.map((a) => `${a.title} ${a.orgName || ''} ${a.joinAccessCode || ''}`),
-        counselingCodeTypeLabel(item.assessments[0]?.codeCategory),
-      ]
-        .join(' ')
-        .toLowerCase();
-      return hay.includes(q);
-    });
+    return displayItems.filter((item) =>
+      matchesWildcardFields(
+        [
+          item.displayName || '',
+          item.email || '',
+          item.phone || '',
+          item.accessCode || '',
+          item.cohortName || '',
+          ...(item.counselorTags || []),
+          ...item.assessments.map((a) => `${a.title} ${a.orgName || ''} ${a.joinAccessCode || ''}`),
+          counselingCodeTypeLabel(item.assessments[0]?.codeCategory),
+        ],
+        q,
+      ),
+    );
   }, [displayItems, searchQuery]);
 
   const sortedFiltered = useMemo(() => {
@@ -1100,10 +1104,12 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     const locked = isRowSelectionLocked(item.portalId);
                     const rowClickable = !deletedMode && !locked;
 
+                    const rowClass = deletedMode ? counselorListBodyRowStaticClass : counselorListBodyRowClass;
+
                     return (
                       <tr
                         key={item.portalId}
-                        className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''}`}
+                        className={`${rowClass} ${isSelected ? 'bg-white/[0.04]' : ''} ${locked ? 'opacity-70' : ''}`}
                       >
                         <td className={`${counselorListTdClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}
@@ -1116,6 +1122,11 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                             disabled={locked}
                             className="rounded accent-blue-500 disabled:opacity-40"
                             aria-label={`${item.displayName || '내담자'} 선택`}
+                            title={
+                              locked && deletedMode
+                                ? '삭제된 상담코드에 속한 내담자입니다. 상담코드 복구 시 함께 복구됩니다.'
+                                : undefined
+                            }
                             onClick={(e) => e.stopPropagation()}
                           />
                         </td>

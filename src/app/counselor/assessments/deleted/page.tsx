@@ -19,7 +19,7 @@ import AuthLink from '@/components/auth/AuthLink';
 import { counselingCodeTypeLabel } from '@/data/counselingCodeTypes';
 import { getAssessmentOrgLabel } from '@/lib/assessmentSortOptions';
 import {
-  counselorListBodyRowClass,
+  counselorListBodyRowStaticClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSelectTdClass,
@@ -44,6 +44,7 @@ import {
   clearCounselorAssessmentsListCache,
   type ArchivedAssessment,
 } from '@/lib/assessmentApi';
+import { matchesWildcardFields } from '@/lib/wildcardSearch';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt';
 type SortDirection = 'asc' | 'desc';
@@ -282,15 +283,19 @@ export default function DeletedAssessmentsPage() {
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
 
   const filtered = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     if (!q) return items;
-    return items.filter(
-      (a) =>
-        (a.title || '').toLowerCase().includes(q) ||
-        (a.accessCode || '').toLowerCase().includes(q) ||
-        counselingCodeTypeLabel(a.codeCategory).toLowerCase().includes(q) ||
-        (a.targetAudience || '').toLowerCase().includes(q) ||
-        getAssessmentOrgLabel(a).toLowerCase().includes(q),
+    return items.filter((a) =>
+      matchesWildcardFields(
+        [
+          a.title || '',
+          a.accessCode || '',
+          counselingCodeTypeLabel(a.codeCategory),
+          a.targetAudience || '',
+          getAssessmentOrgLabel(a),
+        ],
+        q,
+      ),
     );
   }, [items, searchQuery]);
 
@@ -527,7 +532,7 @@ export default function DeletedAssessmentsPage() {
                     return (
                       <tr
                         key={row.id}
-                        className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
+                        className={`${counselorListBodyRowStaticClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
                       >
                         <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                           {startIndex + idx + 1}

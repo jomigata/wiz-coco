@@ -25,6 +25,9 @@ export const counselorListTdCompactClass = 'py-3 px-4 text-left text-sm text-gra
 export const counselorListBodyRowClass =
   'border-b border-white/10 hover:bg-white/5 transition-colors';
 
+/** hover·pointer 없이 표시만 (삭제된 목록 등) */
+export const counselorListBodyRowStaticClass = 'border-b border-white/10';
+
 export const counselorListActionBtnClass =
   'inline-flex min-w-[3.75rem] items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors';
 

@@ -54,6 +54,7 @@ import {
   writeAssessmentListSearch,
 } from '@/lib/counselorAssessmentListSearch';
 import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport';
+import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
@@ -496,24 +497,24 @@ export default function AssessmentList({
   }, 0);
 
   const filtered = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     if (!q) return listItems;
-    return listItems.filter((a) => {
-      const hay = [
-        a.title || '',
-        a.accessCode || '',
-        a.cohortName || '',
-        a.welcomeMessage || '',
-        counselingCodeTypeLabel(a.codeCategory),
-        a.targetAudience || '',
-        getAssessmentOrgLabel(a),
-        ...(a.testList || []).map((t) => `${t.name} ${t.testId}`),
-        clientSearchByAssessment.get(a.id) || '',
-      ]
-        .join(' ')
-        .toLowerCase();
-      return hay.includes(q);
-    });
+    return listItems.filter((a) =>
+      matchesWildcardFields(
+        [
+          a.title || '',
+          a.accessCode || '',
+          a.cohortName || '',
+          a.welcomeMessage || '',
+          counselingCodeTypeLabel(a.codeCategory),
+          a.targetAudience || '',
+          getAssessmentOrgLabel(a),
+          ...(a.testList || []).map((t) => `${t.name} ${t.testId}`),
+          clientSearchByAssessment.get(a.id) || '',
+        ],
+        q,
+      ),
+    );
   }, [listItems, searchQuery, clientSearchByAssessment]);
 
   const sortedFiltered = useMemo(() => {

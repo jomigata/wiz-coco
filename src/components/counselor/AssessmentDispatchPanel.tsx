@@ -46,12 +46,15 @@ import CounselorListSearchInput from '@/components/counselor/CounselorListSearch
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
 import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
+import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
   counselorListSelectTdClass,
   counselorListSelectThClass,
+  counselorListSortActiveClass,
+  counselorListSortIdleClass,
   counselorListTableWrapperClass,
   counselorListTdClass,
   counselorListThClass,
@@ -186,6 +189,7 @@ type RecipientSortKey =
   | 'notifyStatus'
   | 'testStatus';
 type SortDirection = 'asc' | 'desc';
+type NameSortPhase = 'name-asc' | 'name-desc' | 'code-asc' | 'code-desc';
 
 function testStatusOrder(status: DispatchRecipient['testStatus']): number {
   if (status === 'completed') return 2;
@@ -198,11 +202,18 @@ function compareRecipients(
   b: DispatchRecipient,
   key: RecipientSortKey,
   dir: SortDirection,
+  nameSortPhase: NameSortPhase,
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
-    case 'displayName':
-      return mult * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
+    case 'displayName': {
+      const phaseMult = (p: NameSortPhase) => (p.endsWith('-asc') ? 1 : -1);
+      const m = phaseMult(nameSortPhase);
+      if (nameSortPhase.startsWith('code')) {
+        return m * (a.myCode || '').localeCompare(b.myCode || '', 'ko');
+      }
+      return m * (a.displayName || '').localeCompare(b.displayName || '', 'ko');
+    }
     case 'email':
       return mult * (a.email || '').localeCompare(b.email || '', 'ko');
     case 'phone':
@@ -224,6 +235,68 @@ function compareRecipients(
     default:
       return 0;
   }
+}
+
+function sortPhaseIcon(active: boolean, phase: string): string {
+  if (!active) return '↕';
+  return phase.endsWith('-asc') ? '▲' : '▼';
+}
+
+function DualFieldSortHeader({
+  leftLabel,
+  rightLabel,
+  activeKey,
+  sortKey,
+  phase,
+  onSortLeft,
+  onSortRight,
+  className = '',
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  activeKey: RecipientSortKey | null;
+  sortKey: RecipientSortKey;
+  phase: NameSortPhase;
+  onSortLeft: () => void;
+  onSortRight: () => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  const leftActive = active && phase.startsWith('name');
+  const rightActive = active && phase.startsWith('code');
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <div className="inline-flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={onSortLeft}
+          className="inline-flex items-center gap-0.5 transition-colors hover:text-slate-200"
+        >
+          <span>{leftLabel}</span>
+          <span
+            className={`text-[10px] ${leftActive ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+            aria-hidden="true"
+          >
+            {sortPhaseIcon(leftActive, phase.startsWith('name') ? phase : 'name-asc')}
+          </span>
+        </button>
+        <span className="text-slate-600">/</span>
+        <button
+          type="button"
+          onClick={onSortRight}
+          className="inline-flex items-center gap-0.5 transition-colors hover:text-slate-200"
+        >
+          <span>{rightLabel}</span>
+          <span
+            className={`text-[10px] ${rightActive ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+            aria-hidden="true"
+          >
+            {sortPhaseIcon(rightActive, phase.startsWith('code') ? phase : 'code-asc')}
+          </span>
+        </button>
+      </div>
+    </th>
+  );
 }
 
 function SortableColumnHeader({
@@ -332,6 +405,7 @@ export default function AssessmentDispatchPanel({
   const [dispatchComplete, setDispatchComplete] = useState<DispatchComplete | null>(null);
   const [sortKey, setSortKey] = useState<RecipientSortKey | null>('notifyAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [nameSortPhase, setNameSortPhase] = useState<NameSortPhase>('name-asc');
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
 
   useEffect(() => {
@@ -482,27 +556,22 @@ export default function AssessmentDispatchPanel({
   const totalRecipientCount = visibleData?.recipients.length ?? 0;
 
   const sortedRecipients = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     let list = (visibleData?.recipients || []).map((r) =>
       mergeDispatchOverride(r, dispatchOverrides[r.portalId]),
     );
     if (q) {
-      list = list.filter((r) => {
-        const hay = [
-          r.displayName || '',
-          r.email || '',
-          r.phone || '',
-          r.myCode || '',
-        ]
-          .join(' ')
-          .toLowerCase();
-        return hay.includes(q);
-      });
+      list = list.filter((r) =>
+        matchesWildcardFields(
+          [r.displayName || '', r.email || '', r.phone || '', r.myCode || ''],
+          q,
+        ),
+      );
     }
     if (!sortKey) return list;
-    list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir));
+    list.sort((a, b) => compareRecipients(a, b, sortKey, sortDir, nameSortPhase));
     return list;
-  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, searchQuery]);
+  }, [visibleData?.recipients, dispatchOverrides, sortKey, sortDir, nameSortPhase, searchQuery]);
 
   const remindEligibleSelected = useMemo(
     () => (visibleData?.recipients || []).filter((r) => selected.has(r.portalId) && canSendReminder(r)),
@@ -565,6 +634,18 @@ export default function AssessmentDispatchPanel({
     () => selectedRecipients.filter((r) => !canSendReminder(r)),
     [selectedRecipients],
   );
+
+  const toggleNameFieldSort = (field: 'name' | 'code') => {
+    setSortKey('displayName');
+    setNameSortPhase((prev) => {
+      if (field === 'name') {
+        if (prev.startsWith('name')) return prev === 'name-asc' ? 'name-desc' : 'name-asc';
+        return 'name-asc';
+      }
+      if (prev.startsWith('code')) return prev === 'code-asc' ? 'code-desc' : 'code-asc';
+      return 'code-asc';
+    });
+  };
 
   const toggleSort = (key: RecipientSortKey) => {
     if (sortKey === key) {
@@ -904,12 +985,14 @@ export default function AssessmentDispatchPanel({
                     aria-label="전체 선택"
                   />
                 </th>
-                <SortableColumnHeader
-                  label="이름 / 나의코드"
-                  sortKey="displayName"
+                <DualFieldSortHeader
+                  leftLabel="이름"
+                  rightLabel="나의코드"
                   activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
+                  sortKey="displayName"
+                  phase={nameSortPhase}
+                  onSortLeft={() => toggleNameFieldSort('name')}
+                  onSortRight={() => toggleNameFieldSort('code')}
                   className="w-36"
                 />
                 <SortableColumnHeader
