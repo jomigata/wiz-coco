@@ -54,7 +54,7 @@ import { applyRealtimeToClientList } from '@/lib/clientPortalRealtime';
 import { useCounselorTestResultsRealtime } from '@/hooks/useCounselorTestResultsRealtime';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
+import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
 import {
   buildClientPortalsCacheKey,
@@ -72,7 +72,8 @@ type ListSortKey =
   | 'notifyStatus'
   | 'counselInfo'
   | 'notifyAt'
-  | 'usageEndDate';
+  | 'usageEndDate'
+  | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
 type NameSortPhase = 'name-asc' | 'name-desc' | 'code-asc' | 'code-desc';
 type CounselSortPhase =
@@ -265,6 +266,8 @@ function compareRows(
         (parseUsageEndDate(primaryUsageEndDate(a, usageMap)) -
           parseUsageEndDate(primaryUsageEndDate(b, usageMap)))
       );
+    case 'counselorEmail':
+      return compareCounselorEmail(a.counselorEmail, b.counselorEmail, dir);
     default:
       return 0;
   }
@@ -680,11 +683,12 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
             a.joinAccessCode || '',
             formatAccessCodeDisplay(a.joinAccessCode || ''),
           ]),
+          ...(adminUser ? [item.counselorEmail || ''] : []),
         ],
         q,
       ),
     );
-  }, [displayItems, searchQuery]);
+  }, [displayItems, searchQuery, adminUser]);
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
@@ -1087,7 +1091,14 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
-                    {adminUser ? <CounselorAdminEmailTh /> : null}
+                    {adminUser ? (
+                      <CounselorAdminEmailSortHeader
+                        emailSortKey="counselorEmail"
+                        activeKey={sortKey}
+                        direction={sortDir}
+                        onSort={toggleSort}
+                      />
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -1255,14 +1266,16 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     >
                       {restoring ? '복구 중…' : `복구 (${selected.size})`}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => void handlePermanentDelete()}
-                      disabled={deleting || selected.size === 0}
-                      className="inline-flex items-center rounded-md bg-red-700 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-                    >
-                      {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
-                    </button>
+                    {!adminUser ? (
+                      <button
+                        type="button"
+                        onClick={() => void handlePermanentDelete()}
+                        disabled={deleting || selected.size === 0}
+                        className="inline-flex items-center rounded-md bg-red-700 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                      >
+                        {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
+                      </button>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-2">
@@ -1282,14 +1295,16 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     >
                       인쇄 ({selected.size})
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleClientDelete()}
-                      disabled={clientDeleteLoading || selected.size === 0}
-                      className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-                    >
-                      {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
-                    </button>
+                    {!adminUser ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleClientDelete()}
+                        disabled={clientDeleteLoading || selected.size === 0}
+                        className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                      >
+                        {clientDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                      </button>
+                    ) : null}
                   </div>
                 )
               }

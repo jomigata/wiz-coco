@@ -46,9 +46,9 @@ import {
 } from '@/lib/assessmentApi';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
+import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 
-type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
 type CounselSortPhase = 'org-asc' | 'org-desc' | 'title-asc' | 'title-desc';
 
@@ -96,6 +96,8 @@ function compareRows(
       );
     case 'usageEndDate':
       return mult * (parseUsageEndDate(a.usageEndDate) - parseUsageEndDate(b.usageEndDate));
+    case 'counselorEmail':
+      return compareCounselorEmail(a.counselorEmail, b.counselorEmail, dir);
     default:
       return 0;
   }
@@ -297,11 +299,12 @@ export default function DeletedAssessmentsPage() {
           formatAccessCodeDisplay(a.accessCode),
           counselingCodeTypeLabel(a.codeCategory),
           a.targetAudience || '',
+          ...(adminUser ? [a.counselorEmail || ''] : []),
         ],
         q,
       ),
     );
-  }, [items, searchQuery]);
+  }, [items, searchQuery, adminUser]);
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
@@ -523,7 +526,14 @@ export default function DeletedAssessmentsPage() {
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
-                    {adminUser ? <CounselorAdminEmailTh /> : null}
+                    {adminUser ? (
+                      <CounselorAdminEmailSortHeader
+                        emailSortKey="counselorEmail"
+                        activeKey={sortKey}
+                        direction={sortDir}
+                        onSort={toggleSort}
+                      />
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -610,14 +620,16 @@ export default function DeletedAssessmentsPage() {
                   >
                     {restoring ? '복구 중…' : `복구 (${selected.size})`}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void handlePermanentDelete()}
-                    disabled={deleting || selected.size === 0}
-                    className="rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-                  >
-                    {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
-                  </button>
+                  {!adminUser ? (
+                    <button
+                      type="button"
+                      onClick={() => void handlePermanentDelete()}
+                      disabled={deleting || selected.size === 0}
+                      className="rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                    >
+                      {deleting ? '처리 중…' : `영구 삭제 (${selected.size})`}
+                    </button>
+                  ) : null}
                 </div>
               }
             />

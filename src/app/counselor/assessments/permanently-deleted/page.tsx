@@ -30,7 +30,7 @@ import { useListPagination } from '@/hooks/useListPagination';
 import { useCounselorListPageSize } from '@/hooks/useCounselorListPageSize';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
+import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 import {
   fetchPermanentlyDeletedRecords,
   restorePermanentlyDeletedRecords,
@@ -44,6 +44,28 @@ function formatWhen(iso: string | null | undefined): string {
   } catch {
     return String(iso);
   }
+}
+
+type ListSortKey = 'permanentlyDeletedAt' | 'counselorEmail';
+type SortDirection = 'asc' | 'desc';
+
+function parseWhen(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+function compareRows(
+  a: PermanentlyDeletedAssessment,
+  b: PermanentlyDeletedAssessment,
+  key: ListSortKey,
+  dir: SortDirection,
+): number {
+  const mult = dir === 'asc' ? 1 : -1;
+  if (key === 'permanentlyDeletedAt') {
+    return mult * (parseWhen(a.permanentlyDeletedAt) - parseWhen(b.permanentlyDeletedAt));
+  }
+  return compareCounselorEmail(a.counselorEmail, b.counselorEmail, dir);
 }
 
 export default function PermanentlyDeletedAssessmentsPage() {
@@ -60,7 +82,18 @@ export default function PermanentlyDeletedAssessmentsPage() {
     error?: boolean;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortKey, setSortKey] = useState<ListSortKey>('permanentlyDeletedAt');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const { pageSize, setPageSize } = useCounselorListPageSize();
+
+  const toggleSort = (key: ListSortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
 
   const load = useCallback(async () => {
     if (!adminUser) return;
@@ -99,6 +132,12 @@ export default function PermanentlyDeletedAssessmentsPage() {
     );
   }, [items, searchQuery]);
 
+  const sortedFiltered = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => compareRows(a, b, sortKey, sortDir));
+    return list;
+  }, [filtered, sortKey, sortDir]);
+
   const {
     page,
     setPage,
@@ -107,7 +146,7 @@ export default function PermanentlyDeletedAssessmentsPage() {
     totalCount,
     currentCount,
     startIndex,
-  } = useListPagination(filtered, pageSize);
+  } = useListPagination(sortedFiltered, pageSize);
 
   const allPageSelected =
     paginatedItems.length > 0 && paginatedItems.every((row) => selected.has(row.id));
@@ -236,7 +275,12 @@ export default function PermanentlyDeletedAssessmentsPage() {
                     <th scope="col" className={counselorListThClass}>
                       그룹명 / 제목
                     </th>
-                    <CounselorAdminEmailTh />
+                    <CounselorAdminEmailSortHeader
+                      emailSortKey="counselorEmail"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                    />
                   </tr>
                 </thead>
                 <tbody>

@@ -55,9 +55,9 @@ import {
 import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
-import { CounselorAdminEmailTd, CounselorAdminEmailTh } from '@/components/counselor/CounselorAdminEmailColumn';
+import { CounselorAdminEmailSortHeader, CounselorAdminEmailTd, compareCounselorEmail } from '@/components/counselor/CounselorAdminEmailColumn';
 
-type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
+type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'counselorEmail';
 type SortDirection = 'asc' | 'desc';
 type CounselSortPhase = 'org-asc' | 'org-desc' | 'title-asc' | 'title-desc';
 
@@ -113,6 +113,8 @@ function compareAssessments(
       );
     case 'usageEndDate':
       return mult * (parseUsageEndDate(a.usageEndDate) - parseUsageEndDate(b.usageEndDate));
+    case 'counselorEmail':
+      return compareCounselorEmail(a.counselorEmail, b.counselorEmail, dir);
     default:
       return 0;
   }
@@ -508,11 +510,12 @@ export default function AssessmentList({
           ...(a.testList || []).map((t) => t.name),
           ...(a.testList || []).map((t) => t.testId),
           ...(clientSearchFieldsByAssessment.get(a.id) || []),
+          ...(adminUser ? [a.counselorEmail || ''] : []),
         ],
         q,
       ),
     );
-  }, [listItems, searchQuery, clientSearchFieldsByAssessment]);
+  }, [listItems, searchQuery, clientSearchFieldsByAssessment, adminUser]);
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
@@ -763,7 +766,14 @@ export default function AssessmentList({
                     className="whitespace-nowrap text-center"
                   />
                   <th scope="col" className={`${counselorListThClass} text-center`}>기타</th>
-                  {adminUser ? <CounselorAdminEmailTh /> : null}
+                  {adminUser ? (
+                    <CounselorAdminEmailSortHeader
+                      emailSortKey="counselorEmail"
+                      activeKey={sortKey}
+                      direction={sortDir}
+                      onSort={toggleSort}
+                    />
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -882,14 +892,16 @@ export default function AssessmentList({
                 >
                   인쇄 ({selected.size})
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void handleBulkDelete()}
-                  disabled={bulkDeleteLoading || selected.size === 0}
-                  className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-                >
-                  {bulkDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
-                </button>
+                {!adminUser ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleBulkDelete()}
+                    disabled={bulkDeleteLoading || selected.size === 0}
+                    className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                  >
+                    {bulkDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                  </button>
+                ) : null}
               </div>
             }
           />
