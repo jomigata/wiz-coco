@@ -520,7 +520,7 @@ export default function AssessmentAddRecipientModal({
         }
         hint={
           addSendNow
-            ? '이메일·SMS 발송 중입니다. 발송은 1~2분 이상 걸릴 수 있습니다.'
+            ? '이메일·SMS 발송 중입니다. 코드 발송량에 따라, 발송은 1~2분 이상 걸릴 수 있습니다.'
             : undefined
         }
       />

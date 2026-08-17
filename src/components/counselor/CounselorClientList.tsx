@@ -520,10 +520,13 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     [user?.uid],
   );
 
-  const initialCached = useMemo(() => readCachedClientPortals(cacheKey), [cacheKey]);
+  const initialCached = useMemo(
+    () => (deletedMode ? null : readCachedClientPortals(cacheKey)),
+    [cacheKey, deletedMode],
+  );
 
   const [items, setItems] = useState<CounselorClientPortalListItem[]>(
-    () => initialCached?.items ?? [],
+    () => (deletedMode ? [] : initialCached?.items ?? []),
   );
   const [assessmentMeta, setAssessmentMeta] = useState<
     Record<string, { testList: { testId: string; name: string }[] }>
@@ -532,7 +535,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
     () => initialCached?.cohorts ?? [],
   );
   const [tags, setTags] = useState<string[]>(() => initialCached?.tags ?? []);
-  const [loading, setLoading] = useState(() => !initialCached?.items?.length);
+  const [loading, setLoading] = useState(() =>
+    deletedMode ? true : !initialCached?.items?.length,
+  );
 
   useEffect(() => {
     void listAssessments()
@@ -553,6 +558,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
   const load = useCallback(async () => {
     if (deletedMode) {
       setLoading(true);
+      setItems([]);
       setError('');
       try {
         const filterAssessmentId = (searchParams.get('assessmentId') || '').trim();
@@ -920,15 +926,6 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
             onChange={setSearchQuery}
             placeholder="이름 · 연락처 · 상담유형 · 상담코드 · 상담정보 · 태그"
           />
-          {deletedMode ? (
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
-            >
-              새로고침
-            </button>
-          ) : null}
         </span>
       }
       toolbar={
@@ -961,7 +958,9 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
         ) : null}
 
         {loading && displayItems.length === 0 ? (
-          <p className="py-12 text-center text-sm text-slate-500">내담자 목록을 불러오는 중…</p>
+          <p className="py-12 text-center text-sm text-slate-500">
+            {deletedMode ? '삭제된 내담자 목록을 불러오는 중…' : '내담자 목록을 불러오는 중…'}
+          </p>
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[12rem] flex-1 flex-col items-center justify-center rounded-md border border-white/10 bg-white/[0.03] py-10 text-center">
             <FaUsers className="mb-2 h-10 w-10 text-slate-600" />
@@ -990,7 +989,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
           </div>
         ) : (
           <>
-            {loading ? (
+            {loading && !deletedMode ? (
               <p className="mb-2 shrink-0 text-xs text-sky-300/80" role="status">
                 저장된 목록을 표시 중… 최신 정보를 불러오고 있습니다.
               </p>
@@ -1099,7 +1098,7 @@ export default function CounselorClientList({ deletedMode = false }: CounselorCl
                     const isSelected = selected.has(item.portalId);
 
                     const locked = isRowSelectionLocked(item.portalId);
-                    const rowClickable = !locked;
+                    const rowClickable = !deletedMode && !locked;
 
                     return (
                       <tr

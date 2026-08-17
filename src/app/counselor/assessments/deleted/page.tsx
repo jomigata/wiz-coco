@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
-import ArchivedRecipientsTable from '@/components/counselor/ArchivedRecipientsTable';
 import { AuthLoadingState, AuthRequiredState } from '@/components/auth/AuthStatusViews';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import { useRedirectOnLoginRequiredError } from '@/hooks/useRequireLoginRedirect';
@@ -39,10 +38,6 @@ import {
   writeCachedArchivedAssessments,
 } from '@/lib/counselorSessionCache';
 import {
-  fetchArchivedDispatchRecipients,
-  type ArchivedDispatchRecipient,
-} from '@/lib/clientPortalApi';
-import {
   listArchivedAssessments,
   permanentlyDeleteArchivedAssessments,
   restoreArchivedAssessments,
@@ -52,6 +47,7 @@ import {
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate' | 'archivedAt';
 type SortDirection = 'asc' | 'desc';
+type CounselSortPhase = 'org-asc' | 'org-desc' | 'title-asc' | 'title-desc';
 
 function parseCreatedAt(iso?: string | null): number {
   if (!iso) return 0;
@@ -66,15 +62,12 @@ function parseUsageEndDate(iso?: string): number {
   return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
 }
 
-function assessmentInfoLabel(a: ArchivedAssessment): string {
-  return `${getAssessmentOrgLabel(a)} / ${(a.title || '—').trim()}`;
-}
-
 function compareRows(
   a: ArchivedAssessment,
   b: ArchivedAssessment,
   key: ListSortKey,
   dir: SortDirection,
+  counselSortPhase: CounselSortPhase,
 ): number {
   const mult = dir === 'asc' ? 1 : -1;
   switch (key) {
@@ -82,8 +75,17 @@ function compareRows(
       return mult * (parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt));
     case 'archivedAt':
       return mult * (parseCreatedAt(a.archivedAt) - parseCreatedAt(b.archivedAt));
-    case 'counselInfo':
-      return mult * assessmentInfoLabel(a).localeCompare(assessmentInfoLabel(b), 'ko');
+    case 'counselInfo': {
+      const phaseMult = (p: CounselSortPhase) => (p.endsWith('-asc') ? 1 : -1);
+      const m = phaseMult(counselSortPhase);
+      if (counselSortPhase.startsWith('title')) {
+        return (
+          m *
+          ((a.title || '').trim() || '—').localeCompare((b.title || '').trim() || '—', 'ko')
+        );
+      }
+      return m * getAssessmentOrgLabel(a).localeCompare(getAssessmentOrgLabel(b), 'ko');
+    }
     case 'accessCode':
       return (
         mult *
@@ -124,6 +126,68 @@ function resultStatusCounts(a: ArchivedAssessment) {
   const testIncomplete = a.testIncompleteCount ?? 0;
   const dispatchTotal = testComplete + testIncomplete;
   return { dispatchFailed, testIncomplete, dispatchTotal, testComplete };
+}
+
+function sortPhaseIcon(active: boolean, phase: string): string {
+  if (!active) return '↕';
+  return phase.endsWith('-asc') ? '▲' : '▼';
+}
+
+function DualFieldSortHeader({
+  leftLabel,
+  rightLabel,
+  activeKey,
+  sortKey,
+  phase,
+  onSortLeft,
+  onSortRight,
+  className = '',
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  activeKey: ListSortKey;
+  sortKey: ListSortKey;
+  phase: CounselSortPhase;
+  onSortLeft: () => void;
+  onSortRight: () => void;
+  className?: string;
+}) {
+  const active = activeKey === sortKey;
+  const leftActive = active && phase.startsWith('org');
+  const rightActive = active && phase.startsWith('title');
+  return (
+    <th scope="col" className={`${counselorListThClass} ${className}`}>
+      <div className="inline-flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={onSortLeft}
+          className="inline-flex items-center gap-0.5 transition-colors hover:text-slate-200"
+        >
+          <span>{leftLabel}</span>
+          <span
+            className={`text-[10px] ${leftActive ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+            aria-hidden="true"
+          >
+            {sortPhaseIcon(leftActive, phase.startsWith('org') ? phase : 'org-asc')}
+          </span>
+        </button>
+        <span className="text-slate-600">/</span>
+        <button
+          type="button"
+          onClick={onSortRight}
+          className="inline-flex items-center gap-0.5 transition-colors hover:text-slate-200"
+        >
+          <span>{rightLabel}</span>
+          <span
+            className={`text-[10px] ${rightActive ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+            aria-hidden="true"
+          >
+            {sortPhaseIcon(rightActive, phase.startsWith('title') ? phase : 'title-asc')}
+          </span>
+        </button>
+      </div>
+    </th>
+  );
 }
 
 function SortableColumnHeader({
@@ -183,15 +247,8 @@ export default function DeletedAssessmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<ListSortKey>('archivedAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [recipientCache, setRecipientCache] = useState<Record<string, ArchivedDispatchRecipient[]>>({});
-  const [recipientLoadingId, setRecipientLoadingId] = useState<string | null>(null);
-  const [recipientError, setRecipientError] = useState('');
-  const emptyRecipientSelection = useMemo(() => new Set<string>(), []);
+  const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
   const { pageSize, setPageSize } = useCounselorListPageSize();
-
-  const cellLinkClass =
-    'cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-500/60 rounded-sm';
 
   const load = useCallback(async () => {
     const cached = counselorUid
@@ -239,9 +296,9 @@ export default function DeletedAssessmentsPage() {
 
   const sortedFiltered = useMemo(() => {
     const list = [...filtered];
-    list.sort((a, b) => compareRows(a, b, sortKey, sortDir));
+    list.sort((a, b) => compareRows(a, b, sortKey, sortDir, counselSortPhase));
     return list;
-  }, [filtered, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir, counselSortPhase]);
 
   const totalParticipants = useMemo(
     () =>
@@ -267,6 +324,18 @@ export default function DeletedAssessmentsPage() {
     currentCount,
   } = useListPagination(sortedFiltered, pageSize);
 
+  const toggleCounselFieldSort = (field: 'org' | 'title') => {
+    setSortKey('counselInfo');
+    setCounselSortPhase((prev) => {
+      if (field === 'org') {
+        if (prev.startsWith('org')) return prev === 'org-asc' ? 'org-desc' : 'org-asc';
+        return 'org-asc';
+      }
+      if (prev.startsWith('title')) return prev === 'title-asc' ? 'title-desc' : 'title-asc';
+      return 'title-asc';
+    });
+  };
+
   const toggleSort = (key: ListSortKey) => {
     if (sortKey === key) {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -289,28 +358,6 @@ export default function DeletedAssessmentsPage() {
       return next;
     });
   };
-
-  const toggleExpand = useCallback(
-    async (assessmentId: string) => {
-      if (expandedId === assessmentId) {
-        setExpandedId(null);
-        return;
-      }
-      setExpandedId(assessmentId);
-      setRecipientError('');
-      if (recipientCache[assessmentId]) return;
-      setRecipientLoadingId(assessmentId);
-      try {
-        const result = await fetchArchivedDispatchRecipients(assessmentId);
-        setRecipientCache((prev) => ({ ...prev, [assessmentId]: result.items || [] }));
-      } catch (err) {
-        setRecipientError(err instanceof Error ? err.message : '삭제된 내담자 목록을 불러오지 못했습니다.');
-      } finally {
-        setRecipientLoadingId(null);
-      }
-    },
-    [expandedId, recipientCache],
-  );
 
   const handleRestore = async () => {
     if (selected.size === 0) return;
@@ -390,14 +437,6 @@ export default function DeletedAssessmentsPage() {
             onChange={setSearchQuery}
             placeholder="검사명 · 상담유형 · 코드 · 기관명 검색"
           />
-          <button
-            type="button"
-            onClick={() => void load()}
-            disabled={loading}
-            className="ml-auto inline-flex shrink-0 items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1.5 text-sm text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
-          >
-            새로고침
-          </button>
         </span>
       }
       toolbar={undefined}
@@ -455,12 +494,14 @@ export default function DeletedAssessmentsPage() {
                       onSort={toggleSort}
                       className="whitespace-nowrap text-center"
                     />
-                    <SortableColumnHeader
-                      label="그룹명 / 제목"
-                      sortKey="counselInfo"
+                    <DualFieldSortHeader
+                      leftLabel="그룹명"
+                      rightLabel="제목"
                       activeKey={sortKey}
-                      direction={sortDir}
-                      onSort={toggleSort}
+                      sortKey="counselInfo"
+                      phase={counselSortPhase}
+                      onSortLeft={() => toggleCounselFieldSort('org')}
+                      onSortRight={() => toggleCounselFieldSort('title')}
                     />
                     <th scope="col" className={`${counselorListThClass} whitespace-nowrap text-center`}>
                       <span className="block">진행현황</span>
@@ -482,87 +523,51 @@ export default function DeletedAssessmentsPage() {
                     const infoPrimary = getAssessmentOrgLabel(row);
                     const infoSecondary = (row.title || '—').trim();
                     const isSelected = selected.has(row.id);
-                    const isOpen = expandedId === row.id;
-                    const expandedRecipients = recipientCache[row.id] || [];
 
                     return (
-                      <React.Fragment key={row.id}>
-                        <tr
-                          className={`${counselorListBodyRowClass} ${isSelected || isOpen ? 'bg-white/[0.04]' : ''}`}
+                      <tr
+                        key={row.id}
+                        className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}
+                      >
+                        <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
+                          {startIndex + idx + 1}
+                        </td>
+                        <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleOne(row.id)}
+                            className="rounded accent-blue-500"
+                            aria-label={`${infoSecondary} 선택`}
+                          />
+                        </td>
+                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center text-slate-300`}>
+                          {formatCounselorIssueDate(row.archivedAt)}
+                        </td>
+                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
+                          <span className="font-mono tracking-wide text-cyan-300/95">
+                            {formatAccessCodeDisplay(row.accessCode)}
+                          </span>
+                        </td>
+                        <td className={`max-w-[16rem] ${counselorListTdCompactClass}`}>
+                          <CounselorSlashInfoCell
+                            primary={infoPrimary}
+                            secondary={infoSecondary}
+                            showTooltip={false}
+                          />
+                        </td>
+                        <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center`}>
+                          <CounselorProgressMetricsInline
+                            totalClients={dispatchTotal}
+                            items={[{ label: '검사완료', value: testComplete }]}
+                          />
+                        </td>
+                        <td
+                          className={`whitespace-nowrap ${counselorListTdCompactClass} text-center ${expired ? 'text-red-400' : ''}`}
                         >
-                          <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
-                            {startIndex + idx + 1}
-                          </td>
-                          <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleOne(row.id)}
-                              className="rounded accent-blue-500"
-                              aria-label={`${infoSecondary} 선택`}
-                            />
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center text-slate-300`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className={cellLinkClass}>{formatCounselorIssueDate(row.archivedAt)}</span>
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className={`${cellLinkClass} font-mono tracking-wide text-cyan-300/95`}>
-                              {formatAccessCodeDisplay(row.accessCode)}
-                            </span>
-                          </td>
-                          <td
-                            className={`max-w-[16rem] ${counselorListTdCompactClass} cursor-pointer`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <CounselorSlashInfoCell
-                              primary={infoPrimary}
-                              secondary={infoSecondary}
-                              showTooltip={false}
-                              className={cellLinkClass}
-                            />
-                          </td>
-                          <td className={`whitespace-nowrap ${counselorListTdCompactClass} text-center cursor-default`}>
-                            <CounselorProgressMetricsInline
-                              totalClients={dispatchTotal}
-                              items={[{ label: '검사완료', value: testComplete }]}
-                            />
-                          </td>
-                          <td
-                            className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-center ${expired ? 'text-red-400' : ''}`}
-                            onClick={() => void toggleExpand(row.id)}
-                          >
-                            <span className={cellLinkClass}>{formatUsageEndDate(row.usageEndDate)}</span>
-                          </td>
-                        </tr>
-                        {isOpen ? (
-                          <tr>
-                            <td colSpan={7} className="border-t border-white/10 bg-slate-950/40 px-3 py-4">
-                              {recipientLoadingId === row.id ? (
-                                <p className="text-sm text-slate-400">내담자 목록을 불러오는 중…</p>
-                              ) : recipientError && !expandedRecipients.length ? (
-                                <p className="text-sm text-red-400">{recipientError}</p>
-                              ) : expandedRecipients.length === 0 ? (
-                                <p className="text-sm text-slate-400">발송된 내담자가 없습니다.</p>
-                              ) : (
-                                <ArchivedRecipientsTable
-                                  items={expandedRecipients}
-                                  selected={emptyRecipientSelection}
-                                  onToggleOne={() => undefined}
-                                  layout="dispatch"
-                                  hideSelect
-                                  hideArchivedAt
-                                />
-                              )}
-                            </td>
-                          </tr>
-                        ) : null}
-                      </React.Fragment>
+                          {formatUsageEndDate(row.usageEndDate)}
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>

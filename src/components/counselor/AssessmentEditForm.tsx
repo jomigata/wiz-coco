@@ -286,7 +286,8 @@ export default function AssessmentEditForm({
         </p>
       ) : null}
 
-      <div className="-mx-2.5 flex flex-wrap items-center justify-center gap-2.5 border-t border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3 sm:-mx-3">
+      <div className="mt-6 overflow-hidden rounded-xl border border-sky-400/20">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 border-t border-sky-400/20 bg-gradient-to-r from-sky-600/25 via-sky-500/15 to-transparent px-4 py-3.5">
         <button
           type="submit"
           disabled={!canSubmit}
@@ -308,6 +309,7 @@ export default function AssessmentEditForm({
         >
           취소
         </button>
+      </div>
       </div>
       <CounselorActionProgressOverlay
         open={loading}

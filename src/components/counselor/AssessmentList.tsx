@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaClipboard } from 'react-icons/fa';
 import type { CounselorAssessment, CreatedAssessmentBannerInfo, PortalMoveBannerInfo } from '@/lib/assessmentApi';
-import { deleteAssessment, fetchAssessmentListStats, listAssessments, mergeAssessmentListStats, removeCounselorAssessmentFromListCache } from '@/lib/assessmentApi';
+import { deleteAssessment, fetchAssessmentListStats, listAssessments, mergeAssessmentListStats, removeCounselorAssessmentFromListCache, clearCounselorAssessmentsListCache } from '@/lib/assessmentApi';
 import { listCounselorClientPortals } from '@/lib/clientPortalApi';
 import { useAuthResolved } from '@/hooks/useAuthResolved';
 import type { CounselorClientPortalListItem } from '@/types/clientPortal';
@@ -22,6 +22,7 @@ import AssessmentAddRecipientModal, {
 import AssessmentCreateModal from '@/components/counselor/AssessmentCreateModal';
 import AssessmentEditModal from '@/components/counselor/AssessmentEditModal';
 import CounselorActionProgressOverlay from '@/components/counselor/CounselorActionProgressOverlay';
+import CounselorActionCompleteModal from '@/components/counselor/CounselorActionCompleteModal';
 import { rememberCounselorAssessmentContext, rememberCounselorProgressFrom } from '@/lib/counselorNestedNav';
 import {
   counselingCodeTypeLabel,
@@ -32,6 +33,8 @@ import {
   counselorListBodyRowClass,
   counselorListHeaderRowClass,
   counselorListNoThClass,
+  counselorListSelectTdClass,
+  counselorListSelectThClass,
   counselorListSortActiveClass,
   counselorListSortIdleClass,
   counselorListTableWrapperClass,
@@ -50,6 +53,7 @@ import {
   clearAssessmentListSearch,
   writeAssessmentListSearch,
 } from '@/lib/counselorAssessmentListSearch';
+import { exportCounselorAssessments } from '@/lib/counselorAssessmentListExport';
 import { getAppRoleSync, isAdmin } from '@/utils/roleUtils';
 
 type ListSortKey = 'createdAt' | 'counselInfo' | 'accessCode' | 'usageEndDate';
@@ -262,10 +266,14 @@ export default function AssessmentList({
   const [sortKey, setSortKey] = useState<ListSortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [counselSortPhase, setCounselSortPhase] = useState<CounselSortPhase>('org-asc');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [actionComplete, setActionComplete] = useState<{
+    title: string;
+    message: string;
+    error?: boolean;
+  } | null>(null);
   const [addTarget, setAddTarget] = useState<CounselorAssessment | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CounselorAssessment | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<CounselorAssessment | null>(null);
   const [liveAssessmentId, setLiveAssessmentId] = useState<string | null>(null);
@@ -458,32 +466,6 @@ export default function AssessmentList({
     setEditTarget(assessment);
   };
 
-  const openDelete = (assessment: CounselorAssessment) => {
-    rememberCounselorAssessmentContext(assessment.id);
-    setDeleteError('');
-    setDeleteTarget(assessment);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
-    setDeleteLoading(true);
-    setDeleteError('');
-    try {
-      await deleteAssessment(deleteTarget.id, deleteTarget.accessCode);
-      removeCounselorAssessmentFromListCache(deleteTarget.id, deleteTarget.accessCode);
-      setListItems((prev) => {
-        const next = prev.filter((a) => a.id !== deleteTarget.id);
-        onAssessmentsRefresh?.(next);
-        return next;
-      });
-      setDeleteTarget(null);
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : '삭제에 실패했습니다.');
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   const toggleCounselFieldSort = (field: 'org' | 'title') => {
     setSortKey('counselInfo');
     setCounselSortPhase((prev) => {
@@ -549,6 +531,83 @@ export default function AssessmentList({
     paginatedItems,
     currentCount,
   } = useListPagination(sortedFiltered, pageSize);
+
+  const selectedItems = useMemo(
+    () => sortedFiltered.filter((a) => selected.has(a.id)),
+    [sortedFiltered, selected],
+  );
+
+  const allPageSelected =
+    paginatedItems.length > 0 && paginatedItems.every((a) => selected.has(a.id));
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllOnPage = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) {
+        paginatedItems.forEach((a) => next.delete(a.id));
+      } else {
+        paginatedItems.forEach((a) => next.add(a.id));
+      }
+      return next;
+    });
+  };
+
+  const handleAssessmentDownload = () => {
+    exportCounselorAssessments(selectedItems, 'download');
+  };
+
+  const handleAssessmentPrint = () => {
+    exportCounselorAssessments(selectedItems, 'print');
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`선택 ${selected.size}건을 삭제하시겠습니까?`)) return;
+    setBulkDeleteLoading(true);
+    let deleted = 0;
+    let failed = 0;
+    try {
+      for (const item of selectedItems) {
+        try {
+          await deleteAssessment(item.id, item.accessCode);
+          removeCounselorAssessmentFromListCache(item.id, item.accessCode);
+          deleted += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      clearCounselorAssessmentsListCache(user?.uid);
+      setSelected(new Set());
+      setListItems((prev) => {
+        const removed = new Set(selectedItems.map((a) => a.id));
+        const next = prev.filter((a) => !removed.has(a.id));
+        onAssessmentsRefresh?.(next);
+        return next;
+      });
+      setActionComplete({
+        title: '삭제 완료',
+        message: `삭제 ${deleted}건${failed ? `, 실패 ${failed}건` : ''}`,
+        error: failed > 0 && deleted === 0,
+      });
+    } catch (err) {
+      setActionComplete({
+        title: '삭제 실패',
+        message: err instanceof Error ? err.message : '삭제에 실패했습니다.',
+        error: true,
+      });
+    } finally {
+      setBulkDeleteLoading(false);
+    }
+  };
 
   return (
     <CounselorPageSection
@@ -667,6 +726,15 @@ export default function AssessmentList({
               <thead>
                 <tr className={counselorListHeaderRowClass}>
                   <th className={counselorListNoThClass}>No.</th>
+                  <th className={counselorListSelectThClass}>
+                    <input
+                      type="checkbox"
+                      checked={allPageSelected}
+                      onChange={toggleAllOnPage}
+                      className="rounded accent-blue-500"
+                      aria-label="현재 페이지 전체 선택"
+                    />
+                  </th>
                   <SortableColumnHeader
                     label="발급일"
                     sortKey="createdAt"
@@ -711,11 +779,21 @@ export default function AssessmentList({
                   const { dispatchTotal, testComplete } = resultStatusCounts(a);
                   const expired = isExpired(a.usageEndDate);
                   const { primary: infoPrimary, secondary: infoSecondary } = assessmentGroupTitleParts(a);
+                  const isSelected = selected.has(a.id);
 
                   return (
-                    <tr key={a.id} className={counselorListBodyRowClass}>
+                    <tr key={a.id} className={`${counselorListBodyRowClass} ${isSelected ? 'bg-white/[0.04]' : ''}`}>
                       <td className={`${counselorListTdCompactClass} tabular-nums text-slate-500`}>
                         {startIndex + idx + 1}
+                      </td>
+                      <td className={counselorListSelectTdClass} onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleOne(a.id)}
+                          className="rounded accent-blue-500"
+                          aria-label={`${infoSecondary || infoPrimary} 선택`}
+                        />
                       </td>
                       <td
                         className={`whitespace-nowrap ${counselorListTdCompactClass} cursor-pointer text-white`}
@@ -776,13 +854,6 @@ export default function AssessmentList({
                           >
                             수정
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => openDelete(a)}
-                            className="inline-flex items-center justify-center rounded bg-red-950/50 px-2 py-0.5 text-xs font-medium text-red-300 hover:bg-red-900/60"
-                          >
-                            삭제
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -799,6 +870,35 @@ export default function AssessmentList({
             onPageChange={setPage}
             pageSize={pageSize}
             onPageSizeChange={setPageSize}
+            unit="건"
+            footerAction={
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAssessmentDownload}
+                  disabled={selected.size === 0 || bulkDeleteLoading}
+                  className="inline-flex items-center rounded-md bg-emerald-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+                >
+                  다운로드 ({selected.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAssessmentPrint}
+                  disabled={selected.size === 0 || bulkDeleteLoading}
+                  className="inline-flex items-center rounded-md border border-white/15 bg-[#101f38]/90 px-2.5 py-1 text-sm font-medium text-slate-200 transition-colors hover:bg-white/5 disabled:opacity-50"
+                >
+                  인쇄 ({selected.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleBulkDelete()}
+                  disabled={bulkDeleteLoading || selected.size === 0}
+                  className="inline-flex items-center rounded-md bg-red-700/90 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                >
+                  {bulkDeleteLoading ? '삭제 중…' : `삭제 (${selected.size})`}
+                </button>
+              </div>
+            }
           />
         </>
       )}
@@ -835,112 +935,17 @@ export default function AssessmentList({
       }}
     />
 
-    {deleteTarget ? (
-      (() => {
-        const { primary, secondary } = assessmentGroupTitleParts(deleteTarget);
-        const testCount = deleteTarget.testList?.length ?? 0;
-        return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
-        <div
-          className="w-full max-w-lg overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl shadow-black/50"
-          role="dialog"
-          aria-labelledby="delete-assessment-title"
-          aria-modal="true"
-        >
-          <div className="border-b border-red-500/20 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900 px-6 py-5">
-            <div className="flex items-start gap-3">
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-red-400"
-                aria-hidden
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.75}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </span>
-              <div className="min-w-0">
-                <h2 id="delete-assessment-title" className="text-xl font-semibold text-white">
-                  상담코드 삭제
-                </h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                  아래 상담코드를 삭제 목록으로 이동합니다. 되돌리려면 삭제된 상담코드 에서 복구할 수 있습니다.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 px-6 py-5">
-            <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/8 px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                삭제 대상 상담코드
-              </p>
-              <p className="mt-1.5 font-mono text-2xl font-bold tracking-wider text-cyan-300">
-                {formatAccessCodeDisplay(deleteTarget.accessCode)}
-              </p>
-              <p className="mt-2 text-sm font-semibold leading-snug text-slate-100">
-                {primary}
-                {secondary ? (
-                  <span className="font-normal text-slate-300"> / {secondary}</span>
-                ) : null}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-                <span>
-                  포함 검사{' '}
-                  <span className="font-semibold tabular-nums text-slate-200">{testCount}</span>개
-                </span>
-                {deleteTarget.createdAt ? (
-                  <span>발급일 {formatCounselorIssueDate(deleteTarget.createdAt)}</span>
-                ) : null}
-                {counselingCodeTypeLabel(deleteTarget.codeCategory) !== '—' ? (
-                  <span>{counselingCodeTypeLabel(deleteTarget.codeCategory)}</span>
-                ) : null}
-              </div>
-            </div>
-
-            {deleteError ? (
-              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-                {deleteError}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="flex justify-end gap-2 border-t border-white/[0.06] bg-black/20 px-6 py-4">
-            <button
-              type="button"
-              onClick={() => {
-                if (!deleteLoading) {
-                  setDeleteTarget(null);
-                  setDeleteError('');
-                }
-              }}
-              disabled={deleteLoading}
-              className="rounded-lg border border-white/10 bg-slate-800/80 px-4 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-700 disabled:opacity-50"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleDeleteConfirm()}
-              disabled={deleteLoading}
-              className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-900/30 transition-colors hover:bg-red-500 disabled:opacity-50"
-            >
-              {deleteLoading ? '처리 중…' : '삭제 확인'}
-            </button>
-          </div>
-        </div>
-      </div>
-        );
-      })()
-    ) : null}
-
     <CounselorActionProgressOverlay
-      open={deleteLoading}
+      open={bulkDeleteLoading}
       title="삭제 진행 중…"
-      message="상담코드를 삭제하고 있습니다."
+      message={`선택 ${selected.size}건을 삭제하고 있습니다.`}
+    />
+    <CounselorActionCompleteModal
+      open={Boolean(actionComplete)}
+      title={actionComplete?.title ?? ''}
+      message={actionComplete?.message}
+      error={actionComplete?.error}
+      onConfirm={() => setActionComplete(null)}
     />
 
     </CounselorPageSection>

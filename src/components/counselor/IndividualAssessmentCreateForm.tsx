@@ -166,9 +166,11 @@ export default function IndividualAssessmentCreateForm({
 
   const filteredTests = useMemo(() => {
     const q = testSearchQuery.trim().toLowerCase();
-    if (!q) return sortedTests;
-    return sortedTests.filter((t) => t.name.toLowerCase().includes(q));
-  }, [sortedTests, testSearchQuery]);
+    const base = q ? sortedTests.filter((t) => t.name.toLowerCase().includes(q)) : sortedTests;
+    const picked = base.filter((t) => selectedTestIds.has(t.testId));
+    const rest = base.filter((t) => !selectedTestIds.has(t.testId));
+    return [...picked, ...rest];
+  }, [sortedTests, testSearchQuery, selectedTestIds]);
 
   const focusValidationField = useCallback(
     (field: 'cohortName' | 'title' | 'recipients' | 'tests') => {
@@ -1271,7 +1273,7 @@ export default function IndividualAssessmentCreateForm({
               {loadingIntent === 'send_all' ? (
                 <>
                   <br />
-                  발송은 1~2분 이상 걸릴 수 있습니다.
+                  코드 발송량에 따라, 발송은 1~2분 이상 걸릴 수 있습니다.
                 </>
               ) : null}
             </p>
