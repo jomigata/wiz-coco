@@ -45,7 +45,6 @@ import CounselorListBackLink from '@/components/counselor/CounselorListBackLink'
 import CounselorPageSection from '@/components/counselor/CounselorPageSection';
 import CounselorListSearchInput from '@/components/counselor/CounselorListSearchInput';
 import CounselorProgressMetricsInline from '@/components/counselor/CounselorProgressMetricsInline';
-import CounselorSlashInfoCell from '@/components/counselor/CounselorSlashInfoCell';
 import { buildAssessmentListHref, writeAssessmentListSearch } from '@/lib/counselorAssessmentListSearch';
 import { matchesWildcardFields } from '@/lib/wildcardSearch';
 import {
@@ -241,63 +240,6 @@ function compareRecipients(
 function sortPhaseIcon(active: boolean, phase: string): string {
   if (!active) return '↕';
   return phase.endsWith('-asc') ? '▲' : '▼';
-}
-
-function DualFieldSortHeader({
-  leftLabel,
-  rightLabel,
-  activeKey,
-  sortKey,
-  phase,
-  onSortLeft,
-  onSortRight,
-  className = '',
-}: {
-  leftLabel: string;
-  rightLabel: string;
-  activeKey: RecipientSortKey | null;
-  sortKey: RecipientSortKey;
-  phase: NameSortPhase;
-  onSortLeft: () => void;
-  onSortRight: () => void;
-  className?: string;
-}) {
-  const active = activeKey === sortKey;
-  const leftActive = active && phase.startsWith('name');
-  const rightActive = active && phase.startsWith('code');
-  return (
-    <th scope="col" className={`${counselorListThClass} ${className}`}>
-      <div className="inline-flex flex-wrap items-center gap-1">
-        <button
-          type="button"
-          onClick={onSortLeft}
-          className="inline-flex items-center gap-0.5 transition-colors hover:text-slate-200"
-        >
-          <span>{leftLabel}</span>
-          <span
-            className={`text-[10px] ${leftActive ? counselorListSortActiveClass : counselorListSortIdleClass}`}
-            aria-hidden="true"
-          >
-            {sortPhaseIcon(leftActive, phase.startsWith('name') ? phase : 'name-asc')}
-          </span>
-        </button>
-        <span className="text-slate-600">/</span>
-        <button
-          type="button"
-          onClick={onSortRight}
-          className="inline-flex items-center gap-0.5 transition-colors hover:text-slate-200"
-        >
-          <span>{rightLabel}</span>
-          <span
-            className={`text-[10px] ${rightActive ? counselorListSortActiveClass : counselorListSortIdleClass}`}
-            aria-hidden="true"
-          >
-            {sortPhaseIcon(rightActive, phase.startsWith('code') ? phase : 'code-asc')}
-          </span>
-        </button>
-      </div>
-    </th>
-  );
 }
 
 function SortableColumnHeader({
@@ -968,11 +910,12 @@ export default function AssessmentDispatchPanel({
                 <colgroup>
                   <col className="w-10" />
                   <col className="w-10" />
+                  <col className="w-28" />
+                  <col className="w-28" />
                   <col className="w-36" />
                   <col className="w-32" />
                   <col className="w-52" />
                   <col className="w-28" />
-                  <col className="w-36" />
                   <col className="w-36" />
                 </colgroup>
                 <thead>
@@ -987,14 +930,35 @@ export default function AssessmentDispatchPanel({
                     aria-label="전체 선택"
                   />
                 </th>
-                <DualFieldSortHeader
-                  leftLabel="이름"
-                  rightLabel="나의코드"
+                <th scope="col" className={`${counselorListThClass} w-28`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleNameFieldSort('name')}
+                    className="inline-flex items-center gap-1 transition-colors hover:text-slate-200"
+                  >
+                    <span>이름</span>
+                    <span
+                      className={`text-[10px] ${sortKey === 'displayName' && nameSortPhase.startsWith('name') ? counselorListSortActiveClass : counselorListSortIdleClass}`}
+                      aria-hidden="true"
+                    >
+                      {sortPhaseIcon(sortKey === 'displayName' && nameSortPhase.startsWith('name'), nameSortPhase.startsWith('name') ? nameSortPhase : 'name-asc')}
+                    </span>
+                  </button>
+                </th>
+                <SortableColumnHeader
+                  label="나의코드"
+                  sortKey="myCode"
                   activeKey={sortKey}
-                  sortKey="displayName"
-                  phase={nameSortPhase}
-                  onSortLeft={() => toggleNameFieldSort('name')}
-                  onSortRight={() => toggleNameFieldSort('code')}
+                  direction={sortDir}
+                  onSort={toggleSort}
+                  className="w-28"
+                />
+                <SortableColumnHeader
+                  label="진행 현황"
+                  sortKey="testStatus"
+                  activeKey={sortKey}
+                  direction={sortDir}
+                  onSort={toggleSort}
                   className="w-36"
                 />
                 <SortableColumnHeader
@@ -1020,14 +984,6 @@ export default function AssessmentDispatchPanel({
                   direction={sortDir}
                   onSort={toggleSort}
                   className="w-28"
-                />
-                <SortableColumnHeader
-                  label="진행 현황"
-                  sortKey="testStatus"
-                  activeKey={sortKey}
-                  direction={sortDir}
-                  onSort={toggleSort}
-                  className="w-36"
                 />
                 <SortableColumnHeader
                   label="발송일시"
@@ -1073,12 +1029,17 @@ export default function AssessmentDispatchPanel({
                           className="rounded text-blue-500"
                         />
                       </td>
-                      <td className="px-3 py-2 text-white align-top w-36 max-w-[9rem]">
-                        <CounselorSlashInfoCell
-                          primary={r.displayName || '—'}
-                          secondary={myCodeLabel !== '—' ? myCodeLabel : '—'}
-                          showTooltip={false}
-                        />
+                      <td className="px-3 py-2 text-white align-top w-28 max-w-[7rem] truncate">
+                        {r.displayName || '—'}
+                      </td>
+                      <td className="px-3 py-2 text-slate-300 align-top w-28 max-w-[7rem] font-mono tracking-wide whitespace-nowrap">
+                        {myCodeLabel !== '—' ? myCodeLabel : '—'}
+                      </td>
+                      <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
+                        <span className="text-slate-400" aria-hidden="true">
+                          {isOpen ? '▼' : '▶'}{' '}
+                        </span>
+                        <span>{summary.text}</span>
                       </td>
                       <td className="px-3 py-2 text-slate-300 align-top whitespace-nowrap tabular-nums">
                         {r.phone?.trim() ? displayContactPhone(r.phone, contactRevealed) : '—'}
@@ -1098,12 +1059,6 @@ export default function AssessmentDispatchPanel({
                       >
                         <DispatchStatusText value={notify} />
                       </td>
-                      <td className={`px-3 py-2.5 align-top whitespace-nowrap text-sm ${summary.className}`}>
-                        <span className="text-slate-400" aria-hidden="true">
-                          {isOpen ? '▼' : '▶'}{' '}
-                        </span>
-                        <span>{summary.text}</span>
-                      </td>
                       <td className="px-3 py-2.5 align-top whitespace-nowrap text-sm tabular-nums text-slate-400">
                         {formatNotifyDate(r.notifyAt)}
                       </td>
@@ -1116,7 +1071,7 @@ export default function AssessmentDispatchPanel({
                           aria-hidden="true"
                         />
                         <td
-                          colSpan={6}
+                          colSpan={7}
                           className="border-b border-slate-700/60 bg-slate-900/20 px-3 py-3 pb-4 align-top"
                         >
                           {tests.length === 0 ? (

@@ -506,7 +506,6 @@ export default function IndividualAssessmentCreateForm({
         });
         setSharedJoinCode(result.joinAccessCode || '');
         setNotifyQueued(result.notifyQueued);
-        setScheduledAtIso(result.scheduledAt ?? null);
         setLastCreatedAssessmentId(assessmentId);
         setLoadingIntent(null);
         return;
