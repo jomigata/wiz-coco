@@ -43,7 +43,7 @@ type PortalTab = 'tests' | 'care' | 'materials';
 function PortalLoading() {
   return (
     <div className="min-h-screen bg-gray-900 pt-24 flex justify-center">
-      <p className="text-slate-400">내 검사실을 불러오는 중…</p>
+      <p className="text-slate-400">내 검사실로 이동 중…</p>
     </div>
   );
 }
