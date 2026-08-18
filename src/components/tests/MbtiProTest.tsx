@@ -6,11 +6,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MbtiProClientInfo, { ClientInfo } from './MbtiProClientInfo';
-import MbtiProCodeInput from './MbtiProCodeInput';
-import { generateTestCode } from '@/utils/testCodeGenerator';
 import { clearTestProgress, generateTestId } from '@/utils/testResume';
-import { initializeFirebase, auth } from '@/lib/firebase';
-import { testResults } from '@/utils/firebaseIntegration';
 import { MBTI_PRO_TEST_FLOW, type MbtiProTestFlowConfig } from '@/config/mbtiProTestFlow';
 import { getMbtiProVisualTheme, resolveMbtiProPageShell } from '@/config/mbtiProVisualTheme';
 import { normalizeAccessCodeInput, isValidAccessCodeInput } from '@/lib/accessCodeFormat';
@@ -75,10 +71,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const [mouseIdleTimer, setMouseIdleTimer] = useState<NodeJS.Timeout | null>(null);
   
   // 검사 단계 상태 추가
-  const [currentStep, setCurrentStep] = useState<'code' | 'info' | 'test'>(() =>
-    flow.skipCodeStep ? 'info' : 'code',
-  );
-  const [codeData, setCodeData] = useState<{ groupCode: string; groupPassword: string } | null>(null);
+  const [currentStep, setCurrentStep] = useState<'info' | 'test'>(() => 'info');
   const [joinAccessCode, setJoinAccessCode] = useState('');
   const [joinAssessmentTestId, setJoinAssessmentTestId] = useState('');
   const [joinFromPortal, setJoinFromPortal] = useState(false);
@@ -87,6 +80,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
   const [editResultId, setEditResultId] = useState('');
   const [editResultLoading, setEditResultLoading] = useState(false);
   const [editOriginalResponses, setEditOriginalResponses] = useState<unknown>(null);
+  const [urlParsed, setUrlParsed] = useState(false);
   const testId = generateTestId(pathname || flow.defaultPath);
 
   useLayoutEffect(() => {
@@ -102,6 +96,8 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       setJoinAccessCode('');
       setJoinAssessmentTestId('');
       setJoinFromPortal(false);
+    } finally {
+      setUrlParsed(true);
     }
   }, []);
 
@@ -229,14 +225,7 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     return type;
   };
 
-  // 상담(코드) 입력 핸들러
-  const handleCodeSubmit = (codeData: { groupCode: string; groupPassword: string }) => {
-    console.log('MbtiProTest - 상담(코드) 제출:', codeData);
-    setCodeData(codeData);
-    setCurrentStep('info');
-  };
-
-  // 클라이언트 정보 제출 핸들러 (기존 함수 수정)
+  // 클라이언트 정보 제출 핸들러
 
   useEffect(() => {
     // clientInfo가 있을 때만 질문을 준비합니다
@@ -285,11 +274,10 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
       return;
     }
     
-    // 상담(코드) 데이터와 클라이언트 정보를 결합
     const completeInfo: ClientInfo = {
       ...info,
-      groupCode: codeData?.groupCode || '',
-      groupPassword: codeData?.groupPassword || '',
+      groupCode: info.groupCode || '',
+      groupPassword: info.groupPassword || '',
       privacyAgreed: info.privacyAgreed || false
     };
     
@@ -387,246 +375,66 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     setIsLoading(true); // 로딩 시작
     
     try {
-      // 현재 시간을 타임스탬프로 기록
-      const completionTime = new Date().toISOString();
-      
-      // clientInfo와 answers를 함께 전달, 타임스탬프 추가
-      const testData = {
-        answers,
-        clientInfo: {
-          birthYear: clientInfo?.birthYear || '-',
-          gender: clientInfo?.gender || '-',
-          name: clientInfo?.name || '-',
-          groupCode: clientInfo?.groupCode || '-',
-          privacyAgreed: clientInfo?.privacyAgreed || false
-        },
-        timestamp: completionTime // 검사 완료 시간 기록
-      };
-      
-      // 상담(코드) 생성 (로그인 사용자만)
-      let testCode: string | null = null;
-      if (isLoggedIn) {
-        testCode = generateTestCode(flow.codePrefix);
-      }
-      
-      // 로컬 스토리지에 검사 완료 시간 저장
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('mbti_pro_completion_time', completionTime);
-        
-        // 마이페이지 검사 기록에 추가 (로그인 사용자만)
-        if (isLoggedIn && testCode) {
-          try {
-            // counselorCode 생성 (groupCode를 counselorCode로 사용)
-            const counselorCode = clientInfo?.groupCode || codeData?.groupCode || null;
-            
-            // 현재 로그인한 사용자 정보 가져오기
-            let currentUserId = null;
-            let currentUserEmail = null;
-            
-            // Firebase Auth에서 사용자 정보 가져오기
-            try {
-              initializeFirebase();
-              if (auth && auth.currentUser) {
-                currentUserId = auth.currentUser.uid;
-                currentUserEmail = auth.currentUser.email;
-              }
-            } catch (authError) {
-              console.warn('Firebase Auth에서 사용자 정보 가져오기 실패:', authError);
-            }
-            
-            // LocalStorage에서도 사용자 정보 확인 (폴백)
-            if (!currentUserEmail) {
-              const currentUserData = localStorage.getItem('user');
-              if (currentUserData) {
-                try {
-                  const userData = JSON.parse(currentUserData);
-                  currentUserEmail = userData.email;
-                  currentUserId = userData.id || currentUserId;
-                } catch (parseError) {
-                  console.error('사용자 데이터 파싱 오류:', parseError);
-                }
-              }
-            }
-            
-            const testRecord = {
-              code: testCode,
-              counselorCode: counselorCode,
-              testType: flow.firebaseTestTypeLabel,
-              timestamp: completionTime,
-              mbtiType: calculateMbtiType(answers),
-              userId: currentUserId, // Firebase 저장을 위한 userId 추가
-              userData: {
-                answers: answers,
-                result: calculateMbtiType(answers),
-                clientInfo: {
-                  ...(clientInfo || {}),
-                  counselorCode: counselorCode
-                },
-                counselorCode: counselorCode,
-                groupCode: clientInfo?.groupCode || codeData?.groupCode || undefined
-              },
-              status: '완료'
-            };
-            
-            // 1. Firebase DB에 먼저 저장 (주 저장소)
-            let firebaseSaveSuccess = false;
-            if (currentUserId) {
-              try {
-                await testResults.saveTestResult({
-                  ...testRecord,
-                  userId: currentUserId,
-                  createdAt: new Date(completionTime)
-                });
-                firebaseSaveSuccess = true;
-                console.log('✅ Firebase DB에 검사 결과 저장 성공:', testCode);
-              } catch (firebaseError) {
-                console.error('❌ Firebase DB 저장 실패:', firebaseError);
-                // Firebase 저장 실패 시 오프라인 큐에 추가
-                try {
-                  const { addToOfflineQueue } = await import('@/utils/offlineQueue');
-                  addToOfflineQueue({
-                    type: 'save',
-                    collection: 'test_results',
-                    data: {
-                      ...testRecord,
-                      userId: currentUserId,
-                      createdAt: new Date(completionTime)
-                    }
-                  });
-                  console.log('✅ 오프라인 큐에 작업 추가 완료');
-                } catch (queueError) {
-                  console.error('오프라인 큐 추가 실패:', queueError);
-                }
-              }
-            } else {
-              console.warn('⚠️ 사용자 ID가 없어 Firebase 저장을 건너뜁니다.');
-            }
-            
-            // 2. 성공 후 LocalStorage에 캐시 저장
-            try {
-              // 사용자별 키로 저장
-              const userSpecificKey = currentUserEmail ? `mbti-user-test-records-${currentUserEmail}` : 'mbti-user-test-records';
-              
-              // 기존 검사 기록 가져오기
-              const existingRecords = localStorage.getItem(userSpecificKey);
-              let records = [];
-              
-              if (existingRecords) {
-                try {
-                  records = JSON.parse(existingRecords);
-                  if (!Array.isArray(records)) {
-                    records = [];
-                  }
-                } catch (parseError) {
-                  console.error('기존 검사 기록 파싱 오류:', parseError);
-                  records = [];
-                }
-              }
-              
-              // 새 기록 추가
-              records.unshift(testRecord);
-              
-              // 최대 50개까지만 저장
-              if (records.length > 50) {
-                records = records.slice(0, 50);
-              }
-              
-              // 로컬 스토리지에 저장
-              localStorage.setItem(userSpecificKey, JSON.stringify(records));
-              
-              // test_records에도 저장 (마이페이지에서 표시되도록)
-              const globalRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-              globalRecords.unshift(testRecord);
-              
-              // 최대 50개까지만 저장
-              if (globalRecords.length > 50) {
-                globalRecords.splice(50);
-              }
-              
-              localStorage.setItem('test_records', JSON.stringify(globalRecords));
-              
-              // Firebase 저장 성공 여부를 기록
-              if (firebaseSaveSuccess) {
-                console.log(`✅ 검사 기록 저장 완료 (Firebase + LocalStorage 캐시):`, testRecord);
-              } else {
-                console.log(`⚠️ 검사 기록 LocalStorage 캐시 저장 완료 (Firebase 저장 실패):`, testRecord);
-              }
-            } catch (storageError) {
-              console.error('❌ LocalStorage 캐시 저장 오류:', storageError);
-            }
-          } catch (storageError) {
-            console.error('검사 기록 저장 오류:', storageError);
-          }
-        }
-      }
-      
-      // 검사 완료 시 진행 상태 삭제
       clearTestProgress(testId);
       try {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('mbti_pro_code_data');
-          // 검사 완료 직후임을 표시하는 플래그 설정
           sessionStorage.setItem('testJustCompleted', 'true');
         }
-        setCodeData(null);
-      } catch {}
+      } catch {
+        // ignore
+      }
 
       const portalCode = joinAccessCode;
       const portalTestId = joinAssessmentTestId;
-      if (portalCode && portalTestId && isValidAccessCodeInput(portalCode)) {
-        const payload = buildMbtiProJoinResponses(answers, clientInfo);
-        try {
-          if (editResultId.trim()) {
-            if (mbtiProResponsesChanged(editOriginalResponses, payload)) {
-              await updateClientResult(editResultId.trim(), { responses: payload }, portalCode);
-            }
-          } else {
-            await submitResult({
-              accessCode: portalCode,
-              testId: portalTestId,
-              responses: payload,
-            });
-          }
-        } catch (submitErr) {
-          console.error('상담(코드) 결과 제출 실패:', submitErr);
-          if (editResultId.trim()) {
-            setIsLoading(false);
-            window.alert(
-              submitErr instanceof Error ? submitErr.message : '수정 내용 저장에 실패했습니다.',
-            );
-            return;
-          }
-        }
-        if (joinFromPortal) {
-          let assessmentId = '';
-          try {
-            const raw = sessionStorage.getItem(JOIN_STORAGE_KEY);
-            if (raw) {
-              const parsed = JSON.parse(raw) as { assessmentId?: string };
-              assessmentId = (parsed.assessmentId || '').trim();
-            }
-          } catch {
-            // ignore
-          }
-          const expandKey =
-            assessmentId && portalTestId ? `${assessmentId}:${portalTestId}` : '';
-          setPortalReturnPath(buildPortalProgressReturnUrl(expandKey || undefined));
-          sessionStorage.setItem('returnToPortal', 'true');
-        }
-      }
-      
-      // 다음 페이지로 이동하기 전에 약간의 지연 추가 (UI 표시를 위해)
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      if (flow.defaultPath === '/tests/ego-ok-pro') {
-        router.push(getPortalReturnPath());
+      if (!portalCode || !portalTestId || !isValidAccessCodeInput(portalCode)) {
         setIsLoading(false);
+        router.push('/portal/');
         return;
       }
 
-      // 생성한 testCode를 URL 파라미터로 전달 (검사기록 목록의 코드와 일치시키기 위해)
-      const queryString = encodeURIComponent(JSON.stringify(testData));
-      router.push(flow.buildResultUrl({ encodedData: queryString, testCode }));
+      const payload = buildMbtiProJoinResponses(answers, clientInfo);
+      try {
+        if (editResultId.trim()) {
+          if (mbtiProResponsesChanged(editOriginalResponses, payload)) {
+            await updateClientResult(editResultId.trim(), { responses: payload }, portalCode);
+          }
+        } else {
+          await submitResult({
+            accessCode: portalCode,
+            testId: portalTestId,
+            responses: payload,
+          });
+        }
+      } catch (submitErr) {
+        console.error('상담(코드) 결과 제출 실패:', submitErr);
+        setIsLoading(false);
+        window.alert(
+          submitErr instanceof Error ? submitErr.message : '검사 결과 저장에 실패했습니다.',
+        );
+        return;
+      }
+
+      if (joinFromPortal) {
+        let assessmentId = '';
+        try {
+          const raw = sessionStorage.getItem(JOIN_STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw) as { assessmentId?: string };
+            assessmentId = (parsed.assessmentId || '').trim();
+          }
+        } catch {
+          // ignore
+        }
+        const expandKey =
+          assessmentId && portalTestId ? `${assessmentId}:${portalTestId}` : '';
+        setPortalReturnPath(buildPortalProgressReturnUrl(expandKey || undefined));
+        sessionStorage.setItem('returnToPortal', 'true');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      router.push(getPortalReturnPath());
+      setIsLoading(false);
     } catch (error) {
       console.error('검사 완료 중 오류 발생:', error);
       setIsLoading(false); // 오류 발생 시 로딩 상태 해제
@@ -730,6 +538,20 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
     },
   };
 
+  // 포털 상담(코드) 전용: accessCode 없이 직접 접근 차단
+  if (urlParsed && (!joinAccessCode || !isValidAccessCodeInput(joinAccessCode))) {
+    return (
+      <div className={`flex min-h-screen flex-col items-center justify-center gap-4 px-4 ${pageShell}`}>
+        <p className="text-center text-slate-300">
+          이 검사는 상담(코드)를 통해 접속해야 합니다.
+        </p>
+        <Link href="/portal/" className="text-sky-400 hover:text-sky-300">
+          내 검사실로 이동
+        </Link>
+      </div>
+    );
+  }
+
   // 단계별 렌더링
   if (joinAccessCode && isValidAccessCodeInput(joinAccessCode)) {
     if (!joinAccessReady || editResultLoading) {
@@ -751,18 +573,6 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
         </div>
       );
     }
-  }
-
-  if (currentStep === 'code' && !flow.skipCodeStep) {
-    return (
-      <MbtiProCodeInput
-        onSubmit={handleCodeSubmit}
-        initialData={codeData}
-        uiTheme={uiTheme}
-        screenTitle={flow.codeStepTitle ?? flow.displayName}
-        screenSubtitle={flow.codeStepSubtitle}
-      />
-    );
   }
 
   if (currentStep === 'info') {
@@ -808,16 +618,12 @@ export default function MbtiProTest({ isLoggedIn, flow = MBTI_PRO_TEST_FLOW }: M
               setCurrentStep('test');
             }}
             onBack={
-              flow.skipCodeStep && !joinFromPortal
-                ? undefined
-                : (info) => {
+              joinFromPortal
+                ? (info) => {
                     setClientInfo(info);
-                    if (joinFromPortal) {
-                      router.replace(getPortalReturnPath());
-                      return;
-                    }
-                    setCurrentStep('code');
+                    router.replace(getPortalReturnPath());
                   }
+                : undefined
             }
           />
         </div>

@@ -3,10 +3,11 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function AdminDeletedCodesLegacyRedirect() {
+/** 레거시 standalone 검사 → 포털 상담코드 검사실 */
+export default function LegacyTestRedirect() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/admin/dashboard');
+    router.replace('/portal/');
   }, [router]);
   return null;
 }

@@ -1,8 +1,7 @@
 'use client';
 
-import PersonalAmateurTestFlowPage from '@/components/tests/PersonalAmateurTestFlowPage';
-import { MBTI_AMATEUR_TEST_FLOW } from '@/config/personalAmateurTestFlow';
+import LegacyTestRedirect from '@/components/LegacyTestRedirect';
 
-export default function MbtiTestPage() {
-  return <PersonalAmateurTestFlowPage config={MBTI_AMATEUR_TEST_FLOW} />;
+export default function MbtiLegacyRedirectPage() {
+  return <LegacyTestRedirect />;
 }

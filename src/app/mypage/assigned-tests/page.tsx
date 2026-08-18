@@ -95,7 +95,7 @@ export default function AssignedTestsPage() {
   // 검사 유형별 라우트 매핑
   const getTestRoute = (testType: string) => {
     const routes: { [key: string]: string } = {
-      'mbti': '/tests/mbti',
+      'mbti': '/portal/',
       'depression': '/tests/depression-mood',
       'anxiety': '/tests/anxiety-stress',
       'stress': '/tests/anxiety-stress',

@@ -17,9 +17,8 @@ import { formatAccessCodeDisplay, normalizeAccessCodeInput } from '@/lib/accessC
 import { isCounselor } from '@/utils/roleUtils';
 import { hasAuthenticatedTabSession, markInternalNavigation, pushWithAuthSession } from '@/utils/authSessionLifecycle';
 
-// 삭제코드 페이지 컴포넌트 import
-import { DeletedCodesContent } from '@/app/mypage/deleted-codes/components';
 import ProfileEditor from './components/ProfileEditor';
+import { purgeLegacyTestStorage } from '@/utils/purgeLegacyTestStorage';
 import InlineProfileBlocks, { applySavePatch } from './components/InlineProfileBlocks';
 import SubtleLoadingOverlay from '@/components/SubtleLoadingOverlay';
 import { counselorAssessmentTestOptions } from '@/data/counselorAssessmentTests';
@@ -218,7 +217,7 @@ function MyPageContent() {
   
   const normalizeMypageTab = (tab: string | null | undefined): string => {
     const t = (tab || 'profile').trim();
-    if (t === 'deleted-codes') return 'deleted';
+    if (t === 'deleted-codes' || t === 'deleted') return 'records';
     if (t === 'membership') return 'profile';
     if (t === 'in-progress') return 'profile';
     return t;
@@ -259,34 +258,10 @@ function MyPageContent() {
     'all' | 'incomplete' | 'mbti-personal' | 'mbti-professional' | 'ai-profiling' | 'integrated' | 'ego' | 'enneagram'
   >('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [deletedCodesCount, setDeletedCodesCount] = useState(0);
 
-  // 삭제된 코드 수 가져오기
-  const updateDeletedCodesCount = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        const deletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
-        setDeletedCodesCount(Array.isArray(deletedRecords) ? deletedRecords.length : 0);
-      } catch (error) {
-        setDeletedCodesCount(0);
-      }
-    }
-  };
-
+  // 레거시 localStorage 검사기록 1회 정리 (서버 purge 후 브라우저 캐시 제거)
   useEffect(() => {
-    updateDeletedCodesCount();
-  }, [activeTab]);
-
-  // 삭제코드 업데이트 이벤트 리스너
-  useEffect(() => {
-    const handleDeletedCodesUpdate = () => {
-      updateDeletedCodesCount();
-    };
-
-    window.addEventListener('deletedCodesUpdated', handleDeletedCodesUpdate);
-    return () => {
-      window.removeEventListener('deletedCodesUpdated', handleDeletedCodesUpdate);
-    };
+    purgeLegacyTestStorage();
   }, []);
 
   // 검사기록 업데이트 이벤트 리스너 (refreshTestRecords 정의 이후 effect에서 등록)
@@ -418,161 +393,6 @@ function MyPageContent() {
     window.dispatchEvent(new CustomEvent('wizcoco:mypage-tab'));
   };
 
-  // 레코드 정규화: status, testType, timestamp, score
-  const normalizeTestRecord = (record: any): TestRecord => {
-    // status 표준화
-    const rawStatus = (record.status || '').toString().toLowerCase();
-    const status = rawStatus.includes('완료') || rawStatus === 'completed' || rawStatus === 'complete' ? 'completed' : 'in_progress';
-
-    // testType 표준화 (대표 문자열로 통일)
-    const rawType = (record.testType || '').toString().toLowerCase();
-    let testType = '기타';
-    if (rawType.includes('mbti pro') || rawType.includes('mbti_pro') || rawType.includes('전문가')) testType = 'MBTI Pro';
-    else if (rawType.includes('mbti')) testType = 'MBTI';
-    else if (rawType.includes('ai') && rawType.includes('profil')) testType = 'AI 프로파일링';
-    else if (rawType.includes('integrated') || rawType.includes('통합')) testType = '통합 평가';
-    else if (rawType.includes('에고')) testType = '에고그램';
-    else if (rawType.includes('에니어') || rawType.includes('ennea')) testType = '에니어그램';
-
-    // timestamp 보정
-    const timestamp = record.timestamp || record.createdAt || new Date().toISOString();
-
-    return {
-      code: record.code || record.id || '',
-      testType,
-      timestamp,
-      createdAt: record.createdAt,
-      mbtiType: record.mbtiType,
-      userData: record.userData,
-      status
-    } as TestRecord;
-  };
-
-  // 검사 유형 명칭 표준화 함수
-  const normalizeTestTypeName = (testType: string): string => {
-    if (!testType) return 'Unknown';
-    
-    const type = testType.toLowerCase();
-    if (type.includes('mbti')) {
-      if (type.includes('전문가') || type.includes('pro')) {
-        return '전문가용 MBTI 검사';
-      } else {
-        return '개인용 MBTI 검사';
-      }
-    }
-    if (type.includes('ai') && type.includes('프로파일링')) {
-      return 'AI 프로파일링 검사';
-    }
-    if (type.includes('통합')) {
-      return '통합 평가 검사';
-    }
-    if (type.includes('에고')) {
-      return '에고 검사';
-    }
-    if (type.includes('에니어')) {
-      return '에니어그램 검사';
-    }
-    
-    // 기본값으로 원본 반환 (첫 글자 대문자)
-    return testType.charAt(0).toUpperCase() + testType.slice(1);
-  };
-
-  // 로컬 테스트 기록만 빌드 (상담사 API 제외)
-  const buildLocalTestRecords = React.useCallback((): TestRecord[] => {
-    try {
-      const allRecords: TestRecord[] = [];
-      const userKeySuffix = (user?.id || '').trim();
-      const userEmailSuffix = (user?.email || '').trim();
-      
-      // 1. 기본 test_records에서 로드 (개인용 MBTI, AI 프로파일링 등)
-      const basicRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-      if (Array.isArray(basicRecords)) {
-        basicRecords.forEach(record => {
-          const normalizedRecord = normalizeTestRecord(record);
-          normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
-          
-          // 상담코드 추출 (clientInfo 또는 userData에서)
-          const clientInfo = record.userData?.clientInfo || record.clientInfo;
-          if (clientInfo && clientInfo.counselorCode) {
-            normalizedRecord.counselorCode = clientInfo.counselorCode;
-          }
-          
-          allRecords.push(normalizedRecord);
-        });
-      }
-      
-      // 2. 사용자별 MBTI 기록에서 로드 (전문가용 MBTI)
-      const userSpecificKeys = [
-        userKeySuffix ? `mbti-user-test-records-${userKeySuffix}` : '',
-        // 하위호환: 예전 email 기반 키
-        userEmailSuffix ? `mbti-user-test-records-${userEmailSuffix}` : '',
-      ].filter(Boolean) as string[];
-
-      for (const userSpecificKey of userSpecificKeys) {
-        const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
-        console.log(`[MyPage] 사용자별 기록 키: ${userSpecificKey}`);
-        console.log(`[MyPage] 사용자별 기록 수: ${Array.isArray(userRecords) ? userRecords.length : 0}`);
-
-        if (Array.isArray(userRecords)) {
-          userRecords.forEach(record => {
-            console.log(`[MyPage] 사용자별 기록:`, record);
-            const normalizedRecord = normalizeTestRecord(record);
-            normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
-
-            // 상담코드 추출
-            const clientInfo = record.userData?.clientInfo || record.clientInfo;
-            if (clientInfo && clientInfo.counselorCode) {
-              normalizedRecord.counselorCode = clientInfo.counselorCode;
-            }
-
-            allRecords.push(normalizedRecord);
-          });
-        }
-      }
-      
-      // 3. 일반 사용자별 키도 확인 (로그인하지 않은 경우)
-      const generalUserRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
-      console.log(`[MyPage] 일반 사용자 기록 수: ${Array.isArray(generalUserRecords) ? generalUserRecords.length : 0}`);
-      
-      if (Array.isArray(generalUserRecords)) {
-        generalUserRecords.forEach(record => {
-          console.log(`[MyPage] 일반 사용자 기록:`, record);
-          const normalizedRecord = normalizeTestRecord(record);
-          normalizedRecord.testType = normalizeTestTypeName(normalizedRecord.testType);
-          
-          // 상담코드 추출
-          const clientInfo = record.userData?.clientInfo || record.clientInfo;
-          if (clientInfo && clientInfo.counselorCode) {
-            normalizedRecord.counselorCode = clientInfo.counselorCode;
-          }
-          
-          allRecords.push(normalizedRecord);
-        });
-      }
-      
-      // 중복 제거 (같은 code를 가진 기록)
-      const uniqueRecords = allRecords.filter((record, index, self) => 
-        index === self.findIndex(r => r.code === record.code)
-      );
-      
-      // 기본 데이터가 있는 것만 필터링
-      const validRecords = uniqueRecords.filter(r => r.code && r.testType);
-
-      console.log(`[MyPage] 사용자 ${user?.id || user?.email || 'guest'}의 모든 검사 기록 ${validRecords.length}개를 로드했습니다.`);
-      console.log(`[MyPage] 최종 기록 목록:`, validRecords);
-
-      const sorted = validRecords.sort((a: any, b: any) => {
-        const timeA = new Date(a.timestamp || new Date()).getTime();
-        const timeB = new Date(b.timestamp || new Date()).getTime();
-        return timeB - timeA;
-      });
-      return sorted;
-    } catch (error) {
-      console.error('로컬 테스트 기록 로드 오류:', error);
-      return [];
-    }
-  }, [user]);
-
   const refreshTestRecords = React.useCallback(async () => {
     if (!user) {
       setTestRecords([]);
@@ -582,13 +402,11 @@ function MyPageContent() {
     setRecordsLoading(true);
     setRecordsError(null);
     try {
-      const local = buildLocalTestRecords();
-      setTestRecords(local);
-      const merged: TestRecord[] = [...local];
+      purgeLegacyTestStorage();
+      const merged: TestRecord[] = [];
 
       if (firebaseUser) {
-        const [{ queryDocuments }, { normalizeAccessCodeInput }, assessmentApi] = await Promise.all([
-          import('@/utils/firebaseFirestore'),
+        const [{ normalizeAccessCodeInput }, assessmentApi] = await Promise.all([
           import('@/lib/accessCodeFormat'),
           import('@/lib/assessmentApi'),
         ]);
@@ -596,94 +414,26 @@ function MyPageContent() {
         const userRole = firebaseUser.role || user?.role;
         const userIsCounselor = isCounselor(userRole);
 
-        const accountEmail = (firebaseUser.email || user?.email || '').trim().toLowerCase();
-        const fsQueryJobs: Promise<any[]>[] = [
-          queryDocuments(
-            'testResults',
-            [{ field: 'uid', operator: '==', value: firebaseUser.uid }],
-            'createdAt',
-            'desc',
-            100,
-          ),
-        ];
-        if (accountEmail) {
-          fsQueryJobs.push(
-            queryDocuments(
-              'testResults',
-              [{ field: 'email', operator: '==', value: accountEmail }],
-              'createdAt',
-              'desc',
-              100,
-            ),
-            queryDocuments(
-              'testResults',
-              [{ field: 'clientEmail', operator: '==', value: accountEmail }],
-              'createdAt',
-              'desc',
-              100,
-            ),
-          );
-        }
-        const fsBatches = await Promise.all(
-          fsQueryJobs.map((job) =>
-            job.catch((e) => {
-              console.warn('[MyPage] Firestore testResults 병합 실패:', e);
-              return [] as any[];
-            }),
-          ),
-        );
-        const rowsById = new Map<string, any>();
-        for (const batch of fsBatches) {
-          for (const row of batch) {
-            const id = String((row as { id?: string }).id || '');
-            if (id) rowsById.set(id, row);
-          }
-        }
-        const rows = Array.from(rowsById.values());
-
-        const [bundle] = await Promise.all([
-          (async () => {
-            const resultsPromise = assessmentApi.listMyAssessmentResults().catch((e) => {
-              console.warn('[MyPage] 상담사 상담(코드) 목록 병합 실패:', e);
-              return { results: [] as any[] };
-            });
-            if (!userIsCounselor) {
-              const r = await resultsPromise;
-              return { results: r.results || [], assessments: [] as any[] };
-            }
-            const assessmentsPromise = assessmentApi.listAssessments().catch((e) => {
-              console.warn('[MyPage] 상담사 상담(코드)(세트) 목록 병합 실패:', e);
+        const resultsPromise = assessmentApi.listMyAssessmentResults().catch((e) => {
+          console.warn('[MyPage] 상담(코드) 결과 목록 실패:', e);
+          return { results: [] as any[] };
+        });
+        const assessmentsPromise = userIsCounselor
+          ? assessmentApi.listAssessments().catch((e) => {
+              console.warn('[MyPage] 상담(코드) 세트 목록 실패:', e);
               return { assessments: [] as any[] };
-            });
-            const [r, a] = await Promise.all([resultsPromise, assessmentsPromise]);
-            return {
-              results: r.results || [],
-              assessments: a.assessments || [],
-            };
-          })(),
-        ]);
+            })
+          : Promise.resolve({ assessments: [] as any[] });
 
-        for (const row of rows) {
-          merged.push({
-            code: `fs-${String((row as any).id || '')}`,
-            testType: String((row as any).testType || (row as any).testId || '검사 결과'),
-            timestamp:
-              (row as any).createdAt?.toDate?.()?.toISOString?.() ||
-              ((row as any).createdAt?.seconds
-                ? new Date(Number((row as any).createdAt.seconds) * 1000).toISOString()
-                : new Date().toISOString()),
-            status: String((row as any).status || 'completed'),
-            recordSource: 'local',
-          } as any);
-        }
+        const [r, a] = await Promise.all([resultsPromise, assessmentsPromise]);
 
-        for (const row of bundle.results || []) {
+        for (const row of r.results || []) {
           const ac = normalizeAccessCodeInput(String(row.accessCode || ''));
           merged.push({
             code: `counselor-${row.resultId}`,
             testType: row.assessmentTitle
-              ? `상담사 상담(코드) · ${row.assessmentTitle}`
-              : '상담사 상담(코드)',
+              ? `상담(코드) · ${row.assessmentTitle}`
+              : '상담(코드)',
             timestamp: row.completedAt || new Date().toISOString(),
             status: 'completed',
             counselorCodePinDisplay: ac || '—',
@@ -698,22 +448,25 @@ function MyPageContent() {
           });
         }
 
-        for (const a of bundle.assessments || []) {
-          const ac = normalizeAccessCodeInput(String((a as any).accessCode || ''));
+        for (const assessment of a.assessments || []) {
+          const ac = normalizeAccessCodeInput(String((assessment as any).accessCode || ''));
           if (!ac) continue;
           merged.push({
-            code: `counselor-set-${String((a as any).id || ac)}`,
-            testType: (a as any).title ? `상담사 상담(코드) · ${(a as any).title}` : '상담사 상담(코드)',
-            timestamp: String((a as any).createdAt || new Date().toISOString()),
-            status: String((a as any).status || 'not_started'),
+            code: `counselor-set-${String((assessment as any).id || ac)}`,
+            testType: (assessment as any).title
+              ? `상담(코드) · ${(assessment as any).title}`
+              : '상담(코드)',
+            timestamp: String((assessment as any).createdAt || new Date().toISOString()),
+            status: String((assessment as any).status || 'not_started'),
             counselorCodePinDisplay: ac,
             recordSource: 'counselor-assessment',
             counselorAccessCode: ac,
             usageEndDate:
-              typeof (a as any).usageEndDate === 'string' && String((a as any).usageEndDate).trim()
-                ? String((a as any).usageEndDate).trim()
+              typeof (assessment as any).usageEndDate === 'string' &&
+              String((assessment as any).usageEndDate).trim()
+                ? String((assessment as any).usageEndDate).trim()
                 : undefined,
-          } as any);
+          } as TestRecord);
         }
       }
 
@@ -727,11 +480,11 @@ function MyPageContent() {
       });
     } catch (e) {
       setRecordsError('검사 기록을 불러오지 못했습니다.');
-      setTestRecords(buildLocalTestRecords());
+      setTestRecords([]);
     } finally {
       setRecordsLoading(false);
     }
-  }, [user, firebaseUser?.uid, buildLocalTestRecords]);
+  }, [user, firebaseUser]);
 
   useEffect(() => {
     void refreshTestRecords();
@@ -897,17 +650,6 @@ function MyPageContent() {
                 }`}
               >
                 통계 보기
-              </button>
-              <button
-                type="button"
-                onClick={() => changeTab('deleted')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-colors ${
-                  activeTab === 'deleted'
-                    ? 'text-white bg-white/10 border border-b-0 border-white/15'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                삭제코드 ({deletedCodesCount})
               </button>
             </motion.div>
 
@@ -1194,9 +936,6 @@ function MyPageContent() {
               </motion.div>
             )}
 
-            {activeTab === 'deleted' && (
-              <DeletedCodesContent isEmbedded={true} />
-            )}
             </div>
           </>
         )}
@@ -1287,59 +1026,12 @@ function MyPageContent() {
   );
 }
 
-// 검사 유형별 결과 페이지 경로 생성 함수
+// 검사 유형별 결과 페이지 경로 (포털 상담코드 전용)
 const getResultPageUrl = (record: TestRecord): string => {
   if (record.recordSource === 'counselor-assessment') {
-    return '/mypage?tab=records';
+    return '/portal/';
   }
-  const testType = (record.testType || '').toLowerCase();
-  const code = record.code || '';
-  const mbtiType = record.mbtiType || '';
-  
-  // 전문가용 MBTI 검사 결과 페이지
-  if (testType.includes('전문가용') || testType.includes('mbti pro') || testType.includes('mbti_pro') || 
-      testType.includes('professional') || code.startsWith('MP') || record.counselorCode?.startsWith('MP')) {
-    // 결과 데이터 확인
-    try {
-      const resultData = typeof window !== 'undefined' 
-        ? localStorage.getItem(`test-result-${code}`) 
-        : null;
-      if (resultData) {
-        const data = JSON.parse(resultData);
-        const dataStr = encodeURIComponent(JSON.stringify({
-          code: code,
-          mbtiType: mbtiType || data.mbtiType || 'INTJ',
-          answers: data.answers || {},
-          timestamp: record.timestamp,
-          userData: record.userData || data.userData
-        }));
-        return `/tests/mbti_pro/result?data=${dataStr}`;
-      }
-      // 결과 데이터가 없으면 코드만 전달
-      return `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
-    } catch (e) {
-      console.error('전문가용 MBTI 결과 페이지 URL 생성 오류:', e);
-      return `/tests/mbti_pro/result?code=${encodeURIComponent(code)}`;
-    }
-  }
-  
-  // 개인용 MBTI 검사 결과 페이지
-  if (testType.includes('mbti')) {
-    return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
-  }
-  
-  // AI 프로파일링 검사 결과 페이지
-  if (testType.includes('ai') && testType.includes('프로파일링')) {
-    return `/tests/ai-profiling/result?code=${encodeURIComponent(code)}`;
-  }
-  
-  // 통합 평가 검사 결과 페이지
-  if (testType.includes('통합')) {
-    return `/tests/integrated-assessment/result?code=${encodeURIComponent(code)}`;
-  }
-  
-  // 기본적으로 MBTI 결과 페이지로 이동 (임시)
-  return `/results/mbti?code=${encodeURIComponent(code)}&type=${encodeURIComponent(mbtiType)}`;
+  return '/mypage?tab=records';
 };
 
 // 정렬 타입 정의
@@ -1773,91 +1465,30 @@ function TestRecordsTabContent({
     setShowBulkDeleteModal(true);
   };
 
-  // 일괄 삭제 실행
-  const handleBulkDeleteConfirm = () => {
+  // 일괄 삭제 실행 (상담코드 API 전용)
+  const handleBulkDeleteConfirm = async () => {
     if (selectedRecords.length === 0) return;
 
-    const localOnlyCodes = selectedRecords.filter((c) => !c.startsWith('counselor-'));
-    const skipped = selectedRecords.length - localOnlyCodes.length;
-    if (localOnlyCodes.length === 0) {
-      alert(
-        '상담사 상담(코드) 기록은 일괄 삭제할 수 없습니다. 해당 행의 삭제 버튼으로 개별 삭제해 주세요.'
-      );
+    const resultIds = selectedRecords
+      .map((code) => testRecords.find((r) => r.code === code))
+      .filter((r): r is TestRecord => Boolean(r?.counselorResultId));
+
+    if (resultIds.length === 0) {
+      alert('삭제할 상담(코드) 검사 기록을 선택해 주세요.');
       setShowBulkDeleteModal(false);
       return;
     }
-    if (skipped > 0) {
-      alert(
-        `선택한 항목 중 상담사 상담(코드) ${skipped}건은 제외하고, 일반 검사 ${localOnlyCodes.length}건만 삭제합니다.`
-      );
-    }
 
     try {
-      if (typeof window !== 'undefined') {
-        // 삭제할 레코드 정보 수집
-        const recordsToDelete = localOnlyCodes.map(code => {
-          const record = testRecords.find(r => r.code === code);
-          return record ? {
-            ...record,
-            deletedAt: new Date().toISOString()
-          } : null;
-        }).filter(Boolean) as any[];
-
-        // 기존 삭제된 레코드 가져오기
-        const deletedRecordsStr = localStorage.getItem('deleted_test_records') || '[]';
-        const deletedRecords = JSON.parse(deletedRecordsStr);
-        const updatedDeletedRecords = [...deletedRecords, ...recordsToDelete];
-        
-        // 최대 100개까지만 저장
-        if (updatedDeletedRecords.length > 100) {
-          updatedDeletedRecords.splice(100);
+      const { deleteResult } = await import('@/lib/assessmentApi');
+      for (const record of resultIds) {
+        if (record.counselorResultId) {
+          await deleteResult(record.counselorResultId);
         }
-        
-        localStorage.setItem('deleted_test_records', JSON.stringify(updatedDeletedRecords));
-
-        // test_records에서 삭제
-        const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-        const filteredRecords = allRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
-        localStorage.setItem('test_records', JSON.stringify(filteredRecords));
-
-        // 사용자별 기록에서도 삭제
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          try {
-            const u = JSON.parse(userData);
-            const suffixes = [
-              (u?.id || u?.uid || '').toString().trim(),
-              (u?.email || '').toString().trim(),
-            ].filter(Boolean) as string[];
-            for (const suffix of suffixes) {
-              const userSpecificKey = `mbti-user-test-records-${suffix}`;
-              const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
-              const filteredUserRecords = userRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
-              localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
-            }
-          } catch (e) {
-            console.error('사용자별 기록 삭제 오류:', e);
-          }
-        }
-
-        // 일반 사용자별 키에서도 삭제
-        const generalRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
-        const filteredGeneralRecords = generalRecords.filter((r: TestRecord) => !localOnlyCodes.includes(r.code));
-        localStorage.setItem('mbti-user-test-records', JSON.stringify(filteredGeneralRecords));
-
-        // test-result-{code} 키도 삭제
-        localOnlyCodes.forEach(code => {
-          localStorage.removeItem(`test-result-${code}`);
-        });
-
-        // 부모 컴포넌트에 업데이트 이벤트 발생
-        window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
-        window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
       }
-
       setSelectedRecords([]);
       setShowBulkDeleteModal(false);
-      // 페이지 새로고침 없이 이벤트만 발생 (부모 컴포넌트가 처리)
+      window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
     } catch (error) {
       console.error('검사 기록 일괄 삭제 중 오류:', error);
       alert('검사 기록 일괄 삭제 중 오류가 발생했습니다.');
@@ -1894,87 +1525,9 @@ function TestRecordsTabContent({
       return;
     }
 
-    if (!deleteModalRecord.code) {
-      setShowDeleteModal(false);
-      return;
-    }
-
-    try {
-      // 삭제된 기록을 deleted_test_records에 추가
-      if (typeof window !== 'undefined') {
-        const deletedRecords = JSON.parse(localStorage.getItem('deleted_test_records') || '[]');
-        const deletedRecord = {
-          ...deleteModalRecord,
-          deletedAt: new Date().toISOString(),
-          status: '삭제됨'
-        };
-        deletedRecords.unshift(deletedRecord);
-        
-        // 최대 100개까지만 저장
-        if (deletedRecords.length > 100) {
-          deletedRecords.splice(100);
-        }
-        
-        localStorage.setItem('deleted_test_records', JSON.stringify(deletedRecords));
-      }
-
-      // test_records에서 삭제
-      const allRecords = JSON.parse(localStorage.getItem('test_records') || '[]');
-      const filteredRecords = allRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
-      localStorage.setItem('test_records', JSON.stringify(filteredRecords));
-
-      // 사용자별 기록에서도 삭제
-      if (typeof window !== 'undefined') {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          try {
-            const u = JSON.parse(userData);
-            const suffixes = [
-              (u?.id || u?.uid || '').toString().trim(),
-              (u?.email || '').toString().trim(),
-            ].filter(Boolean) as string[];
-            for (const suffix of suffixes) {
-              const userSpecificKey = `mbti-user-test-records-${suffix}`;
-              const userRecords = JSON.parse(localStorage.getItem(userSpecificKey) || '[]');
-              const filteredUserRecords = userRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
-              localStorage.setItem(userSpecificKey, JSON.stringify(filteredUserRecords));
-            }
-          } catch (e) {
-            console.error('사용자별 기록 삭제 오류:', e);
-          }
-        }
-
-        // 일반 사용자별 키에서도 삭제
-        const generalRecords = JSON.parse(localStorage.getItem('mbti-user-test-records') || '[]');
-        const filteredGeneralRecords = generalRecords.filter((r: TestRecord) => r.code !== deleteModalRecord.code);
-        localStorage.setItem('mbti-user-test-records', JSON.stringify(filteredGeneralRecords));
-
-        // test-result-{code} 키도 삭제
-        localStorage.removeItem(`test-result-${deleteModalRecord.code}`);
-        
-        // 전문가용 MBTI 결과 데이터도 삭제
-        const testType = (deleteModalRecord.testType || '').toLowerCase();
-        const isProfessional = testType.includes('전문가용') || 
-                               testType.includes('mbti pro') ||
-                               deleteModalRecord.code.startsWith('MP');
-        if (isProfessional) {
-          localStorage.removeItem(`mbti_pro_result_data`);
-        }
-      }
-
-      // 부모 컴포넌트에 업데이트 이벤트 발생
-      window.dispatchEvent(new CustomEvent('testRecordsUpdated'));
-      window.dispatchEvent(new CustomEvent('deletedCodesUpdated'));
-      
-      // 모달 닫기
-      setShowDeleteModal(false);
-      setDeleteModalRecord(null);
-    } catch (error) {
-      console.error('검사 기록 삭제 중 오류:', error);
-      alert('검사 기록 삭제 중 오류가 발생했습니다.');
-      setShowDeleteModal(false);
-      setDeleteModalRecord(null);
-    }
+    alert('상담(코드) 검사 기록만 삭제할 수 있습니다.');
+    setShowDeleteModal(false);
+    setDeleteModalRecord(null);
   };
 
   return (
@@ -2363,7 +1916,7 @@ function TestRecordsTabContent({
               선택한 {selectedRecords.length}개의 검사 기록을 삭제하시겠습니까?
             </p>
             <p className="text-blue-300 text-sm mb-6">
-              삭제된 검사기록은 삭제코드 페이지에서 확인할 수 있습니다.
+              삭제된 검사 기록은 복구할 수 없습니다.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -2435,7 +1988,7 @@ function TestRecordsTabContent({
               {deleteModalRecord.recordSource === 'counselor-assessment' ? (
                 <p className="text-blue-300 text-sm mt-4">로그인한 계정으로 서버에 저장된 결과만 삭제됩니다.</p>
               ) : (
-                <p className="text-blue-300 text-sm mt-4">삭제된 검사기록은 삭제코드 에서 확인할수 있습니다.</p>
+                <p className="text-blue-300 text-sm mt-4">삭제된 검사 기록은 복구할 수 없습니다.</p>
               )}
             </div>
 

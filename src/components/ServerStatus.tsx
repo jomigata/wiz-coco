@@ -89,7 +89,7 @@ const ServerStatus: React.FC<ServerStatusProps> = ({ onServerSelect }) => {
     
     // 서버 ID에 따라 다른 작업 수행
     if (server.id === 'records') {
-      router.push('/mypage/test-records');
+      router.push('/mypage?tab=records');
     }
   };
 

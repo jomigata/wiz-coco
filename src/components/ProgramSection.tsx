@@ -201,28 +201,28 @@ export default function ProgramSection() {
       description: "나의 성격유형을 파악하고 장단점을 이해하여 더 나은 관계와 성장을 도모하세요",
       icon: "👤",
       image: "",
-      link: "/tests/mbti"
+      link: "/portal/"
     },
     {
-      title: "전문가용 MBTI",
-      description: "전문가의 해석과 함께 심층적인 성격유형 분석을 통해 자신의 성장 가능성을 발견하세요",
+      title: "상담(코드) 검사",
+      description: "상담사가 발급한 상담(코드)로 전문 심리검사에 참여하세요",
       icon: "💑",
       image: "",
-      link: "/tests/mbti_pro"
+      link: "/portal/"
     },
     {
-      title: "그룹형 MBTI",
-      description: "팀원들의 MBTI 유형을 분석하고 팀 내 소통과 협업을 향상시키세요",
+      title: "그룹 검사",
+      description: "기관·단체 상담(코드)를 통해 그룹 심리검사에 참여하세요",
       icon: "🧒",
       image: "",
-      link: "/tests/group_mbti"
+      link: "/portal/"
     },
     {
-      title: "인사이드 MBTI",
-      description: "두 사람의 MBTI 유형을 비교하여 관계 역학과 상호작용 패턴을 심층적으로 분석해 보세요",
+      title: "내 검사실",
+      description: "발급받은 상담(코드)로 진행 중인 검사와 결과를 확인하세요",
       icon: "👨‍👩‍👧",
       image: "",
-      link: "/tests/inside-mbti"
+      link: "/portal/"
     },
     {
       title: "개인 맞춤 심리 상담",

@@ -66,17 +66,7 @@ export default function AdminNavigation() {
               >
                 대시보드
               </Link>
-              <Link
-                href="/admin/test-prefix"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/admin/test-prefix')
-                    ? 'bg-indigo-700 text-white'
-                    : 'text-gray-300 hover:bg-indigo-700/50 hover:text-white'
-                }`}
-              >
-                접두사 관리
-              </Link>
-              <Link
+<Link
                 href="/admin/test-codes"
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/admin/test-codes')
@@ -168,18 +158,7 @@ export default function AdminNavigation() {
             >
               대시보드
             </Link>
-            <Link
-              href="/admin/test-prefix"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/admin/test-prefix')
-                  ? 'bg-indigo-700 text-white'
-                  : 'text-gray-300 hover:bg-indigo-700/50 hover:text-white'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              접두사 관리
-            </Link>
-            <Link
+<Link
               href="/admin/test-codes"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/admin/test-codes')

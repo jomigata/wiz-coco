@@ -26,8 +26,8 @@ export default function Header() {
               검사 목록
             </Link>
             <Link
-              href="/tests/mbti"
-              className={`px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${isActive('/tests/mbti')}`}
+              href="/portal/"
+              className={`px-4 py-2 rounded-lg hover:bg-green-700 transition-colors ${isActive('/portal')}`}
             >
               MBTI 검사
             </Link>

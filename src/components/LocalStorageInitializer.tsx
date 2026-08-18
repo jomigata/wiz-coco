@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { initializeLocalStorage, printStorageGuidelines } from '@/utils/localStorageManager';
-import { migrateLocalInspectionCodes } from '@/lib/inspectionCodeMigration';
+import { purgeLegacyTestStorage } from '@/utils/purgeLegacyTestStorage';
 
 /**
  * 로컬스토리지 초기화 컴포넌트
@@ -12,7 +12,7 @@ export default function LocalStorageInitializer() {
   useEffect(() => {
     // 앱 시작 시 로컬스토리지 초기화
     initializeLocalStorage();
-    void migrateLocalInspectionCodes();
+    purgeLegacyTestStorage();
 
     // 개발 환경에서만 가이드라인 출력
     if (process.env.NODE_ENV === 'development') {
